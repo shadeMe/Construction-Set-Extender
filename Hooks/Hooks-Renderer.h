@@ -65,6 +65,7 @@ namespace cse
 		_DeclareMemHdlr(TESPathGridGenerateNiNode, "");
 		_DeclareMemHdlr(CenterCameraOnRefSelection, "adds a sanity check for non-reference forms in the selection when centering or 'topping' the camera");
 		_DeclareMemHdlr(TopCameraOnRefSelection, "");
+		_DeclareMemHdlr(RenderWindowMouseMoveHandler, "allows the handler to be triggered even when the viewport is 'dirty'");
 
 		void __stdcall RenderWindowReferenceSelectionDetour(TESObjectREFR* Ref, bool ShowSelectionBox);
 	}

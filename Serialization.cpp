@@ -279,8 +279,10 @@ namespace cse
 
 			bool Result = true;
 			char Buffer[0x100] = { 0 };
-			FORMAT_STR(Buffer, "%s{ %08X|%d|%s }", kSigil, In->formID, (UInt32)In->formType,
-					   (In->GetEditorID() == NULL ? kNullEditorID : In->GetEditorID()));
+			TESFile* Parent = In->GetOverrideFile(-1);
+			FORMAT_STR(Buffer, "%s{%08X|%d|%s|%s}", kSigil, In->formID, (UInt32)In->formType,
+					   (In->GetEditorID() == NULL ? kNullEditorID : In->GetEditorID()),
+					   (Parent == NULL ? "Oblivion.esm" : Parent->fileName));
 			Out = Buffer;
 			return Result;
 		}
@@ -292,29 +294,92 @@ namespace cse
 
 			if (In.length() < 0x100)
 			{
-				char EditorID[0x100] = { 0 };
+				char String[0x100] = { 0 };
 				UInt32 FormID = 0;
 				UInt32 TypeID = 0;
+				std::string EditorID, Plugin;
 
 				if (In.find(kSigil) == 0)
 				{
 					std::string Data(In.substr(strlen(kSigil)));
-					if (sscanf_s(Data.c_str(), "{ %08X|%d|%s }", &FormID, &TypeID, EditorID, sizeof(EditorID)) == 3)
+					if (Data.length() > 1)
 					{
-						TESForm* Form = TESForm::LookupByFormID(FormID);
-						bool GoodEditorID = (Form->GetEditorID() == NULL && strcmp(EditorID, kNullEditorID) == 0) || Form->editorID.Compare(EditorID) == 0;
-						if (Form && Form->formType == TypeID && GoodEditorID)
+						SME::StringHelpers::Tokenizer Extractor(Data.c_str(), "{}|");
+						bool HasError = false;
+						int ArgCount = 0;
+						while (true)
 						{
-							Result = true;
-							*Out = Form;
+							std::string CurrentArg;
+							if (Extractor.NextToken(CurrentArg) != -1)
+							{
+								if (CurrentArg.empty())
+									continue;
+
+								switch (ArgCount + 1)
+								{
+								case 1:
+									if (sscanf_s(CurrentArg.c_str(), "%08X", &FormID) != 1)
+									{
+										HasError = true;
+										BGSEECONSOLE_MESSAGE("TESForm2Text::Deserialize - Invalid FormID (%s)", CurrentArg.c_str());
+									}
+									break;
+								case 2:
+									if (sscanf_s(CurrentArg.c_str(), "%d", &TypeID) != 1)
+									{
+										HasError = true;
+										BGSEECONSOLE_MESSAGE("TESForm2Text::Deserialize - Invalid TypeID (%s)", CurrentArg.c_str());
+									}
+									break;
+								case 3:
+									EditorID = CurrentArg;
+									break;
+								case 4:
+									Plugin = CurrentArg;
+									break;
+								}
+
+								if (HasError)
+									break;
+
+								ArgCount++;
+							}
+							else
+								break;
 						}
-						else if (Form)
-							BGSEECONSOLE_MESSAGE("TESForm2Text::Deserialize - TypeID/EditorID mismatch! Found (%d, %s), Expected (%d, %s)", TypeID, EditorID, Form->formType, Form->GetEditorID());
+
+						if (HasError == false && ArgCount == 4)
+						{
+							TESFile* ParentPlugin = _DATAHANDLER->LookupPluginByName(Plugin.c_str());
+							if (ParentPlugin && _DATAHANDLER->IsPluginLoaded(ParentPlugin))
+							{
+								FormID = (ParentPlugin->fileIndex << 24) | (FormID & 0x00FFFFFF);
+								TESForm* Form = TESForm::LookupByFormID(FormID);
+								if (Form)
+								{
+									bool GoodEditorID = (Form->GetEditorID() == NULL && strcmp(EditorID.c_str(), kNullEditorID) == 0) || Form->editorID.Compare(EditorID.c_str()) == 0;
+									if (Form && Form->formType == TypeID && GoodEditorID)
+									{
+										Result = true;
+										*Out = Form;
+									}
+									else
+									{
+										BGSEECONSOLE_MESSAGE("TESForm2Text::Deserialize - TypeID/EditorID mismatch! Found (%d, %s), Expected (%d, %s)",
+															 TypeID, EditorID.c_str(), Form->formType, Form->GetEditorID());
+									}
+								}
+								else
+									BGSEECONSOLE_MESSAGE("TESForm2Text::Deserialize - Couldn't find form with formID %08X", FormID);
+							}
+							else
+								BGSEECONSOLE_MESSAGE("TESForm2Text::Deserialize - Parent plugin %s was not loaded", Plugin.c_str());
+						}
 						else
-							BGSEECONSOLE_MESSAGE("TESForm2Text::Deserialize - Couldn't find form with formID %08X", FormID);
+							BGSEECONSOLE_MESSAGE("TESForm2Text::Deserialize - Couldn't extract data completely (%s)", In.c_str());
 					}
 					else
-						BGSEECONSOLE_MESSAGE("TESForm2Text::Deserialize - Couldn't extract data completely (%s)", In.c_str());
+						BGSEECONSOLE_MESSAGE("TESForm2Text::Deserialize - Input too short");
 				}
 				else
 					BGSEECONSOLE_MESSAGE("TESForm2Text::Deserialize - Invalid sigil (%s)", In.c_str());

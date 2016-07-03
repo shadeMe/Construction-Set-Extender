@@ -1211,23 +1211,11 @@ namespace cse
 
 								if (_RENDERSEL->selectionCount == 1 && _RENDERSEL->selectionList->Data == TESRenderWindow::CurrentMouseRef)
 									TESRenderWindow::CurrentMouseRef = NULL;
-
-								if (TESRenderWindow::CurrentMouseRef ||
-									(LastMouseRef && TESRenderWindow::CurrentMouseRef == NULL))
-								{
-									TESRenderWindow::Redraw();
-								}
 							}
 							else
 							{
 								TESRenderWindow::CurrentMousePathGridPoint = TESRender::PickPathGridPointAtCoords(TESRenderWindow::CurrentMouseCoord.x,
 																												  TESRenderWindow::CurrentMouseCoord.y);
-
-								if (TESRenderWindow::CurrentMousePathGridPoint ||
-									(LastPathGridPoint && TESRenderWindow::CurrentMousePathGridPoint == NULL))
-								{
-									TESRenderWindow::Redraw();
-								}
 							}
 						}
 					}
@@ -1260,7 +1248,6 @@ namespace cse
 			case WM_MOUSELEAVE:
 			case WM_NCMOUSELEAVE:
 				TESRenderWindow::CurrentMouseRef = NULL;
-				TESRenderWindow::Redraw();
 
 				break;
 			case WM_LBUTTONDOWN:

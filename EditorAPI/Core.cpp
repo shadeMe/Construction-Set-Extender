@@ -63,6 +63,18 @@ TESFile* TESDataHandler::LookupPluginByIndex(UInt32 Index)
 	return thisCall<TESFile*>(0x0047BEC0, this, Index);
 }
 
+bool TESDataHandler::IsPluginLoaded(TESFile* File)
+{
+	SME_ASSERT(File);
+	for each (auto Itr in filesByID)
+	{
+		if (Itr == File)
+			return true;
+	}
+
+	return false;
+}
+
 void TESDataHandler::SortScripts()
 {
 	thisCall<UInt32>(0x0047BA30, this);

@@ -186,7 +186,7 @@ public:
 	bool							IsTemporary() const;
 
 	bool							SetEditorID(const char* EditorID);
-	TESFile*						GetOverrideFile(int Index);
+	TESFile*						GetOverrideFile(int Index) const;
 	void							MarkAsTemporary();
 	void							SetFormID(UInt32 FormID, bool Unk02 = true);	// arg2=true to reserve formid from datahandler ?
 

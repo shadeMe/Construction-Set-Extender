@@ -22,6 +22,7 @@ namespace cse
 			class OSDLayer : public IRenderWindowOSDLayer
 			{
 				RenderWindowCellLists*		Parent;
+				ImGuiTextFilter				FilterHelper;
 
 				enum
 				{

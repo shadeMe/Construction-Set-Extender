@@ -122,6 +122,7 @@ public:
 	// methods
 	TESFile*										LookupPluginByName(const char* PluginName);
 	TESFile*										LookupPluginByIndex(UInt32 Index);
+	bool											IsPluginLoaded(TESFile* File);
 	void											SortScripts();
 	TESForm*										CreateForm(UInt8 TypeID);
 	void											PopulatePluginArray(const char* WorkingDirectory);

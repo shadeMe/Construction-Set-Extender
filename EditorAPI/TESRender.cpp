@@ -24,13 +24,14 @@ PathGridPointListT*					TESRenderWindow::SelectedPathGridPoints = (PathGridPoint
 float*								TESRenderWindow::CameraPanSpeed = (float*)0x00A0B090;
 float*								TESRenderWindow::CameraZoomSpeed = (float*)0x00A0B088;
 float*								TESRenderWindow::CameraRotationSpeed = (float*)0x00A0B080;
-float*								TESRenderWindow::SnapGridDistance = (float*)0x00A0B060;
-float*								TESRenderWindow::SnapAngle = (float*)0x00A0B068;
+UInt32*								TESRenderWindow::SnapGridDistance = (UInt32*)0x00A0B060;
+UInt32*								TESRenderWindow::SnapAngle = (UInt32*)0x00A0B068;
 float*								TESRenderWindow::RefRotationSpeed = (float*)0x00A0B070;
 float*								TESRenderWindow::RefMovementSpeed = (float*)0x00A0B078;
 
 TESLandTexture**					TESRenderWindow::ActiveLandscapeTexture = (TESLandTexture**)0x00A0B0C0;
 TESObjectCELL**						TESRenderWindow::ActiveCell = (TESObjectCELL**)0x00A0BC3C;
+TESObjectREFR**						TESRenderWindow::SnapReference = (TESObjectREFR**)0x00A0B050;
 
 UInt8*								TESRenderWindow::LandscapeEditFlag = (UInt8*)0x00A0BC35;
 UInt8*								TESRenderWindow::PathGridEditFlag = (UInt8*)0x00A0BC5C;
@@ -169,7 +170,14 @@ bool TESRenderWindow::GetCellInActiveGrid(TESObjectCELL* Cell)
 	}
 }
 
-void TESRenderWindow::UndoStack::RecordReference( UInt32 Operation, TESRenderSelection::SelectedObjectsEntry* Selection )
+std::string TESRenderWindow::GetCellGeomDescription(TESObjectCELL* Cell)
+{
+	char Buffer[0x200] = {0};
+	cdeclCall<void>(0x0053D0F0, Cell, Buffer);
+	return Buffer;
+}
+
+void TESRenderWindow::UndoStack::RecordReference(UInt32 Operation, TESRenderSelection::SelectedObjectsEntry* Selection)
 {
 	thisCall<UInt32>(0x00432D40, this, Operation, Selection);
 }
@@ -199,6 +207,11 @@ void TESRender::PrimaryRenderer::GetCameraPivot( Vector3* OutPivot, float ScaleF
 	Buffer.Scale(ScaleFactor);
 
 	*OutPivot += Buffer;
+}
+
+const NiVector3* TESRender::PrimaryRenderer::GetCameraWorldTranslate()
+{
+	return &primaryCamera->m_worldTranslate;
 }
 
 void TESRender::PrimaryRenderer::MoveReferenceSelection(int XOffset, int YOffset, bool AxisX, bool AxisY, bool AxisZ)
@@ -341,7 +354,7 @@ TESPathGridPoint* TESRender::PickPathGridPointAtCoords(int X, int Y)
 	return Result;
 }
 
-TESSceneNodeDebugData* TESSceneNodeDebugData::Initialize( HINSTANCE Instance,
+TESSceneNodeDebugData* TESSceneNodeDebugData::Initialize(HINSTANCE Instance,
 																	HWND Parent,
 																	NiNode* Node,
 																	const char* WindowTitle,

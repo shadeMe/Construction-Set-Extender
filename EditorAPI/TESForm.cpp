@@ -143,7 +143,7 @@ bool TESForm::SetEditorID(const char* EditorID)
 	return thisCall<bool>(0x00497670, this, EditorID);
 }
 
-TESFile* TESForm::GetOverrideFile(int Index)
+TESFile* TESForm::GetOverrideFile(int Index) const
 {
 	return thisCall<TESFile*>(0x00495FE0, this, Index);
 }

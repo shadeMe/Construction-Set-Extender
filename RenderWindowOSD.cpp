@@ -1,4 +1,4 @@
-#include "RenderWindowOSD.h"
+﻿#include "RenderWindowOSD.h"
 #include <bgsee\RenderWindowFlyCamera.h>
 
 namespace cse
@@ -397,9 +397,14 @@ namespace cse
 				// do nothing if the fly camera is active
 				return DlgProcResult;
 			}
+			else if (Parent->RenderingLayers)
+			{
+				// do nothing if we're still rendering the previous frame
+				return DlgProcResult;
+			}
 
-			// don't update input state if the mouse is captured elsewhere
-			if (GetCapture() != hWnd)
+			// don't update input state if the mouse/keyboard is captured elsewhere or if the render window doesn't have input focus
+			if (GetCapture() != hWnd && GetActiveWindow() == hWnd)
 			{
 				// get input data and flag the viewport for update
 				if (Pipeline->UpdateInputState(hWnd, uMsg, wParam, lParam))
@@ -419,6 +424,16 @@ namespace cse
 			case WM_DESTROY:
 				ExtraData->Remove(DialogExtraData::kTypeID);
 				delete xData;
+
+				break;
+			case WM_LBUTTONDBLCLK:
+				{
+					if (Parent->NeedsInput())
+					{
+						// preempt the vanilla handler
+						Return = true;
+					}
+				}
 
 				break;
 			case WM_MOUSEMOVE:
@@ -446,7 +461,7 @@ namespace cse
 						TESRenderWindow::Redraw();
 
 					Pipeline->NewFrame();
-					Parent->GUILogic();
+					Parent->RenderLayers();
 				}
 
 				break;
@@ -455,82 +470,12 @@ namespace cse
 			return DlgProcResult;
 		}
 
-
-		void RenderWindowOSD::RenderSelectionControls()
+		void RenderWindowOSD::RenderLayers()
 		{
-			if (_RENDERSEL->selectionCount == 0)
-				return;
-
-			ImGui::SetNextWindowPos(ImVec2(10, 300), ImGuiSetCond_FirstUseEver);
-			if (!ImGui::Begin("Selection Controls", NULL, ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing))
-			{
-				ImGui::End();
-				return;
-			}
-
-			ImGui::PushItemWidth(-10);
-			ImGui::TextDisabled("(?)");
-			ImGui::PopItemWidth();
-			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip("Help text placeholder");
-
-			ImGui::Separator();
-			ImGui::Button("Turn OFF Vorians");
-
-			if (ImGui::CollapsingHeader("3D Data + Flags"))
-			{
-				ImGui::BeginChild("PosData", ImVec2(ImGui::GetWindowContentRegionWidth() * 0.5f, 100), true);
-				ImGui::TextDisabled("Position");
-				ImGui::PushItemWidth(250);
-				ImGui::Button("X");
-				if (ImGui::IsItemActive())
-				{
-					ImDrawList* draw_list = ImGui::GetWindowDrawList();
-					draw_list->PushClipRectFullScreen();
-					draw_list->AddLine(ImGui::CalcItemRectClosestPoint(ImGui::GetIO().MousePos, true, -2.0f), ImGui::GetIO().MousePos, ImColor(ImGui::GetStyle().Colors[ImGuiCol_Button]), 4.0f);
-					draw_list->PopClipRect();
-					ImVec2 Delta = ImGui::GetIO().MouseDelta;
-					_PRIMARYRENDERER->MoveReferenceSelection(Delta.x + Delta.y, Delta.y, true, false, false);
-				}
-				ImGui::SameLine();
-				ImGui::Button("Y");
-				if (ImGui::IsItemActive())
-				{
-					ImDrawList* draw_list = ImGui::GetWindowDrawList();
-					draw_list->PushClipRectFullScreen();
-					draw_list->AddLine(ImGui::CalcItemRectClosestPoint(ImGui::GetIO().MousePos, true, -2.0f), ImGui::GetIO().MousePos, ImColor(ImGui::GetStyle().Colors[ImGuiCol_Button]), 4.0f);
-					draw_list->PopClipRect();
-					ImVec2 Delta = ImGui::GetIO().MouseDelta;
-					_PRIMARYRENDERER->MoveReferenceSelection(Delta.x + Delta.y, Delta.x + Delta.y, false, true, false);
-				}
-				ImGui::SameLine();
-				ImGui::Button("Z");
-				if (ImGui::IsItemActive())
-				{
-					ImDrawList* draw_list = ImGui::GetWindowDrawList();
-					draw_list->PushClipRectFullScreen();
-					draw_list->AddLine(ImGui::CalcItemRectClosestPoint(ImGui::GetIO().MousePos, true, -2.0f), ImGui::GetIO().MousePos, ImColor(ImGui::GetStyle().Colors[ImGuiCol_Button]), 4.0f);
-					draw_list->PopClipRect();
-					ImVec2 Delta = ImGui::GetIO().MouseDelta;
-					_PRIMARYRENDERER->MoveReferenceSelection(Delta.x + Delta.y, Delta.y, false, false, true);
-				}
-				ImGui::PopItemWidth();
-				ImGui::EndChild();
-			}
-
-			ImGui::End();
-		}
-
-		void RenderWindowOSD::GUILogic()
-		{
+			SME::MiscGunk::ScopedSetter<bool> Sentry(RenderingLayers, true);
 			for each (auto Itr in AttachedLayers)
 				Itr->Draw(this, Pipeline);
-
-			RenderSelectionControls();
-
-			ImGui::ShowTestWindow();
 		}
-
 
 		bool RenderWindowOSD::NeedsBackgroundUpdate() const
 		{
@@ -550,6 +495,7 @@ namespace cse
 			Pipeline = new ImGuiDX9();
 			AttachedLayers.reserve(10);
 			Initialized = false;
+			RenderingLayers = false;
 		}
 
 		RenderWindowOSD::~RenderWindowOSD()
@@ -573,7 +519,10 @@ namespace cse
 			AttachLayer(&DefaultOverlayOSDLayer::Instance);
 			AttachLayer(&MouseOverTooltipOSDLayer::Instance);
 			AttachLayer(&NotificationOSDLayer::Instance);
-
+			AttachLayer(&ToolbarOSDLayer::Instance);
+#ifndef NDEBUG
+			AttachLayer(&DebugOSDLayer::Instance);
+#endif
 			Initialized = true;
 
 			return Initialized;
@@ -586,15 +535,22 @@ namespace cse
 			DetachLayer(&DefaultOverlayOSDLayer::Instance);
 			DetachLayer(&MouseOverTooltipOSDLayer::Instance);
 			DetachLayer(&NotificationOSDLayer::Instance);
-
+			DetachLayer(&ToolbarOSDLayer::Instance);
+#ifndef NDEBUG
+			DetachLayer(&DebugOSDLayer::Instance);
+#endif
 			Initialized = false;
 		}
 
 		void RenderWindowOSD::Render()
 		{
-			if (Initialized)
+			if (Initialized && bgsee::RenderWindowFlyCamera::IsActive() == false)
 			{
-				ImGui::Render();
+				if (RenderingLayers == false)
+				{
+					// defer the final render call until all layers are done drawing
+					ImGui::Render();
+				}
 			}
 		}
 
@@ -633,7 +589,7 @@ namespace cse
 			if (Initialized == false)
 				return false;
 			else
-				return Pipeline->NeedsInput();
+				return Pipeline->NeedsInput() || ImGui::IsRootWindowOrAnyChildHovered();
 		}
 
 		DefaultOverlayOSDLayer		DefaultOverlayOSDLayer::Instance;
@@ -646,9 +602,11 @@ namespace cse
 		void DefaultOverlayOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
 			ImGui::SetNextWindowPos(ImVec2(10, 10));
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 6));
 			if (!ImGui::Begin("Default Info Overlay", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoBringToFrontOnFocus))
 			{
 				ImGui::End();
+				ImGui::PopStyleVar();
 				return;
 			}
 
@@ -656,6 +614,10 @@ namespace cse
 			if (CurrentCell == NULL)
 				CurrentCell = *TESRenderWindow::ActiveCell;
 
+			int R = 0, G = 0, B = 0;
+			const NiVector3* CameraCoords = _PRIMARYRENDERER->GetCameraWorldTranslate();
+
+			ImGui::Columns(2, "Cell and Cam Data", false);
 			if (CurrentCell)
 			{
 				char Buffer[0x50] = { 0 };
@@ -667,86 +629,141 @@ namespace cse
 							   CurrentCell->cellData.coords->y, CurrentCell->formID);
 				}
 
-				ImGui::Text("Current Cell: %s", Buffer);
+				ImGui::Text("Current Cell:"); ImGui::SameLine(); ImGui::TextDisabled("(?)"); ImGui::NextColumn();
+				if (ImGui::IsItemHovered())
+				{
+					std::string Geom(TESRenderWindow::GetCellGeomDescription(CurrentCell).c_str());
+					SME::StringHelpers::Tokenizer Extractor(Geom.c_str(), ",");
+					std::string CurrentArg, Extract;
+					int Count = 0;
+					while (Extractor.NextToken(CurrentArg) != -1)
+					{
+						switch (Count)
+						{
+						case 1:
+						case 2:
+						case 3:
+							Extract += "  " + CurrentArg.substr(1) + "\n";
+							break;
+						}
+
+						Count++;
+					}
+					ImGui::SetTooltip("Geometry:\n%s", Extract.c_str());
+				}
+				ImGui::Text("%s  ", Buffer); ImGui::NextColumn();
+
+				ImGui::Text("Camera:"); ImGui::NextColumn(); ImGui::Text("%.0f, %0.f, %0.f  ", CameraCoords->x, CameraCoords->y, CameraCoords->z); ImGui::NextColumn();
 				ImGui::Separator();
 			}
 
-			if (settings::renderWindowOSD::kShowSelectionStats.GetData().i && _RENDERSEL->selectionCount)
+			ImGui::Columns(1);
+
+			ImGui::Columns(2, "Selection Data", false);
+			SME::StringHelpers::GetRGB(settings::renderWindowOSD::kColorSelectionStats().s, R, G, B);
+
+			if (_RENDERSEL->selectionCount)
 			{
-				int R, G, B;
-				SME::StringHelpers::GetRGB(settings::renderWindowOSD::kColorSelectionStats().s, R, G, B);
 				char Buffer[0x200] = { 0 };
 
 				if (_RENDERSEL->selectionCount > 1)
 				{
-					FORMAT_STR(Buffer, "%d Objects Selected\nNominal Center: %.04f, %.04f, %.04f",
-							   _RENDERSEL->selectionCount,
-							   _RENDERSEL->selectionPositionVectorSum.x,
-							   _RENDERSEL->selectionPositionVectorSum.y,
-							   _RENDERSEL->selectionPositionVectorSum.z);
+					ImGui::TextColored(ImColor(R, G, B), "%d Objects Selected", _RENDERSEL->selectionCount); ImGui::NextColumn(); ImGui::NextColumn();
+					ImGui::TextColored(ImColor(R, G, B), "Nominal Center:"); ImGui::NextColumn();
+					ImGui::TextColored(ImColor(R, G, B), "%.04f, %.04f, %.04f   ", _RENDERSEL->selectionPositionVectorSum.x,
+									   _RENDERSEL->selectionPositionVectorSum.y, _RENDERSEL->selectionPositionVectorSum.z); ImGui::NextColumn();
 				}
 				else
 				{
 					TESObjectREFR* Selection = CS_CAST(_RENDERSEL->selectionList->Data, TESForm, TESObjectREFR);
 					if (Selection)	// in the off-chance that the selection contains a regular form
 					{
+						ImGui::TextColored(ImColor(R, G, B), "%s(%08X)", ((Selection->editorID.Size()) ? (Selection->editorID.c_str()) : ("")), Selection->formID); ImGui::NextColumn();
+						ImGui::TextColored(ImColor(R, G, B), "%s", TESForm::GetFormTypeIDLongName(Selection->baseForm->formType)); ImGui::NextColumn();
+
+						ImGui::TextColored(ImColor(R, G, B), "Base Form:"); ImGui::NextColumn(); ImGui::TextColored(ImColor(R, G, B), "%s(%08X)",
+							((Selection->baseForm->editorID.Size()) ? (Selection->baseForm->editorID.c_str()) : ("")), Selection->baseForm->formID); ImGui::NextColumn();
+
+						ImGui::TextColored(ImColor(R, G, B), "Position:"); ImGui::NextColumn();
+						ImGui::TextColored(ImColor(R, G, B), "%.03f, %.03f, %.03f   ", Selection->position.x, Selection->position.y, Selection->position.z); ImGui::NextColumn();
+
+						ImGui::TextColored(ImColor(R, G, B), "Rotation:"); ImGui::NextColumn();
+						ImGui::TextColored(ImColor(R, G, B), "%.03f, %.03f, %.03f   ",
+										   Selection->rotation.x * 57.2957763671875,
+										   Selection->rotation.y * 57.2957763671875,
+										   Selection->rotation.z * 57.2957763671875); ImGui::NextColumn();
+
+						ImGui::TextColored(ImColor(R, G, B), "Scale:"); ImGui::NextColumn(); ImGui::TextColored(ImColor(R, G, B), "%0.3f", Selection->scale); ImGui::NextColumn();
+
+						ImGui::TextColored(ImColor(R, G, B), "Flags:");  ImGui::SameLine(); ImGui::TextDisabled("(?) "); ImGui::NextColumn();
+						if (ImGui::IsItemHovered())
+						{
+							ImGui::SetTooltip("P  - Persistent\nD  - Initially Disabled\nV  - Visible When Distant\nI  - Invisible (Editor only)\nCI - Children Invisible (Editor only)\nF  - Frozen (Editor only)");
+						}
+						ImGui::TextColored(ImColor(R, G, B), "%s %s %s %s %s %s   ",
+										   ((Selection->formFlags & TESForm::kFormFlags_QuestItem) ? ("P") : ("-")),
+										   ((Selection->formFlags & TESForm::kFormFlags_Disabled) ? ("D") : ("-")),
+										   ((Selection->formFlags & TESForm::kFormFlags_VisibleWhenDistant) ? ("V") : ("-")),
+										   (Selection->GetInvisible() ? ("I") : ("-")),
+										   (Selection->GetChildrenInvisible() ? ("CI") : ("-")),
+										   (Selection->GetFrozen() ? ("F") : ("-"))); ImGui::NextColumn();
+
 						BSExtraData* xData = Selection->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
 						char xBuffer[0x50] = { 0 };
 						if (xData)
 						{
 							ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
-							FORMAT_STR(xBuffer, "\nParent: %s [%08X]  Opposite State: %d",
-								((xParent->parent->editorID.Size()) ? (xParent->parent->editorID.c_str()) : ("")),
-									   xParent->parent->formID, xParent->oppositeState);
+							ImGui::TextColored(ImColor(R, G, B), "Parent:"); ImGui::NextColumn();
+							ImGui::TextColored(ImColor(R, G, B), "%s(%08X) %s   ",
+											((xParent->parent->editorID.Size()) ? (xParent->parent->editorID.c_str()) : ("")),
+											xParent->parent->formID,
+											(xParent->oppositeState ? "[X]" : "")); ImGui::NextColumn();
 						}
 
 						char cBuffer[0x50] = { 0 };
 						if (Selection->parentCell->GetIsInterior() == false)
 						{
-							FORMAT_STR(cBuffer, "\nParent Cell: %s(%08X) %d,%d", Selection->parentCell->GetEditorID(),
-									   Selection->parentCell->formID,
-									   Selection->parentCell->cellData.coords->x, Selection->parentCell->cellData.coords->y);
+							ImGui::TextColored(ImColor(R, G, B), "Parent Cell:"); ImGui::NextColumn();
+							ImGui::TextColored(ImColor(R, G, B), "%s(%08X) %d,%d   ", Selection->parentCell->GetEditorID(), Selection->parentCell->formID,
+											Selection->parentCell->cellData.coords->x, Selection->parentCell->cellData.coords->y); ImGui::NextColumn();
 						}
-
-						FORMAT_STR(Buffer, "%s(%08X) Base Form: %s(%08X)\nPosition: %.04f, %.04f, %.04f\nRotation: %.04f, %.04f, %.04f\nScale: %.04f\nFlags: %s %s %s %s %s %s%s%s",
-							((Selection->editorID.Size()) ? (Selection->editorID.c_str()) : ("")), Selection->formID,
-								   ((Selection->baseForm->editorID.Size()) ? (Selection->baseForm->editorID.c_str()) : ("")), Selection->baseForm->formID,
-								   Selection->position.x, Selection->position.y, Selection->position.z,
-								   Selection->rotation.x * 57.2957763671875,
-								   Selection->rotation.y * 57.2957763671875,
-								   Selection->rotation.z * 57.2957763671875,
-								   Selection->scale,
-								   ((Selection->formFlags & TESForm::kFormFlags_QuestItem) ? ("P") : ("-")),
-								   ((Selection->formFlags & TESForm::kFormFlags_Disabled) ? ("D") : ("-")),
-								   ((Selection->formFlags & TESForm::kFormFlags_VisibleWhenDistant) ? ("V") : ("-")),
-								   (Selection->GetInvisible() ? ("I") : ("-")),
-								   (Selection->GetChildrenInvisible() ? ("CI") : ("-")),
-								   (Selection->GetFrozen() ? ("F") : ("-")),
-								   xBuffer,
-								   cBuffer);
 					}
 
 				}
 
-				ImGui::TextColored(ImColor(R, G, B), "%s", Buffer);
 				ImGui::Separator();
 			}
 
-			if (settings::renderWindowOSD::kShowRAMUsage.GetData().i)
+			if (TESRenderWindow::SelectedPathGridPoints->Count() == 1)
 			{
-				int R, G, B;
-				SME::StringHelpers::GetRGB(settings::renderWindowOSD::kColorRAMUsage().s, R, G, B);
-
-				PROCESS_MEMORY_COUNTERS_EX MemCounter = { 0 };
-				if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&MemCounter, sizeof(MemCounter)))
+				TESPathGridPoint* Point = TESRenderWindow::SelectedPathGridPoints->Head()->Item();
+				ImGui::TextColored(ImColor(R, G, B), "Position:"); ImGui::NextColumn();
+				ImGui::TextColored(ImColor(R, G, B), "%.03f, %.03f, %.03f   ", Point->position.x, Point->position.y, Point->position.z); ImGui::NextColumn();
+				if (Point->linkedRef)
 				{
-					UInt32 CurrentRAMCounter = MemCounter.WorkingSetSize / (1024 * 1024);		// in megabytes
-					ImGui::TextColored(ImColor(R, G, B), "RAM Usage: %d MB", CurrentRAMCounter);
+					ImGui::TextColored(ImColor(R, G, B), "Linked Reference:"); ImGui::NextColumn();
+					ImGui::TextColored(ImColor(R, G, B), "%s(%08X)", ((Point->linkedRef->editorID.Size()) ? (Point->linkedRef->editorID.c_str()) : ("")), Point->linkedRef->formID); ImGui::NextColumn();
 				}
+
+				ImGui::Separator();
+			}
+			ImGui::Columns(1);
+
+			ImGui::Columns(2, "RAM Data", false);
+			PROCESS_MEMORY_COUNTERS_EX MemCounter = { 0 };
+			SME::StringHelpers::GetRGB(settings::renderWindowOSD::kColorRAMUsage().s, R, G, B);
+			if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&MemCounter, sizeof(MemCounter)))
+			{
+				UInt32 CurrentRAMCounter = MemCounter.WorkingSetSize / (1024 * 1024);		// in megabytes
+				ImGui::TextColored(ImColor(R, G, B), "RAM Usage:"); ImGui::NextColumn();
+				ImGui::TextColored(ImColor(R, G, B), "%d MB  ", CurrentRAMCounter); ImGui::NextColumn();
 			}
 
-			ImGui::Text("Avg. %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+			ImGui::Text("FPS:"); ImGui::NextColumn(); ImGui::Text("%.1f  ", ImGui::GetIO().Framerate); ImGui::NextColumn();
+			ImGui::Columns(1);
+
 			ImGui::End();
+			ImGui::PopStyleVar();
 		}
 
 		bool DefaultOverlayOSDLayer::NeedsBackgroundUpdate()
@@ -934,6 +951,226 @@ namespace cse
 				Notifications.push(Notification(Buffer));
 		}
 
+		DebugOSDLayer			DebugOSDLayer::Instance;
+
+		DebugOSDLayer::~DebugOSDLayer()
+		{
+			;//
+		}
+
+		void DebugOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
+		{
+			ImGui::ShowTestWindow();
+
+			if (_RENDERSEL->selectionCount == 0)
+				return;
+
+			ImGui::SetNextWindowPos(ImVec2(10, 300), ImGuiSetCond_FirstUseEver);
+			if (!ImGui::Begin("Selection Controls", NULL, ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing))
+			{
+				ImGui::End();
+				return;
+			}
+
+			ImGui::PushItemWidth(-10);
+			ImGui::TextDisabled("(?)");
+			ImGui::PopItemWidth();
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Help text placeholder");
+
+			ImGui::Separator();
+			ImGui::Button("Turn OFF Vorians");
+
+			if (ImGui::CollapsingHeader("3D Data + Flags"))
+			{
+				ImGui::BeginChild("PosData", ImVec2(ImGui::GetWindowContentRegionWidth() * 0.5f, 100), true);
+				ImGui::TextDisabled("Position");
+				ImGui::PushItemWidth(250);
+				ImGui::Button("X");
+				if (ImGui::IsItemActive())
+				{
+					ImDrawList* draw_list = ImGui::GetWindowDrawList();
+					draw_list->PushClipRectFullScreen();
+					draw_list->AddLine(ImGui::CalcItemRectClosestPoint(ImGui::GetIO().MousePos, true, -2.0f), ImGui::GetIO().MousePos, ImColor(ImGui::GetStyle().Colors[ImGuiCol_Button]), 4.0f);
+					draw_list->PopClipRect();
+					ImVec2 Delta = ImGui::GetIO().MouseDelta;
+					_PRIMARYRENDERER->MoveReferenceSelection(Delta.x + Delta.y, Delta.y, true, false, false);
+				}
+				ImGui::SameLine();
+				ImGui::Button("Y");
+				if (ImGui::IsItemActive())
+				{
+					ImDrawList* draw_list = ImGui::GetWindowDrawList();
+					draw_list->PushClipRectFullScreen();
+					draw_list->AddLine(ImGui::CalcItemRectClosestPoint(ImGui::GetIO().MousePos, true, -2.0f), ImGui::GetIO().MousePos, ImColor(ImGui::GetStyle().Colors[ImGuiCol_Button]), 4.0f);
+					draw_list->PopClipRect();
+					ImVec2 Delta = ImGui::GetIO().MouseDelta;
+					_PRIMARYRENDERER->MoveReferenceSelection(Delta.x + Delta.y, Delta.x + Delta.y, false, true, false);
+				}
+				ImGui::SameLine();
+				ImGui::Button("Z");
+				if (ImGui::IsItemActive())
+				{
+					ImDrawList* draw_list = ImGui::GetWindowDrawList();
+					draw_list->PushClipRectFullScreen();
+					draw_list->AddLine(ImGui::CalcItemRectClosestPoint(ImGui::GetIO().MousePos, true, -2.0f), ImGui::GetIO().MousePos, ImColor(ImGui::GetStyle().Colors[ImGuiCol_Button]), 4.0f);
+					draw_list->PopClipRect();
+					ImVec2 Delta = ImGui::GetIO().MouseDelta;
+					_PRIMARYRENDERER->MoveReferenceSelection(Delta.x + Delta.y, Delta.y, false, false, true);
+				}
+				ImGui::PopItemWidth();
+				ImGui::EndChild();
+			}
+
+			ImGui::End();
+		}
+
+		bool DebugOSDLayer::NeedsBackgroundUpdate()
+		{
+			return false;
+		}
+
+		ToolbarOSDLayer				ToolbarOSDLayer::Instance;
+
+		void ToolbarOSDLayer::RenderBottomToolbar()
+		{
+			int XSize = *TESRenderWindow::ScreeWidth;
+			int YPos = *TESRenderWindow::ScreeHeight - (BottomExpanded ? 60 : 30);
+			int YSize = BottomExpanded ? 60 : 30;
+
+			ImGui::SetNextWindowPos(ImVec2(0, YPos));
+			ImGui::SetNextWindowSize(ImVec2(XSize, YSize));
+
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
+			if (!ImGui::Begin("Bottom Toolbar", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus |
+							  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing))
+			{
+				ImGui::End();
+				ImGui::PopStyleVar(2);
+				return;
+			}
+
+			float CamPan = *TESRenderWindow::CameraPanSpeed;
+			float CamZoom = *TESRenderWindow::CameraZoomSpeed;
+			float CamRot = *TESRenderWindow::CameraRotationSpeed;
+			float RefMov = *TESRenderWindow::RefMovementSpeed;
+			float RefRot = *TESRenderWindow::RefRotationSpeed;
+			float TOD = _TES->GetSkyTOD();
+			UInt32 Flags = *TESRenderWindow::StateFlags;
+			bool SnapGrid = Flags & TESRenderWindow::kRenderWindowState_SnapToGrid;
+			bool SnapAngle = Flags & TESRenderWindow::kRenderWindowState_SnapToAngle;
+			int GridVal = *TESRenderWindow::SnapGridDistance;
+			int AngleVal = *TESRenderWindow::SnapAngle;
+			TESObjectREFR* SnapRef = *TESRenderWindow::SnapReference;
+
+
+			if (ImGui::Checkbox("Snap Grid", &SnapGrid))
+			{
+				if (SnapGrid)
+					Flags |= TESRenderWindow::kRenderWindowState_SnapToGrid;
+				else
+					Flags &= ~TESRenderWindow::kRenderWindowState_SnapToGrid;
+			} ImGui::SameLine();
+			ImGui::PushItemWidth(50); ImGui::DragInt("##gridDist", &GridVal, 1, 0, 5000); ImGui::PopItemWidth(); ImGui::SameLine(0, 50);
+
+			if (ImGui::Checkbox("Snap Angle", &SnapAngle))
+			{
+				if (SnapAngle)
+					Flags |= TESRenderWindow::kRenderWindowState_SnapToAngle;
+				else
+					Flags &= ~TESRenderWindow::kRenderWindowState_SnapToAngle;
+			} ImGui::SameLine();
+			ImGui::PushItemWidth(50); ImGui::DragInt("##anglVal", &AngleVal, 1, 0, 500); ImGui::PopItemWidth(); ImGui::SameLine(0, 50);
+
+			char Buffer[0x100] = {0};
+			if (SnapRef)
+			{
+				const char* SnapRefID = SnapRef->GetEditorID();
+				FORMAT_STR(Buffer, "%s%s%08X%s", (SnapRefID ? SnapRefID : ""), (SnapRefID ? " (" : ""), SnapRef->formID, (SnapRefID ? ")" : ""));
+			}
+			else
+				FORMAT_STR(Buffer, "Snap Reference");
+
+			ImGui::PushItemWidth(100);
+			if (ImGui::Button(Buffer))
+				SnapRef = TESDialog::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, SnapRef);
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip(Buffer);
+			ImGui::PopItemWidth(); ImGui::SameLine(0, 50);
+
+
+			ImGui::PushItemWidth(100);
+			ImGui::DragFloat("##TOD", &TOD, 0.25f, 0.f, 24.f, "TOD: %.2f");
+			if (ImGui::IsItemHovered() && ImGui::IsItemActive() == false)
+				ImGui::SetTooltip("Time of Day");
+			ImGui::PopItemWidth();
+
+			ImGui::SameLine(XSize - 35);
+			ImGui::PushStyleColor(ImGuiCol_Button, ImColor::HSV(0, 0.6f, 0.6f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImColor::HSV(0, 0.7f, 0.7f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImColor::HSV(0, 0.8f, 0.8f));
+			if (ImGui::Button((BottomExpanded ? " V " : " ^ ")))
+				BottomExpanded = BottomExpanded == false;
+
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip(BottomExpanded ? "Close" : "Expand");
+
+			ImGui::PopStyleColor(3);
+
+			if (BottomExpanded)
+			{
+				ImGui::Text("Camera:"); ImGui::SameLine(0, 10);
+				ImGui::PushItemWidth(125);
+				ImGui::DragFloat("##Cam. Pan", &CamPan, 0.05f, 0.01, 10, "Pan: %.3f"); ImGui::SameLine();
+				ImGui::DragFloat("##Cam. Zoom", &CamZoom, 0.05f, 0.01, 10, "Zoom: %.3f"); ImGui::SameLine();
+				ImGui::DragFloat("##Cam. Rotation", &CamRot, 0.05f, 0.01, 10, "Rotation: %.3f"); ImGui::SameLine(0, 20);
+				ImGui::PopItemWidth();
+
+				ImGui::Text("Reference:"); ImGui::SameLine(0, 10);
+				ImGui::PushItemWidth(125);
+				ImGui::DragFloat("##Ref. Move", &RefMov, 0.05f, 0.01, 10, "Movement: %.3f"); ImGui::SameLine();
+				ImGui::DragFloat("##Ref. Rotation", &RefRot, 0.05f, 0.01, 10, "Rotation: %.3f"); ImGui::SameLine(0, 20);
+				ImGui::PopItemWidth();
+			}
+
+
+			*TESRenderWindow::CameraPanSpeed = CamPan;
+			*TESRenderWindow::CameraZoomSpeed = CamZoom;
+			*TESRenderWindow::CameraRotationSpeed = CamRot;
+			*TESRenderWindow::RefMovementSpeed = RefMov;
+			*TESRenderWindow::RefRotationSpeed = RefRot;
+			*TESRenderWindow::SnapGridDistance = GridVal;
+			*TESRenderWindow::SnapAngle = AngleVal;
+			*TESRenderWindow::StateFlags = Flags;
+			*TESRenderWindow::SnapReference = SnapRef;
+
+			if (TOD != _TES->GetSkyTOD())
+				_TES->SetSkyTOD(TOD);
+
+			ImGui::End();
+			ImGui::PopStyleVar(2);
+		}
+
+		ToolbarOSDLayer::ToolbarOSDLayer()
+		{
+			BottomExpanded = false;
+		}
+
+		ToolbarOSDLayer::~ToolbarOSDLayer()
+		{
+			;//
+		}
+
+		void ToolbarOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
+		{
+			RenderBottomToolbar();
+		}
+
+		bool ToolbarOSDLayer::NeedsBackgroundUpdate()
+		{
+			return false;
+		}
 
 
 	}

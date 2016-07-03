@@ -84,10 +84,9 @@ namespace cse
 			GUIState		State;
 			LayerArrayT		AttachedLayers;
 			bool			Initialized;
+			bool			RenderingLayers;
 
-			void			RenderSelectionControls();
-
-			void			GUILogic();
+			void			RenderLayers();
 			bool			NeedsBackgroundUpdate() const;
 		public:
 			RenderWindowOSD();
@@ -162,5 +161,30 @@ namespace cse
 			static NotificationOSDLayer		Instance;
 		};
 
+		class DebugOSDLayer : public IRenderWindowOSDLayer
+		{
+		public:
+			virtual ~DebugOSDLayer();
+
+			virtual void					Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI);
+			virtual bool					NeedsBackgroundUpdate();
+
+			static DebugOSDLayer			Instance;
+		};
+
+		class ToolbarOSDLayer : public IRenderWindowOSDLayer
+		{
+			bool							BottomExpanded;
+
+			void							RenderBottomToolbar();
+		public:
+			ToolbarOSDLayer();
+			virtual ~ToolbarOSDLayer();
+
+			virtual void					Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI);
+			virtual bool					NeedsBackgroundUpdate();
+
+			static ToolbarOSDLayer			Instance;
+		};
 	}
 }

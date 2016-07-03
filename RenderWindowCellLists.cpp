@@ -86,7 +86,15 @@ namespace cse
 			else
 				FORMAT_STR(Location, "%s (%d,%d)", Cell->GetParentWorldSpace()->name.c_str(), Cell->cellData.coords->x, Cell->cellData.coords->y);
 
-			ImGui::PushID(Cell->formID);
+			char Buffer[0x100] = {0};
+			FORMAT_STR(Buffer, "%s %s %s", EditorID, Name, Location);
+			if (FilterHelper.PassFilter(Buffer) == false)
+				return;
+
+			char Label[0x10] = {0};
+			FORMAT_STR(Label, "%08X-%d", Cell->formID, (UInt32)List);
+
+			ImGui::PushID(Label);
 			if (ImGui::Selectable(EditorID, false, ImGuiSelectableFlags_SpanAllColumns))
 				Out.SelectCell = true;
 			ImGui::PopID();
@@ -113,7 +121,8 @@ namespace cse
 
 		RenderWindowCellLists::OSDLayer::OSDLayer(RenderWindowCellLists* Parent) :
 			IRenderWindowOSDLayer(),
-			Parent(Parent)
+			Parent(Parent),
+			FilterHelper()
 		{
 			SME_ASSERT(Parent);
 		}
@@ -126,6 +135,8 @@ namespace cse
 				ImGui::End();
 				return;
 			}
+
+			FilterHelper.Draw();
 
 			TESObjectCELL* ToSelect = NULL;
 			if (ImGui::CollapsingHeader("Bookmarks"))

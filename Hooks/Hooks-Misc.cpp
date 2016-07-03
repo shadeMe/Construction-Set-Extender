@@ -159,6 +159,17 @@ namespace cse
 			_DefineNopHdlr(ZBufferVertexColorExportB, 0x0046C547, 5);
 			_DefinePatchHdlr(DataHandlerNonParentForm, 0x00483477);
 			_DefineNopHdlr(DataHandlerExportTopicToFile, 0x004EDCFA, 5);
+			_DefineNopHdlr(RenderWindowStatusBarA, 0x0042D338, 5);
+			_DefineNopHdlr(RenderWindowStatusBarB, 0x0042D344, 5);
+			_DefineNopHdlr(RenderWindowStatusBarC, 0x0042D350, 5);
+			_DefineNopHdlr(RenderWindowStatusBarD, 0x0042D65C, 5);
+			_DefineNopHdlr(RenderWindowStatusBarE, 0x0042D668, 5);
+			_DefineNopHdlr(RenderWindowStatusBarF, 0x0042D674, 5);
+			_DefineNopHdlr(RenderWindowStatusBarG, 0x0042D479, 5);
+			_DefineNopHdlr(RenderWindowStatusBarH, 0x0042D488, 5);
+			_DefineNopHdlr(RenderWindowStatusBarI, 0x0042D5DE, 5);
+			_DefineNopHdlr(RenderWindowStatusBarJ, 0x0042D612, 5);
+			_DefineNopHdlr(RenderWindowStatusBarK, 0x00431358, 5);
 
 			_MemHdlr(FileFinderLogMessage).WriteUInt8(0xEB);
 			_MemHdlr(DataHandlerAutoSave).WriteNop();
@@ -191,6 +202,17 @@ namespace cse
 			_MemHdlr(ZBufferVertexColorExportB).WriteNop();
 			_MemHdlr(DataHandlerNonParentForm).WriteUInt8(0xEB);
 			_MemHdlr(DataHandlerExportTopicToFile).WriteNop();
+			_MemHdlr(RenderWindowStatusBarA).WriteNop();
+			_MemHdlr(RenderWindowStatusBarB).WriteNop();
+			_MemHdlr(RenderWindowStatusBarC).WriteNop();
+			_MemHdlr(RenderWindowStatusBarD).WriteNop();
+			_MemHdlr(RenderWindowStatusBarE).WriteNop();
+			_MemHdlr(RenderWindowStatusBarF).WriteNop();
+			_MemHdlr(RenderWindowStatusBarG).WriteNop();
+			_MemHdlr(RenderWindowStatusBarH).WriteNop();
+			_MemHdlr(RenderWindowStatusBarI).WriteNop();
+			_MemHdlr(RenderWindowStatusBarJ).WriteNop();
+			_MemHdlr(RenderWindowStatusBarK).WriteNop();
 
 			const UInt32 kMessageHandlerVTBL = 0x00940760;
 

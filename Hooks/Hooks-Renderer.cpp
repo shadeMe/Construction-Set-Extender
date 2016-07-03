@@ -73,6 +73,7 @@ namespace cse
 		_DefineHookHdlr(TESPathGridGenerateNiNode, 0x0054EE0D);
 		_DefineHookHdlr(CenterCameraOnRefSelection, 0x00428E35);
 		_DefineHookHdlr(TopCameraOnRefSelection, 0x00428FB8);
+		_DefineJumpHdlr(RenderWindowMouseMoveHandler, 0x0042BD88, 0x0042BD8E);
 
 		void PatchRendererHooks(void)
 		{
@@ -130,6 +131,7 @@ namespace cse
 			_MemHdlr(TESPathGridGenerateNiNode).WriteJump();
 			_MemHdlr(CenterCameraOnRefSelection).WriteJump();
 			_MemHdlr(TopCameraOnRefSelection).WriteJump();
+			_MemHdlr(RenderWindowMouseMoveHandler).WriteJump();
 
 			for (int i = 0; i < 4; i++)
 			{

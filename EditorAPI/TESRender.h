@@ -58,6 +58,7 @@ public:
 		// methods
 		void								RenderNode(NiCamera* Camera = NULL, NiNode* NodeToRender = NULL, BSRenderedTexture* RenderToTexture = NULL);
 		void								GetCameraPivot(Vector3* OutPivot, float ScaleFactor);
+		const NiVector3*					GetCameraWorldTranslate();
 
 		void								MoveReferenceSelection(int XOffset, int YOffset, bool AxisX, bool AxisY, bool AxisZ);
 
@@ -242,6 +243,7 @@ public:
 	typedef bool						(*CellObjectListVisitor)(TESObjectREFR* Ref);
 	static UInt32						GetActiveCellObjects(TESObjectREFRArrayT& OutList, CellObjectListVisitor Visitor = NULL);		// enumerates refs in the current interior/exterior grid and returns the count
 	static bool							GetCellInActiveGrid(TESObjectCELL* Cell);	// returns true if the cell is loaded/visible in the render window
+	static std::string					GetCellGeomDescription(TESObjectCELL* Cell);
 
 	static HWND*						WindowHandle;
 	static int*							ScreeWidth;
@@ -259,11 +261,12 @@ public:
 
 	static TESObjectCELL**				ActiveCell;						// points to the current interior cell or the exterior cell at the camera's position
 	static TESLandTexture**				ActiveLandscapeTexture;
+	static TESObjectREFR**				SnapReference;
 
 	static float*						RefMovementSpeed;
 	static float*						RefRotationSpeed;
-	static float*						SnapAngle;
-	static float*						SnapGridDistance;
+	static UInt32*						SnapAngle;
+	static UInt32*						SnapGridDistance;
 	static float*						CameraRotationSpeed;
 	static float*						CameraZoomSpeed;
 	static float*						CameraPanSpeed;
