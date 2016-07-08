@@ -26,6 +26,7 @@ namespace cse
 			this->CaseInsensitiveSearch = (gcnew CheckBox());
 			this->InSelection = (gcnew CheckBox());
 			UseRegEx = gcnew CheckBox();
+			IgnoreComments = gcnew CheckBox;
 			FindReplaceBox->SuspendLayout();
 
 			FindButtonClickHandler = gcnew EventHandler(this, &FindReplaceDialog::FindButton_Click);
@@ -170,6 +171,14 @@ namespace cse
 			this->UseRegEx->TabIndex = 12;
 			this->UseRegEx->Text = L"Use Regular Expressions";
 			this->UseRegEx->UseVisualStyleBackColor = true;
+
+			this->IgnoreComments->AutoSize = true;
+			this->IgnoreComments->Location = System::Drawing::Point(270, 73);
+			this->IgnoreComments->Name = L"IgnoreComments";
+			this->IgnoreComments->Size = System::Drawing::Size(144, 17);
+			this->IgnoreComments->TabIndex = 12;
+			this->IgnoreComments->Text = L"Ignore Comments";
+			this->IgnoreComments->UseVisualStyleBackColor = true;
 			//
 			// SEFindReplace
 			//
@@ -191,6 +200,7 @@ namespace cse
 			FindReplaceBox->Controls->Add(this->QueryBox);
 			FindReplaceBox->Controls->Add(this->LabelReplace);
 			FindReplaceBox->Controls->Add(this->LabelFind);
+			FindReplaceBox->Controls->Add(this->IgnoreComments);
 			FindReplaceBox->FormBorderStyle = FormBorderStyle::FixedToolWindow;
 			FindReplaceBox->Name = L"SEFindReplace";
 			FindReplaceBox->StartPosition = FormStartPosition::CenterScreen;
@@ -232,6 +242,7 @@ namespace cse
 			SAFEDELETE_CLR(MatchWholeWord);
 			SAFEDELETE_CLR(CaseInsensitiveSearch);
 			SAFEDELETE_CLR(InSelection);
+			SAFEDELETE_CLR(IgnoreComments);
 
 			ParentView = nullptr;
 		}
@@ -420,17 +431,19 @@ namespace cse
 			QueryBox->Focus();
 		}
 
-		UInt32 FindReplaceDialog::GetSelectedOptions()
+		textEditors::IScriptTextEditor::FindReplaceOptions FindReplaceDialog::GetSelectedOptions()
 		{
-			UInt32 Options = 0;
+			textEditors::IScriptTextEditor::FindReplaceOptions Options = (textEditors::IScriptTextEditor::FindReplaceOptions)0;
 			if (CaseInsensitiveSearch->Checked)
-				Options |= (UInt32)textEditors::IScriptTextEditor::FindReplaceOptions::CaseInsensitive;
+				Options = Options | textEditors::IScriptTextEditor::FindReplaceOptions::CaseInsensitive;
 			if (MatchWholeWord->Checked)
-				Options |= (UInt32)textEditors::IScriptTextEditor::FindReplaceOptions::MatchWholeWord;
+				Options = Options | textEditors::IScriptTextEditor::FindReplaceOptions::MatchWholeWord;
 			if (UseRegEx->Checked)
-				Options |= (UInt32)textEditors::IScriptTextEditor::FindReplaceOptions::RegEx;
+				Options = Options | textEditors::IScriptTextEditor::FindReplaceOptions::RegEx;
 			if (InSelection->Checked)
-				Options |= (UInt32)textEditors::IScriptTextEditor::FindReplaceOptions::InSelection;
+				Options = Options | textEditors::IScriptTextEditor::FindReplaceOptions::InSelection;
+			if (IgnoreComments->Checked)
+				Options = Options | textEditors::IScriptTextEditor::FindReplaceOptions::IgnoreComments;
 
 			return Options;
 		}
@@ -451,6 +464,11 @@ namespace cse
 				UseRegEx->Checked = true;
 			else
 				UseRegEx->Checked = false;
+
+			if (PREFERENCES->FetchSettingAsInt("IgnoreComments", "FindReplace"))
+				IgnoreComments->Checked = true;
+			else
+				IgnoreComments->Checked = false;
 		}
 
 		void FindReplaceDialog::SaveOptions()
@@ -458,6 +476,7 @@ namespace cse
 			PREFERENCES->FetchSetting("CaseInsensitive", "FindReplace")->SetValue(((int)CaseInsensitiveSearch->Checked).ToString());
 			PREFERENCES->FetchSetting("MatchWholeWord", "FindReplace")->SetValue(((int)MatchWholeWord->Checked).ToString());
 			PREFERENCES->FetchSetting("UseRegEx", "FindReplace")->SetValue(((int)UseRegEx->Checked).ToString());
+			PREFERENCES->FetchSetting("IgnoreComments", "FindReplace")->SetValue(((int)IgnoreComments->Checked).ToString());
 		}
 	}
 }

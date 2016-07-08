@@ -6292,7 +6292,7 @@ bool ImGui::InputScalarAsWidgetReplacement(const ImRect& aabb, const char* label
     if (g.ScalarAsInputTextId == 0)
     {
         // First frame
-        IM_ASSERT(g.ActiveId == id);    // InputText ID expected to match the Slider ID (else we'd need to store them both, which is also possible)
+    //    IM_ASSERT(g.ActiveId == id);    // InputText ID expected to match the Slider ID (else we'd need to store them both, which is also possible)
         g.ScalarAsInputTextId = g.ActiveId;
         SetHoveredID(id);
     }

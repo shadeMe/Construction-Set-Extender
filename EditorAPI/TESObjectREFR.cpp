@@ -17,6 +17,13 @@ bool TESObjectREFR::SetBaseForm(TESForm* BaseForm)
 
 void TESObjectREFR::SetPersistent(bool Persistent)
 {
+	if (Persistent == false)
+	{
+		TESActorBaseData* Data = CS_CAST(baseForm, TESForm, TESActorBaseData);
+		if (Data && Data->HasNoLowLevelProcessing() == false)
+			return;		// actors with low level processing are always persistent
+	}
+
 	thisCall<UInt32>(0x0053F0D0, this, Persistent);
 }
 

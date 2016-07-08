@@ -798,16 +798,16 @@ namespace cse
 			ScopeCrumbBar = gcnew DotNetBar::CrumbBar();
 			ScopeCrumbBar->AutoSize = false;
 			ScopeCrumbBar->Dock = DockStyle::Top;
-			ScopeCrumbBar->BackgroundStyle->BackColor = BackgroundColor;
+	//		ScopeCrumbBar->BackgroundStyle->BackColor = BackgroundColor;
 			ScopeCrumbBar->BackgroundStyle->BorderBottom = DevComponents::DotNetBar::eStyleBorderType::DashDotDot;
 			ScopeCrumbBar->BackgroundStyle->BorderBottomWidth = 2;
-			ScopeCrumbBar->BackgroundStyle->BorderColor = System::Drawing::Color::FromArgb(200, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B);
-			ScopeCrumbBar->BackgroundStyle->BorderColor2 = System::Drawing::Color::FromArgb(200, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B);
+	//		ScopeCrumbBar->BackgroundStyle->BorderColor = System::Drawing::Color::FromArgb(200, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B);
+	//		ScopeCrumbBar->BackgroundStyle->BorderColor2 = System::Drawing::Color::FromArgb(200, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B);
 			ScopeCrumbBar->BackgroundStyle->BorderLeft = DevComponents::DotNetBar::eStyleBorderType::None;
 			ScopeCrumbBar->BackgroundStyle->BorderRight = DevComponents::DotNetBar::eStyleBorderType::None;
 			ScopeCrumbBar->BackgroundStyle->BorderTop = DevComponents::DotNetBar::eStyleBorderType::None;
 			ScopeCrumbBar->FadeEffect = false;
-			ScopeCrumbBar->Font = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"), 9);
+			ScopeCrumbBar->Font = gcnew Font("Segoe UI", 9);
 			ScopeCrumbBar->Margin = Padding(20, 0, 20, 0);
 			ScopeCrumbBar->Padding = Padding(20, 0, 20, 0);
 	//		ScopeCrumbBar->ResetBackgroundStyle();
@@ -955,8 +955,7 @@ namespace cse
 
 			ToolBarGlobalFindList->ToolTipText = "Global Find Result List";
 			ToolBarGlobalFindList->AutoSize = true;
-			ToolBarGlobalFindList->Margin = ToolBarButtonPaddingLarge;
-			ToolBarGlobalFindList->Alignment = ToolStripItemAlignment::Right;
+			ToolBarGlobalFindList->Margin = ToolBarButtonPaddingRegular;
 
 			ToolBarSaveAll->ToolTipText = "Save All Open Scripts";
 			ToolBarSaveAll->AutoSize = true;
@@ -1085,7 +1084,6 @@ namespace cse
 			WorkspaceMainToolBar->Items->Add(ToolBarOptions);
 			WorkspaceMainToolBar->Items->Add(ToolBarNavigationForward);
 			WorkspaceMainToolBar->Items->Add(ToolBarNavigationBack);
-			WorkspaceMainToolBar->Items->Add(ToolBarGlobalFindList);
 			WorkspaceMainToolBar->Items->Add(ToolBarSaveAll);
 			WorkspaceMainToolBar->ShowItemToolTips = true;
 
@@ -1093,6 +1091,7 @@ namespace cse
 			WorkspaceSecondaryToolBar->Dock = DockStyle::Bottom;
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarMessageList);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarFindList);
+			WorkspaceSecondaryToolBar->Items->Add(ToolBarGlobalFindList);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarBookmarkList);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarDumpScript);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarLoadScript);
@@ -3034,10 +3033,13 @@ namespace cse
 		}
 
 		int ConcreteWorkspaceViewController::FindReplace(IWorkspaceView^ View, textEditors::IScriptTextEditor::FindReplaceOperation Operation,
-														  String^ Query, String^ Replacement, UInt32 Options, bool Global)
+														  String^ Query, String^ Replacement, textEditors::IScriptTextEditor::FindReplaceOptions Options, bool Global)
 		{
 			Debug::Assert(View != nullptr);
 			ConcreteWorkspaceView^ Concrete = (ConcreteWorkspaceView^)View;
+
+			if (Query->Length == 0)
+				return -1;
 
 			if (Global)
 			{

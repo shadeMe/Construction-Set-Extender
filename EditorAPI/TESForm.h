@@ -184,6 +184,8 @@ public:
 	bool							IsQuestItem() const;
 	bool							IsDeleted() const;
 	bool							IsTemporary() const;
+	bool							IsVWD() const;
+	bool							IsInitiallyDisabled() const;
 
 	bool							SetEditorID(const char* EditorID);
 	TESFile*						GetOverrideFile(int Index) const;
@@ -210,6 +212,8 @@ public:
 	const char*						GetTypeIDString(void);
 	void							GetDataFromDialog(HWND Dialog);
 	void							SetDataInDialog(HWND Dialog);
+	void							SetInitiallyDisabled(bool State);
+	void							SetVWD(bool State);
 
 	static TESForm*					CreateInstance(UInt8 TypeID);
 	void							DeleteInstance();

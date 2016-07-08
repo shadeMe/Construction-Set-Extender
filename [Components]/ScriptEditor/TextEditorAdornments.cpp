@@ -39,8 +39,8 @@ namespace cse
 
 		void ScopeBreadcrumbManager::ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E)
 		{
-			Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
-			Root->ForeColor = ForegroundColor;
+		//	Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
+			Root->ForeColor = Control::DefaultForeColor;
 
 			if (Bound)
 				RefreshCrumbs();
@@ -104,8 +104,8 @@ namespace cse
 			NewItem->Tag = gcnew CrumbData(BoundParent, Source);
 			NewItem->Image = GetScopeIcon(Source->Type);
 
-			Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
-			NewItem->ForeColor = ForegroundColor;
+		//	Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
+			NewItem->ForeColor = Control::DefaultForeColor;
 			NewItem->HotTrackingStyle = DotNetBar::eHotTrackingStyle::None;
 
 			ActiveCrumbs->Add(Source, NewItem);
@@ -136,8 +136,8 @@ namespace cse
 			InstanceCounter++;
 
 			Root = gcnew DotNetBar::CrumbBarItem();
-			Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
-			Root->ForeColor = ForegroundColor;
+	//		Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
+			Root->ForeColor = Control::DefaultForeColor;
 			Root->Image = GetScopeIcon(obScriptParsing::Structurizer::Node::NodeType::Invalid);
 
 			ParentLineChangedHandler = gcnew EventHandler(this, &ScopeBreadcrumbManager::Parent_LineChanged);

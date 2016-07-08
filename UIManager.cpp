@@ -769,6 +769,8 @@ namespace cse
 			;//
 		}
 
+#define IDC_FINDTEXT_OPENSCRIPTS				9014
+
 		LRESULT CALLBACK FindTextDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 												bool& Return, bgsee::WindowExtraDataCollection* ExtraData )
 		{
@@ -826,10 +828,74 @@ namespace cse
 			case WM_NOTIFY:
 				switch (((LPNMHDR)lParam)->code)
 				{
+				case NM_RCLICK:
+					{
+						NMHDR* Data = (NMHDR*)lParam;
+						TESFormArrayT Selection;
+
+						if (Data->idFrom == kFindTextListView_Objects)
+						{
+							int Index = -1;
+							while ((Index = ListView_GetNextItem(Data->hwndFrom, Index, LVNI_SELECTED)) != -1)
+							{
+								TESForm* Form = (TESForm*)TESListView::GetItemData(Data->hwndFrom, Index);
+								SME_ASSERT(Form);
+
+								Script* FoundScript = CS_CAST(Form, TESForm, Script);
+								if (FoundScript)
+									Selection.push_back(FoundScript);
+							}
+
+							if (Selection.size())
+							{
+								HMENU Popup = CreatePopupMenu();
+								MENUITEMINFO Item = { 0 };
+								Item.cbSize = sizeof(MENUITEMINFO);
+								Item.fMask = MIIM_STATE | MIIM_TYPE | MIIM_ID;
+								Item.fType = MFT_STRING;
+
+								Item.fState = MFS_ENABLED;
+								Item.dwTypeData = "Open in Script Editor";
+								Item.cch = strlen((const char*)Item.dwTypeData);
+								Item.wID = IDC_FINDTEXT_OPENSCRIPTS;
+								InsertMenuItem(Popup, -1, TRUE, &Item);
+
+								POINT CursorPos = { 0 };
+								GetCursorPos(&CursorPos);
+
+								switch (TrackPopupMenu(Popup, TPM_RETURNCMD, CursorPos.x, CursorPos.y, NULL, hWnd, NULL))
+								{
+								case IDC_FINDTEXT_OPENSCRIPTS:
+									{
+										componentDLLInterface::ScriptData** Data = new componentDLLInterface::ScriptData*[Selection.size()];
+										for (int i = 0; i < Selection.size(); i++)
+											Data[i] = new componentDLLInterface::ScriptData((Script*)Selection[i]);
+
+										RECT ScriptEditorLoc;
+										TESDialog::ReadBoundsFromINI("Script Edit", &ScriptEditorLoc);
+										char Buffer[0x100] = {0};
+										GetDlgItemText(hWnd, kFindTextTextBox_Query, Buffer, sizeof(Buffer));
+										cse::cliWrapper::interfaces::SE->InstantiateEditorsAndHighlight(Data,
+																										Selection.size(),
+																										Buffer,
+																										ScriptEditorLoc.left, ScriptEditorLoc.top,
+																										ScriptEditorLoc.right, ScriptEditorLoc.bottom);
+									}
+
+									break;
+								}
+
+								DestroyMenu(Popup);
+							}
+						}
+
+						break;
+					}
+
 				case LVN_BEGINDRAG:
 					{
 						NMLISTVIEW* Data = (NMLISTVIEW*)lParam;
-						std::list<TESForm*> Selection;
+						TESFormArrayT Selection;
 
 						switch (Data->hdr.idFrom)
 						{
@@ -853,7 +919,7 @@ namespace cse
 						{
 							_RENDERSEL->ClearSelection(true);
 
-							for (std::list<TESForm*>::iterator Itr = Selection.begin(); Itr != Selection.end(); ++Itr)
+							for (TESFormArrayT::iterator Itr = Selection.begin(); Itr != Selection.end(); ++Itr)
 								_RENDERSEL->AddToSelection(*Itr);
 
 							kDraggingForms = true;
@@ -872,7 +938,19 @@ namespace cse
 						switch (Form->formType)
 						{
 						case TESForm::kFormType_Script:
-							TESDialog::ShowScriptEditorDialog(Form);
+							{
+								componentDLLInterface::ScriptData* Data = new componentDLLInterface::ScriptData(CS_CAST(Form, TESForm, Script));
+
+								RECT ScriptEditorLoc;
+								TESDialog::ReadBoundsFromINI("Script Edit", &ScriptEditorLoc);
+								char Buffer[0x100] = { 0 };
+								GetDlgItemText(hWnd, kFindTextTextBox_Query, Buffer, sizeof(Buffer));
+								cse::cliWrapper::interfaces::SE->InstantiateEditorAndHighlight(Data,
+																								Buffer,
+																								ScriptEditorLoc.left, ScriptEditorLoc.top,
+																								ScriptEditorLoc.right, ScriptEditorLoc.bottom);
+							}
+
 							break;
 						case TESForm::kFormType_REFR:
 							_TES->LoadCellIntoViewPort((CS_CAST(Form, TESForm, TESObjectREFR))->GetPosition(), CS_CAST(Form, TESForm, TESObjectREFR));

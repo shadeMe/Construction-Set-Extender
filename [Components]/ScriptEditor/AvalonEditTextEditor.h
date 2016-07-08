@@ -247,7 +247,7 @@ namespace cse
 																								 IScriptTextEditor::FindReplaceOperation Operation,
 																								 AvalonEdit::Document::DocumentLine^ Line,
 																								 String^ Replacement,
-																								 UInt32 Options);
+																								 IScriptTextEditor::FindReplaceOptions Options);
 				void										StartMiddleMouseScroll(System::Windows::Input::MouseButtonEventArgs^ E);
 				void										StopMiddleMouseScroll();
 
@@ -411,7 +411,7 @@ namespace cse
 				virtual IScriptTextEditor::FindReplaceResult^	FindReplace(IScriptTextEditor::FindReplaceOperation Operation,
 																		String^ Query,
 																		String^ Replacement,
-																		UInt32 Options);
+																		IScriptTextEditor::FindReplaceOptions Options);
 
 				virtual void								ScrollToLine(UInt32 LineNumber);
 				virtual Point								PointToScreen(Point Location);

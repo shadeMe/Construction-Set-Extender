@@ -1,5 +1,9 @@
 ﻿#include "RenderWindowOSD.h"
 #include <bgsee\RenderWindowFlyCamera.h>
+#include "IMGUI\imgui_internal.h"
+#include "RenderWindowManager.h"
+#include "Achievements.h"
+#include "Construction Set Extender_Resource.h"
 
 namespace cse
 {
@@ -147,6 +151,15 @@ namespace cse
 		{
 			// Build texture atlas
 			ImGuiIO& io = ImGui::GetIO();
+			ImFontConfig config;
+			config.OversampleH = 8;
+			config.OversampleV = 8;
+
+			std::string FontPath(BGSEEWORKSPACE->GetDefaultWorkspace());
+			FontPath += "Data\\Fonts\\DroidSans.ttf";
+			if (_FILEFINDER->FindFile("Fonts\\DroidSans.ttf") == FileFinder::kFileStatus_Unpacked)
+				io.Fonts->AddFontFromFileTTF(FontPath.c_str(), 15, &config);
+
 			unsigned char* pixels;
 			int width, height, bytes_per_pixel;
 			io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height, &bytes_per_pixel);
@@ -179,6 +192,7 @@ namespace cse
 			TicksPerSecond = 0;
 			RenderWindowHandle = NULL;
 			D3DDevice = NULL;
+			MouseDoubleClicked[0] = MouseDoubleClicked[1] = false;
 			Initialized = false;
 		}
 
@@ -218,7 +232,7 @@ namespace cse
 			io.KeyMap[ImGuiKey_X] = 'X';
 			io.KeyMap[ImGuiKey_Y] = 'Y';
 			io.KeyMap[ImGuiKey_Z] = 'Z';
-			io.MouseDoubleClickTime = 1.f;			// need to use a large value here as we aren't updating the GUI every tick
+			io.MouseDoubleClickTime = 1.f;
 			io.RenderDrawListsFn = RenderDrawLists;
 			io.UserData = this;
 
@@ -261,8 +275,32 @@ namespace cse
 			io.KeyAlt = (GetKeyState(VK_MENU) & 0x8000) != 0;
 			io.KeySuper = false;
 
+			// set up colors
+			ImGuiStyle& style = ImGui::GetStyle();
+			style.Colors[ImGuiCol_WindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.78f);
+			style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.61f);
+			style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.90f, 0.80f, 0.80f, 0.49f);
+			style.Colors[ImGuiCol_TitleBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.31f);
+			style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 0.20f);
+			style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.00f, 0.00f, 0.00f, 0.78f);
+			style.Colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.40f, 0.40f, 0.80f, 0.53f);
+			style.Colors[ImGuiCol_Button] = ImVec4(0.35f, 0.55f, 0.61f, 0.51f);
+			style.Colors[ImGuiCol_Header] = ImVec4(0.69f, 0.42f, 0.39f, 0.00f);
+			style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.69f, 0.42f, 0.44f, 0.44f);
+
 			// Start the frame
 			ImGui::NewFrame();
+
+			// manually update the double click state as ImGui's default polling doesn't consistently catch the events given our conditional rendering
+			io.MouseDoubleClicked[0] = MouseDoubleClicked[0];
+			io.MouseDoubleClicked[1] = MouseDoubleClicked[1];
+		}
+
+		void ImGuiDX9::Render()
+		{
+			ImGui::Render();
+
+			MouseDoubleClicked[0] = MouseDoubleClicked[1] = false;
 		}
 
 		void ImGuiDX9::InvalidateDeviceObjects()
@@ -296,6 +334,7 @@ namespace cse
 		bool ImGuiDX9::UpdateInputState(HWND, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			ImGuiIO& io = ImGui::GetIO();
+
 			switch (msg)
 			{
 			case WM_LBUTTONDOWN:
@@ -336,6 +375,12 @@ namespace cse
 				if (wParam > 0 && wParam < 0x10000)
 					io.AddInputCharacter((unsigned short)wParam);
 				return true;
+			case WM_LBUTTONDBLCLK:
+				MouseDoubleClicked[0] = true;
+				return true;
+			case WM_RBUTTONDBLCLK:
+				MouseDoubleClicked[1] = true;
+				return true;
 			}
 
 			return false;
@@ -350,6 +395,43 @@ namespace cse
 		bool ImGuiDX9::IsInitialized() const
 		{
 			return Initialized;
+		}
+
+		bool ImGuiDX9::IsDraggingWindow() const
+		{
+			if (Initialized == false)
+				return false;
+
+			ImGuiContext* RenderContext = ImGui::GetCurrentContext();
+			if (ImGui::IsMouseDragging() && RenderContext->ActiveId == RenderContext->MovedWindowMoveId)
+				return true;
+			else
+				return false;
+		}
+
+		IRenderWindowOSDLayer::IRenderWindowOSDLayer(INISetting& Toggle, UInt32 Priority) :
+			Toggle(&Toggle),
+			Priority(Priority)
+		{
+			;//
+		}
+
+		IRenderWindowOSDLayer::IRenderWindowOSDLayer(UInt32 Priority) :
+			Toggle(NULL),
+			Priority(Priority)
+		{
+			;//
+		}
+
+		UInt32 IRenderWindowOSDLayer::GetPriority() const
+		{
+			return Priority;
+		}
+
+
+		bool IRenderWindowOSDLayer::IsEnabled() const
+		{
+			return Toggle == NULL || Toggle->GetData().i == 1;
 		}
 
 		RenderWindowOSD::DialogExtraData::DialogExtraData(RenderWindowOSD* OSD) :
@@ -403,18 +485,27 @@ namespace cse
 				return DlgProcResult;
 			}
 
-			// don't update input state if the mouse/keyboard is captured elsewhere or if the render window doesn't have input focus
-			if (GetCapture() != hWnd && GetActiveWindow() == hWnd)
+			// get input data and flag the viewport for update
+			if (Pipeline->UpdateInputState(hWnd, uMsg, wParam, lParam))
 			{
-				// get input data and flag the viewport for update
-				if (Pipeline->UpdateInputState(hWnd, uMsg, wParam, lParam))
+				if (GetCapture() != hWnd && GetActiveWindow() == hWnd)
 				{
 					TESRenderWindow::Redraw();
 
 					// check if the GUI needs input, skip the org wndproc if true
 					// the check is performed on the previous frame's state but it works for our purposes
 					if (Pipeline->NeedsInput())
-						Return = true;
+					{
+						if (uMsg != WM_KEYDOWN && uMsg != WM_KEYUP)
+							Return = true;
+						else
+						{
+							// special-case shortcuts
+							ImGuiIO& io = ImGui::GetIO();
+							if (io.WantTextInput)
+								Return = true;
+						}
+					}
 				}
 			}
 
@@ -474,7 +565,10 @@ namespace cse
 		{
 			SME::MiscGunk::ScopedSetter<bool> Sentry(RenderingLayers, true);
 			for each (auto Itr in AttachedLayers)
-				Itr->Draw(this, Pipeline);
+			{
+				if (Itr->IsEnabled())
+					Itr->Draw(this, Pipeline);
+			}
 		}
 
 		bool RenderWindowOSD::NeedsBackgroundUpdate() const
@@ -520,6 +614,7 @@ namespace cse
 			AttachLayer(&MouseOverTooltipOSDLayer::Instance);
 			AttachLayer(&NotificationOSDLayer::Instance);
 			AttachLayer(&ToolbarOSDLayer::Instance);
+			AttachLayer(&SelectionControlsOSDLayer::Instance);
 #ifndef NDEBUG
 			AttachLayer(&DebugOSDLayer::Instance);
 #endif
@@ -536,6 +631,7 @@ namespace cse
 			DetachLayer(&MouseOverTooltipOSDLayer::Instance);
 			DetachLayer(&NotificationOSDLayer::Instance);
 			DetachLayer(&ToolbarOSDLayer::Instance);
+			DetachLayer(&SelectionControlsOSDLayer::Instance);
 #ifndef NDEBUG
 			DetachLayer(&DebugOSDLayer::Instance);
 #endif
@@ -549,7 +645,7 @@ namespace cse
 				if (RenderingLayers == false)
 				{
 					// defer the final render call until all layers are done drawing
-					ImGui::Render();
+					Pipeline->Render();
 				}
 			}
 		}
@@ -561,7 +657,11 @@ namespace cse
 			if (std::find(AttachedLayers.begin(), AttachedLayers.end(), Layer) != AttachedLayers.end())
 				BGSEECONSOLE_MESSAGE("Attempting to re-add the same OSD layer");
 			else
+			{
 				AttachedLayers.push_back(Layer);
+				std::sort(AttachedLayers.begin(), AttachedLayers.end(),
+						  [](const IRenderWindowOSDLayer* LHS, const IRenderWindowOSDLayer* RHS) { return LHS->GetPriority() > RHS->GetPriority(); });
+			}
 		}
 
 		void RenderWindowOSD::DetachLayer(IRenderWindowOSDLayer* Layer)
@@ -594,6 +694,12 @@ namespace cse
 
 		DefaultOverlayOSDLayer		DefaultOverlayOSDLayer::Instance;
 
+		DefaultOverlayOSDLayer::DefaultOverlayOSDLayer() :
+			IRenderWindowOSDLayer(settings::renderWindowOSD::kShowInfoOverlay, IRenderWindowOSDLayer::kPriority_DefaultOverlay)
+		{
+			;//
+		}
+
 		DefaultOverlayOSDLayer::~DefaultOverlayOSDLayer()
 		{
 			;//
@@ -601,12 +707,15 @@ namespace cse
 
 		void DefaultOverlayOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
+			static const float FirstCoulmnWidth = 150;
+
 			ImGui::SetNextWindowPos(ImVec2(10, 10));
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 6));
-			if (!ImGui::Begin("Default Info Overlay", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoBringToFrontOnFocus))
+			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.85f);
+			if (!ImGui::Begin("Default Info Overlay", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing))
 			{
 				ImGui::End();
-				ImGui::PopStyleVar();
+				ImGui::PopStyleVar(2);
 				return;
 			}
 
@@ -618,152 +727,158 @@ namespace cse
 			const NiVector3* CameraCoords = _PRIMARYRENDERER->GetCameraWorldTranslate();
 
 			ImGui::Columns(2, "Cell and Cam Data", false);
-			if (CurrentCell)
 			{
-				char Buffer[0x50] = { 0 };
-				if (CurrentCell->GetIsInterior())
-					FORMAT_STR(Buffer, "%s (%08X)", CurrentCell->GetEditorID(), CurrentCell->formID);
-				else
+				if (CurrentCell)
 				{
-					FORMAT_STR(Buffer, "%s %d,%d (%08X)", CurrentCell->GetEditorID(), CurrentCell->cellData.coords->x,
-							   CurrentCell->cellData.coords->y, CurrentCell->formID);
-				}
-
-				ImGui::Text("Current Cell:"); ImGui::SameLine(); ImGui::TextDisabled("(?)"); ImGui::NextColumn();
-				if (ImGui::IsItemHovered())
-				{
-					std::string Geom(TESRenderWindow::GetCellGeomDescription(CurrentCell).c_str());
-					SME::StringHelpers::Tokenizer Extractor(Geom.c_str(), ",");
-					std::string CurrentArg, Extract;
-					int Count = 0;
-					while (Extractor.NextToken(CurrentArg) != -1)
+					char Buffer[0x50] = { 0 };
+					if (CurrentCell->GetIsInterior())
+						FORMAT_STR(Buffer, "%s (%08X)", CurrentCell->GetEditorID(), CurrentCell->formID);
+					else
 					{
-						switch (Count)
-						{
-						case 1:
-						case 2:
-						case 3:
-							Extract += "  " + CurrentArg.substr(1) + "\n";
-							break;
-						}
-
-						Count++;
+						FORMAT_STR(Buffer, "%s %d,%d (%08X)", CurrentCell->GetEditorID(), CurrentCell->cellData.coords->x,
+								   CurrentCell->cellData.coords->y, CurrentCell->formID);
 					}
-					ImGui::SetTooltip("Geometry:\n%s", Extract.c_str());
+
+					ImGui::Text("Current Cell:"); ImGui::SameLine(); ImGui::TextDisabled("  (?)"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+					if (ImGui::IsItemHovered())
+					{
+						std::string Geom(TESRenderWindow::GetCellGeomDescription(CurrentCell).c_str());
+						SME::StringHelpers::Tokenizer Extractor(Geom.c_str(), ",");
+						std::string CurrentArg, Extract;
+						int Count = 0;
+						while (Extractor.NextToken(CurrentArg) != -1)
+						{
+							switch (Count)
+							{
+							case 1:
+							case 2:
+							case 3:
+								Extract += "  " + CurrentArg.substr(1) + "\n";
+								break;
+							}
+
+							Count++;
+						}
+						ImGui::SetTooltip("Geometry:\n%s", Extract.c_str());
+					}
+					ImGui::Text("%s  ", Buffer); ImGui::NextColumn();
+
+					ImGui::Text("Camera:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+					ImGui::Text("%.0f, %0.f, %0.f  ", CameraCoords->x, CameraCoords->y, CameraCoords->z); ImGui::NextColumn();
+					ImGui::Separator();
 				}
-				ImGui::Text("%s  ", Buffer); ImGui::NextColumn();
-
-				ImGui::Text("Camera:"); ImGui::NextColumn(); ImGui::Text("%.0f, %0.f, %0.f  ", CameraCoords->x, CameraCoords->y, CameraCoords->z); ImGui::NextColumn();
-				ImGui::Separator();
 			}
-
 			ImGui::Columns(1);
-
-			ImGui::Columns(2, "Selection Data", false);
 			SME::StringHelpers::GetRGB(settings::renderWindowOSD::kColorSelectionStats().s, R, G, B);
 
-			if (_RENDERSEL->selectionCount)
+			ImGui::Columns(2, "Selection Data", false);
 			{
-				char Buffer[0x200] = { 0 };
+				if (_RENDERSEL->selectionCount)
+				{
+					char Buffer[0x200] = { 0 };
 
-				if (_RENDERSEL->selectionCount > 1)
-				{
-					ImGui::TextColored(ImColor(R, G, B), "%d Objects Selected", _RENDERSEL->selectionCount); ImGui::NextColumn(); ImGui::NextColumn();
-					ImGui::TextColored(ImColor(R, G, B), "Nominal Center:"); ImGui::NextColumn();
-					ImGui::TextColored(ImColor(R, G, B), "%.04f, %.04f, %.04f   ", _RENDERSEL->selectionPositionVectorSum.x,
-									   _RENDERSEL->selectionPositionVectorSum.y, _RENDERSEL->selectionPositionVectorSum.z); ImGui::NextColumn();
-				}
-				else
-				{
-					TESObjectREFR* Selection = CS_CAST(_RENDERSEL->selectionList->Data, TESForm, TESObjectREFR);
-					if (Selection)	// in the off-chance that the selection contains a regular form
+					if (_RENDERSEL->selectionCount > 1)
 					{
-						ImGui::TextColored(ImColor(R, G, B), "%s(%08X)", ((Selection->editorID.Size()) ? (Selection->editorID.c_str()) : ("")), Selection->formID); ImGui::NextColumn();
-						ImGui::TextColored(ImColor(R, G, B), "%s", TESForm::GetFormTypeIDLongName(Selection->baseForm->formType)); ImGui::NextColumn();
-
-						ImGui::TextColored(ImColor(R, G, B), "Base Form:"); ImGui::NextColumn(); ImGui::TextColored(ImColor(R, G, B), "%s(%08X)",
-							((Selection->baseForm->editorID.Size()) ? (Selection->baseForm->editorID.c_str()) : ("")), Selection->baseForm->formID); ImGui::NextColumn();
-
-						ImGui::TextColored(ImColor(R, G, B), "Position:"); ImGui::NextColumn();
-						ImGui::TextColored(ImColor(R, G, B), "%.03f, %.03f, %.03f   ", Selection->position.x, Selection->position.y, Selection->position.z); ImGui::NextColumn();
-
-						ImGui::TextColored(ImColor(R, G, B), "Rotation:"); ImGui::NextColumn();
-						ImGui::TextColored(ImColor(R, G, B), "%.03f, %.03f, %.03f   ",
-										   Selection->rotation.x * 57.2957763671875,
-										   Selection->rotation.y * 57.2957763671875,
-										   Selection->rotation.z * 57.2957763671875); ImGui::NextColumn();
-
-						ImGui::TextColored(ImColor(R, G, B), "Scale:"); ImGui::NextColumn(); ImGui::TextColored(ImColor(R, G, B), "%0.3f", Selection->scale); ImGui::NextColumn();
-
-						ImGui::TextColored(ImColor(R, G, B), "Flags:");  ImGui::SameLine(); ImGui::TextDisabled("(?) "); ImGui::NextColumn();
-						if (ImGui::IsItemHovered())
+						ImGui::TextColored(ImColor(R, G, B), "%d Objects Selected", _RENDERSEL->selectionCount); ImGui::NextColumn(); ImGui::NextColumn();
+						ImGui::TextColored(ImColor(R, G, B), "Nominal Center:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+						ImGui::TextColored(ImColor(R, G, B), "%.3f, %.3f, %.3f   ", _RENDERSEL->selectionPositionVectorSum.x,
+										   _RENDERSEL->selectionPositionVectorSum.y, _RENDERSEL->selectionPositionVectorSum.z); ImGui::NextColumn();
+					}
+					else
+					{
+						TESObjectREFR* Selection = CS_CAST(_RENDERSEL->selectionList->Data, TESForm, TESObjectREFR);
+						if (Selection)	// in the off-chance that the selection contains a regular form
 						{
-							ImGui::SetTooltip("P  - Persistent\nD  - Initially Disabled\nV  - Visible When Distant\nI  - Invisible (Editor only)\nCI - Children Invisible (Editor only)\nF  - Frozen (Editor only)");
-						}
-						ImGui::TextColored(ImColor(R, G, B), "%s %s %s %s %s %s   ",
-										   ((Selection->formFlags & TESForm::kFormFlags_QuestItem) ? ("P") : ("-")),
-										   ((Selection->formFlags & TESForm::kFormFlags_Disabled) ? ("D") : ("-")),
-										   ((Selection->formFlags & TESForm::kFormFlags_VisibleWhenDistant) ? ("V") : ("-")),
-										   (Selection->GetInvisible() ? ("I") : ("-")),
-										   (Selection->GetChildrenInvisible() ? ("CI") : ("-")),
-										   (Selection->GetFrozen() ? ("F") : ("-"))); ImGui::NextColumn();
+							ImGui::TextColored(ImColor(R, G, B), "%s(%08X)", ((Selection->editorID.Size()) ? (Selection->editorID.c_str()) : ("")), Selection->formID); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+							ImGui::TextColored(ImColor(R, G, B), "%s", TESForm::GetFormTypeIDLongName(Selection->baseForm->formType)); ImGui::NextColumn();
 
-						BSExtraData* xData = Selection->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
-						char xBuffer[0x50] = { 0 };
-						if (xData)
-						{
-							ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
-							ImGui::TextColored(ImColor(R, G, B), "Parent:"); ImGui::NextColumn();
-							ImGui::TextColored(ImColor(R, G, B), "%s(%08X) %s   ",
-											((xParent->parent->editorID.Size()) ? (xParent->parent->editorID.c_str()) : ("")),
-											xParent->parent->formID,
-											(xParent->oppositeState ? "[X]" : "")); ImGui::NextColumn();
+							ImGui::TextColored(ImColor(R, G, B), "Base Form:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+							ImGui::TextColored(ImColor(R, G, B), "%s(%08X)",
+								((Selection->baseForm->editorID.Size()) ? (Selection->baseForm->editorID.c_str()) : ("")), Selection->baseForm->formID); ImGui::NextColumn();
+
+							ImGui::TextColored(ImColor(R, G, B), "Position:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+							ImGui::TextColored(ImColor(R, G, B), "%.03f, %.03f, %.03f   ", Selection->position.x, Selection->position.y, Selection->position.z); ImGui::NextColumn();
+
+							ImGui::TextColored(ImColor(R, G, B), "Rotation:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+							ImGui::TextColored(ImColor(R, G, B), "%.03f, %.03f, %.03f   ",
+											   Selection->rotation.x * 57.2957763671875,
+											   Selection->rotation.y * 57.2957763671875,
+											   Selection->rotation.z * 57.2957763671875); ImGui::NextColumn();
+
+							ImGui::TextColored(ImColor(R, G, B), "Scale:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+							ImGui::TextColored(ImColor(R, G, B), "%0.3f", Selection->scale); ImGui::NextColumn();
+
+							ImGui::TextColored(ImColor(R, G, B), "Flags:");  ImGui::SameLine(); ImGui::TextDisabled("  (?)"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+							if (ImGui::IsItemHovered())
+								ImGui::SetTooltip("P  - Persistent\nD  - Initially Disabled\nV  - Visible When Distant\nI  - Invisible (Editor only)\nCI - Children Invisible (Editor only)\nF  - Frozen (Editor only)");
+							ImGui::TextColored(ImColor(R, G, B), "%s %s %s %s %s %s   ",
+								((Selection->formFlags & TESForm::kFormFlags_QuestItem) ? ("P") : ("-")),
+											   ((Selection->formFlags & TESForm::kFormFlags_Disabled) ? ("D") : ("-")),
+											   ((Selection->formFlags & TESForm::kFormFlags_VisibleWhenDistant) ? ("V") : ("-")),
+											   (Selection->GetInvisible() ? ("I") : ("-")),
+											   (Selection->GetChildrenInvisible() ? ("CI") : ("-")),
+											   (Selection->GetFrozen() ? ("F") : ("-"))); ImGui::NextColumn();
+
+							BSExtraData* xData = Selection->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
+							char xBuffer[0x50] = { 0 };
+							if (xData)
+							{
+								ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
+								ImGui::TextColored(ImColor(R, G, B), "Parent:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+								ImGui::TextColored(ImColor(R, G, B), "%s(%08X) %s   ",
+									((xParent->parent->editorID.Size()) ? (xParent->parent->editorID.c_str()) : ("")),
+												   xParent->parent->formID,
+												   (xParent->oppositeState ? "[X]" : "")); ImGui::NextColumn();
+							}
+
+							char cBuffer[0x50] = { 0 };
+							if (Selection->parentCell->GetIsInterior() == false)
+							{
+								ImGui::TextColored(ImColor(R, G, B), "Parent Cell:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+								ImGui::TextColored(ImColor(R, G, B), "%s(%08X) %d,%d   ", Selection->parentCell->GetEditorID(), Selection->parentCell->formID,
+												   Selection->parentCell->cellData.coords->x, Selection->parentCell->cellData.coords->y); ImGui::NextColumn();
+							}
 						}
 
-						char cBuffer[0x50] = { 0 };
-						if (Selection->parentCell->GetIsInterior() == false)
-						{
-							ImGui::TextColored(ImColor(R, G, B), "Parent Cell:"); ImGui::NextColumn();
-							ImGui::TextColored(ImColor(R, G, B), "%s(%08X) %d,%d   ", Selection->parentCell->GetEditorID(), Selection->parentCell->formID,
-											Selection->parentCell->cellData.coords->x, Selection->parentCell->cellData.coords->y); ImGui::NextColumn();
-						}
 					}
 
+					ImGui::Separator();
 				}
 
-				ImGui::Separator();
-			}
-
-			if (TESRenderWindow::SelectedPathGridPoints->Count() == 1)
-			{
-				TESPathGridPoint* Point = TESRenderWindow::SelectedPathGridPoints->Head()->Item();
-				ImGui::TextColored(ImColor(R, G, B), "Position:"); ImGui::NextColumn();
-				ImGui::TextColored(ImColor(R, G, B), "%.03f, %.03f, %.03f   ", Point->position.x, Point->position.y, Point->position.z); ImGui::NextColumn();
-				if (Point->linkedRef)
+				if (TESRenderWindow::SelectedPathGridPoints->Count() == 1)
 				{
-					ImGui::TextColored(ImColor(R, G, B), "Linked Reference:"); ImGui::NextColumn();
-					ImGui::TextColored(ImColor(R, G, B), "%s(%08X)", ((Point->linkedRef->editorID.Size()) ? (Point->linkedRef->editorID.c_str()) : ("")), Point->linkedRef->formID); ImGui::NextColumn();
-				}
+					TESPathGridPoint* Point = TESRenderWindow::SelectedPathGridPoints->Head()->Item();
+					ImGui::TextColored(ImColor(R, G, B), "Position:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+					ImGui::TextColored(ImColor(R, G, B), "%.03f, %.03f, %.03f   ", Point->position.x, Point->position.y, Point->position.z); ImGui::NextColumn();
+					if (Point->linkedRef)
+					{
+						ImGui::TextColored(ImColor(R, G, B), "Linked Reference:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+						ImGui::TextColored(ImColor(R, G, B), "%s(%08X)", ((Point->linkedRef->editorID.Size()) ? (Point->linkedRef->editorID.c_str()) : ("")), Point->linkedRef->formID); ImGui::NextColumn();
+					}
 
-				ImGui::Separator();
+					ImGui::Separator();
+				}
 			}
 			ImGui::Columns(1);
 
 			ImGui::Columns(2, "RAM Data", false);
-			PROCESS_MEMORY_COUNTERS_EX MemCounter = { 0 };
-			SME::StringHelpers::GetRGB(settings::renderWindowOSD::kColorRAMUsage().s, R, G, B);
-			if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&MemCounter, sizeof(MemCounter)))
 			{
-				UInt32 CurrentRAMCounter = MemCounter.WorkingSetSize / (1024 * 1024);		// in megabytes
-				ImGui::TextColored(ImColor(R, G, B), "RAM Usage:"); ImGui::NextColumn();
-				ImGui::TextColored(ImColor(R, G, B), "%d MB  ", CurrentRAMCounter); ImGui::NextColumn();
-			}
+				PROCESS_MEMORY_COUNTERS_EX MemCounter = { 0 };
+				SME::StringHelpers::GetRGB(settings::renderWindowOSD::kColorRAMUsage().s, R, G, B);
+				if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&MemCounter, sizeof(MemCounter)))
+				{
+					UInt32 CurrentRAMCounter = MemCounter.WorkingSetSize / (1024 * 1024);		// in megabytes
+					ImGui::TextColored(ImColor(R, G, B), "RAM Usage:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+					ImGui::TextColored(ImColor(R, G, B), "%d MB  ", CurrentRAMCounter); ImGui::NextColumn();
+				}
 
-			ImGui::Text("FPS:"); ImGui::NextColumn(); ImGui::Text("%.1f  ", ImGui::GetIO().Framerate); ImGui::NextColumn();
+				ImGui::Text("FPS:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+				ImGui::Text("%.1f  ", ImGui::GetIO().Framerate); ImGui::NextColumn();
+			}
 			ImGui::Columns(1);
 
 			ImGui::End();
-			ImGui::PopStyleVar();
+			ImGui::PopStyleVar(2);
 		}
 
 		bool DefaultOverlayOSDLayer::NeedsBackgroundUpdate()
@@ -772,6 +887,12 @@ namespace cse
 		}
 
 		MouseOverTooltipOSDLayer	MouseOverTooltipOSDLayer::Instance;
+
+		MouseOverTooltipOSDLayer::MouseOverTooltipOSDLayer() :
+			IRenderWindowOSDLayer(IRenderWindowOSDLayer::kPriority_MouseTooltip)
+		{
+
+		}
 
 		MouseOverTooltipOSDLayer::~MouseOverTooltipOSDLayer()
 		{
@@ -879,6 +1000,7 @@ namespace cse
 
 
 		NotificationOSDLayer::NotificationOSDLayer() :
+			IRenderWindowOSDLayer(settings::renderWindowOSD::kShowNotifications, IRenderWindowOSDLayer::kPriority_Notifications),
 			Notifications()
 		{
 			;//
@@ -896,17 +1018,15 @@ namespace cse
 			if (HasNotifications() == false)
 				return;
 
-			ImGui::SetNextWindowPos(ImVec2(10, *TESRenderWindow::ScreeHeight - 60));
+			ImGui::SetNextWindowPos(ImVec2(10, *TESRenderWindow::ScreeHeight - 75));
 			if (!ImGui::Begin("Notification Overlay", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize |
-							  ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing))
+							  ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoInputs))
 			{
 				ImGui::End();
 				return;
 			}
 
-			int R, G, B;
-			SME::StringHelpers::GetRGB(settings::renderWindowOSD::kColorNotifications().s, R, G, B);
-			ImGui::TextColored(ImColor(R, G, B), "%s", GetNextNotification().Message.c_str());
+			ImGui::Text("%s", GetNextNotification().Message.c_str());
 			ImGui::End();
 		}
 
@@ -953,6 +1073,12 @@ namespace cse
 
 		DebugOSDLayer			DebugOSDLayer::Instance;
 
+		DebugOSDLayer::DebugOSDLayer() :
+			IRenderWindowOSDLayer(IRenderWindowOSDLayer::kPriority_Debug)
+		{
+
+		}
+
 		DebugOSDLayer::~DebugOSDLayer()
 		{
 			;//
@@ -961,68 +1087,6 @@ namespace cse
 		void DebugOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
 			ImGui::ShowTestWindow();
-
-			if (_RENDERSEL->selectionCount == 0)
-				return;
-
-			ImGui::SetNextWindowPos(ImVec2(10, 300), ImGuiSetCond_FirstUseEver);
-			if (!ImGui::Begin("Selection Controls", NULL, ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing))
-			{
-				ImGui::End();
-				return;
-			}
-
-			ImGui::PushItemWidth(-10);
-			ImGui::TextDisabled("(?)");
-			ImGui::PopItemWidth();
-			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip("Help text placeholder");
-
-			ImGui::Separator();
-			ImGui::Button("Turn OFF Vorians");
-
-			if (ImGui::CollapsingHeader("3D Data + Flags"))
-			{
-				ImGui::BeginChild("PosData", ImVec2(ImGui::GetWindowContentRegionWidth() * 0.5f, 100), true);
-				ImGui::TextDisabled("Position");
-				ImGui::PushItemWidth(250);
-				ImGui::Button("X");
-				if (ImGui::IsItemActive())
-				{
-					ImDrawList* draw_list = ImGui::GetWindowDrawList();
-					draw_list->PushClipRectFullScreen();
-					draw_list->AddLine(ImGui::CalcItemRectClosestPoint(ImGui::GetIO().MousePos, true, -2.0f), ImGui::GetIO().MousePos, ImColor(ImGui::GetStyle().Colors[ImGuiCol_Button]), 4.0f);
-					draw_list->PopClipRect();
-					ImVec2 Delta = ImGui::GetIO().MouseDelta;
-					_PRIMARYRENDERER->MoveReferenceSelection(Delta.x + Delta.y, Delta.y, true, false, false);
-				}
-				ImGui::SameLine();
-				ImGui::Button("Y");
-				if (ImGui::IsItemActive())
-				{
-					ImDrawList* draw_list = ImGui::GetWindowDrawList();
-					draw_list->PushClipRectFullScreen();
-					draw_list->AddLine(ImGui::CalcItemRectClosestPoint(ImGui::GetIO().MousePos, true, -2.0f), ImGui::GetIO().MousePos, ImColor(ImGui::GetStyle().Colors[ImGuiCol_Button]), 4.0f);
-					draw_list->PopClipRect();
-					ImVec2 Delta = ImGui::GetIO().MouseDelta;
-					_PRIMARYRENDERER->MoveReferenceSelection(Delta.x + Delta.y, Delta.x + Delta.y, false, true, false);
-				}
-				ImGui::SameLine();
-				ImGui::Button("Z");
-				if (ImGui::IsItemActive())
-				{
-					ImDrawList* draw_list = ImGui::GetWindowDrawList();
-					draw_list->PushClipRectFullScreen();
-					draw_list->AddLine(ImGui::CalcItemRectClosestPoint(ImGui::GetIO().MousePos, true, -2.0f), ImGui::GetIO().MousePos, ImColor(ImGui::GetStyle().Colors[ImGuiCol_Button]), 4.0f);
-					draw_list->PopClipRect();
-					ImVec2 Delta = ImGui::GetIO().MouseDelta;
-					_PRIMARYRENDERER->MoveReferenceSelection(Delta.x + Delta.y, Delta.y, false, false, true);
-				}
-				ImGui::PopItemWidth();
-				ImGui::EndChild();
-			}
-
-			ImGui::End();
 		}
 
 		bool DebugOSDLayer::NeedsBackgroundUpdate()
@@ -1035,8 +1099,8 @@ namespace cse
 		void ToolbarOSDLayer::RenderBottomToolbar()
 		{
 			int XSize = *TESRenderWindow::ScreeWidth;
-			int YPos = *TESRenderWindow::ScreeHeight - (BottomExpanded ? 60 : 30);
-			int YSize = BottomExpanded ? 60 : 30;
+			int YPos = *TESRenderWindow::ScreeHeight - (BottomExpanded ? 65 : 35);
+			int YSize = BottomExpanded ? 65 : 35;
 
 			ImGui::SetNextWindowPos(ImVec2(0, YPos));
 			ImGui::SetNextWindowSize(ImVec2(XSize, YSize));
@@ -1060,8 +1124,8 @@ namespace cse
 			UInt32 Flags = *TESRenderWindow::StateFlags;
 			bool SnapGrid = Flags & TESRenderWindow::kRenderWindowState_SnapToGrid;
 			bool SnapAngle = Flags & TESRenderWindow::kRenderWindowState_SnapToAngle;
-			int GridVal = *TESRenderWindow::SnapGridDistance;
-			int AngleVal = *TESRenderWindow::SnapAngle;
+			int GridVal = *(UInt32*)TESRenderWindow::SnapGridDistance;
+			int AngleVal = *(UInt32*)TESRenderWindow::SnapAngle;
 			TESObjectREFR* SnapRef = *TESRenderWindow::SnapReference;
 
 
@@ -1094,7 +1158,7 @@ namespace cse
 
 			ImGui::PushItemWidth(100);
 			if (ImGui::Button(Buffer))
-				SnapRef = TESDialog::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, SnapRef);
+				SnapRef = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, SnapRef, true);
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip(Buffer);
 			ImGui::PopItemWidth(); ImGui::SameLine(0, 50);
@@ -1140,10 +1204,13 @@ namespace cse
 			*TESRenderWindow::CameraRotationSpeed = CamRot;
 			*TESRenderWindow::RefMovementSpeed = RefMov;
 			*TESRenderWindow::RefRotationSpeed = RefRot;
-			*TESRenderWindow::SnapGridDistance = GridVal;
-			*TESRenderWindow::SnapAngle = AngleVal;
+			*(UInt32*)TESRenderWindow::SnapGridDistance = GridVal;
+			*(UInt32*)TESRenderWindow::SnapAngle = AngleVal;
 			*TESRenderWindow::StateFlags = Flags;
 			*TESRenderWindow::SnapReference = SnapRef;
+
+			if (TOD < 0 || TOD > 24)
+				TOD = 10;
 
 			if (TOD != _TES->GetSkyTOD())
 				_TES->SetSkyTOD(TOD);
@@ -1152,7 +1219,8 @@ namespace cse
 			ImGui::PopStyleVar(2);
 		}
 
-		ToolbarOSDLayer::ToolbarOSDLayer()
+		ToolbarOSDLayer::ToolbarOSDLayer():
+			IRenderWindowOSDLayer(settings::renderWindowOSD::kShowToolbar, IRenderWindowOSDLayer::kPriority_Toolbar)
 		{
 			BottomExpanded = false;
 		}
@@ -1172,6 +1240,513 @@ namespace cse
 			return false;
 		}
 
+		SelectionControlsOSDLayer		SelectionControlsOSDLayer::Instance;
 
+		void SelectionControlsOSDLayer::EditBaseForm(TESObjectREFR* Ref)
+		{
+			TESDialog::ShowFormEditDialog(Ref->baseForm);
+		}
+
+		void SelectionControlsOSDLayer::CheckDragChange(ImGuiDX9* GUI, bool& OutDragBegin, bool& OutDragEnd)
+		{
+			if (GUI->IsDraggingWindow())
+				return;
+			else if (ImGui::IsMouseHoveringWindow() == false)
+				return;
+
+			if (ImGui::IsMouseDragging() && ImGui::IsAnyItemActive())
+			{
+				if (DragActive == false)
+				{
+					DragActive = true;
+					OutDragBegin = true;
+				}
+			}
+			else if (ImGui::IsMouseDragging() == false)
+			{
+				if (DragActive)
+				{
+					DragActive = false;
+					OutDragEnd = true;
+				}
+			}
+		}
+
+		void SelectionControlsOSDLayer::CheckTextInputChange(ImGuiDX9* GUI, bool& OutGotFocus, bool& OutLostFocus)
+		{
+			if (ImGui::IsMouseHoveringWindow() == false)
+				return;
+
+			ImGuiIO& io = ImGui::GetIO();
+			if (io.WantTextInput)
+			{
+				if (TextInputActive == false)
+				{
+					TextInputActive = true;
+					OutGotFocus = true;
+				}
+			}
+			else if (TextInputActive)
+			{
+				TextInputActive = false;
+				OutLostFocus = true;
+			}
+		}
+
+		void SelectionControlsOSDLayer::DrawDragTrail()
+		{
+			if (ImGui::IsItemActive())
+			{
+				ImDrawList* DrawList = ImGui::GetWindowDrawList();
+				DrawList->PushClipRectFullScreen();
+				DrawList->AddLine(ImGui::CalcItemRectClosestPoint(ImGui::GetIO().MousePos, true, -2.0f),
+									ImGui::GetIO().MousePos,
+									ImColor(ImGui::GetStyle().Colors[ImGuiCol_Button]),
+								  4.0f);
+				DrawList->PopClipRect();
+			}
+		}
+
+		void SelectionControlsOSDLayer::MoveSelection(bool X, bool Y, bool Z)
+		{
+			if (ImGui::IsItemActive() == false)
+				return;
+
+			ImVec2 Delta = ImGui::GetIO().MouseDelta;
+			_PRIMARYRENDERER->MoveReferenceSelection(Delta.x, Delta.x, X, Y, Z);
+		}
+
+		void SelectionControlsOSDLayer::RotateSelection(bool Local, bool X, bool Y, bool Z)
+		{
+			if (ImGui::IsItemActive() == false)
+				return;
+
+			UInt32 FlagsState = *TESRenderWindow::StateFlags;
+			UInt32 FlagsBuffer = FlagsState & ~TESRenderWindow::kRenderWindowState_UseWorld;
+			if (Local == false)
+				FlagsBuffer |= TESRenderWindow::kRenderWindowState_UseWorld;
+
+			ImVec2 Delta = ImGui::GetIO().MouseDelta;
+
+			*TESRenderWindow::StateFlags = FlagsBuffer;
+			_PRIMARYRENDERER->RotateReferenceSelection(Delta.x, X, Y, Z);
+			*TESRenderWindow::StateFlags = FlagsState;
+		}
+
+		void SelectionControlsOSDLayer::ScaleSelection(bool Local)
+		{
+			if (ImGui::IsItemActive() == false)
+				return;
+
+			ImVec2 Delta = ImGui::GetIO().MouseDelta;
+			_PRIMARYRENDERER->ScaleReferenceSelection(Delta.x, Local == false);
+		}
+
+		void SelectionControlsOSDLayer::AlignSelection(bool Position, bool Rotation)
+		{
+			TESObjectREFR* AlignRef = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, NULL, false);
+			if (AlignRef)
+			{
+				for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+				{
+					TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
+					if (Ref == AlignRef)
+						continue;
+
+					if (Position)
+						Ref->SetPosition(*AlignRef->GetPosition());
+
+					if (Rotation)
+						Ref->SetRotation(*AlignRef->GetRotation(), true);
+
+					Ref->SetFromActiveFile(true);
+				}
+
+				NotificationOSDLayer::Instance.ShowNotification("Selection %s aligned to %08X", Position ? "position" : "roatation", AlignRef->formID);
+				achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefAlignment);
+			}
+		}
+
+		SelectionControlsOSDLayer::SelectionControlsOSDLayer() :
+			IRenderWindowOSDLayer(settings::renderWindowOSD::kShowSelectionControls, IRenderWindowOSDLayer::kPriority_SelectionControls)
+		{
+			TextInputActive = false;
+			DragActive = false;
+			LocalTransformation = 1;
+		}
+
+		SelectionControlsOSDLayer::~SelectionControlsOSDLayer()
+		{
+			;//
+		}
+
+		void SelectionControlsOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
+		{
+			if (_RENDERSEL->selectionCount == 0)
+				return;
+
+			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, (_RENDERSEL->selectionCount == 0 ? 0.1f : 1.0f));
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 5));
+			ImGui::SetNextWindowPosCenter(ImGuiSetCond_FirstUseEver);
+			if (!ImGui::Begin("Quick Controls", NULL, ImGuiWindowFlags_NoFocusOnAppearing))
+			{
+				ImGui::End();
+				ImGui::PopStyleVar(2);
+				return;
+			}
+
+			bool SingleSel = _RENDERSEL->selectionCount == 1;
+			bool GotInputFocus = false, LostInputFocus = false;
+			bool DragBegin = false, DragEnd = false;
+
+			CheckTextInputChange(GUI, GotInputFocus, LostInputFocus);
+			CheckDragChange(GUI, DragBegin, DragEnd);
+
+			if (GotInputFocus || DragBegin)
+			{
+				if (_RENDERSEL->selectionCount)
+				{
+					// recording just once crashes the editor. also, this code only seems to support undos
+					// ### investigate
+					_RENDERUNDO->RecordReference(TESRenderWindow::UndoStack::kUndoOperation_RefChange3D, _RENDERSEL->selectionList);
+					_RENDERUNDO->RecordReference(TESRenderWindow::UndoStack::kUndoOperation_RefChange3D, _RENDERSEL->selectionList);
+				}
+			}
+
+			if (SingleSel)
+			{
+				TESObjectREFR* ThisRef = CS_CAST(_RENDERSEL->selectionList->Data, TESForm, TESObjectREFR);
+				SME_ASSERT(ThisRef);
+
+				Vector3 Position(ThisRef->position);
+				Vector3 Rotation(ThisRef->rotation);
+				float Scale = ThisRef->scale;
+				Rotation.Scale(57.2957763671875);
+
+				ImGui::PushStyleColor(ImGuiCol_Button, ImColor::HSV(0, 0.6f, 0.6f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImColor::HSV(0, 0.7f, 0.7f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImColor::HSV(0, 0.8f, 0.8f));
+				{
+					if (ImGui::Button("Edit Base Form"))
+						EditBaseForm(ThisRef);
+				}
+				ImGui::PopStyleColor(3);
+
+				ImGui::SameLine(ImGui::GetWindowWidth() - 40); ImGui::TextDisabled("(?)");
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Click and drag the buttons to transform the selection.\nCTRL + click to directly edit the values.");
+
+				ImGui::DragFloat3("Position##single_pos", &Position.x, 1, 0, 0, "%.2f");
+				ImGui::DragFloat3("Rotation##single_rot", &Rotation.x, 1, 0, 0, "%.2f");
+				ImGui::SliderFloat("Scale##single_scale", &Scale, 0.01f, 10.f);
+				ImGui::NewLine();
+
+				if (DragActive || TextInputActive || LostInputFocus || DragEnd)
+				{
+					ThisRef->SetPosition(Position);
+					ThisRef->SetRotation(Rotation);
+					ThisRef->SetScale(Scale);
+				}
+
+				if (LostInputFocus || DragEnd)
+					ThisRef->SetFromActiveFile(true);
+			}
+			else if (_RENDERSEL->selectionCount)
+			{
+				ImGui::Text("Transformation:"); ImGui::SameLine(0, 15);
+				ImGui::RadioButton("Local", &LocalTransformation, 1); ImGui::SameLine(); ImGui::RadioButton("Global", &LocalTransformation, 0);
+				ImGui::SameLine(ImGui::GetWindowWidth() - 40); ImGui::TextDisabled("(?)");
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Click and drag the buttons to transform the selection");
+
+				float Width = 0;
+				ImGui::Columns(4, "Position + Rotation", false);
+				{
+					ImGui::Button("X##multi_pos_x", ImVec2(ImGui::GetColumnWidth(), 20)); MoveSelection(true, false, false); DrawDragTrail(); ImGui::NextColumn();
+					ImGui::Button("Y##multi_pos_y", ImVec2(ImGui::GetColumnWidth(), 20)); MoveSelection(false, true, false); DrawDragTrail(); ImGui::NextColumn();
+					ImGui::Button("Z##multi_pos_z", ImVec2(ImGui::GetColumnWidth(), 20)); MoveSelection(false, false, true); DrawDragTrail(); ImGui::NextColumn();
+
+					ImGui::Text("Position"); ImGui::NextColumn();
+
+					ImGui::Button("X##multi_rot_x", ImVec2(ImGui::GetColumnWidth(), 20)); RotateSelection(LocalTransformation, true, false, false);
+					DrawDragTrail(); ImGui::NextColumn();
+					ImGui::Button("Y##multi_rot_y", ImVec2(ImGui::GetColumnWidth(), 20)); RotateSelection(LocalTransformation, false, true, false);
+					DrawDragTrail(); ImGui::NextColumn();
+					ImGui::Button("Z##multi_rot_z", ImVec2(ImGui::GetColumnWidth(), 20)); RotateSelection(LocalTransformation, false, false, true);
+					DrawDragTrail(); ImGui::NextColumn();
+
+					Width = ImGui::GetColumnOffset();
+					ImGui::Text("Rotation"); ImGui::NextColumn();
+				}
+				ImGui::Columns(1);
+
+				ImGui::Button("Scale##multi_scale", ImVec2(Width - 10, 20)); ScaleSelection(LocalTransformation);
+				ImGui::NewLine();
+
+				ImGui::Columns(3, "Grouping", false);
+				{
+					ImGui::Text("Grouping:"); ImGui::NextColumn();
+					if (ImGui::Button("Group##group_sel", ImVec2(ImGui::GetColumnWidth(), 20)))
+						_RENDERWIN_MGR.InvokeContextMenuTool(IDC_RENDERWINDOWCONTEXT_GROUP);
+					ImGui::NextColumn();
+					if (ImGui::Button("Ungroup##ungroup_sel", ImVec2(ImGui::GetColumnWidth(), 20)))
+						_RENDERWIN_MGR.InvokeContextMenuTool(IDC_RENDERWINDOWCONTEXT_UNGROUP);
+					ImGui::NextColumn();
+				}
+				ImGui::Columns(1);
+			}
+
+			ImGui::Columns(3, "Alignment", false);
+			{
+				ImGui::Text("Alignment: "); ImGui::NextColumn();
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Aligns the selection to the position/rotation of another reference");
+				if (ImGui::Button("Postion##align_pos", ImVec2(ImGui::GetColumnWidth(), 20)))
+					AlignSelection(true, false);
+				ImGui::NextColumn();
+				if (ImGui::Button("Rotation##align_rot", ImVec2(ImGui::GetColumnWidth(), 20)))
+					AlignSelection(false, true);
+				ImGui::NextColumn();
+			}
+			ImGui::Columns(1);
+			ImGui::Separator();
+
+			ImGui::Columns(4, "Flags", false);
+			{
+				ImGui::Text("Flags: "); ImGui::NextColumn();
+				if (SingleSel)
+				{
+					TESObjectREFR* ThisRef = CS_CAST(_RENDERSEL->selectionList->Data, TESForm, TESObjectREFR);
+					SME_ASSERT(ThisRef);
+
+					bool Persistent = ThisRef->IsQuestItem();
+					bool VWD = ThisRef->IsVWD();
+					bool Disabled = ThisRef->IsInitiallyDisabled();
+					bool Changed = false;
+
+					if (ImGui::Checkbox("Persistent##flag_persistent", &Persistent))
+						ThisRef->SetPersistent(Persistent), Changed = true;
+					ImGui::NextColumn();
+					if (ImGui::Checkbox("VWD##flag_vwd", &VWD))
+						ThisRef->SetVWD(VWD), Changed = true;
+					ImGui::NextColumn();
+					if (ImGui::Checkbox("Disabled##flag_disabled", &Disabled))
+						ThisRef->SetInitiallyDisabled(Disabled), Changed = true;
+					ImGui::NextColumn();
+
+					if (Changed)
+						ThisRef->SetFromActiveFile(true);
+				}
+				else
+				{
+					bool Persistent = true, VWD = true, Disabled = true;
+					for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+					{
+						TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
+						if (Ref->IsQuestItem() == false)
+							Persistent = false;
+						if (Ref->IsVWD() == false)
+							VWD = false;
+						if (Ref->IsInitiallyDisabled() == false)
+							Disabled = false;
+					}
+
+					bool SetPersistent = false, SetVWD = false, SetDisabled = false;
+					if (ImGui::Checkbox("Persistent##flag_persistent", &Persistent))
+						SetPersistent = true;
+					ImGui::NextColumn();
+					if (ImGui::Checkbox("VWD##flag_vwd", &VWD))
+						SetVWD = true;
+					ImGui::NextColumn();
+					if (ImGui::Checkbox("Disabled##flag_disabled", &Disabled))
+						SetDisabled = true;
+					ImGui::NextColumn();
+
+					if (SetPersistent || SetDisabled || SetVWD)
+					{
+						for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+						{
+							TESObjectREFR* ThisRef = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
+							if (SetPersistent)
+								ThisRef->SetPersistent(Persistent);
+							else if (SetVWD)
+								ThisRef->SetVWD(VWD);
+							else if (SetDisabled)
+								ThisRef->SetInitiallyDisabled(Disabled);
+
+							ThisRef->SetFromActiveFile(true);
+						}
+					}
+				}
+			}
+			ImGui::Columns(1);
+
+			if (ImGui::CollapsingHeader("Enable State Parent##linkedref_header"))
+			{
+				bool Modified = false;
+				if (SingleSel)
+				{
+					TESObjectREFR* ThisRef = CS_CAST(_RENDERSEL->selectionList->Data, TESForm, TESObjectREFR);
+					SME_ASSERT(ThisRef);
+
+					BSExtraData* xData = ThisRef->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
+					ExtraEnableStateParent* xParent = NULL;
+					if (xData)
+						xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
+
+					ImGui::Columns(3, "Enable State Parent##linkedref_cols_single", false);
+					{
+						ImGui::Text("Linked Ref:"); ImGui::NextColumn();
+						if (xParent)
+						{
+							ImGui::Text("%s(%08X)",
+								((xParent->parent->editorID.Size()) ? (xParent->parent->editorID.c_str()) : ("")), xParent->parent->formID);
+						}
+						else
+							ImGui::Text("None");
+						ImGui::NextColumn();
+
+						if (xParent)
+							ImGui::Text("Opposite: %s   ", (xParent->oppositeState ? "Yes" : "No"));
+						else if (ImGui::Button("Set", ImVec2(ImGui::GetColumnWidth(), 20)))
+						{
+							TESObjectREFR* NewParent = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, xParent ? xParent->parent : NULL, true);
+							if (NewParent)
+								ThisRef->extraData.ModExtraEnableStateParent(NewParent), Modified = true;
+						}
+						ImGui::NextColumn();
+
+						if (xParent && ImGui::Button("Change", ImVec2(ImGui::GetColumnWidth(), 20)))
+						{
+							TESObjectREFR* NewParent = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, xParent ? xParent->parent : NULL, true);
+							if (NewParent)
+								ThisRef->extraData.ModExtraEnableStateParent(NewParent), Modified = true;
+						}
+						ImGui::NextColumn();
+
+						if (xParent)
+						{
+							if (ImGui::Button("Clear", ImVec2(ImGui::GetColumnWidth(), 20)))
+								ThisRef->extraData.ModExtraEnableStateParent(NULL), Modified = true;
+						}
+						ImGui::NextColumn();
+
+						if (xParent)
+						{
+							if (ImGui::Button("Toggle Opposite", ImVec2(ImGui::GetColumnWidth(), 20)))
+								ThisRef->SetExtraEnableStateParentOppositeState(xParent->oppositeState == 0), Modified = true;
+						}
+						ImGui::NextColumn();
+					}
+					ImGui::Columns(1);
+
+					if (Modified)
+						ThisRef->SetFromActiveFile(true);
+				}
+				else
+				{
+					ImGui::Columns(4, "Enable State Parent##linkedref_cols_multi", false);
+					{
+						bool SameParent = true;
+						TESObjectREFR* ParentRefMark = NULL;
+						bool OppositeStateMark = false;
+						bool MarksSet = false;
+
+						for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+						{
+							TESObjectREFR* ParentComp = NULL;
+							bool OppositeComp = false;
+
+							TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
+							BSExtraData* xData = Ref->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
+							if (xData)
+							{
+								ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
+								ParentComp = xParent->parent;
+								OppositeComp = xParent->oppositeState == 1;
+							}
+
+							if (MarksSet == false)
+							{
+								ParentRefMark = ParentComp;
+								OppositeStateMark = OppositeComp;
+								MarksSet = true;
+							}
+
+							if (ParentRefMark != ParentComp || OppositeStateMark != OppositeComp)
+							{
+								SameParent = false;
+								break;
+							}
+						}
+
+						ImGui::Text("Linked Ref:"); ImGui::NextColumn();
+						if (SameParent && ParentRefMark)
+						{
+							ImGui::Text("%s(%08X)",
+								((ParentRefMark->editorID.Size()) ? (ParentRefMark->editorID.c_str()) : ("")), ParentRefMark->formID);
+						}
+						else if (SameParent && ParentRefMark == NULL)
+							ImGui::Text("None");
+						else if (SameParent == false)
+							ImGui::Text("(multiple)");
+						ImGui::NextColumn();
+						if (SameParent)
+							ImGui::Text("Opposite: %s   ", (OppositeStateMark ? "Yes" : "No"));
+						ImGui::NextColumn();
+						ImGui::NextColumn();
+
+						char Buffer[0x100] = { 0 };
+						FORMAT_STR(Buffer, "%s", (SameParent && ParentRefMark ? "Change" : "Set"));
+						TESObjectREFR* NewParent = NULL;
+						bool ClearParent = false;
+						bool ToggleOpposite = false;
+						bool NewOpposite = false;
+
+						if (ImGui::Button(Buffer, ImVec2(ImGui::GetColumnWidth(), 20)))
+							NewParent = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, SameParent ? ParentRefMark : NULL, true);
+						ImGui::NextColumn();
+
+						if (ImGui::Button("Clear", ImVec2(ImGui::GetColumnWidth(), 20)))
+							ClearParent = true;
+						ImGui::NextColumn();
+
+						if (ImGui::Button("Set Opposite", ImVec2(ImGui::GetColumnWidth(), 20)))
+							ToggleOpposite = NewOpposite = true;
+						ImGui::NextColumn();
+
+						if (ImGui::Button("Clear Opposite", ImVec2(ImGui::GetColumnWidth(), 20)))
+							ToggleOpposite = true;
+						ImGui::NextColumn();
+
+						for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+						{
+							TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
+							if (NewParent)
+								Ref->extraData.ModExtraEnableStateParent(NewParent);
+
+							if (ClearParent)
+								Ref->extraData.ModExtraEnableStateParent(NULL);
+
+							if (ToggleOpposite)
+								Ref->SetExtraEnableStateParentOppositeState(NewOpposite);
+
+							if (NewParent || ClearParent || ToggleOpposite)
+								Ref->SetFromActiveFile(true);
+						}
+					}
+					ImGui::Columns(1);
+				}
+			}
+
+
+			ImGui::End();
+			ImGui::PopStyleVar(2);
+		}
+
+		bool SelectionControlsOSDLayer::NeedsBackgroundUpdate()
+		{
+			return false;
+		}
 	}
 }

@@ -374,6 +374,8 @@ public:
 	/*12*/ UInt16				maxLevel;		// if PCLevelOffset
 	/*14*/ TESLevItem*			deathItem;
 	/*18*/ FactionListT			factionList;
+
+	bool						HasNoLowLevelProcessing() const;
 };
 STATIC_ASSERT(sizeof(TESActorBaseData) == 0x20);
 

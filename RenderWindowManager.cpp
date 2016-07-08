@@ -30,6 +30,7 @@ namespace cse
 
 		RenderWindowSceneGraphManager::~RenderWindowSceneGraphManager()
 		{
+			DEBUG_ASSERT(Modifiers.size() == 0);
 			Modifiers.clear();
 		}
 
@@ -85,17 +86,11 @@ namespace cse
 
 		ReferenceParentChildIndicator::ReferenceParentChildIndicator()
 		{
-			VertexColor = (NiVertexColorProperty*)FormHeap_Allocate(sizeof(NiVertexColorProperty));
-			thisCall<void>(0x00410C50, VertexColor);
+			VertexColor = (NiVertexColorProperty*)TESRender::CreateProperty(NiVertexColorProperty::kType);
 			VertexColor->flags |= NiVertexColorProperty::kSrcMode_Emissive;
 
-			Wireframe = (NiWireframeProperty*)FormHeap_Allocate(sizeof(NiWireframeProperty));
-			thisCall<void>(0x00417BE0, Wireframe);
+			Wireframe = (NiWireframeProperty*)TESRender::CreateProperty(NiWireframeProperty::kType);
 			Wireframe->m_bWireframe = 0;
-
-			// increment ref counts so that they don't get released elsewhere
-			VertexColor->m_uiRefCount = 1;
-			Wireframe->m_uiRefCount = 1;
 		}
 
 		ReferenceParentChildIndicator::~ReferenceParentChildIndicator()
@@ -157,7 +152,7 @@ namespace cse
 
 								TESRender::AddProperty(NodeLineConnector, VertexColor);
 								TESRender::AddToNiNode(Data.ExtraNode, NodeLineConnector);
-								thisCall<void>(0x006F2C10, NodeLineConnector);
+								TESRender::UpdateDynamicEffectState(NodeLineConnector);
 
 								if (NewParentNode)
 								{
@@ -169,7 +164,7 @@ namespace cse
 									TESRender::AddProperty(ParentIndicator, Wireframe);
 									TESRender::AddProperty(ParentIndicator, VertexColor);
 									TESRender::AddToNiNode(Data.ExtraNode, ParentIndicator);
-									thisCall<void>(0x006F2C10, ParentIndicator);
+									TESRender::UpdateDynamicEffectState(ParentIndicator);
 								}
 							}
 						}
@@ -247,6 +242,50 @@ namespace cse
 			CulledRefBuffer.clear();
 		}
 
+		DebugSceneGraphModifier			DebugSceneGraphModifier::Instance;
+
+		DebugSceneGraphModifier::DebugSceneGraphModifier()
+		{
+			MatProp = (NiMaterialProperty*)TESRender::CreateProperty(NiMaterialProperty::kType);
+			MatProp->m_diff.r = 0;
+			MatProp->m_diff.b = 1;
+			MatProp->m_diff.g = 0;
+			MatProp->m_fAlpha = 0.3;
+
+			Stencil = (NiStencilProperty*)TESRender::CreateProperty(NiStencilProperty::kType);
+			Stencil->flags = 0;
+			Stencil->flags |= NiStencilProperty::kTestMode_Always;
+		}
+
+		DebugSceneGraphModifier::~DebugSceneGraphModifier()
+		{
+		//	SME_ASSERT(MatProp->m_uiRefCount == 1);
+			TESRender::DeleteNiRefObject(MatProp);
+			TESRender::DeleteNiRefObject(Stencil);
+		}
+
+		void DebugSceneGraphModifier::PreRender(RenderData& Data)
+		{
+			if (_RENDERSEL->selectionCount)
+			{
+				for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+				{
+					TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
+					NiNode* Node = Ref->GetNiNode();
+					if (Node && TESRender::GetProperty(Node, NiStencilProperty::kType) == NULL)
+					{
+						TESRender::AddProperty(Node, Stencil);
+						TESRender::UpdateDynamicEffectState(Node);
+						TESRender::UpdateAVObject(Node);
+					}
+				}
+			}
+		}
+
+		void DebugSceneGraphModifier::PostRender(RenderData& Data)
+		{
+			;//
+		}
 
 
 		RenderWindowSelectionManager::RenderWindowSelectionManager(RenderWindowGroupManager* GroupMan) :
@@ -280,7 +319,7 @@ namespace cse
 						_RENDERSEL->AddToSelection(Ref, SelectionBox);
 
 					// recheck the selection for frozen refs that may have been a part of the group
-					std::vector<TESForm*> FrozenRefs;
+					TESFormArrayT FrozenRefs;
 
 					for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 					{
@@ -291,7 +330,7 @@ namespace cse
 							FrozenRefs.push_back(Itr->Data);
 					}
 
-					for (std::vector<TESForm*>::const_iterator Itr = FrozenRefs.begin(); Itr != FrozenRefs.end(); Itr++)
+					for (TESFormArrayT::const_iterator Itr = FrozenRefs.begin(); Itr != FrozenRefs.end(); Itr++)
 						_RENDERSEL->RemoveFromSelection(*Itr, true);
 				}
 			}
@@ -514,12 +553,12 @@ namespace cse
 										CheckItem = true;
 
 									break;
-								case IDC_RENDERWINDOWCONTEXT_MOUSEREFENABLED:
+								case IDC_RENDERWINDOWCONTEXT_OSD_MOUSEREF:
 									if (settings::renderWindowOSD::kShowMouseRef.GetData().i)
 										CheckItem = true;
 
 									break;
-								case IDC_RENDERWINDOWCONTEXT_MOUSEREFCTRLMODIFIED:
+								case IDC_RENDERWINDOWCONTEXT_OSD_MOUSEREF_CTRLMODIFIED:
 									if (settings::renderWindowOSD::kMouseRefCtrlModified.GetData().i)
 										CheckItem = true;
 
@@ -544,6 +583,26 @@ namespace cse
 									break;
 								case IDC_RENDERWINDOWCONTEXT_OFFSETDUPLICATEDREFSINTHEZAXIS:
 									if (settings::renderer::kZOffsetDuplicatedRefs().i)
+										CheckItem = true;
+
+									break;
+								case IDC_RENDERWINDOWCONTEXT_OSD_INFOOVERLAY:
+									if (settings::renderWindowOSD::kShowInfoOverlay().i)
+										CheckItem = true;
+
+									break;
+								case IDC_RENDERWINDOWCONTEXT_OSD_CELLLISTS:
+									if (settings::renderWindowOSD::kShowCellLists().i)
+										CheckItem = true;
+
+									break;
+								case IDC_RENDERWINDOWCONTEXT_OSD_SELECTIONCONTROLS:
+									if (settings::renderWindowOSD::kShowSelectionControls().i)
+										CheckItem = true;
+
+									break;
+								case IDC_RENDERWINDOWCONTEXT_OSD_TOOLBARS:
+									if (settings::renderWindowOSD::kShowToolbar().i)
 										CheckItem = true;
 
 									break;
@@ -733,23 +792,14 @@ namespace cse
 
 										if (BatchData->World3DData.UseScale())	ThisRef->SetScale(BatchData->World3DData.Scale), Modified = true;
 
-										if (BatchData->Flags.UsePersistent() &&
-											ThisRef->baseForm->formType != TESForm::kFormType_NPC &&
-											ThisRef->baseForm->formType != TESForm::kFormType_Creature)
-										{
-											ThisRef->SetQuestItem(BatchData->Flags.Persistent);
-											Modified = true;
-										}
+										if (BatchData->Flags.UsePersistent())
+											ThisRef->SetPersistent(BatchData->Flags.Persistent), Modified = true;
 
 										if (BatchData->Flags.UseDisabled())
-											SME::MiscGunk::ToggleFlag(&ThisRef->formFlags,
-																	  TESForm::kFormFlags_Disabled,
-																	  BatchData->Flags.Disabled), Modified = true;
+											ThisRef->SetInitiallyDisabled(BatchData->Flags.Disabled), Modified = true;
 
 										if (BatchData->Flags.UseVWD())
-											SME::MiscGunk::ToggleFlag(&ThisRef->formFlags,
-																	  TESForm::kFormFlags_VisibleWhenDistant,
-																	  BatchData->Flags.VWD), Modified = true;
+											ThisRef->SetVWD(BatchData->Flags.VWD), Modified = true;
 
 										if (BatchData->EnableParent.UseEnableParent())
 										{
@@ -918,20 +968,14 @@ namespace cse
 						{
 						case IDC_RENDERWINDOWCONTEXT_GROUP:
 							if (RenderWindowManager::Instance.GetReferenceGroupManager()->AddGroup(_RENDERSEL) == false)
-							{
-								BGSEEUI->MsgBoxW(hWnd, 0,
-												 "Couldn't add current selection to a new group.\n\nCheck the console for more details.");
-							}
+								NotificationOSDLayer::Instance.ShowNotification("Couldn't add current selection to a new group.\n\nCheck the console for more details.");
 							else
 								NotificationOSDLayer::Instance.ShowNotification("Created new selection group");
 
 							break;
 						case IDC_RENDERWINDOWCONTEXT_UNGROUP:
 							if (RenderWindowManager::Instance.GetReferenceGroupManager()->RemoveGroup(_RENDERSEL) == false)
-							{
-								BGSEEUI->MsgBoxW(hWnd, 0,
-												 "Couldn't dissolve the current selection's group.\n\nCheck the console for more details.");
-							}
+								NotificationOSDLayer::Instance.ShowNotification("Couldn't dissolve the current selection's group.\n\nCheck the console for more details.");
 							else
 								NotificationOSDLayer::Instance.ShowNotification("Removed selection group");
 
@@ -939,46 +983,6 @@ namespace cse
 						}
 
 						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefGrouping);
-						Return = true;
-					}
-
-					break;
-				case IDC_RENDERWINDOWCONTEXT_ALIGNTOX:
-				case IDC_RENDERWINDOWCONTEXT_ALIGNTOY:
-				case IDC_RENDERWINDOWCONTEXT_ALIGNTOZ:
-					if (_RENDERSEL->selectionCount > 1)
-					{
-						// record the op twice, otherwise the thingy will crash on undo for some reason
-						_RENDERUNDO->RecordReference(TESRenderWindow::UndoStack::kUndoOperation_Unk03, _RENDERSEL->selectionList);
-						_RENDERUNDO->RecordReference(TESRenderWindow::UndoStack::kUndoOperation_Unk03, _RENDERSEL->selectionList);
-
-						TESObjectREFR* AlignRef = CS_CAST(_RENDERSEL->selectionList->Data, TESForm, TESObjectREFR);
-
-						for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList->Next; Itr && Itr->Data; Itr = Itr->Next)
-						{
-							TESObjectREFR* ThisRef = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
-
-							switch (LOWORD(wParam))
-							{
-							case IDC_RENDERWINDOWCONTEXT_ALIGNTOX:
-								ThisRef->position.x = AlignRef->position.x;
-								break;
-							case IDC_RENDERWINDOWCONTEXT_ALIGNTOY:
-								ThisRef->position.y = AlignRef->position.y;
-								break;
-							case IDC_RENDERWINDOWCONTEXT_ALIGNTOZ:
-								ThisRef->position.z = AlignRef->position.z;
-								break;
-							}
-
-							ThisRef->SetFromActiveFile(true);
-							ThisRef->UpdateNiNode();
-						}
-
-						NotificationOSDLayer::Instance.ShowNotification("Selection aligned to %08X", AlignRef->formID);
-						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefAlignment);
-						TESRenderWindow::Redraw();
-
 						Return = true;
 					}
 
@@ -1017,14 +1021,14 @@ namespace cse
 					}
 
 					break;
-				case IDC_RENDERWINDOWCONTEXT_MOUSEREFENABLED:
+				case IDC_RENDERWINDOWCONTEXT_OSD_MOUSEREF:
 					{
 						settings::renderWindowOSD::kShowMouseRef.ToggleData();
 						Return = true;
 					}
 
 					break;
-				case IDC_RENDERWINDOWCONTEXT_MOUSEREFCTRLMODIFIED:
+				case IDC_RENDERWINDOWCONTEXT_OSD_MOUSEREF_CTRLMODIFIED:
 					{
 						settings::renderWindowOSD::kMouseRefCtrlModified.ToggleData();
 						Return = true;
@@ -1038,6 +1042,34 @@ namespace cse
 						TESLODTextureGenerator::SaveExteriorSnapshot(*TESRenderWindow::ActiveCell,
 																	 settings::renderer::kExteriorSnapshotResolution.GetData().i,
 																	 NULL);
+					}
+
+					break;
+				case IDC_RENDERWINDOWCONTEXT_OSD_CELLLISTS:
+					{
+						settings::renderWindowOSD::kShowCellLists.ToggleData();
+						Return = true;
+					}
+
+					break;
+				case IDC_RENDERWINDOWCONTEXT_OSD_INFOOVERLAY:
+					{
+						settings::renderWindowOSD::kShowInfoOverlay.ToggleData();
+						Return = true;
+					}
+
+					break;
+				case IDC_RENDERWINDOWCONTEXT_OSD_SELECTIONCONTROLS:
+					{
+						settings::renderWindowOSD::kShowSelectionControls.ToggleData();
+						Return = true;
+					}
+
+					break;
+				case IDC_RENDERWINDOWCONTEXT_OSD_TOOLBARS:
+					{
+						settings::renderWindowOSD::kShowToolbar.ToggleData();
+						Return = true;
 					}
 
 					break;
@@ -1186,6 +1218,36 @@ namespace cse
 				}
 
 				break;
+			case WM_SETCURSOR:
+				{
+					if (GetCapture() != hWnd)
+					{
+						HCURSOR Icon = *TESRenderWindow::CursorArrow;
+
+						if (*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0)
+						{
+							TESObjectREFR* MouseRef = TESRender::PickRefAtCoords(TESRenderWindow::CurrentMouseCoord.x, TESRenderWindow::CurrentMouseCoord.y);
+							if (MouseRef)
+							{
+								if (MouseRef->GetFrozen() || (MouseRef->IsActive() == false && TESRenderWindow::FreezeInactiveRefs))
+									Icon = LoadCursor(NULL, IDC_NO);
+								else if (_RENDERSEL->HasObject(MouseRef))
+									Icon = *TESRenderWindow::CursorMove;
+								else
+									Icon = *TESRenderWindow::CursorSelect;
+							}
+						}
+
+						HCURSOR CurrentCursor = GetCursor();
+						if (Icon && CurrentCursor != Icon)
+							SetCursor(Icon);
+
+						DlgProcResult = TRUE;
+						Return = true;
+					}
+				}
+
+				break;
 			case WM_MOUSEMOVE:
 				{
 					TESRenderWindow::CurrentMouseCoord.x = GET_X_LPARAM(lParam);
@@ -1218,29 +1280,6 @@ namespace cse
 																												  TESRenderWindow::CurrentMouseCoord.y);
 							}
 						}
-					}
-
-					if (GetCapture() != hWnd)
-					{
-						HCURSOR Icon = *TESRenderWindow::CursorArrow;
-
-						if (*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0)
-						{
-							TESObjectREFR* MouseRef = TESRender::PickRefAtCoords(TESRenderWindow::CurrentMouseCoord.x, TESRenderWindow::CurrentMouseCoord.y);
-							if (MouseRef)
-							{
-								if (MouseRef->GetFrozen() || (MouseRef->IsActive() == false && TESRenderWindow::FreezeInactiveRefs))
-									Icon = LoadCursor(NULL, IDC_NO);
-								else if (_RENDERSEL->HasObject(MouseRef))
-									Icon = *TESRenderWindow::CursorMove;
-								else
-									Icon = *TESRenderWindow::CursorSelect;
-							}
-						}
-
-						HCURSOR CurrentCursor = GetCursor();
-						if (Icon && CurrentCursor != Icon)
-							SetCursor(Icon);
 					}
 				}
 
@@ -1636,6 +1675,9 @@ namespace cse
 
 			SceneGraphManager->AddModifier(&ReferenceParentChildIndicator::Instance);
 			SceneGraphManager->AddModifier(&ReferenceVisibilityModifier::Instance);
+#ifndef NDEBUG
+			SceneGraphManager->AddModifier(&DebugSceneGraphModifier::Instance);
+#endif
 			CellLists->Initialize(OSD);
 
 			Initialized = true;
@@ -1663,7 +1705,9 @@ namespace cse
 			OSD->Deinitialize();
 			SceneGraphManager->RemoveModifier(&ReferenceParentChildIndicator::Instance);
 			SceneGraphManager->RemoveModifier(&ReferenceVisibilityModifier::Instance);
-
+#ifndef NDEBUG
+			SceneGraphManager->RemoveModifier(&DebugSceneGraphModifier::Instance);
+#endif
 			Initialized = false;
 		}
 
@@ -1683,6 +1727,12 @@ namespace cse
 		{
 			SME_ASSERT(Initialized);
 			return SelectionManager;
+		}
+
+		void RenderWindowManager::InvokeContextMenuTool(int Identifier)
+		{
+			SME_ASSERT(Initialized);
+			SendMessage(*TESRenderWindow::WindowHandle, WM_COMMAND, Identifier, NULL);
 		}
 
 		void RenderWindowManager::HandleD3DRelease()
@@ -1722,5 +1772,8 @@ namespace cse
 		{
 			_RENDERWIN_MGR.Deinitialize();
 		}
+
+
+
 	}
 }

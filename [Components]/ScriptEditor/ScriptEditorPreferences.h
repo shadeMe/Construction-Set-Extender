@@ -150,6 +150,7 @@ namespace cse
 			CheckBox^									CaseInsensitive;
 			CheckBox^									MatchWholeWord;
 			CheckBox^									UseRegEx;
+			CheckBox^									IgnoreComments;
 
 			FontDialog^									FontSelection;
 

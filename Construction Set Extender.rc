@@ -628,12 +628,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Selection:",                  9999, GRAYED
         MENUITEM "Invert",                      IDC_RENDERWINDOWCONTEXT_INVERTSELECTION
-        POPUP "Relative Alignment"
-        BEGIN
-            MENUITEM "To X-Axis",                   IDC_RENDERWINDOWCONTEXT_ALIGNTOX
-            MENUITEM "To Y-Axis",                   IDC_RENDERWINDOWCONTEXT_ALIGNTOY
-            MENUITEM "To Z-Axis",                   IDC_RENDERWINDOWCONTEXT_ALIGNTOZ
-        END
         POPUP "Grouping"
         BEGIN
             MENUITEM "Group",                       IDC_RENDERWINDOWCONTEXT_GROUP
@@ -665,13 +659,20 @@ BEGIN
         MENUITEM "Switch C <-> Y Hotkeys",      IDC_RENDERWINDOWCONTEXT_SWITCHCNY
         MENUITEM "Static Camera Pivot",         IDC_RENDERWINDOWCONTEXT_STATICCAMERAPIVOT
         MENUITEM "Use Alternate Movement Settings", IDC_RENDERWINDOWCONTEXT_USEALTERNATEMOVEMENTSETTINGS
-        POPUP "Object-Under-Pointer Display"
-        BEGIN
-            MENUITEM "Enabled",                     IDC_RENDERWINDOWCONTEXT_MOUSEREFENABLED
-            MENUITEM SEPARATOR
-            MENUITEM "CTRL Key Modified",           IDC_RENDERWINDOWCONTEXT_MOUSEREFCTRLMODIFIED
-        END
         MENUITEM SEPARATOR
+        POPUP "On-Screen Display"
+        BEGIN
+            MENUITEM "Info Overlay",                IDC_RENDERWINDOWCONTEXT_OSD_INFOOVERLAY
+            MENUITEM "Selection Controls",          IDC_RENDERWINDOWCONTEXT_OSD_SELECTIONCONTROLS
+            MENUITEM "Cell Lists",                  IDC_RENDERWINDOWCONTEXT_OSD_CELLLISTS
+            MENUITEM "Toolbars",                    IDC_RENDERWINDOWCONTEXT_OSD_TOOLBARS
+            POPUP "Object-Under-Pointer Display"
+            BEGIN
+                MENUITEM "Enabled",                     IDC_RENDERWINDOWCONTEXT_OSD_MOUSEREF
+                MENUITEM SEPARATOR
+                MENUITEM "CTRL Key Modified",           IDC_RENDERWINDOWCONTEXT_OSD_MOUSEREF_CTRLMODIFIED
+            END
+        END
         MENUITEM "Render Window Properties",    293
         MENUITEM SEPARATOR
         MENUITEM "Unload Current Cell(s)",      IDC_RENDERWINDOWCONTEXT_UNLOADCURRENTCELLS
@@ -725,33 +726,61 @@ END
 //
 
 IDB_ACHIEVEMENT_ANTICHRIST BITMAP                  "Images\\antic.bmp"
+
 IDB_ACHIEVEMENT_AUTOMATON BITMAP                  "Images\\automaton.bmp"
+
 IDB_ACHIEVEMENT_BOBTHEBUILDER BITMAP                  "Images\\bob.bmp"
+
 IDB_ACHIEVEMENT_CARDINALSIN BITMAP                  "Images\\cardinalsin.bmp"
+
 IDB_ACHIEVEMENT_CHEAT   BITMAP                  "Images\\cheat.bmp"
+
 IDB_ACHIEVEMENT_COMMANDANT BITMAP                  "Images\\command.bmp"
+
 IDB_ACHIEVEMENT_COMPARTMENTALIZER BITMAP                  "Images\\compart.bmp"
+
 IDB_ACHIEVEMENT_ERUDITEMODDER BITMAP                  "Images\\erudite.bmp"
+
 IDB_ACHIEVEMENT_FEARLESS BITMAP                  "Images\\fearless.bmp"
+
 IDB_ACHIEVEMENT_FLYINGBLIND BITMAP                  "Images\\fly.bmp"
+
 IDB_ACHIEVEMENT_HERECTIC BITMAP                  "Images\\heretic.bmp"
+
 IDB_ACHIEVEMENT_TOTALLYJOBLESS BITMAP                  "Images\\jobless.bmp"
+
 IDB_ACHIEVEMENT_LAZYBUM BITMAP                  "Images\\lazybum.bmp"
+
 IDB_ACHIEVEMENT_LOQUACIOUS BITMAP                  "Images\\loquacious.bmp"
+
 IDB_ACHIEVEMENT_MADSCIENTIST BITMAP                  "Images\\madsci.bmp"
+
 IDB_ACHIEVEMENT_MAGISTER BITMAP                  "Images\\magister.bmp"
+
 IDB_ACHIEVEMENT_PEDANTIC BITMAP                  "Images\\pedantic.bmp"
+
 IDB_ACHIEVEMENT_POWERUSER BITMAP                  "Images\\powerusr.bmp"
+
 IDB_ACHIEVEMENT_SABOTEUR BITMAP                  "Images\\saboteur.bmp"
+
 IDB_ACHIEVEMENT_SOPRANO BITMAP                  "Images\\soprano.bmp"
+
 IDB_ACHIEVEMENT_THEWISEONE BITMAP                  "Images\\wiseone.bmp"
+
 IDB_ACHIEVEMENT_WTF     BITMAP                  "Images\\wtf.bmp"
+
 IDB_ACHIEVEMENT_LOST    BITMAP                  "Images\\lost.bmp"
+
 IDB_ACHIEVEMENT_OLDESTTRICK BITMAP                  "Images\\fakevoice.bmp"
+
 IDB_ACHIEVEMENT_OVER3000 BITMAP                  "Images\\omfgodrays.bmp"
+
 IDB_ACHIEVEMENT_FUNNYGUY BITMAP                  "Images\\funnyman.bmp"
+
 IDB_ACHIEVEMENT_CAKE    BITMAP                  "Images\\cake.bmp"
+
 IDB_ACHIEVEMENT_CHICKEN BITMAP                  "Images\\chicken.bmp"
+
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 

@@ -265,6 +265,17 @@ public:
 };
 STATIC_ASSERT(sizeof(DialogExtraQuestStageData) == 0x20);
 
+// 14
+class DialogExtraRefSelectControl : public BSExtraData
+{
+public:
+	// members
+	//     /*00*/ BSExtraData
+	/*0C*/ RefSelectControl::Data*	data;
+	/*10*/ int						selectRefButtonID;
+};
+STATIC_ASSERT(sizeof(DialogExtraRefSelectControl) == 0x14);
+
 // 1C
 class DialogExtraPopupMenu: public BSExtraData
 {

@@ -103,6 +103,7 @@ namespace componentDLLInterface
 		};
 
 		void										(* DeleteInterOpData)(IDisposableData* Pointer, bool IsArray);
+		void										(* DeleteData)(void* Pointer, bool IsArray);
 
 		IEditorAPI									EditorAPI;
 		IScriptEditor								ScriptEditor;
@@ -116,7 +117,14 @@ namespace componentDLLInterface
 	public:
 		UInt32										(* InitializeComponents)(CommandTableData* Data, IntelliSenseUpdateData* GMSTData);		// returns the no. of script commands (OBSE+Plugins) parsed
 
-		void										(* InstantiateEditor)(ScriptData* InitializerScript, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height);
+		void										(* InstantiateEditor)(ScriptData* InitializerScript,
+																		  UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height);
+		void										(* InstantiateEditorAndHighlight)(ScriptData* InitializerScript, const char* SearchQuery,
+																		  UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height);
+		void										(* InstantiateEditors)(ScriptData** InitializerScripts, UInt32 ScriptCount,
+																		   UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height);
+		void										(* InstantiateEditorsAndHighlight)(ScriptData** InitializerScripts, UInt32 ScriptCount, const char* SearchQuery,
+																					   UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height);
 		void										(* AddScriptCommandDeveloperURL)(const char* ScriptCommandName, const char* URL);
 
 		void										(* CloseAllOpenEditors)(void);

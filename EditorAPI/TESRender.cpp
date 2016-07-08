@@ -24,8 +24,8 @@ PathGridPointListT*					TESRenderWindow::SelectedPathGridPoints = (PathGridPoint
 float*								TESRenderWindow::CameraPanSpeed = (float*)0x00A0B090;
 float*								TESRenderWindow::CameraZoomSpeed = (float*)0x00A0B088;
 float*								TESRenderWindow::CameraRotationSpeed = (float*)0x00A0B080;
-UInt32*								TESRenderWindow::SnapGridDistance = (UInt32*)0x00A0B060;
-UInt32*								TESRenderWindow::SnapAngle = (UInt32*)0x00A0B068;
+float*								TESRenderWindow::SnapGridDistance = (float*)0x00A0B060;
+float*								TESRenderWindow::SnapAngle = (float*)0x00A0B068;
 float*								TESRenderWindow::RefRotationSpeed = (float*)0x00A0B070;
 float*								TESRenderWindow::RefMovementSpeed = (float*)0x00A0B078;
 
@@ -219,6 +219,25 @@ void TESRender::PrimaryRenderer::MoveReferenceSelection(int XOffset, int YOffset
 	cdeclCall<void>(0x00425670, this, XOffset, YOffset, AxisX, AxisY, AxisZ);
 }
 
+void TESRender::PrimaryRenderer::RotateReferenceSelection(int Offset, bool AxisX, bool AxisY, bool AxisZ)
+{
+	int Axis = 0;
+	if (AxisX)
+		Axis = 1;
+	else if (AxisY)
+		Axis = 3;		// yeah, 3
+	else if (AxisZ)
+		Axis = 2;
+
+	SME_ASSERT(Axis);
+	cdeclCall<void>(0x00425D60, Offset, Axis);
+}
+
+void TESRender::PrimaryRenderer::ScaleReferenceSelection(int Offset, bool Global)
+{
+	cdeclCall<void>(0x00424650, Offset, Global);
+}
+
 bool TESRender::UpdateNode(NiNode* Node, UInt32 UpdateType, float Multiplier)
 {
 	bool Result = cdeclCall<bool>(0x00430080, Node, UpdateType, Multiplier);
@@ -234,7 +253,12 @@ void TESRender::UpdateAVObject( NiAVObject* Object )
 	thisCall<void>(0x006F25E0, Object, 0.0, true);		// NiAVObject::Update
 }
 
-void TESRender::RotateNode( NiNode* Node, Vector3* Pivot, int XOffset, int YOffset, float SpeedMultiplier )
+void TESRender::UpdateDynamicEffectState(NiAVObject* Object)
+{
+	thisCall<void>(0x006F2C10, Object);
+}
+
+void TESRender::RotateNode(NiNode* Node, Vector3* Pivot, int XOffset, int YOffset, float SpeedMultiplier)
 {
 	cdeclCall<void>(0x00430420, Node, Pivot, XOffset, YOffset, SpeedMultiplier);
 }
@@ -322,6 +346,45 @@ void TESRender::AddProperty(NiAVObject* To, NiProperty* Property, bool Initializ
 NiProperty* TESRender::GetProperty(NiAVObject* In, UInt16 ID)
 {
 	return thisCall<NiProperty*>(0x006F27C0, In, ID);
+}
+
+NiProperty* TESRender::CreateProperty(UInt8 Type)
+{
+	bool InvalidType = false;
+	switch (Type)
+	{
+	case NiVertexColorProperty::kType:
+		{
+			NiVertexColorProperty* VertexColor = (NiVertexColorProperty*)FormHeap_Allocate(sizeof(NiVertexColorProperty));
+			thisCall<void>(0x00410C50, VertexColor);
+			VertexColor->m_uiRefCount++;
+			return VertexColor;
+		}
+	case NiWireframeProperty::kType:
+		{
+			NiWireframeProperty* Wireframe = (NiWireframeProperty*)FormHeap_Allocate(sizeof(NiWireframeProperty));
+			thisCall<void>(0x00417BE0, Wireframe);
+			Wireframe->m_uiRefCount++;
+			return Wireframe;
+		}
+	case NiMaterialProperty::kType:
+		{
+			NiMaterialProperty* Mat = (NiMaterialProperty*)FormHeap_Allocate(sizeof(NiMaterialProperty));
+			thisCall<void>(0x00704060, Mat);
+			Mat->m_uiRefCount++;
+			return Mat;
+		}
+	case NiStencilProperty::kType:
+		{
+			NiStencilProperty* Stencil = (NiStencilProperty*)FormHeap_Allocate(sizeof(NiStencilProperty));
+			thisCall<void>(0x00410BE0, Stencil);
+			Stencil->m_uiRefCount++;
+			return Stencil;
+		}
+	default:
+		SME_ASSERT(InvalidType);
+		return NULL;
+	}
 }
 
 TESPathGridPoint* TESRender::PickPathGridPointAtCoords(int X, int Y)

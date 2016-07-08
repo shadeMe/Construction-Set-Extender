@@ -1461,8 +1461,8 @@ namespace cse
 			{
 				Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
 				Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"),
-											  PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"),
-											  (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
+											  PREFERENCES->FetchSettingAsInt("FontSize", "Appearance") - 2,
+											  FontStyle::Italic);
 
 				Windows::Media::Brush^ ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(100,
 																ForegroundColor.R,
@@ -1471,6 +1471,8 @@ namespace cse
 				Windows::Media::Brush^ BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(0, 0, 0, 0));
 
 				ElementText = ElementText->Replace("\t", "");
+				if (ElementText->Length > 100)
+					ElementText = ElementText->Substring(0, 100) + "...";
 
 				AdornmentData^ Data = gcnew AdornmentData;
 				Data->JumpLine = JumpLine;
@@ -1490,8 +1492,8 @@ namespace cse
 				{
 					Windows::Controls::Image^ Icon = gcnew Windows::Controls::Image();
 					Icon->Source = IconData;
-					Icon->Width = 16;
-					Icon->Height = 16;
+					Icon->Width = 14;
+					Icon->Height = 14;
 					Icon->HorizontalAlignment = Windows::HorizontalAlignment::Center;
 					Icon->VerticalAlignment = Windows::VerticalAlignment::Bottom;
 					Panel->Children->Add(Icon);
@@ -1500,6 +1502,7 @@ namespace cse
 				Windows::Controls::Label^ AdornmentLabel = gcnew Windows::Controls::Label();
 				AdornmentLabel->FontFamily = gcnew Windows::Media::FontFamily(CustomFont->FontFamily->Name);
 				AdornmentLabel->FontSize = CustomFont->Size;
+				AdornmentLabel->FontStyle = Windows::FontStyles::Italic;
 				AdornmentLabel->Foreground = ForegroundBrush;
 				AdornmentLabel->Background = BackgroundBrush;
 				AdornmentLabel->Content = ElementText;

@@ -136,7 +136,7 @@ using namespace SME::Functors;
 
 // required for assertions in d'tors (for static instances) as we don't want it to trigger the crash handler recursively
 #ifdef NDEBUG
-#define DEBUG_ASSERT(expr)		(void)( (!!(expr)) || (BGSEECONSOLE_MESSAGE("Debug assertion failed in %s, line %s!", __FILE__, __LINE__)) )
+#define DEBUG_ASSERT(expr)
 #else
 #define DEBUG_ASSERT(expr)		SME_ASSERT(expr)
 #endif

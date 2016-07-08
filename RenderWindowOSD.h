@@ -22,6 +22,7 @@ namespace cse
 
 			HWND							RenderWindowHandle;
 			IDirect3DDevice9*				D3DDevice;
+			bool							MouseDoubleClicked[2];		// for the left and right mouse buttons
 			bool							Initialized;
 
 			static void						RenderDrawLists(ImDrawData* draw_data);
@@ -34,6 +35,7 @@ namespace cse
 
 			bool			Initialize(HWND RenderWindow, IDirect3DDevice9* Device);
 			void			NewFrame();
+			void			Render();
 
 			void			InvalidateDeviceObjects();
 			bool			CreateDeviceObjects();
@@ -41,12 +43,17 @@ namespace cse
 			bool			UpdateInputState(HWND, UINT msg, WPARAM wParam, LPARAM lParam);		// returns true if the message was processed
 			bool			NeedsInput() const;		// returns true if the GUI needs mouse/keyboard input
 			bool			IsInitialized() const;
+			bool			IsDraggingWindow() const;
 		};
 
 		// queues ImGui drawcalls
 		class IRenderWindowOSDLayer
 		{
+			const INISetting*				Toggle;
+			UInt32							Priority;
 		public:
+			IRenderWindowOSDLayer(INISetting& Toggle, UInt32 Priority);
+			IRenderWindowOSDLayer(UInt32 Priority);
 			virtual ~IRenderWindowOSDLayer() = 0
 			{
 				;//
@@ -54,6 +61,21 @@ namespace cse
 
 			virtual void					Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI) = 0;
 			virtual bool					NeedsBackgroundUpdate() = 0;			// returns true if the layer needs to be rendered when the render window doesn't have input focus
+			virtual UInt32					GetPriority() const;					// layers with higher priority get rendered first
+			virtual bool					IsEnabled() const;
+
+			enum
+			{
+				kPriority_Notifications			= 1001,
+				kPriority_MouseTooltip			= 1000,
+				kPriority_Toolbar				= 999,
+
+				kPriority_SelectionControls		= 998,
+				kPriority_CellLists				= 997,
+
+				kPriority_Debug					= 1,
+				kPriority_DefaultOverlay		= 0,
+			};
 		};
 
 		class RenderWindowOSD
@@ -109,6 +131,7 @@ namespace cse
 		class DefaultOverlayOSDLayer : public IRenderWindowOSDLayer
 		{
 		public:
+			DefaultOverlayOSDLayer();
 			virtual ~DefaultOverlayOSDLayer();
 
 			virtual void					Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI);
@@ -120,6 +143,7 @@ namespace cse
 		class MouseOverTooltipOSDLayer : public IRenderWindowOSDLayer
 		{
 		public:
+			MouseOverTooltipOSDLayer();
 			virtual ~MouseOverTooltipOSDLayer();
 
 			virtual void					Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI);
@@ -164,6 +188,7 @@ namespace cse
 		class DebugOSDLayer : public IRenderWindowOSDLayer
 		{
 		public:
+			DebugOSDLayer();
 			virtual ~DebugOSDLayer();
 
 			virtual void					Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI);
@@ -185,6 +210,31 @@ namespace cse
 			virtual bool					NeedsBackgroundUpdate();
 
 			static ToolbarOSDLayer			Instance;
+		};
+
+		class SelectionControlsOSDLayer : public IRenderWindowOSDLayer
+		{
+			bool					TextInputActive;
+			bool					DragActive;
+			int						LocalTransformation;
+
+			void					EditBaseForm(TESObjectREFR* Ref);
+			void					CheckTextInputChange(ImGuiDX9* GUI, bool& OutGotFocus, bool& OutLostFocus);
+			void					CheckDragChange(ImGuiDX9* GUI, bool& OutDragBegin, bool& OutDragEnd);
+			void					DrawDragTrail();
+
+			void					MoveSelection(bool X, bool Y, bool Z);
+			void					RotateSelection(bool Local, bool X, bool Y, bool Z);
+			void					ScaleSelection(bool Local);
+			void					AlignSelection(bool Position, bool Rotation);
+		public:
+			SelectionControlsOSDLayer();
+			virtual ~SelectionControlsOSDLayer();
+
+			virtual void					Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI);
+			virtual bool					NeedsBackgroundUpdate();
+
+			static SelectionControlsOSDLayer			Instance;
 		};
 	}
 }

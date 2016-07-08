@@ -61,6 +61,8 @@ public:
 		const NiVector3*					GetCameraWorldTranslate();
 
 		void								MoveReferenceSelection(int XOffset, int YOffset, bool AxisX, bool AxisY, bool AxisZ);
+		void								RotateReferenceSelection(int Offset, bool AxisX, bool AxisY, bool AxisZ);
+		void								ScaleReferenceSelection(int Offset, bool Global);
 
 		static PrimaryRenderer**			Singleton;
 	};
@@ -145,6 +147,7 @@ public:
 
 	// misc methods that belong elsewhere
 	static void								UpdateAVObject(NiAVObject* Object);		// NiAVObject method
+	static void								UpdateDynamicEffectState(NiAVObject* Object);		
 	static NiNode*							CreateNiNode();
 	static void								DeleteNiRefObject(NiRefObject* Object);
 	static void								AddToNiNode(NiNode* To, NiAVObject* Child);
@@ -152,6 +155,8 @@ public:
 	static ShadowSceneNode*					GetSceneGraphRoot();
 	static void								AddProperty(NiAVObject* To, NiProperty* Property, bool InitializeState = true);
 	static NiProperty*						GetProperty(NiAVObject* In, UInt16 ID);
+	static NiProperty*						CreateProperty(UInt8 Type);		// increments ref count
+
 
 	static NiDX9Renderer**					NiRendererSingleton;
 	static NiNode**							PathGridSceneRoot;
@@ -181,10 +186,10 @@ public:
 	public:
 		enum
 		{
-			kUndoOperation_Unk01	=	1,		// used to record ref creation?
-			kUndoOperation_Unk02,				// used to record ref deletion?
-			kUndoOperation_Unk03,				// used to record ref 3D data
-			kUndoOperation_Unk04,				// 4-6 used to record landscape changes
+			kUndoOperation_RefCreate	=	1,
+			kUndoOperation_RefDelete,
+			kUndoOperation_RefChange3D,
+			kUndoOperation_Unk04,					// 4-6 used to record landscape changes
 			kUndoOperation_Unk05,
 			kUndoOperation_Unk06
 		};
@@ -265,8 +270,8 @@ public:
 
 	static float*						RefMovementSpeed;
 	static float*						RefRotationSpeed;
-	static UInt32*						SnapAngle;
-	static UInt32*						SnapGridDistance;
+	static float*						SnapAngle;						// the snap angle and dist. are weird - they are actually unsigned ints but declaring them as such causes issues (why? compiler related?)
+	static float*						SnapGridDistance;				// so we need to cast them as UInt32 pointers before dereferencing them
 	static float*						CameraRotationSpeed;
 	static float*						CameraZoomSpeed;
 	static float*						CameraPanSpeed;

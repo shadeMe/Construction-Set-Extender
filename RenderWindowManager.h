@@ -84,6 +84,20 @@ namespace cse
 			static ReferenceVisibilityModifier			Instance;
 		};
 
+		class DebugSceneGraphModifier : public IRenderWindowSceneGraphModifier
+		{
+			NiMaterialProperty*			MatProp;
+			NiStencilProperty*			Stencil;
+		public:
+			DebugSceneGraphModifier();
+			virtual ~DebugSceneGraphModifier();
+
+			virtual void					PreRender(RenderData& Data);
+			virtual void					PostRender(RenderData& Data);
+
+			static DebugSceneGraphModifier			Instance;
+		};
+
 
 		class RenderWindowSelectionManager
 		{
@@ -171,6 +185,8 @@ namespace cse
 			RenderWindowGroupManager*					GetReferenceGroupManager() const;
 			PathGridUndoManager*						GetPathGridUndoManager() const;
 			RenderWindowSelectionManager*				GetSelectionManager() const;
+
+			void										InvokeContextMenuTool(int Identifier);
 
 			static RenderWindowManager					Instance;
 		};

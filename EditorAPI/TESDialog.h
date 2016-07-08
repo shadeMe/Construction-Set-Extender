@@ -150,6 +150,8 @@ enum
 	kFindTextListView_Topics = 1019,
 	kFindTextListView_Infos = 1952,
 	kFindTextListView_Objects = 1018,			// displays scripts and quests too
+
+	kFindTextTextBox_Query = 1000,
 };
 
 // 18
@@ -190,6 +192,45 @@ public:
 	void								RefreshListView(HWND Dialog);
 };
 STATIC_ASSERT(sizeof(SelectQuestWindowData) == 0x10);
+
+class RefSelectControl
+{
+public:
+	typedef bool(__cdecl *Comparator)(TESObjectREFR*, void*);
+
+	// 0C
+	struct Params
+	{
+
+		// members
+		/*00*/ TESObjectREFR*			defaultSelection;
+		/*04*/ Comparator				refComparator;
+		/*08*/ void*					userData;			// to be passed to the comparator
+	};
+
+	enum
+	{
+		kRefSelect_CellDropdown		= 2063,
+		kRefSelect_RefDropdown		= 1983,
+		kRefSelect_SelectRefButton	= 1982,
+	};
+
+	// 1C
+	struct Data
+	{
+		// members
+		/*00*/ HWND				parent;
+		/*04*/ Comparator		refComparator;
+		/*08*/ void*			userData;				// init to Param::userData
+		/*0C*/ int				selectRefButtonID;
+		/*10*/ int				cellComboBoxID;
+		/*14*/ int				refComboBoxID;
+		/*18*/ UInt8			allowNone;
+		/*19*/ UInt8			pad19[3];
+	};
+
+	static TESObjectREFR*		ShowSelectReferenceDialog(HWND Parent, TESObjectREFR* DefaultSelection, bool OnlyPersistent);
+};
 
 // control IDs of listview controls that are populated with TESForm instances
 enum
@@ -485,7 +526,6 @@ public:
 	static bool								ReadBoundsFromINI(const char* WindowClassName, LPRECT OutRect);
 
 	static UInt32							GetDialogTemplateForFormType(UInt8 FormTypeID);
-	static TESObjectREFR*					ShowSelectReferenceDialog(HWND Parent, TESObjectREFR* DefaultSelection);
 	static BSExtraData*						GetDialogExtraByType(HWND Dialog, UInt16 Type);
 	static TESForm*							GetDialogExtraParam(HWND Dialog);
 	static TESForm*							GetDialogExtraLocalCopy(HWND Dialog);

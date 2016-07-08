@@ -218,6 +218,7 @@ namespace cse
 			SettingCollection->Add(gcnew INISetting("CaseInsensitive", "FindReplace", "0"), gcnew BoundControl(CaseInsensitive, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 			SettingCollection->Add(gcnew INISetting("MatchWholeWord", "FindReplace", "0"), gcnew BoundControl(MatchWholeWord, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 			SettingCollection->Add(gcnew INISetting("UseRegEx", "FindReplace", "0"), gcnew BoundControl(UseRegEx, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("IgnoreComments", "FindReplace", "0"), gcnew BoundControl(IgnoreComments, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 
 			// Backup
 			SettingCollection->Add(gcnew INISetting("UseAutoRecovery", "Backup", "1"), gcnew BoundControl(UseAutoRecovery, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
@@ -399,6 +400,7 @@ namespace cse
 			LabelAutoRecoveryInterval = gcnew Label();
 			AutoRecoverySavePeriod = gcnew NumericUpDown();
 			ForceDatabaseUpdate = gcnew Button();
+			IgnoreComments = gcnew CheckBox;
 			this->TabValidator = (gcnew System::Windows::Forms::TabPage());
 			this->VarFormNameCollisions = (gcnew System::Windows::Forms::CheckBox());
 			this->VarCmdNameCollisions = (gcnew System::Windows::Forms::CheckBox());
@@ -419,6 +421,7 @@ namespace cse
 			CaseInsensitive->Checked = false;
 			MatchWholeWord->Checked = false;
 			UseRegEx->Checked = false;
+			IgnoreComments->Checked = false;
 
 			TabBox->SuspendLayout();
 			TabGeneral->SuspendLayout();

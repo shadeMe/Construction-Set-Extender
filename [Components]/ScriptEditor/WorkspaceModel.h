@@ -73,7 +73,7 @@ namespace cse
 
 			virtual textEditors::IScriptTextEditor::FindReplaceResult^
 											FindReplace(IWorkspaceModel^ Model, textEditors::IScriptTextEditor::FindReplaceOperation Operation,
-														String^ Query, String^ Replacement, UInt32 Options);
+														String^ Query, String^ Replacement, textEditors::IScriptTextEditor::FindReplaceOptions Options);
 
 			virtual bool					GetOffsetViewerData(IWorkspaceModel^ Model, String^% OutText, UInt32% OutBytecode, UInt32% OutLength);
 

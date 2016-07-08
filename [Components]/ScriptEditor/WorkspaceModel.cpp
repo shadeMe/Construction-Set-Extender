@@ -726,7 +726,7 @@ namespace cse
 																						textEditors::IScriptTextEditor::FindReplaceOperation Operation,
 																						String^ Query,
 																						String^ Replacement,
-																						UInt32 Options)
+																						textEditors::IScriptTextEditor::FindReplaceOptions Options)
 		{
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;

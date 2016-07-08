@@ -157,6 +157,10 @@ bool TESDataHandler::PanicSave( bool Initialize /*= false*/ )
 		// wrap this in SEH to prevent the crash handler from being invoked again (we won't be here unless the editor has already crashed)
 		__try
 		{
+			// skip if the original crash happened when saving/loading
+			if (ThreadLocalData::Get()->saveLoadInProgress)
+				return false;
+
 			this->unkCD2 = 1;
 			TESFile* ActiveFile = this->activeFile;
 

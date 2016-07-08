@@ -288,6 +288,16 @@ void TESForm::SetDataInDialog( HWND Dialog )
 	thisVirtualCall<void>(0x114, this, Dialog);
 }
 
+void TESForm::SetInitiallyDisabled(bool State)
+{
+	SME::MiscGunk::ToggleFlag(&formFlags, kFormFlags_Disabled, State);
+}
+
+void TESForm::SetVWD(bool State)
+{
+	SME::MiscGunk::ToggleFlag(&formFlags, kFormFlags_VisibleWhenDistant, State);
+}
+
 bool TESForm::GetFromActiveFile() const
 {
 	return (formFlags & kFormFlags_FromActiveFile);
@@ -303,7 +313,17 @@ bool TESForm::IsTemporary() const
 	return (formFlags & kFormFlags_Temporary);
 }
 
-TESForm* TESForm::CreateTemporaryCopy( TESForm* Source, bool CopyModifiedState /*= true*/ )
+bool TESForm::IsVWD() const
+{
+	return (formFlags & kFormFlags_VisibleWhenDistant);
+}
+
+bool TESForm::IsInitiallyDisabled() const
+{
+	return (formFlags & kFormFlags_Disabled);
+}
+
+TESForm* TESForm::CreateTemporaryCopy(TESForm* Source, bool CopyModifiedState /*= true*/)
 {
 	SME_ASSERT(Source);
 

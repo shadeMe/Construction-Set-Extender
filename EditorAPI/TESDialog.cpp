@@ -114,11 +114,6 @@ UInt32 TESDialog::GetDialogTemplateForFormType(UInt8 FormTypeID)
 	return cdeclCall<UInt32>(0x00442050, FormTypeID);
 }
 
-TESObjectREFR* TESDialog::ShowSelectReferenceDialog(HWND Parent, TESObjectREFR* DefaultSelection)
-{
-	return cdeclCall<TESObjectREFR*>(0x0044D660, Parent, DefaultSelection, 0x00545B10, 0);
-}
-
 BSExtraData* TESDialog::GetDialogExtraByType(HWND Dialog, UInt16 Type)
 {
 	return cdeclCall<BSExtraData*>(0x00442990, Dialog, Type);
@@ -644,4 +639,27 @@ void SelectTopicWindowData::RefreshListView(HWND Dialog)
 void SelectQuestWindowData::RefreshListView(HWND Dialog)
 {
 	cdeclCall<void>(0x004DEE30, Dialog, this, NULL);
+}
+
+bool RefSelectControlDefaultComparator(TESObjectREFR* Ref, void* UserData)
+{
+	UInt32 OnlyPersistent = (UInt32)UserData;
+	if (Ref == NULL || Ref->IsDeleted() || Ref->IsTemporary() || (OnlyPersistent && Ref->IsQuestItem() == false))
+		return false;
+	else
+		return true;
+}
+
+TESObjectREFR* RefSelectControl::ShowSelectReferenceDialog(HWND Parent, TESObjectREFR* DefaultSelection, bool OnlyPersistent)
+{
+	TESObjectREFR* Selection = cdeclCall<TESObjectREFR*>(0x0044D660, Parent, DefaultSelection, RefSelectControlDefaultComparator, (UInt32)OnlyPersistent);
+	if (Parent)
+	{
+		// usual kind of black magic one needs to perform because Windows
+		SetForegroundWindow(*TESCSMain::WindowHandle);
+		SetForegroundWindow(Parent);
+		SetActiveWindow(Parent);
+	}
+
+	return Selection;
 }

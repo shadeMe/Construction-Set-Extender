@@ -139,7 +139,8 @@ namespace cse
 				InSelection		=		1 << 0,
 				MatchWholeWord	=		1 << 1,
 				CaseInsensitive	=		1 << 2,
-				RegEx			=		1 << 3
+				RegEx			=		1 << 3,
+				IgnoreComments	=		1 << 4
 			};
 
 			ref struct FindReplaceResult
@@ -232,7 +233,7 @@ namespace cse
 			FindReplaceResult^							FindReplace(FindReplaceOperation Operation,
 																	String^ Query,
 																	String^ Replacement,
-																	UInt32 Options);
+																	FindReplaceOptions Options);
 
 			void										ScrollToLine(UInt32 LineNumber);
 			Point										PointToScreen(Point Location);

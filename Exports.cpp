@@ -26,7 +26,15 @@ extern "C"
 void DeleteInterOpData(IDisposableData* Pointer, bool IsArray)
 {
 	if (IsArray)
-		delete [] Pointer;
+		delete[] Pointer;
+	else
+		delete Pointer;
+}
+
+void DeleteData(void* Pointer, bool IsArray)
+{
+	if (IsArray)
+		delete[] Pointer;
 	else
 		delete Pointer;
 }
@@ -46,6 +54,7 @@ void ComponentDLLDebugPrint(UInt8 Source, const char* Message)
 		e_TAG
 	};
 
+	bool InvalidPrefix = false;
 	switch (Source)
 	{
 	case e_BE:
@@ -64,7 +73,7 @@ void ComponentDLLDebugPrint(UInt8 Source, const char* Message)
 		Prefix = "TAG";
 		break;
 	default:
-		Prefix = "???";
+		SME_ASSERT(InvalidPrefix);
 		break;
 	}
 
@@ -205,7 +214,7 @@ void LoadFormForEditByFormID(UInt32 FormID)
 
 FormData* ShowPickReferenceDialog(HWND Parent)
 {
-	TESObjectREFR* Ref = TESDialog::ShowSelectReferenceDialog(Parent, NULL);
+	TESObjectREFR* Ref = RefSelectControl::ShowSelectReferenceDialog(Parent, NULL, true);
 
 	if (!Ref)
 		return NULL;
@@ -1381,6 +1390,7 @@ TagBrowserInstantiationData* AllocateInstantionData(UInt32 FormCount)
 componentDLLInterface::CSEInterfaceTable g_InteropInterface =
 {
 	DeleteInterOpData,
+	DeleteData,
 	{
 		ComponentDLLDebugPrint,
 		WriteToStatusBar,

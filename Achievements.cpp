@@ -285,7 +285,7 @@ namespace cse
 			UINT8 Count = 0;
 			for (int i = kTool__BEING + 1; i < kTool__MAX; i++)
 			{
-				if ((ExtraData & (UInt64)(1 << i)))
+				if ((ExtraData & (UInt64)((UInt64)1 << i)))
 					Count++;
 			}
 
@@ -312,7 +312,7 @@ namespace cse
 		{
 			SME_ASSERT(Tool > kTool__BEING && Tool < kTool__MAX);
 
-			ExtraData |= (UInt64)(1 << Tool);
+			ExtraData |= (UInt64)((UInt64)1 << Tool);
 			if (GetUnlockedToolCount() > ThresholdCount)
 			{
 				if (GetUnlocked() == false)

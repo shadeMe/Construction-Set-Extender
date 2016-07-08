@@ -93,7 +93,7 @@ namespace cse
 																		   IScriptTextEditor::FindReplaceOperation Operation,
 																		   AvalonEdit::Document::DocumentLine^ Line,
 																		   String^ Replacement,
-																		   UInt32 Options)
+																		   IScriptTextEditor::FindReplaceOptions Options)
 			{
 				int Hits = 0, SearchStartOffset = 0;
 				String^ CurrentLine = TextField->Document->GetText(Line);
@@ -103,28 +103,29 @@ namespace cse
 					while (true)
 					{
 						System::Text::RegularExpressions::MatchCollection^ PatternMatches = ExpressionParser->Matches(CurrentLine, SearchStartOffset);
-
 						if (PatternMatches->Count)
 						{
 							bool Restart = false;
-
 							for each (System::Text::RegularExpressions::Match^ Itr in PatternMatches)
 							{
 								int Offset = Line->Offset + Itr->Index, Length = Itr->Length;
 								Hits++;
 
-								if (Operation == IScriptTextEditor::FindReplaceOperation::Replace)
+								if (Options.HasFlag(IScriptTextEditor::FindReplaceOptions::IgnoreComments) == false || GetCharIndexInsideCommentSegment(Offset) == false)
 								{
-									TextField->Document->Replace(Offset, Length, Replacement);
-									CurrentLine = TextField->Document->GetText(Line);
-									LineTracker->TrackFindResult(Offset, Offset + Replacement->Length, CurrentLine);
-									SearchStartOffset = Itr->Index + Replacement->Length;
-									Restart = true;
-									break;
-								}
-								else if (Operation == IScriptTextEditor::FindReplaceOperation::Find)
-								{
-									LineTracker->TrackFindResult(Offset, Offset + Length, CurrentLine);
+									if (Operation == IScriptTextEditor::FindReplaceOperation::Replace)
+									{
+										TextField->Document->Replace(Offset, Length, Replacement);
+										CurrentLine = TextField->Document->GetText(Line);
+										LineTracker->TrackFindResult(Offset, Offset + Replacement->Length, CurrentLine);
+										SearchStartOffset = Itr->Index + Replacement->Length;
+										Restart = true;
+										break;
+									}
+									else if (Operation == IScriptTextEditor::FindReplaceOperation::Find)
+									{
+										LineTracker->TrackFindResult(Offset, Offset + Length, CurrentLine);
+									}
 								}
 							}
 
@@ -2735,7 +2736,8 @@ namespace cse
 				}
 			}
 
-			IScriptTextEditor::FindReplaceResult^ AvalonEditTextEditor::FindReplace(IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, UInt32 Options)
+			IScriptTextEditor::FindReplaceResult^ AvalonEditTextEditor::FindReplace(IScriptTextEditor::FindReplaceOperation Operation,
+																					String^ Query, String^ Replacement, IScriptTextEditor::FindReplaceOptions Options)
 			{
 				IScriptTextEditor::FindReplaceResult^ Result = gcnew IScriptTextEditor::FindReplaceResult;
 
@@ -2750,17 +2752,17 @@ namespace cse
 				{
 					String^ Pattern = "";
 
-					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::RegEx))
+					if (Options.HasFlag(IScriptTextEditor::FindReplaceOptions::RegEx))
 						Pattern = Query;
 					else
 					{
 						Pattern = System::Text::RegularExpressions::Regex::Escape(Query);
-						if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::MatchWholeWord))
+						if (Options.HasFlag(IScriptTextEditor::FindReplaceOptions::MatchWholeWord))
 							Pattern = "\\b" + Pattern + "\\b";
 					}
 
 					System::Text::RegularExpressions::Regex^ Parser = nullptr;
-					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::CaseInsensitive))
+					if (Options.HasFlag(IScriptTextEditor::FindReplaceOptions::CaseInsensitive))
 					{
 						Parser = gcnew System::Text::RegularExpressions::Regex(Pattern,
 																			   System::Text::RegularExpressions::RegexOptions::IgnoreCase | System::Text::RegularExpressions::RegexOptions::Singleline);
@@ -2773,7 +2775,7 @@ namespace cse
 
 					AvalonEdit::Editing::Selection^ TextSelection = TextField->TextArea->Selection;
 
-					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::InSelection))
+					if (Options.HasFlag(IScriptTextEditor::FindReplaceOptions::InSelection))
 					{
 						if (TextSelection->IsEmpty == false)
 						{

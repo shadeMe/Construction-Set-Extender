@@ -75,14 +75,11 @@ SE		---->
 
 
 	ENHANCEMENT		=
-		> Search/replace ignore comments toggle
 		> Document minimap
 		> Change margin
 
 
 	MISC			=
-		> Move the global find list icon to the lower toolbar
-		> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=25140390
 
 
 

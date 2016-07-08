@@ -58,7 +58,7 @@ namespace cse
 
 			virtual void	Jump(IWorkspaceView^ View, IWorkspaceModel^ From, String^ ScriptEditorID);
 			virtual int		FindReplace(IWorkspaceView^ View, textEditors::IScriptTextEditor::FindReplaceOperation Operation,
-										String^ Query, String^ Replacement, UInt32 Options, bool Global);
+										String^ Query, String^ Replacement, textEditors::IScriptTextEditor::FindReplaceOptions Options, bool Global);
 			virtual void	ShowOutline(IWorkspaceView^ View, obScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model);
 
 			virtual void	Redraw(IWorkspaceView^ View);
@@ -173,12 +173,12 @@ namespace cse
 			textEditors::IScriptTextEditor::FindReplaceOperation		Operation;
 			String^														Query;
 			String^														Replacement;
-			UInt32														Options;
+			textEditors::IScriptTextEditor::FindReplaceOptions			Options;
 
 			List<HitData^>^												Hits;
 
 			FindReplaceAllResults() : Operation(textEditors::IScriptTextEditor::FindReplaceOperation::CountMatches),
-				Query(""), Replacement(""), Options(0), Hits(gcnew List<HitData^>) {}
+				Query(""), Replacement(""), Options((textEditors::IScriptTextEditor::FindReplaceOptions)0), Hits(gcnew List<HitData^>) {}
 
 			void Add(IWorkspaceModel^ Model, textEditors::IScriptTextEditor::FindReplaceResult^ Data)
 			{

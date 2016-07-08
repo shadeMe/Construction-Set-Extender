@@ -64,7 +64,7 @@ namespace cse
 
 			void	Jump(IWorkspaceView^ View, IWorkspaceModel^ From, String^ ScriptEditorID);
 			int		FindReplace(IWorkspaceView^ View, textEditors::IScriptTextEditor::FindReplaceOperation Operation,
-																	String^ Query, String^ Replacement, UInt32 Options, bool Global);
+																	String^ Query, String^ Replacement, textEditors::IScriptTextEditor::FindReplaceOptions Options, bool Global);
 			void	ShowOutline(IWorkspaceView^ View, obScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model);
 
 			void	Redraw(IWorkspaceView^ View);

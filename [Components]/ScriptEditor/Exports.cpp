@@ -82,6 +82,49 @@ void InstantiateEditor(componentDLLInterface::ScriptData* InitializerScript, UIn
 	New->AssociateModel(Model, true);
 }
 
+void InstantiateEditorAndHighlight(componentDLLInterface::ScriptData* InitializerScript, const char* SearchQuery, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
+{
+	ConcreteWorkspaceView^ New = (ConcreteWorkspaceView^)ConcreteWorkspaceViewFactory::Instance->CreateView(Left, Top, Width, Height);
+	IWorkspaceModel^ Model = ConcreteWorkspaceModelFactory::Instance->CreateModel(InitializerScript);
+
+	New->AssociateModel(Model, true);
+	New->Controller->FindReplace(New,
+								 cse::textEditors::IScriptTextEditor::FindReplaceOperation::Find,
+								 gcnew String(SearchQuery), "",
+								 cse::textEditors::IScriptTextEditor::FindReplaceOptions::CaseInsensitive,
+								 false);
+}
+
+void InstantiateEditors(componentDLLInterface::ScriptData** InitializerScripts, UInt32 ScriptCount, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
+{
+	ConcreteWorkspaceView^ New = (ConcreteWorkspaceView^)ConcreteWorkspaceViewFactory::Instance->CreateView(Left, Top, Width, Height);
+	for (int i = 0; i < ScriptCount; i++)
+	{
+		IWorkspaceModel^ Model = ConcreteWorkspaceModelFactory::Instance->CreateModel(InitializerScripts[i]);
+		New->AssociateModel(Model, i == 0);
+	}
+
+	nativeWrapper::g_CSEInterfaceTable->DeleteData(InitializerScripts, true);
+}
+
+void InstantiateEditorsAndHighlight(componentDLLInterface::ScriptData** InitializerScripts, UInt32 ScriptCount, const char* SearchQuery, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
+{
+	ConcreteWorkspaceView^ New = (ConcreteWorkspaceView^)ConcreteWorkspaceViewFactory::Instance->CreateView(Left, Top, Width, Height);
+	for (int i = 0; i < ScriptCount; i++)
+	{
+		IWorkspaceModel^ Model = ConcreteWorkspaceModelFactory::Instance->CreateModel(InitializerScripts[i]);
+		New->AssociateModel(Model, i == 0);
+	}
+
+	New->Controller->FindReplace(New,
+								 cse::textEditors::IScriptTextEditor::FindReplaceOperation::Find,
+								 gcnew String(SearchQuery), "",
+								 cse::textEditors::IScriptTextEditor::FindReplaceOptions::CaseInsensitive,
+								 true);
+
+	nativeWrapper::g_CSEInterfaceTable->DeleteData(InitializerScripts, true);
+}
+
 void AddScriptCommandDeveloperURL(const char* ScriptCommandName, const char* URL)
 {
 	ISDB->RegisterDeveloperURL(gcnew String(ScriptCommandName), gcnew String(URL));
@@ -149,6 +192,9 @@ componentDLLInterface::ScriptEditorInterface g_InteropInterface =
 {
 	InitializeComponents,
 	InstantiateEditor,
+	InstantiateEditorAndHighlight,
+	InstantiateEditors,
+	InstantiateEditorsAndHighlight,
 	AddScriptCommandDeveloperURL,
 	CloseAllOpenEditors,
 	UpdateIntelliSenseDatabase,

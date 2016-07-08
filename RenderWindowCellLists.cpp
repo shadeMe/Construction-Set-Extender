@@ -120,7 +120,7 @@ namespace cse
 		}
 
 		RenderWindowCellLists::OSDLayer::OSDLayer(RenderWindowCellLists* Parent) :
-			IRenderWindowOSDLayer(),
+			IRenderWindowOSDLayer(IRenderWindowOSDLayer::kPriority_CellLists),
 			Parent(Parent),
 			FilterHelper()
 		{
@@ -130,7 +130,7 @@ namespace cse
 		void RenderWindowCellLists::OSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
 			ImGui::SetNextWindowPos(ImVec2(10, 300), ImGuiSetCond_FirstUseEver);
-			if (!ImGui::Begin("Cell Lists", NULL, ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing))
+			if (!ImGui::Begin("Cell Lists", NULL, ImGuiWindowFlags_NoFocusOnAppearing))
 			{
 				ImGui::End();
 				return;

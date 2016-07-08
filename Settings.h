@@ -87,15 +87,16 @@ namespace cse
 
 		namespace renderWindowOSD
 		{
-			extern INISetting					kShowSelectionStats;
-			extern INISetting					kShowRAMUsage;
 			extern INISetting					kShowMouseRef;
 			extern INISetting					kMouseRefCtrlModified;
+			extern INISetting					kShowInfoOverlay;
+			extern INISetting					kShowCellLists;
+			extern INISetting					kShowSelectionControls;
+			extern INISetting					kShowToolbar;
+			extern INISetting					kShowNotifications;
 
 			extern INISetting					kColorSelectionStats;
 			extern INISetting					kColorRAMUsage;
-			extern INISetting					kColorMouseRef;
-			extern INISetting					kColorNotifications;
 		}
 
 		namespace renderWindowFlyCamera

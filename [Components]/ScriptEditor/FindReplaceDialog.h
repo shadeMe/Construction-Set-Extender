@@ -24,6 +24,7 @@ namespace cse
 			CheckBox^									CaseInsensitiveSearch;
 			CheckBox^									InSelection;
 			CheckBox^									UseRegEx;
+			CheckBox^									IgnoreComments;
 
 			IWorkspaceView^								ParentView;
 			bool										Closing;
@@ -45,8 +46,8 @@ namespace cse
 			void										FindReplaceBox_Cancel(Object^ Sender, CancelEventArgs^ E);
 			void										FindReplaceBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
 
-			void										CacheComboBoxStrings();
-			UInt32										GetSelectedOptions();
+			void													CacheComboBoxStrings();
+			textEditors::IScriptTextEditor::FindReplaceOptions		GetSelectedOptions();
 
 			void										LoadOptions();
 			void										SaveOptions();

@@ -58,14 +58,17 @@ namespace cse
 			Depot.push_back(&renderer::kPathGridLinkedRefIndicator);
 			Depot.push_back(&renderer::kPathGridLinkedRefIndicatorFlags);
 
-			Depot.push_back(&renderWindowOSD::kShowSelectionStats);
-			Depot.push_back(&renderWindowOSD::kShowRAMUsage);
 			Depot.push_back(&renderWindowOSD::kShowMouseRef);
 			Depot.push_back(&renderWindowOSD::kMouseRefCtrlModified);
 			Depot.push_back(&renderWindowOSD::kColorSelectionStats);
 			Depot.push_back(&renderWindowOSD::kColorRAMUsage);
-			Depot.push_back(&renderWindowOSD::kColorMouseRef);
-			Depot.push_back(&renderWindowOSD::kColorNotifications);
+
+			Depot.push_back(&renderWindowOSD::kShowInfoOverlay);
+			Depot.push_back(&renderWindowOSD::kShowCellLists);
+			Depot.push_back(&renderWindowOSD::kShowSelectionControls);
+			Depot.push_back(&renderWindowOSD::kShowToolbar);
+			Depot.push_back(&renderWindowOSD::kShowNotifications);
+
 
 			Depot.push_back(&renderWindowFlyCamera::kMovementSpeed);
 			Depot.push_back(&renderWindowFlyCamera::kSprintMultiplier);
@@ -170,15 +173,17 @@ namespace cse
 		{
 #define RWOSD_INISECTION				"RenderWindowOSD"
 
-			INISetting		kShowSelectionStats("ShowSelectionStats", RWOSD_INISECTION, "Displays selection details", (SInt32)1);
-			INISetting		kShowRAMUsage("ShowRAMUsage", RWOSD_INISECTION, "Displays the editor's RAM usage", (SInt32)1);
 			INISetting		kShowMouseRef("ShowMouseRef", RWOSD_INISECTION, "Displays details about the reference under the mouse pointer", (SInt32)1);
 			INISetting		kMouseRefCtrlModified("MouseRefCtrlModified", RWOSD_INISECTION, "The control key must be held down to display the mouse ref's details", (SInt32)0);
 
+			INISetting		kShowInfoOverlay("ShowInfoOverlay", RWOSD_INISECTION, "Displays details about the current cell, selection, etc on the top-left corner", (SInt32)1);
+			INISetting		kShowCellLists("ShowCellLists", RWOSD_INISECTION, "Displays the cell bookmars/recently visited list", (SInt32)1);
+			INISetting		kShowSelectionControls("ShowSelectionControls", RWOSD_INISECTION, "Displays the selection edit controls", (SInt32)1);
+			INISetting		kShowToolbar("ShowToolbar", RWOSD_INISECTION, "Displays the toolbar", (SInt32)1);
+			INISetting		kShowNotifications("ShowNotifications", RWOSD_INISECTION, "Displays notifications", (SInt32)1);
+
 			INISetting		kColorSelectionStats("ColorSelectionStats", RWOSD_INISECTION, "Foreground color", "189,237,99");
 			INISetting		kColorRAMUsage("ColorRAMUsage", RWOSD_INISECTION, "Foreground color", "230,230,0");
-			INISetting		kColorMouseRef("ColorMouseRef", RWOSD_INISECTION, "Foreground color", "255,128,0");
-			INISetting		kColorNotifications("ColorNotifications", RWOSD_INISECTION, "Foreground color", "230,230,0");
 		}
 
 		namespace renderWindowFlyCamera

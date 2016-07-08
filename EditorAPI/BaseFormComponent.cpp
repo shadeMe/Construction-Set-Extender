@@ -3,10 +3,10 @@
 bool TESLeveledList::WalkForCircularPath( std::string& Output, TESLeveledList* Check, TESLeveledList* Against )
 {
 	bool Result = true;
-	
+
 	TESForm* CheckBase = CS_CAST(Check, TESLeveledList, TESForm);
 	TESForm* CheckAgainstBase = CS_CAST(Against, TESLeveledList, TESForm);
-	SME_ASSERT(CheckBase && CheckAgainstBase);	
+	SME_ASSERT(CheckBase && CheckAgainstBase);
 
 	for (TESLeveledList::LevListT::Iterator Itr = Check->levList.Begin(); Itr.Get() && Itr.End() == false; ++Itr)
 	{
@@ -27,7 +27,7 @@ bool TESLeveledList::WalkForCircularPath( std::string& Output, TESLeveledList* C
 		{
 			std::string TempStr = Output + CheckBase->GetEditorID();
 			TempStr += " >";
-			
+
 			// recurse
 			if (WalkForCircularPath(TempStr, Inner, Against) == false)
 			{
@@ -44,4 +44,9 @@ bool TESLeveledList::WalkForCircularPath( std::string& Output, TESLeveledList* C
 bool TESLeveledList::CheckForCircularPaths( std::string& Output )
 {
 	return WalkForCircularPath(Output, this, this);
+}
+
+bool TESActorBaseData::HasNoLowLevelProcessing() const
+{
+	return actorFlags & kCreatureFlag_NoLowProc;
 }

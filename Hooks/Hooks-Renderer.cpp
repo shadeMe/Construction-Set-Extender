@@ -74,6 +74,9 @@ namespace cse
 		_DefineHookHdlr(CenterCameraOnRefSelection, 0x00428E35);
 		_DefineHookHdlr(TopCameraOnRefSelection, 0x00428FB8);
 		_DefineJumpHdlr(RenderWindowMouseMoveHandler, 0x0042BD88, 0x0042BD8E);
+		_DefineHookHdlr(TESRenderRotateSelectionWorldA, 0x00425F16);
+		_DefineHookHdlr(TESRenderRotateSelectionWorldB, 0x00426043);
+		_DefineHookHdlr(RotateCameraDrag, 0x0042CBFD);
 
 		void PatchRendererHooks(void)
 		{
@@ -132,6 +135,9 @@ namespace cse
 			_MemHdlr(CenterCameraOnRefSelection).WriteJump();
 			_MemHdlr(TopCameraOnRefSelection).WriteJump();
 			_MemHdlr(RenderWindowMouseMoveHandler).WriteJump();
+			_MemHdlr(TESRenderRotateSelectionWorldA).WriteJump();
+			_MemHdlr(TESRenderRotateSelectionWorldB).WriteJump();
+			_MemHdlr(RotateCameraDrag).WriteJump();
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -1355,6 +1361,75 @@ namespace cse
 				jmp		_hhGetVar(Retn)
 			SKIP:
 				jmp		_hhGetVar(Jump)
+			}
+		}
+
+		#define _hhName		TESRenderRotateSelectionWorldA
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00425F32);
+			_hhSetVar(Jump, 0x0042604F);
+			__asm
+			{
+				cmp		eax, 1
+				jz		LOCAL
+				test	bl, bl
+				jz		LOCAL
+
+				jmp		_hhGetVar(Jump)
+			LOCAL:
+				// the vanilla local rotation code only rotates the first ref in the selection, so that needs fixing as well
+				mov		ecx, 0x00A0AF60
+				mov		eax, [ecx]
+				mov		eax, [eax]
+				mov		[esp + 0x30], eax			// save the first entry to an unused location on the stack
+
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		#define _hhName		TESRenderRotateSelectionWorldB
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00426048);
+			_hhSetVar(Call, 0x0053FC70);
+			_hhSetVar(Jump, 0x00425F32);
+			__asm
+			{
+				call	_hhGetVar(Call)
+
+				mov		eax, [esp + 0x30]			// restore the selection entry we stored earlier and check if we have more refs to process
+				mov		eax, [eax + 0x8]
+
+				test	eax, eax
+				jz		END
+
+				mov		[esp + 0x30], eax			// update our variable on the stack and jump back
+				jmp		_hhGetVar(Jump)
+			END:
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		#define _hhName		RotateCameraDrag
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0042CC04);
+			_hhSetVar(Jump, 0x0042C919);
+			__asm
+			{
+				mov		ecx, 0x00A0BBDC
+				mov		cl, byte ptr [ecx]
+				test	cl, cl
+				jz		NODRAG
+
+				jmp		_hhGetVar(Jump)
+			NODRAG:
+				mov		ecx, 0x00A0BC21
+				mov		cl, byte ptr[ecx]
+				cmp		cl, 0
+
+				jmp		_hhGetVar(Retn)
 			}
 		}
 	}
