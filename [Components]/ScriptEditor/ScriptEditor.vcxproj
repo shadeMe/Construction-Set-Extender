@@ -147,14 +147,10 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\C
     </Reference>
     <Reference Include="ICSharpCode.AvalonEdit">
       <HintPath>..\..\[Depends]\ICSharpCode.AvalonEdit.dll</HintPath>
-      <Private>false</Private>
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="ObjectListView">
       <HintPath>..\..\[Depends]\ObjectListView.dll</HintPath>
-      <Private>false</Private>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
