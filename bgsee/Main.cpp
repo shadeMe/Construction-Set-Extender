@@ -578,7 +578,7 @@ namespace bgsee
 		Initialized = false;
 	}
 
-	Main* Main::GetSingleton()
+	__declspec(noinline) Main* Main::GetSingleton()
 	{
 		if (Singleton == NULL)
 			Singleton = new Main();

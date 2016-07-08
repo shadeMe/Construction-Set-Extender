@@ -204,7 +204,7 @@ namespace bgsee
 			kExtenderParentEditor__MAX
 		};
 
-		static Main*						GetSingleton();
+		static Main*							GetSingleton();
 
 		bool									Initialize(const char* LongName, const char* DisplayName, const char* ShortName, const char* ReleaseName,
 														UInt32 Version, UInt8 EditorID, UInt32 EditorSupportedVersion, UInt32 EditorCurrentVersion,

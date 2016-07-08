@@ -1057,7 +1057,7 @@ namespace bgsee
 		Singleton = NULL;
 	}
 
-	UIManager* UIManager::GetSingleton()
+	__declspec(noinline) UIManager* UIManager::GetSingleton()
 	{
 		if (Singleton == NULL)
 			Singleton = new UIManager();

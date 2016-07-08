@@ -195,12 +195,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IntDir>$(Configuration)\</IntDir>
     <IncludePath>Script;Script\MUP Base;Script\MUP Implementation;$(XSECommonIncludePath);$(DirectXIncludePath);$(BoostIncludePath);$(CrashRptIncludePath);$(SMESundriesIncludePath);$(IncludePath)</IncludePath>
-    <LibraryPath>$(DirectXLibPath);$(CrashRptLibPath);$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(DirectXLibPath);$(CrashRptLibPath);$(BoostLibPath);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(Configuration)\</OutDir>
     <IncludePath>Script;Script\MUP Base;Script\MUP Implementation;$(XSECommonIncludePath);$(DirectXIncludePath);$(BoostIncludePath);$(CrashRptIncludePath);$(SMESundriesIncludePath);$(IncludePath)</IncludePath>
-    <LibraryPath>$(DirectXLibPath);$(CrashRptLibPath);$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(DirectXLibPath);$(CrashRptLibPath);$(BoostLibPath);$(LibraryPath)</LibraryPath>
     <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -245,7 +245,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <StringPooling>true</StringPooling>

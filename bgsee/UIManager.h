@@ -253,7 +253,7 @@ namespace bgsee
 			kHandleCollection__MAX,
 		};
 	private:
-		static UIManager*					Singleton;
+		static UIManager*						Singleton;
 
 		struct IATPatchData
 		{
