@@ -52,6 +52,7 @@ TESObjectREFR*						TESRenderWindow::CurrentMouseRef = NULL;
 TESPathGridPoint*					TESRenderWindow::CurrentMousePathGridPoint = NULL;
 bool								TESRenderWindow::ShowInitiallyDisabledRefs = true;
 bool								TESRenderWindow::ShowInitiallyDisabledRefChildren = true;
+bool								TESRenderWindow::GrassTextureOverlay = false;
 
 const float							TESRenderWindow::MaxLandscapeEditBrushRadius = 25.0f;
 

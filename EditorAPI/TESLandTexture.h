@@ -55,7 +55,7 @@ public:
 	// members
 	//     /*00*/ TESForm
 	//	   /*24*/ TESTexture
-	/*3C*/ UInt32						unk3C;
+	/*3C*/ NiSourceTexture*				sourceTexture;			// smart pointer
 	/*40*/ UInt8						havokMaterial;
 	/*41*/ UInt8						friction;
 	/*42*/ UInt8						restitution;
@@ -64,4 +64,8 @@ public:
 	/*4C*/ UInt32						unk4C;					// could be a linked list, ctor initializes it as if it were
 	/*50*/ UInt32						unk50;
 	/*54*/ UInt32						unk54;					// init to 0
+
+	// methods
+	bool					LoadSourceTexture();
+	void					ReleaseSourceTexture();
 };

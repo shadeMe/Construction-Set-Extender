@@ -223,7 +223,12 @@ bool TESDataHandler::AddForm( TESForm* Form )
 	return thisCall<bool>(0x004818F0, this, Form);
 }
 
-void TESDataHandler::RemoveInvalidScripts( void )
+void TESDataHandler::RemoveCellProcess(TESObjectCELL* Cell)
+{
+	thisCall<void>(0x004792F0, this, Cell);
+}
+
+void TESDataHandler::RemoveInvalidScripts(void)
 {
 	std::list<Script*> Delinquents;
 
@@ -234,9 +239,7 @@ void TESDataHandler::RemoveInvalidScripts( void )
 		if (Current)
 		{
 			if (Current->editorID.c_str() == NULL && Current->text == NULL && Current->data == NULL)
-			{
 				Delinquents.push_back(Current);
-			}
 		}
 	}
 
@@ -308,12 +311,17 @@ void TES::SetCurrentWorldspace(TESWorldSpace* Worldspace)
 	thisCall<void>(0x004773B0, this, Worldspace);
 }
 
+int TES::PurgeExteriorCellBufer(bool SkipCurrentGrid /*= false*/, TESWorldSpace* ParentWorldSpace /*= NULL*/)
+{
+	return thisCall<int>(0x004755E0, this, SkipCurrentGrid, ParentWorldSpace);
+}
+
 void TES::PurgeLoadedResources()
 {
 	TESRenderWindow::Reset();
 
 	thisCall<void>(0x004763A0, _TES, 0, 0);
-	thisCall<void>(0x00476190, _TES, 0);
+	thisCall<void>(0x00476190, _TES, 1);
 
 	thisCall<void>(0x00474760, _MODELLOADER);
 	FormHeap_Free(_MODELLOADER);
@@ -328,6 +336,43 @@ TESObjectCELL* TES::GetCurrentCell() const
 		return currentInteriorCell;
 	else
 		return currentExteriorCell;
+}
+
+void TES::ReloadLandscapeTextures()
+{
+	_TEXTUREPALETTE->ReleaseTextures();
+
+	for (tList<TESLandTexture>::Iterator Itr = _DATAHANDLER->landTextures.Begin(); !Itr.End() && !Itr.Get(); ++Itr)
+		Itr.Get()->ReleaseSourceTexture();
+	
+	for (tList<TESLandTexture>::Iterator Itr = _DATAHANDLER->landTextures.Begin(); !Itr.End() && !Itr.Get(); ++Itr)
+		Itr.Get()->LoadSourceTexture();
+
+	for (cseOverride::NiTMapIterator Itr = TESForm::FormIDMap->GetFirstPos(); Itr;)
+	{
+		UInt32 FormID = NULL;
+		TESForm* Form = NULL;
+
+		TESForm::FormIDMap->GetNext(Itr, FormID, Form);
+		if (FormID && Form)
+		{
+			if (Form->formType == TESForm::kFormType_Cell)
+			{
+				TESObjectCELL* Cell = CS_CAST(Form, TESForm, TESObjectCELL);
+				if (Cell->GetIsInterior() == false)
+				{
+					TESObjectLAND* Land = Cell->GetLand();
+					if (Land && Land->landData && Land->landData->nodeData)
+					{
+						Land->Refresh3D(true);
+			//			thisCall<void>(0x00527980, this);
+					}
+				}
+			}
+		}
+	}
+
+	TESRenderWindow::Refresh3D();
 }
 
 UInt8 FileFinder::FindFile(const char* Path, UInt32 Unk02, UInt32 Unk03, int Unk04)

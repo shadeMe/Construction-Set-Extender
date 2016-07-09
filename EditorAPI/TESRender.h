@@ -293,6 +293,7 @@ public:
 	static POINT						CurrentMouseCoord;
 	static bool							ShowInitiallyDisabledRefs;
 	static bool							ShowInitiallyDisabledRefChildren;
+	static bool							GrassTextureOverlay;
 
 	static const float					MaxLandscapeEditBrushRadius;
 

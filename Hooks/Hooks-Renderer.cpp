@@ -77,9 +77,95 @@ namespace cse
 		_DefineHookHdlr(TESRenderRotateSelectionWorldA, 0x00425F16);
 		_DefineHookHdlr(TESRenderRotateSelectionWorldB, 0x00426043);
 		_DefineHookHdlr(RotateCameraDrag, 0x0042CBFD);
+		_DefineHookHdlr(LandscapeTextureLoad, 0x005311FA);
+
+#ifndef NDEBUG
+		void __stdcall DoTestHook1(NiSourceTexture* def,
+								   NiSourceTexture* tex1,
+								   NiSourceTexture* tex2,
+								   NiSourceTexture* tex3,
+								   NiSourceTexture* tex4,
+								   NiSourceTexture* tex5,
+								   NiSourceTexture* tex6,
+								   NiSourceTexture* tex7,
+								   NiSourceTexture* tex8)
+		{
+			BSShaderPPLightingProperty* PPLighting;
+			__asm  mov PPLighting, ecx
+
+			NiSourceTexture* check[9] = { 0 };
+
+			BGSEECONSOLE_MESSAGE("BEGIN SET LANDSCAPE TEXTURE=================");
+			BGSEECONSOLE->Indent();
+			int TexNo = 0;
+			while (TexNo < 9)
+			{
+				NiSourceTexture* currentTex = NI_CAST(PPLighting->diffuse[TexNo], NiSourceTexture);
+				check[TexNo] = currentTex;
+				BGSEECONSOLE_MESSAGE("Current tex %d: %s", TexNo, currentTex ? currentTex->fileName : "NULL");
+				TexNo++;
+			}
+
+			BGSEECONSOLE_MESSAGE("\n");
+			if (tex1)
+				BGSEECONSOLE_MESSAGE("Changing tex 1 to %s,", tex1->fileName);
+			if (tex2)
+				BGSEECONSOLE_MESSAGE("Changing tex 2 to %s,", tex2->fileName);
+			if (tex3)
+				BGSEECONSOLE_MESSAGE("Changing tex 3 to %s,", tex3->fileName);
+			if (tex4)
+				BGSEECONSOLE_MESSAGE("Changing tex 4 to %s,", tex4->fileName);
+			if (tex5)
+				BGSEECONSOLE_MESSAGE("Changing tex 5 to %s,", tex5->fileName);
+			if (tex6)
+				BGSEECONSOLE_MESSAGE("Changing tex 6 to %s,", tex6->fileName);
+			if (tex7)
+				BGSEECONSOLE_MESSAGE("Changing tex 7 to %s,", tex7->fileName);
+			if (tex8)
+				BGSEECONSOLE_MESSAGE("Changing tex 8 to %s,", tex8->fileName);
+
+			thisCall<void>(0x00775C80, PPLighting, def, tex1, tex2, tex3, tex4, tex5, tex6, tex7, tex8);
+
+			BGSEECONSOLE_MESSAGE("\n");
+			const char* SourcePath = settings::renderer::kGrassOverlayTexturePath().s;
+			TexNo = 0;
+			while (TexNo < 9)
+			{
+				NiSourceTexture* currentTex = NI_CAST(PPLighting->diffuse[TexNo], NiSourceTexture);
+				if (check[TexNo] == currentTex)
+					BGSEECONSOLE_MESSAGE("Didn't change tex %d", TexNo);
+				else if (currentTex)
+				{
+					if (strstr(currentTex->fileName, SourcePath) != NULL && TESRenderWindow::GrassTextureOverlay == false)
+						BGSEECONSOLE_MESSAGE("Tex changed but overlay is still active!");
+				}
+
+				TexNo++;
+			}
+
+			BGSEECONSOLE->Exdent();
+			BGSEECONSOLE_MESSAGE("END SET LANDSCAPE TEXTURE=================");
+		}
+
+		#define _hhName		TestHook1
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00529A31);
+			_hhSetVar(Call, 0x00775C80);
+			__asm
+			{
+				call	DoTestHook1
+				jmp		_hhGetVar(Retn)
+			}
+		}
+		_DefineHookHdlr(TestHook1, 0x00529A2C);
+#endif
 
 		void PatchRendererHooks(void)
 		{
+#ifndef NDEBUG
+			_MemHdlr(TestHook1).WriteJump();
+#endif
 			_MemHdlr(DoorMarkerProperties).WriteJump();
 			_MemHdlr(TESObjectREFRSetupDialog).WriteJump();
 			_MemHdlr(TESObjectREFRCleanDialog).WriteJump();
@@ -138,6 +224,7 @@ namespace cse
 			_MemHdlr(TESRenderRotateSelectionWorldA).WriteJump();
 			_MemHdlr(TESRenderRotateSelectionWorldB).WriteJump();
 			_MemHdlr(RotateCameraDrag).WriteJump();
+			_MemHdlr(LandscapeTextureLoad).WriteJump();
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -1439,6 +1526,44 @@ namespace cse
 				jmp		_hhGetVar(Retn)
 			EXIT:
 				popad
+				jmp		_hhGetVar(Jump)
+			}
+		}
+
+		const char* __stdcall DoLandscapeTextureLoad(TESLandTexture* Texture)
+		{
+			if (TESRenderWindow::GrassTextureOverlay && Texture->potentialGrassList.Count())
+				return settings::renderer::kGrassOverlayTexturePath().s;
+			else
+				return Texture->texturePath.c_str();
+		}
+
+		#define _hhName		LandscapeTextureLoad
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00531228);
+			_hhSetVar(Jump, 0x00531347);
+			__asm
+			{
+				mov     eax, [ecx + 0x3C]
+				test	eax, eax
+				jnz		STAGELEFT
+
+				lea		esi, [ecx + 0x3C]
+				mov		ebx, 0x00A10004
+				mov		ebx, [ebx]
+				test	ebx, ebx
+				jz		STAGELEFT
+
+				mov		[esp + 0x14], eax
+				mov		[esp + 0x22C], eax
+
+				push	ecx
+				call	DoLandscapeTextureLoad
+				test	eax, eax
+
+				jmp		_hhGetVar(Retn)
+			STAGELEFT:
 				jmp		_hhGetVar(Jump)
 			}
 		}

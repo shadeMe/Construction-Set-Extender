@@ -143,6 +143,7 @@ public:
 													// if Create is set to true, an exterior cell will be created at the input coords and returned
 
 	bool											AddForm(TESForm* Form);
+	void											RemoveCellProcess(TESObjectCELL* Cell);
 
 	void											RemoveInvalidScripts(void);			// destroys any empty scripts, i.e., scripts without script text/editorID
 	void											CleanCellWaterExtraData(void);		// removes instances of ExtraCellWaterHeight/Type from all cell objects that don't need it
@@ -255,9 +256,11 @@ public:
 	void							SetSkyTOD(float TOD);	// actually belongs to the Sky class
 	float							GetSkyTOD(void);		// this one too
 	void							SetCurrentWorldspace(TESWorldSpace* Worldspace);
+	int								PurgeExteriorCellBufer(bool SkipCurrentGrid = false, TESWorldSpace* ParentWorldSpace = NULL);		// returns the no of cells purged
 
 	void							PurgeLoadedResources();
 	TESObjectCELL*					GetCurrentCell() const;
+	void							ReloadLandscapeTextures();
 
 	static TES**					Singleton;
 };

@@ -358,6 +358,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClCompile Include="Achievements.cpp" />
     <ClCompile Include="AuxiliaryViewport.cpp" />
     <ClCompile Include="Console.cpp" />
+    <ClCompile Include="EditorAPI\TESLandTexture.cpp" />
     <ClCompile Include="EventSinks.cpp" />
     <ClCompile Include="EventSources.cpp" />
     <ClCompile Include="FormUndoStack.cpp" />

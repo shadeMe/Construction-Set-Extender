@@ -39,3 +39,4 @@ BuildInfo.h
 *.Identifier
 
 .gitattributes
+*.tmp

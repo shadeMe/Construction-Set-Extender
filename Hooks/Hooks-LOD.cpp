@@ -49,7 +49,7 @@ namespace cse
 		_DefineHookHdlr(NiRenderedTextureCreateSourceTextureB, 0x004AD515);
 		_DefineHookHdlr(LODTextureGenSavePartialToDisk, 0x0041143E);
 		_DefineHookHdlrWithBuffer(GeneratePartialLODFilePath, 0x004128B3, 6, 0x6A, 0x0, 0x6A, 0x0, 0x6A, 0x0);
-		
+
 		void PatchLODHooks(void)
 		{
 			_MemHdlr(LODLandTextureMipMapLevelA).WriteNop();
@@ -668,7 +668,7 @@ namespace cse
 				Container->m_localTranslate.y = CameraPosY;
 
 				SME_ASSERT(TESLODTextureGenerator::ExteriorSnapshotSource->land);
-				TESObjectLAND::HeightLimitData Limits = {0};
+				TESObjectLAND::LandHeightLimit Limits = {0};
 				TESLODTextureGenerator::ExteriorSnapshotSource->land->GetHeightLimits(&Limits);
 
 				Container->m_localTranslate.z = Limits.minHeight + 20000.0f;

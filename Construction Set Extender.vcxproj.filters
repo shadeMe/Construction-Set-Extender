@@ -333,6 +333,9 @@
     <ClCompile Include="RenderWindowCellLists.cpp">
       <Filter>Components\Render Window</Filter>
     </ClCompile>
+    <ClCompile Include="EditorAPI\TESLandTexture.cpp">
+      <Filter>EditorAPI\Forms\World</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">

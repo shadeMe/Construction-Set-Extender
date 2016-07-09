@@ -52,5 +52,6 @@ public:
 	void							ModExtraRank(int Rank);
 	void							ModExtraCount(UInt32 Count);
 	void							ModExtraDistantData(TESObjectLAND* Land, Vector3* Position);
+	void							ModExtraCell3D(NiNode* CellNode);
 };
 STATIC_ASSERT(sizeof(ExtraDataList) == 0x14);

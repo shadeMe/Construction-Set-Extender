@@ -45,7 +45,12 @@ void ExtraDataList::ModExtraDistantData(TESObjectLAND* Land, Vector3* Position)
 	thisCall<void>(0x0045F1D0, this, Land, Position);
 }
 
-void BaseExtraList::AddExtra( BSExtraData* xData )
+void ExtraDataList::ModExtraCell3D(NiNode* CellNode)
+{
+	thisCall<void>(0x0045E770, this, CellNode);
+}
+
+void BaseExtraList::AddExtra(BSExtraData* xData)
 {
 	thisCall<void>(0x0045B0D0, this, xData);
 }

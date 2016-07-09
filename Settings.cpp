@@ -57,6 +57,7 @@ namespace cse
 			Depot.push_back(&renderer::kRefToggleOpacityAlpha);
 			Depot.push_back(&renderer::kPathGridLinkedRefIndicator);
 			Depot.push_back(&renderer::kPathGridLinkedRefIndicatorFlags);
+			Depot.push_back(&renderer::kGrassOverlayTexturePath);
 
 			Depot.push_back(&renderWindowOSD::kShowMouseRef);
 			Depot.push_back(&renderWindowOSD::kMouseRefCtrlModified);
@@ -68,6 +69,7 @@ namespace cse
 			Depot.push_back(&renderWindowOSD::kShowSelectionControls);
 			Depot.push_back(&renderWindowOSD::kShowToolbar);
 			Depot.push_back(&renderWindowOSD::kShowNotifications);
+			Depot.push_back(&renderWindowOSD::kWindowBGAlpha);
 
 
 			Depot.push_back(&renderWindowFlyCamera::kMovementSpeed);
@@ -167,6 +169,8 @@ namespace cse
 			INISetting		kPathGridLinkedRefIndicator("PathGridLinkedRefIndicator", RENDERER_INISECTION, "Display connectors between path grid points and their linked references", (SInt32)1);
 			INISetting		kPathGridLinkedRefIndicatorFlags("PathGridLinkedRefIndicatorFlags", RENDERER_INISECTION, "Indicator visibility flags",
 							(UInt32)kPathGridLinkedRefIndicatorFlag_HidePointBoundingBox | kPathGridLinkedRefIndicatorFlag_HideLinkedRefNode | kPathGridLinkedRefIndicatorFlag_HideLineConnector);
+			INISetting		kGrassOverlayTexturePath("GrassOverlayTexturePath", RENDERER_INISECTION, "Path relative to the Textures\\Landscape folder that gets applied when the grass overlay is enabled", "CSE_GrassOverlay.dds");
+
 		}
 
 		namespace renderWindowOSD
@@ -184,6 +188,7 @@ namespace cse
 
 			INISetting		kColorSelectionStats("ColorSelectionStats", RWOSD_INISECTION, "Foreground color", "189,237,99");
 			INISetting		kColorRAMUsage("ColorRAMUsage", RWOSD_INISECTION, "Foreground color", "230,230,0");
+			INISetting		kWindowBGAlpha("WindowBGAlpha", RWOSD_INISECTION, "Window background alpha (0-1)", (float)0.7f);
 		}
 
 		namespace renderWindowFlyCamera

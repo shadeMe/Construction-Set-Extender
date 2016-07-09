@@ -274,7 +274,7 @@ namespace cse
 
 			// set up colors
 			ImGuiStyle& style = ImGui::GetStyle();
-			style.Colors[ImGuiCol_WindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.5f);
+			style.Colors[ImGuiCol_WindowBg] = ImVec4(0.00f, 0.00f, 0.00f, settings::renderWindowOSD::kWindowBGAlpha().f);
 			style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.61f);
 			style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.90f, 0.80f, 0.80f, 0.49f);
 			style.Colors[ImGuiCol_TitleBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.31f);
@@ -730,10 +730,10 @@ namespace cse
 				{
 					char Buffer[0x50] = { 0 };
 					if (CurrentCell->GetIsInterior())
-						FORMAT_STR(Buffer, "%s (%08X)", CurrentCell->GetEditorID(), CurrentCell->formID);
+						FORMAT_STR(Buffer, "%s (%08X)   ", CurrentCell->GetEditorID(), CurrentCell->formID);
 					else
 					{
-						FORMAT_STR(Buffer, "%s %d,%d (%08X)", CurrentCell->GetEditorID(), CurrentCell->cellData.coords->x,
+						FORMAT_STR(Buffer, "%s %d,%d (%08X)   ", CurrentCell->GetEditorID(), CurrentCell->cellData.coords->x,
 								   CurrentCell->cellData.coords->y, CurrentCell->formID);
 					}
 
@@ -1185,6 +1185,11 @@ namespace cse
 				ImGui::SetTooltip(BottomExpanded ? "Close" : "Expand");
 
 			ImGui::PopStyleColor(3);
+
+			ImGui::SameLine(XSize - 60);
+			ImGui::TextDisabled("(?)");
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Click and drag the values to change them. CTRL + click to directly edit them.");
 
 			if (BottomExpanded)
 			{

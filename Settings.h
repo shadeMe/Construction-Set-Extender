@@ -76,6 +76,7 @@ namespace cse
 			extern INISetting					kRefToggleOpacityAlpha;
 			extern INISetting					kPathGridLinkedRefIndicator;
 			extern INISetting					kPathGridLinkedRefIndicatorFlags;
+			extern INISetting					kGrassOverlayTexturePath;
 
 			enum
 			{
@@ -97,6 +98,7 @@ namespace cse
 
 			extern INISetting					kColorSelectionStats;
 			extern INISetting					kColorRAMUsage;
+			extern INISetting					kWindowBGAlpha;
 		}
 
 		namespace renderWindowFlyCamera

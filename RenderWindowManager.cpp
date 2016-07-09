@@ -234,24 +234,50 @@ namespace cse
 
 		DebugSceneGraphModifier::~DebugSceneGraphModifier()
 		{
-		//	SME_ASSERT(MatProp->m_uiRefCount == 1);
 			TESRender::DeleteNiRefObject(MatProp);
 			TESRender::DeleteNiRefObject(Stencil);
 		}
 
 		void DebugSceneGraphModifier::PreRender(RenderData& Data)
 		{
-			if (_RENDERSEL->selectionCount)
+			GridCellArray* CellGrid = _TES->gridCellArray;
+			for (int i = 0; i < CellGrid->size; i++)
 			{
-				for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+				for (int j = 0; j < CellGrid->size; j++)
 				{
-					TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
-					NiNode* Node = Ref->GetNiNode();
-					if (Node && TESRender::GetProperty(Node, NiStencilProperty::kType) == NULL)
+					GridCellArray::GridEntry* Data = CellGrid->GetCellEntry(i, j);
+					if (Data && Data->cell)
 					{
-						TESRender::AddProperty(Node, Stencil);
-						TESRender::UpdateDynamicEffectState(Node);
-						TESRender::UpdateAVObject(Node);
+						TESObjectLAND* Land = Data->cell->land;
+						if (Land)
+						{
+							for (int k = 0; k < 3; k++)
+							{
+								NiNode* Node = Land->GetQuadLandNode(k);
+								NiTriStrips* LandTriStrips = NI_CAST(Node->m_children.data[0], NiTriStrips);
+								if (LandTriStrips)
+								{
+									BSShaderProperty* ShaderProp = (BSShaderProperty*)TESRender::GetProperty(LandTriStrips, BSShaderPPLightingProperty::kType);
+									BSShaderPPLightingProperty* PPLighting = NI_CAST(ShaderProp, BSShaderPPLightingProperty);
+									if (PPLighting)
+									{
+										int TexNo = 0;
+										while (TexNo < 9)
+										{
+											NiSourceTexture* currentTex = NI_CAST(PPLighting->diffuse[TexNo], NiSourceTexture);
+											const char* SourcePath = settings::renderer::kGrassOverlayTexturePath().s;
+											if (currentTex)
+											{
+												if (strstr(currentTex->fileName, SourcePath) != NULL && TESRenderWindow::GrassTextureOverlay == false)
+													;//			BGSEECONSOLE_MESSAGE("Invalid grass over for cell %s", Land->parentCell->GetEditorID());
+											}
+
+											TexNo++;
+										}
+									}
+								}
+							}
+						}
 					}
 				}
 			}
@@ -259,7 +285,6 @@ namespace cse
 
 		void DebugSceneGraphModifier::PostRender(RenderData& Data)
 		{
-			;//
 		}
 
 		ReferenceVisibilityValidator	ReferenceVisibilityValidator::Instance;
@@ -625,6 +650,10 @@ namespace cse
 								case IDC_RENDERWINDOWCONTEXT_OSD_TOOLBARS:
 									if (settings::renderWindowOSD::kShowToolbar().i)
 										CheckItem = true;
+
+									break;
+								case IDC_RENDERWINDOWCONTEXT_GRASSOVERLAY:
+									CheckItem = TESRenderWindow::GrassTextureOverlay;
 
 									break;
 								default:
@@ -1092,6 +1121,12 @@ namespace cse
 						settings::renderWindowOSD::kShowToolbar.ToggleData();
 						Return = true;
 					}
+
+					break;
+				case IDC_RENDERWINDOWCONTEXT_GRASSOVERLAY:
+					TESRenderWindow::GrassTextureOverlay = TESRenderWindow::GrassTextureOverlay == false;
+					_TES->ReloadLandscapeTextures();
+					Return = true;
 
 					break;
 				}
