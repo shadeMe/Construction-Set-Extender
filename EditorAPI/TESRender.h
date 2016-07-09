@@ -147,7 +147,7 @@ public:
 
 	// misc methods that belong elsewhere
 	static void								UpdateAVObject(NiAVObject* Object);		// NiAVObject method
-	static void								UpdateDynamicEffectState(NiAVObject* Object);		
+	static void								UpdateDynamicEffectState(NiAVObject* Object);
 	static NiNode*							CreateNiNode();
 	static void								DeleteNiRefObject(NiRefObject* Object);
 	static void								AddToNiNode(NiNode* To, NiAVObject* Child);
@@ -263,6 +263,7 @@ public:
 	static UInt8*						RefreshFlag;
 	static UInt8*						PathGridEditFlag;
 	static UInt8*						LandscapeEditFlag;
+	static UInt8*						DraggingSelection;
 
 	static TESObjectCELL**				ActiveCell;						// points to the current interior cell or the exterior cell at the camera's position
 	static TESLandTexture**				ActiveLandscapeTexture;

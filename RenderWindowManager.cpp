@@ -196,40 +196,15 @@ namespace cse
 		{
 			for each (auto Itr in Data.LoadedRefs)
 			{
-				if (Itr->IsTemporary() == false)
+				if (ReferenceVisibilityValidator::Instance.ShouldBeInvisible(Itr))
 				{
-					NiNode* Node = Itr->GetNiNode();
-					// skip culled nodes as their visibility is controlled by edit dialogs
-					if (Node && Node->IsCulled() == false)
+					if (ReferenceVisibilityValidator::Instance.IsCulled(Itr) == false)
 					{
-						bool ShouldCull = false;
-						if (TESRenderWindow::ShowInitiallyDisabledRefs == false && Itr->GetDisabled())
-							ShouldCull = true;
-
-						BSExtraData* xData = Itr->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
-						if (xData)
-						{
-							ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
-							if (xParent->parent->GetChildrenInvisible() ||
-								(xParent->parent->GetDisabled() &&
-								 TESRenderWindow::ShowInitiallyDisabledRefChildren == false))
-							{
-								ShouldCull = true;
-							}
-						}
-
-						if (Itr->GetInvisible())
-							ShouldCull = true;
-
-
-						if (ShouldCull)
-						{
-							Node->SetCulled(true);
-							CulledRefBuffer.push_back(Node);
-						}
+						NiNode* Node = Itr->GetNiNode();
+						Node->SetCulled(true);
+						CulledRefBuffer.push_back(Node);
 					}
 				}
-
 			}
 		}
 
@@ -287,6 +262,43 @@ namespace cse
 			;//
 		}
 
+		ReferenceVisibilityValidator	ReferenceVisibilityValidator::Instance;
+
+		bool ReferenceVisibilityValidator::ShouldBeInvisible(TESObjectREFR* Ref)
+		{
+			bool Invisible = false;
+			if (Ref->IsTemporary() == false)
+			{
+				if (TESRenderWindow::ShowInitiallyDisabledRefs == false && Ref->GetDisabled())
+					Invisible = true;
+
+				BSExtraData* xData = Ref->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
+				if (xData)
+				{
+					ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
+					if (xParent->parent->GetChildrenInvisible() ||
+						(xParent->parent->GetDisabled() &&
+						 TESRenderWindow::ShowInitiallyDisabledRefChildren == false))
+					{
+						Invisible = true;
+					}
+				}
+
+				if (Ref->GetInvisible())
+					Invisible = true;
+			}
+
+			return Invisible;
+		}
+
+		bool ReferenceVisibilityValidator::IsCulled(TESObjectREFR* Ref)
+		{
+			NiNode* Node = Ref->GetNiNode();
+			if (Node == NULL || Node->IsCulled())
+				return true;
+			else
+				return false;
+		}
 
 		RenderWindowSelectionManager::RenderWindowSelectionManager(RenderWindowGroupManager* GroupMan) :
 			ReferenceGroupManager(GroupMan)
@@ -302,6 +314,15 @@ namespace cse
 		void RenderWindowSelectionManager::AddToSelection(TESObjectREFR* Ref, bool SelectionBox) const
 		{
 			Ref->ToggleSelectionBox(false);
+
+			if ((*TESRenderWindow::RubberBandSelector)->dragging && GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_CONTROL))
+			{
+				// it's a drag deselect op, remove the ref from the current selection
+				if (_RENDERSEL->HasObject(Ref))
+					_RENDERSEL->RemoveFromSelection(Ref, false);
+
+				return;
+			}
 
 			if (GetAsyncKeyState(VK_MENU))
 			{
@@ -1106,21 +1127,6 @@ namespace cse
 
 			switch (uMsg)
 			{
-			case WM_RENDERWINDOW_UPDATEFOV:
-				{
-					Return = true;
-
-					float CameraFOV = settings::renderer::kCameraFOV.GetData().f;
-					if (CameraFOV > 120.0f)
-						CameraFOV = 120.0f;
-					else if (CameraFOV < 50.0f)
-						CameraFOV = 50.0f;
-
-					TESRender::SetCameraFOV(_PRIMARYRENDERER->primaryCamera, CameraFOV);
-					memcpy(&TESRenderWindow::CameraFrustumBuffer, &_PRIMARYRENDERER->primaryCamera->m_kViewFrustum, sizeof(NiFrustum));
-				}
-
-				break;
 			case WM_INITDIALOG:
 				{
 					DialogExtraData* xData = BGSEE_GETWINDOWXDATA(DialogExtraData, ExtraData);
@@ -1184,7 +1190,7 @@ namespace cse
 						_PRIMARYRENDERER->primaryCamera->m_kViewFrustum.b != TESRenderWindow::CameraFrustumBuffer.b ||
 						_PRIMARYRENDERER->primaryCamera->m_kViewFrustum.t != TESRenderWindow::CameraFrustumBuffer.t)
 					{
-						SendMessage(hWnd, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);
+						_RENDERWIN_MGR.RefreshFOV();
 					}
 
 					break;
@@ -1238,12 +1244,15 @@ namespace cse
 							}
 						}
 
-						HCURSOR CurrentCursor = GetCursor();
-						if (Icon && CurrentCursor != Icon)
-							SetCursor(Icon);
+						if (Icon != *TESRenderWindow::CursorArrow)
+						{
+							HCURSOR CurrentCursor = GetCursor();
+							if (Icon && CurrentCursor != Icon)
+								SetCursor(Icon);
 
-						DlgProcResult = TRUE;
-						Return = true;
+							DlgProcResult = TRUE;
+							Return = true;
+						}
 					}
 				}
 
@@ -1524,7 +1533,7 @@ namespace cse
 					break;
 				case VK_F5:
 					{
-						SendMessage(hWnd, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);
+						_RENDERWIN_MGR.RefreshFOV();
 						SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL, NULL);
 					}
 
@@ -1735,6 +1744,19 @@ namespace cse
 			SendMessage(*TESRenderWindow::WindowHandle, WM_COMMAND, Identifier, NULL);
 		}
 
+		void RenderWindowManager::RefreshFOV()
+		{
+			float CameraFOV = settings::renderer::kCameraFOV.GetData().f;
+			if (CameraFOV > 120.0f)
+				CameraFOV = 120.0f;
+			else if (CameraFOV < 50.0f)
+				CameraFOV = 50.0f;
+
+			TESRender::SetCameraFOV(_PRIMARYRENDERER->primaryCamera, CameraFOV);
+			memcpy(&TESRenderWindow::CameraFrustumBuffer, &_PRIMARYRENDERER->primaryCamera->m_kViewFrustum, sizeof(NiFrustum));
+			TESRenderWindow::Redraw();
+		}
+
 		void RenderWindowManager::HandleD3DRelease()
 		{
 			SME_ASSERT(Initialized);
@@ -1765,13 +1787,15 @@ namespace cse
 			bool ComponentInitialized = _RENDERWIN_MGR.InitializeOSD();
 			SME_ASSERT(ComponentInitialized);
 
-			SendMessage(*TESRenderWindow::WindowHandle, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);
+			_RENDERWIN_MGR.RefreshFOV();
 		}
 
 		void Deinitialize(void)
 		{
 			_RENDERWIN_MGR.Deinitialize();
 		}
+
+
 
 
 

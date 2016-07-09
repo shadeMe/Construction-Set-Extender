@@ -2,7 +2,7 @@ To-Do
 =====
 
 IMMEDIATE  >>
-		> Update to C++11/14
+
 
 NOTE	---->
 		> http://www.creationkit.com/fallout4/index.php?title=New_Editor_Features
@@ -11,10 +11,6 @@ NOTE	---->
 CSE		---->
 
 	BUGFIX			=
-		> Script compiler bug
-			>> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=24047482
-			>> This one is pretty deep-rooted in the compiler, suggested workaround - add a parenthesis escape format specifier to OBSE
-		> QQuix default form being injected into plugins/ESMs?
 		> Object window columns like Auto calc, Enchantment type, Count don't sort consistently
 			>> Columns not handled by default = 3, 24, 41, 54. Some others are incorrectly handled
 		> Render window fixed camera pivot bug
@@ -22,10 +18,6 @@ CSE		---->
 		> The Landscape Textures Quad is supposed to replace the clicked texture with the one you double-click from the list it offers, but when you save the file, reloading reveals that it has instead replaced it with the quad's Default texture
 			>> Needs extensive decoding of land data
 		>  If you edit a land record, then switch to either a parent or child worldspace which contains that same cell, frequently the edits are not displayed in the render window, instead you see the unedited land height (however collision is handled correctly so Fing an object will drop it to where the land should be) - additionally, when editing a land record in a child worldspace, sometimes these edits get saved into a NEW land record for the child worldspace instead of being allocated to the existing land record of the parent worldspace. I believe the land record from the parent landscape is the one which gets displayed in-game when such an overlap exists.
-		> Partial black tex hasn't been fixed yet
-		> Look into the activator bug at 0x00511D8C
-			>> Need to get working repro steps
-		> Fix memory leak in local map generator
 
 
 	ENHANCEMENT		=
@@ -33,49 +25,38 @@ CSE		---->
 		> Wildcard find/replace
 		> Add an option to restore a saved backup for some esp/esm, instead of manually recover it from Data/Backup folder and moving it back to Data folder.
 		> Render window gizmos
-		> Align rotation/position
-		> Clear current snap reference
-		> Drag deselect refs
-		> Recent cells list
-		> Filter what shows up in the cell list
-		> Local rotation w/t multiple objects
-		> Select all refs in use info window
-		> Select all links to/from selected refs
-		> Quick linked refs
+		> Named ref groups
+		> Selection painting
 		> Selection mask
+		> Hide mouse when transforming
 		> Grass overlay
 		> Show Target NPCs context menu tool
 			>> Would it be possible to have the option to view the list of NPCs, a sort of Use Info option just for NPCs who meet the conditions for speaking a response?
-		> Option to change referencing records for any base object, like in TES4Edit
 		> Copy From Template tool
 			>> Batch editor for base forms
-		> Option to disable asymmetry when generating a new NPC face
-		> Add CK-like Move Reference command (special case hardcoded markers, such as north/door/travel markers)
-		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released
 		> Add a random "roughness" factor to the landscape sculpting brush
-		> Region node editing in render window
 		> Overhaul of the Region Editor, with a larger (adjustable?) window, a larger rendering area and greater control of node placement and repositioning.
 
 	CODA			=
 
 
 	MISC			=
-
+		> Update to C++11/14
 
 
 SE		---->
 
 	IMMEDIATE		=
-		> Background task threading issues in the editor
+
 
 	BUGFIX			=
+		> Background task threading issues in the editor
 		> DPI scaling issues with WPF code (WPF doesn't seem to respect the application's request to disable DPI scaling)
 		> Editor doesn't acquire focus after switching scripts/on opening and general focus related wonkiness
 			>> Even with the FocusHelper, the Tab key needs to be pressed to relinquish focus to the text editor. Not sure what else to do
 
 
 	ENHANCEMENT		=
-		> Document minimap
 		> Change margin
 
 
@@ -89,4 +70,3 @@ USE		---->
 
 
 	ENHANCEMENT		=
-		> Export all data to CSV

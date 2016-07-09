@@ -34,6 +34,7 @@ TESObjectCELL**						TESRenderWindow::ActiveCell = (TESObjectCELL**)0x00A0BC3C;
 TESObjectREFR**						TESRenderWindow::SnapReference = (TESObjectREFR**)0x00A0B050;
 
 UInt8*								TESRenderWindow::LandscapeEditFlag = (UInt8*)0x00A0BC35;
+UInt8*								TESRenderWindow::DraggingSelection = (UInt8*)0x00A0BBF6;
 UInt8*								TESRenderWindow::PathGridEditFlag = (UInt8*)0x00A0BC5C;
 UInt8*								TESRenderWindow::RefreshFlag = (UInt8*)0x00A0BC4D;
 UInt32*								TESRenderWindow::StateFlags = (UInt32*)0x00A0B058;

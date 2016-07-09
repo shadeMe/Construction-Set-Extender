@@ -251,10 +251,7 @@ namespace cse
 			SME_ASSERT(Initialized);
 
 			if (!FontTexture)
-			{
-				bool ObjectsCreated = CreateDeviceObjects();
-				SME_ASSERT(ObjectsCreated);
-			}
+				CreateDeviceObjects();
 
 			ImGuiIO& io = ImGui::GetIO();
 
@@ -277,7 +274,7 @@ namespace cse
 
 			// set up colors
 			ImGuiStyle& style = ImGui::GetStyle();
-			style.Colors[ImGuiCol_WindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.78f);
+			style.Colors[ImGuiCol_WindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.5f);
 			style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.61f);
 			style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.90f, 0.80f, 0.80f, 0.49f);
 			style.Colors[ImGuiCol_TitleBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.31f);
@@ -300,6 +297,7 @@ namespace cse
 		{
 			ImGui::Render();
 
+			// reset mouse double click state for the next frame
 			MouseDoubleClicked[0] = MouseDoubleClicked[1] = false;
 		}
 
@@ -1127,7 +1125,7 @@ namespace cse
 			int GridVal = *(UInt32*)TESRenderWindow::SnapGridDistance;
 			int AngleVal = *(UInt32*)TESRenderWindow::SnapAngle;
 			TESObjectREFR* SnapRef = *TESRenderWindow::SnapReference;
-
+			float FOV = settings::renderer::kCameraFOV().f;
 
 			if (ImGui::Checkbox("Snap Grid", &SnapGrid))
 			{
@@ -1168,7 +1166,13 @@ namespace cse
 			ImGui::DragFloat("##TOD", &TOD, 0.25f, 0.f, 24.f, "TOD: %.2f");
 			if (ImGui::IsItemHovered() && ImGui::IsItemActive() == false)
 				ImGui::SetTooltip("Time of Day");
+
+			ImGui::SameLine(0, 50);
+			ImGui::DragFloat("##FOV", &FOV, 1.f, 50.f, 120.f, "FOV: %.0f");
+			if (ImGui::IsItemHovered() && ImGui::IsItemActive() == false)
+				ImGui::SetTooltip("Camera FOV");
 			ImGui::PopItemWidth();
+
 
 			ImGui::SameLine(XSize - 35);
 			ImGui::PushStyleColor(ImGuiCol_Button, ImColor::HSV(0, 0.6f, 0.6f));
@@ -1214,6 +1218,15 @@ namespace cse
 
 			if (TOD != _TES->GetSkyTOD())
 				_TES->SetSkyTOD(TOD);
+
+			if (FOV < 50 || FOV > 120)
+				FOV = 75;
+
+			if (settings::renderer::kCameraFOV().f != FOV)
+			{
+				settings::renderer::kCameraFOV.SetFloat(FOV);
+				_RENDERWIN_MGR.RefreshFOV();
+			}
 
 			ImGui::End();
 			ImGui::PopStyleVar(2);

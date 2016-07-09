@@ -69,6 +69,7 @@ namespace cse
 		_DeclareMemHdlr(TESRenderRotateSelectionWorldA, "fixes a bug that prevented the rotation of multiple refs in their local axes");
 		_DeclareMemHdlr(TESRenderRotateSelectionWorldB, "");
 		_DeclareMemHdlr(RotateCameraDrag, "prevent the shift key from rotating the camera when lasso'ing");
+		_DeclareMemHdlr(RubberbandSelectionDragDeselectRefs, "allow ref drag deselection with the Shift key");
 
 		void __stdcall RenderWindowReferenceSelectionDetour(TESObjectREFR* Ref, bool ShowSelectionBox);
 	}

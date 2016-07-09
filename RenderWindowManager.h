@@ -98,6 +98,15 @@ namespace cse
 			static DebugSceneGraphModifier			Instance;
 		};
 
+		class ReferenceVisibilityValidator
+		{
+		public:
+			bool							ShouldBeInvisible(TESObjectREFR* Ref);			// returns true if the reference is not supposed to be rendered to the scene
+			bool							IsCulled(TESObjectREFR* Ref);					// returns true if the ref's node is culled
+
+			static ReferenceVisibilityValidator			Instance;
+		};
+
 
 		class RenderWindowSelectionManager
 		{
@@ -130,8 +139,6 @@ namespace cse
 
 		// result = Vector3*
 #define WM_RENDERWINDOW_GETCAMERASTATICPIVOT	(WM_USER + 2005)
-#define WM_RENDERWINDOW_UPDATEFOV				(WM_USER + 2010)
-
 
 		class RenderWindowManager
 		{
@@ -187,6 +194,7 @@ namespace cse
 			RenderWindowSelectionManager*				GetSelectionManager() const;
 
 			void										InvokeContextMenuTool(int Identifier);
+			void										RefreshFOV();
 
 			static RenderWindowManager					Instance;
 		};

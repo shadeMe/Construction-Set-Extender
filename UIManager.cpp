@@ -30,7 +30,7 @@ namespace cse
 		FilterableFormListManager::FilterableWindowData::WindowTimerMapT			FilterableFormListManager::FilterableWindowData::FilterTimerTable;
 		FilterableFormListManager::FilterableWindowData::FormListFilterDataMapT	FilterableFormListManager::FilterableWindowData::FormListDataTable;
 
-		FilterableFormListManager::FilterableWindowData::FilterableWindowData( HWND Parent, HWND EditBox, HWND FormList, HWND Label, int TimerPeriod ) :
+		FilterableFormListManager::FilterableWindowData::FilterableWindowData( HWND Parent, HWND EditBox, HWND FormList, HWND Label, int TimerPeriod, SecondaryFilter UserFilter ) :
 			ParentWindow(Parent),
 			FilterEditBox(EditBox),
 			FormListView(FormList),
@@ -39,6 +39,7 @@ namespace cse
 			FilterString(""),
 			TimerPeriod(TimerPeriod),
 			TimeCounter(-1),
+			SecondFilter(UserFilter),
 			Enabled(true)
 		{
 			SME_ASSERT(ParentWindow && FilterEditBox && FormListView);
@@ -71,6 +72,8 @@ namespace cse
 					if (Form)
 					{
 						if (UserData->FilterForm(Form) == false)
+							return -1;
+						else if (UserData->SecondFilter && UserData->SecondFilter(Form) == false)
 							return -1;
 					}
 				}
@@ -405,14 +408,14 @@ namespace cse
 			ActiveFilters.clear();
 		}
 
-		bool FilterableFormListManager::Register(HWND FilterEdit, HWND FilterLabel, HWND FormList, HWND ParentWindow, int TimePeriod /*= 500*/)
+		bool FilterableFormListManager::Register(HWND FilterEdit, HWND FilterLabel, HWND FormList, HWND ParentWindow, int TimePeriod /*= 500*/, SecondaryFilter UserFilter /*= NULL*/ )
 		{
 			SME_ASSERT(ParentWindow && FormList);
 			SME_ASSERT(FilterEdit && FilterLabel);
 
 			if (Lookup(FilterEdit) == NULL)
 			{
-				ActiveFilters.push_back(new FilterableWindowData(ParentWindow, FilterEdit, FormList, FilterLabel, TimePeriod));
+				ActiveFilters.push_back(new FilterableWindowData(ParentWindow, FilterEdit, FormList, FilterLabel, TimePeriod, UserFilter));
 				return true;
 			}
 
@@ -558,7 +561,10 @@ namespace cse
 			YEdit(),
 			GoBtn(),
 			CellFilterEditBox(),
-			CellFilterLabel()
+			CellFilterLabel(),
+			VisibleOnlyCheckBox(),
+			SelectionOnlyCheckBox(),
+			RefreshRefListBtn()
 		{
 			;//
 		}
@@ -667,6 +673,23 @@ namespace cse
 			}
 
 			return Result;
+		}
+
+		bool CellViewExtraData::RefListFilter(TESForm* Form)
+		{
+			TESObjectREFR* Ref = (TESObjectREFR*)Form;
+
+			bool VisibleOnly = IsDlgButtonChecked(*TESCellViewWindow::WindowHandle, IDC_CSE_CELLVIEW_VISIBLEONLYBTN) == BST_CHECKED;
+			bool SelectionOnly = IsDlgButtonChecked(*TESCellViewWindow::WindowHandle, IDC_CSE_CELLVIEW_SELECTEDONLYBTN) == BST_CHECKED;
+
+			if (VisibleOnly == false && SelectionOnly == false)
+				return true;
+			else if (VisibleOnly && (renderWindow::ReferenceVisibilityValidator::Instance.ShouldBeInvisible(Ref) || renderWindow::ReferenceVisibilityValidator::Instance.IsCulled(Ref)))
+				return false;
+			else if (SelectionOnly && _RENDERSEL->HasObject(Form) == false)
+				return false;
+			else
+				return true;
 		}
 
 		DialogExtraFittingsData::DialogExtraFittingsData() :
@@ -2165,6 +2188,9 @@ namespace cse
 			HWND CellFilterEditBox = GetDlgItem(hWnd, IDC_CSE_CELLVIEW_CELLFILTEREDIT);
 			HWND CellFilterLabel = GetDlgItem(hWnd, IDC_CSE_CELLVIEW_CELLFILTERLBL);
 			int* RefListSortColumn = TESCellViewWindow::ObjectListSortColumn;
+			HWND VisibleOnlyCheckbox = GetDlgItem(hWnd, IDC_CSE_CELLVIEW_VISIBLEONLYBTN);
+			HWND SelectionOnlyCheckbox = GetDlgItem(hWnd, IDC_CSE_CELLVIEW_SELECTEDONLYBTN);
+			HWND RefreshRefListBtn = GetDlgItem(hWnd, IDC_CSE_CELLVIEW_REFRESHREFSBTN);
 
 			switch (uMsg)
 			{
@@ -2207,12 +2233,15 @@ namespace cse
 						SME::UIHelpers::GetClientRectInitBounds(GoBtn, hWnd, &xData->GoBtn);
 						SME::UIHelpers::GetClientRectInitBounds(CellFilterEditBox, hWnd, &xData->CellFilterEditBox);
 						SME::UIHelpers::GetClientRectInitBounds(CellFilterLabel, hWnd, &xData->CellFilterLabel);
+						SME::UIHelpers::GetClientRectInitBounds(VisibleOnlyCheckbox, hWnd, &xData->VisibleOnlyCheckBox);
+						SME::UIHelpers::GetClientRectInitBounds(SelectionOnlyCheckbox, hWnd, &xData->SelectionOnlyCheckBox);
+						SME::UIHelpers::GetClientRectInitBounds(RefreshRefListBtn, hWnd, &xData->RefreshRefListBtn);
 
 						TESDialog::ReadBoundsFromINI("Cell View", &Bounds);
 						SetWindowPos(hWnd, NULL, Bounds.left, Bounds.top, Bounds.right, Bounds.bottom, SWP_NOZORDER);
 					}
 
-					FilterableFormListManager::Instance.Register(RefFilterEditBox, RefFilterLabel, RefList, hWnd);
+					FilterableFormListManager::Instance.Register(RefFilterEditBox, RefFilterLabel, RefList, hWnd, 500, CellViewExtraData::RefListFilter);
 					FilterableFormListManager::Instance.Register(CellFilterEditBox, CellFilterLabel, CellList, hWnd);
 
 					LVCOLUMN ColumnData = {0};
@@ -2436,6 +2465,21 @@ namespace cse
 							DeltaDlgWidth + xData->RefFilterEditBox.right, xData->RefFilterEditBox.bottom + 2,
 							NULL);
 
+						DeferWindowPos(DeferPosData, VisibleOnlyCheckbox, 0,
+									   DeltaDlgWidth + xData->VisibleOnlyCheckBox.left, xData->VisibleOnlyCheckBox.top,
+									   0, 0,
+									   SWP_NOSIZE);
+
+						DeferWindowPos(DeferPosData, SelectionOnlyCheckbox, 0,
+									   DeltaDlgWidth + xData->SelectionOnlyCheckBox.left, xData->SelectionOnlyCheckBox.top,
+									   0, 0,
+									   SWP_NOSIZE);
+
+						DeferWindowPos(DeferPosData, RefreshRefListBtn, 0,
+									   DeltaDlgWidth + xData->RefreshRefListBtn.left, xData->RefreshRefListBtn.top,
+									   0, 0,
+									   SWP_NOSIZE);
+
 						DeferWindowPos(DeferPosData, CellFilterEditBox, 0,
 									   0, 0,
 									   BaseCellListRect->right + DeltaDlgWidth - xData->CellFilterLabel.right - 7, xData->CellFilterEditBox.bottom,
@@ -2461,12 +2505,18 @@ namespace cse
 						GetWindowText(XEdit, (LPSTR)XCoord, sizeof(XCoord));
 						GetWindowText(YEdit, (LPSTR)YCoord, sizeof(YCoord));
 
-						if (strlen(XCoord) && strlen(YCoord))
+						if (strlen(XCoord) && strlen(YCoord) && _TES->currentInteriorCell == NULL)
 						{
 							Vector3 Coords((atoi(XCoord) << 12) + 2048.0, (atoi(YCoord) << 12) + 2048.0, 0);
 							_TES->LoadCellIntoViewPort(&Coords, NULL);
 						}
 					}
+
+					break;
+				case IDC_CSE_CELLVIEW_VISIBLEONLYBTN:
+				case IDC_CSE_CELLVIEW_SELECTEDONLYBTN:
+				case IDC_CSE_CELLVIEW_REFRESHREFSBTN:
+					TESCellViewWindow::RefreshObjectList();
 
 					break;
 				}

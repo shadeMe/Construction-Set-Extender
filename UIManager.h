@@ -16,6 +16,9 @@ namespace cse
 
 		class FilterableFormListManager
 		{
+		public:
+			typedef bool ( *SecondaryFilter)(TESForm*);			// returns true if the form is to be added
+		private:
 			class FilterableWindowData
 			{
 				static LRESULT CALLBACK			FormListSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -36,6 +39,7 @@ namespace cse
 				int						TimerPeriod;
 				int						TimeCounter;
 				UInt8					Flags;
+				SecondaryFilter			SecondFilter;
 				bool					Enabled;
 
 				enum
@@ -62,7 +66,7 @@ namespace cse
 				void					HookFormList(void);
 				void					UnhookFormList(void);
 			public:
-				FilterableWindowData(HWND Parent, HWND EditBox, HWND FormList, HWND Label, int TimerPeriod);
+				FilterableWindowData(HWND Parent, HWND EditBox, HWND FormList, HWND Label, int TimerPeriod, SecondaryFilter UserFilter = NULL);
 				~FilterableWindowData();
 
 				bool					HandleMessages(UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true on timeout
@@ -80,7 +84,7 @@ namespace cse
 			FilterableFormListManager();
 			~FilterableFormListManager();
 
-			bool						Register(HWND FilterEdit, HWND FilterLabel, HWND FormList, HWND ParentWindow, int TimePeriod = 500);
+			bool						Register(HWND FilterEdit, HWND FilterLabel, HWND FormList, HWND ParentWindow, int TimePeriod = 500, SecondaryFilter UserFilter = NULL);
 			void						Unregister(HWND FilterEdit);
 
 			bool						HandleMessages(HWND FilterEdit, UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true to request a refresh of the form list
@@ -123,6 +127,9 @@ namespace cse
 			RECT	GoBtn;
 			RECT	CellFilterEditBox;
 			RECT	CellFilterLabel;
+			RECT	VisibleOnlyCheckBox;
+			RECT	SelectionOnlyCheckBox;
+			RECT	RefreshRefListBtn;
 
 			CellViewExtraData();
 			virtual ~CellViewExtraData();
@@ -139,6 +146,7 @@ namespace cse
 			};
 
 			static int CALLBACK CustomFormListComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
+			static bool RefListFilter(TESForm* Form);
 		};
 
 		class DialogExtraFittingsData : public bgsee::WindowExtraData
@@ -298,6 +306,9 @@ namespace cse
 #define IDC_CSE_CELLVIEW_XEDIT					9931
 #define IDC_CSE_CELLVIEW_YEDIT					9932
 #define IDC_CSE_CELLVIEW_GOBTN					9933
+#define IDC_CSE_CELLVIEW_VISIBLEONLYBTN			9938
+#define IDC_CSE_CELLVIEW_SELECTEDONLYBTN		9939
+#define IDC_CSE_CELLVIEW_REFRESHREFSBTN			9940
 
 #define IDC_CSE_RESPONSEWINDOW_FACEGENPREVIEW	9934
 // also used in the NPC edit dialog

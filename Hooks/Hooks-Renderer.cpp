@@ -1425,11 +1425,21 @@ namespace cse
 
 				jmp		_hhGetVar(Jump)
 			NODRAG:
+				// skip rotation if the Control key is held down
+				pushad
+				call	IsControlKeyDown
+				test	eax, eax
+				jnz		EXIT
+				popad
+
 				mov		ecx, 0x00A0BC21
 				mov		cl, byte ptr[ecx]
 				cmp		cl, 0
 
 				jmp		_hhGetVar(Retn)
+			EXIT:
+				popad
+				jmp		_hhGetVar(Jump)
 			}
 		}
 	}
