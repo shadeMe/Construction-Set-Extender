@@ -217,7 +217,11 @@ namespace cse
 			bool					TextInputActive;
 			bool					DragActive;
 			int						LocalTransformation;
+			bool					AlignmentAxisX;
+			bool					AlignmentAxisY;
+			bool					AlignmentAxisZ;
 
+			void					EditReference(TESObjectREFR* Ref);
 			void					EditBaseForm(TESObjectREFR* Ref);
 			void					CheckTextInputChange(ImGuiDX9* GUI, bool& OutGotFocus, bool& OutLostFocus);
 			void					CheckDragChange(ImGuiDX9* GUI, bool& OutDragBegin, bool& OutDragEnd);

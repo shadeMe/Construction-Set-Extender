@@ -156,6 +156,7 @@ public:
 	static void								AddProperty(NiAVObject* To, NiProperty* Property, bool InitializeState = true);
 	static NiProperty*						GetProperty(NiAVObject* In, UInt16 ID);
 	static NiProperty*						CreateProperty(UInt8 Type);		// increments ref count
+	static NiSourceTexture*					CreateSourceTexture(const char* FilePath);
 
 
 	static NiDX9Renderer**					NiRendererSingleton;
@@ -282,20 +283,6 @@ public:
 	static HCURSOR*						CursorArrow;
 	static HCURSOR*						CursorSelect;
 	static HCURSOR*						CursorMove;
-
-	// CSE-specific
-	static bool							FreezeInactiveRefs;
-	static bool							UseAlternateMovementSettings;
-	static POINT						CurrentMouseLBDragCoordDelta;
-	static NiFrustum					CameraFrustumBuffer;
-	static TESObjectREFR*				CurrentMouseRef;
-	static TESPathGridPoint*			CurrentMousePathGridPoint;
-	static POINT						CurrentMouseCoord;
-	static bool							ShowInitiallyDisabledRefs;
-	static bool							ShowInitiallyDisabledRefChildren;
-	static bool							GrassTextureOverlay;
-
-	static const float					MaxLandscapeEditBrushRadius;
 
 	enum
 	{

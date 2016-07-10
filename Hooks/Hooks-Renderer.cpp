@@ -77,7 +77,7 @@ namespace cse
 		_DefineHookHdlr(TESRenderRotateSelectionWorldA, 0x00425F16);
 		_DefineHookHdlr(TESRenderRotateSelectionWorldB, 0x00426043);
 		_DefineHookHdlr(RotateCameraDrag, 0x0042CBFD);
-		_DefineHookHdlr(LandscapeTextureLoad, 0x005311FA);
+		_DefineHookHdlr(LandscapeTextureLoad, 0x005232E0);
 
 #ifndef NDEBUG
 		void __stdcall DoTestHook1(NiSourceTexture* def,
@@ -132,11 +132,11 @@ namespace cse
 			while (TexNo < 9)
 			{
 				NiSourceTexture* currentTex = NI_CAST(PPLighting->diffuse[TexNo], NiSourceTexture);
-				if (check[TexNo] == currentTex)
+				if (check[TexNo] == currentTex && check[TexNo])
 					BGSEECONSOLE_MESSAGE("Didn't change tex %d", TexNo);
 				else if (currentTex)
 				{
-					if (strstr(currentTex->fileName, SourcePath) != NULL && TESRenderWindow::GrassTextureOverlay == false)
+					if (strstr(currentTex->fileName, SourcePath) != NULL && _RENDERWIN_XSTATE.UseGrassTextureOverlay == false)
 						BGSEECONSOLE_MESSAGE("Tex changed but overlay is still active!");
 				}
 
@@ -164,7 +164,7 @@ namespace cse
 		void PatchRendererHooks(void)
 		{
 #ifndef NDEBUG
-			_MemHdlr(TestHook1).WriteJump();
+	//		_MemHdlr(TestHook1).WriteJump();
 #endif
 			_MemHdlr(DoorMarkerProperties).WriteJump();
 			_MemHdlr(TESObjectREFRSetupDialog).WriteJump();
@@ -198,7 +198,7 @@ namespace cse
 			_MemHdlr(TESPathGridShowMultipleSelectionRing).WriteJump();
 			_MemHdlr(TESPathGridDtor).WriteUInt8(0xEB);
 			_MemHdlr(InitialCellLoadCameraPosition).WriteJump();
-			_MemHdlr(LandscapeEditBrushRadius).WriteUInt32((UInt32)&TESRenderWindow::MaxLandscapeEditBrushRadius);
+			_MemHdlr(LandscapeEditBrushRadius).WriteUInt32((UInt32)&_RENDERWIN_XSTATE.MaxLandscapeEditBrushRadius);
 			_MemHdlr(DuplicateReferences).WriteJump();
 			_MemHdlr(RenderToAuxiliaryViewport).WriteJump();
 			_MemHdlr(TESRenderControlPerformRelativeScale).WriteJump();
@@ -274,7 +274,7 @@ namespace cse
 		void __stdcall DoTESObjectREFREditDialogHook(NiNode* Node, bool State)
 		{
 			// reset the current mouse-over ref, just in case it happens to be the temp ref the edit dlg created
-			TESRenderWindow::CurrentMouseRef = NULL;
+			_RENDERWIN_XSTATE.CurrentMouseRef = NULL;
 		}
 
 		#define _hhName		TESObjectREFRSetupDialog
@@ -375,49 +375,49 @@ namespace cse
 			switch (Setting)
 			{
 			case kMovementSetting_RefMovementSpeed:
-				if (TESRenderWindow::UseAlternateMovementSettings)
+				if (_RENDERWIN_XSTATE.UseAlternateMovementSettings)
 					s_MovementSettingBuffer = settings::renderer::kAltRefMovementSpeed.GetData().f;
 				else
 					s_MovementSettingBuffer = *TESRenderWindow::RefMovementSpeed;
 
 				break;
 			case kMovementSetting_RefSnapGrid:
-				if (TESRenderWindow::UseAlternateMovementSettings)
+				if (_RENDERWIN_XSTATE.UseAlternateMovementSettings)
 					s_MovementSettingBuffer = settings::renderer::kAltRefSnapGrid.GetData().f;
 				else
 					s_MovementSettingBuffer = *TESRenderWindow::SnapGridDistance;
 
 				break;
 			case kMovementSetting_RefRotationSpeed:
-				if (TESRenderWindow::UseAlternateMovementSettings)
+				if (_RENDERWIN_XSTATE.UseAlternateMovementSettings)
 					s_MovementSettingBuffer = settings::renderer::kAltRefRotationSpeed.GetData().f;
 				else
 					s_MovementSettingBuffer = *TESRenderWindow::RefRotationSpeed;
 
 				break;
 			case kMovementSetting_RefSnapAngle:
-				if (TESRenderWindow::UseAlternateMovementSettings)
+				if (_RENDERWIN_XSTATE.UseAlternateMovementSettings)
 					s_MovementSettingBuffer = settings::renderer::kAltRefSnapAngle.GetData().f;
 				else
 					s_MovementSettingBuffer = *TESRenderWindow::SnapAngle;
 
 				break;
 			case kMovementSetting_CamRotationSpeed:
-				if (TESRenderWindow::UseAlternateMovementSettings)
+				if (_RENDERWIN_XSTATE.UseAlternateMovementSettings)
 					s_MovementSettingBuffer = settings::renderer::kAltCamRotationSpeed.GetData().f;
 				else
 					s_MovementSettingBuffer = *TESRenderWindow::CameraRotationSpeed;
 
 				break;
 			case kMovementSetting_CamZoomSpeed:
-				if (TESRenderWindow::UseAlternateMovementSettings)
+				if (_RENDERWIN_XSTATE.UseAlternateMovementSettings)
 					s_MovementSettingBuffer = settings::renderer::kAltCamZoomSpeed.GetData().f;
 				else
 					s_MovementSettingBuffer = *TESRenderWindow::CameraZoomSpeed;
 
 				break;
 			case kMovementSetting_CamPanSpeed:
-				if (TESRenderWindow::UseAlternateMovementSettings)
+				if (_RENDERWIN_XSTATE.UseAlternateMovementSettings)
 					s_MovementSettingBuffer = settings::renderer::kAltCamPanSpeed.GetData().f;
 				else
 					s_MovementSettingBuffer = *TESRenderWindow::CameraPanSpeed;
@@ -792,7 +792,7 @@ namespace cse
 			DeletionList->RemoveAll();
 			FormHeap_Free(DeletionList);
 
-			TESRenderWindow::CurrentMousePathGridPoint = NULL;
+			_RENDERWIN_XSTATE.CurrentMousePathGridPoint = NULL;
 		}
 
 		#define _hhName		TESPathGridPointDtor
@@ -1090,8 +1090,11 @@ namespace cse
 
 		bool __stdcall DoTESPathGridRubberBandSelectionHook(void)
 		{
-			if (TESRenderWindow::CurrentMouseLBDragCoordDelta.x < 2 && TESRenderWindow::CurrentMouseLBDragCoordDelta.y < 2)
+			if (_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.x < 2 &&
+				_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.y < 2)
+			{
 				return false;
+			}
 			else
 				return true;
 		}
@@ -1301,9 +1304,7 @@ namespace cse
 			if (Enabled && GetAsyncKeyState(VK_CONTROL) == FALSE ||
 				(Enabled == false && GetAsyncKeyState(VK_CONTROL)))
 			{
-				Vector3* StaticPivot = (Vector3*)SendMessage(*TESRenderWindow::WindowHandle, WM_RENDERWINDOW_GETCAMERASTATICPIVOT, NULL, NULL);
-				*OutPivot = *StaticPivot;
-
+				*OutPivot = _RENDERWIN_XSTATE.StaticCameraPivot;
 				return true;
 			}
 
@@ -1530,41 +1531,31 @@ namespace cse
 			}
 		}
 
-		const char* __stdcall DoLandscapeTextureLoad(TESLandTexture* Texture)
+		NiSourceTexture* __stdcall DoLandscapeTextureLoad(TESLandTexture* Texture)
 		{
-			if (TESRenderWindow::GrassTextureOverlay && Texture->potentialGrassList.Count())
-				return settings::renderer::kGrassOverlayTexturePath().s;
+			if (_RENDERWIN_XSTATE.UseGrassTextureOverlay && Texture->potentialGrassList.Count())
+			{
+				if (_RENDERWIN_XSTATE.GrassOverlayTexture)
+					return _RENDERWIN_XSTATE.GrassOverlayTexture;
+				else
+					return Texture->sourceTexture;
+			}
 			else
-				return Texture->texturePath.c_str();
+				return Texture->sourceTexture;
 		}
 
 		#define _hhName		LandscapeTextureLoad
 		_hhBegin()
 		{
-			_hhSetVar(Retn, 0x00531228);
-			_hhSetVar(Jump, 0x00531347);
+			_hhSetVar(Retn, 0x005232E6);
 			__asm
 			{
-				mov     eax, [ecx + 0x3C]
-				test	eax, eax
-				jnz		STAGELEFT
-
-				lea		esi, [ecx + 0x3C]
-				mov		ebx, 0x00A10004
-				mov		ebx, [ebx]
-				test	ebx, ebx
-				jz		STAGELEFT
-
-				mov		[esp + 0x14], eax
-				mov		[esp + 0x22C], eax
-
+				push	ecx
 				push	ecx
 				call	DoLandscapeTextureLoad
 				test	eax, eax
 
 				jmp		_hhGetVar(Retn)
-			STAGELEFT:
-				jmp		_hhGetVar(Jump)
 			}
 		}
 	}

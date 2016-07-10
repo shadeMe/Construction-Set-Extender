@@ -136,9 +136,35 @@ namespace cse
 		};
 
 
+		class RenderWindowExtendedState
+		{
+			bool						Initialized;
+		public:
+			const float					MaxLandscapeEditBrushRadius;
 
-		// result = Vector3*
-#define WM_RENDERWINDOW_GETCAMERASTATICPIVOT	(WM_USER + 2005)
+			bool						FreezeInactiveRefs;
+			bool						UseAlternateMovementSettings;
+			POINT						CurrentMouseLBDragCoordDelta;
+			NiFrustum					CameraFrustumBuffer;
+			TESObjectREFR*				CurrentMouseRef;
+			TESPathGridPoint*			CurrentMousePathGridPoint;
+			POINT						CurrentMouseCoord;
+			bool						ShowInitiallyDisabledRefs;
+			bool						ShowInitiallyDisabledRefChildren;
+			bool						UseGrassTextureOverlay;
+			NiSourceTexture*			GrassOverlayTexture;
+			Vector3						StaticCameraPivot;
+
+			RenderWindowExtendedState();
+			~RenderWindowExtendedState();
+
+			void						Initialize();
+			void						Deinitialize();
+
+
+			static RenderWindowExtendedState		Instance;
+		};
+#define _RENDERWIN_XSTATE		renderWindow::RenderWindowExtendedState::Instance
 
 		class RenderWindowManager
 		{

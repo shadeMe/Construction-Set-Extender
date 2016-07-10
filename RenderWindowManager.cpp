@@ -266,12 +266,6 @@ namespace cse
 										{
 											NiSourceTexture* currentTex = NI_CAST(PPLighting->diffuse[TexNo], NiSourceTexture);
 											const char* SourcePath = settings::renderer::kGrassOverlayTexturePath().s;
-											if (currentTex)
-											{
-												if (strstr(currentTex->fileName, SourcePath) != NULL && TESRenderWindow::GrassTextureOverlay == false)
-													;//			BGSEECONSOLE_MESSAGE("Invalid grass over for cell %s", Land->parentCell->GetEditorID());
-											}
-
 											TexNo++;
 										}
 									}
@@ -294,7 +288,7 @@ namespace cse
 			bool Invisible = false;
 			if (Ref->IsTemporary() == false)
 			{
-				if (TESRenderWindow::ShowInitiallyDisabledRefs == false && Ref->GetDisabled())
+				if (_RENDERWIN_XSTATE.ShowInitiallyDisabledRefs == false && Ref->GetDisabled())
 					Invisible = true;
 
 				BSExtraData* xData = Ref->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
@@ -303,7 +297,7 @@ namespace cse
 					ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
 					if (xParent->parent->GetChildrenInvisible() ||
 						(xParent->parent->GetDisabled() &&
-						 TESRenderWindow::ShowInitiallyDisabledRefChildren == false))
+						 _RENDERWIN_XSTATE.ShowInitiallyDisabledRefChildren == false))
 					{
 						Invisible = true;
 					}
@@ -356,7 +350,7 @@ namespace cse
 			}
 			else
 			{
-				if (Ref->GetFrozen() || (Ref->IsActive() == false && TESRenderWindow::FreezeInactiveRefs))
+				if (Ref->GetFrozen() || (Ref->IsActive() == false && _RENDERWIN_XSTATE.FreezeInactiveRefs))
 					;// ref's frozen, don't select
 				else
 				{
@@ -372,7 +366,7 @@ namespace cse
 						TESObjectREFR* Selection = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
 						SME_ASSERT(Selection);
 
-						if (Selection->GetFrozen() || (Selection->IsActive() == false && TESRenderWindow::FreezeInactiveRefs))
+						if (Selection->GetFrozen() || (Selection->IsActive() == false && _RENDERWIN_XSTATE.FreezeInactiveRefs))
 							FrozenRefs.push_back(Itr->Data);
 					}
 
@@ -388,7 +382,7 @@ namespace cse
 				return true;
 			else if (Ref->GetFrozen())
 				return false;
-			else if (Ref->IsActive() && TESRenderWindow::FreezeInactiveRefs)
+			else if (Ref->IsActive() && _RENDERWIN_XSTATE.FreezeInactiveRefs)
 				return false;
 			else
 				return true;
@@ -503,6 +497,62 @@ namespace cse
 		}
 
 
+		RenderWindowExtendedState		RenderWindowExtendedState::Instance;
+
+		RenderWindowExtendedState::RenderWindowExtendedState() :
+			Initialized(false),
+			MaxLandscapeEditBrushRadius(25.f)
+		{
+			CurrentMouseLBDragCoordDelta = { 0, 0 };
+			UseAlternateMovementSettings = false;
+			FreezeInactiveRefs = false;
+			CameraFrustumBuffer = { 0 };
+			CurrentMouseCoord = { 0 };
+			CurrentMouseRef = NULL;
+			CurrentMousePathGridPoint = NULL;
+			ShowInitiallyDisabledRefs = true;
+			ShowInitiallyDisabledRefChildren = true;
+			UseGrassTextureOverlay = false;
+			GrassOverlayTexture = NULL;
+			StaticCameraPivot.Scale(0);
+		}
+
+		RenderWindowExtendedState::~RenderWindowExtendedState()
+		{
+			DEBUG_ASSERT(Initialized == false);
+		}
+
+
+		void RenderWindowExtendedState::Initialize()
+		{
+			SME_ASSERT(Initialized == false);
+
+			char Buffer[0x100] = { 0 };
+			FORMAT_STR(Buffer, "Textures\\Landscape\\%s", settings::renderer::kGrassOverlayTexturePath().s);
+			if (_FILEFINDER->FindFile(Buffer) != FileFinder::kFileStatus_NotFound)
+			{
+				GrassOverlayTexture = TESRender::CreateSourceTexture(Buffer);
+				GrassOverlayTexture->m_uiRefCount = 1;
+			}
+
+			Initialized = true;
+		}
+
+		void RenderWindowExtendedState::Deinitialize()
+		{
+			SME_ASSERT(Initialized);
+
+			if (GrassOverlayTexture)
+			{
+				UseGrassTextureOverlay = false;
+				_TES->ReloadLandscapeTextures();
+				TESRender::DeleteNiRefObject(GrassOverlayTexture);
+				GrassOverlayTexture = NULL;
+			}
+
+			Initialized = false;
+		}
+
 		RenderWindowManager				RenderWindowManager::Instance;
 
 
@@ -580,7 +630,7 @@ namespace cse
 								switch (CurrentItem.wID)
 								{
 								case IDC_RENDERWINDOWCONTEXT_FREEZEINACTIVE:
-									if (TESRenderWindow::FreezeInactiveRefs)
+									if (_RENDERWIN_XSTATE.FreezeInactiveRefs)
 										CheckItem = true;
 
 									break;
@@ -610,7 +660,7 @@ namespace cse
 
 									break;
 								case IDC_RENDERWINDOWCONTEXT_USEALTERNATEMOVEMENTSETTINGS:
-									if (TESRenderWindow::UseAlternateMovementSettings)
+									if (_RENDERWIN_XSTATE.UseAlternateMovementSettings)
 										CheckItem = true;
 
 									break;
@@ -653,7 +703,7 @@ namespace cse
 
 									break;
 								case IDC_RENDERWINDOWCONTEXT_GRASSOVERLAY:
-									CheckItem = TESRenderWindow::GrassTextureOverlay;
+									CheckItem = _RENDERWIN_XSTATE.UseGrassTextureOverlay;
 
 									break;
 								default:
@@ -710,9 +760,9 @@ namespace cse
 				{
 				case IDC_RENDERWINDOWCONTEXT_USEALTERNATEMOVEMENTSETTINGS:
 					{
-						TESRenderWindow::UseAlternateMovementSettings = (TESRenderWindow::UseAlternateMovementSettings == false);
+						_RENDERWIN_XSTATE.UseAlternateMovementSettings = (_RENDERWIN_XSTATE.UseAlternateMovementSettings == false);
 
-						if (TESRenderWindow::UseAlternateMovementSettings == false)
+						if (_RENDERWIN_XSTATE.UseAlternateMovementSettings == false)
 							NotificationOSDLayer::Instance.ShowNotification("Using vanilla movement settings");
 						else
 							NotificationOSDLayer::Instance.ShowNotification("Using alternate movement settings");
@@ -748,9 +798,9 @@ namespace cse
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_FREEZEINACTIVE:
-					TESRenderWindow::FreezeInactiveRefs = (TESRenderWindow::FreezeInactiveRefs == false);
+					_RENDERWIN_XSTATE.FreezeInactiveRefs = (_RENDERWIN_XSTATE.FreezeInactiveRefs == false);
 
-					if (TESRenderWindow::FreezeInactiveRefs)
+					if (_RENDERWIN_XSTATE.FreezeInactiveRefs)
 						NotificationOSDLayer::Instance.ShowNotification("Inactive references frozen");
 					else
 						NotificationOSDLayer::Instance.ShowNotification("Inactive references thawed");
@@ -1124,7 +1174,7 @@ namespace cse
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_GRASSOVERLAY:
-					TESRenderWindow::GrassTextureOverlay = TESRenderWindow::GrassTextureOverlay == false;
+					_RENDERWIN_XSTATE.UseGrassTextureOverlay = _RENDERWIN_XSTATE.UseGrassTextureOverlay == false;
 					_TES->ReloadLandscapeTextures();
 					Return = true;
 
@@ -1146,8 +1196,6 @@ namespace cse
 
 			UInt8* YKeyState = (UInt8*)0x00A0BC1E;
 			float* UnkRotFactor = (float*)0x00A0BAC4;
-
-			static Vector3 kCameraStaticPivot;
 
 			if (bgsee::RenderWindowFlyCamera::IsActive() && uMsg != WM_DESTROY)
 			{
@@ -1184,15 +1232,7 @@ namespace cse
 					}
 				}
 
-				break;
-			case WM_RENDERWINDOW_GETCAMERASTATICPIVOT:
-				{
-					SetWindowLongPtr(hWnd, DWLP_MSGRESULT, (LONG_PTR)&kCameraStaticPivot);
-					DlgProcResult = TRUE;
-					Return = true;
-				}
-
-				break;
+				break;			
 			case WM_CLOSE:
 				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kMainMenu_View_RenderWindow, NULL);
 				Return = true;
@@ -1220,10 +1260,10 @@ namespace cse
 
 					// the primary camera's view frustum gets updated ever so often, resetting its horizontal FOV
 					// we update it here in case it has changed
-					if (_PRIMARYRENDERER->primaryCamera->m_kViewFrustum.l != TESRenderWindow::CameraFrustumBuffer.l ||
-						_PRIMARYRENDERER->primaryCamera->m_kViewFrustum.r != TESRenderWindow::CameraFrustumBuffer.r ||
-						_PRIMARYRENDERER->primaryCamera->m_kViewFrustum.b != TESRenderWindow::CameraFrustumBuffer.b ||
-						_PRIMARYRENDERER->primaryCamera->m_kViewFrustum.t != TESRenderWindow::CameraFrustumBuffer.t)
+					if (_PRIMARYRENDERER->primaryCamera->m_kViewFrustum.l != _RENDERWIN_XSTATE.CameraFrustumBuffer.l ||
+						_PRIMARYRENDERER->primaryCamera->m_kViewFrustum.r != _RENDERWIN_XSTATE.CameraFrustumBuffer.r ||
+						_PRIMARYRENDERER->primaryCamera->m_kViewFrustum.b != _RENDERWIN_XSTATE.CameraFrustumBuffer.b ||
+						_PRIMARYRENDERER->primaryCamera->m_kViewFrustum.t != _RENDERWIN_XSTATE.CameraFrustumBuffer.t)
 					{
 						_RENDERWIN_MGR.RefreshFOV();
 					}
@@ -1267,10 +1307,10 @@ namespace cse
 
 						if (*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0)
 						{
-							TESObjectREFR* MouseRef = TESRender::PickRefAtCoords(TESRenderWindow::CurrentMouseCoord.x, TESRenderWindow::CurrentMouseCoord.y);
+							TESObjectREFR* MouseRef = TESRender::PickRefAtCoords(_RENDERWIN_XSTATE.CurrentMouseCoord.x, _RENDERWIN_XSTATE.CurrentMouseCoord.y);
 							if (MouseRef)
 							{
-								if (MouseRef->GetFrozen() || (MouseRef->IsActive() == false && TESRenderWindow::FreezeInactiveRefs))
+								if (MouseRef->GetFrozen() || (MouseRef->IsActive() == false && _RENDERWIN_XSTATE.FreezeInactiveRefs))
 									Icon = LoadCursor(NULL, IDC_NO);
 								else if (_RENDERSEL->HasObject(MouseRef))
 									Icon = *TESRenderWindow::CursorMove;
@@ -1294,14 +1334,14 @@ namespace cse
 				break;
 			case WM_MOUSEMOVE:
 				{
-					TESRenderWindow::CurrentMouseCoord.x = GET_X_LPARAM(lParam);
-					TESRenderWindow::CurrentMouseCoord.y = GET_Y_LPARAM(lParam);
+					_RENDERWIN_XSTATE.CurrentMouseCoord.x = GET_X_LPARAM(lParam);
+					_RENDERWIN_XSTATE.CurrentMouseCoord.y = GET_Y_LPARAM(lParam);
 
-					TESObjectREFR* LastMouseRef = TESRenderWindow::CurrentMouseRef;
-					TESRenderWindow::CurrentMouseRef = NULL;
+					TESObjectREFR* LastMouseRef = _RENDERWIN_XSTATE.CurrentMouseRef;
+					_RENDERWIN_XSTATE.CurrentMouseRef = NULL;
 
-					TESPathGridPoint* LastPathGridPoint = TESRenderWindow::CurrentMousePathGridPoint;
-					TESRenderWindow::CurrentMousePathGridPoint = NULL;
+					TESPathGridPoint* LastPathGridPoint = _RENDERWIN_XSTATE.CurrentMousePathGridPoint;
+					_RENDERWIN_XSTATE.CurrentMousePathGridPoint = NULL;
 
 					if (GetActiveWindow() == hWnd && GetCapture() != hWnd && *TESRenderWindow::LandscapeEditFlag == 0)
 					{
@@ -1312,16 +1352,16 @@ namespace cse
 						{
 							if (*TESRenderWindow::PathGridEditFlag == 0)
 							{
-								TESRenderWindow::CurrentMouseRef = TESRender::PickRefAtCoords(TESRenderWindow::CurrentMouseCoord.x,
-																							  TESRenderWindow::CurrentMouseCoord.y);
+								_RENDERWIN_XSTATE.CurrentMouseRef = TESRender::PickRefAtCoords(_RENDERWIN_XSTATE.CurrentMouseCoord.x,
+																							  _RENDERWIN_XSTATE.CurrentMouseCoord.y);
 
-								if (_RENDERSEL->selectionCount == 1 && _RENDERSEL->selectionList->Data == TESRenderWindow::CurrentMouseRef)
-									TESRenderWindow::CurrentMouseRef = NULL;
+								if (_RENDERSEL->selectionCount == 1 && _RENDERSEL->selectionList->Data == _RENDERWIN_XSTATE.CurrentMouseRef)
+									_RENDERWIN_XSTATE.CurrentMouseRef = NULL;
 							}
 							else
 							{
-								TESRenderWindow::CurrentMousePathGridPoint = TESRender::PickPathGridPointAtCoords(TESRenderWindow::CurrentMouseCoord.x,
-																												  TESRenderWindow::CurrentMouseCoord.y);
+								_RENDERWIN_XSTATE.CurrentMousePathGridPoint = TESRender::PickPathGridPointAtCoords(_RENDERWIN_XSTATE.CurrentMouseCoord.x,
+																												_RENDERWIN_XSTATE.CurrentMouseCoord.y);
 							}
 						}
 					}
@@ -1330,13 +1370,15 @@ namespace cse
 				break;
 			case WM_MOUSELEAVE:
 			case WM_NCMOUSELEAVE:
-				TESRenderWindow::CurrentMouseRef = NULL;
+				_RENDERWIN_XSTATE.CurrentMouseRef = NULL;
 
 				break;
 			case WM_LBUTTONDOWN:
-				TESRenderWindow::CurrentMouseLBDragCoordDelta.x = GET_X_LPARAM(lParam);
-				TESRenderWindow::CurrentMouseLBDragCoordDelta.y = GET_Y_LPARAM(lParam);
+				_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.x = GET_X_LPARAM(lParam);
+				_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.y = GET_Y_LPARAM(lParam);
 
+				break;
+			case WM_RBUTTONDOWN:
 				if (GetAsyncKeyState(VK_MENU) && GetAsyncKeyState(VK_CONTROL))
 				{
 					// handle it for the button up event
@@ -1345,12 +1387,14 @@ namespace cse
 
 				break;
 			case WM_LBUTTONUP:
-				TESRenderWindow::CurrentMouseLBDragCoordDelta.x -= GET_X_LPARAM(lParam);
-				TESRenderWindow::CurrentMouseLBDragCoordDelta.y -= GET_Y_LPARAM(lParam);
+				_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.x -= GET_X_LPARAM(lParam);
+				_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.y -= GET_Y_LPARAM(lParam);
 
-				TESRenderWindow::CurrentMouseLBDragCoordDelta.x = abs(TESRenderWindow::CurrentMouseLBDragCoordDelta.x);
-				TESRenderWindow::CurrentMouseLBDragCoordDelta.y = abs(TESRenderWindow::CurrentMouseLBDragCoordDelta.y);
+				_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.x = abs(_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.x);
+				_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.y = abs(_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.y);
 
+				break;
+			case WM_RBUTTONUP:
 				if (GetAsyncKeyState(VK_MENU) && GetAsyncKeyState(VK_CONTROL))
 				{
 					// place palette object, if any
@@ -1392,7 +1436,7 @@ namespace cse
 				switch (wParam)
 				{
 				case VK_SHIFT:
-					_PRIMARYRENDERER->GetCameraPivot(&kCameraStaticPivot, 0.18);
+					_PRIMARYRENDERER->GetCameraPivot(&_RENDERWIN_XSTATE.StaticCameraPivot, 0.18);
 
 					break;
 				case VK_F1:		// F1
@@ -1580,7 +1624,7 @@ namespace cse
 						else if (GetCapture())
 							break;
 
-						TESRenderWindow::CurrentMouseRef = NULL;
+						_RENDERWIN_XSTATE.CurrentMouseRef = NULL;
 
 						bgsee::RenderWindowFlyCamera* xFreeCamData = BGSEE_GETWINDOWXDATA(bgsee::RenderWindowFlyCamera, ExtraData);
 						SME_ASSERT(xFreeCamData == NULL);
@@ -1663,8 +1707,8 @@ namespace cse
 					break;
 				case VK_DELETE:
 					// clear the picked objects just in case they are about to be deleted
-					TESRenderWindow::CurrentMouseRef = NULL;
-					TESRenderWindow::CurrentMousePathGridPoint = NULL;
+					_RENDERWIN_XSTATE.CurrentMouseRef = NULL;
+					_RENDERWIN_XSTATE.CurrentMousePathGridPoint = NULL;
 
 					break;
 				}
@@ -1724,6 +1768,7 @@ namespace cse
 #endif
 			CellLists->Initialize(OSD);
 
+			_RENDERWIN_XSTATE.Initialize();
 			Initialized = true;
 
 			return Initialized;
@@ -1752,6 +1797,7 @@ namespace cse
 #ifndef NDEBUG
 			SceneGraphManager->RemoveModifier(&DebugSceneGraphModifier::Instance);
 #endif
+			_RENDERWIN_XSTATE.Deinitialize();
 			Initialized = false;
 		}
 
@@ -1788,7 +1834,7 @@ namespace cse
 				CameraFOV = 50.0f;
 
 			TESRender::SetCameraFOV(_PRIMARYRENDERER->primaryCamera, CameraFOV);
-			memcpy(&TESRenderWindow::CameraFrustumBuffer, &_PRIMARYRENDERER->primaryCamera->m_kViewFrustum, sizeof(NiFrustum));
+			memcpy(&_RENDERWIN_XSTATE.CameraFrustumBuffer, &_PRIMARYRENDERER->primaryCamera->m_kViewFrustum, sizeof(NiFrustum));
 			TESRenderWindow::Redraw();
 		}
 
@@ -1829,7 +1875,6 @@ namespace cse
 		{
 			_RENDERWIN_MGR.Deinitialize();
 		}
-
 
 
 

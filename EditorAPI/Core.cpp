@@ -340,14 +340,6 @@ TESObjectCELL* TES::GetCurrentCell() const
 
 void TES::ReloadLandscapeTextures()
 {
-	_TEXTUREPALETTE->ReleaseTextures();
-
-	for (tList<TESLandTexture>::Iterator Itr = _DATAHANDLER->landTextures.Begin(); !Itr.End() && !Itr.Get(); ++Itr)
-		Itr.Get()->ReleaseSourceTexture();
-	
-	for (tList<TESLandTexture>::Iterator Itr = _DATAHANDLER->landTextures.Begin(); !Itr.End() && !Itr.Get(); ++Itr)
-		Itr.Get()->LoadSourceTexture();
-
 	for (cseOverride::NiTMapIterator Itr = TESForm::FormIDMap->GetFirstPos(); Itr;)
 	{
 		UInt32 FormID = NULL;
@@ -363,10 +355,7 @@ void TES::ReloadLandscapeTextures()
 				{
 					TESObjectLAND* Land = Cell->GetLand();
 					if (Land && Land->landData && Land->landData->nodeData)
-					{
 						Land->Refresh3D(true);
-			//			thisCall<void>(0x00527980, this);
-					}
 				}
 			}
 		}

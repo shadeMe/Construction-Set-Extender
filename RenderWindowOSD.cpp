@@ -901,18 +901,17 @@ namespace cse
 		{
 			if (OSD->NeedsInput())
 				return;
-			else if (*TESRenderWindow::PathGridEditFlag == 0 && TESRenderWindow::CurrentMouseRef == NULL)
+			else if (*TESRenderWindow::PathGridEditFlag == 0 && _RENDERWIN_XSTATE.CurrentMouseRef == NULL)
 				return;
-			else if (*TESRenderWindow::PathGridEditFlag && TESRenderWindow::CurrentMousePathGridPoint == NULL)
+			else if (*TESRenderWindow::PathGridEditFlag && _RENDERWIN_XSTATE.CurrentMousePathGridPoint == NULL)
 				return;
 
-			SME_ASSERT((TESRenderWindow::CurrentMouseRef && TESRenderWindow::CurrentMousePathGridPoint == NULL) ||
-				(TESRenderWindow::CurrentMouseRef == NULL && TESRenderWindow::CurrentMousePathGridPoint));
+			SME_ASSERT((void*)_RENDERWIN_XSTATE.CurrentMouseRef != (void*)_RENDERWIN_XSTATE.CurrentMousePathGridPoint);
 
 			char Buffer[0x200] = { 0 }, BaseBuffer[0x100] = { 0 };
-			if (TESRenderWindow::CurrentMouseRef)
+			if (_RENDERWIN_XSTATE.CurrentMouseRef)
 			{
-				TESObjectREFR* Ref = TESRenderWindow::CurrentMouseRef;
+				TESObjectREFR* Ref = _RENDERWIN_XSTATE.CurrentMouseRef;
 				TESForm* Base = Ref->baseForm;
 				SME_ASSERT(Base);
 
@@ -926,7 +925,7 @@ namespace cse
 				if (xData)
 				{
 					ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
-					FORMAT_STR(xBuffer, "\nEnable-state Parent: %s%s%08X%s, Opposite State: %d",
+					FORMAT_STR(xBuffer, "\n\nParent: %s%s%08X%s, Opposite: %d",
 							((xParent->parent->editorID.Size()) ? (xParent->parent->editorID.c_str()) : ("")),
 							(xParent->parent->editorID.Size() ? "(" : ""),
 							xParent->parent->formID,
@@ -944,7 +943,7 @@ namespace cse
 			}
 			else
 			{
-				TESObjectREFR* Ref = TESRenderWindow::CurrentMousePathGridPoint->linkedRef;
+				TESObjectREFR* Ref = _RENDERWIN_XSTATE.CurrentMousePathGridPoint->linkedRef;
 				if (Ref == NULL)
 					return;
 
@@ -1260,6 +1259,11 @@ namespace cse
 
 		SelectionControlsOSDLayer		SelectionControlsOSDLayer::Instance;
 
+		void SelectionControlsOSDLayer::EditReference(TESObjectREFR* Ref)
+		{
+			TESDialog::ShowFormEditDialog(Ref);
+		}
+
 		void SelectionControlsOSDLayer::EditBaseForm(TESObjectREFR* Ref)
 		{
 			TESDialog::ShowFormEditDialog(Ref->baseForm);
@@ -1362,9 +1366,15 @@ namespace cse
 
 		void SelectionControlsOSDLayer::AlignSelection(bool Position, bool Rotation)
 		{
+			if (AlignmentAxisX == false && AlignmentAxisY == false && AlignmentAxisZ == false)
+				return;
+
 			TESObjectREFR* AlignRef = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, NULL, false);
 			if (AlignRef)
 			{
+				const Vector3& AlignPos = *AlignRef->GetPosition();
+				const Vector3& AlignRot = *AlignRef->GetRotation();
+
 				for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 				{
 					TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
@@ -1372,15 +1382,35 @@ namespace cse
 						continue;
 
 					if (Position)
-						Ref->SetPosition(*AlignRef->GetPosition());
+					{
+						Vector3 NewPos(*Ref->GetPosition());
+						if (AlignmentAxisX)
+							NewPos.x = AlignPos.x;
+						if (AlignmentAxisY)
+							NewPos.y = AlignPos.y;
+						if (AlignmentAxisZ)
+							NewPos.z = AlignPos.z;
+
+						Ref->SetPosition(NewPos);
+					}
 
 					if (Rotation)
-						Ref->SetRotation(*AlignRef->GetRotation(), true);
+					{
+						Vector3 NewRot(*Ref->GetRotation());
+						if (AlignmentAxisX)
+							NewRot.x = AlignRot.x;
+						if (AlignmentAxisY)
+							NewRot.y = AlignRot.y;
+						if (AlignmentAxisZ)
+							NewRot.z = AlignRot.z;
+
+						Ref->SetRotation(NewRot, true);
+					}
 
 					Ref->SetFromActiveFile(true);
 				}
 
-				NotificationOSDLayer::Instance.ShowNotification("Selection %s aligned to %08X", Position ? "position" : "roatation", AlignRef->formID);
+				NotificationOSDLayer::Instance.ShowNotification("Selection %s aligned to %08X", Position ? "position" : "rotation", AlignRef->formID);
 				achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefAlignment);
 			}
 		}
@@ -1391,6 +1421,7 @@ namespace cse
 			TextInputActive = false;
 			DragActive = false;
 			LocalTransformation = 1;
+			AlignmentAxisX = AlignmentAxisY = AlignmentAxisZ = true;
 		}
 
 		SelectionControlsOSDLayer::~SelectionControlsOSDLayer()
@@ -1400,7 +1431,9 @@ namespace cse
 
 		void SelectionControlsOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
-			if (_RENDERSEL->selectionCount == 0)
+			if (_RENDERSEL->selectionCount == 0 || _RENDERSEL->selectionList == NULL || _RENDERSEL->selectionList->Data == NULL)
+				return;
+			else if (TESDialog::GetActiveFormEditDialog(_RENDERSEL->selectionList->Data))
 				return;
 
 			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, (_RENDERSEL->selectionCount == 0 ? 0.1f : 1.0f));
@@ -1431,6 +1464,7 @@ namespace cse
 				}
 			}
 
+			bool ReturnEarly = false;
 			if (SingleSel)
 			{
 				TESObjectREFR* ThisRef = CS_CAST(_RENDERSEL->selectionList->Data, TESForm, TESObjectREFR);
@@ -1441,18 +1475,41 @@ namespace cse
 				float Scale = ThisRef->scale;
 				Rotation.Scale(57.2957763671875);
 
-				ImGui::PushStyleColor(ImGuiCol_Button, ImColor::HSV(0, 0.6f, 0.6f));
-				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImColor::HSV(0, 0.7f, 0.7f));
-				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImColor::HSV(0, 0.8f, 0.8f));
+				ImGui::Columns(2, "Ref Info", false);
 				{
-					if (ImGui::Button("Edit Base Form"))
-						EditBaseForm(ThisRef);
-				}
-				ImGui::PopStyleColor(3);
+					ImGui::Text("%s(%08X) [%s]", ThisRef->editorID.Size() ? ThisRef->editorID.c_str() : "",
+								ThisRef->formID,
+								TESForm::GetFormTypeIDLongName(ThisRef->baseForm->formType)); ImGui::NextColumn();
 
-				ImGui::SameLine(ImGui::GetWindowWidth() - 40); ImGui::TextDisabled("(?)");
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Click and drag the buttons to transform the selection.\nCTRL + click to directly edit the values.");
+					ImGui::SetColumnOffset(-1, ImGui::GetWindowWidth() - 180);
+					ImGui::PushStyleColor(ImGuiCol_Button, ImColor::HSV(0, 0.6f, 0.6f));
+					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImColor::HSV(0, 0.7f, 0.7f));
+					ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImColor::HSV(0, 0.8f, 0.8f));
+					{
+						if (ImGui::Button("Reference##edit_ref"))
+						{
+							EditReference(ThisRef);
+
+							ImGui::PopStyleColor(3);
+							ImGui::End();
+							ImGui::PopStyleVar(2);
+							return;
+						}
+						ImGui::SameLine(0, 5);
+
+						if (ImGui::Button("Base Form##edit_base"))
+							EditBaseForm(ThisRef);
+					}
+					ImGui::PopStyleColor(3);
+
+					ImGui::SameLine(0, 8); ImGui::TextDisabled("(?)   ");
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Click and drag the buttons to transform the selection.\nCTRL + click to directly edit the values.\n\nThe \"Reference\" and \"Base Form\" buttons open their corresponding edit dialogs.");
+
+					ImGui::NextColumn();
+				}
+				ImGui::Columns(1);
+				ImGui::NewLine();
 
 				ImGui::DragFloat3("Position##single_pos", &Position.x, 1, 0, 0, "%.2f");
 				ImGui::DragFloat3("Rotation##single_rot", &Rotation.x, 1, 0, 0, "%.2f");
@@ -1472,10 +1529,11 @@ namespace cse
 			else if (_RENDERSEL->selectionCount)
 			{
 				ImGui::Text("Transformation:"); ImGui::SameLine(0, 15);
-				ImGui::RadioButton("Local", &LocalTransformation, 1); ImGui::SameLine(); ImGui::RadioButton("Global", &LocalTransformation, 0);
+				ImGui::RadioButton("Local", &LocalTransformation, 1); ImGui::SameLine(0, 10); ImGui::RadioButton("Global", &LocalTransformation, 0);
 				ImGui::SameLine(ImGui::GetWindowWidth() - 40); ImGui::TextDisabled("(?)");
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Click and drag the buttons to transform the selection");
+				ImGui::NewLine();
 
 				float Width = 0;
 				ImGui::Columns(4, "Position + Rotation", false);
@@ -1525,6 +1583,10 @@ namespace cse
 				if (ImGui::Button("Rotation##align_rot", ImVec2(ImGui::GetColumnWidth(), 20)))
 					AlignSelection(false, true);
 				ImGui::NextColumn();
+
+				ImGui::Checkbox("Align X-axis", &AlignmentAxisX); ImGui::NextColumn();
+				ImGui::Checkbox("Align Y-axis", &AlignmentAxisY); ImGui::NextColumn();
+				ImGui::Checkbox("Align Z-axis", &AlignmentAxisZ); ImGui::NextColumn();
 			}
 			ImGui::Columns(1);
 			ImGui::Separator();

@@ -234,6 +234,7 @@ DLGPROC TESDialog::GetFormEditDlgProc(TESForm* Form, bool& FormIDListViewForm)
 	case TESForm::kFormType_SubSpace:
 	case TESForm::kFormType_EffectShader:
 	case TESForm::kFormType_SigilStone:
+	case TESForm::kFormType_REFR:
 		return (DLGPROC)0x00447580;
 	case TESForm::kFormType_Faction:
 	case TESForm::kFormType_Race:
@@ -298,6 +299,11 @@ BaseExtraList* TESDialog::GetDialogExtraDataList(HWND Dialog)
 bool TESDialog::CallFormDialogMessageCallback(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LONG* outLong)
 {
 	return cdeclCall<bool>(0x00442BD0, hWnd, uMsg, wParam, lParam, outLong);
+}
+
+HWND TESDialog::GetActiveFormEditDialog(TESForm* Form)
+{
+	return cdeclCall<HWND>(0x004469D0, Form);
 }
 
 BaseExtraList* TESDialog::CreateDialogExtraDataList(HWND Dialog)

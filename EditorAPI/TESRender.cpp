@@ -43,19 +43,6 @@ HCURSOR*							TESRenderWindow::CursorMove = (HCURSOR*)0x00A0BAB4;
 HCURSOR*							TESRenderWindow::CursorSelect = (HCURSOR*)0x00A0BAB0;
 HCURSOR*							TESRenderWindow::CursorArrow = (HCURSOR*)0x00A0BABC;
 
-POINT								TESRenderWindow::CurrentMouseLBDragCoordDelta = { 0, 0 };
-bool								TESRenderWindow::UseAlternateMovementSettings = false;
-bool								TESRenderWindow::FreezeInactiveRefs = false;
-NiFrustum							TESRenderWindow::CameraFrustumBuffer = { 0 };
-POINT								TESRenderWindow::CurrentMouseCoord = { 0 };
-TESObjectREFR*						TESRenderWindow::CurrentMouseRef = NULL;
-TESPathGridPoint*					TESRenderWindow::CurrentMousePathGridPoint = NULL;
-bool								TESRenderWindow::ShowInitiallyDisabledRefs = true;
-bool								TESRenderWindow::ShowInitiallyDisabledRefChildren = true;
-bool								TESRenderWindow::GrassTextureOverlay = false;
-
-const float							TESRenderWindow::MaxLandscapeEditBrushRadius = 25.0f;
-
 TESPreviewControl::PreviewControlListT*		TESPreviewControl::ActivePreviewControls = (TESPreviewControl::PreviewControlListT*)0x00A0BE90;
 
 void TESRenderWindow::Reset()
@@ -387,6 +374,11 @@ NiProperty* TESRender::CreateProperty(UInt8 Type)
 		SME_ASSERT(InvalidType);
 		return NULL;
 	}
+}
+
+NiSourceTexture* TESRender::CreateSourceTexture(const char* FilePath)
+{
+	return cdeclCall<NiSourceTexture*>(0x006F8410, FilePath, 0x00A00900, 1);
 }
 
 TESPathGridPoint* TESRender::PickPathGridPointAtCoords(int X, int Y)

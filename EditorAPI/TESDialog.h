@@ -533,6 +533,7 @@ public:
 
 	static DLGPROC							GetFormEditDlgProc(TESForm* Form, bool& FormIDListViewForm);
 	static bool								CallFormDialogMessageCallback(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LONG* outLong);
+	static HWND								GetActiveFormEditDialog(TESForm* Form);
 
 	static bool								SelectTESFileCommonDialog(HWND Parent, const char* SaveDir, bool SaveAsESM, char* FileNameOut, size_t OutSize);
 	static HWND								ShowFormEditDialog(TESForm* Form);

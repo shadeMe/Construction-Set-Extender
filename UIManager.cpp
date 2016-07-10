@@ -1373,12 +1373,12 @@ namespace cse
 
 									break;
 								case IDC_MAINMENU_INITIALLYDISABLEDREFERENCES:
-									if (TESRenderWindow::ShowInitiallyDisabledRefs)
+									if (_RENDERWIN_XSTATE.ShowInitiallyDisabledRefs)
 										CheckItem = true;
 
 									break;
 								case IDC_MAINMENU_CHILDREFERENCESOFTHEDISABLED:
-									if (TESRenderWindow::ShowInitiallyDisabledRefChildren)
+									if (_RENDERWIN_XSTATE.ShowInitiallyDisabledRefChildren)
 										CheckItem = true;
 
 									break;
@@ -1785,11 +1785,11 @@ namespace cse
 
 					break;
 				case IDC_MAINMENU_INITIALLYDISABLEDREFERENCES:
-					TESRenderWindow::ShowInitiallyDisabledRefs = (TESRenderWindow::ShowInitiallyDisabledRefs == false);
+					_RENDERWIN_XSTATE.ShowInitiallyDisabledRefs = _RENDERWIN_XSTATE.ShowInitiallyDisabledRefs == false;
 
 					break;
 				case IDC_MAINMENU_CHILDREFERENCESOFTHEDISABLED:
-					TESRenderWindow::ShowInitiallyDisabledRefChildren = (TESRenderWindow::ShowInitiallyDisabledRefChildren == false);
+					_RENDERWIN_XSTATE.ShowInitiallyDisabledRefChildren = _RENDERWIN_XSTATE.ShowInitiallyDisabledRefChildren == false;
 
 					break;
 				case IDC_MAINMENU_CODAOPENSCRIPTREPOSITORY:
