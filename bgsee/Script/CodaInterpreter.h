@@ -52,11 +52,15 @@ namespace bgsee
 			UInt32											GetParsedTokenCount() const;
 			CodaScriptKeywordT								GetFirstTokenKeywordType();
 
-			void											Sanitize(CodaScriptSourceCodeT& In, CodaScriptSourceCodeT& Out, UInt32 OperationMask);
+			void											Sanitize(const CodaScriptSourceCodeT& In, CodaScriptSourceCodeT& Out, UInt32 OperationMask);
 
 			static CodaScriptKeywordT						GetKeywordType(CodaScriptSourceCodeT& Token);
 			static const CodaScriptSourceCodeT&				GetKeywordName(CodaScriptKeywordT Keyword);
 		private:
+			CodaScriptSourceCodeT							SourceString;
+
+			bool											IsIndexStringLiteral(const CodaScriptSourceCodeT& Source, int Index);		// returns true if the index is inside a string literal
+
 			static const CodaScriptSourceCodeT				kWhitespace;
 			static const CodaScriptSourceCodeT				kValidDelimiters;
 			static const CodaScriptSourceCodeT				kCommentDelimiter;

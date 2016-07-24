@@ -8,6 +8,34 @@ namespace bgsee
 {
 	namespace script
 	{
+		bool CodaScriptTokenizer::IsIndexStringLiteral(const CodaScriptSourceCodeT& Source, int Index)
+		{
+			if (Index >= Source.length())
+				return false;
+
+			int QuoteStack = 0;
+			int Idx = 0;
+			for each (char Itr in Source)
+			{
+				if (Itr == '"')
+				{
+					if (QuoteStack == 0)
+						QuoteStack++;
+					else if (QuoteStack == 1)
+						QuoteStack--;
+					else
+						break;				// wtf
+				}
+
+				if (Index == Idx && QuoteStack)
+					return true;
+
+				Idx++;
+			}
+
+			return false;
+		}
+
 		const CodaScriptSourceCodeT				CodaScriptTokenizer::kWhitespace = " \t";
 		const CodaScriptSourceCodeT				CodaScriptTokenizer::kCommentDelimiter = ";";
 		const CodaScriptSourceCodeT				CodaScriptTokenizer::kValidDelimiters = kCommentDelimiter + kWhitespace + ".,(){}[]\n";
@@ -44,12 +72,12 @@ namespace bgsee
 
 		bool CodaScriptTokenizer::Tokenize(CodaScriptSourceCodeT Source, bool CollectEmptyTokens)
 		{
-			Source += "\n";
-
 			bool Result = false;
 			int StartPos = -1, LastPos = -1;
 
 			ResetState();
+			SourceString = Source;
+			Source += "\n";
 
 			for (int i = 0; i < Source.length(); i++)
 			{
@@ -120,6 +148,7 @@ namespace bgsee
 			Tokens.clear();
 			Delimiters.clear();
 			Indices.clear();
+			SourceString.clear();
 		}
 
 		CodaScriptKeywordT CodaScriptTokenizer::GetKeywordType(CodaScriptSourceCodeT& Token)
@@ -138,7 +167,7 @@ namespace bgsee
 			return Result;
 		}
 
-		void CodaScriptTokenizer::Sanitize(CodaScriptSourceCodeT& In, CodaScriptSourceCodeT& Out, UInt32 OperationMask)
+		void CodaScriptTokenizer::Sanitize(const CodaScriptSourceCodeT& In, CodaScriptSourceCodeT& Out, UInt32 OperationMask)
 		{
 			Out.clear();
 
@@ -152,10 +181,11 @@ namespace bgsee
 				if ((OperationMask & kSanitizeOps_StripTabCharacters))
 					std::replace(Out.begin(), Out.end(), '\t', ' ');
 
-				int CommentDelimiter = Out.find(kCommentDelimiter);
-				if ((OperationMask & kSanitizeOps_StripComments) && CommentDelimiter != std::string::npos)
+				if ((OperationMask & kSanitizeOps_StripComments))
 				{
-					Out.erase(CommentDelimiter, Out.length() - CommentDelimiter);
+					int CommentDelimiter = Out.rfind(kCommentDelimiter);
+					if (CommentDelimiter != std::string::npos && IsIndexStringLiteral(SourceString, CommentDelimiter) == false)
+						Out.erase(CommentDelimiter, Out.length() - CommentDelimiter);
 				}
 			}
 		}
@@ -872,14 +902,16 @@ namespace bgsee
 
 							if (Tokenizer.GetParsedTokenCount() > 3 && !strcmp(Tokenizer.Tokens[2].c_str(), "="))
 							{
-								CodaScriptSourceCodeT LineBuffer(Buffer);
-								CodaScriptSourceCodeT InitializationValue = LineBuffer.substr(Tokenizer.Indices[3]);
+								CodaScriptSourceCodeT LineBuffer;
+								Tokenizer.Sanitize(CodaScriptSourceCodeT(Buffer), LineBuffer,
+												   CodaScriptTokenizer::kSanitizeOps_StripComments |
+												   CodaScriptTokenizer::kSanitizeOps_StripLeadingWhitespace |
+												   CodaScriptTokenizer::kSanitizeOps_StripTabCharacters);
 
+								CodaScriptSourceCodeT InitializationValue = LineBuffer.substr(Tokenizer.Indices[3]);
 								if (InitializationValue.find("\"") == 0 && InitializationValue.length() > 1)
 								{
-									InitializationValue.erase(InitializationValue.begin());
-									InitializationValue.erase(InitializationValue.begin() + InitializationValue.length() - 1);
-
+									InitializationValue = Tokenizer.Tokens[3];
 									*NewVar->GetStoreOwner() = CodaScriptBackingStore(InitializationValue.c_str());
 								}
 								else
