@@ -6,6 +6,7 @@
 #include "Hooks\Hooks-ScriptEditor.h"
 #include "Hooks\Hooks-Plugins.h"
 #include "Hooks\Hooks-Dialog.h"
+#include "CustomDialogProcs.h"
 
 #include <bgsee\WorkspaceManager.h>
 

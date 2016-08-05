@@ -1775,6 +1775,14 @@ namespace cse
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, RenderWindowMenuInitSelectSubclassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, RenderWindowMasterSubclassProc);
 			BGSEEUI->GetMenuHotSwapper()->RegisterTemplateReplacer(IDR_RENDERWINDOWCONTEXT, BGSEEMAIN->GetExtenderHandle());
+			if (settings::dialogs::kShowMainWindowsInTaskbar.GetData().i)
+			{
+				bgsee::WindowStyler::StyleData RegularAppWindow = { 0 };
+				RegularAppWindow.Extended = WS_EX_APPWINDOW;
+				RegularAppWindow.ExtendedOp = bgsee::WindowStyler::StyleData::kOperation_OR;
+
+				BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_RenderWindow, RegularAppWindow);
+			}
 
 			events::renderer::kRelease.AddSink(EventSink);
 			events::renderer::kRenew.AddSink(EventSink);

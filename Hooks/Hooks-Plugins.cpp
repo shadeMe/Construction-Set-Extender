@@ -1,7 +1,8 @@
 #include "Hooks-Plugins.h"
 #include "Hooks-Misc.h"
 #include "Hooks-Dialog.h"
-#include "..\WorkspaceManager.h"
+#include "WorkspaceManager.h"
+#include "CustomDialogProcs.h"
 
 #pragma warning(push)
 #pragma optimize("", off)

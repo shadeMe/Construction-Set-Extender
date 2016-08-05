@@ -1015,7 +1015,7 @@ namespace cse
 			if (HasNotifications() == false)
 				return;
 
-			ImGui::SetNextWindowPos(ImVec2(10, *TESRenderWindow::ScreeHeight - 75));
+			ImGui::SetNextWindowPos(ImVec2(10, *TESRenderWindow::ScreeHeight - 100));
 			if (!ImGui::Begin("Notification Overlay", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize |
 							  ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoInputs))
 			{

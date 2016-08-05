@@ -1,6 +1,7 @@
 #include "Hooks-AssetSelector.h"
 #include "WorkspaceManager.h"
 #include "Construction Set Extender_Resource.h"
+#include "CustomDialogProcs.h"
 
 #pragma warning(push)
 #pragma optimize("", off)
@@ -82,7 +83,7 @@ namespace cse
 		{
 			TESModel* BaseForm = CS_CAST(s_AssetFormComponent, BaseFormComponent, TESModel);
 			SME_ASSERT(BaseForm);
-			
+
 			s_AssetFileBrowserBaseDir = "";
 			if (BaseForm->modelPath.c_str())
 				s_AssetFileBrowserBaseDir = "Data\\Meshes\\" + std::string(BaseForm->modelPath.c_str());
@@ -105,7 +106,7 @@ namespace cse
 				s_AssetFileBrowserBaseDir = "Data\\Meshes\\" + std::string(BaseForm->modelPath.c_str());
 
 				if (s_AssetFileBrowserBaseDir[s_AssetFileBrowserBaseDir.length() - 1] != 'f')
-					s_AssetFileBrowserBaseDir += "\\";		// fix up trailing backslash if the path doesn't point to a KF file	
+					s_AssetFileBrowserBaseDir += "\\";		// fix up trailing backslash if the path doesn't point to a KF file
 			}
 
 			bool Result = cdeclCall<bool>(kAnimationSelectorCommonDialogCallAddr, Parent, SaveDir, FilterStr,
@@ -130,7 +131,7 @@ namespace cse
 			s_AssetFileBrowserBaseDir = "";
 			if (BaseForm->texturePath.c_str())
 				s_AssetFileBrowserBaseDir = std::string(SaveDir) + std::string(BaseForm->texturePath.c_str());
-		
+
 			bool Result = cdeclCall<bool>(kTextureSelectorCommonDialogCallAddr, Parent, SaveDir, FilterStr, OutBuffer, BufferSize);
 
 			s_AssetFileBrowserBaseDir = "";

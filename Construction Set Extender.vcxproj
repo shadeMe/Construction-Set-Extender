@@ -351,6 +351,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CellViewWindowOverrides.cpp" />
     <ClCompile Include="Coda\Commands\CodaScriptCommands-BFC.cpp" />
     <ClCompile Include="Coda\Commands\CodaScriptCommands-Form.cpp" />
     <ClCompile Include="Coda\Commands\CodaScriptCommands-Reference.cpp" />
@@ -358,6 +359,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClCompile Include="Achievements.cpp" />
     <ClCompile Include="AuxiliaryViewport.cpp" />
     <ClCompile Include="Console.cpp" />
+    <ClCompile Include="CustomDialogProcs.cpp" />
     <ClCompile Include="EditorAPI\TESLandTexture.cpp" />
     <ClCompile Include="EventSinks.cpp" />
     <ClCompile Include="EventSources.cpp" />
@@ -370,8 +372,11 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClCompile Include="IMGUI\imgui_draw.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="DialogImposterManager.cpp" />
+    <ClCompile Include="MainWindowOverrides.cpp" />
+    <ClCompile Include="MiscWindowOverrides.cpp" />
     <ClCompile Include="ObjectPaletteManager.cpp" />
     <ClCompile Include="ObjectPrefabManager.cpp" />
+    <ClCompile Include="ObjectWindowOverrides.cpp" />
     <ClCompile Include="PathGridUndoManager.cpp" />
     <ClCompile Include="RenderWindowCellLists.cpp" />
     <ClCompile Include="RenderWindowGroupManager.cpp" />
@@ -462,6 +467,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClInclude Include="..\OBSE\obse\NiRenderer.h" />
     <ClInclude Include="..\obse\obse\NiTypes.h" />
     <ClInclude Include="..\obse\obse\PluginAPI.h" />
+    <ClInclude Include="CellViewWindowOverrides.h" />
     <ClInclude Include="Coda\Commands\CodaScriptCommands-BFC.h" />
     <ClInclude Include="Coda\Commands\CodaScriptCommands-Form.h" />
     <ClInclude Include="Coda\Commands\CodaScriptCommands-Reference.h" />
@@ -469,6 +475,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClInclude Include="Achievements.h" />
     <ClInclude Include="AuxiliaryViewport.h" />
     <ClInclude Include="Console.h" />
+    <ClInclude Include="CustomDialogProcs.h" />
     <ClInclude Include="EventSinks.h" />
     <ClInclude Include="EventSources.h" />
     <ClInclude Include="FormUndoStack.h" />
@@ -483,8 +490,11 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClInclude Include="IMGUI\stb_truetype.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="DialogImposterManager.h" />
+    <ClInclude Include="MainWindowOverrides.h" />
+    <ClInclude Include="MiscWindowOverrides.h" />
     <ClInclude Include="ObjectPaletteManager.h" />
     <ClInclude Include="ObjectPrefabManager.h" />
+    <ClInclude Include="ObjectWindowOverrides.h" />
     <ClInclude Include="PathGridUndoManager.h" />
     <ClInclude Include="RenderWindowCellLists.h" />
     <ClInclude Include="RenderWindowGroupManager.h" />
@@ -632,6 +642,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <None Include="Images\Splash.bmp" />
     <None Include="Images\wiseone.bmp" />
     <None Include="Images\wtf.bmp" />
+    <None Include="MainWindowOverrides" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\[Libraries]\BGSEditorExtenderBase\bgsee\BGSEditorExtenderBase.rc" />

@@ -97,6 +97,9 @@
     <Filter Include="Components\IMGUI">
       <UniqueIdentifier>{840e81b2-3d8d-49a1-a634-94193d0753c6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Components\UI Manager">
+      <UniqueIdentifier>{e0cbcf87-cc2c-4a4e-9a9b-8102df1d48f4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="[Common]\CLIWrapper.cpp">
@@ -269,9 +272,6 @@
     <ClCompile Include="Settings.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="UIManager.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="WorkspaceManager.cpp">
       <Filter>Components</Filter>
     </ClCompile>
@@ -335,6 +335,24 @@
     </ClCompile>
     <ClCompile Include="EditorAPI\TESLandTexture.cpp">
       <Filter>EditorAPI\Forms\World</Filter>
+    </ClCompile>
+    <ClCompile Include="UIManager.cpp">
+      <Filter>Components\UI Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="MainWindowOverrides.cpp">
+      <Filter>Components\UI Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="CellViewWindowOverrides.cpp">
+      <Filter>Components\UI Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectWindowOverrides.cpp">
+      <Filter>Components\UI Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="CustomDialogProcs.cpp">
+      <Filter>Components\UI Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="MiscWindowOverrides.cpp">
+      <Filter>Components\UI Manager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -739,9 +757,6 @@
     <ClInclude Include="Settings.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="UIManager.h">
-      <Filter>Components</Filter>
-    </ClInclude>
     <ClInclude Include="WorkspaceManager.h">
       <Filter>Components</Filter>
     </ClInclude>
@@ -811,6 +826,24 @@
     </ClInclude>
     <ClInclude Include="RenderWindowCellLists.h">
       <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="UIManager.h">
+      <Filter>Components\UI Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="MainWindowOverrides.h">
+      <Filter>Components\UI Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="CellViewWindowOverrides.h">
+      <Filter>Components\UI Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectWindowOverrides.h">
+      <Filter>Components\UI Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomDialogProcs.h">
+      <Filter>Components\UI Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="MiscWindowOverrides.h">
+      <Filter>Components\UI Manager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -907,6 +940,7 @@
     <None Include="Images\chicken.bmp">
       <Filter>Resources\Images</Filter>
     </None>
+    <None Include="MainWindowOverrides" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Construction Set Extender.rc">

@@ -24,6 +24,9 @@
 #include "Coda\Coda.h"
 #include "GlobalClipboard.h"
 #include "FormUndoStack.h"
+#include "MainWindowOverrides.h"
+#include "CellViewWindowOverrides.h"
+#include "ObjectWindowOverrides.h"
 
 #include <bgsee\ToolBox.h>
 #include <bgsee\Script\CodaVM.h>
@@ -160,14 +163,9 @@ namespace cse
 
 	bool InitCallbackPostMainWindowInit::Handle(void* Parameter)
 	{
-		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(uiManager::MainWindowMenuInitSubclassProc);
-		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(uiManager::MainWindowMenuSelectSubclassProc);
-		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(uiManager::MainWindowMiscSubclassProc);
-
-		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_ObjectWindow, uiManager::ObjectWindowSubclassProc);
-		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_ObjectWindow, uiManager::CommonDialogExtraFittingsSubClassProc);
-		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellView, uiManager::CellViewWindowSubclassProc);
-		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellView, uiManager::CommonDialogExtraFittingsSubClassProc);
+		uiManager::InitializeMainWindowOverrides();
+		uiManager::InitializeObjectWindowOverrides();
+		uiManager::InitializeCellViewWindowOverrides();
 
 		BGSEECONSOLE_MESSAGE("Initializing Render Window Manager");
 		BGSEECONSOLE->Indent();
@@ -181,13 +179,9 @@ namespace cse
 			RegularAppWindow.Extended = WS_EX_APPWINDOW;
 			RegularAppWindow.ExtendedOp = bgsee::WindowStyler::StyleData::kOperation_OR;
 
-			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_ObjectWindow, RegularAppWindow);
-			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_CellView, RegularAppWindow);
-			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_RenderWindow, RegularAppWindow);
 			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_FindText, RegularAppWindow);
 			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_SearchReplace, RegularAppWindow);
 		}
-
 
 		return true;
 	}

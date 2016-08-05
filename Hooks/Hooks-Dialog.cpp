@@ -1,11 +1,13 @@
 #include "Hooks-Dialog.h"
-#include "..\Achievements.h"
-#include "..\UIManager.h"
-#include "..\GlobalClipboard.h"
+#include "Achievements.h"
+#include "UIManager.h"
+#include "GlobalClipboard.h"
 #include "[Common]\CLIWrapper.h"
-#include "..\DialogImposterManager.h"
-#include "..\ObjectPaletteManager.h"
-#include "..\ObjectPrefabManager.h"
+#include "DialogImposterManager.h"
+#include "ObjectPaletteManager.h"
+#include "ObjectPrefabManager.h"
+#include "CustomDialogProcs.h"
+#include "CellViewWindowOverrides.h"
 
 #pragma warning(push)
 #pragma optimize("", off)
