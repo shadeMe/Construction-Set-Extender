@@ -6,9 +6,22 @@ namespace cse
 	{
 		class RenderWindowGroupManager
 		{
-			typedef UInt32								ReferenceHandleT;
+			
+/*
+			class CosaveHandler : public serialization::PluginCosaveManager::IEventHandler
+			{
+				RenderWindowGroupManager*		Parent;
+			public:
+				CosaveHandler(RenderWindowGroupManager* Parent);
 
-			static bool									GetReferenceExists(ReferenceHandleT Ref);
+				virtual void					HandleLoad(const char* PluginName, const char* CosaveDirectory);
+				virtual void					HandleSave(const char* PluginName, const char* CosaveDirectory);
+				virtual void					HandleShutdown(const char* PluginName, const char* CosaveDirectory);
+			};
+
+			friend class CosaveHandler;*/
+
+			typedef UInt32											ReferenceHandleT;
 
 			class GroupData
 			{
@@ -31,9 +44,14 @@ namespace cse
 				const UInt32							GetSize(void) const { return Members.size(); }
 			};
 
-			typedef boost::shared_ptr<GroupData>		GroupDataHandleT;
-
+			typedef boost::shared_ptr<GroupData>					GroupDataHandleT;
 			typedef std::map<ReferenceHandleT, GroupDataHandleT>	GroupDataStoreT;
+
+			static bool									GetReferenceExists(ReferenceHandleT Ref);
+
+
+
+
 
 			GroupDataStoreT								DataStore;
 		public:

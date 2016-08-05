@@ -260,7 +260,7 @@ namespace cse
 				Static_SetText(GetDlgItem(s_NotificationDialog, -1), Buffer);
 			}
 
-			TESLODTextureGenerator::GeneratorState = TESLODTextureGenerator::kLODDiffuseMapGeneratorState_FullMap;
+			TESLODTextureGenerator::GeneratorState = TESLODTextureGenerator::kState_FullMap;
 		}
 		#define _hhName		GenerateLODFullTexture
 		_hhBegin()
@@ -282,7 +282,7 @@ namespace cse
 
 		bool __stdcall GetIsLODDiffuseMapGeneratorInUse(void)
 		{
-			if (TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kLODDiffuseMapGeneratorState_NotInUse ||
+			if (TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kState_NotInUse ||
 				*((TESWorldSpace**)0x00A0AB14) == NULL ||		// current worldspace
 				*((UInt32*)0x00A0AAF0) == 0 ||					// LOD gen state
 				*((UInt8*)0x00A0AB13) == 0)						// LOD texture state
@@ -295,7 +295,7 @@ namespace cse
 
 		bool __stdcall GetIsLODDiffuseMapGeneratorCreatingFullMap(void)
 		{
-			return TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kLODDiffuseMapGeneratorState_FullMap;
+			return TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kState_FullMap;
 		}
 
 		#define _hhName		GenerateLODDiffuseMapsReentryGuardA
@@ -428,11 +428,11 @@ namespace cse
 
 		void __stdcall ShowLODTextureGenNotification(bool State)
 		{
-			if (State && TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kLODDiffuseMapGeneratorState_NotInUse)
+			if (State && TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kState_NotInUse)
 			{
 				s_NotificationDialog = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), BGSEEUI->GetMainWindow(), NULL, NULL);
 				Static_SetText(GetDlgItem(s_NotificationDialog, -1), "Please Wait\nDiffuse Map 0/256");
-				TESLODTextureGenerator::GeneratorState = TESLODTextureGenerator::kLODDiffuseMapGeneratorState_Partials;
+				TESLODTextureGenerator::GeneratorState = TESLODTextureGenerator::kState_Partials;
 
 				// reduce time spent updating the main windows during cell switch
 				BGSEEUI->GetInvalidationManager()->Push(*TESCellViewWindow::WindowHandle);
@@ -470,14 +470,14 @@ namespace cse
 
 				*TESCSMain::AllowAutoSaveFlag = 0;
 			}
-			else if (TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kLODDiffuseMapGeneratorState_FullMap)
+			else if (TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kState_FullMap)
 			{
 				BGSEECONSOLE_MESSAGE("Generated %d partial diffuse map(s) in total", s_NotificationMapCounter);
 				DestroyWindow(s_NotificationDialog);
 
 				s_NotificationDialog = NULL;
 				s_NotificationMapCounter = 0;
-				TESLODTextureGenerator::GeneratorState = TESLODTextureGenerator::kLODDiffuseMapGeneratorState_NotInUse;
+				TESLODTextureGenerator::GeneratorState = TESLODTextureGenerator::kState_NotInUse;
 
 				BGSEEUI->GetInvalidationManager()->Pop(*TESCellViewWindow::WindowHandle);
 				BGSEEUI->GetInvalidationManager()->Pop(*TESCSMain::WindowHandle);
@@ -488,7 +488,7 @@ namespace cse
 					char Buffer[MAX_PATH + 1] = {0};
 					SHFILEOPSTRUCT DeleteFolderData = {0};
 
-					sprintf_s(Buffer, sizeof(Buffer), "%s\\Data\\Textures\\LandscapeLOD\\Generated\\Partial\\*.dds\0", BGSEEMAIN->GetAPPPath());
+					sprintf_s(Buffer, sizeof(Buffer), "%s\\Data\\Textures\\LandscapeLOD\\Generated\\Partial\\*.dds\0", BGSEEWORKSPACE->GetCurrentWorkspace());
 					Buffer[strlen(Buffer) + 1] = 0;
 					DeleteFolderData.wFunc = FO_DELETE;
 					DeleteFolderData.pFrom = Buffer;

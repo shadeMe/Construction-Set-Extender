@@ -41,6 +41,7 @@ public:
 		kRecordFlags__FormFlags                = 0x000A8EE0, // flag bits copied from forms for form records
 		kRecordFlags__FileFlags                = 0xFF000091, // flag bits copied from files for TES4 records
 		kRecordFlags_Ignored            = /*0C*/ 0x00001000, // record is ignored during loading
+		kRecordFlags_Partial            = /*0E*/ 0x00004000, // from Beth Dev ziegfelding: When partial forms load form the file they load minimal data from it so that the data in the original ESM will remain unchanged. Used for "parent" forms (forms whose presence in the TESFile is required by other forms that depend on it)
 		kRecordFlags_Compressed         = /*12*/ 0x00040000, // record data is compressed using ZLib.  Note that group records cannot be compressed
 	};
 

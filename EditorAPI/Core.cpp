@@ -12,7 +12,7 @@ FileFinder**						FileFinder::Singleton = (FileFinder**)0x00A0DE8C;
 BSTexturePalette**					BSTexturePalette::Singleton = (BSTexturePalette**)0x00A10004;
 BSTextureManager**					BSTextureManager::Singleton = (BSTextureManager**)0x00A8E760;
 
-UInt8								TESLODTextureGenerator::GeneratorState = TESLODTextureGenerator::kLODDiffuseMapGeneratorState_NotInUse;
+UInt8								TESLODTextureGenerator::GeneratorState = TESLODTextureGenerator::kState_NotInUse;
 const char*							TESLODTextureGenerator::LODFullTexturePath = ".\\Data\\Textures\\LandscapeLOD\\Generated\\%i.%02i.%02i.%i.dds";
 const char*							TESLODTextureGenerator::ExteriorSnapshotPathBuffer = NULL;
 TESObjectCELL*						TESLODTextureGenerator::ExteriorSnapshotSource = NULL;
@@ -419,7 +419,7 @@ GridCellArray::GridEntry* GridCellArray::GetCellEntry( SInt32 X, SInt32 Y )
 void TESLODTextureGenerator::SaveExteriorSnapshot( TESObjectCELL* Exterior, UInt32 Resolution, const char* SavePath )
 {
 	SME_ASSERT(Exterior && Exterior->GetIsInterior() == false && Resolution);
-	SME_ASSERT(GeneratorState == kLODDiffuseMapGeneratorState_NotInUse);
+	SME_ASSERT(GeneratorState == kState_NotInUse);
 
 	ExteriorSnapshotSource = Exterior;
 	SInt32 XCoord = Exterior->cellData.coords->x;

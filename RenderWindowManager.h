@@ -22,9 +22,9 @@ namespace cse
 
 			struct RenderData
 			{
-				NiNode*				SceneGraph;
-				NiNode*				ExtraNode;			// default root node new geom can be added to
-				TESObjectREFRArrayT		LoadedRefs;			// all the references in the current cell(grid)
+				NiNode*							SceneGraph;
+				NiNode*							ExtraNode;			// default root node new geom can be added to
+				const TESObjectREFRArrayT&		LoadedRefs;			// all the references in the current cell(grid)
 
 				RenderData(NiNode* SceneGraph, NiNode* ExtraNode);
 			};
@@ -101,21 +101,22 @@ namespace cse
 		class ReferenceVisibilityValidator
 		{
 		public:
-			bool							ShouldBeInvisible(TESObjectREFR* Ref);			// returns true if the reference is not supposed to be rendered to the scene
-			bool							IsCulled(TESObjectREFR* Ref);					// returns true if the ref's node is culled
-
-			static ReferenceVisibilityValidator			Instance;
+			static bool							ShouldBeInvisible(TESObjectREFR* Ref);			// returns true if the reference is not supposed to be rendered to the scene
+			static bool							IsCulled(TESObjectREFR* Ref);					// returns true if the ref's node is culled
 		};
 
 
 		class RenderWindowSelectionManager
 		{
 			RenderWindowGroupManager*		ReferenceGroupManager;
+
+			bool							IsSelectable(TESObjectREFR* Ref, bool& OutRegularHandling) const;
 		public:
 			RenderWindowSelectionManager(RenderWindowGroupManager* GroupMan);
 			~RenderWindowSelectionManager();
 
-			void							AddToSelection(TESObjectREFR* Ref, bool SelectionBox) const;
+			void							AddToSelection(TESObjectREFR* Ref, bool AddSelectionBox) const;
+			void							RemoveFromSelection(TESObjectREFR* Ref, bool RemoveSelectionBox) const;
 			bool							IsSelectable(TESObjectREFR* Ref) const;
 		};
 
@@ -154,6 +155,15 @@ namespace cse
 			bool						UseGrassTextureOverlay;
 			NiSourceTexture*			GrassOverlayTexture;
 			Vector3						StaticCameraPivot;
+			bool						PaintingSelection;
+			UInt8						SelectionPaintingMode;
+
+			enum : UInt8
+			{
+				kSelectionPaintingMode_NotSet = 0,
+				kSelectionPaintingMode_Select,
+				kSelectionPaintingMode_Deselect
+			};
 
 			RenderWindowExtendedState();
 			~RenderWindowExtendedState();
@@ -168,17 +178,6 @@ namespace cse
 
 		class RenderWindowManager
 		{
-			class DialogExtraData : public bgsee::WindowExtraData
-			{
-			public:
-				bool				TunnelingKeyMessage;
-
-				DialogExtraData();
-				virtual ~DialogExtraData();
-
-				enum { kTypeID = 'XRWM' };
-			};
-
 			class GlobalEventSink : public SME::MiscGunk::IEventSink
 			{
 				RenderWindowManager*			Parent;
@@ -200,13 +199,18 @@ namespace cse
 			RenderWindowOSD*							OSD;
 			RenderWindowCellLists*						CellLists;
 			GlobalEventSink*							EventSink;
+			TESObjectREFRArrayT							ActiveRefCache;
 
 			bool										Initialized;
 
 			void										HandleD3DRelease();
 			void										HandleD3DRenew();
-			void										HandleSceneGraphRender(NiCamera* Camera, NiNode* SceneGraph, NiCullingProcess* CullingProc, BSRenderedTexture* RenderTarget);
+			void										HandlePreSceneGraphRender(NiCamera* Camera,
+																				  NiNode* SceneGraph,
+																				  NiCullingProcess* CullingProc,
+																				  BSRenderedTexture* RenderTarget);
 			void										HandlePostSceneGraphRender();
+			void										CacheActiveRefs();
 		public:
 			RenderWindowManager();
 			~RenderWindowManager();
@@ -221,6 +225,7 @@ namespace cse
 
 			void										InvokeContextMenuTool(int Identifier);
 			void										RefreshFOV();
+			const TESObjectREFRArrayT&					GetActiveRefs() const;
 
 			static RenderWindowManager					Instance;
 		};

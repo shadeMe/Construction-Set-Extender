@@ -84,7 +84,7 @@ namespace cse
 			FilterableFormListManager();
 			~FilterableFormListManager();
 
-			bool						Register(HWND FilterEdit, HWND FilterLabel, HWND FormList, HWND ParentWindow, int TimePeriod = 500, SecondaryFilter UserFilter = NULL);
+			bool						Register(HWND FilterEdit, HWND FilterLabel, HWND FormList, HWND ParentWindow, int TimePeriod = 250, SecondaryFilter UserFilter = NULL);
 			void						Unregister(HWND FilterEdit);
 
 			bool						HandleMessages(HWND FilterEdit, UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true to request a refresh of the form list

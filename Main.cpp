@@ -466,6 +466,11 @@ namespace cse
 		return true;
 	}
 
+	CrashCallback::CrashCallback()
+	{
+		HandlerCalled = false;
+	}
+
 	CrashCallback::~CrashCallback()
 	{
 		;//
@@ -473,6 +478,11 @@ namespace cse
 
 	bool CrashCallback::Handle(void* Parameter)
 	{
+		if (HandlerCalled)
+			return false;
+		else
+			HandlerCalled = true;
+
 		BGSEECONSOLE->Pad(2);
 		BGSEECONSOLE_MESSAGE("The editor crashed, dammit!");
 		BGSEECONSOLE->Indent();
@@ -545,6 +555,7 @@ namespace cse
 
 		return ResumeExecution;
 	}
+
 
 	void StartupManager::LoadStartupPlugin()
 	{

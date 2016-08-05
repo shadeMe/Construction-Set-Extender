@@ -15,9 +15,9 @@ namespace cse
 		IRenderWindowSceneGraphModifier::RenderData::RenderData(NiNode* SceneGraph, NiNode* ExtraNode) :
 			SceneGraph(SceneGraph),
 			ExtraNode(ExtraNode),
-			LoadedRefs()
+			LoadedRefs(_RENDERWIN_MGR.GetActiveRefs())
 		{
-			TESRenderWindow::GetActiveCellObjects(LoadedRefs);
+			;//
 		}
 
 
@@ -196,9 +196,9 @@ namespace cse
 		{
 			for each (auto Itr in Data.LoadedRefs)
 			{
-				if (ReferenceVisibilityValidator::Instance.ShouldBeInvisible(Itr))
+				if (ReferenceVisibilityValidator::ShouldBeInvisible(Itr))
 				{
-					if (ReferenceVisibilityValidator::Instance.IsCulled(Itr) == false)
+					if (ReferenceVisibilityValidator::IsCulled(Itr) == false)
 					{
 						NiNode* Node = Itr->GetNiNode();
 						Node->SetCulled(true);
@@ -281,8 +281,6 @@ namespace cse
 		{
 		}
 
-		ReferenceVisibilityValidator	ReferenceVisibilityValidator::Instance;
-
 		bool ReferenceVisibilityValidator::ShouldBeInvisible(TESObjectREFR* Ref)
 		{
 			bool Invisible = false;
@@ -330,7 +328,7 @@ namespace cse
 			ReferenceGroupManager = NULL;
 		}
 
-		void RenderWindowSelectionManager::AddToSelection(TESObjectREFR* Ref, bool SelectionBox) const
+		void RenderWindowSelectionManager::AddToSelection(TESObjectREFR* Ref, bool AddSelectionBox) const
 		{
 			Ref->ToggleSelectionBox(false);
 
@@ -343,20 +341,16 @@ namespace cse
 				return;
 			}
 
-			if (GetAsyncKeyState(VK_MENU))
+			bool RegularHandling = false;
+			if (IsSelectable(Ref, RegularHandling))
 			{
-				// if the alt key is held down, fallback to regular handling
-				_RENDERSEL->AddToSelection(Ref, SelectionBox);
-			}
-			else
-			{
-				if (Ref->GetFrozen() || (Ref->IsActive() == false && _RENDERWIN_XSTATE.FreezeInactiveRefs))
-					;// ref's frozen, don't select
+				if (RegularHandling || _RENDERWIN_XSTATE.PaintingSelection)
+					_RENDERSEL->AddToSelection(Ref, AddSelectionBox);
 				else
 				{
 					// add the parent group to the selection, if any
 					if (ReferenceGroupManager->SelectAffiliatedGroup(Ref, _RENDERSEL, false) == false)
-						_RENDERSEL->AddToSelection(Ref, SelectionBox);
+						_RENDERSEL->AddToSelection(Ref, AddSelectionBox);
 
 					// recheck the selection for frozen refs that may have been a part of the group
 					TESFormArrayT FrozenRefs;
@@ -376,16 +370,34 @@ namespace cse
 			}
 		}
 
-		bool RenderWindowSelectionManager::IsSelectable(TESObjectREFR* Ref) const
+		void RenderWindowSelectionManager::RemoveFromSelection(TESObjectREFR* Ref, bool RemoveSelectionBox) const
 		{
-			if (GetAsyncKeyState(VK_MENU))		// alt key is down
+			// nothing to do here
+			_RENDERSEL->RemoveFromSelection(Ref, RemoveSelectionBox);
+		}
+
+		bool RenderWindowSelectionManager::IsSelectable(TESObjectREFR* Ref, bool& OutRegularHandling) const
+		{
+			if (GetAsyncKeyState(VK_MENU) && _RENDERWIN_XSTATE.PaintingSelection == false)
+			{
+				// alt key is down
+				OutRegularHandling = true;
 				return true;
+			}
+			else if (ReferenceVisibilityValidator::ShouldBeInvisible(Ref) || ReferenceVisibilityValidator::IsCulled(Ref))
+				return false;
 			else if (Ref->GetFrozen())
 				return false;
-			else if (Ref->IsActive() && _RENDERWIN_XSTATE.FreezeInactiveRefs)
+			else if (Ref->IsActive() == false && _RENDERWIN_XSTATE.FreezeInactiveRefs)
 				return false;
 			else
 				return true;
+		}
+
+		bool RenderWindowSelectionManager::IsSelectable(TESObjectREFR* Ref) const
+		{
+			bool Throwaway = false;
+			return IsSelectable(Ref, Throwaway);
 		}
 
 		RenderWindowFlyCameraOperator::RenderWindowFlyCameraOperator(HWND ParentWindow, bgsee::ResourceTemplateT TemplateID) :
@@ -515,6 +527,8 @@ namespace cse
 			UseGrassTextureOverlay = false;
 			GrassOverlayTexture = NULL;
 			StaticCameraPivot.Scale(0);
+			PaintingSelection = false;
+			SelectionPaintingMode = kSelectionPaintingMode_NotSet;
 		}
 
 		RenderWindowExtendedState::~RenderWindowExtendedState()
@@ -556,17 +570,6 @@ namespace cse
 		RenderWindowManager				RenderWindowManager::Instance;
 
 
-		RenderWindowManager::DialogExtraData::DialogExtraData() :
-			bgsee::WindowExtraData(kTypeID)
-		{
-			TunnelingKeyMessage = false;
-		}
-
-		RenderWindowManager::DialogExtraData::~DialogExtraData()
-		{
-			;//
-		}
-
 		RenderWindowManager::GlobalEventSink::GlobalEventSink(RenderWindowManager* Parent) :
 			Parent(Parent)
 		{
@@ -591,7 +594,7 @@ namespace cse
 					events::renderer::PreSceneGraphRenderData* Args = dynamic_cast<events::renderer::PreSceneGraphRenderData*>(Data);
 					SME_ASSERT(Args);
 
-					Parent->HandleSceneGraphRender(Args->Camera, Args->SceneGraph, Args->CullingProc, Args->RenderTarget);
+					Parent->HandlePreSceneGraphRender(Args->Camera, Args->SceneGraph, Args->CullingProc, Args->RenderTarget);
 					break;
 				}
 			case events::TypedEventSource::kType_Renderer_PostMainSceneGraphRender:
@@ -809,13 +812,13 @@ namespace cse
 				case IDC_RENDERWINDOWCONTEXT_INVERTSELECTION:
 					if (*TESRenderWindow::PathGridEditFlag == 0)
 					{
-						TESObjectREFRArrayT Refs;
-						if (TESRenderWindow::GetActiveCellObjects(Refs))
+						const TESObjectREFRArrayT& Refs = _RENDERWIN_MGR.GetActiveRefs();
+						if (Refs.size())
 						{
 							TESRenderSelection* Buffer = TESRenderSelection::CreateInstance(_RENDERSEL);
 							_RENDERSEL->ClearSelection(true);
 
-							for (TESObjectREFRArrayT::iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr)
+							for (TESObjectREFRArrayT::const_iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr)
 							{
 								TESObjectREFR* Ref = *Itr;
 
@@ -831,8 +834,8 @@ namespace cse
 					break;
 				case IDC_RENDERWINDOWCONTEXT_BATCHREFERENCEEDITOR:
 					{
-						TESObjectREFRArrayT Refs;
-						UInt32 RefCount = TESRenderWindow::GetActiveCellObjects(Refs);
+						const TESObjectREFRArrayT& Refs = _RENDERWIN_MGR.GetActiveRefs();
+						UInt32 RefCount = Refs.size();
 
 						if (RefCount > 1)
 						{
@@ -840,7 +843,7 @@ namespace cse
 							componentDLLInterface::CellObjectData* RefData = new componentDLLInterface::CellObjectData[RefCount];
 							componentDLLInterface::BatchRefData* BatchData = new componentDLLInterface::BatchRefData();
 
-							for (TESObjectREFRArrayT::iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr, ++i)
+							for (TESObjectREFRArrayT::const_iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr, ++i)
 							{
 								TESObjectREFR* ThisRef = *Itr;
 								componentDLLInterface::CellObjectData* ThisRefData = &RefData[i];
@@ -982,10 +985,8 @@ namespace cse
 				case IDC_RENDERWINDOWCONTEXT_THAWALLINCELL:
 				case IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL:
 					{
-						TESObjectREFRArrayT Refs;
-						TESRenderWindow::GetActiveCellObjects(Refs);
-
-						for (TESObjectREFRArrayT::iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr)
+						const TESObjectREFRArrayT& Refs = _RENDERWIN_MGR.GetActiveRefs();
+						for (TESObjectREFRArrayT::const_iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr)
 						{
 							TESObjectREFR* Ref = *Itr;
 
@@ -1009,11 +1010,11 @@ namespace cse
 						switch (LOWORD(wParam))
 						{
 						case IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL:
-							NotificationOSDLayer::Instance.ShowNotification("Reset visibility flags on the active cell's references");
+							NotificationOSDLayer::Instance.ShowNotification("Reset visibility flags on the active cell/grid's references");
 
 							break;
 						case IDC_RENDERWINDOWCONTEXT_THAWALLINCELL:
-							NotificationOSDLayer::Instance.ShowNotification("Thawed all of the active cell's references");
+							NotificationOSDLayer::Instance.ShowNotification("Thawed all of the active cell/grid's references");
 
 							break;
 						}
@@ -1194,9 +1195,6 @@ namespace cse
 			LRESULT DlgProcResult = TRUE;
 			Return = false;
 
-			UInt8* YKeyState = (UInt8*)0x00A0BC1E;
-			float* UnkRotFactor = (float*)0x00A0BAC4;
-
 			if (bgsee::RenderWindowFlyCamera::IsActive() && uMsg != WM_DESTROY)
 			{
 				// do nothing if the fly camera is active
@@ -1211,28 +1209,9 @@ namespace cse
 			switch (uMsg)
 			{
 			case WM_INITDIALOG:
-				{
-					DialogExtraData* xData = BGSEE_GETWINDOWXDATA(DialogExtraData, ExtraData);
-					if (xData == NULL)
-					{
-						xData = new DialogExtraData();
-						ExtraData->Add(xData);
-					}
-
-				}
-
 				break;
 			case WM_DESTROY:
-				{
-					DialogExtraData* xData = BGSEE_GETWINDOWXDATA(DialogExtraData, ExtraData);
-					if (xData)
-					{
-						ExtraData->Remove(DialogExtraData::kTypeID);
-						delete xData;
-					}
-				}
-
-				break;			
+				break;
 			case WM_CLOSE:
 				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kMainMenu_View_RenderWindow, NULL);
 				Return = true;
@@ -1251,7 +1230,7 @@ namespace cse
 						SetTimer(hWnd, TESRenderWindow::kTimer_ViewportUpdate, Period, NULL);
 					}
 
-					if (TESLODTextureGenerator::GeneratorState != TESLODTextureGenerator::kLODDiffuseMapGeneratorState_NotInUse)
+					if (TESLODTextureGenerator::GeneratorState != TESLODTextureGenerator::kState_NotInUse)
 					{
 						// prevent the OS from triggering the screen-saver/switching to standby mode
 						SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED);
@@ -1337,26 +1316,59 @@ namespace cse
 					_RENDERWIN_XSTATE.CurrentMouseCoord.x = GET_X_LPARAM(lParam);
 					_RENDERWIN_XSTATE.CurrentMouseCoord.y = GET_Y_LPARAM(lParam);
 
-					TESObjectREFR* LastMouseRef = _RENDERWIN_XSTATE.CurrentMouseRef;
-					_RENDERWIN_XSTATE.CurrentMouseRef = NULL;
+					if (_RENDERWIN_XSTATE.PaintingSelection)
+					{
+						Return = true;
+						// paint only when the control key is held down
+						if (GetAsyncKeyState(VK_CONTROL))
+						{
+							TESObjectREFR* MouseRef = TESRender::PickRefAtCoords(_RENDERWIN_XSTATE.CurrentMouseCoord.x, _RENDERWIN_XSTATE.CurrentMouseCoord.y);
+							if (MouseRef)
+							{
+								if (_RENDERWIN_XSTATE.SelectionPaintingMode == RenderWindowExtendedState::kSelectionPaintingMode_NotSet)
+								{
+									if (_RENDERSEL->HasObject(MouseRef))
+										_RENDERWIN_XSTATE.SelectionPaintingMode = RenderWindowExtendedState::kSelectionPaintingMode_Deselect;
+									else
+										_RENDERWIN_XSTATE.SelectionPaintingMode = RenderWindowExtendedState::kSelectionPaintingMode_Select;
+								}
 
-					TESPathGridPoint* LastPathGridPoint = _RENDERWIN_XSTATE.CurrentMousePathGridPoint;
+								if (_RENDERWIN_XSTATE.SelectionPaintingMode == RenderWindowExtendedState::kSelectionPaintingMode_Select)
+									_RENDERWIN_MGR.GetSelectionManager()->AddToSelection(MouseRef, true);
+								else
+									_RENDERWIN_MGR.GetSelectionManager()->RemoveFromSelection(MouseRef, true);
+							}
+						}
+					}
+
+					_RENDERWIN_XSTATE.CurrentMouseRef = NULL;
 					_RENDERWIN_XSTATE.CurrentMousePathGridPoint = NULL;
 
-					if (GetActiveWindow() == hWnd && GetCapture() != hWnd && *TESRenderWindow::LandscapeEditFlag == 0)
+					if (GetActiveWindow() == hWnd && *TESRenderWindow::LandscapeEditFlag == 0 && (_RENDERWIN_XSTATE.PaintingSelection || GetCapture() != hWnd))
 					{
 						int Enabled = settings::renderWindowOSD::kShowMouseRef.GetData().i;
 						int ControlModified = settings::renderWindowOSD::kMouseRefCtrlModified.GetData().i;
 
-						if (Enabled && (ControlModified == false || GetAsyncKeyState(VK_CONTROL)))
+						if (Enabled && (_RENDERWIN_XSTATE.PaintingSelection || ControlModified == false || GetAsyncKeyState(VK_CONTROL)))
 						{
 							if (*TESRenderWindow::PathGridEditFlag == 0)
 							{
 								_RENDERWIN_XSTATE.CurrentMouseRef = TESRender::PickRefAtCoords(_RENDERWIN_XSTATE.CurrentMouseCoord.x,
 																							  _RENDERWIN_XSTATE.CurrentMouseCoord.y);
-
-								if (_RENDERSEL->selectionCount == 1 && _RENDERSEL->selectionList->Data == _RENDERWIN_XSTATE.CurrentMouseRef)
-									_RENDERWIN_XSTATE.CurrentMouseRef = NULL;
+								if (_RENDERWIN_XSTATE.CurrentMouseRef)
+								{
+									if (_RENDERWIN_XSTATE.PaintingSelection == false &&
+										_RENDERSEL->selectionCount == 1 &&
+										_RENDERSEL->selectionList->Data == _RENDERWIN_XSTATE.CurrentMouseRef)
+									{
+										_RENDERWIN_XSTATE.CurrentMouseRef = NULL;
+									}
+									else if (ReferenceVisibilityValidator::IsCulled(_RENDERWIN_XSTATE.CurrentMouseRef) ||
+											 ReferenceVisibilityValidator::ShouldBeInvisible(_RENDERWIN_XSTATE.CurrentMouseRef))
+									{
+										_RENDERWIN_XSTATE.CurrentMouseRef = NULL;
+									}
+								}
 							}
 							else
 							{
@@ -1374,8 +1386,38 @@ namespace cse
 
 				break;
 			case WM_LBUTTONDOWN:
+				if (GetAsyncKeyState(VK_MENU) && GetAsyncKeyState(VK_CONTROL) &&
+					*TESRenderWindow::LandscapeEditFlag == 0 && *TESRenderWindow::PathGridEditFlag == 0)
+				{
+					SME_ASSERT(_RENDERWIN_XSTATE.PaintingSelection == false &&
+							   _RENDERWIN_XSTATE.SelectionPaintingMode == RenderWindowExtendedState::kSelectionPaintingMode_NotSet);
+
+					_RENDERWIN_XSTATE.PaintingSelection = true;
+					NotificationOSDLayer::Instance.ShowNotification("Painting reference selection...");
+
+					SetCapture(hWnd);
+					Return = true;
+				}
+
 				_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.x = GET_X_LPARAM(lParam);
 				_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.y = GET_Y_LPARAM(lParam);
+
+				break;
+			case WM_LBUTTONUP:
+				if (_RENDERWIN_XSTATE.PaintingSelection)
+				{
+					_RENDERWIN_XSTATE.PaintingSelection = false;
+					_RENDERWIN_XSTATE.SelectionPaintingMode = RenderWindowExtendedState::kSelectionPaintingMode_NotSet;
+
+					ReleaseCapture();
+					Return = true;
+				}
+
+				_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.x -= GET_X_LPARAM(lParam);
+				_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.y -= GET_Y_LPARAM(lParam);
+
+				_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.x = abs(_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.x);
+				_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.y = abs(_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.y);
 
 				break;
 			case WM_RBUTTONDOWN:
@@ -1384,14 +1426,6 @@ namespace cse
 					// handle it for the button up event
 					Return = true;
 				}
-
-				break;
-			case WM_LBUTTONUP:
-				_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.x -= GET_X_LPARAM(lParam);
-				_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.y -= GET_Y_LPARAM(lParam);
-
-				_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.x = abs(_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.x);
-				_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.y = abs(_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.y);
 
 				break;
 			case WM_RBUTTONUP:
@@ -1411,11 +1445,7 @@ namespace cse
 						int SwitchEnabled = settings::renderer::kSwitchCAndY.GetData().i;
 						if (SwitchEnabled)
 						{
-							if (*YKeyState)
-								*UnkRotFactor = 0.0;
-
-							*YKeyState = 0;
-
+							BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, 0x59, lParam);
 							Return = true;
 						}
 					}
@@ -1425,7 +1455,10 @@ namespace cse
 					{
 						int SwitchEnabled = settings::renderer::kSwitchCAndY.GetData().i;
 						if (SwitchEnabled)
+						{
+							BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, 0x43, lParam);
 							Return = true;
+						}
 					}
 
 					break;
@@ -1468,15 +1501,9 @@ namespace cse
 					else
 					{
 						int SwitchEnabled = settings::renderer::kSwitchCAndY.GetData().i;
-						DialogExtraData* xData = BGSEE_GETWINDOWXDATA(DialogExtraData, ExtraData);
-						SME_ASSERT(xData);
-
 						if (SwitchEnabled)
 						{
-							xData->TunnelingKeyMessage = true;
-							SendMessage(hWnd, WM_KEYDOWN, 0x43, lParam);
-							xData->TunnelingKeyMessage = false;
-
+							BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, 0x43, lParam);
 							Return = true;
 						}
 					}
@@ -1485,16 +1512,9 @@ namespace cse
 				case 0x43:		// C
 					{
 						int SwitchEnabled = settings::renderer::kSwitchCAndY.GetData().i;
-						DialogExtraData* xData = BGSEE_GETWINDOWXDATA(DialogExtraData, ExtraData);
-						SME_ASSERT(xData);
-
-						if (SwitchEnabled && xData->TunnelingKeyMessage == false)
+						if (SwitchEnabled)
 						{
-							if (*YKeyState == 0)
-								*UnkRotFactor = 0.0;
-
-							*YKeyState = 1;
-
+							BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, 0x59, lParam);
 							Return = true;
 						}
 					}
@@ -1619,7 +1639,7 @@ namespace cse
 					break;
 				case VK_OEM_3:	// ~
 					{
-						if (TESLODTextureGenerator::GeneratorState != TESLODTextureGenerator::kLODDiffuseMapGeneratorState_NotInUse)
+						if (TESLODTextureGenerator::GeneratorState != TESLODTextureGenerator::kState_NotInUse)
 							break;
 						else if (GetCapture())
 							break;
@@ -1643,10 +1663,8 @@ namespace cse
 					{
 						Return = true;
 
-						TESObjectREFRArrayT Refs;
-						TESRenderWindow::GetActiveCellObjects(Refs);
-
-						for (TESObjectREFRArrayT::iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr)
+						const TESObjectREFRArrayT& Refs = _RENDERWIN_MGR.GetActiveRefs();
+						for (TESObjectREFRArrayT::const_iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr)
 						{
 							TESObjectREFR* Ref = *Itr;
 
@@ -1721,7 +1739,8 @@ namespace cse
 
 
 
-		RenderWindowManager::RenderWindowManager()
+		RenderWindowManager::RenderWindowManager() :
+			ActiveRefCache()
 		{
 			SceneGraphManager = new RenderWindowSceneGraphManager();
 			PGUndoManager = new PathGridUndoManager();
@@ -1730,6 +1749,7 @@ namespace cse
 			OSD = new RenderWindowOSD();
 			CellLists = new RenderWindowCellLists();
 			EventSink = new GlobalEventSink(this);
+			ActiveRefCache.reserve(200);
 
 			Initialized = false;
 		}
@@ -1838,6 +1858,16 @@ namespace cse
 			TESRenderWindow::Redraw();
 		}
 
+		void RenderWindowManager::CacheActiveRefs()
+		{
+			TESRenderWindow::GetActiveCellObjects(ActiveRefCache);
+		}
+
+		const TESObjectREFRArrayT& RenderWindowManager::GetActiveRefs() const
+		{
+			return ActiveRefCache;
+		}
+
 		void RenderWindowManager::HandleD3DRelease()
 		{
 			SME_ASSERT(Initialized);
@@ -1850,9 +1880,11 @@ namespace cse
 			OSD->HandleD3DRenew();
 		}
 
-		void RenderWindowManager::HandleSceneGraphRender(NiCamera* Camera, NiNode* SceneGraph, NiCullingProcess* CullingProc, BSRenderedTexture* RenderTarget)
+		void RenderWindowManager::HandlePreSceneGraphRender(NiCamera* Camera, NiNode* SceneGraph, NiCullingProcess* CullingProc, BSRenderedTexture* RenderTarget)
 		{
 			SME_ASSERT(Initialized);
+
+			CacheActiveRefs();
 			SceneGraphManager->HandleRender(Camera, SceneGraph, CullingProc, RenderTarget);
 		}
 
@@ -1865,6 +1897,9 @@ namespace cse
 
 		void Initialize()
 		{
+
+
+
 			bool ComponentInitialized = _RENDERWIN_MGR.InitializeOSD();
 			SME_ASSERT(ComponentInitialized);
 

@@ -11,6 +11,7 @@ NOTE	---->
 CSE		---->
 
 	BUGFIX			=
+		> Look into the coda bug on the Nexus issue tracker
 		> Object window columns like Auto calc, Enchantment type, Count don't sort consistently
 			>> Columns not handled by default = 3, 24, 41, 54. Some others are incorrectly handled
 		> Render window fixed camera pivot bug
@@ -24,7 +25,6 @@ CSE		---->
 		> Add an option to restore a saved backup for some esp/esm, instead of manually recover it from Data/Backup folder and moving it back to Data folder.
 		> Render window gizmos
 		> Named ref groups
-		> Selection painting
 		> Selection mask
 		> Hide mouse when transforming
 		> Show Target NPCs context menu tool
@@ -47,6 +47,7 @@ SE		---->
 
 
 	BUGFIX			=
+		> Horizontal scroll bar doesn't work until cursor moves off-screen
 		> Background task threading issues in the editor
 		> DPI scaling issues with WPF code (WPF doesn't seem to respect the application's request to disable DPI scaling)
 		> Editor doesn't acquire focus after switching scripts/on opening and general focus related wonkiness
@@ -54,6 +55,7 @@ SE		---->
 
 
 	ENHANCEMENT		=
+		> Hide intellisense infterface when Ctrl key is held down
 		> Change margin
 
 

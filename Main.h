@@ -63,6 +63,7 @@ namespace cse
 
 	class CrashCallback : public bgsee::DaemonCallback
 	{
+		bool				HandlerCalled;		// to prevent the handler from being called multiple times (which might happen in case of catastrophic failures)
 		enum
 		{
 			kCrashHandlerMode_Terminate = 0,
@@ -70,6 +71,7 @@ namespace cse
 			kCrashHandlerMode_Ask,
 		};
 	public:
+		CrashCallback();
 		virtual ~CrashCallback();
 
 		virtual bool						Handle(void* Parameter = NULL);

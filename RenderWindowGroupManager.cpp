@@ -218,7 +218,6 @@ namespace cse
 			if (DataStore.count(Ref->formID))
 			{
 				GroupDataHandleT Group = DataStore[Ref->formID];
-
 				if (Group->ValidateMembers() == 1)
 				{
 					// only one member (the current ref) in the group, so dissolve it

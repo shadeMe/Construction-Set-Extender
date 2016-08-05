@@ -148,7 +148,6 @@ public:
 	void											RemoveInvalidScripts(void);			// destroys any empty scripts, i.e., scripts without script text/editorID
 	void											CleanCellWaterExtraData(void);		// removes instances of ExtraCellWaterHeight/Type from all cell objects that don't need it
 	void											FixInteriorCellFogPlane(void);		// applies the "nVidia fog" fix
-
 	void											PerformPostLoadTasks(void);
 
 	bool											PanicSave(bool Initialize = false);	// last chance save handler, used when the editor crashes
@@ -413,9 +412,9 @@ class TESLODTextureGenerator
 public:
 	enum
 	{
-		kLODDiffuseMapGeneratorState_NotInUse = 0,
-		kLODDiffuseMapGeneratorState_Partials,
-		kLODDiffuseMapGeneratorState_FullMap,
+		kState_NotInUse = 0,
+		kState_Partials,
+		kState_FullMap,
 	};
 
 	static UInt8					GeneratorState;

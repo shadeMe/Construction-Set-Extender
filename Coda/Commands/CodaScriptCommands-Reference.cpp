@@ -201,7 +201,6 @@ namespace cse
 
 					if (Form == NULL)
 						return false;
-						return false;
 
 					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
 					if (!Reference)

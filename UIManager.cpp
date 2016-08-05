@@ -408,7 +408,7 @@ namespace cse
 			ActiveFilters.clear();
 		}
 
-		bool FilterableFormListManager::Register(HWND FilterEdit, HWND FilterLabel, HWND FormList, HWND ParentWindow, int TimePeriod /*= 500*/, SecondaryFilter UserFilter /*= NULL*/ )
+		bool FilterableFormListManager::Register(HWND FilterEdit, HWND FilterLabel, HWND FormList, HWND ParentWindow, int TimePeriod /*= 250*/, SecondaryFilter UserFilter /*= NULL*/ )
 		{
 			SME_ASSERT(ParentWindow && FormList);
 			SME_ASSERT(FilterEdit && FilterLabel);
@@ -684,7 +684,7 @@ namespace cse
 
 			if (VisibleOnly == false && SelectionOnly == false)
 				return true;
-			else if (VisibleOnly && (renderWindow::ReferenceVisibilityValidator::Instance.ShouldBeInvisible(Ref) || renderWindow::ReferenceVisibilityValidator::Instance.IsCulled(Ref)))
+			else if (VisibleOnly && (renderWindow::ReferenceVisibilityValidator::ShouldBeInvisible(Ref) || renderWindow::ReferenceVisibilityValidator::IsCulled(Ref)))
 				return false;
 			else if (SelectionOnly && _RENDERSEL->HasObject(Form) == false)
 				return false;

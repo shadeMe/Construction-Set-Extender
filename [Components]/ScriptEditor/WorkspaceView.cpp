@@ -799,10 +799,10 @@ namespace cse
 			ScopeCrumbBar->AutoSize = false;
 			ScopeCrumbBar->Dock = DockStyle::Top;
 	//		ScopeCrumbBar->BackgroundStyle->BackColor = BackgroundColor;
-			ScopeCrumbBar->BackgroundStyle->BorderBottom = DevComponents::DotNetBar::eStyleBorderType::DashDotDot;
-			ScopeCrumbBar->BackgroundStyle->BorderBottomWidth = 2;
 	//		ScopeCrumbBar->BackgroundStyle->BorderColor = System::Drawing::Color::FromArgb(200, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B);
 	//		ScopeCrumbBar->BackgroundStyle->BorderColor2 = System::Drawing::Color::FromArgb(200, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B);
+			ScopeCrumbBar->BackgroundStyle->BorderBottom = DevComponents::DotNetBar::eStyleBorderType::DashDotDot;
+			ScopeCrumbBar->BackgroundStyle->BorderBottomWidth = 2;
 			ScopeCrumbBar->BackgroundStyle->BorderLeft = DevComponents::DotNetBar::eStyleBorderType::None;
 			ScopeCrumbBar->BackgroundStyle->BorderRight = DevComponents::DotNetBar::eStyleBorderType::None;
 			ScopeCrumbBar->BackgroundStyle->BorderTop = DevComponents::DotNetBar::eStyleBorderType::None;
@@ -1700,9 +1700,9 @@ namespace cse
 			PreprocessorTextViewer->SetForegroundColor(ForegroundColor);
 			PreprocessorTextViewer->SetBackgroundColor(BackgroundColor);
 
-			ScopeCrumbBar->BackgroundStyle->BackColor = BackgroundColor;
-			ScopeCrumbBar->BackgroundStyle->BorderColor = System::Drawing::Color::FromArgb(200, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B);
-			ScopeCrumbBar->BackgroundStyle->BorderColor2 = System::Drawing::Color::FromArgb(200, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B);
+		//	ScopeCrumbBar->BackgroundStyle->BackColor = BackgroundColor;
+		//	ScopeCrumbBar->BackgroundStyle->BorderColor = System::Drawing::Color::FromArgb(200, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B);
+		//	ScopeCrumbBar->BackgroundStyle->BorderColor2 = System::Drawing::Color::FromArgb(200, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B);
 			ScopeCrumbBar->Font = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"), 9);
 
 			Redraw();

@@ -1133,7 +1133,7 @@ namespace cse
 				else
 					Flags &= ~TESRenderWindow::kRenderWindowState_SnapToGrid;
 			} ImGui::SameLine();
-			ImGui::PushItemWidth(50); ImGui::DragInt("##gridDist", &GridVal, 1, 0, 5000); ImGui::PopItemWidth(); ImGui::SameLine(0, 50);
+			ImGui::PushItemWidth(30); ImGui::DragInt("##gridDist", &GridVal, 1, 0, 5000); ImGui::PopItemWidth(); ImGui::SameLine(0, 20);
 
 			if (ImGui::Checkbox("Snap Angle", &SnapAngle))
 			{
@@ -1142,7 +1142,7 @@ namespace cse
 				else
 					Flags &= ~TESRenderWindow::kRenderWindowState_SnapToAngle;
 			} ImGui::SameLine();
-			ImGui::PushItemWidth(50); ImGui::DragInt("##anglVal", &AngleVal, 1, 0, 500); ImGui::PopItemWidth(); ImGui::SameLine(0, 50);
+			ImGui::PushItemWidth(30); ImGui::DragInt("##anglVal", &AngleVal, 1, 0, 500); ImGui::PopItemWidth(); ImGui::SameLine(0, 35);
 
 			char Buffer[0x100] = {0};
 			if (SnapRef)
@@ -1158,20 +1158,25 @@ namespace cse
 				SnapRef = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, SnapRef, true);
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip(Buffer);
-			ImGui::PopItemWidth(); ImGui::SameLine(0, 50);
+			ImGui::PopItemWidth(); ImGui::SameLine(0, 35);
 
 
 			ImGui::PushItemWidth(100);
 			ImGui::DragFloat("##TOD", &TOD, 0.25f, 0.f, 24.f, "TOD: %.2f");
 			if (ImGui::IsItemHovered() && ImGui::IsItemActive() == false)
 				ImGui::SetTooltip("Time of Day");
-
-			ImGui::SameLine(0, 50);
-			ImGui::DragFloat("##FOV", &FOV, 1.f, 50.f, 120.f, "FOV: %.0f");
-			if (ImGui::IsItemHovered() && ImGui::IsItemActive() == false)
-				ImGui::SetTooltip("Camera FOV");
 			ImGui::PopItemWidth();
 
+			ImGui::SameLine(0, 30);
+			ImGui::Checkbox("Freeze Inactive Refs", &_RENDERWIN_XSTATE.FreezeInactiveRefs);
+
+			ImGui::SameLine(0, 15);
+			if (ImGui::Button("Thaw All"))
+				_RENDERWIN_MGR.InvokeContextMenuTool(IDC_RENDERWINDOWCONTEXT_THAWALLINCELL);
+
+			ImGui::SameLine(0, 15);
+			if (ImGui::Button("Reveal All"))
+				_RENDERWIN_MGR.InvokeContextMenuTool(IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL);
 
 			ImGui::SameLine(XSize - 35);
 			ImGui::PushStyleColor(ImGuiCol_Button, ImColor::HSV(0, 0.6f, 0.6f));
@@ -1203,6 +1208,13 @@ namespace cse
 				ImGui::PushItemWidth(125);
 				ImGui::DragFloat("##Ref. Move", &RefMov, 0.05f, 0.01, 10, "Movement: %.3f"); ImGui::SameLine();
 				ImGui::DragFloat("##Ref. Rotation", &RefRot, 0.05f, 0.01, 10, "Rotation: %.3f"); ImGui::SameLine(0, 20);
+				ImGui::PopItemWidth();
+
+				ImGui::PushItemWidth(100);
+				ImGui::SameLine(0, 20);
+				ImGui::DragFloat("##FOV", &FOV, 1.f, 50.f, 120.f, "FOV: %.0f");
+				if (ImGui::IsItemHovered() && ImGui::IsItemActive() == false)
+					ImGui::SetTooltip("Camera FOV");
 				ImGui::PopItemWidth();
 			}
 
@@ -1481,7 +1493,7 @@ namespace cse
 								ThisRef->formID,
 								TESForm::GetFormTypeIDLongName(ThisRef->baseForm->formType)); ImGui::NextColumn();
 
-					ImGui::SetColumnOffset(-1, ImGui::GetWindowWidth() - 180);
+					ImGui::SetColumnOffset(-1, ImGui::GetWindowWidth() - 185);
 					ImGui::PushStyleColor(ImGuiCol_Button, ImColor::HSV(0, 0.6f, 0.6f));
 					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImColor::HSV(0, 0.7f, 0.7f));
 					ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImColor::HSV(0, 0.8f, 0.8f));

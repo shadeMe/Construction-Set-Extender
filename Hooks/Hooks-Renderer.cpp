@@ -63,7 +63,6 @@ namespace cse
 		_DefineHookHdlr(RenderWindowAxisHotkeysMovePathGridPoints, 0x0042BF17);
 		_DefinePatchHdlr(RenderWindowAxisHotkeysRotateReferences, 0x0042CBBD + 2);
 		_DefineHookHdlr(BSFadeNodeDrawTransparency, 0x004BC527);
-		_DefineHookHdlr(TESRubberBandSelectionSkipInvisibleRefs, 0x0042FB89);
 		_DefineHookHdlr(RenderWindowCameraRotationPivot, 0x0042CBFD);
 		_DefinePatchHdlrWithBuffer(CellViewSetCurrentCell, 0x00409170, 1, 0x53);
 		_DefineJumpHdlr(RenderWindowCursorSwap, 0x0042CA34, 0x0042CAA3);
@@ -211,7 +210,6 @@ namespace cse
 			_MemHdlr(RenderWindowAxisHotkeysMovePathGridPoints).WriteJump();
 			_MemHdlr(RenderWindowAxisHotkeysRotateReferences).WriteUInt32(0x00A0BC1E);
 			_MemHdlr(BSFadeNodeDrawTransparency).WriteJump();
-			_MemHdlr(TESRubberBandSelectionSkipInvisibleRefs).WriteJump();
 			_MemHdlr(RenderWindowCameraRotationPivot).WriteJump();
 			_MemHdlr(RenderWindowCursorSwap).WriteJump();
 			_MemHdlr(RenderWindowCopySelection).WriteUInt8(0x0);
@@ -645,7 +643,7 @@ namespace cse
 
 		void __stdcall ActivateRenderWindow(void)
 		{
-			if (TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kLODDiffuseMapGeneratorState_NotInUse)
+			if (TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kState_NotInUse)
 				SetForegroundWindow(*TESRenderWindow::WindowHandle);
 		}
 
@@ -1275,28 +1273,6 @@ namespace cse
 			}
 		}
 
-		void __stdcall DoTESRubberBandSelectionSkipInvisibleRefsHook(TESRenderSelection* Selection, TESObjectREFR* Ref, bool ShowSelectionRing)
-		{
-			NiNode* Node = Ref->GetNiNode();
-			if (Node)
-			{
-				if ((Node->m_flags & NiAVObject::kFlag_AppCulled) == false)
-					Selection->AddToSelection(Ref, ShowSelectionRing);
-			}
-		}
-
-		#define _hhName		TESRubberBandSelectionSkipInvisibleRefs
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x0042FB8E);
-			__asm
-			{
-				push	ecx
-				call	DoTESRubberBandSelectionSkipInvisibleRefsHook
-				jmp		_hhGetVar(Retn)
-			}
-		}
-
 		bool __stdcall DoRenderWindowCameraRotationPivotHook(Vector3* OutPivot, UInt8* AlternatePivot)
 		{
 			bool Enabled = _RENDERSEL->selectionCount == 0 && settings::renderer::kFixedCameraPivot.GetData().i;
@@ -1392,7 +1368,9 @@ namespace cse
 			if (settings::renderer::kPathGridLinkedRefIndicator().i == 0)
 			{
 				if ((settings::renderer::kPathGridLinkedRefIndicatorFlags().u & settings::renderer::kPathGridLinkedRefIndicatorFlag_HideLinkedRefNode))
+				{
 					RefNode->SetCulled(true);
+				}
 			}
 		}
 
