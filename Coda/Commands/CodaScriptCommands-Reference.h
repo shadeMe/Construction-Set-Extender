@@ -172,12 +172,11 @@ namespace cse
 					OneForm,
 					ICodaScriptDataStore::kDataType_Invalid);
 
-				CodaScriptParametricCommandPrototype(CreateRenderWindowSelectionGroup,
+				CodaScriptCommandPrototype(CreateRenderWindowSelectionGroup,
 					"createSelGroup",
 					"Creates a render window selection group from an array of references. Returns true if successful, false otherwise.",
 					0,
-					1,
-					OneArray,
+					2,
 					ICodaScriptDataStore::kDataType_Numeric);
 
 				CodaScriptParametricCommandPrototype(DissolveRenderWindowSelectionGroup,

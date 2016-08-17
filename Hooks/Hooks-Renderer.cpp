@@ -1471,6 +1471,7 @@ namespace cse
 				jz		END
 
 				mov		[esp + 0x30], eax			// update our variable on the stack and jump back
+				xor		esi, esi					// ensure ESI is zero as it's supposed to be non-volatile
 				jmp		_hhGetVar(Jump)
 			END:
 				jmp		_hhGetVar(Retn)

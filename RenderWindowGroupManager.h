@@ -4,67 +4,66 @@ namespace cse
 {
 	namespace renderWindow
 	{
+		class RenderWindowOSD;
+
 		class RenderWindowGroupManager
 		{
-			
-/*
-			class CosaveHandler : public serialization::PluginCosaveManager::IEventHandler
-			{
-				RenderWindowGroupManager*		Parent;
-			public:
-				CosaveHandler(RenderWindowGroupManager* Parent);
-
-				virtual void					HandleLoad(const char* PluginName, const char* CosaveDirectory);
-				virtual void					HandleSave(const char* PluginName, const char* CosaveDirectory);
-				virtual void					HandleShutdown(const char* PluginName, const char* CosaveDirectory);
-			};
-
-			friend class CosaveHandler;*/
-
-			typedef UInt32											ReferenceHandleT;
+			typedef UInt32								ReferenceHandleT;
+			typedef std::string							GroupIDT;
+			typedef std::vector<ReferenceHandleT>		MemberRosterT;
 
 			class GroupData
 			{
-				static UInt32							GetNextID(void);
+				friend class RenderWindowGroupManager;
 
-				typedef std::vector<ReferenceHandleT>	MemberRosterT;
-
+				GroupIDT								ID;
 				MemberRosterT							Members;
-				UInt32									ID;
 
 				bool									GetIsMember(ReferenceHandleT Ref, MemberRosterT::iterator& Match);
 			public:
-				GroupData(TESRenderSelection* Selection);
+				GroupData(GroupIDT ID, TESRenderSelection* Selection);
 
-				UInt32									ValidateMembers(void);
+				UInt32									ValidateMembers(MemberRosterT& OutDelinquents);		// returns the new size
+				void									AddMember(ReferenceHandleT Ref);
 				void									RemoveMember(ReferenceHandleT Ref);
 				void									ConvertToSelection(TESRenderSelection* Selection, bool ClearSelection);
 
-				const UInt32							GetID(void) const { return ID; }
+				const GroupIDT							GetID(void) const { return ID; }
 				const UInt32							GetSize(void) const { return Members.size(); }
 			};
 
-			typedef boost::shared_ptr<GroupData>					GroupDataHandleT;
-			typedef std::map<ReferenceHandleT, GroupDataHandleT>	GroupDataStoreT;
+			typedef boost::shared_ptr<GroupData>						GroupDataHandleT;
+			typedef std::map<ReferenceHandleT, GroupDataHandleT>		GroupDataReferenceMapT;
+			typedef std::vector<GroupDataHandleT>						GroupDataArrayT;
 
 			static bool									GetReferenceExists(ReferenceHandleT Ref);
+			bool										GetGroupExists(GroupIDT ID);
+			GroupDataHandleT							LookupGroup(GroupIDT ID);
+			GroupDataHandleT							GetParentGroup(ReferenceHandleT Ref);
+			bool										ValidateGroup(GroupDataHandleT Group);		// returns false if the group has <= 1 member
+			void										RegisterGroup(GroupDataHandleT Group, bool RegisterRefs);
+			void										DeregisterGroup(GroupDataHandleT Group, bool DeregisterRefs);
+			void										StandardOutput(const char* Fmt, ...);
 
-
-
-
-
-			GroupDataStoreT								DataStore;
+			GroupDataReferenceMapT						ReferenceTable;
+			GroupDataArrayT								RegisteredGroups;
+			void*										ConsoleContext;
 		public:
 			RenderWindowGroupManager();
+			~RenderWindowGroupManager();
 
-			bool										AddGroup(TESRenderSelection* Selection);		// returns false if any of the refs in the selection were already a part of some group
+			void										Initialize();
+			void										Deinitialize();
+
+			bool										AddGroup(GroupIDT ID, TESRenderSelection* Selection);		// returns false if any of the refs in the selection were already a part of some group
 			bool										RemoveGroup(TESRenderSelection* Selection);
-			void										Orphanize(ReferenceHandleT Ref);				// removes the ref from its parent group, if any
-
-																										// if the ref is a part of a group, replaces the selection with the group and returns true. returns false otherwise
+			void										Orphanize(TESObjectREFR* Ref);				// removes the ref from its parent group, if any
+			const char*									GetParentGroupID(TESObjectREFR* Ref);		// returns NULL if not a member of any group
+																									// if the ref is a part of a group, replaces the selection with the group and returns true. returns false otherwise
 			bool										SelectAffiliatedGroup(TESObjectREFR* Ref, TESRenderSelection* Selection, bool ClearSelection);
-
+			bool										IsSelectionGroupable(TESRenderSelection* Selection);
 			void										Clear();
+			bool										GetGroupExists(const char* ID);
 		};
 	}
 }

@@ -1062,29 +1062,18 @@ namespace cse
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_GROUP:
-				case IDC_RENDERWINDOWCONTEXT_UNGROUP:
-					if (_RENDERSEL->selectionCount > 1)
 					{
-						switch (LOWORD(wParam))
-						{
-						case IDC_RENDERWINDOWCONTEXT_GROUP:
-							if (RenderWindowManager::Instance.GetReferenceGroupManager()->AddGroup(_RENDERSEL) == false)
-								NotificationOSDLayer::Instance.ShowNotification("Couldn't add current selection to a new group.\n\nCheck the console for more details.");
-							else
-								NotificationOSDLayer::Instance.ShowNotification("Created new selection group");
+						if (_RENDERWIN_MGR.GetReferenceGroupManager()->IsSelectionGroupable(_RENDERSEL))
+							_RENDERWIN_MGR.CreateRefGroup();
 
-							break;
-						case IDC_RENDERWINDOWCONTEXT_UNGROUP:
-							if (RenderWindowManager::Instance.GetReferenceGroupManager()->RemoveGroup(_RENDERSEL) == false)
-								NotificationOSDLayer::Instance.ShowNotification("Couldn't dissolve the current selection's group.\n\nCheck the console for more details.");
-							else
-								NotificationOSDLayer::Instance.ShowNotification("Removed selection group");
-
-							break;
-						}
-
-						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefGrouping);
 						Return = true;
+					}
+
+					break;
+				case IDC_RENDERWINDOWCONTEXT_UNGROUP:
+					{
+						Return = true;
+						_RENDERWIN_MGR.DeleteRefGroup();
 					}
 
 					break;
@@ -1795,6 +1784,7 @@ namespace cse
 			SceneGraphManager->AddModifier(&DebugSceneGraphModifier::Instance);
 #endif
 			CellLists->Initialize(OSD);
+			GroupManager->Initialize();
 
 			_RENDERWIN_XSTATE.Initialize();
 			Initialized = true;
@@ -1818,6 +1808,7 @@ namespace cse
 			events::renderer::kPreSceneGraphRender.RemoveSink(EventSink);
 			events::renderer::kPostSceneGraphRender.RemoveSink(EventSink);
 
+			GroupManager->Deinitialize();
 			CellLists->Deinitialize(OSD);
 			OSD->Deinitialize();
 			SceneGraphManager->RemoveModifier(&ReferenceParentChildIndicator::Instance);
@@ -1869,6 +1860,59 @@ namespace cse
 		void RenderWindowManager::CacheActiveRefs()
 		{
 			TESRenderWindow::GetActiveCellObjects(ActiveRefCache);
+		}
+
+		bool RenderWindowManager::RenderModalNewRefGroup(RenderWindowOSD* OSD, ImGuiDX9* GUI)
+		{
+			static char NewGroupNameBuffer[0x100] = { 0 };
+
+			ImGui::InputText("Name", NewGroupNameBuffer, sizeof(NewGroupNameBuffer));
+			bool InvalidName = GroupManager->GetGroupExists(NewGroupNameBuffer);
+			if (InvalidName)
+				ImGui::Text("Group already exists!");
+			else if (strlen(NewGroupNameBuffer) == 0)
+				InvalidName = true;
+
+			ImGui::Separator();
+			bool Close = false;
+			if (ImGui::Button("OK", ImVec2(120, 0)) && InvalidName == false)
+			{
+				if (GroupManager->AddGroup(NewGroupNameBuffer, _RENDERSEL) == false)
+					NotificationOSDLayer::Instance.ShowNotification("Couldn't add current selection to a new group.");
+				else
+					NotificationOSDLayer::Instance.ShowNotification("Created new selection group");
+
+				achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefGrouping);
+				Close = true;
+			}
+
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel", ImVec2(120, 0)))
+				Close = true;
+
+			if (Close)
+			{
+				// clear the buffer for the next use
+				ZeroMemory(NewGroupNameBuffer, sizeof(NewGroupNameBuffer));
+				return true;
+			}
+			else
+				return false;
+		}
+
+		void RenderWindowManager::CreateRefGroup()
+		{
+			ModalWindowProviderOSDLayer::Instance.ShowModal("New Reference Group",
+															std::bind(&RenderWindowManager::RenderModalNewRefGroup, this, std::placeholders::_1, std::placeholders::_2),
+															ImGuiWindowFlags_AlwaysAutoResize);
+		}
+
+		void RenderWindowManager::DeleteRefGroup()
+		{
+			if (RenderWindowManager::Instance.GetReferenceGroupManager()->RemoveGroup(_RENDERSEL) == false)
+				NotificationOSDLayer::Instance.ShowNotification("Couldn't dissolve the current selection's group.");
+			else
+				NotificationOSDLayer::Instance.ShowNotification("Removed selection group");
 		}
 
 		const TESObjectREFRArrayT& RenderWindowManager::GetActiveRefs() const

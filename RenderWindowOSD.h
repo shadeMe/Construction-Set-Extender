@@ -51,6 +51,20 @@ namespace cse
 		{
 			const INISetting*				Toggle;
 			UInt32							Priority;
+		protected:
+			enum
+			{
+				kPriority_Notifications = 1001,
+				kPriority_MouseTooltip = 1000,
+				kPriority_Toolbar = 999,
+
+				kPriority_SelectionControls = 998,
+				kPriority_CellLists = 997,
+
+				kPriority_Debug = 2,
+				kPriority_DefaultOverlay = 1,
+				kPriority_ModalProvider = 0,
+			};
 		public:
 			IRenderWindowOSDLayer(INISetting& Toggle, UInt32 Priority);
 			IRenderWindowOSDLayer(UInt32 Priority);
@@ -63,19 +77,6 @@ namespace cse
 			virtual bool					NeedsBackgroundUpdate() = 0;			// returns true if the layer needs to be rendered when the render window doesn't have input focus
 			virtual UInt32					GetPriority() const;					// layers with higher priority get rendered first
 			virtual bool					IsEnabled() const;
-
-			enum
-			{
-				kPriority_Notifications			= 1001,
-				kPriority_MouseTooltip			= 1000,
-				kPriority_Toolbar				= 999,
-
-				kPriority_SelectionControls		= 998,
-				kPriority_CellLists				= 997,
-
-				kPriority_Debug					= 1,
-				kPriority_DefaultOverlay		= 0,
-			};
 		};
 
 		class RenderWindowOSD
@@ -224,7 +225,7 @@ namespace cse
 			void					EditReference(TESObjectREFR* Ref);
 			void					EditBaseForm(TESObjectREFR* Ref);
 			void					CheckTextInputChange(ImGuiDX9* GUI, bool& OutGotFocus, bool& OutLostFocus);
-			void					CheckDragChange(ImGuiDX9* GUI, bool& OutDragBegin, bool& OutDragEnd);
+			void					CheckDragChange(ImGuiDX9* GUI, bool& OutsDragBegin, bool& OutDragEnd);
 			void					DrawDragTrail();
 
 			void					MoveSelection(bool X, bool Y, bool Z);
@@ -235,10 +236,40 @@ namespace cse
 			SelectionControlsOSDLayer();
 			virtual ~SelectionControlsOSDLayer();
 
+			virtual void			Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI);
+			virtual bool			NeedsBackgroundUpdate();
+
+			static SelectionControlsOSDLayer			Instance;
+		};
+
+		class ModalWindowProviderOSDLayer : public IRenderWindowOSDLayer
+		{
+		public:
+			typedef std::function<bool(RenderWindowOSD*, ImGuiDX9*)>		ModalRenderDelegateT;			// draws the modal's contents and returns true to close it, false otherwise
+		private:
+			struct ModalData
+			{
+				std::string						WindowName;		// salted with random integer to prevent collisions
+				ModalRenderDelegateT			Delegate;
+				ImGuiWindowFlags_				Flags;
+				bool							Open;
+
+				ModalData(const char* Name, ModalRenderDelegateT Delegate, ImGuiWindowFlags_ Flags);
+			};
+
+			typedef std::stack<ModalData>		ModalDataStackT;
+
+			ModalDataStackT			OpenModals;
+		public:
+			ModalWindowProviderOSDLayer();
+			virtual ~ModalWindowProviderOSDLayer();
+
 			virtual void					Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI);
 			virtual bool					NeedsBackgroundUpdate();
 
-			static SelectionControlsOSDLayer			Instance;
+			void							ShowModal(const char* Name, ModalRenderDelegateT Delegate, ImGuiWindowFlags_ Flags);
+
+			static ModalWindowProviderOSDLayer		Instance;
 		};
 	}
 }

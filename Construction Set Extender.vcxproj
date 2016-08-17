@@ -642,7 +642,6 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <None Include="Images\Splash.bmp" />
     <None Include="Images\wiseone.bmp" />
     <None Include="Images\wtf.bmp" />
-    <None Include="MainWindowOverrides" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\[Libraries]\BGSEditorExtenderBase\bgsee\BGSEditorExtenderBase.rc" />

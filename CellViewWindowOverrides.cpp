@@ -181,6 +181,18 @@ namespace cse
 
 			switch (uMsg)
 			{
+			case WM_ACTIVATE:
+				if (LOWORD(wParam) != WA_INACTIVE)
+				{
+					// refresh the ref list if the visible only/selection only filter is checked
+					if (IsDlgButtonChecked(hWnd, IDC_CSE_CELLVIEW_VISIBLEONLYBTN) == BST_CHECKED ||
+						IsDlgButtonChecked(hWnd, IDC_CSE_CELLVIEW_SELECTEDONLYBTN) == BST_CHECKED)
+					{
+						TESCellViewWindow::RefreshObjectList();
+					}
+				}
+
+				break;
 			case WM_CLOSE:
 				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kMainMenu_View_CellViewWindow, NULL);
 				Return = true;

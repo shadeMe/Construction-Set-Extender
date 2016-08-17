@@ -135,12 +135,12 @@ using namespace SME::Functors;
 #define PI						3.151592653589793
 
 #undef SME_ASSERT
-#define SME_ASSERT(_Expression) (void)( (!!(_Expression)) || (BGSEECONSOLE->LogAssertion("CSE", "ASSERTION FAILED (%s, %s): %s", __FILE__, __LINE__, #_Expression), _wassert(_CRT_WIDE(#_Expression), _CRT_WIDE(__FILE__), __LINE__), 0) )
+#define SME_ASSERT(_Expression) (void)( (!!(_Expression)) || (BGSEECONSOLE->LogAssertion("CSE", "ASSERTION FAILED (%s, %d): %s", __FILE__, __LINE__, #_Expression), _wassert(_CRT_WIDE(#_Expression), _CRT_WIDE(__FILE__), __LINE__), 0) )
 
 
 // required for assertions in d'tors (for static instances) as we don't want it to trigger the crash handler recursively
 #ifdef NDEBUG
-#define DEBUG_ASSERT(expr)		BGSEECONSOLE->LogAssertion("CSE", "ASSERTION FAILED (%s, %s): %s", __FILE__, __LINE__, #expr)
+#define DEBUG_ASSERT(expr)		BGSEECONSOLE->LogAssertion("CSE", "ASSERTION FAILED (%s, %d): %s", __FILE__, __LINE__, #expr)
 #else
 #define DEBUG_ASSERT(expr)		SME_ASSERT(expr)
 #endif

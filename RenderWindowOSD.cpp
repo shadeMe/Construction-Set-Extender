@@ -542,7 +542,7 @@ namespace cse
 
 				break;
 			case WM_TIMER:
-				// our main render loop
+				// main render loop
 				if (wParam == TESRenderWindow::kTimer_ViewportUpdate)
 				{
 					// refresh the viewport if the mouse is in the client area or there are pending notifications
@@ -608,6 +608,7 @@ namespace cse
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, OSDSubclassProc);
 			SendMessage(*TESRenderWindow::WindowHandle, WM_RENDERWINDOWOSD_INITXDATA, NULL, (LPARAM)new DialogExtraData(this));
 
+			AttachLayer(&ModalWindowProviderOSDLayer::Instance);
 			AttachLayer(&DefaultOverlayOSDLayer::Instance);
 			AttachLayer(&MouseOverTooltipOSDLayer::Instance);
 			AttachLayer(&NotificationOSDLayer::Instance);
@@ -625,6 +626,7 @@ namespace cse
 		{
 			SME_ASSERT(Initialized);
 
+			DetachLayer(&ModalWindowProviderOSDLayer::Instance);
 			DetachLayer(&DefaultOverlayOSDLayer::Instance);
 			DetachLayer(&MouseOverTooltipOSDLayer::Instance);
 			DetachLayer(&NotificationOSDLayer::Instance);
@@ -859,7 +861,7 @@ namespace cse
 			}
 			ImGui::Columns(1);
 
-			ImGui::Columns(2, "RAM Data", false);
+			ImGui::Columns(2, "Misc Data", false);
 			{
 				PROCESS_MEMORY_COUNTERS_EX MemCounter = { 0 };
 				SME::StringHelpers::GetRGB(settings::renderWindowOSD::kColorRAMUsage().s, R, G, B);
@@ -933,13 +935,19 @@ namespace cse
 							xParent->oppositeState);
 				}
 
-				FORMAT_STR(Buffer, "%s%s%08X%s %s%s",
+				char RefGroupBuffer[0x50] = { 0 };
+				const char* ParentGroup = _RENDERWIN_MGR.GetReferenceGroupManager()->GetParentGroupID(Ref);
+				if (ParentGroup)
+					FORMAT_STR(RefGroupBuffer, "\nGroup: %s", ParentGroup);
+
+				FORMAT_STR(Buffer, "%s%s%08X%s %s%s%s",
 					(Ref->GetEditorID() ? Ref->GetEditorID() : ""),
 						   (Ref->GetEditorID() ? "(" : ""),
 						   Ref->formID,
 						   (Ref->GetEditorID() ? ")" : ""),
 						   BaseBuffer,
-						   xBuffer);
+						   xBuffer,
+						   RefGroupBuffer);
 			}
 			else
 			{
@@ -1839,6 +1847,75 @@ namespace cse
 		bool SelectionControlsOSDLayer::NeedsBackgroundUpdate()
 		{
 			return false;
+		}
+
+		ModalWindowProviderOSDLayer			ModalWindowProviderOSDLayer::Instance;
+
+
+		ModalWindowProviderOSDLayer::ModalData::ModalData(const char* Name, ModalRenderDelegateT Delegate, ImGuiWindowFlags_ Flags) :
+			WindowName(Name),
+			Delegate(Delegate),
+			Flags(Flags),
+			Open(false)
+		{
+			char Buffer[0x100] = {0};
+			SME::MersenneTwister::init_genrand(GetTickCount());
+			FORMAT_STR(Buffer, "##%d_%s", SME::MersenneTwister::genrand_int32(), Name);
+
+			WindowName.append(Buffer);
+		}
+
+		ModalWindowProviderOSDLayer::ModalWindowProviderOSDLayer() :
+			IRenderWindowOSDLayer(kPriority_ModalProvider),
+			OpenModals()
+		{
+			;//
+		}
+
+		ModalWindowProviderOSDLayer::~ModalWindowProviderOSDLayer()
+		{
+			while (OpenModals.size())
+			{
+				OpenModals.pop();
+				ImGui::CloseCurrentPopup();
+			}
+		}
+
+		void ModalWindowProviderOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
+		{
+			if (OpenModals.size())
+			{
+				// only renders one modal at a time (the topmost)
+				ModalData& Top = OpenModals.top();
+				if (Top.Open == false)
+				{
+					ImGui::OpenPopup(Top.WindowName.c_str());
+					Top.Open = true;
+				}
+
+				if (ImGui::BeginPopupModal(Top.WindowName.c_str(), NULL, Top.Flags))
+				{
+					if (Top.Delegate(OSD, GUI))
+					{
+						ImGui::CloseCurrentPopup();
+						OpenModals.pop();
+					}
+
+					ImGui::EndPopup();
+				}
+			}
+		}
+
+		bool ModalWindowProviderOSDLayer::NeedsBackgroundUpdate()
+		{
+			return false;
+		}
+
+		void ModalWindowProviderOSDLayer::ShowModal(const char* Name, ModalRenderDelegateT Delegate, ImGuiWindowFlags_ Flags)
+		{
+			SME_ASSERT(Name && Delegate);
+			ModalData NewModal(Name, Delegate, Flags);
+			OpenModals.push(NewModal);
 		}
 	}
 }

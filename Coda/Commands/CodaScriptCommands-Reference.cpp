@@ -89,6 +89,12 @@ namespace cse
 					{ "Cell", ICodaScriptDataStore::kDataType_Reference }
 				};
 
+				CodaScriptCommandParamData(CreateRenderWindowSelectionGroup, 2)
+				{
+					{ "References", ICodaScriptDataStore::kDataType_Array },
+					{ "Group Name", ICodaScriptDataStore::kDataType_String }
+				};
+
 				CodaScriptCommandHandler(CreateRef)
 				{
 					TESForm* BaseForm = NULL;
@@ -112,9 +118,13 @@ namespace cse
 					if (!Base || !ParentCell || (ParentCell->GetIsInterior() == false && !ParentWorldspace))
 						return false;
 
+					// convert rotation to radians first
+					Vector3 OutRotation(Rotation.x, Rotation.y, Rotation.z);
+					OutRotation.Scale(0.01745329238474369);
+
 					TESObjectREFR* NewRef = _DATAHANDLER->PlaceObjectRef(Base,
 																		&(Vector3(Position.x, Position.y, Position.z)),
-																		&(Vector3(Rotation.x, Rotation.y, Rotation.z)),
+																		&OutRotation,
 																		ParentCell, ParentWorldspace, NULL);
 					if (NewRef)
 						Result->SetFormID(NewRef->formID);
@@ -554,10 +564,10 @@ namespace cse
 				CodaScriptCommandHandler(CreateRenderWindowSelectionGroup)
 				{
 					ICodaScriptDataStore* Array = NULL;
+					CodaScriptStringParameterTypeT GroupName = NULL;
 
-					CodaScriptCommandExtractArgs(&Array);
-
-					SME_ASSERT(Array);
+					CodaScriptCommandExtractArgs(&Array, &GroupName);
+					SME_ASSERT(Array && GroupName);
 
 					Result->SetNumber(0);
 
@@ -584,14 +594,14 @@ namespace cse
 								return false;
 						}
 
-						TESRenderSelection* Buffer = TESRenderSelection::CreateInstance();
+						TESRenderSelection* SelBuffer = TESRenderSelection::CreateInstance();
 						for (int i = 0, j = Members.size(); i < j; i++)
-							Buffer->AddToSelection(Members[i], false);
+							SelBuffer->AddToSelection(Members[i], false);
 
-						if (renderWindow::RenderWindowManager::Instance.GetReferenceGroupManager()->AddGroup(Buffer))
+						if (_RENDERWIN_MGR.GetReferenceGroupManager()->AddGroup(GroupName, SelBuffer))
 							Result->SetNumber(1);
 
-						Buffer->DeleteInstance();
+						SelBuffer->DeleteInstance();
 					}
 
 					return true;

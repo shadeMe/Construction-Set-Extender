@@ -34,8 +34,8 @@ namespace cse
 				kState_Bad,				// errors encountered during operation/operation couldn't be performed
 			};
 
-			TESFileWrapper*						SourceFile;
-			ObjectRefCollectionSerializer*			Serializer;
+			TESFileWrapper*								SourceFile;
+			ObjectRefCollectionSerializer*				Serializer;
 			ObjectRefCollectionInstantiator*			Instantiator;
 
 			UInt8										SerializationState;

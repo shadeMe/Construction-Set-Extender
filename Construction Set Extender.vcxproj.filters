@@ -940,7 +940,6 @@
     <None Include="Images\chicken.bmp">
       <Filter>Resources\Images</Filter>
     </None>
-    <None Include="MainWindowOverrides" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Construction Set Extender.rc">
