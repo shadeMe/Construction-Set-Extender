@@ -244,7 +244,7 @@ namespace bgsee
 #define BGSEEMAIN					bgsee::Main::GetSingleton()
 #define BGSEECONSOLE				BGSEEMAIN->GetConsole()
 #define BGSEECONSOLE_MESSAGE(...)	BGSEECONSOLE->LogMsg(BGSEEMAIN->ExtenderGetShortName(), __VA_ARGS__)
-#define BGSEECONSOLE_ERROR(...)		BGSEECONSOLE->LogErrorMsg(BGSEEMAIN->ExtenderGetShortName(), __VA_ARGS__)
+#define BGSEECONSOLE_ERROR(...)		BGSEECONSOLE->LogWindowsError(BGSEEMAIN->ExtenderGetShortName(), __VA_ARGS__)
 
 #define BGSEE_DEBUGBREAK			bgsee:Daemon::WaitForDebugger(); __asm { int 3 }
 

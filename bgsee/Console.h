@@ -123,6 +123,7 @@ namespace bgsee
 
 		class MessageLogContext
 		{
+			static const UInt32		kMessageLogCharLimit = 0x8000;
 		protected:
 			std::string				Name;
 			std::string				LogPath;
@@ -130,6 +131,8 @@ namespace bgsee
 			UInt8					State;
 
 			friend class			Console;
+
+			void					CheckBufferLength(size_t AddendLength);		// clears the buffer preemptively if it's approaching its limit 
 		public:
 			MessageLogContext(const char* ContextName, const char* ContextLogPath = NULL);
 			virtual ~MessageLogContext();
@@ -249,7 +252,6 @@ namespace bgsee
 		bool						LookupSecondaryContextByInstance(MessageLogContext* Context, ContextArrayT::iterator& Match);
 		void						ReleaseSecondaryContexts(void);
 	public:
-		static const UInt32			kMessageLogCharLimit = 0x8000;
 		static const UInt32			kMaxIndentLevel = 0x10;
 
 		Console(const char* LogPath);
@@ -261,7 +263,7 @@ namespace bgsee
 															ConsoleWarningRegistrar& Registrar);
 
 		virtual void				LogMsg(std::string Prefix, const char* Format, ...);
-		virtual void				LogErrorMsg(std::string Prefix, const char* Format, ...);
+		virtual void				LogWindowsError(std::string Prefix, const char* Format, ...);
 		virtual void				LogWarning(std::string Prefix, const char* Format, ...);
 		virtual void				LogAssertion(std::string Prefix, const char* Format, ...);
 

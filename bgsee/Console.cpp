@@ -297,14 +297,7 @@ namespace bgsee
 					break;
 
 				SendMessage(hWnd, WM_SETREDRAW, FALSE, 0);
-				int LogLength = GetWindowTextLength(hWnd);
-
-				if (LogLength > kMessageLogCharLimit)
-				{
-					Edit_SetText(hWnd, NULL);
-					Instance->GetActiveContext()->ClearBuffer();
-				}
-
+				
 				switch (Instance->GetActiveContext()->GetState())
 				{
 				case MessageLogContext::kState_Reset:
@@ -427,14 +420,20 @@ namespace bgsee
 		State = NewState;
 	}
 
-	Console::MessageLogContext::MessageLogContext( const char* ContextName, const char* ContextLogPath /*= NULL*/ )
+	void Console::MessageLogContext::CheckBufferLength(size_t AddendLength)
+	{
+		if (BackBuffer.length() + AddendLength >= kMessageLogCharLimit)
+			ClearBuffer();
+	}
+
+	Console::MessageLogContext::MessageLogContext(const char* ContextName, const char* ContextLogPath /*= NULL*/)
 	{
 		this->Name = ContextName;
 		if (ContextLogPath)
 			this->LogPath = ContextLogPath;
 		else
 			this->LogPath = "";
-		this->BackBuffer.reserve(Console::kMessageLogCharLimit);
+		this->BackBuffer.reserve(kMessageLogCharLimit);
 		this->SetState(kState_Default);
 	}
 
@@ -449,6 +448,7 @@ namespace bgsee
 		}
 
 		Buffer.append(Message).append("\r\n");
+		CheckBufferLength(Buffer.length());
 		BackBuffer += Buffer;
 
 		SetState(kState_Update);
@@ -547,14 +547,15 @@ namespace bgsee
 		}
 
 		SME::StringHelpers::Replace(FormattedMessage, '\n', (char)'\r\n');
-		BackBuffer += Addend + "\r\n";
+		Addend += "\r\n";
+
+		CheckBufferLength(Addend.length());
+		BackBuffer += Addend;
 
 		SetState(kState_Update);
 
 		if (ExecutingCallbacks == false && strlen(Message) > 0)
-		{
 			ExecutePrintCallbacks(Prefix, Message);
-		}
 	}
 
 	void Console::DefaultDebugLogContext::Reset()
@@ -649,9 +650,7 @@ namespace bgsee
 
 		PrintCallbackArrayT::iterator Match;
 		if (LookupPrintCallback(Callback, Match))
-		{
 			PrintCallbacks.erase(Match);
-		}
 	}
 
 	void Console::DefaultDebugLogContext::Flush()
@@ -814,9 +813,7 @@ namespace bgsee
 		std::string Buffer(kWindowTitle);
 
 		if (strlen(Prefix))
-		{
 			Buffer += " [" + std::string(Prefix) + "]";
-		}
 
 		SetWindowText(DialogHandle, Buffer.c_str());
 	}
@@ -1014,7 +1011,7 @@ namespace bgsee
 		PrimaryContext->Print(Prefix.c_str(), Buffer);
 	}
 
-	void Console::LogErrorMsg( std::string Prefix, const char* Format, ... )
+	void Console::LogWindowsError( std::string Prefix, const char* Format, ... )
 	{
 		char Buffer[0x1000] = {0};
 
