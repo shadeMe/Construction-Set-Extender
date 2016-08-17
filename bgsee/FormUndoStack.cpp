@@ -190,7 +190,7 @@ namespace bgsee
 
 		if (WalkingStacks)
 		{
-			BGSEECONSOLE->PrintToMessageLogContext(ConsoleMessageContext, "Couldn't reset stacks - Stack walk in progress");
+			BGSEECONSOLE->PrintToMessageLogContext(ConsoleMessageContext, false, "Couldn't reset stacks - Stack walk in progress");
 			return;
 		}
 

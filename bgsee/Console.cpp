@@ -438,10 +438,17 @@ namespace bgsee
 		this->SetState(kState_Default);
 	}
 
-	void Console::MessageLogContext::Print( const char* Message )
+	void Console::MessageLogContext::Print( const char* Message, bool AddTimestamp )
 	{
-		std::string Buffer(Message);
-		Buffer += "\r\n";
+		std::string Buffer;
+		if (AddTimestamp)
+		{
+			char TimeBuffer[0x32] = { 0 };
+			SME::MiscGunk::GetTimeString(TimeBuffer, sizeof(TimeBuffer), "%H:%M:%S");
+			Buffer.append("{").append(TimeBuffer).append("} ");
+		}
+
+		Buffer.append(Message).append("\r\n");
 		BackBuffer += Buffer;
 
 		SetState(kState_Update);
@@ -461,9 +468,7 @@ namespace bgsee
 	void Console::MessageLogContext::OpenLog() const
 	{
 		if (HasLog())
-		{
 			ShellExecute(NULL, "open", (LPSTR)LogPath.c_str(), NULL, NULL, SW_SHOW);
-		}
 	}
 
 	bool Console::MessageLogContext::HasLog() const
@@ -1111,7 +1116,7 @@ namespace bgsee
 		delete Context;
 	}
 
-	void Console::PrintToMessageLogContext( void* Context, const char* Format, ... )
+	void Console::PrintToMessageLogContext( void* Context, bool HideTimestamp, const char* Format, ... )
 	{
 		char Buffer[0x1000] = {0};
 
@@ -1123,7 +1128,8 @@ namespace bgsee
 		std::string Addend(Buffer);
 		Addend += "\r\n";
 
-		((MessageLogContext*)Context)->Print(Buffer);
+		bool AddTimestamp = HideTimestamp == false && kINI_LogTimestamps.GetData().i;
+		((MessageLogContext*)Context)->Print(Buffer, AddTimestamp);
 	}
 
 	bool Console::RegisterConsoleCommand( ConsoleCommandInfo* Command )

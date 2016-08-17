@@ -141,7 +141,7 @@ namespace bgsee
 				kState_Reset,
 			};
 
-			virtual void			Print(const char* Message);
+			virtual void			Print(const char* Message, bool AddTimestamp);
 			virtual void			Reset();
 
 			UInt8					GetState() const;
@@ -272,7 +272,7 @@ namespace bgsee
 
 		void*						RegisterMessageLogContext(const char* Name, const char* LogPath = NULL);	// returns the context object
 		void						UnregisterMessageLogContext(void* Context);									// destroys the pointer
-		void						PrintToMessageLogContext(void* Context, const char* Format, ...);
+		void						PrintToMessageLogContext(void* Context, bool HideTimestamp, const char* Format, ...);
 
 		bool						RegisterConsoleCommand(ConsoleCommandInfo* Command);
 		void						UnregisterConsoleCommand(ConsoleCommandInfo* Command);

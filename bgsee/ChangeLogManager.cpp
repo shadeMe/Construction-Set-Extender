@@ -53,7 +53,7 @@ namespace bgsee
 			Output << Message << "\n";
 
 			if (ConsoleMessageContext)
-				BGSEECONSOLE->PrintToMessageLogContext(ConsoleMessageContext, Output.str().c_str());
+				BGSEECONSOLE->PrintToMessageLogContext(ConsoleMessageContext, true, Output.str().c_str());
 
 			fputs(Output.str().c_str(), Log);
 
