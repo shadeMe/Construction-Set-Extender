@@ -246,8 +246,8 @@ public:
 	static void							Refresh3D();
 	static void							TogglePathGridEditMode();
 
-	typedef bool						(*CellObjectListVisitor)(TESObjectREFR* Ref);
-	static UInt32						GetActiveCellObjects(TESObjectREFRArrayT& OutList, CellObjectListVisitor Visitor = NULL);		// enumerates refs in the current interior/exterior grid and returns the count
+	typedef std::function<bool(TESObjectREFR*)>		CellObjectListVisitorT;
+	static UInt32						GetActiveCellObjects(TESObjectREFRArrayT& OutList, CellObjectListVisitorT Visitor);		// enumerates refs in the current interior/exterior grid and returns the count
 	static bool							GetCellInActiveGrid(TESObjectCELL* Cell);	// returns true if the cell is loaded/visible in the render window
 	static std::string					GetCellGeomDescription(TESObjectCELL* Cell);
 

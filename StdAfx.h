@@ -87,6 +87,7 @@
 #include <boost\intrusive_ptr.hpp>
 #include <boost\weak_ptr.hpp>
 #include <boost\filesystem.hpp>
+#include <boost\algorithm\string.hpp>
 
 namespace bfs = boost::filesystem;
 

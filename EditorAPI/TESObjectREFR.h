@@ -72,12 +72,12 @@ public:
 	void						ToggleInvisiblity(void);
 	void						ToggleChildrenInvisibility(void);
 	void						ToggleSelectionBox(bool State);
-	void						SetFrozenState(bool State);
+	void						SetFrozen(bool State);
 	void						SetAlpha(float Alpha = -1.0f);		// pass -1.0f to reset alpha
 
 	bool						GetInvisible(void) const;
 	bool						GetChildrenInvisible(void) const;
-	bool						GetFrozen(void) const;
+	bool						IsFrozen(void) const;
 	float						GetAlpha(void);
 	bool						GetDisabled(void) const;
 };

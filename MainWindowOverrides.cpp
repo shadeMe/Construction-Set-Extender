@@ -550,10 +550,12 @@ namespace cse
 					break;
 				case IDC_MAINMENU_INITIALLYDISABLEDREFERENCES:
 					_RENDERWIN_XSTATE.ShowInitiallyDisabledRefs = _RENDERWIN_XSTATE.ShowInitiallyDisabledRefs == false;
+					TESRenderWindow::Redraw();
 
 					break;
 				case IDC_MAINMENU_CHILDREFERENCESOFTHEDISABLED:
 					_RENDERWIN_XSTATE.ShowInitiallyDisabledRefChildren = _RENDERWIN_XSTATE.ShowInitiallyDisabledRefChildren == false;
+					TESRenderWindow::Redraw();
 
 					break;
 				case IDC_MAINMENU_CODAOPENSCRIPTREPOSITORY:

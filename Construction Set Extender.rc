@@ -664,8 +664,6 @@ BEGIN
         POPUP "On-Screen Display"
         BEGIN
             MENUITEM "Info Overlay",                IDC_RENDERWINDOWCONTEXT_OSD_INFOOVERLAY
-            MENUITEM "Selection Controls",          IDC_RENDERWINDOWCONTEXT_OSD_SELECTIONCONTROLS
-            MENUITEM "Cell Lists",                  IDC_RENDERWINDOWCONTEXT_OSD_CELLLISTS
             MENUITEM "Toolbars",                    IDC_RENDERWINDOWCONTEXT_OSD_TOOLBARS
             POPUP "Object-Under-Pointer Display"
             BEGIN
@@ -673,6 +671,10 @@ BEGIN
                 MENUITEM SEPARATOR
                 MENUITEM "CTRL Key Modified",           IDC_RENDERWINDOWCONTEXT_OSD_MOUSEREF_CTRLMODIFIED
             END
+            MENUITEM SEPARATOR
+            MENUITEM "Selection Controls",          IDC_RENDERWINDOWCONTEXT_OSD_SELECTIONCONTROLS
+            MENUITEM "Cell Lists",                  IDC_RENDERWINDOWCONTEXT_OSD_CELLLISTS
+            MENUITEM "Active Reference Collections", IDC_RENDERWINDOWCONTEXT_OSD_ACTIVEREFERENCECOLLECTIONS
         END
         MENUITEM "Render Window Properties",    293
         MENUITEM SEPARATOR

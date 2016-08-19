@@ -289,6 +289,9 @@ void TESDataHandler::PerformPostLoadTasks( void )
 
 void TES::LoadCellIntoViewPort(const Vector3* CameraCoordData, TESObjectREFR* Reference)
 {
+	if (CameraCoordData == nullptr)
+		CameraCoordData = &Vector3();
+
 	cdeclCall<UInt32>(0x00430F40, CameraCoordData, Reference);
 }
 

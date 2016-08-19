@@ -60,6 +60,7 @@ namespace cse
 
 				kPriority_SelectionControls = 998,
 				kPriority_CellLists = 997,
+				kPriority_ActiveRefCollections = 996,
 
 				kPriority_Debug = 2,
 				kPriority_DefaultOverlay = 1,
@@ -270,6 +271,35 @@ namespace cse
 			void							ShowModal(const char* Name, ModalRenderDelegateT Delegate, ImGuiWindowFlags_ Flags);
 
 			static ModalWindowProviderOSDLayer		Instance;
+		};
+
+
+		class ActiveRefCollectionsOSDLayer : public IRenderWindowOSDLayer
+		{
+			enum
+			{
+				kTab_Invisible = 0,
+				kTab_Frozen,
+				kTab_Groups,
+				kTab_Layers,
+
+				kTab__MAX
+			};
+
+			int								CurrentTab;
+			ImGuiTextFilter					FilterHelper;
+
+			void							RenderRefTableContents(int Tab);
+			void							RenderTabContents(int Tab);
+			std::string						GetRefEditorID(TESObjectREFR* Ref);
+		public:
+			ActiveRefCollectionsOSDLayer();
+			virtual ~ActiveRefCollectionsOSDLayer();
+
+			virtual void					Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI);
+			virtual bool					NeedsBackgroundUpdate();
+
+			static ActiveRefCollectionsOSDLayer			Instance;
 		};
 	}
 }

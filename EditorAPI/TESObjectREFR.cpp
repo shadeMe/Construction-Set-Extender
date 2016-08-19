@@ -180,7 +180,7 @@ void TESObjectREFR::ToggleChildrenInvisibility( void )
 		SME::MiscGunk::ToggleFlag(&formFlags, kSpecialFlags_Children3DInvisible, true);
 }
 
-void TESObjectREFR::SetFrozenState( bool State )
+void TESObjectREFR::SetFrozen( bool State )
 {
 	SME::MiscGunk::ToggleFlag(&formFlags, kSpecialFlags_Frozen, State);
 }
@@ -217,7 +217,7 @@ bool TESObjectREFR::GetChildrenInvisible( void ) const
 	return (formFlags & kSpecialFlags_Children3DInvisible);
 }
 
-bool TESObjectREFR::GetFrozen( void ) const
+bool TESObjectREFR::IsFrozen( void ) const
 {
 	return (formFlags & kSpecialFlags_Frozen);
 }

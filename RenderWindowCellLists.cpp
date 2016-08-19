@@ -95,7 +95,7 @@ namespace cse
 			FORMAT_STR(Label, "%08X-%d", Cell->formID, (UInt32)List);
 
 			ImGui::PushID(Label);
-			if (ImGui::Selectable(EditorID, false, ImGuiSelectableFlags_SpanAllColumns))
+			if (ImGui::Selectable(EditorID, false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(0))
 				Out.SelectCell = true;
 			ImGui::PopID();
 

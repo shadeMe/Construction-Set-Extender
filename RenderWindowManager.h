@@ -101,8 +101,18 @@ namespace cse
 		class ReferenceVisibilityValidator
 		{
 		public:
-			static bool							ShouldBeInvisible(TESObjectREFR* Ref);			// returns true if the reference is not supposed to be rendered to the scene
-			static bool							IsCulled(TESObjectREFR* Ref);					// returns true if the ref's node is culled
+			// reasons why the ref ought to be invisible
+			enum
+			{
+				kReason_InitiallyDisabledSelf		= 1 << 1,		// ref has the "Initially Disabled" flag
+				kReason_InitiallyDisabledChild		= 1 << 2,		// ref is a child of a parent that is initially disabled
+				kReason_InvisibleSelf				= 1 << 3,		// ref has the "Invisible" flag
+				kReason_InvisibleChild				= 1 << 4,		// ref is a child of a parent that has the "Invisible Children" flag
+			};
+
+			static bool							ShouldBeInvisible(TESObjectREFR* Ref, UInt32& OutReasonFlags);			// returns true if the reference is not supposed to be rendered to the scene
+			static bool							ShouldBeInvisible(TESObjectREFR* Ref);
+			static bool							IsCulled(TESObjectREFR* Ref);											// returns true if the ref's node is culled
 		};
 
 
@@ -110,14 +120,24 @@ namespace cse
 		{
 			RenderWindowGroupManager*		ReferenceGroupManager;
 
-			bool							IsSelectable(TESObjectREFR* Ref, bool& OutRegularHandling) const;
+			bool							IsSelectable(TESObjectREFR* Ref, bool& OutRegularHandling, UInt32& OutReasonFlags) const;
 		public:
 			RenderWindowSelectionManager(RenderWindowGroupManager* GroupMan);
 			~RenderWindowSelectionManager();
 
+			// reasons why the ref can(not) be selected
+			enum
+			{
+				kReason_Override				= 1 << 0,		// selection override key (ALT) is held down, allowing selection
+				kReason_InvalidVisibility		= 1 << 1,		// ref is invisible
+				kReason_FrozenSelf				= 1 << 2,		// ref has the "Frozen" flag
+				kReason_FrozenInactive			= 1 << 3,		// ref is frozen by the "Freeze Inactive Refs" tool
+			};
+
 			void							AddToSelection(TESObjectREFR* Ref, bool AddSelectionBox) const;
 			void							RemoveFromSelection(TESObjectREFR* Ref, bool RemoveSelectionBox) const;
 			bool							IsSelectable(TESObjectREFR* Ref) const;
+			bool							IsSelectable(TESObjectREFR* Ref, UInt32& OutReasonFlags) const;
 		};
 
 		class RenderWindowFlyCameraOperator : public bgsee::RenderWindowFlyCameraOperator
@@ -211,7 +231,7 @@ namespace cse
 																				  BSRenderedTexture* RenderTarget);
 			void										HandlePostSceneGraphRender();
 			void										CacheActiveRefs();
-			
+
 			bool										RenderModalNewRefGroup(RenderWindowOSD* OSD, ImGuiDX9* GUI);
 			void										CreateRefGroup();
 			void										DeleteRefGroup();

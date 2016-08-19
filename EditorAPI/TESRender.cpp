@@ -90,7 +90,7 @@ void TESRenderWindow::Refresh3D()
 	SendMessage(*WindowHandle, WM_KEYDOWN, VK_F5, NULL);
 }
 
-UInt32 TESRenderWindow::GetActiveCellObjects(TESObjectREFRArrayT& OutList, CellObjectListVisitor Visitor)
+UInt32 TESRenderWindow::GetActiveCellObjects(TESObjectREFRArrayT& OutList, CellObjectListVisitorT Visitor)
 {
 	OutList.clear();
 
@@ -99,9 +99,9 @@ UInt32 TESRenderWindow::GetActiveCellObjects(TESObjectREFRArrayT& OutList, CellO
 		for (TESObjectCELL::ObjectREFRList::Iterator Itr = _TES->currentInteriorCell->objectList.Begin(); !Itr.End(); ++Itr)
 		{
 			TESObjectREFR* Ref = Itr.Get();
-			if (Ref)
+			if (Ref && Ref->IsTemporary() == false)
 			{
-				if (Visitor == NULL || Visitor(Ref) == true)
+				if (!Visitor || Visitor(Ref) == true)
 					OutList.push_back(Ref);
 			}
 		}
@@ -120,9 +120,9 @@ UInt32 TESRenderWindow::GetActiveCellObjects(TESObjectREFRArrayT& OutList, CellO
 					for (TESObjectCELL::ObjectREFRList::Iterator Itr = Data->cell->objectList.Begin(); !Itr.End(); ++Itr)
 					{
 						TESObjectREFR* Ref = Itr.Get();
-						if (Ref)
+						if (Ref && Ref->IsTemporary() == false)
 						{
-							if (Visitor == NULL || Visitor(Ref) == true)
+							if (!Visitor || Visitor(Ref) == true)
 								OutList.push_back(Ref);
 						}
 					}

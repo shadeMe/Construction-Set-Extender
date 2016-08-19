@@ -95,10 +95,13 @@ namespace cse
 			extern INISetting					kShowSelectionControls;
 			extern INISetting					kShowToolbar;
 			extern INISetting					kShowNotifications;
+			extern INISetting					kShowActiveRefCollections;
 
 			extern INISetting					kColorSelectionStats;
 			extern INISetting					kColorRAMUsage;
 			extern INISetting					kWindowBGAlpha;
+			extern INISetting					kFontSize;
+			extern INISetting					kFontFace;
 		}
 
 		namespace renderWindowFlyCamera

@@ -69,7 +69,10 @@ namespace cse
 			Depot.push_back(&renderWindowOSD::kShowSelectionControls);
 			Depot.push_back(&renderWindowOSD::kShowToolbar);
 			Depot.push_back(&renderWindowOSD::kShowNotifications);
+			Depot.push_back(&renderWindowOSD::kShowActiveRefCollections);
 			Depot.push_back(&renderWindowOSD::kWindowBGAlpha);
+			Depot.push_back(&renderWindowOSD::kFontSize);
+			Depot.push_back(&renderWindowOSD::kFontFace);
 
 
 			Depot.push_back(&renderWindowFlyCamera::kMovementSpeed);
@@ -185,10 +188,14 @@ namespace cse
 			INISetting		kShowSelectionControls("ShowSelectionControls", RWOSD_INISECTION, "Displays the selection edit controls", (SInt32)1);
 			INISetting		kShowToolbar("ShowToolbar", RWOSD_INISECTION, "Displays the toolbar", (SInt32)1);
 			INISetting		kShowNotifications("ShowNotifications", RWOSD_INISECTION, "Displays notifications", (SInt32)1);
+			INISetting		kShowActiveRefCollections("ShowActiveRefCollections", RWOSD_INISECTION, "Displays the reference collections list", (SInt32)1);
 
 			INISetting		kColorSelectionStats("ColorSelectionStats", RWOSD_INISECTION, "Foreground color", "189,237,99");
 			INISetting		kColorRAMUsage("ColorRAMUsage", RWOSD_INISECTION, "Foreground color", "230,230,0");
 			INISetting		kWindowBGAlpha("WindowBGAlpha", RWOSD_INISECTION, "Window background alpha (0-1)", (float)0.7f);
+
+			INISetting		kFontSize("FontSize", RWOSD_INISECTION, "Font size", (SInt32)16);
+			INISetting		kFontFace("FontFace", RWOSD_INISECTION, "Font face. Must correspond to a TTF font file in the Data\\Font directory", "OpenSans-Bold.ttf");
 		}
 
 		namespace renderWindowFlyCamera

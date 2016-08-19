@@ -82,6 +82,7 @@ namespace cse
 			// Setup render state: fixed-pipeline, alpha-blending, no face culling, no depth testing
 			Impl->D3DDevice->SetPixelShader(NULL);
 			Impl->D3DDevice->SetVertexShader(NULL);
+			Impl->D3DDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID);
 			Impl->D3DDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 			Impl->D3DDevice->SetRenderState(D3DRS_LIGHTING, false);
 			Impl->D3DDevice->SetRenderState(D3DRS_ZENABLE, false);
@@ -156,9 +157,9 @@ namespace cse
 			config.OversampleV = 8;
 
 			std::string FontPath(BGSEEWORKSPACE->GetDefaultWorkspace());
-			FontPath += "Data\\Fonts\\DroidSans.ttf";
-			if (_FILEFINDER->FindFile("Fonts\\DroidSans.ttf") == FileFinder::kFileStatus_Unpacked)
-				io.Fonts->AddFontFromFileTTF(FontPath.c_str(), 15, &config);
+			FontPath.append("Data\\Fonts\\").append(settings::renderWindowOSD::kFontFace().s);
+			if (GetFileAttributes(FontPath.c_str()) != INVALID_FILE_ATTRIBUTES)
+				io.Fonts->AddFontFromFileTTF(FontPath.c_str(), settings::renderWindowOSD::kFontSize().i, &config);
 
 			unsigned char* pixels;
 			int width, height, bytes_per_pixel;
@@ -272,8 +273,21 @@ namespace cse
 			io.KeyAlt = (GetKeyState(VK_MENU) & 0x8000) != 0;
 			io.KeySuper = false;
 
-			// set up colors
+			// set up window styles and colors
 			ImGuiStyle& style = ImGui::GetStyle();
+
+			style.WindowPadding = ImVec2(10, 10);
+			style.WindowRounding = 5.0f;
+			style.FramePadding = ImVec2(5, 3);
+			style.FrameRounding = 4.0f;
+			style.ItemSpacing = ImVec2(12, 8);
+			style.ItemInnerSpacing = ImVec2(8, 6);
+			style.IndentSpacing = 25.0f;
+			style.ScrollbarSize = 15.0f;
+			style.ScrollbarRounding = 9.0f;
+		//	style.GrabMinSize = 5.0f;
+			style.GrabRounding = 3.0f;
+
 			style.Colors[ImGuiCol_WindowBg] = ImVec4(0.00f, 0.00f, 0.00f, settings::renderWindowOSD::kWindowBGAlpha().f);
 			style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.61f);
 			style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.90f, 0.80f, 0.80f, 0.49f);
@@ -614,6 +628,7 @@ namespace cse
 			AttachLayer(&NotificationOSDLayer::Instance);
 			AttachLayer(&ToolbarOSDLayer::Instance);
 			AttachLayer(&SelectionControlsOSDLayer::Instance);
+			AttachLayer(&ActiveRefCollectionsOSDLayer::Instance);
 #ifndef NDEBUG
 			AttachLayer(&DebugOSDLayer::Instance);
 #endif
@@ -632,6 +647,7 @@ namespace cse
 			DetachLayer(&NotificationOSDLayer::Instance);
 			DetachLayer(&ToolbarOSDLayer::Instance);
 			DetachLayer(&SelectionControlsOSDLayer::Instance);
+			DetachLayer(&ActiveRefCollectionsOSDLayer::Instance);
 #ifndef NDEBUG
 			DetachLayer(&DebugOSDLayer::Instance);
 #endif
@@ -711,11 +727,10 @@ namespace cse
 
 			ImGui::SetNextWindowPos(ImVec2(10, 10));
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 6));
-			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.85f);
 			if (!ImGui::Begin("Default Info Overlay", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing))
 			{
 				ImGui::End();
-				ImGui::PopStyleVar(2);
+				ImGui::PopStyleVar();
 				return;
 			}
 
@@ -817,7 +832,7 @@ namespace cse
 											   ((Selection->formFlags & TESForm::kFormFlags_VisibleWhenDistant) ? ("V") : ("-")),
 											   (Selection->GetInvisible() ? ("I") : ("-")),
 											   (Selection->GetChildrenInvisible() ? ("CI") : ("-")),
-											   (Selection->GetFrozen() ? ("F") : ("-"))); ImGui::NextColumn();
+											   (Selection->IsFrozen() ? ("F") : ("-"))); ImGui::NextColumn();
 
 							BSExtraData* xData = Selection->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
 							char xBuffer[0x50] = { 0 };
@@ -829,6 +844,8 @@ namespace cse
 									((xParent->parent->editorID.Size()) ? (xParent->parent->editorID.c_str()) : ("")),
 												   xParent->parent->formID,
 												   (xParent->oppositeState ? "[X]" : "")); ImGui::NextColumn();
+								if (ImGui::IsItemClicked())
+									_TES->LoadCellIntoViewPort(nullptr, xParent->parent);
 							}
 
 							char cBuffer[0x50] = { 0 };
@@ -878,7 +895,7 @@ namespace cse
 			ImGui::Columns(1);
 
 			ImGui::End();
-			ImGui::PopStyleVar(2);
+			ImGui::PopStyleVar();
 		}
 
 		bool DefaultOverlayOSDLayer::NeedsBackgroundUpdate()
@@ -1023,7 +1040,7 @@ namespace cse
 			if (HasNotifications() == false)
 				return;
 
-			ImGui::SetNextWindowPos(ImVec2(10, *TESRenderWindow::ScreeHeight - 100));
+			ImGui::SetNextWindowPos(ImVec2(10, *TESRenderWindow::ScreeHeight - 150));
 			if (!ImGui::Begin("Notification Overlay", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize |
 							  ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoInputs))
 			{
@@ -1103,20 +1120,24 @@ namespace cse
 
 		void ToolbarOSDLayer::RenderBottomToolbar()
 		{
+			static const int kExpandedHeight = 70, kRegularHeight = 40;
+
 			int XSize = *TESRenderWindow::ScreeWidth;
-			int YPos = *TESRenderWindow::ScreeHeight - (BottomExpanded ? 65 : 35);
-			int YSize = BottomExpanded ? 65 : 35;
+			int YPos = *TESRenderWindow::ScreeHeight - (BottomExpanded ? kExpandedHeight : kRegularHeight);
+			int YSize = BottomExpanded ? kExpandedHeight : kRegularHeight;
 
 			ImGui::SetNextWindowPos(ImVec2(0, YPos));
 			ImGui::SetNextWindowSize(ImVec2(XSize, YSize));
 
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(7, 7));
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(7, 7));
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
 			if (!ImGui::Begin("Bottom Toolbar", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus |
-							  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing))
+							  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoScrollbar))
 			{
 				ImGui::End();
-				ImGui::PopStyleVar(2);
+				ImGui::PopStyleVar(4);
 				return;
 			}
 
@@ -1253,7 +1274,7 @@ namespace cse
 			}
 
 			ImGui::End();
-			ImGui::PopStyleVar(2);
+			ImGui::PopStyleVar(4);
 		}
 
 		ToolbarOSDLayer::ToolbarOSDLayer():
@@ -1449,6 +1470,8 @@ namespace cse
 			;//
 		}
 
+#define CURRENT_COLWIDTH_MINUS_10	ImGui::GetColumnWidth() - 10
+
 		void SelectionControlsOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
 			if (_RENDERSEL->selectionCount == 0 || _RENDERSEL->selectionList == NULL || _RENDERSEL->selectionList->Data == NULL)
@@ -1497,16 +1520,17 @@ namespace cse
 
 				ImGui::Columns(2, "Ref Info", false);
 				{
-					ImGui::Text("%s(%08X) [%s]", ThisRef->editorID.Size() ? ThisRef->editorID.c_str() : "",
+					ImGui::TextWrapped("%s(%08X) [%s]", ThisRef->editorID.Size() ? ThisRef->editorID.c_str() : "",
 								ThisRef->formID,
-								TESForm::GetFormTypeIDLongName(ThisRef->baseForm->formType)); ImGui::NextColumn();
+								TESForm::GetFormTypeIDLongName(ThisRef->baseForm->formType));
+					ImGui::NextColumn();
 
-					ImGui::SetColumnOffset(-1, ImGui::GetWindowWidth() - 185);
+					float ColWidth = ImGui::GetColumnWidth() - 20;
 					ImGui::PushStyleColor(ImGuiCol_Button, ImColor::HSV(0, 0.6f, 0.6f));
 					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImColor::HSV(0, 0.7f, 0.7f));
 					ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImColor::HSV(0, 0.8f, 0.8f));
 					{
-						if (ImGui::Button("Reference##edit_ref"))
+						if (ImGui::Button("Reference##edit_ref", ImVec2(ColWidth / 2 - 10, 20)))
 						{
 							EditReference(ThisRef);
 
@@ -1515,14 +1539,14 @@ namespace cse
 							ImGui::PopStyleVar(2);
 							return;
 						}
-						ImGui::SameLine(0, 5);
+						ImGui::SameLine();
 
-						if (ImGui::Button("Base Form##edit_base"))
+						if (ImGui::Button("Base Form##edit_base", ImVec2(ColWidth / 2 - 10, 20)))
 							EditBaseForm(ThisRef);
 					}
 					ImGui::PopStyleColor(3);
 
-					ImGui::SameLine(0, 8); ImGui::TextDisabled("(?)   ");
+					ImGui::SameLine(); ImGui::TextDisabled("(?)  ");
 					if (ImGui::IsItemHovered())
 						ImGui::SetTooltip("Click and drag the buttons to transform the selection.\nCTRL + click to directly edit the values.\n\nThe \"Reference\" and \"Base Form\" buttons open their corresponding edit dialogs.");
 
@@ -1558,17 +1582,17 @@ namespace cse
 				float Width = 0;
 				ImGui::Columns(4, "Position + Rotation", false);
 				{
-					ImGui::Button("X##multi_pos_x", ImVec2(ImGui::GetColumnWidth(), 20)); MoveSelection(true, false, false); DrawDragTrail(); ImGui::NextColumn();
-					ImGui::Button("Y##multi_pos_y", ImVec2(ImGui::GetColumnWidth(), 20)); MoveSelection(false, true, false); DrawDragTrail(); ImGui::NextColumn();
-					ImGui::Button("Z##multi_pos_z", ImVec2(ImGui::GetColumnWidth(), 20)); MoveSelection(false, false, true); DrawDragTrail(); ImGui::NextColumn();
+					ImGui::Button("X##multi_pos_x", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)); MoveSelection(true, false, false); DrawDragTrail(); ImGui::NextColumn();
+					ImGui::Button("Y##multi_pos_y", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)); MoveSelection(false, true, false); DrawDragTrail(); ImGui::NextColumn();
+					ImGui::Button("Z##multi_pos_z", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)); MoveSelection(false, false, true); DrawDragTrail(); ImGui::NextColumn();
 
 					ImGui::Text("Position"); ImGui::NextColumn();
 
-					ImGui::Button("X##multi_rot_x", ImVec2(ImGui::GetColumnWidth(), 20)); RotateSelection(LocalTransformation, true, false, false);
+					ImGui::Button("X##multi_rot_x", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)); RotateSelection(LocalTransformation, true, false, false);
 					DrawDragTrail(); ImGui::NextColumn();
-					ImGui::Button("Y##multi_rot_y", ImVec2(ImGui::GetColumnWidth(), 20)); RotateSelection(LocalTransformation, false, true, false);
+					ImGui::Button("Y##multi_rot_y", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)); RotateSelection(LocalTransformation, false, true, false);
 					DrawDragTrail(); ImGui::NextColumn();
-					ImGui::Button("Z##multi_rot_z", ImVec2(ImGui::GetColumnWidth(), 20)); RotateSelection(LocalTransformation, false, false, true);
+					ImGui::Button("Z##multi_rot_z", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)); RotateSelection(LocalTransformation, false, false, true);
 					DrawDragTrail(); ImGui::NextColumn();
 
 					Width = ImGui::GetColumnOffset();
@@ -1582,10 +1606,10 @@ namespace cse
 				ImGui::Columns(3, "Grouping", false);
 				{
 					ImGui::Text("Grouping:"); ImGui::NextColumn();
-					if (ImGui::Button("Group##group_sel", ImVec2(ImGui::GetColumnWidth(), 20)))
+					if (ImGui::Button("Group##group_sel", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)))
 						_RENDERWIN_MGR.InvokeContextMenuTool(IDC_RENDERWINDOWCONTEXT_GROUP);
 					ImGui::NextColumn();
-					if (ImGui::Button("Ungroup##ungroup_sel", ImVec2(ImGui::GetColumnWidth(), 20)))
+					if (ImGui::Button("Ungroup##ungroup_sel", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)))
 						_RENDERWIN_MGR.InvokeContextMenuTool(IDC_RENDERWINDOWCONTEXT_UNGROUP);
 					ImGui::NextColumn();
 				}
@@ -1597,10 +1621,10 @@ namespace cse
 				ImGui::Text("Alignment: "); ImGui::NextColumn();
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Aligns the selection to the position/rotation of another reference");
-				if (ImGui::Button("Postion##align_pos", ImVec2(ImGui::GetColumnWidth(), 20)))
+				if (ImGui::Button("Postion##align_pos", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)))
 					AlignSelection(true, false);
 				ImGui::NextColumn();
-				if (ImGui::Button("Rotation##align_rot", ImVec2(ImGui::GetColumnWidth(), 20)))
+				if (ImGui::Button("Rotation##align_rot", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)))
 					AlignSelection(false, true);
 				ImGui::NextColumn();
 
@@ -1708,7 +1732,7 @@ namespace cse
 
 						if (xParent)
 							ImGui::Text("Opposite: %s   ", (xParent->oppositeState ? "Yes" : "No"));
-						else if (ImGui::Button("Set", ImVec2(ImGui::GetColumnWidth(), 20)))
+						else if (ImGui::Button("Set", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)))
 						{
 							TESObjectREFR* NewParent = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, xParent ? xParent->parent : NULL, true);
 							if (NewParent)
@@ -1716,7 +1740,7 @@ namespace cse
 						}
 						ImGui::NextColumn();
 
-						if (xParent && ImGui::Button("Change", ImVec2(ImGui::GetColumnWidth(), 20)))
+						if (xParent && ImGui::Button("Change", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)))
 						{
 							TESObjectREFR* NewParent = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, xParent ? xParent->parent : NULL, true);
 							if (NewParent)
@@ -1726,14 +1750,14 @@ namespace cse
 
 						if (xParent)
 						{
-							if (ImGui::Button("Clear", ImVec2(ImGui::GetColumnWidth(), 20)))
+							if (ImGui::Button("Clear", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)))
 								ThisRef->extraData.ModExtraEnableStateParent(NULL), Modified = true;
 						}
 						ImGui::NextColumn();
 
 						if (xParent)
 						{
-							if (ImGui::Button("Toggle Opposite", ImVec2(ImGui::GetColumnWidth(), 20)))
+							if (ImGui::Button("Toggle Opposite", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)))
 								ThisRef->SetExtraEnableStateParentOppositeState(xParent->oppositeState == 0), Modified = true;
 						}
 						ImGui::NextColumn();
@@ -1803,19 +1827,19 @@ namespace cse
 						bool ToggleOpposite = false;
 						bool NewOpposite = false;
 
-						if (ImGui::Button(Buffer, ImVec2(ImGui::GetColumnWidth(), 20)))
+						if (ImGui::Button(Buffer, ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)))
 							NewParent = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, SameParent ? ParentRefMark : NULL, true);
 						ImGui::NextColumn();
 
-						if (ImGui::Button("Clear", ImVec2(ImGui::GetColumnWidth(), 20)))
+						if (ImGui::Button("Clear", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)))
 							ClearParent = true;
 						ImGui::NextColumn();
 
-						if (ImGui::Button("Set Opposite", ImVec2(ImGui::GetColumnWidth(), 20)))
+						if (ImGui::Button("Set Opposite", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)))
 							ToggleOpposite = NewOpposite = true;
 						ImGui::NextColumn();
 
-						if (ImGui::Button("Clear Opposite", ImVec2(ImGui::GetColumnWidth(), 20)))
+						if (ImGui::Button("Clear Opposite", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)))
 							ToggleOpposite = true;
 						ImGui::NextColumn();
 
@@ -1914,8 +1938,298 @@ namespace cse
 		void ModalWindowProviderOSDLayer::ShowModal(const char* Name, ModalRenderDelegateT Delegate, ImGuiWindowFlags_ Flags)
 		{
 			SME_ASSERT(Name && Delegate);
+
+			// flag the current open modal, if any, as closed
+			if (OpenModals.size())
+			{
+				ModalData& Top = OpenModals.top();
+				if (Top.Open)
+					Top.Open = false;
+			}
+
 			ModalData NewModal(Name, Delegate, Flags);
 			OpenModals.push(NewModal);
 		}
+
+		ActiveRefCollectionsOSDLayer	ActiveRefCollectionsOSDLayer::Instance;
+
+		void ActiveRefCollectionsOSDLayer::RenderRefTableContents(int Tab)
+		{
+			const TESObjectREFRArrayT& ActiveRefs = _RENDERWIN_MGR.GetActiveRefs();
+
+			for each (auto Itr in ActiveRefs)
+			{
+				std::string EditorID(GetRefEditorID(Itr));
+				UInt32 FormID = Itr->formID;
+				const char* Type = TESForm::GetFormTypeIDLongName(Itr->baseForm->formType);
+				char FilterBuffer[0x200] = { 0 };
+				char Label[0x10] = { 0 };
+
+				switch (Tab)
+				{
+				case kTab_Invisible:
+				case kTab_Frozen:
+					{
+						FORMAT_STR(FilterBuffer, "%s %08X %s", EditorID.c_str(), FormID, Type);
+						if (FilterHelper.PassFilter(FilterBuffer) == false)
+							return;
+
+						bool TruthCond = false;
+						UInt32 InvisibleReasons = 0;
+						if (Tab == kTab_Invisible)
+							TruthCond = ReferenceVisibilityValidator::ShouldBeInvisible(Itr, InvisibleReasons);
+						else
+							TruthCond = Itr->IsFrozen();
+
+						if (TruthCond)
+						{
+							FORMAT_STR(Label, "%08X-%d", FormID, Tab);
+							ImGui::PushID(Label);
+							{
+								if (ImGui::Selectable(EditorID.c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick) &&
+									ImGui::IsMouseDoubleClicked(0))
+								{
+									// TODO select ref?
+								}
+
+								if (ImGui::BeginPopupContextItem(Tab == kTab_Invisible ? "Invisible_Popup" : "Frozen_Popup"))
+								{
+									if (Tab == kTab_Invisible)
+									{
+										if (ImGui::Selectable("Toggle Invisibility"))
+											Itr->ToggleInvisiblity();
+										if (ImGui::Selectable("Toggle Children Invisibility"))
+											Itr->ToggleInvisiblity();
+									}
+									else
+									{
+										if (ImGui::Selectable("Thaw"))
+											Itr->SetFrozen(false);
+									}
+
+									ImGui::EndPopup();
+								}
+							}
+							ImGui::PopID();
+
+							ImGui::NextColumn();
+							char FormIDBuffer[0x10] = { 0 };
+							FORMAT_STR(FormIDBuffer, "%08X", FormID);
+							ImGui::Selectable(FormIDBuffer);
+							ImGui::NextColumn();
+							ImGui::Selectable(Type);
+							ImGui::NextColumn();
+
+							if (Tab == kTab_Invisible)
+							{
+								std::string FlagsBuffer;
+								if ((InvisibleReasons & ReferenceVisibilityValidator::kReason_InvisibleSelf))
+									FlagsBuffer.append("IS");
+
+								if ((InvisibleReasons & ReferenceVisibilityValidator::kReason_InvisibleChild))
+									FlagsBuffer.append(" IC");
+
+								if ((InvisibleReasons & ReferenceVisibilityValidator::kReason_InitiallyDisabledSelf))
+									FlagsBuffer.append(" DS");
+
+								if ((InvisibleReasons & ReferenceVisibilityValidator::kReason_InitiallyDisabledChild))
+									FlagsBuffer.append(" DC");
+
+								boost::trim(FlagsBuffer);
+								ImGui::Selectable(FlagsBuffer.c_str());
+								ImGui::NextColumn();
+							}
+						}
+
+					}
+
+					break;
+				case kTab_Groups:
+					{
+
+					}
+
+					break;
+				case kTab_Layers:
+					{
+
+					}
+
+					break;
+				}
+			}
+		}
+
+		void ActiveRefCollectionsOSDLayer::RenderTabContents(int Tab)
+		{
+			SME_ASSERT(Tab >= kTab_Invisible && Tab < kTab__MAX);
+
+			switch (Tab)
+			{
+			case kTab_Invisible:
+			case kTab_Frozen:
+				{
+					ImGui::Columns(2, "ref_table_header", false);
+					{
+						if (Tab == kTab_Invisible)
+						{
+							ImGui::TextWrapped("Invisible References (?):");
+							if (ImGui::IsItemHovered())
+								ImGui::SetTooltip("EditorIDs with an asterisk correspond to the reference's base form.");
+						}
+						else
+						{
+							ImGui::TextWrapped("Frozen References (?):");
+							if (ImGui::IsItemHovered())
+								ImGui::SetTooltip("Excluding references frozen with the \"Freeze Inactive Refs\" tool.\n\nEditorIDs with an asterisk correspond to the reference's base form.");
+						}
+
+						ImGui::NextColumn();
+
+						if (Tab == kTab_Invisible)
+						{
+							if (ImGui::Button("Reveal All", ImVec2(ImGui::GetColumnWidth() - 15, 20)))
+								_RENDERWIN_MGR.InvokeContextMenuTool(IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL);
+						}
+						else
+						{
+							if (ImGui::Button("Thaw All", ImVec2(ImGui::GetColumnWidth() - 15, 20)))
+								_RENDERWIN_MGR.InvokeContextMenuTool(IDC_RENDERWINDOWCONTEXT_THAWALLINCELL);
+						}
+
+						ImGui::NextColumn();
+					}
+					ImGui::Columns();
+
+					ImGui::Columns(Tab == kTab_Invisible ? 4 : 3, "ref_table_invisible/frozen");
+					{
+						ImGui::Separator();
+						ImGui::Text("EditorID"); ImGui::NextColumn();
+						ImGui::Text("FormID"); ImGui::NextColumn();
+						ImGui::Text("Type"); ImGui::NextColumn();
+
+						if (Tab == kTab_Invisible)
+						{
+							ImGui::Text("Reason (?)");
+							if (ImGui::IsItemHovered())
+								ImGui::SetTooltip("DS - Initially Disabled\nDC - Child of Initially Disabled Parent\nIS - Invisible\nIC - Child of Parent with \"Invisible Children\" Flag");
+							ImGui::NextColumn();
+						}
+
+						ImGui::Separator();
+						RenderRefTableContents(Tab);
+					}
+					ImGui::Columns();
+					ImGui::Separator();
+				}
+
+				break;
+			case kTab_Groups:
+				{
+
+				}
+
+				break;
+			case kTab_Layers:
+				{
+
+				}
+
+				break;
+			}
+		}
+
+		std::string ActiveRefCollectionsOSDLayer::GetRefEditorID(TESObjectREFR* Ref)
+		{
+			SME_ASSERT(Ref && Ref->baseForm);
+
+			const char* EditorID = Ref->GetEditorID();
+			if (EditorID == NULL)
+			{
+				EditorID = Ref->baseForm->GetEditorID();
+
+				if (EditorID == NULL)
+					return "<no-EID>";
+				else
+					return std::string(EditorID).append("*");
+			}
+			else
+				return EditorID;
+		}
+
+		ActiveRefCollectionsOSDLayer::ActiveRefCollectionsOSDLayer() :
+			IRenderWindowOSDLayer(settings::renderWindowOSD::kShowActiveRefCollections, kPriority_ActiveRefCollections),
+			CurrentTab(kTab_Invisible),
+			FilterHelper()
+		{
+			;//
+		}
+
+		ActiveRefCollectionsOSDLayer::~ActiveRefCollectionsOSDLayer()
+		{
+			;//
+		}
+
+		void ActiveRefCollectionsOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
+		{
+			ImGui::SetNextWindowPos(ImVec2(10, 300), ImGuiSetCond_FirstUseEver);
+			if (!ImGui::Begin("Active Reference Collections", NULL, ImGuiWindowFlags_NoFocusOnAppearing))
+			{
+				ImGui::End();
+				return;
+			}
+
+			ImGui::Columns(4, "Tab List", false);
+			{
+				static const ImColor kInactiveTabColor(ImColor::HSV(0, 0.2f, 0.2f));
+				static const ImColor kActiveTabColor(ImColor::HSV(0, 0.6f, 0.6f));
+
+				for (int i = kTab_Invisible; i < kTab__MAX; i++)
+				{
+					if (i != CurrentTab)
+						ImGui::PushStyleColor(ImGuiCol_Button, kInactiveTabColor);
+					else
+						ImGui::PushStyleColor(ImGuiCol_Button, kActiveTabColor);
+					{
+						const char* TabTitle = NULL;
+						switch (i)
+						{
+						case kTab_Invisible:
+							TabTitle = "Invisible##tab_invisible";
+							break;
+						case kTab_Frozen:
+							TabTitle = "Frozen##tab_frozen";
+							break;
+						case kTab_Groups:
+							TabTitle = "Groups##tab_groups";
+							break;
+						case kTab_Layers:
+							TabTitle = "Layers##tab_layers";
+							break;
+						}
+
+						if (ImGui::Button(TabTitle, ImVec2(ImGui::GetColumnWidth() - 15, 0)))
+							CurrentTab = i;
+
+						ImGui::NextColumn();
+					}
+					ImGui::PopStyleColor();
+				}
+
+			}
+			ImGui::Columns(1);
+			ImGui::Separator();
+			FilterHelper.Draw();
+			ImGui::Separator();
+			RenderTabContents(CurrentTab);
+
+			ImGui::End();
+		}
+
+		bool ActiveRefCollectionsOSDLayer::NeedsBackgroundUpdate()
+		{
+			return false;
+		}
+
 	}
 }

@@ -90,7 +90,7 @@ namespace cse
 			VertexColor->flags |= NiVertexColorProperty::kSrcMode_Emissive;
 
 			Wireframe = (NiWireframeProperty*)TESRender::CreateProperty(NiWireframeProperty::kType);
-			Wireframe->m_bWireframe = 0;
+			Wireframe->m_bWireframe = 1;
 		}
 
 		ReferenceParentChildIndicator::~ReferenceParentChildIndicator()
@@ -196,7 +196,8 @@ namespace cse
 		{
 			for each (auto Itr in Data.LoadedRefs)
 			{
-				if (ReferenceVisibilityValidator::ShouldBeInvisible(Itr))
+				UInt32 Reason = 0;
+				if (Itr->IsTemporary() == false && ReferenceVisibilityValidator::ShouldBeInvisible(Itr, Reason))
 				{
 					if (ReferenceVisibilityValidator::IsCulled(Itr) == false)
 					{
@@ -283,29 +284,35 @@ namespace cse
 
 		bool ReferenceVisibilityValidator::ShouldBeInvisible(TESObjectREFR* Ref)
 		{
-			bool Invisible = false;
-			if (Ref->IsTemporary() == false)
+			UInt32 Throwaway = 0;
+			return ShouldBeInvisible(Ref, Throwaway);
+		}
+
+		bool ReferenceVisibilityValidator::ShouldBeInvisible(TESObjectREFR* Ref, UInt32& OutReasonFlags)
+		{
+			OutReasonFlags = 0;
+
+			if (_RENDERWIN_XSTATE.ShowInitiallyDisabledRefs == false && Ref->GetDisabled())
+				OutReasonFlags |= kReason_InitiallyDisabledSelf;
+
+			if (Ref->GetInvisible())
+				OutReasonFlags |= kReason_InvisibleSelf;
+
+			BSExtraData* xData = Ref->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
+			if (xData)
 			{
-				if (_RENDERWIN_XSTATE.ShowInitiallyDisabledRefs == false && Ref->GetDisabled())
-					Invisible = true;
+				ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
+				if (xParent->parent->GetChildrenInvisible())
+					OutReasonFlags |= kReason_InvisibleChild;
 
-				BSExtraData* xData = Ref->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
-				if (xData)
-				{
-					ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
-					if (xParent->parent->GetChildrenInvisible() ||
-						(xParent->parent->GetDisabled() &&
-						 _RENDERWIN_XSTATE.ShowInitiallyDisabledRefChildren == false))
-					{
-						Invisible = true;
-					}
-				}
-
-				if (Ref->GetInvisible())
-					Invisible = true;
+				if (xParent->parent->GetDisabled() && _RENDERWIN_XSTATE.ShowInitiallyDisabledRefChildren == false)
+					OutReasonFlags |= kReason_InitiallyDisabledChild;
 			}
 
-			return Invisible;
+			if (OutReasonFlags)
+				return true;
+			else
+				return false;
 		}
 
 		bool ReferenceVisibilityValidator::IsCulled(TESObjectREFR* Ref)
@@ -342,7 +349,8 @@ namespace cse
 			}
 
 			bool RegularHandling = false;
-			if (IsSelectable(Ref, RegularHandling))
+			UInt32 Throwaway = 0;
+			if (IsSelectable(Ref, RegularHandling, Throwaway))
 			{
 				if (RegularHandling || _RENDERWIN_XSTATE.PaintingSelection)
 					_RENDERSEL->AddToSelection(Ref, AddSelectionBox);
@@ -360,7 +368,7 @@ namespace cse
 						TESObjectREFR* Selection = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
 						SME_ASSERT(Selection);
 
-						if (Selection->GetFrozen() || (Selection->IsActive() == false && _RENDERWIN_XSTATE.FreezeInactiveRefs))
+						if (Selection->IsFrozen() || (Selection->IsActive() == false && _RENDERWIN_XSTATE.FreezeInactiveRefs))
 							FrozenRefs.push_back(Itr->Data);
 					}
 
@@ -376,28 +384,51 @@ namespace cse
 			_RENDERSEL->RemoveFromSelection(Ref, RemoveSelectionBox);
 		}
 
-		bool RenderWindowSelectionManager::IsSelectable(TESObjectREFR* Ref, bool& OutRegularHandling) const
+		bool RenderWindowSelectionManager::IsSelectable(TESObjectREFR* Ref, bool& OutRegularHandling, UInt32& OutReasonFlags) const
 		{
+			OutReasonFlags = 0;
+			OutRegularHandling = false;
+
+			bool Result = true;
 			if (GetAsyncKeyState(VK_MENU) && _RENDERWIN_XSTATE.PaintingSelection == false)
 			{
 				// alt key is down
 				OutRegularHandling = true;
-				return true;
+				OutReasonFlags |= kReason_Override;
 			}
-			else if (ReferenceVisibilityValidator::ShouldBeInvisible(Ref) || ReferenceVisibilityValidator::IsCulled(Ref))
-				return false;
-			else if (Ref->GetFrozen())
-				return false;
-			else if (Ref->IsActive() == false && _RENDERWIN_XSTATE.FreezeInactiveRefs)
-				return false;
-			else
-				return true;
+
+			if (ReferenceVisibilityValidator::ShouldBeInvisible(Ref) || ReferenceVisibilityValidator::IsCulled(Ref))
+			{
+				OutReasonFlags |= kReason_InvalidVisibility;
+				Result = false;
+			}
+
+			if (Ref->IsFrozen())
+			{
+				OutReasonFlags |= kReason_FrozenSelf;
+				Result = false;
+			}
+
+			if (Ref->IsActive() == false && _RENDERWIN_XSTATE.FreezeInactiveRefs)
+			{
+				OutReasonFlags |= kReason_FrozenInactive;
+				Result = false;
+			}
+
+			return Result;
 		}
 
 		bool RenderWindowSelectionManager::IsSelectable(TESObjectREFR* Ref) const
 		{
 			bool Throwaway = false;
-			return IsSelectable(Ref, Throwaway);
+			UInt32 ThrowawayEx = 0;
+			return IsSelectable(Ref, Throwaway, ThrowawayEx);
+		}
+
+		bool RenderWindowSelectionManager::IsSelectable(TESObjectREFR* Ref, UInt32& OutReasonFlags) const
+		{
+			bool Throwaway = false;
+			return IsSelectable(Ref, Throwaway, OutReasonFlags);
 		}
 
 		RenderWindowFlyCameraOperator::RenderWindowFlyCameraOperator(HWND ParentWindow, bgsee::ResourceTemplateT TemplateID) :
@@ -675,8 +706,7 @@ namespace cse
 									else
 									{
 										FORMAT_STR(NewItemText, "Save Exterior Cell %i,%i Snapshot",
-											(*TESRenderWindow::ActiveCell)->cellData.coords->x,
-												   (*TESRenderWindow::ActiveCell)->cellData.coords->y);
+											(*TESRenderWindow::ActiveCell)->cellData.coords->x, (*TESRenderWindow::ActiveCell)->cellData.coords->y);
 									}
 
 									break;
@@ -702,6 +732,11 @@ namespace cse
 									break;
 								case IDC_RENDERWINDOWCONTEXT_OSD_TOOLBARS:
 									if (settings::renderWindowOSD::kShowToolbar().i)
+										CheckItem = true;
+
+									break;
+								case IDC_RENDERWINDOWCONTEXT_OSD_ACTIVEREFERENCECOLLECTIONS:
+									if (settings::renderWindowOSD::kShowActiveRefCollections().i)
 										CheckItem = true;
 
 									break;
@@ -1001,7 +1036,7 @@ namespace cse
 
 								break;
 							case IDC_RENDERWINDOWCONTEXT_THAWALLINCELL:
-								Ref->SetFrozenState(false);
+								Ref->SetFrozen(false);
 
 								break;
 							}
@@ -1045,12 +1080,12 @@ namespace cse
 
 							break;
 						case IDC_RENDERWINDOWCONTEXT_FREEZE:
-							Ref->SetFrozenState(true);
+							Ref->SetFrozen(true);
 							achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefFreezing);
 
 							break;
 						case IDC_RENDERWINDOWCONTEXT_THAW:
-							Ref->SetFrozenState(false);
+							Ref->SetFrozen(false);
 							achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefFreezing);
 
 							break;
@@ -1159,6 +1194,13 @@ namespace cse
 				case IDC_RENDERWINDOWCONTEXT_OSD_TOOLBARS:
 					{
 						settings::renderWindowOSD::kShowToolbar.ToggleData();
+						Return = true;
+					}
+
+					break;
+				case IDC_RENDERWINDOWCONTEXT_OSD_ACTIVEREFERENCECOLLECTIONS:
+					{
+						settings::renderWindowOSD::kShowActiveRefCollections.ToggleData();
 						Return = true;
 					}
 
@@ -1278,12 +1320,19 @@ namespace cse
 							TESObjectREFR* MouseRef = TESRender::PickRefAtCoords(_RENDERWIN_XSTATE.CurrentMouseCoord.x, _RENDERWIN_XSTATE.CurrentMouseCoord.y);
 							if (MouseRef)
 							{
-								if (MouseRef->GetFrozen() || (MouseRef->IsActive() == false && _RENDERWIN_XSTATE.FreezeInactiveRefs))
+								UInt32 SelectionReason = 0;
+								if (_RENDERWIN_MGR.SelectionManager->IsSelectable(MouseRef, SelectionReason))
+								{
+									if (_RENDERSEL->HasObject(MouseRef))
+										Icon = *TESRenderWindow::CursorMove;
+									else
+										Icon = *TESRenderWindow::CursorSelect;
+								}
+								else if ((SelectionReason & RenderWindowSelectionManager::kReason_FrozenInactive) ||
+									(SelectionReason & RenderWindowSelectionManager::kReason_FrozenSelf))
+								{
 									Icon = LoadCursor(NULL, IDC_NO);
-								else if (_RENDERSEL->HasObject(MouseRef))
-									Icon = *TESRenderWindow::CursorMove;
-								else
-									Icon = *TESRenderWindow::CursorSelect;
+								}
 							}
 						}
 
@@ -1432,7 +1481,7 @@ namespace cse
 				case 0x43:		// C
 					{
 						int SwitchEnabled = settings::renderer::kSwitchCAndY.GetData().i;
-						if (SwitchEnabled)
+						if (SwitchEnabled && GetAsyncKeyState(VK_CONTROL) == FALSE)
 						{
 							BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, 0x59, lParam);
 							Return = true;
@@ -1443,7 +1492,7 @@ namespace cse
 				case 0x59:		// Y
 					{
 						int SwitchEnabled = settings::renderer::kSwitchCAndY.GetData().i;
-						if (SwitchEnabled)
+						if (SwitchEnabled && GetAsyncKeyState(VK_CONTROL) == FALSE)
 						{
 							BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, 0x43, lParam);
 							Return = true;
@@ -1490,7 +1539,7 @@ namespace cse
 					else
 					{
 						int SwitchEnabled = settings::renderer::kSwitchCAndY.GetData().i;
-						if (SwitchEnabled)
+						if (SwitchEnabled && GetAsyncKeyState(VK_CONTROL) == FALSE)
 						{
 							BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, 0x43, lParam);
 							Return = true;
@@ -1501,7 +1550,7 @@ namespace cse
 				case 0x43:		// C
 					{
 						int SwitchEnabled = settings::renderer::kSwitchCAndY.GetData().i;
-						if (SwitchEnabled)
+						if (SwitchEnabled && GetAsyncKeyState(VK_CONTROL) == FALSE)
 						{
 							BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, 0x59, lParam);
 							Return = true;
@@ -1859,7 +1908,12 @@ namespace cse
 
 		void RenderWindowManager::CacheActiveRefs()
 		{
-			TESRenderWindow::GetActiveCellObjects(ActiveRefCache);
+			TESRenderWindow::GetActiveCellObjects(ActiveRefCache, [](TESObjectREFR* Ref)->bool {
+				if (Ref->IsDeleted())
+					return false;
+				else
+					return true;
+			});
 		}
 
 		bool RenderWindowManager::RenderModalNewRefGroup(RenderWindowOSD* OSD, ImGuiDX9* GUI)
@@ -1949,9 +2003,6 @@ namespace cse
 
 		void Initialize()
 		{
-
-
-
 			bool ComponentInitialized = _RENDERWIN_MGR.InitializeOSD();
 			SME_ASSERT(ComponentInitialized);
 
@@ -1962,9 +2013,5 @@ namespace cse
 		{
 			_RENDERWIN_MGR.Deinitialize();
 		}
-
-
-
-
 	}
 }
