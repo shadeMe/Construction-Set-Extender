@@ -163,7 +163,7 @@ namespace cse
 			if (GetCosaveDirectory(_DATAHANDLER->activeFile, CosavePath))
 			{
 				SME::MiscGunk::ScopedSetter<bool> Sentry(InvokingHandlers, true);
-				for each (auto Itr in Handlers)
+				for (auto Itr : Handlers)
 					Itr->HandleLoad(_DATAHANDLER->activeFile->fileName, CosavePath.c_str());
 			}
 		}
@@ -180,7 +180,7 @@ namespace cse
 			if (GetCosaveDirectory(_DATAHANDLER->activeFile, CosavePath))
 			{
 				SME::MiscGunk::ScopedSetter<bool> Sentry(InvokingHandlers, true);
-				for each (auto Itr in Handlers)
+				for (auto Itr : Handlers)
 					Itr->HandleSave(_DATAHANDLER->activeFile->fileName, CosavePath.c_str());
 			}
 		}
@@ -196,7 +196,7 @@ namespace cse
 			if (GetCosaveDirectory(_DATAHANDLER->activeFile, CosavePath))
 			{
 				SME::MiscGunk::ScopedSetter<bool> Sentry(InvokingHandlers, true);
-				for each (auto Itr in Handlers)
+				for (auto Itr : Handlers)
 					Itr->HandleShutdown(_DATAHANDLER->activeFile->fileName, CosavePath.c_str());
 			}
 		}

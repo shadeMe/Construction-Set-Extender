@@ -392,7 +392,7 @@ namespace cse
 
 		FilterableFormListManager::~FilterableFormListManager()
 		{
-			for each (auto Itr in ActiveFilters)
+			for (auto Itr : ActiveFilters)
 				delete Itr;
 
 			ActiveFilters.clear();
@@ -449,7 +449,7 @@ namespace cse
 
 		FilterableFormListManager::FilterableWindowData* FilterableFormListManager::Lookup(HWND FilterEdit)
 		{
-			for each (auto Itr in ActiveFilters)
+			for (auto Itr : ActiveFilters)
 			{
 				if (*Itr == FilterEdit)
 					return Itr;

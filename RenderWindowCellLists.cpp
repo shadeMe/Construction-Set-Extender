@@ -160,7 +160,7 @@ namespace cse
 					ImGui::Separator();
 
 					TESObjectCELL* ToRemove = NULL;
-					for each (auto Itr in Parent->Bookmarks)
+					for (auto Itr : Parent->Bookmarks)
 					{
 						CellListDialogResult Out;
 						AddCellToList(Itr, kList_Bookmark, Out);
@@ -201,7 +201,7 @@ namespace cse
 				ImGui::Separator();
 
 				TESObjectCELL* ToAdd = NULL;
-				for each (auto Itr in Parent->RecentlyVisited)
+				for (auto Itr : Parent->RecentlyVisited)
 				{
 					CellListDialogResult Out;
 					AddCellToList(Itr, kList_Recents, Out);
@@ -283,7 +283,7 @@ namespace cse
 
 				serialization::TESForm2Text Serializer;
 				std::string OutString;
-				for each (auto Itr in Bookmarks)
+				for (auto Itr : Bookmarks)
 				{
 					std::string Temp;
 					if (Serializer.Serialize(Itr, Temp))

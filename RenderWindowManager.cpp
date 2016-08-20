@@ -59,13 +59,13 @@ namespace cse
 			TESRender::AddToNiNode(SceneGraph, ExtraFittingsNode);
 			IRenderWindowSceneGraphModifier::RenderData Data(SceneGraph, ExtraFittingsNode);
 
-			for each (auto Itr in Modifiers)
+			for (auto Itr : Modifiers)
 				Itr->PreRender(Data);
 
 			TESRender::UpdateAVObject(ExtraFittingsNode);
 			cdeclCall<void>(0x00700240, Camera, SceneGraph, CullingProc, RenderTarget);
 
-			for each (auto Itr in Modifiers)
+			for (auto Itr : Modifiers)
 				Itr->PostRender(Data);
 
 			bool Freed = TESRender::RemoveFromNiNode(SceneGraph, ExtraFittingsNode);
@@ -111,8 +111,8 @@ namespace cse
 				TESObjectREFRArrayT CurrentRefs;
 				if (TESRenderWindow::GetActiveCellObjects(CurrentRefs, &EnableParentIndicatorVisitor))
 				{
-					std::vector<TESObjectREFR*> EnumeratedParents;
-					for each (auto Itr in CurrentRefs)
+					TESObjectREFRArrayT EnumeratedParents;
+					for (auto Itr : CurrentRefs)
 					{
 						NiNode* RefNode = Itr->GetNiNode();
 						if (RefNode)
@@ -194,7 +194,7 @@ namespace cse
 
 		void ReferenceVisibilityModifier::PreRender(RenderData& Data)
 		{
-			for each (auto Itr in Data.LoadedRefs)
+			for (auto Itr : Data.LoadedRefs)
 			{
 				UInt32 Reason = 0;
 				if (Itr->IsTemporary() == false && ReferenceVisibilityValidator::ShouldBeInvisible(Itr, Reason))
@@ -212,7 +212,7 @@ namespace cse
 		void ReferenceVisibilityModifier::PostRender(RenderData& Data)
 		{
 			// reset the culled state
-			for each (auto Itr in CulledRefBuffer)
+			for (auto Itr : CulledRefBuffer)
 				Itr->SetCulled(false);
 
 			CulledRefBuffer.clear();
@@ -1766,7 +1766,7 @@ namespace cse
 						BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, wParam, lParam);
 
 						// reset culled state
-						for each (auto Itr in Delinquents)
+						for (auto Itr : Delinquents)
 							Itr->SetCulled(false);
 					}
 

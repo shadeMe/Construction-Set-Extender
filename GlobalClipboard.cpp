@@ -157,7 +157,7 @@ namespace cse
 			if (ExpectedRefs)
 				Out = ObjectRefSerializer;
 
-			for each (auto Itr in Forms)
+			for (auto Itr : Forms)
 			{
 				TESForm* Wrapped = dynamic_cast<TESFormWrapper*>(Itr)->GetWrappedForm();
 				if ((Wrapped->IsReference() && ExpectedRefs == false) ||

@@ -54,7 +54,7 @@ namespace cse
 		{
 			EventSourceArrayT& Registry = GetRegistry();
 			bool HasActiveSinks = false;
-			for each (auto Itr in Registry)
+			for (auto Itr : Registry)
 			{
 				if (Itr->Sinks.size())
 				{

@@ -573,7 +573,7 @@ namespace cse
 		void RenderWindowOSD::RenderLayers()
 		{
 			SME::MiscGunk::ScopedSetter<bool> Sentry(RenderingLayers, true);
-			for each (auto Itr in AttachedLayers)
+			for (auto Itr : AttachedLayers)
 			{
 				if (Itr->IsEnabled())
 					Itr->Draw(this, Pipeline);
@@ -582,7 +582,7 @@ namespace cse
 
 		bool RenderWindowOSD::NeedsBackgroundUpdate() const
 		{
-			for each (auto Itr in AttachedLayers)
+			for (auto Itr : AttachedLayers)
 			{
 				if (Itr->NeedsBackgroundUpdate())
 					return true;
@@ -1963,7 +1963,7 @@ namespace cse
 		{
 			const TESObjectREFRArrayT& ActiveRefs = _RENDERWIN_MGR.GetActiveRefs();
 
-			for each (auto Itr in ActiveRefs)
+			for (auto Itr : ActiveRefs)
 			{
 				std::string EditorID(GetRefEditorID(Itr));
 				UInt32 FormID = Itr->formID;

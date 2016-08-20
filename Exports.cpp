@@ -1290,21 +1290,21 @@ BatchRefOwnerFormData* GetOwnershipData(void)
 	Result->FormListHead = new FormData[Result->FormCount];
 
 	UInt32 Index = 0;
-	for each (auto Itr in SortedNPCs)
+	for (auto Itr : SortedNPCs)
 	{
 		FormData* ThisForm = &Result->FormListHead[Index];
 		ThisForm->FillFormData(Itr);
 		Index++;
 	}
 
-	for each (auto Itr in SortedFactions)
+	for (auto Itr : SortedFactions)
 	{
 		FormData* ThisForm = &Result->FormListHead[Index];
 		ThisForm->FillFormData(Itr);
 		Index++;
 	}
 
-	for each (auto Itr in SortedGlobals)
+	for (auto Itr : SortedGlobals)
 	{
 		FormData* ThisForm = &Result->FormListHead[Index];
 		ThisForm->FillFormData(Itr);

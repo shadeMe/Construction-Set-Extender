@@ -178,7 +178,7 @@ namespace cse
 
 	void IFormCollectionSerializer::FreeBuffer(void)
 	{
-		for each (auto Itr in LoadedFormBuffer)
+		for (auto Itr : LoadedFormBuffer)
 		{
 			// clean up any cross refs that may have accumulated to suppress the deletion conformation dialog
 			Itr->CleanupCrossReferenceList();
@@ -266,7 +266,7 @@ namespace cse
 	{
 		SME_ASSERT(Form);
 
-		for each (auto Itr in LoadedFormBuffer)
+		for (auto Itr : LoadedFormBuffer)
 		{
 			if (Itr == Form)
 				return true;
@@ -293,7 +293,7 @@ namespace cse
 			SME_ASSERT((*Serializer->LoadedFormBuffer.begin())->IsReference() == false);
 
 			bool ReplaceAll = false;
-			for each (auto Itr in Serializer->LoadedFormBuffer)
+			for (auto Itr : Serializer->LoadedFormBuffer)
 			{
 				TESForm* TempForm = Itr;
 				bool FormExists = false;
@@ -411,7 +411,7 @@ namespace cse
 		ThreadLocalData::Get()->saveLoadInProgress = 1;
 		{
 
-			for each (auto Itr in Forms)
+			for (auto Itr : Forms)
 			{
 				if (Itr->GetType() == TESForm::kFormType_REFR ||
 					Itr->GetType() == TESForm::kFormType_ACHR ||
@@ -430,7 +430,7 @@ namespace cse
 			if (Result && Forms.size())
 			{
 				bool FormCheck = true;
-				for each (auto Itr in Forms)
+				for (auto Itr : Forms)
 				{
 					if (Itr->GetEditorID() && strlen(Itr->GetEditorID()) < 1)
 					{
@@ -477,7 +477,7 @@ namespace cse
 						}
 
 						// we can skip the form sorting as they are all of a single type
-						for each (auto Itr in Forms)
+						for (auto Itr : Forms)
 							SaveForm(OutputStream, Itr);
 
 						if (OutputStream->CorrectHeader(Forms.size()) == false)
@@ -565,7 +565,7 @@ namespace cse
 	void ObjectRefCollectionInstantiator::GetPositionOffset(TESObjectREFRArrayT& InData, NiNode* CameraNode, Vector3& OutOffset)
 	{
 		TESObjectSelection* Buffer = TESObjectSelection::CreateInstance();
-		for each (auto Itr in InData)
+		for (auto Itr : InData)
 		{
 			// need to generate the ref's 3D first, otherwise it won't get added to the selection
 			TESBoundObject* BaseForm = CS_CAST(Itr->baseForm, TESForm, TESBoundObject);
@@ -648,7 +648,7 @@ namespace cse
 				std::map<TESObjectREFR*, const char*> RefEditorIDMap;
 				TESObjectREFRArrayT RefBuffer;
 
-				for each (auto Itr in Serializer->LoadedFormBuffer)
+				for (auto Itr : Serializer->LoadedFormBuffer)
 				{
 					TESForm* TempForm = Itr;
 					bool FormExists = false;
@@ -740,7 +740,7 @@ namespace cse
 						_RENDERSEL->ClearSelection(true);
 
 					// update extra data ref pointers to the allocated instances
-					for each (auto i in AllocationMap)
+					for (auto i : AllocationMap)
 					{
 						TESObjectREFR* NewRef = i.second;
 						TESObjectREFR* TempRef = i.first;
@@ -749,7 +749,7 @@ namespace cse
 						if (xParent && xParent->parent)
 						{
 							TESObjectREFR* NewParent = NULL;
-							for each (auto j in AllocationMap)
+							for (auto j : AllocationMap)
 							{
 								if (j.first == xParent->parent)
 								{
@@ -795,7 +795,7 @@ namespace cse
 		TESObjectREFRArrayT RefBuffer;
 		bool Result = true;
 
-		for each (auto Itr in Data->LoadedFormBuffer)
+		for (auto Itr : Data->LoadedFormBuffer)
 		{
 			TESObjectREFR* ThisRef = (TESObjectREFR*)Itr;
 			if (ThisRef->baseForm == NULL)
@@ -811,7 +811,7 @@ namespace cse
 		{
 			NiNode* Root = *OutPreviewNode = TESRender::CreateNiNode();
 
-			for each (auto Itr in RefBuffer)
+			for (auto Itr : RefBuffer)
 			{
 				TESObjectREFR* NewRef = CS_CAST(TESForm::CreateInstance(TESForm::kFormType_REFR), TESForm, TESObjectREFR);
 				SME_ASSERT(NewRef);
@@ -832,11 +832,11 @@ namespace cse
 
 					TESRender::DeleteNiRefObject(Root);
 
-					for each (auto Itr in OutPreviewBaseForms)
+					for (auto Itr : OutPreviewBaseForms)
 						Itr->DeleteInstance();
 					OutPreviewBaseForms.clear();
 
-					for each (auto Itr in OutPreviewRefs)
+					for (auto Itr : OutPreviewRefs)
 						Itr->DeleteInstance();
 					OutPreviewRefs.clear();
 
@@ -858,7 +858,7 @@ namespace cse
 
 				Vector3 PosOffset;
 				GetPositionOffset(OutPreviewRefs, PreviewControl->sceneRoot, PosOffset);
-				for each (auto Itr in OutPreviewRefs)
+				for (auto Itr : OutPreviewRefs)
 				{
 					Vector3 NewPos(PosOffset);
 					NewPos += Itr->position;
@@ -955,7 +955,7 @@ namespace cse
 
 							if (BaseFormID)
 							{
-								for each (auto Itr in BaseFormDeserializatonBuffer)
+								for (auto Itr : BaseFormDeserializatonBuffer)
 								{
 									if ((Itr->formID & 0xFFFFFF) == (BaseFormID & 0xFFFFFF))
 									{
@@ -992,7 +992,7 @@ namespace cse
 
 	void ObjectRefCollectionSerializer::FreeDeserializationBuffers()
 	{
-		for each (auto Itr in BaseFormDeserializatonBuffer)
+		for (auto Itr : BaseFormDeserializatonBuffer)
 			Itr->DeleteInstance();
 
 		BaseFormDeserializatonBuffer.clear();
@@ -1003,7 +1003,7 @@ namespace cse
 	bool ObjectRefCollectionSerializer::IsBaseFormTemporary(TESForm* Form) const
 	{
 		SME_ASSERT(Form);
-		for each (auto Itr in BaseFormDeserializatonBuffer)
+		for (auto Itr : BaseFormDeserializatonBuffer)
 		{
 			if (Form == Itr)
 				return true;
@@ -1015,7 +1015,7 @@ namespace cse
 	bool ObjectRefCollectionSerializer::IsBaseFormTemporary(UInt32 FormID) const
 	{
 		SME_ASSERT(FormID);
-		for each (auto Itr in BaseFormDeserializatonBuffer)
+		for (auto Itr : BaseFormDeserializatonBuffer)
 		{
 			if (FormID == Itr->formID)
 				return true;
@@ -1029,7 +1029,7 @@ namespace cse
 		bool Result = true;
 
 		TESFormArrayT Validated;
-		for each (auto Itr in LoadedFormBuffer)
+		for (auto Itr : LoadedFormBuffer)
 		{
 			TESObjectREFR* ThisRef = (TESObjectREFR*)Itr;
 			SME_ASSERT(ThisRef->baseForm && ThisRef->baseForm->GetEditorID());
@@ -1151,7 +1151,7 @@ namespace cse
 		ThreadLocalData::Get()->saveLoadInProgress = 1;
 		{
 
-			for each (auto Itr in Forms)
+			for (auto Itr : Forms)
 			{
 				if (Itr->GetType() != TESForm::kFormType_REFR &&
 					Itr->GetType() != TESForm::kFormType_ACHR &&
@@ -1173,7 +1173,7 @@ namespace cse
 				bool FormCheck = true;
 				TESFormArrayT RefBaseForms;
 
-				for each (auto Itr in Forms)
+				for (auto Itr : Forms)
 				{
 					if (Itr->GetEditorID() && strlen(Itr->GetEditorID()) < 1)
 					{
@@ -1227,7 +1227,7 @@ namespace cse
 					if (xParent && xParent->parent)
 					{
 						bool MissingParent = true;
-						for each (auto j in Forms)
+						for (auto j : Forms)
 						{
 							if (j->GetFormID() == xParent->parent->formID)
 							{
@@ -1245,7 +1245,7 @@ namespace cse
 					}
 
 					bool FoundBase = false;
-					for each (auto ExtantBase in RefBaseForms)
+					for (auto ExtantBase : RefBaseForms)
 					{
 						if (ExtantBase == ThisRef->baseForm)
 						{
@@ -1259,9 +1259,9 @@ namespace cse
 						RefBaseForms.push_back(ThisRef->baseForm);
 				}
 
-				for each (auto Base in RefBaseForms)
+				for (auto Base : RefBaseForms)
 				{
-					for each (auto Ref in Forms)
+					for (auto Ref : Forms)
 					{
 						if ((Ref->GetFormID() & 0xFFFFFF) == (Base->formID & 0xFFFFFF))
 						{
@@ -1299,14 +1299,14 @@ namespace cse
 						}
 
 						// serialize base forms first
-						for each (auto Itr in RefBaseForms)
+						for (auto Itr : RefBaseForms)
 						{
 							TESFormWrapper Box(Itr);
 							SaveForm(OutputStream, &Box);
 						}
 
 						// save the refs next
-						for each (auto Itr in Forms)
+						for (auto Itr : Forms)
 							SaveForm(OutputStream, Itr);
 
 						if (OutputStream->CorrectHeader(Forms.size()) == false)
@@ -1376,14 +1376,14 @@ namespace cse
 				} while (InputStream->GetNextRecord(true));
 
 				// resolve extra data with formID fields
-				for each (auto Itr in LoadedFormBuffer)
+				for (auto Itr : LoadedFormBuffer)
 				{
 					TESObjectREFR* ThisRef = (TESObjectREFR*)Itr;
 					ExtraEnableStateParent* xParent = (ExtraEnableStateParent*)ThisRef->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
 					if (xParent && xParent->parent)
 					{
 						UInt32 FormID = (UInt32)xParent->parent & 0xFFFFFF;
-						for each (auto j in LoadedFormBuffer)
+						for (auto j : LoadedFormBuffer)
 						{
 							if ((j->formID & 0xFFFFFF) == FormID)
 							{
@@ -1396,16 +1396,16 @@ namespace cse
 				}
 
 				// link the refs
-				for each (auto Itr in LoadedFormBuffer)
+				for (auto Itr : LoadedFormBuffer)
 					Itr->LinkForm();
 
 				// link the base forms
-				for each (auto Itr in BaseFormDeserializatonBuffer)
+				for (auto Itr : BaseFormDeserializatonBuffer)
 					Itr->LinkForm();
 
 				// update extra data
 				// invalid extradata would've been stripped away during linking, so re-add
-				for each (auto Itr in ParentDeserializationBuffer)
+				for (auto Itr : ParentDeserializationBuffer)
 				{
 					Itr.first->extraData.ModExtraEnableStateParent(ParentDeserializationBuffer[Itr.first]);
 					Itr.first->SetExtraEnableStateParentOppositeState(ParentStateDeserializationBuffer[Itr.first]);
@@ -1442,7 +1442,7 @@ namespace cse
 
 	bool ObjectRefCollectionSerializer::GetHasTemporaryBaseForms() const
 	{
-		for each (auto Itr in LoadedFormBuffer)
+		for (auto Itr : LoadedFormBuffer)
 		{
 			TESObjectREFR* ThisRef = (TESObjectREFR*)Itr;
 			if (IsBaseFormTemporary(ThisRef->baseForm))
@@ -1456,7 +1456,7 @@ namespace cse
 	{
 		Out.clear();
 
-		for each (auto Itr in LoadedFormBuffer)
+		for (auto Itr : LoadedFormBuffer)
 		{
 			ObjectRefDescriptorHandleT Item(GetDescriptor(Itr));
 			Out.push_back(Item);

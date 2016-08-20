@@ -23,10 +23,10 @@ namespace cse
 			if (RootNode)
 				TESRender::DeleteNiRefObject(RootNode);
 
-			for each (auto Itr in References)
+			for (auto Itr : References)
 				Itr->DeleteInstance();
 
-			for each (auto Itr in BaseForms)
+			for (auto Itr : BaseForms)
 				Itr->DeleteInstance();
 
 			References.clear();
@@ -70,7 +70,7 @@ namespace cse
 				UInt32 Index = 0;
 				TESListView::ClearItems(DetailsList);
 
-				for each (auto Itr in Description)
+				for (auto Itr : Description)
 				{
 					for (int i = 0; i < 9; i++)
 					{
@@ -391,7 +391,7 @@ namespace cse
 										if (NewIndex < Instance.PreviewData->References.size())
 										{
 											TESObjectREFR* Selection = Instance.PreviewData->References[NewIndex];
-											for each (auto Itr in Instance.PreviewData->References)
+											for (auto Itr : Instance.PreviewData->References)
 												Itr->ToggleSelectionBox(false);
 
 											Selection->ToggleSelectionBox(true);
@@ -521,7 +521,7 @@ namespace cse
 			SME::StringHelpers::MakeLower(Filter);
 			bool SelectDefault = false;
 
-			for each (auto Itr in LoadedPrefabs)
+			for (auto Itr : LoadedPrefabs)
 			{
 				std::string Compare(Itr->FileName);
 				SME::StringHelpers::MakeLower(Compare);
@@ -655,7 +655,7 @@ namespace cse
 									 "Couldn't create a prefab collection from the current Render Window selection.\n\nCheck the console for more information.");
 				}
 
-				for each (auto Itr in Selection)
+				for (auto Itr : Selection)
 					delete Itr;
 
 				Selection.clear();
@@ -708,7 +708,7 @@ namespace cse
 
 		bool ObjectPrefabManager::GetExistingPrefab(const char* FilePath, PrefabObjectHandleT& Out)
 		{
-			for each (auto Itr in LoadedPrefabs)
+			for (auto Itr : LoadedPrefabs)
 			{
 				if (!_stricmp(Itr->FilePath.c_str(), FilePath))
 				{

@@ -278,13 +278,13 @@ namespace cse
 
 	void ObjectWindowImposterManager::RefreshImposters(void) const
 	{
-		for each (auto Itr  in ImposterRegistry)
+		for (auto Itr : ImposterRegistry)
 			SendMessage(Itr.first, WM_OBJECTWINDOWIMPOSTER_REFRESHFORMLIST, NULL, NULL);
 	}
 
 	void ObjectWindowImposterManager::DestroyImposters(void)
 	{
-		for each (auto Itr  in ImposterRegistry)
+		for (auto Itr : ImposterRegistry)
 		{
 			DestroyWindow(Itr.first);
 			delete Itr.second;
@@ -586,7 +586,7 @@ namespace cse
 
 	void PreviewWindowImposterManager::DestroyImposters(void)
 	{
-		for each (auto Itr  in ImposterRegistry)
+		for (auto Itr : ImposterRegistry)
 		{
 			DestroyWindow(Itr.first);
 			delete Itr.second;

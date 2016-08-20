@@ -66,7 +66,7 @@ TESFile* TESDataHandler::LookupPluginByIndex(UInt32 Index)
 bool TESDataHandler::IsPluginLoaded(TESFile* File)
 {
 	SME_ASSERT(File);
-	for each (auto Itr in filesByID)
+	for (auto Itr : filesByID)
 	{
 		if (Itr == File)
 			return true;

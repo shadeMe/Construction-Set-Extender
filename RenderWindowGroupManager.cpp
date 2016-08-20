@@ -113,7 +113,7 @@ namespace cse
 
 		RenderWindowGroupManager::GroupDataHandleT RenderWindowGroupManager::LookupGroup(GroupIDT ID)
 		{
-			for each (auto Itr in RegisteredGroups)
+			for (auto Itr : RegisteredGroups)
 			{
 				if (!_stricmp(ID.c_str(), Itr->GetID().c_str()))
 					return Itr;
@@ -135,7 +135,7 @@ namespace cse
 			MemberRosterT Delinquents;
 			Group->ValidateMembers(Delinquents);
 
-			for each (auto Itr in Delinquents)
+			for (auto Itr : Delinquents)
 				ReferenceTable.erase(Itr);
 
 			if (Group->GetSize() <= 1)
@@ -154,7 +154,7 @@ namespace cse
 			RegisteredGroups.push_back(Group);
 			if (RegisterRefs)
 			{
-				for each (auto Itr in Group->Members)
+				for (auto Itr : Group->Members)
 					ReferenceTable[Itr] = Group;
 			}
 		}
@@ -167,7 +167,7 @@ namespace cse
 
 			if (DeregisterRefs)
 			{
-				for each (auto Itr in Group->Members)
+				for (auto Itr : Group->Members)
 					ReferenceTable.erase(Itr);
 			}
 		}
