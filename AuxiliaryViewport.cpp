@@ -8,7 +8,7 @@
 
 namespace cse
 {
-	AuxiliaryViewport*		AuxiliaryViewport::Singleton = NULL;
+	AuxiliaryViewport*			AuxiliaryViewport::Singleton = nullptr;
 	const char*					AuxiliaryViewport::kWindowTitle = "Auxiliary Viewport Window";
 
 #define AUXVIEWPORT_INISECTION				"AuxViewport"
@@ -30,7 +30,7 @@ namespace cse
 
 	AuxiliaryViewport* AuxiliaryViewport::GetSingleton()
 	{
-		if (Singleton == NULL)
+		if (Singleton == nullptr)
 			Singleton = new AuxiliaryViewport();
 
 		return Singleton;
@@ -70,7 +70,7 @@ namespace cse
 													IDD_AUXVIEWPORT,
 													IDR_BGSEE_GENERIC_CONTEXTMENU,
 													BaseDlgProc),
-		ViewportCamera(NULL),
+		ViewportCamera(nullptr),
 		Frozen(false),
 		Rendering(false)
 	{
@@ -85,7 +85,7 @@ namespace cse
 		thisVirtualCall<void>(0x0, ViewportCamera, true);
 		INISaveUIState(&kINI_Top, &kINI_Left, &kINI_Right, &kINI_Bottom, &kINI_Visible);
 
-		Singleton = NULL;
+		Singleton = nullptr;
 	}
 
 	void AuxiliaryViewport::Initialize()
@@ -107,7 +107,7 @@ namespace cse
 
 	void AuxiliaryViewport::ClearScreen()
 	{
-		InvalidateRect(DialogHandle, NULL, TRUE);
+		InvalidateRect(DialogHandle, nullptr, TRUE);
 	}
 
 	void AuxiliaryViewport::Redraw()
@@ -121,7 +121,7 @@ namespace cse
 
 		memcpy(ViewportCamera, Camera, sizeof(NiCamera));
 		ViewportCamera->m_uiRefCount = RefCountBuffer;
-		ViewportCamera->m_parent = NULL;
+		ViewportCamera->m_parent = nullptr;
 	}
 
 	bool AuxiliaryViewport::ToggleFrozenState()
@@ -139,7 +139,7 @@ namespace cse
 		SME::MiscGunk::ScopedSetter<bool> Sentry(Rendering, true);
 
 		hooks::_MemHdlr(NiDX9RendererPresent).WriteUInt16(0x9090);
-		if (Camera == NULL)
+		if (Camera == nullptr)
 			Camera = ViewportCamera;
 
 		_PRIMARYRENDERER->RenderNode(Camera, NodeToRender);
@@ -150,7 +150,7 @@ namespace cse
 
 	void AuxiliaryViewport::DrawBackBuffer( void )
 	{
-		_NIRENDERER->device->Present(NULL, NULL, DialogHandle, NULL);
+		_NIRENDERER->device->Present(nullptr, nullptr, DialogHandle, nullptr);
 	}
 
 	bool AuxiliaryViewport::IsFrozen() const

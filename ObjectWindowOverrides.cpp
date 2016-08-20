@@ -51,7 +51,7 @@ namespace cse
 				{
 					FilterableFormListManager::Instance.Unregister(FilterEditBox);
 					ObjectWindowImposterManager::Instance.DestroyImposters();
-					TESObjectWindow::PrimaryObjectWindowHandle = NULL;
+					TESObjectWindow::PrimaryObjectWindowHandle = nullptr;
 				}
 
 				break;
@@ -83,7 +83,7 @@ namespace cse
 			{
 				HTREEITEM Selection = TreeView_GetSelection(TreeList);
 
-				TreeView_SelectItem(TreeList, NULL);
+				TreeView_SelectItem(TreeList, nullptr);
 				TreeView_SelectItem(TreeList, Selection);
 			}
 

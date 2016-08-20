@@ -135,10 +135,10 @@ public:
 													// places an object ref at the specified position in the specified cell/worldspace, with the specified base form.
 													// if existingRef is provided, it is used as the ref, otherwise a new ref is created.  returns null on failure
 	void											AutoSave(void);
-	bool											SavePlugin(const char* FileName = NULL, bool AsESM = false);
+	bool											SavePlugin(const char* FileName = nullptr, bool AsESM = false);
 													// if AsESM is set to true, all loaded records will be dumped to the save file regardless of their modified status
 
-	TESObjectCELL*									GetExteriorCell(float XCoord, float YCoord, float ZCoord, bool* Create = NULL, TESWorldSpace* Worldspace = NULL);
+	TESObjectCELL*									GetExteriorCell(float XCoord, float YCoord, float ZCoord, bool* Create = nullptr, TESWorldSpace* Worldspace = nullptr);
 	TESObjectCELL*									GetExteriorCell(float XCoord, float YCoord, TESWorldSpace* Worldspace, bool Create = false);
 													// if Create is set to true, an exterior cell will be created at the input coords and returned
 
@@ -247,7 +247,7 @@ public:
 	/*A0*/ tList<void>				unkA0;					// data is some struct containing NiNode*
 	/*A8*/ UInt32					unkA8;
 
-	virtual bool					VFn00(UInt32 arg1, UInt32 arg2, UInt32 arg3, UInt32 arg4, TESWorldSpace* worldspace = NULL);		// calls worldspace->vtbl0x183, if worldspace == NULL, uses the currentWorldspace member
+	virtual bool					VFn00(UInt32 arg1, UInt32 arg2, UInt32 arg3, UInt32 arg4, TESWorldSpace* worldspace = nullptr);		// calls worldspace->vtbl0x183, if worldspace == NULL, uses the currentWorldspace member
 
 	// methods
 	void							LoadCellIntoViewPort(const Vector3* CameraCoordData, TESObjectREFR* Reference);	// arg1 = Camera position if arg is valid, else arg1 = ext. cell coords
@@ -255,7 +255,7 @@ public:
 	void							SetSkyTOD(float TOD);	// actually belongs to the Sky class
 	float							GetSkyTOD(void);		// this one too
 	void							SetCurrentWorldspace(TESWorldSpace* Worldspace);
-	int								PurgeExteriorCellBufer(bool SkipCurrentGrid = false, TESWorldSpace* ParentWorldSpace = NULL);		// returns the no of cells purged
+	int								PurgeExteriorCellBufer(bool SkipCurrentGrid = false, TESWorldSpace* ParentWorldSpace = nullptr);		// returns the no of cells purged
 
 	void							PurgeLoadedResources();
 	TESObjectCELL*					GetCurrentCell() const;

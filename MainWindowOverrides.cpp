@@ -244,7 +244,7 @@ namespace cse
 					{
 						if (achievements::kOldestTrickInTheBook->GetUnlocked() == false)
 						{
-							ShellExecute(NULL, "open", "http://www.youtube.com/watch?v=oHg5SJYRHA0", NULL, NULL, SW_SHOWNORMAL);
+							ShellExecute(nullptr, "open", "http://www.youtube.com/watch?v=oHg5SJYRHA0", nullptr, nullptr, SW_SHOWNORMAL);
 							BGSEEACHIEVEMENTS->Unlock(achievements::kOldestTrickInTheBook);
 						}
 						else
@@ -254,7 +254,7 @@ namespace cse
 					break;
 				case IDC_MAINMENU_SAVEAS:
 					{
-						if (_DATAHANDLER->activeFile == NULL)
+						if (_DATAHANDLER->activeFile == nullptr)
 						{
 							BGSEEUI->MsgBoxE("An active plugin must be set before using this tool.");
 							break;
@@ -274,7 +274,7 @@ namespace cse
 							SaveAsBuffer->SetActive(false);
 							SaveAsBuffer->SetLoaded(false);
 
-							_DATAHANDLER->activeFile = NULL;
+							_DATAHANDLER->activeFile = nullptr;
 
 							if (SendMessage(hWnd, TESCSMain::kWindowMessage_Save, NULL, (LPARAM)FileName))
 								TESCSMain::SetTitleModified(false);
@@ -319,7 +319,7 @@ namespace cse
 						else
 							AppPath += "Oblivion.exe";
 
-						ShellExecute(NULL, "open", (LPCSTR)AppPath.c_str(), NULL, NULL, SW_SHOW);
+						ShellExecute(nullptr, "open", (LPCSTR)AppPath.c_str(), nullptr, nullptr, SW_SHOW);
 						BGSEEACHIEVEMENTS->Unlock(achievements::kLazyBum);
 					}
 
@@ -329,7 +329,7 @@ namespace cse
 
 					break;
 				case IDC_MAINMENU_TAGBROWSER:
-					cliWrapper::interfaces::TAG->ShowTagBrowserDialog(NULL);
+					cliWrapper::interfaces::TAG->ShowTagBrowserDialog(nullptr);
 					achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_TagBrowser);
 
 					break;
@@ -364,7 +364,7 @@ namespace cse
 
 					break;
 				case IDC_MAINMENU_USEINFOLISTING:
-					cliWrapper::interfaces::USE->ShowUseInfoListDialog(NULL);
+					cliWrapper::interfaces::USE->ShowUseInfoListDialog(nullptr);
 					achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_UseInfoListing);
 
 					break;
@@ -393,7 +393,7 @@ namespace cse
 							OverwriteExisting = true;
 						}
 
-						HWND IdleWindow = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), hWnd, NULL, NULL);
+						HWND IdleWindow = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), hWnd, nullptr, NULL);
 						IFileStream ExistingFile;
 						int BatchGenCounter = 0, FailedCounter = 0;
 						bool HasError = false;
@@ -655,7 +655,7 @@ namespace cse
 			{
 			case WM_INITDIALOG:
 				{
-					SetTimer(hWnd, ID_PATHGRIDTOOLBARBUTTION_TIMERID, 500, NULL);
+					SetTimer(hWnd, ID_PATHGRIDTOOLBARBUTTION_TIMERID, 500, nullptr);
 					Return = true;
 				}
 
@@ -676,7 +676,7 @@ namespace cse
 			case WM_MAINWINDOW_INITEXTRADATA:
 				{
 					MainWindowMiscData* xData = BGSEE_GETWINDOWXDATA(MainWindowMiscData, ExtraData);
-					if (xData == NULL)
+					if (xData == nullptr)
 					{
 						xData = new MainWindowMiscData();
 
@@ -759,7 +759,7 @@ namespace cse
 			case WM_INITDIALOG:
 				{
 					MainWindowToolbarData* xData = BGSEE_GETWINDOWXDATA(MainWindowToolbarData, ExtraData);
-					if (xData == NULL)
+					if (xData == nullptr)
 					{
 						xData = new MainWindowToolbarData();
 						ExtraData->Add(xData);

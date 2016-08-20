@@ -87,7 +87,7 @@ FormCrossReferenceData* FormCrossReferenceData::LookupFormInCrossReferenceList( 
 			return Data;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 FormCrossReferenceData* FormCrossReferenceData::CreateInstance(TESForm* Reference, bool IncrementRefCount)
@@ -133,7 +133,7 @@ TESForm* FormCrossReferenceData::GetForm() const
 
 bool TESForm::SetEditorID(const char* EditorID)
 {
-	if (IsTemporary() && EditorID == NULL)
+	if (IsTemporary() && EditorID == nullptr)
 	{
 		this->editorID.Clear();
 		return true;

@@ -141,7 +141,7 @@ namespace cse
 
 			SME_ASSERT(Wrapper && Wrapper->GetWrappedPlugin());
 
-			TESFileFormListWindow::Show(NULL, Wrapper->GetWrappedPlugin());
+			TESFileFormListWindow::Show(nullptr, Wrapper->GetWrappedPlugin());
 		}
 
 		bgsee::FormCollectionSerializer* GlobalClipboardOperator::GetSerializer(bgsee::FormListT& Forms)
@@ -164,7 +164,7 @@ namespace cse
 					(Wrapped->IsReference() == false && ExpectedRefs))
 				{
 					BGSEECONSOLE_MESSAGE("Selection type mismatch! Selection can be either base forms of the same type or object references");
-					Out = NULL;
+					Out = nullptr;
 				}
 			}
 
@@ -180,7 +180,7 @@ namespace cse
 			case IFormCollectionSerializer::kSerializer_ObjectRef:
 				return ObjectRefSerializer;
 			default:
-				return NULL;
+				return nullptr;
 			}
 		}
 

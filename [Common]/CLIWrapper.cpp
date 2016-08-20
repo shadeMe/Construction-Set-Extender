@@ -6,24 +6,24 @@ namespace cse
 	{
 		namespace interfaces
 		{
-			componentDLLInterface::ScriptEditorInterface*			SE = NULL;
-			componentDLLInterface::UseInfoListInterface*			USE = NULL;
-			componentDLLInterface::BSAViewerInterface*				BSA = NULL;
-			componentDLLInterface::BatchEditorInterface*			BE = NULL;
-			componentDLLInterface::TagBrowserInterface*				TAG = NULL;
+			componentDLLInterface::ScriptEditorInterface*			SE = nullptr;
+			componentDLLInterface::UseInfoListInterface*			USE = nullptr;
+			componentDLLInterface::BSAViewerInterface*				BSA = nullptr;
+			componentDLLInterface::BatchEditorInterface*			BE = nullptr;
+			componentDLLInterface::TagBrowserInterface*				TAG = nullptr;
 		}
 
-		componentDLLInterface::QueryInterface SEQueryInterfaceProc = NULL;
-		componentDLLInterface::QueryInterface USEQueryInterfaceProc = NULL;
-		componentDLLInterface::QueryInterface BSAQueryInterfaceProc = NULL;
-		componentDLLInterface::QueryInterface BEQueryInterfaceProc = NULL;
-		componentDLLInterface::QueryInterface TAGQueryInterfaceProc = NULL;
+		componentDLLInterface::QueryInterface SEQueryInterfaceProc = nullptr;
+		componentDLLInterface::QueryInterface USEQueryInterfaceProc = nullptr;
+		componentDLLInterface::QueryInterface BSAQueryInterfaceProc = nullptr;
+		componentDLLInterface::QueryInterface BEQueryInterfaceProc = nullptr;
+		componentDLLInterface::QueryInterface TAGQueryInterfaceProc = nullptr;
 
 		bool cliWrapper::ImportInterfaces(const OBSEInterface * obse)
 		{
 			SetErrorMode(0);
 			std::string DLLName = "";
-			void** Interface = NULL;
+			void** Interface = nullptr;
 
 			for (int i = 0; i < 5; i++)
 			{
@@ -54,14 +54,14 @@ namespace cse
 				std::string DLLPath = std::string(BGSEEMAIN->GetComponentDLLPath()) + DLLName;
 
 				HMODULE hMod = LoadLibrary(DLLPath.c_str());
-				if (hMod == NULL)
+				if (hMod == nullptr)
 				{
 					BGSEECONSOLE_ERROR("Couldn't load %s", DLLName.c_str());
 					return false;
 				}
 
 				componentDLLInterface::QueryInterface ExportedProc = (componentDLLInterface::QueryInterface)GetProcAddress(hMod, "QueryInterface");
-				if (ExportedProc == NULL)
+				if (ExportedProc == nullptr)
 				{
 					BGSEECONSOLE_ERROR("Couldn't import interface from %s", DLLName.c_str());
 					return false;

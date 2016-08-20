@@ -906,7 +906,7 @@ public:
 	bool								HasObject(TESForm* Form);
 	void								CalculateBounds(void);
 
-	static TESObjectSelection*			CreateInstance(TESObjectSelection* Source = NULL);
+	static TESObjectSelection*			CreateInstance(TESObjectSelection* Source = nullptr);
 	void								DeleteInstance();
 
 	static TESObjectSelection**			PrimaryInstance;

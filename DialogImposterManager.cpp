@@ -30,7 +30,7 @@ namespace cse
 			{
 				HTREEITEM Selection = TreeView_GetSelection(TreeList);
 
-				TreeView_SelectItem(TreeList, NULL);
+				TreeView_SelectItem(TreeList, nullptr);
 				TreeView_SelectItem(TreeList, Selection);
 
 				DlgProcResult = TRUE;
@@ -72,7 +72,7 @@ namespace cse
 				case TVN_SELCHANGED:
 					{
 						// (hack)workaround for the non-sorting form list
-						SetTimer(hWnd, ID_OBJECTWIDOWIMPOSTER_COLUMNRESIZETIMERID, 500, NULL);
+						SetTimer(hWnd, ID_OBJECTWIDOWIMPOSTER_COLUMNRESIZETIMERID, 500, nullptr);
 						break;
 					}
 				}
@@ -176,7 +176,7 @@ namespace cse
 	}
 
 	ObjectWindowImposterManager::CacheOperator::CacheOperator(HWND Imposter) :
-		ParentData(NULL)
+		ParentData(nullptr)
 	{
 		SME_ASSERT(Imposter);
 		ParentData = ObjectWindowImposterManager::Instance.GetImposterData(Imposter);
@@ -231,7 +231,7 @@ namespace cse
 		if (ImposterRegistry.count(Imposter))
 			return ImposterRegistry.at(Imposter);
 		else
-			return NULL;
+			return nullptr;
 	}
 
 	ObjectWindowImposterManager::ObjectWindowImposterManager() :
@@ -404,7 +404,7 @@ namespace cse
 				Params.renderTargetWidth = Params.renderTargetHeight = 1024.f;
 				Data->Renderer = TESPreviewControl::CreatePreviewControl(hWnd, &Params);
 
-				SetTimer(hWnd, 1, 5, NULL);		// preview control refresh timer
+				SetTimer(hWnd, 1, 5, nullptr);		// preview control refresh timer
 				ShowWindow(hWnd, SW_SHOW);
 
 				GetClientRect(hWnd, &Data->Bounds);
@@ -469,12 +469,12 @@ namespace cse
 	PreviewWindowImposterManager::ImposterData::ImposterData()
 	{
 		InitTickCount = 0;
-		PreviewRef = NULL;
-		PreviewGround = NULL;
-		Renderer = NULL;
-		PreviewSource = NULL;
+		PreviewRef = nullptr;
+		PreviewGround = nullptr;
+		Renderer = nullptr;
+		PreviewSource = nullptr;
 		ZeroMemory(&Bounds, sizeof(Bounds));
-		DialogExtraList = NULL;
+		DialogExtraList = nullptr;
 	}
 
 	PreviewWindowImposterManager::ImposterData::~ImposterData()
@@ -489,7 +489,7 @@ namespace cse
 	}
 
 	PreviewWindowImposterManager::CacheOperator::CacheOperator(HWND Imposter) :
-		ParentData(NULL)
+		ParentData(nullptr)
 	{
 		SME_ASSERT(Imposter);
 		ParentData = PreviewWindowImposterManager::Instance.GetImposterData(Imposter);
@@ -539,7 +539,7 @@ namespace cse
 		if (ImposterRegistry.count(Imposter))
 			return ImposterRegistry.at(Imposter);
 		else
-			return NULL;
+			return nullptr;
 	}
 
 	PreviewWindowImposterManager::PreviewWindowImposterManager() :

@@ -126,7 +126,7 @@ namespace cse
 				Name = Name.substr(0, Name.rfind("."));
 
 				sprintf_s(NewPath, sizeof(NewPath), "Data\\Backup\\%s", Name.c_str());
-				if (CreateDirectory(NewPath, NULL) == FALSE && GetLastError() != ERROR_ALREADY_EXISTS)
+				if (CreateDirectory(NewPath, nullptr) == FALSE && GetLastError() != ERROR_ALREADY_EXISTS)
 				{
 					BGSEECONSOLE_ERROR("Couldn't create backup directory '%s'", NewPath);
 				}

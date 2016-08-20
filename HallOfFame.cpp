@@ -6,7 +6,7 @@ namespace cse
 	{
 		HallOfFameEntry::HallOfFameEntry( const char* Name, const char* Title, UInt8 Type ) :
 			bgsee::extras::HallOfFameEntry(Name, Title),
-			Instance(NULL),
+			Instance(nullptr),
 			FormType(Type)
 		{
 			;//
@@ -14,7 +14,7 @@ namespace cse
 
 		HallOfFameEntry::~HallOfFameEntry()
 		{
-			Instance = NULL;
+			Instance = nullptr;
 		}
 
 		void HallOfFameEntry::Initialize( UInt32 FormID )
@@ -126,7 +126,7 @@ namespace cse
 		{
 			// temporarily "killing" the dataHandler to prevent the TESForm ctor from assigning formIDs
 			void* DataHandlerInstance = _DATAHANDLER;
-			_DATAHANDLER = NULL;
+			_DATAHANDLER = nullptr;
 			EffectSetting::CreateInstance((UInt32)Name, Title, 4, 0.0, 0, 0x170, -1, 1, 'LPSD');
 			_DATAHANDLER = (TESDataHandler*)DataHandlerInstance;
 		}
@@ -156,7 +156,7 @@ namespace cse
 
 		HallOfFameShadeMe::HallOfFameShadeMe() :
 			HallOfFameEntry("shadeMe", "Likes Andrea Corr", TESForm::kFormType_NPC),
-			TheGreatEye(NULL)
+			TheGreatEye(nullptr)
 		{
 			;//
 		}
@@ -186,7 +186,7 @@ namespace cse
 
 			_DATAHANDLER->clearingData = 1;			// set the flag to allow default objects to be released
 			TheGreatEye->DeleteInstance();
-			TheGreatEye = NULL;
+			TheGreatEye = nullptr;
 			_DATAHANDLER->clearingData = Flag;
 		}
 

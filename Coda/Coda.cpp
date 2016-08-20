@@ -23,7 +23,7 @@ namespace cse
 				if (FormID)
 					*CurrentArg = TESForm::LookupByFormID(FormID);
 				else
-					*CurrentArg = NULL;
+					*CurrentArg = nullptr;
 			}
 
 			va_end(Args);
@@ -54,7 +54,7 @@ namespace cse
 			BGSEECONSOLE_MESSAGE("Executing Coda Script '%s'", ScriptName.c_str());
 
 			bool ThrowAway = false;
-			if (CODAVM->RunScript(ScriptName, NULL, NULL, ThrowAway, (RunInBackground == "1" ? true : false)))
+			if (CODAVM->RunScript(ScriptName, nullptr, nullptr, ThrowAway, (RunInBackground == "1" ? true : false)))
 				BGSEEACHIEVEMENTS->Unlock(achievements::kAutomaton);
 		}
 

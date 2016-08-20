@@ -7,13 +7,13 @@ namespace cse
 		FormUndoProxy::FormUndoProxy( TESForm* ParentForm, TESForm* CopySource ) :
 			bgsee::FormUndoProxy(),
 			Parent(ParentForm),
-			Buffer(NULL)
+			Buffer(nullptr)
 		{
 			SME_ASSERT(ParentForm && ParentForm != CopySource);
 
-			if (CopySource == NULL)
+			if (CopySource == nullptr)
 				CopySource = ParentForm;
-			
+
 			if (CopySource->GetEditorID())
 				EditorID = CopySource->GetEditorID();
 			else
@@ -59,8 +59,8 @@ namespace cse
 			{
 				if (_stricmp(EditorID.c_str(), Parent->GetEditorID()))
 				{
-				
-					if (TESForm::LookupByEditorID(EditorID.c_str()) == NULL)
+
+					if (TESForm::LookupByEditorID(EditorID.c_str()) == nullptr)
 					{
 						// copy editorID if it's been changed and no other form's using it
 						if (Parent->SetEditorID(EditorID.c_str()) == false)

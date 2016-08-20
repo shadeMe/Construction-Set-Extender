@@ -5,7 +5,7 @@
 
 bool				g_HandleDebugText		=	false;
 HANDLE				g_InteropPipeHandle		=	INVALID_HANDLE_VALUE;
-FILE*				g_DebugLog				=	NULL;
+FILE*				g_DebugLog				=	nullptr;
 
 _DefinePatchHdlr(Crt0EntryPointInitialization, 0x008AE5C0);
 _DefineNopHdlr(InitializeWindows, 0x0041D571, 5);
@@ -76,16 +76,16 @@ void ConnectToInteropPipe(void)
 		g_InteropPipeHandle = CreateFile(PipeName,
 			GENERIC_READ|GENERIC_WRITE,
 			0,
-			NULL,
+			nullptr,
 			OPEN_EXISTING,
 			0,
-			NULL);
+			nullptr);
 
 		if (g_InteropPipeHandle != INVALID_HANDLE_VALUE)
 		{
 			DWORD HandleState = PIPE_READMODE_MESSAGE|PIPE_WAIT;
 
-			if (!SetNamedPipeHandleState(g_InteropPipeHandle, &HandleState, NULL, NULL))
+			if (!SetNamedPipeHandleState(g_InteropPipeHandle, &HandleState, nullptr, nullptr))
 			{
 				DebugPrint("Couldn't set handle on interop pipe - Terminating!");
 				LogWinAPIErrorMessage(GetLastError());
@@ -247,11 +247,11 @@ void LogWinAPIErrorMessage(DWORD ErrorID)
 		FORMAT_MESSAGE_ALLOCATE_BUFFER |
 		FORMAT_MESSAGE_FROM_SYSTEM |
 		FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL,
+		nullptr,
 		ErrorID,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(LPTSTR) &ErrorMsg,
-		0, NULL );
+		0, nullptr );
 
 	DebugPrint("\tError Message: %s", (LPSTR)ErrorMsg);
 	LocalFree(ErrorMsg);

@@ -34,7 +34,7 @@ namespace cse
 			AddBookmark = false;
 			RemoveBookmark = false;
 			SelectCell = false;
-			Selection = NULL;
+			Selection = nullptr;
 		}
 
 		void RenderWindowCellLists::OSDLayer::OnSelectCell(TESObjectCELL* Cell) const
@@ -43,12 +43,12 @@ namespace cse
 			// which includes our hooks
 			TESWorldSpace* ParentWorldspace = Cell->GetParentWorldSpace();
 			TESObjectCELL* Buffer = _TES->currentInteriorCell;
-			if (ParentWorldspace == NULL)
+			if (ParentWorldspace == nullptr)
 				_TES->currentInteriorCell = Cell;
 			else
 			{
 				_TES->SetCurrentWorldspace(ParentWorldspace);
-				_TES->currentInteriorCell = NULL;
+				_TES->currentInteriorCell = nullptr;
 			}
 
 			TESCellViewWindow::UpdateCurrentWorldspace();
@@ -72,10 +72,10 @@ namespace cse
 		void RenderWindowCellLists::OSDLayer::AddCellToList(TESObjectCELL* Cell, UInt8 List, CellListDialogResult& Out) const
 		{
 			const char* EditorID = Cell->GetEditorID();
-			if (EditorID == NULL)
+			if (EditorID == nullptr)
 				EditorID = "";
 			const char* Name = Cell->name.c_str();
-			if (Name == NULL)
+			if (Name == nullptr)
 				Name = "";
 
 			char Location[0x100] = { 0 };
@@ -136,7 +136,7 @@ namespace cse
 		void RenderWindowCellLists::OSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
 			ImGui::SetNextWindowPos(ImVec2(10, 300), ImGuiSetCond_FirstUseEver);
-			if (!ImGui::Begin("Cell Lists", NULL, ImGuiWindowFlags_NoFocusOnAppearing))
+			if (!ImGui::Begin("Cell Lists", nullptr, ImGuiWindowFlags_NoFocusOnAppearing))
 			{
 				ImGui::End();
 				return;
@@ -144,7 +144,7 @@ namespace cse
 
 			FilterHelper.Draw();
 
-			TESObjectCELL* ToSelect = NULL;
+			TESObjectCELL* ToSelect = nullptr;
 			if (ImGui::CollapsingHeader("Bookmarks"))
 			{
 				if (_TES->GetCurrentCell() && ImGui::Button("Bookmark Current Cell"))
@@ -159,7 +159,7 @@ namespace cse
 					ImGui::Text("Location"); ImGui::NextColumn();
 					ImGui::Separator();
 
-					TESObjectCELL* ToRemove = NULL;
+					TESObjectCELL* ToRemove = nullptr;
 					for (auto Itr : Parent->Bookmarks)
 					{
 						CellListDialogResult Out;
@@ -200,7 +200,7 @@ namespace cse
 				ImGui::Text("Location"); ImGui::NextColumn();
 				ImGui::Separator();
 
-				TESObjectCELL* ToAdd = NULL;
+				TESObjectCELL* ToAdd = nullptr;
 				for (auto Itr : Parent->RecentlyVisited)
 				{
 					CellListDialogResult Out;
@@ -318,7 +318,7 @@ namespace cse
 					if (Line.length() < 2)
 						return;
 
-					TESForm* Cell = NULL;
+					TESForm* Cell = nullptr;
 					if (Serializer.Deserialize(Line, &Cell))
 					{
 						SME_ASSERT(Cell->formType == TESForm::kFormType_Cell);

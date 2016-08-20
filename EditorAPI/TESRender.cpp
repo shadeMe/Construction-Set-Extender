@@ -178,7 +178,7 @@ void TESRenderWindow::UndoStack::Clear( void )
 
 void TESRender::PrimaryRenderer::RenderNode( NiCamera* Camera /*= NULL*/, NiNode* NodeToRender /*= NULL*/, BSRenderedTexture* RenderToTexture /*= NULL*/ )
 {
-	if (Camera == NULL)
+	if (Camera == nullptr)
 		Camera = primaryCamera;
 
 	niWindow->Render(Camera, NodeToRender, RenderToTexture);
@@ -304,7 +304,7 @@ void TESRender::DeleteNiRefObject(NiRefObject* Object)
 
 bool TESRender::RemoveFromNiNode(NiNode* From, NiAVObject* Child)
 {
-	NiAVObject* Out = NULL;
+	NiAVObject* Out = nullptr;
 	thisVirtualCall<void>(0x88, From, &Out, Child);
 	if (Out)
 	{
@@ -372,7 +372,7 @@ NiProperty* TESRender::CreateProperty(UInt8 Type)
 		}
 	default:
 		SME_ASSERT(InvalidType);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -383,10 +383,10 @@ NiSourceTexture* TESRender::CreateSourceTexture(const char* FilePath)
 
 TESPathGridPoint* TESRender::PickPathGridPointAtCoords(int X, int Y)
 {
-	if (*TESRenderWindow::PathGridEditFlag == 0 || *PathGridSceneRoot == NULL)
-		return NULL;
+	if (*TESRenderWindow::PathGridEditFlag == 0 || *PathGridSceneRoot == nullptr)
+		return nullptr;
 
-	TESPathGridPoint* Result = NULL;
+	TESPathGridPoint* Result = nullptr;
 	Vector3 Arg1(0, 0, 0), Arg2(Arg1);
 
 	TESRenderWindow::PickBuffer->SetRoot(*PathGridSceneRoot);

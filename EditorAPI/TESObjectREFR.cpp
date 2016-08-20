@@ -75,8 +75,8 @@ void TESObjectREFR::SetScale( float Scale )
 void TESObjectREFR::SetPosition( float X, float Y, float Z )
 {
 	thisCall<TESObjectCELL*>(0x00544380, this);			// subspace related
-	TESObjectCELL* ExteriorAtCoordsProlog = NULL;
-	TESObjectCELL* ExteriorAtCoordsEpilog = NULL;
+	TESObjectCELL* ExteriorAtCoordsProlog = nullptr;
+	TESObjectCELL* ExteriorAtCoordsEpilog = nullptr;
 
 	if (parentCell && parentCell->GetIsInterior() == false)
 		ExteriorAtCoordsProlog = _DATAHANDLER->GetExteriorCell(position.x, position.y, position.z, false, parentCell->GetParentWorldSpace());
@@ -192,7 +192,7 @@ void TESObjectREFR::SetAlpha( float Alpha /*= -1.0f*/ )
 		return;
 
 	BSFadeNode* FadeNode = (BSFadeNode*)GetNiNode();
-	if (FadeNode == NULL)
+	if (FadeNode == nullptr)
 		return;
 
 	if (Alpha == -1.0f)
@@ -269,6 +269,6 @@ void TESObjectREFR::Delete()
 		TESBoundObject* BaseForm = CS_CAST(baseForm, TESForm, TESBoundObject);
 		if (BaseForm)
 			BaseForm->DecrementObjectRefCount();
-		SetNiNode(NULL);
+		SetNiNode(nullptr);
 	}
 }

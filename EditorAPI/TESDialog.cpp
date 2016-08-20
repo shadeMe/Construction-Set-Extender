@@ -32,7 +32,7 @@ int*						TESObjectWindow::SortColumnArray = (int*)0x00A0B668;
 DLGPROC						TESObjectWindow::DialogProc = (DLGPROC)0x00420240;
 TESObjectWindow::TreeEntryInfo**
 							TESObjectWindow::TreeEntryArray = (TESObjectWindow::TreeEntryInfo**)0x00A0B700;
-HWND						TESObjectWindow::PrimaryObjectWindowHandle = NULL;
+HWND						TESObjectWindow::PrimaryObjectWindowHandle = nullptr;
 
 HWND*						TESCellViewWindow::WindowHandle = (HWND*)0x00A0AF4C;
 HWND*						TESCellViewWindow::ObjectListHandle = (HWND*)0x00A0AA00;
@@ -144,8 +144,8 @@ HWND TESDialog::ShowFormEditDialog(TESForm* Form)
 	bool FormIDListViewForm = false;
 	DLGPROC WndProc = GetFormEditDlgProc(Form, FormIDListViewForm);
 
-	if (WndProc == NULL || GetDialogTemplateForFormType(Form->formType) == 0)
-		return NULL;
+	if (WndProc == nullptr || GetDialogTemplateForFormType(Form->formType) == 0)
+		return nullptr;
 
 	FormEditParam InitData(Form);
 	HWND Dialog = BGSEEUI->ModelessDialog(*TESCSMain::Instance,
@@ -176,7 +176,7 @@ HWND TESDialog::ShowFormEditDialog(TESForm* Form)
 void TESDialog::ShowScriptEditorDialog(TESForm* InitScript)
 {
 	Script* AuxScript = CS_CAST(InitScript, TESForm, Script);
-	componentDLLInterface::ScriptData* Data = NULL;
+	componentDLLInterface::ScriptData* Data = nullptr;
 
 	if (AuxScript)
 		Data = new componentDLLInterface::ScriptData(AuxScript);
@@ -252,13 +252,13 @@ DLGPROC TESDialog::GetFormEditDlgProc(TESForm* Form, bool& FormIDListViewForm)
 		FormIDListViewForm = true;
 		return (DLGPROC)0x00448820;
 	default:
-		return NULL;
+		return nullptr;
 	}
 }
 
 HWND TESDialog::ShowUseReportDialog(TESForm* Form)
 {
-	return BGSEEUI->ModelessDialog(*TESCSMain::Instance, (LPSTR)TESDialog::kDialogTemplate_UseReport, NULL, (DLGPROC)0x00433FE0, (LPARAM)Form, true);
+	return BGSEEUI->ModelessDialog(*TESCSMain::Instance, (LPSTR)TESDialog::kDialogTemplate_UseReport, nullptr, (DLGPROC)0x00433FE0, (LPARAM)Form, true);
 }
 
 void TESDialog::ResetFormListControls()
@@ -438,7 +438,7 @@ void TESPreviewWindow::Deinitialize(HWND PreviewWindow)
 
 void TESPreviewWindow::Display(TESBoundObject* Object)
 {
-	if (*WindowHandle == NULL)
+	if (*WindowHandle == nullptr)
 		SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kMainMenu_View_PreviewWindow, NULL);
 
 	if (Object)
@@ -519,7 +519,7 @@ void TESObjectSelection::CalculateBounds(void)
 
 void TESFileFormListWindow::Show(HWND Parent, TESFile* File)
 {
-	if (Parent == NULL)
+	if (Parent == nullptr)
 		Parent = *TESCSMain::WindowHandle;
 
 	BGSEEUI->ModalDialog(*TESCSMain::Instance, MAKEINTRESOURCE(TESDialog::kDialogTemplate_TESFileDetails), Parent, (DLGPROC)0x00410280, (LPARAM)File, true);
@@ -613,17 +613,17 @@ void TESObjectWindow::UpdateTreeChildren(HWND ObjectWindow)
 	}
 
 	TVSORTCB SortData = { 0 };
-	SortData.hParent = NULL;
+	SortData.hParent = nullptr;
 	SortData.lpfnCompare = TreeViewSortComparator;
 
-	TreeView_SortChildrenCB(*TESObjectWindow::TreeViewHandle, &SortData, NULL);
+	TreeView_SortChildrenCB(*TESObjectWindow::TreeViewHandle, &SortData, nullptr);
 
 	for (HTREEITEM i = TreeView_GetRoot(*TESObjectWindow::TreeViewHandle); i; i = TreeView_GetNextItem(*TESObjectWindow::TreeViewHandle, i, TVGN_NEXT))
 	{
 		SortData.hParent = i;
 		SortData.lpfnCompare = TreeViewSortComparator;
 
-		TreeView_SortChildrenCB(*TESObjectWindow::TreeViewHandle, &SortData, NULL);
+		TreeView_SortChildrenCB(*TESObjectWindow::TreeViewHandle, &SortData, nullptr);
 	}
 }
 
@@ -639,18 +639,18 @@ void* TESTreeView::GetItemData(HWND hWnd, HTREEITEM Item)
 
 void SelectTopicWindowData::RefreshListView(HWND Dialog)
 {
-	cdeclCall<void>(0x004EFFB0, Dialog, this, NULL);
+	cdeclCall<void>(0x004EFFB0, Dialog, this, nullptr);
 }
 
 void SelectQuestWindowData::RefreshListView(HWND Dialog)
 {
-	cdeclCall<void>(0x004DEE30, Dialog, this, NULL);
+	cdeclCall<void>(0x004DEE30, Dialog, this, nullptr);
 }
 
 bool RefSelectControlDefaultComparator(TESObjectREFR* Ref, void* UserData)
 {
 	UInt32 OnlyPersistent = (UInt32)UserData;
-	if (Ref == NULL || Ref->IsDeleted() || Ref->IsTemporary() || (OnlyPersistent && Ref->IsQuestItem() == false))
+	if (Ref == nullptr || Ref->IsDeleted() || Ref->IsTemporary() || (OnlyPersistent && Ref->IsQuestItem() == false))
 		return false;
 	else
 		return true;

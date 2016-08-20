@@ -14,7 +14,7 @@ namespace cse
 		class FilterableFormListManager
 		{
 		public:
-			typedef bool ( *SecondaryFilter)(TESForm*);			// returns true if the form is to be added
+			typedef std::function<bool(TESForm*)>			SecondaryFilterT;			// returns true if the form is to be added
 		private:
 			class FilterableWindowData
 			{
@@ -36,7 +36,7 @@ namespace cse
 				int						TimerPeriod;
 				int						TimeCounter;
 				UInt8					Flags;
-				SecondaryFilter			SecondFilter;
+				SecondaryFilterT		SecondFilter;
 				bool					Enabled;
 
 				enum
@@ -63,7 +63,7 @@ namespace cse
 				void					HookFormList(void);
 				void					UnhookFormList(void);
 			public:
-				FilterableWindowData(HWND Parent, HWND EditBox, HWND FormList, HWND Label, int TimerPeriod, SecondaryFilter UserFilter = NULL);
+				FilterableWindowData(HWND Parent, HWND EditBox, HWND FormList, HWND Label, int TimerPeriod, SecondaryFilterT UserFilter = nullptr);
 				~FilterableWindowData();
 
 				bool					HandleMessages(UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true on timeout
@@ -81,7 +81,7 @@ namespace cse
 			FilterableFormListManager();
 			~FilterableFormListManager();
 
-			bool						Register(HWND FilterEdit, HWND FilterLabel, HWND FormList, HWND ParentWindow, int TimePeriod = 250, SecondaryFilter UserFilter = NULL);
+			bool						Register(HWND FilterEdit, HWND FilterLabel, HWND FormList, HWND ParentWindow, int TimePeriod = 250, SecondaryFilterT UserFilter = nullptr);
 			void						Unregister(HWND FilterEdit);
 
 			bool						HandleMessages(HWND FilterEdit, UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true to request a refresh of the form list

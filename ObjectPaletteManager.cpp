@@ -229,7 +229,7 @@ namespace cse
 		void PaletteObject::Reset()
 		{
 			Name = "";
-			BaseObject = NULL;
+			BaseObject = nullptr;
 			AngleBase.x = AngleBase.y = AngleBase.z = 0;
 			AngleOffset.x = AngleOffset.y = AngleOffset.z = 0;
 			Sink.x = Sink.y = 0;
@@ -286,7 +286,7 @@ namespace cse
 
 		PaletteObject::~PaletteObject()
 		{
-			BaseObject = NULL;
+			BaseObject = nullptr;
 		}
 
 		ObjectPaletteManager							ObjectPaletteManager::Instance;
@@ -368,7 +368,7 @@ namespace cse
 						if (Instance.ActiveObject)
 							Instance.ActiveObject->GetFromDialog(hWnd);
 
-						Instance.ActiveObject = NULL;
+						Instance.ActiveObject = nullptr;
 						Instance.EnableControls(false);
 						Instance.UpdateSelectionList();
 						Instance.UpdatePreview();
@@ -456,7 +456,7 @@ namespace cse
 									Result = TRUE;
 
 									int NewIndex = ChangeData->iItem;
-									Instance.ActiveObject = NULL;
+									Instance.ActiveObject = nullptr;
 
 									PaletteObject* NewSelection = (PaletteObject*)ChangeData->lParam;
 									if (NewIndex != -1 && NewSelection)
@@ -476,7 +476,7 @@ namespace cse
 									 TESListView::GetSelectedItemCount(LoadedObjectsList) == 0)
 							{
 								// this needs to be deferred until the old selection/deselection message is processed
-								SetTimer(hWnd, IDC_OBJECTPALETTE_LISTSTATETIMERID, 200, NULL);
+								SetTimer(hWnd, IDC_OBJECTPALETTE_LISTSTATETIMERID, 200, nullptr);
 							}
 						}
 
@@ -566,8 +566,8 @@ namespace cse
 			BGSEEUI->GetWindowHandleCollection(bgsee::UIManager::kHandleCollection_DragDropableWindows)->Add(LoadedObjectsList);
 
 			EnableControls(false);
-			SetTimer(Dialog, IDC_OBJECTPALETTE_FILTERINPUTTIMERID, 500, NULL);
-			SetTimer(Dialog, IDC_OBJECTPALETTE_PREVIEWTIMERID, 5, NULL);
+			SetTimer(Dialog, IDC_OBJECTPALETTE_FILTERINPUTTIMERID, 500, nullptr);
+			SetTimer(Dialog, IDC_OBJECTPALETTE_PREVIEWTIMERID, 5, nullptr);
 
 			TESDialog::AddDialogToOpenList(Dialog);
 		}
@@ -582,13 +582,13 @@ namespace cse
 			TESListView::ClearColumnHeaders(LoadedObjectsList);
 			TESListView::ClearColumnHeaders(SelectedObjectsList);
 
-			MainDialog = NULL;
+			MainDialog = nullptr;
 
 			CurrentPaletteFilename = "";
 			TimeCounter = 0;
-			ActiveObject = NULL;
-			Renderer = NULL;
-			ExtraDataList = NULL;
+			ActiveObject = nullptr;
+			Renderer = nullptr;
+			ExtraDataList = nullptr;
 
 			LoadedObjects.clear();
 			CurrentSelection.clear();
@@ -596,7 +596,7 @@ namespace cse
 			if (PreviewRef)
 			{
 				PreviewRef->DeleteInstance();
-				PreviewRef = NULL;
+				PreviewRef = nullptr;
 			}
 
 			BGSEEUI->GetWindowHandleCollection(bgsee::UIManager::kHandleCollection_DragDropableWindows)->Remove(LoadedObjectsList);
@@ -620,7 +620,7 @@ namespace cse
 			RefreshingList = true;
 
 			TESListView::ClearItems(LoadedObjectsList);
-			ActiveObject = NULL;
+			ActiveObject = nullptr;
 
 			char Buffer[0x100] = { 0 };
 			GetWindowText(FilterBox, Buffer, sizeof(Buffer));
@@ -701,7 +701,7 @@ namespace cse
 			}
 
 			HWND LoadedObjectsList = GetDlgItem(MainDialog, IDC_PALETTEOBJECTS_LOADED);
-			ActiveObject = NULL;
+			ActiveObject = nullptr;
 			int Selection = -1;
 			do
 			{
@@ -772,7 +772,7 @@ namespace cse
 						}
 
 						PaletteObject* NewObject = new PaletteObject(Extract);
-						if (NewObject->BaseObject == NULL)
+						if (NewObject->BaseObject == nullptr)
 						{
 							Result = false;
 							BGSEECONSOLE_MESSAGE("Couldn't resolve base form for palette object '%s' (ID=%s) in file '%s'",
@@ -878,10 +878,10 @@ namespace cse
 			{
 				NiNode* Node = PreviewRef->GetNiNode();
 				Renderer->TESPreviewControl::RemovePreviewNode(Node);
-				PreviewRef->SetNiNode(NULL);
+				PreviewRef->SetNiNode(nullptr);
 
 				PreviewRef->DeleteInstance();
-				PreviewRef = NULL;
+				PreviewRef = nullptr;
 			}
 
 			if (ActiveObject)
@@ -896,7 +896,7 @@ namespace cse
 				else
 				{
 					PreviewRef->DeleteInstance();
-					PreviewRef = NULL;
+					PreviewRef = nullptr;
 				}
 			}
 
@@ -943,13 +943,13 @@ namespace cse
 		ObjectPaletteManager::ObjectPaletteManager() :
 			LoadedObjects(),
 			CurrentSelection(),
-			PreviewRef(NULL),
-			MainDialog(NULL),
+			PreviewRef(nullptr),
+			MainDialog(nullptr),
 			CurrentPaletteFilename(""),
 			TimeCounter(0),
-			ExtraDataList(NULL),
-			Renderer(NULL),
-			ActiveObject(NULL),
+			ExtraDataList(nullptr),
+			Renderer(nullptr),
+			ActiveObject(nullptr),
 			RefreshingList(false)
 		{
 			;//
@@ -962,12 +962,12 @@ namespace cse
 
 		bool ObjectPaletteManager::PlaceObject(int X, int Y) const
 		{
-			if (MainDialog == NULL)
+			if (MainDialog == nullptr)
 				return false;
 
 			if (CurrentSelection.size())
 			{
-				if ((*TESRenderWindow::ActiveCell == NULL && _TES->currentInteriorCell == NULL) ||
+				if ((*TESRenderWindow::ActiveCell == nullptr && _TES->currentInteriorCell == nullptr) ||
 					*TESRenderWindow::PathGridEditFlag ||
 					*TESRenderWindow::LandscapeEditFlag)
 				{
@@ -980,7 +980,7 @@ namespace cse
 				TESObjectCELL* Interior = _TES->currentInteriorCell;
 				TESWorldSpace* Worldspace = _TES->currentWorldSpace;
 				if (Interior)
-					Worldspace = NULL;
+					Worldspace = nullptr;
 
 				if (Interior || Worldspace)
 				{
@@ -1001,10 +1001,10 @@ namespace cse
 					}
 
 					// sanity check to ensure exterior coords are valid
-					if (_TES->currentInteriorCell == NULL)
+					if (_TES->currentInteriorCell == nullptr)
 					{
 						TESWorldSpace* CurrentWorldspace = _TES->currentWorldSpace;
-						if (CurrentWorldspace == NULL || _DATAHANDLER->GetExteriorCell(Position.x, Position.y, CurrentWorldspace) == NULL)
+						if (CurrentWorldspace == nullptr || _DATAHANDLER->GetExteriorCell(Position.x, Position.y, CurrentWorldspace) == nullptr)
 							thisCall<bool>(0x006FF1A0, MainCamera, X, Y, &Position, &Rotation);
 					}
 
@@ -1108,8 +1108,8 @@ namespace cse
 				kRepositoryPath().c_str(),
 				"Object Palette Files\0*.cseopal\0\0",
 				"Select Object Palette File",
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
 				Save == false,
 				Save,
 				SelectPath,

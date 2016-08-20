@@ -15,15 +15,15 @@ Setting* SettingCollectionList::LookupByName( const char* Name )
 			return Current;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void GameSettingCollection::CreateDefaultCopy()
 {
 	for (cseOverride::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
 	{
-		const char* Name = NULL;
-		Setting* Data = NULL;
+		const char* Name = nullptr;
+		Setting* Data = nullptr;
 
 		settingMap.GetNext(Itr, Name, Data);
 		if (Name)
@@ -44,8 +44,8 @@ void GameSettingCollection::ResetCollection()
 {
 	for (cseOverride::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
 	{
-		const char* Name = NULL;
-		Setting* Data = NULL;
+		const char* Name = nullptr;
+		Setting* Data = nullptr;
 
 		settingMap.GetNext(Itr, Name, Data);
 		if (Data)
@@ -74,8 +74,8 @@ void GameSettingCollection::SerializeGMSTDataForHandShake(componentDLLInterface:
 	UInt32 Index = 0;
 	for (cseOverride::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
 	{
-		const char* Name = NULL;
-		Setting* Data = NULL;
+		const char* Name = nullptr;
+		Setting* Data = nullptr;
 
 		settingMap.GetNext(Itr, Name, Data);
 		if (Name)

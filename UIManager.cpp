@@ -16,15 +16,15 @@ namespace cse
 	{
 #define ID_CSEFILTERABLEFORMLIST_FILTERINPUTTIMERID				0x99
 
-		FilterableFormListManager												FilterableFormListManager::Instance;
+		FilterableFormListManager													FilterableFormListManager::Instance;
 		FilterableFormListManager::FilterableWindowData::WindowTimerMapT			FilterableFormListManager::FilterableWindowData::FilterTimerTable;
-		FilterableFormListManager::FilterableWindowData::FormListFilterDataMapT	FilterableFormListManager::FilterableWindowData::FormListDataTable;
+		FilterableFormListManager::FilterableWindowData::FormListFilterDataMapT		FilterableFormListManager::FilterableWindowData::FormListDataTable;
 
-		FilterableFormListManager::FilterableWindowData::FilterableWindowData( HWND Parent, HWND EditBox, HWND FormList, HWND Label, int TimerPeriod, SecondaryFilter UserFilter ) :
+		FilterableFormListManager::FilterableWindowData::FilterableWindowData( HWND Parent, HWND EditBox, HWND FormList, HWND Label, int TimerPeriod, SecondaryFilterT UserFilter ) :
 			ParentWindow(Parent),
 			FilterEditBox(EditBox),
 			FormListView(FormList),
-			FormListWndProc(NULL),
+			FormListWndProc(nullptr),
 			FilterLabel(Label),
 			FilterString(""),
 			TimerPeriod(TimerPeriod),
@@ -145,8 +145,8 @@ namespace cse
 				return true;
 
 			std::string EditorID, FullName, Description, FormIDStr;
-			TESFullName* FullNameCmpt = NULL;
-			TESDescription* DescriptionCmpt = NULL;
+			TESFullName* FullNameCmpt = nullptr;
+			TESDescription* DescriptionCmpt = nullptr;
 
 			if (Form->IsReference())
 			{
@@ -158,10 +158,10 @@ namespace cse
 				}
 			}
 
-			if (Form->IsReference() == false && FullNameCmpt == NULL)
+			if (Form->IsReference() == false && FullNameCmpt == nullptr)
 				FullNameCmpt = CS_CAST(Form, TESForm, TESFullName);
 
-			if (Form->IsReference() == false && DescriptionCmpt == NULL)
+			if (Form->IsReference() == false && DescriptionCmpt == nullptr)
 				DescriptionCmpt = CS_CAST(Form, TESForm, TESDescription);
 
 			if (FullNameCmpt && FullNameCmpt->name.c_str())
@@ -284,7 +284,7 @@ namespace cse
 			Item.wID = IDC_CSEFILTERABLEFORMLIST_REGEX;
 			InsertMenuItem(Popup, -1, TRUE, &Item);
 
-			InsertMenu(Popup, -1, MF_BYPOSITION | MF_SEPARATOR, NULL, NULL);
+			InsertMenu(Popup, -1, MF_BYPOSITION | MF_SEPARATOR, NULL, nullptr);
 
 			Item.fState = MFS_ENABLED;
 			Item.dwTypeData = "Search EditorID";
@@ -318,7 +318,7 @@ namespace cse
 			Item.wID = IDC_CSEFILTERABLEFORMLIST_FORMID;
 			InsertMenuItem(Popup, -1, TRUE, &Item);
 
-			switch (TrackPopupMenu(Popup, TPM_RETURNCMD, X, Y, NULL, Parent, NULL))
+			switch (TrackPopupMenu(Popup, TPM_RETURNCMD, X, Y, NULL, Parent, nullptr))
 			{
 			case IDC_CSEFILTERABLEFORMLIST_REGEX:
 				SME::MiscGunk::ToggleFlag(&Flags, kFlags_RegEx, HasRegEx() == false);
@@ -355,7 +355,7 @@ namespace cse
 			if (FilterTimerTable.count(ParentWindow) == 0)
 			{
 				FilterTimerTable[ParentWindow] = 1;
-				SetTimer(ParentWindow, ID_CSEFILTERABLEFORMLIST_FILTERINPUTTIMERID, TimerPeriod, NULL);
+				SetTimer(ParentWindow, ID_CSEFILTERABLEFORMLIST_FILTERINPUTTIMERID, TimerPeriod, nullptr);
 			}
 			else
 				FilterTimerTable[ParentWindow]++;
@@ -398,12 +398,12 @@ namespace cse
 			ActiveFilters.clear();
 		}
 
-		bool FilterableFormListManager::Register(HWND FilterEdit, HWND FilterLabel, HWND FormList, HWND ParentWindow, int TimePeriod /*= 250*/, SecondaryFilter UserFilter /*= NULL*/ )
+		bool FilterableFormListManager::Register(HWND FilterEdit, HWND FilterLabel, HWND FormList, HWND ParentWindow, int TimePeriod /*= 250*/, SecondaryFilterT UserFilter /*= NULL*/ )
 		{
 			SME_ASSERT(ParentWindow && FormList);
 			SME_ASSERT(FilterEdit && FilterLabel);
 
-			if (Lookup(FilterEdit) == NULL)
+			if (Lookup(FilterEdit) == nullptr)
 			{
 				ActiveFilters.push_back(new FilterableWindowData(ParentWindow, FilterEdit, FormList, FilterLabel, TimePeriod, UserFilter));
 				return true;
@@ -455,7 +455,7 @@ namespace cse
 					return Itr;
 			}
 
-			return NULL;
+			return nullptr;
 		}
 
 		FormEnumerationManager		FormEnumerationManager::Instance;
@@ -540,17 +540,17 @@ namespace cse
 			bgsee::WindowExtraData(kTypeID)
 		{
 			LastCursorPos.x = LastCursorPos.y = 0;
-			LastCursorPosWindow = NULL;
+			LastCursorPosWindow = nullptr;
 			QuickViewTriggered = false;
 
-			AssetControlToolTip = CreateWindowEx(NULL, TOOLTIPS_CLASS, NULL,
+			AssetControlToolTip = CreateWindowEx(NULL, TOOLTIPS_CLASS, nullptr,
 												TTS_ALWAYSTIP|TTS_NOPREFIX,
 												CW_USEDEFAULT, CW_USEDEFAULT,
 												CW_USEDEFAULT, CW_USEDEFAULT,
-												NULL, NULL, NULL, NULL);
+												nullptr, nullptr, nullptr, nullptr);
 			ZeroMemory(&AssetControlToolData, sizeof(AssetControlToolData));
 			AssetControlToolData.cbSize = sizeof(AssetControlToolData);
-			LastTrackedTool = NULL;
+			LastTrackedTool = nullptr;
 			TrackingToolTip = false;
 		}
 
@@ -563,7 +563,7 @@ namespace cse
 		TESFormEditData::TESFormEditData() :
 			bgsee::WindowExtraData(kTypeID)
 		{
-			Buffer = NULL;
+			Buffer = nullptr;
 		}
 
 		TESFormEditData::~TESFormEditData()
@@ -574,7 +574,7 @@ namespace cse
 
 		void TESFormEditData::FillBuffer( TESForm* Parent )
 		{
-			SME_ASSERT(Buffer == NULL);
+			SME_ASSERT(Buffer == nullptr);
 
 			Buffer = TESForm::CreateTemporaryCopy(Parent);
 		}
@@ -615,14 +615,14 @@ namespace cse
 			case WM_OBJECTWINDOWIMPOSTER_INITIALIZEXTRA:
 				{
 					xData = BGSEE_GETWINDOWXDATA(DialogExtraFittingsData, ExtraData);
-					if (xData == NULL)
+					if (xData == nullptr)
 					{
 						xData = new DialogExtraFittingsData();
 						ExtraData->Add(xData);
 					}
 
-					SetTimer(hWnd, ID_COMMONDLGEXTRAFITTINGS_QUICKVIEWTIMERID, 100, NULL);
-					SetTimer(hWnd, ID_COMMONDLGEXTRAFITTINGS_ASSETTOOLTIPTIMERID, 650, NULL);
+					SetTimer(hWnd, ID_COMMONDLGEXTRAFITTINGS_QUICKVIEWTIMERID, 100, nullptr);
+					SetTimer(hWnd, ID_COMMONDLGEXTRAFITTINGS_ASSETTOOLTIPTIMERID, 650, nullptr);
 				}
 
 				break;
@@ -634,7 +634,7 @@ namespace cse
 						ExtraData->Remove(DialogExtraFittingsData::kTypeID);
 						delete xData;
 
-						xData = NULL;
+						xData = nullptr;
 					}
 
 					KillTimer(hWnd, ID_COMMONDLGEXTRAFITTINGS_QUICKVIEWTIMERID);
@@ -714,7 +714,7 @@ namespace cse
 							xData->QuickViewTriggered = false;
 
 							HWND WindowAtPoint = xData->LastCursorPosWindow;
-							TESForm* Form = NULL;
+							TESForm* Form = nullptr;
 
 							char Buffer[0x200] = {0};
 							GetClassName(WindowAtPoint, Buffer, sizeof(Buffer));
@@ -756,7 +756,7 @@ namespace cse
 								PotentialEditorID.erase(StatusIndicatorOffset, 2);
 
 							Form = TESForm::LookupByEditorID(PotentialEditorID.c_str());
-							xData->LastCursorPosWindow = NULL;
+							xData->LastCursorPosWindow = nullptr;
 
 							if (Form)
 							{
@@ -829,7 +829,7 @@ namespace cse
 								break;
 							case CDDS_ITEMPREPAINT:
 								{
-									TESForm* Form = NULL;
+									TESForm* Form = nullptr;
 
 									switch (wParam)
 									{
@@ -1147,7 +1147,7 @@ namespace cse
 																	GetDlgItem(hWnd, kFormList_TESFormIDListView), hWnd);
 
 					TESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(TESFormIDListViewData, ExtraData);
-					if (xData == NULL)
+					if (xData == nullptr)
 					{
 						xData = new TESFormIDListViewData();
 						ExtraData->Add(xData);
@@ -1327,7 +1327,7 @@ namespace cse
 								TESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(TESFormIDListViewData, ExtraData);
 								SME_ASSERT(xData);
 								xData->DisableDragHandling = true;
-								SetTimer(hWnd, ID_TESFORMIDLISTVIEW_DRAGTIMER, 1000, NULL);
+								SetTimer(hWnd, ID_TESFORMIDLISTVIEW_DRAGTIMER, 1000, nullptr);
 
 								Return = true;
 								SetWindowLongPtr(hWnd, DWL_MSGRESULT, DlgProcResult);
@@ -1342,7 +1342,7 @@ namespace cse
 								HWND ListView = ChangeData->hdr.hwndFrom;
 								DialogExtraParam* xParam = CS_CAST(TESDialog::GetDialogExtraByType(hWnd, BSExtraData::kDialogExtra_Param), BSExtraData, DialogExtraParam);
 								DialogExtraLocalCopy* xLocalCopy = CS_CAST(TESDialog::GetDialogExtraByType(hWnd, BSExtraData::kDialogExtra_Param), BSExtraData, DialogExtraLocalCopy);
-								TESForm* NewSelection = NULL;
+								TESForm* NewSelection = nullptr;
 
 								if (xParam && xLocalCopy && NewIndex != -1 && (NewSelection = (TESForm*)TESListView::GetItemData(ListView, NewIndex)))
 								{
@@ -1361,7 +1361,7 @@ namespace cse
 									if (IsWindowEnabled(GetDlgItem(hWnd, TESDialog::kStandardButton_Ok)) == FALSE)
 									{
 										EnableWindow(GetDlgItem(hWnd, TESDialog::kStandardButton_Ok), TRUE);
-										InvalidateRect(hWnd, NULL, TRUE);
+										InvalidateRect(hWnd, nullptr, TRUE);
 									}
 
 									SetFocus(ListView);
@@ -1406,7 +1406,7 @@ namespace cse
 					TESFormEditData* xData = BGSEE_GETWINDOWXDATA(TESFormEditData, ExtraData);
 					TESForm* WorkingCopy = TESDialog::GetDialogExtraParam(hWnd);
 
-					if (xData == NULL)
+					if (xData == nullptr)
 					{
 						xData = new TESFormEditData();
 						ExtraData->Add(xData);

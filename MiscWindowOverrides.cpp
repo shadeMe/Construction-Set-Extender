@@ -66,7 +66,7 @@ namespace cse
 						if (TESDialog::GetIsWindowDragDropRecipient(_RENDERSEL->selectionList->Data->formType, Window))
 						{
 							HWND Parent = GetParent(Window);
-							if (Parent == NULL || Parent == *TESCSMain::WindowHandle)
+							if (Parent == nullptr || Parent == *TESCSMain::WindowHandle)
 								Parent = Window;
 
 							SendMessage(Parent, TESDialog::kWindowMessage_HandleDragDrop, NULL, (LPARAM)&Pos);
@@ -75,7 +75,7 @@ namespace cse
 							_RENDERSEL->ClearSelection();
 
 						kDraggingForms = false;
-						SetCursor(LoadCursor(NULL, IDC_ARROW));
+						SetCursor(LoadCursor(nullptr, IDC_ARROW));
 						ReleaseCapture();
 					}
 				}
@@ -119,7 +119,7 @@ namespace cse
 								POINT CursorPos = { 0 };
 								GetCursorPos(&CursorPos);
 
-								switch (TrackPopupMenu(Popup, TPM_RETURNCMD, CursorPos.x, CursorPos.y, NULL, hWnd, NULL))
+								switch (TrackPopupMenu(Popup, TPM_RETURNCMD, CursorPos.x, CursorPos.y, NULL, hWnd, nullptr))
 								{
 								case IDC_FINDTEXT_OPENSCRIPTS:
 									{
@@ -396,7 +396,7 @@ namespace cse
 							while (Read.eof() == false)
 							{
 								Read.getline(Buffer, sizeof(Buffer));
-								if (Buffer[0] != '#' && Buffer[0] != NULL && Buffer[0] != '\n')
+								if (Buffer[0] != '#' && Buffer[0] != 0 && Buffer[0] != '\n')
 								{
 									TESFile* Plugin = _DATAHANDLER->LookupPluginByName(Buffer);
 									if (Plugin)
@@ -414,8 +414,8 @@ namespace cse
 						for (tList<TESFile>::Iterator Itr = _DATAHANDLER->fileList.Begin(); Itr.Get() && Itr.End() == false; ++Itr)
 							Itr.Get()->SetLoaded(false);
 
-						ActiveTESFilePtr = NULL;
-						ActiveTESFile = NULL;
+						ActiveTESFilePtr = nullptr;
+						ActiveTESFile = nullptr;
 						BGSEEUI->GetInvalidationManager()->Redraw(PluginList);
 					}
 
@@ -456,7 +456,7 @@ namespace cse
 						if (BGSEEUI->MsgBoxW(hWnd, MB_YESNO, "There are open script windows. Are you sure you'd like to proceed?") == IDNO)
 							Return = true;
 					}
-					else if (ActiveTESFile != NULL && !_stricmp(ActiveTESFile->fileName, "oblivion.esm"))
+					else if (ActiveTESFile != nullptr && !_stricmp(ActiveTESFile->fileName, "oblivion.esm"))
 					{
 						if (BGSEEUI->MsgBoxW(hWnd,
 											 MB_YESNO,
@@ -575,7 +575,7 @@ namespace cse
 								LipPath = LipPath.substr(0, LipPath.rfind("."));
 								LipPath += ".lip";
 
-								HWND NPCEditDlg = NULL;
+								HWND NPCEditDlg = nullptr;
 								for (tList<HWND>::Iterator Itr = TESDialog::OpenDialogWindows->Begin(); Itr.End() == false && Itr.Get(); ++Itr)
 								{
 									HWND Current = (HWND)Itr.Get();
@@ -640,12 +640,12 @@ namespace cse
 							SelectFile.lStructSize = sizeof(OPENFILENAME);
 							SelectFile.hwndOwner = hWnd;
 							SelectFile.lpstrFilter = "MP3 Files\0*.mp3\0\0";
-							SelectFile.lpstrCustomFilter = NULL;
+							SelectFile.lpstrCustomFilter = nullptr;
 							SelectFile.nFilterIndex = 0;
 							SelectFile.lpstrFile = FilePath;
 							SelectFile.nMaxFile = sizeof(FilePath);
-							SelectFile.lpstrFileTitle = NULL;
-							SelectFile.lpstrInitialDir = NULL;
+							SelectFile.lpstrFileTitle = nullptr;
+							SelectFile.lpstrInitialDir = nullptr;
 							SelectFile.lpstrTitle = "Select an audio file to use as the current response's voice";
 							SelectFile.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_NOCHANGEDIR;
 
@@ -654,7 +654,7 @@ namespace cse
 								std::string Destination(std::string(BGSEEMAIN->GetAPPPath()) + "\\" + std::string(VoicePath)), DirPath(Destination);
 								DirPath = DirPath.substr(0, DirPath.rfind("\\") + 1);
 
-								if (SHCreateDirectoryEx(NULL, DirPath.c_str(), NULL) &&
+								if (SHCreateDirectoryEx(nullptr, DirPath.c_str(), nullptr) &&
 									GetLastError() != ERROR_FILE_EXISTS &&
 									GetLastError() != ERROR_ALREADY_EXISTS)
 								{
@@ -686,7 +686,7 @@ namespace cse
 						std::string Path(VoicePath);
 						Path = Path.substr(0, Path.rfind("."));
 
-						HWND IdleWindow = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), BGSEEUI->GetMainWindow(), NULL, NULL);
+						HWND IdleWindow = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), BGSEEUI->GetMainWindow(), nullptr, NULL);
 
 						if (CSIOM->GenerateLIPSyncFile(Path.c_str(), (*ResponseEditorData::EditorCache)->responseLocalCopy->responseText.c_str()) == false)
 							BGSEEUI->MsgBoxE(hWnd, 0, "Couldn't generate LIP file for the selected voice.\n\nCheck the console for more information.");
@@ -832,7 +832,7 @@ namespace cse
 					{
 						char* Buffer = new char[FileVersionSize];
 						char VersionString[0x100] = { 0 };
-						void* VersionStringPtr = NULL;
+						void* VersionStringPtr = nullptr;
 
 						GetFileVersionInfo(BGSEEMAIN->GetDLLPath(), FileVersionHandle, FileVersionSize, Buffer);
 						VerQueryValue(Buffer, "\\StringFileInfo\\040904b0\\ProductVersion", &VersionStringPtr, (PUINT)FileVersionHandle);
@@ -960,7 +960,7 @@ namespace cse
 			{
 			case WM_INITDIALOG:
 				{
-					if (*TESRenderWindow::ActiveCell == NULL)		// immediately close the dialog if you haven't got any cell loaded
+					if (*TESRenderWindow::ActiveCell == nullptr)		// immediately close the dialog if you haven't got any cell loaded
 						SendMessage(hWnd, WM_COMMAND, TESDialog::kStandardButton_Cancel, NULL);		// otherwise, the editor will crash as soon as the render window acquires input focus
 					else
 						SendDlgItemMessage(hWnd, kFormList_LandTextures, LVM_SORTITEMS, 0, (LPARAM)TESDialog::LandscapeTextureSortComparator);
@@ -1078,7 +1078,7 @@ namespace cse
 						// RMB is held down, forward the message to the trackbar and then consume it
 						Return = true;
 
-						HWND Parent = NULL;
+						HWND Parent = nullptr;
 						if ((Parent = GetParent(hWnd)))
 						{
 							HWND Trackbar = GetDlgItem(Parent, kFaceGenControl_AdvancedTrackbar);
@@ -1185,7 +1185,7 @@ namespace cse
 								Data->DelayTime = 10;
 
 							xData->VoicePlaybackFilePath = RelativeVoicePath;
-							SetTimer(hWnd, IDT_FACEGENPREVIEW_VOICEPLAYBACK, Data->DelayTime, NULL);
+							SetTimer(hWnd, IDT_FACEGENPREVIEW_VOICEPLAYBACK, Data->DelayTime, nullptr);
 						}
 					}
 				}
@@ -1209,7 +1209,7 @@ namespace cse
 			case WM_INITDIALOG:
 				{
 					FaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(FaceGenWindowData, ExtraData);
-					if (xData == NULL)
+					if (xData == nullptr)
 					{
 						xData = new FaceGenWindowData();
 						ExtraData->Add(xData);
@@ -1295,7 +1295,7 @@ namespace cse
 								// don't allow updates immediately, use a cool-down timer
 								static const UInt32 kPreviewUpdateCoolDownPeriod = 1000;		// in ms
 
-								SetTimer(hWnd, IDT_FACEGENPREVIEW_PREVIEWUPDATE, kPreviewUpdateCoolDownPeriod, NULL);
+								SetTimer(hWnd, IDT_FACEGENPREVIEW_PREVIEWUPDATE, kPreviewUpdateCoolDownPeriod, nullptr);
 
 								HWND AdvancedParamsList = GetDlgItem(hWnd, kFaceGenControl_AdvancedParamsListView);
 								if (AdvancedParamsList)
@@ -1330,7 +1330,7 @@ namespace cse
 						// we HACK around this by preventing updates for a short time after the current tab's been switched
 						// during this time, updates to the edit controls' text will be ignored by this handler
 						FaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(FaceGenWindowData, ExtraData);
-						if (xData == NULL || xData->AllowPreviewUpdates == false)
+						if (xData == nullptr || xData->AllowPreviewUpdates == false)
 							break;
 
 						if (LOWORD(wParam) == kFaceGenControl_AgeEditCtrl ||
@@ -1390,9 +1390,9 @@ namespace cse
 
 								if (EffectItems && Selection)
 								{
-									EffectItemList::EffectItemListT::_Node* CurrentNode = NULL;
-									EffectItemList::EffectItemListT::_Node* PreviousNode = NULL;
-									EffectItemList::EffectItemListT::_Node* NextNode = NULL;
+									EffectItemList::EffectItemListT::_Node* CurrentNode = nullptr;
+									EffectItemList::EffectItemListT::_Node* PreviousNode = nullptr;
+									EffectItemList::EffectItemListT::_Node* NextNode = nullptr;
 
 									for (EffectItemList::EffectItemListT::_Node* Itr = EffectItems->effects.Head();
 										 Itr; PreviousNode = Itr, Itr = Itr->Next())
@@ -1410,7 +1410,7 @@ namespace cse
 									case VK_UP:
 										Up = true;
 
-										if (PreviousNode == NULL)
+										if (PreviousNode == nullptr)
 											SelectionMoved = false;
 										else
 										{
@@ -1421,7 +1421,7 @@ namespace cse
 
 										break;
 									case VK_DOWN:
-										if (NextNode == NULL)
+										if (NextNode == nullptr)
 											SelectionMoved = false;
 										else
 										{

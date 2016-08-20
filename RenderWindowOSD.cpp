@@ -30,21 +30,21 @@ namespace cse
 			// Create and grow buffers if needed
 			if (!Impl->VertexBuffer || Impl->VertexBufferSize < draw_data->TotalVtxCount)
 			{
-				if (Impl->VertexBuffer) { Impl->VertexBuffer->Release(); Impl->VertexBuffer = NULL; }
+				if (Impl->VertexBuffer) { Impl->VertexBuffer->Release(); Impl->VertexBuffer = nullptr; }
 				Impl->VertexBufferSize = draw_data->TotalVtxCount + 5000;
-				if (Impl->D3DDevice->CreateVertexBuffer(Impl->VertexBufferSize * sizeof(CUSTOMVERTEX), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, D3DFVF_CUSTOMVERTEX, D3DPOOL_DEFAULT, &Impl->VertexBuffer, NULL) < 0)
+				if (Impl->D3DDevice->CreateVertexBuffer(Impl->VertexBufferSize * sizeof(CUSTOMVERTEX), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, D3DFVF_CUSTOMVERTEX, D3DPOOL_DEFAULT, &Impl->VertexBuffer, nullptr) < 0)
 					return;
 			}
 			if (!Impl->IndexBuffer || Impl->IndexBufferSize < draw_data->TotalIdxCount)
 			{
-				if (Impl->IndexBuffer) { Impl->IndexBuffer->Release(); Impl->IndexBuffer = NULL; }
+				if (Impl->IndexBuffer) { Impl->IndexBuffer->Release(); Impl->IndexBuffer = nullptr; }
 				Impl->IndexBufferSize = draw_data->TotalIdxCount + 10000;
-				if (Impl->D3DDevice->CreateIndexBuffer(Impl->IndexBufferSize * sizeof(ImDrawIdx), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, sizeof(ImDrawIdx) == 2 ? D3DFMT_INDEX16 : D3DFMT_INDEX32, D3DPOOL_DEFAULT, &Impl->IndexBuffer, NULL) < 0)
+				if (Impl->D3DDevice->CreateIndexBuffer(Impl->IndexBufferSize * sizeof(ImDrawIdx), D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, sizeof(ImDrawIdx) == 2 ? D3DFMT_INDEX16 : D3DFMT_INDEX32, D3DPOOL_DEFAULT, &Impl->IndexBuffer, nullptr) < 0)
 					return;
 			}
 
 			// Backup the DX9 state
-			IDirect3DStateBlock9* d3d9_state_block = NULL;
+			IDirect3DStateBlock9* d3d9_state_block = nullptr;
 			if (Impl->D3DDevice->CreateStateBlock(D3DSBT_ALL, &d3d9_state_block) < 0)
 				return;
 
@@ -80,8 +80,8 @@ namespace cse
 			Impl->D3DDevice->SetFVF(D3DFVF_CUSTOMVERTEX);
 
 			// Setup render state: fixed-pipeline, alpha-blending, no face culling, no depth testing
-			Impl->D3DDevice->SetPixelShader(NULL);
-			Impl->D3DDevice->SetVertexShader(NULL);
+			Impl->D3DDevice->SetPixelShader(nullptr);
+			Impl->D3DDevice->SetVertexShader(nullptr);
 			Impl->D3DDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID);
 			Impl->D3DDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 			Impl->D3DDevice->SetRenderState(D3DRS_LIGHTING, false);
@@ -167,10 +167,10 @@ namespace cse
 
 			// Upload texture to graphics system
 			SAFERELEASE_D3D(FontTexture);
-			if (D3DDevice->CreateTexture(width, height, 1, D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &FontTexture, NULL) < 0)
+			if (D3DDevice->CreateTexture(width, height, 1, D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &FontTexture, nullptr) < 0)
 				return false;
 			D3DLOCKED_RECT tex_locked_rect;
-			if (FontTexture->LockRect(0, &tex_locked_rect, NULL, 0) != D3D_OK)
+			if (FontTexture->LockRect(0, &tex_locked_rect, nullptr, 0) != D3D_OK)
 				return false;
 			for (int y = 0; y < height; y++)
 				memcpy((unsigned char *)tex_locked_rect.pBits + tex_locked_rect.Pitch * y, pixels + (width * bytes_per_pixel) * y, (width * bytes_per_pixel));
@@ -184,15 +184,15 @@ namespace cse
 
 		ImGuiDX9::ImGuiDX9()
 		{
-			VertexBuffer = NULL;
-			IndexBuffer = NULL;
+			VertexBuffer = nullptr;
+			IndexBuffer = nullptr;
 			VertexBufferSize = 5000;
 			IndexBufferSize = 10000;
-			FontTexture = NULL;
+			FontTexture = nullptr;
 			Time = 0;
 			TicksPerSecond = 0;
-			RenderWindowHandle = NULL;
-			D3DDevice = NULL;
+			RenderWindowHandle = nullptr;
+			D3DDevice = nullptr;
 			MouseDoubleClicked[0] = MouseDoubleClicked[1] = false;
 			Initialized = false;
 		}
@@ -329,7 +329,7 @@ namespace cse
 				ImGui::GetIO().Fonts->TexID = 0;
 			}
 
-			FontTexture = NULL;
+			FontTexture = nullptr;
 		}
 
 		bool ImGuiDX9::CreateDeviceObjects()
@@ -429,7 +429,7 @@ namespace cse
 		}
 
 		IRenderWindowOSDLayer::IRenderWindowOSDLayer(UInt32 Priority) :
-			Toggle(NULL),
+			Toggle(nullptr),
 			Priority(Priority)
 		{
 			;//
@@ -443,7 +443,7 @@ namespace cse
 
 		bool IRenderWindowOSDLayer::IsEnabled() const
 		{
-			return Toggle == NULL || Toggle->GetData().i == 1;
+			return Toggle == nullptr || Toggle->GetData().i == 1;
 		}
 
 		RenderWindowOSD::DialogExtraData::DialogExtraData(RenderWindowOSD* OSD) :
@@ -455,7 +455,7 @@ namespace cse
 
 		RenderWindowOSD::DialogExtraData::~DialogExtraData()
 		{
-			Parent = NULL;
+			Parent = nullptr;
 		}
 
 		RenderWindowOSD::GUIState::GUIState()
@@ -480,7 +480,7 @@ namespace cse
 			}
 
 			DialogExtraData* xData = BGSEE_GETWINDOWXDATA_QUICK(DialogExtraData, ExtraData);
-			if (xData == NULL)
+			if (xData == nullptr)
 				return DlgProcResult;
 
 			RenderWindowOSD* Parent = xData->Parent;
@@ -733,7 +733,7 @@ namespace cse
 
 			ImGui::SetNextWindowPos(ImVec2(10, 10));
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 6));
-			if (!ImGui::Begin("Default Info Overlay", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing))
+			if (!ImGui::Begin("Default Info Overlay", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing))
 			{
 				ImGui::End();
 				ImGui::PopStyleVar();
@@ -741,7 +741,7 @@ namespace cse
 			}
 
 			TESObjectCELL* CurrentCell = _TES->currentInteriorCell;
-			if (CurrentCell == NULL)
+			if (CurrentCell == nullptr)
 				CurrentCell = *TESRenderWindow::ActiveCell;
 
 			int R = 0, G = 0, B = 0;
@@ -926,9 +926,9 @@ namespace cse
 		{
 			if (OSD->NeedsInput())
 				return;
-			else if (*TESRenderWindow::PathGridEditFlag == 0 && _RENDERWIN_XSTATE.CurrentMouseRef == NULL)
+			else if (*TESRenderWindow::PathGridEditFlag == 0 && _RENDERWIN_XSTATE.CurrentMouseRef == nullptr)
 				return;
-			else if (*TESRenderWindow::PathGridEditFlag && _RENDERWIN_XSTATE.CurrentMousePathGridPoint == NULL)
+			else if (*TESRenderWindow::PathGridEditFlag && _RENDERWIN_XSTATE.CurrentMousePathGridPoint == nullptr)
 				return;
 
 			SME_ASSERT((void*)_RENDERWIN_XSTATE.CurrentMouseRef != (void*)_RENDERWIN_XSTATE.CurrentMousePathGridPoint);
@@ -975,7 +975,7 @@ namespace cse
 			else
 			{
 				TESObjectREFR* Ref = _RENDERWIN_XSTATE.CurrentMousePathGridPoint->linkedRef;
-				if (Ref == NULL)
+				if (Ref == nullptr)
 					return;
 
 				TESForm* Base = Ref->baseForm;
@@ -1047,7 +1047,7 @@ namespace cse
 				return;
 
 			ImGui::SetNextWindowPos(ImVec2(10, *TESRenderWindow::ScreeHeight - 150));
-			if (!ImGui::Begin("Notification Overlay", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize |
+			if (!ImGui::Begin("Notification Overlay", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize |
 							  ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoInputs))
 			{
 				ImGui::End();
@@ -1086,7 +1086,7 @@ namespace cse
 
 		void NotificationOSDLayer::ShowNotification(const char* Format, ...)
 		{
-			if (Format == NULL)
+			if (Format == nullptr)
 				return;
 
 			char Buffer[0x1000] = { 0 };
@@ -1139,7 +1139,7 @@ namespace cse
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(7, 7));
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(7, 7));
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
-			if (!ImGui::Begin("Bottom Toolbar", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus |
+			if (!ImGui::Begin("Bottom Toolbar", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus |
 							  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoScrollbar))
 			{
 				ImGui::End();
@@ -1416,7 +1416,7 @@ namespace cse
 			if (AlignmentAxisX == false && AlignmentAxisY == false && AlignmentAxisZ == false)
 				return;
 
-			TESObjectREFR* AlignRef = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, NULL, false);
+			TESObjectREFR* AlignRef = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, nullptr, false);
 			if (AlignRef)
 			{
 				const Vector3& AlignPos = *AlignRef->GetPosition();
@@ -1480,7 +1480,7 @@ namespace cse
 
 		void SelectionControlsOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
-			if (_RENDERSEL->selectionCount == 0 || _RENDERSEL->selectionList == NULL || _RENDERSEL->selectionList->Data == NULL)
+			if (_RENDERSEL->selectionCount == 0 || _RENDERSEL->selectionList == nullptr || _RENDERSEL->selectionList->Data == nullptr)
 				return;
 			else if (TESDialog::GetActiveFormEditDialog(_RENDERSEL->selectionList->Data))
 				return;
@@ -1488,7 +1488,7 @@ namespace cse
 			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, (_RENDERSEL->selectionCount == 0 ? 0.1f : 1.0f));
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 5));
 			ImGui::SetNextWindowPosCenter(ImGuiSetCond_FirstUseEver);
-			if (!ImGui::Begin("Quick Controls", NULL, ImGuiWindowFlags_NoFocusOnAppearing))
+			if (!ImGui::Begin("Quick Controls", nullptr, ImGuiWindowFlags_NoFocusOnAppearing))
 			{
 				ImGui::End();
 				ImGui::PopStyleVar(2);
@@ -1720,7 +1720,7 @@ namespace cse
 					SME_ASSERT(ThisRef);
 
 					BSExtraData* xData = ThisRef->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
-					ExtraEnableStateParent* xParent = NULL;
+					ExtraEnableStateParent* xParent = nullptr;
 					if (xData)
 						xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
 
@@ -1740,7 +1740,7 @@ namespace cse
 							ImGui::Text("Opposite: %s   ", (xParent->oppositeState ? "Yes" : "No"));
 						else if (ImGui::Button("Set", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)))
 						{
-							TESObjectREFR* NewParent = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, xParent ? xParent->parent : NULL, true);
+							TESObjectREFR* NewParent = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, xParent ? xParent->parent : nullptr, true);
 							if (NewParent)
 								ThisRef->extraData.ModExtraEnableStateParent(NewParent), Modified = true;
 						}
@@ -1748,7 +1748,7 @@ namespace cse
 
 						if (xParent && ImGui::Button("Change", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)))
 						{
-							TESObjectREFR* NewParent = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, xParent ? xParent->parent : NULL, true);
+							TESObjectREFR* NewParent = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, xParent ? xParent->parent : nullptr, true);
 							if (NewParent)
 								ThisRef->extraData.ModExtraEnableStateParent(NewParent), Modified = true;
 						}
@@ -1757,7 +1757,7 @@ namespace cse
 						if (xParent)
 						{
 							if (ImGui::Button("Clear", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)))
-								ThisRef->extraData.ModExtraEnableStateParent(NULL), Modified = true;
+								ThisRef->extraData.ModExtraEnableStateParent(nullptr), Modified = true;
 						}
 						ImGui::NextColumn();
 
@@ -1778,13 +1778,13 @@ namespace cse
 					ImGui::Columns(4, "Enable State Parent##linkedref_cols_multi", false);
 					{
 						bool SameParent = true;
-						TESObjectREFR* ParentRefMark = NULL;
+						TESObjectREFR* ParentRefMark = nullptr;
 						bool OppositeStateMark = false;
 						bool MarksSet = false;
 
 						for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 						{
-							TESObjectREFR* ParentComp = NULL;
+							TESObjectREFR* ParentComp = nullptr;
 							bool OppositeComp = false;
 
 							TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
@@ -1816,7 +1816,7 @@ namespace cse
 							ImGui::Text("%s(%08X)",
 								((ParentRefMark->editorID.Size()) ? (ParentRefMark->editorID.c_str()) : ("")), ParentRefMark->formID);
 						}
-						else if (SameParent && ParentRefMark == NULL)
+						else if (SameParent && ParentRefMark == nullptr)
 							ImGui::Text("None");
 						else if (SameParent == false)
 							ImGui::Text("(multiple)");
@@ -1828,13 +1828,13 @@ namespace cse
 
 						char Buffer[0x100] = { 0 };
 						FORMAT_STR(Buffer, "%s", (SameParent && ParentRefMark ? "Change" : "Set"));
-						TESObjectREFR* NewParent = NULL;
+						TESObjectREFR* NewParent = nullptr;
 						bool ClearParent = false;
 						bool ToggleOpposite = false;
 						bool NewOpposite = false;
 
 						if (ImGui::Button(Buffer, ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)))
-							NewParent = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, SameParent ? ParentRefMark : NULL, true);
+							NewParent = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, SameParent ? ParentRefMark : nullptr, true);
 						ImGui::NextColumn();
 
 						if (ImGui::Button("Clear", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)))
@@ -1856,7 +1856,7 @@ namespace cse
 								Ref->extraData.ModExtraEnableStateParent(NewParent);
 
 							if (ClearParent)
-								Ref->extraData.ModExtraEnableStateParent(NULL);
+								Ref->extraData.ModExtraEnableStateParent(nullptr);
 
 							if (ToggleOpposite)
 								Ref->SetExtraEnableStateParentOppositeState(NewOpposite);
@@ -1923,7 +1923,7 @@ namespace cse
 					Top.Open = true;
 				}
 
-				if (ImGui::BeginPopupModal(Top.WindowName.c_str(), NULL, Top.Flags))
+				if (ImGui::BeginPopupModal(Top.WindowName.c_str(), nullptr, Top.Flags))
 				{
 					if (Top.Delegate(OSD, GUI))
 					{
@@ -2150,11 +2150,11 @@ namespace cse
 			SME_ASSERT(Ref && Ref->baseForm);
 
 			const char* EditorID = Ref->GetEditorID();
-			if (EditorID == NULL)
+			if (EditorID == nullptr)
 			{
 				EditorID = Ref->baseForm->GetEditorID();
 
-				if (EditorID == NULL)
+				if (EditorID == nullptr)
 					return "<no-EID>";
 				else
 					return std::string(EditorID).append("*");
@@ -2179,7 +2179,7 @@ namespace cse
 		void ActiveRefCollectionsOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
 			ImGui::SetNextWindowPos(ImVec2(10, 300), ImGuiSetCond_FirstUseEver);
-			if (!ImGui::Begin("Active Reference Collections", NULL, ImGuiWindowFlags_NoFocusOnAppearing))
+			if (!ImGui::Begin("Active Reference Collections", nullptr, ImGuiWindowFlags_NoFocusOnAppearing))
 			{
 				ImGui::End();
 				return;
@@ -2197,7 +2197,7 @@ namespace cse
 					else
 						ImGui::PushStyleColor(ImGuiCol_Button, kActiveTabColor);
 					{
-						const char* TabTitle = NULL;
+						const char* TabTitle = nullptr;
 						switch (i)
 						{
 						case kTab_Invisible:

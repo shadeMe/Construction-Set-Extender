@@ -33,10 +33,10 @@
 
 namespace cse
 {
-	OBSEMessagingInterface*						XSEMsgIntfc = NULL;
+	OBSEMessagingInterface*						XSEMsgIntfc = nullptr;
 	PluginHandle								XSEPluginHandle = kPluginHandle_Invalid;
 
-	OBSECommandTableInterface*					XSECommandTableIntfc = NULL;
+	OBSECommandTableInterface*					XSECommandTableIntfc = nullptr;
 	componentDLLInterface::CommandTableData		XSECommandTableData;
 
 	ReleaseNameTable							ReleaseNameTable::Instance;
@@ -80,7 +80,7 @@ namespace cse
 		XSEMsgIntfc = (OBSEMessagingInterface*)OBSE->QueryInterface(kInterface_Messaging);
 		XSECommandTableIntfc = (OBSECommandTableInterface*)OBSE->QueryInterface(kInterface_CommandTable);
 
-		if (XSEMsgIntfc == NULL || XSECommandTableIntfc == NULL)
+		if (XSEMsgIntfc == nullptr || XSECommandTableIntfc == nullptr)
 		{
 			BGSEECONSOLE_MESSAGE("Messaging/CommandTable interface not found");
 			return false;
@@ -359,7 +359,7 @@ namespace cse
 
 	bool DeinitCallback::Handle(void* Parameter)
 	{
-		TESDialog::WriteBoundsToINI(*TESCSMain::WindowHandle, NULL);
+		TESDialog::WriteBoundsToINI(*TESCSMain::WindowHandle, nullptr);
 		TESDialog::WriteBoundsToINI(*TESCellViewWindow::WindowHandle, "Cell View");
 		TESDialog::WriteBoundsToINI(*TESObjectWindow::WindowHandle, "Object Window");
 		TESDialog::WriteBoundsToINI(*TESRenderWindow::WindowHandle, "Render Window");
@@ -530,7 +530,7 @@ namespace cse
 			else
 				Jingle += "Do you wish to resume execution?\n\nPS: It is almost always futile to select 'Yes'.";
 
-			switch (MessageBox(NULL, Jingle.c_str(), BGSEEMAIN->ExtenderGetShortName(), MBFlags))
+			switch (MessageBox(nullptr, Jingle.c_str(), BGSEEMAIN->ExtenderGetShortName(), MBFlags))
 			{
 			case IDYES:
 				ResumeExecution = true;
@@ -542,7 +542,7 @@ namespace cse
 				if (BGSEEMAIN->GetDaemon()->GetFullInitComplete())
 					BGSEEACHIEVEMENTS->Unlock(achievements::kFunnyGuy, false, true);
 
-				MessageBox(NULL, "Hah! Nice try, Bob.", BGSEEMAIN->ExtenderGetDisplayName(), MB_TASKMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+				MessageBox(nullptr, "Hah! Nice try, Bob.", BGSEEMAIN->ExtenderGetDisplayName(), MB_TASKMODAL | MB_TOPMOST | MB_SETFOREGROUND);
 				break;
 			}
 		}
@@ -591,7 +591,7 @@ namespace cse
 			if (strcmp(ScriptID, ""))
 				TESDialog::ShowScriptEditorDialog(TESForm::LookupByEditorID(ScriptID));
 			else
-				TESDialog::ShowScriptEditorDialog(NULL);
+				TESDialog::ShowScriptEditorDialog(nullptr);
 		}
 	}
 
@@ -627,7 +627,7 @@ namespace cse
 		case OBSEMessagingInterface::kMessage_PostLoad:
 			XSECommandTableData.CommandTableStart = XSECommandTableIntfc->Start();
 			XSECommandTableData.CommandTableEnd = XSECommandTableIntfc->End();
-			XSEMsgIntfc->RegisterListener(XSEPluginHandle, NULL, CSEInteropHandler);
+			XSEMsgIntfc->RegisterListener(XSEPluginHandle, nullptr, CSEInteropHandler);
 			break;
 		case OBSEMessagingInterface::kMessage_PostPostLoad:
 			break;
@@ -660,7 +660,7 @@ extern "C"
 		AuxiliaryViewport::RegisterINISettings(CSEINISettings);
 
 		bool ComponentInitialized = BGSEEMAIN->Initialize(BGSEEMAIN_EXTENDERLONGNAME,
-														  (IsWarholAGenius ? "ConstruKction Set Extender" : NULL),
+														  (IsWarholAGenius ? "ConstruKction Set Extender" : nullptr),
 														  BGSEEMAIN_EXTENDERSHORTNAME,
 														  ReleaseNameTable::Instance.LookupRelease(VERSION_MAJOR, VERSION_MINOR),
 														  PACKED_SME_VERSION,
@@ -707,7 +707,7 @@ extern "C"
 
 		if (BGSEEMAIN->GetDaemon()->ExecuteInitCallbacks(bgsee::Daemon::kInitCallback_Query) == false)
 		{
-			MessageBox(NULL,
+			MessageBox(nullptr,
 					   "The Construction Set Extender failed to initialize correctly!\n\nIt's highly advised that you close the CS right away. More information can be found in the log file (Construction Set Extender.log in the root game directory).",
 					   "The Cyrodiil Bunny Ranch",
 					   MB_TASKMODAL | MB_SETFOREGROUND | MB_ICONERROR | MB_OK);
@@ -723,7 +723,7 @@ extern "C"
 	{
 		if (BGSEEMAIN->GetDaemon()->ExecuteInitCallbacks(bgsee::Daemon::kInitCallback_Load) == false)
 		{
-			MessageBox(NULL,
+			MessageBox(nullptr,
 					   "The Construction Set Extender failed to load correctly!\n\nIt's highly advised that you close the CS right away. More information can be found in the log file (Construction Set Extender.log in the root game directory).",
 					   "Rumpy-Pumpy!!",
 					   MB_TASKMODAL | MB_SETFOREGROUND | MB_ICONERROR | MB_OK);

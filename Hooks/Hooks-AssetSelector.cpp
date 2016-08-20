@@ -12,7 +12,7 @@ namespace cse
 	namespace hooks
 	{
 		static char						s_AssetSelectorReturnPath[MAX_PATH] = {0};
-		static BaseFormComponent*		s_AssetFormComponent = NULL;
+		static BaseFormComponent*		s_AssetFormComponent = nullptr;
 		static std::string				s_AssetFileBrowserBaseDir;
 
 		_DefinePatchHdlr(TESDialogShowNIFFileSelect, 0x00446C7D + 1);
@@ -293,7 +293,7 @@ namespace cse
 
 			bool Extracted = ArchiveManager::ExtractArchiveFile(FullPathBuffer, "tempaf");
 			if (Extracted &&
-				(SHCreateDirectoryEx(NULL, DirPath.c_str(), NULL) == ERROR_SUCCESS ||
+				(SHCreateDirectoryEx(nullptr, DirPath.c_str(), nullptr) == ERROR_SUCCESS ||
 				GetLastError() == ERROR_FILE_EXISTS ||
 				GetLastError() == ERROR_ALREADY_EXISTS) &&
 				CopyFile("tempaf", FullPathBuffer, FALSE))
@@ -304,7 +304,7 @@ namespace cse
 					return;
 				}
 
-				ShellExecute(NULL, "open", (LPSTR)FullPathBuffer, NULL, NULL, SW_SHOW);
+				ShellExecute(nullptr, "open", (LPSTR)FullPathBuffer, nullptr, nullptr, SW_SHOW);
 			}
 			else
 			{
@@ -350,7 +350,7 @@ namespace cse
 					if (DirPath.rfind("\\") != -1)
 						DirPath = DirPath.substr(0, DirPath.rfind("\\") + 1);
 
-					if ((SHCreateDirectoryEx(NULL, DirPath.c_str(), NULL) == ERROR_SUCCESS ||
+					if ((SHCreateDirectoryEx(nullptr, DirPath.c_str(), nullptr) == ERROR_SUCCESS ||
 						GetLastError() == ERROR_FILE_EXISTS ||
 						GetLastError() == ERROR_ALREADY_EXISTS) &&
 						CopyFile("tempaf", FullPathBuffer, FALSE))
@@ -365,7 +365,7 @@ namespace cse
 			if (FileFound)
 			{
 				BGSEECONSOLE_MESSAGE("Opened asset at '%s'", FullPathBuffer);
-				ShellExecute(NULL, "open", (LPSTR)FullPathBuffer, NULL, NULL, SW_SHOW);
+				ShellExecute(nullptr, "open", (LPSTR)FullPathBuffer, nullptr, nullptr, SW_SHOW);
 			}
 			else
 			{

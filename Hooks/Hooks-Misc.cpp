@@ -229,10 +229,10 @@ namespace cse
 
 		void __stdcall DoCSInitHook()
 		{
-			if (*TESCSMain::WindowHandle == NULL ||
+			if (*TESCSMain::WindowHandle == nullptr ||
 				*TESObjectWindow::Initialized == 0 ||
-				*TESCellViewWindow::WindowHandle == NULL ||
-				*TESRenderWindow::WindowHandle == NULL)
+				*TESCellViewWindow::WindowHandle == nullptr ||
+				*TESRenderWindow::WindowHandle == nullptr)
 			{
 				return;								// prevents the hook from being called before the full init
 			}
@@ -331,7 +331,7 @@ namespace cse
 				isdigit((int)*EditorID) &&
 				(Form->formFlags & TESForm::kFormFlags_Temporary) == 0)
 			{
-				BGSEEUI->MsgBoxW(NULL,
+				BGSEEUI->MsgBoxW(nullptr,
 								MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_OK,
 								"The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler might attempt to parse it as an integer.\nConsider beginning the editorID with an alphabet.\n\nThis warning can be disabled in the 'CSE Preferences' dialog (File menu).",
 								EditorID);
@@ -681,7 +681,7 @@ namespace cse
 
 		void __stdcall DoAchievementPluginDescriptionHook(TESFile* File)
 		{
-			if (File->description.c_str() == NULL)
+			if (File->description.c_str() == nullptr)
 				return;
 
 			std::stringstream DescriptionStream(File->description.c_str(), std::ios::in);
@@ -802,7 +802,7 @@ namespace cse
 			else
 			{
 				Cell->ModExtraCellWaterHeight(0.0);
-				Cell->ModExtraCellWaterType(NULL);
+				Cell->ModExtraCellWaterType(nullptr);
 			}
 		}
 
@@ -1058,7 +1058,7 @@ namespace cse
 		{
 			if (New->IsTemporary())
 			{
-				if (New->name == NULL)
+				if (New->name == nullptr)
 				{
 					switch (Source->GetValueType())
 					{
@@ -1125,7 +1125,7 @@ namespace cse
 		{
 			Form->PopulateCrossReferenceListView(ListView);
 
-			MagicItem* Item = NULL;
+			MagicItem* Item = nullptr;
 			if (Form->formType == TESForm::kFormType_Script)
 			{
 				Script* ThisScript = CS_CAST(Form, TESForm, Script);

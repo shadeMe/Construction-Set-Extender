@@ -4,7 +4,7 @@ namespace cse
 {
 	namespace hooks
 	{
-		FARPROC								IATProcBuffer = NULL;			// used to call WndMgmt functions
+		FARPROC								IATProcBuffer = nullptr;			// used to call WndMgmt functions
 
 		void __stdcall IATCacheGetWindowTextAddress(void)
 		{

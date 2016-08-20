@@ -16,14 +16,14 @@ bool PerformPipeOperation(HANDLE PipeHandle, int Operation, OldCSInteropData* Bu
 									Buffer,
 									sizeof(OldCSInteropData),
 									BytesReadWrittenBuf,
-									NULL);
+									nullptr);
 			break;
 		case kPipeOperation_Write:
 			PipeOperation = WriteFile(PipeHandle,
 									Buffer,
 									sizeof(OldCSInteropData),
 									BytesReadWrittenBuf,
-									NULL);
+									nullptr);
 			break;
 		}
 	}

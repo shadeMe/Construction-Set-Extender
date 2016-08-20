@@ -6,11 +6,11 @@ namespace cse
 {
 #define INJECT_TIMEOUT			5000
 
-	OldCSInteropManager* OldCSInteropManager::Singleton = NULL;
+	OldCSInteropManager* OldCSInteropManager::Singleton = nullptr;
 
 	OldCSInteropManager* OldCSInteropManager::GetSingleton()
 	{
-		if (Singleton == NULL)
+		if (Singleton == nullptr)
 			Singleton = new OldCSInteropManager();
 
 		return Singleton;
@@ -37,7 +37,7 @@ namespace cse
 				&InteropDataOut,
 				sizeof(OldCSInteropData),
 				&BytesWritten,
-				NULL) &&
+				nullptr) &&
 				GetLastError() != ERROR_SUCCESS)
 			{
 				BGSEECONSOLE_ERROR("Couldn't write exit message to interop pipe!");
@@ -46,7 +46,7 @@ namespace cse
 			CloseHandle(InteropPipeHandle);
 		}
 
-		Singleton = NULL;
+		Singleton = nullptr;
 	}
 
 	bool OldCSInteropManager::CreateNamedPipeServer(char** GUIDOut)
@@ -67,7 +67,7 @@ namespace cse
 				sizeof(OldCSInteropData),
 				sizeof(OldCSInteropData),
 				50,
-				NULL);
+				nullptr);
 
 			if (InteropPipeHandle == INVALID_HANDLE_VALUE)
 			{
@@ -95,7 +95,7 @@ namespace cse
 
 		if (process)
 		{
-			UInt32	hookBase = (UInt32)VirtualAllocEx(process, NULL, 8192, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+			UInt32	hookBase = (UInt32)VirtualAllocEx(process, nullptr, 8192, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 			if(hookBase)
 			{
 				// safe because kernel32 is loaded at the same address in all processes
@@ -112,7 +112,7 @@ namespace cse
 
 				WriteProcessMemory(process, (LPVOID)(hookBase), hookCode, sizeof(hookCode), &bytesWritten);
 
-				HANDLE	thread = CreateRemoteThread(process, NULL, 0, (LPTHREAD_START_ROUTINE)hookBase, (void *)(hookBase + 5), 0, NULL);
+				HANDLE	thread = CreateRemoteThread(process, nullptr, 0, (LPTHREAD_START_ROUTINE)hookBase, (void *)(hookBase + 5), 0, nullptr);
 				if(thread)
 				{
 					switch(WaitForSingleObject(thread, INJECT_TIMEOUT))
@@ -191,12 +191,12 @@ namespace cse
 
 		Loaded = CreateProcess(procName,
 							GUIDStr,	// pass the pipe guid
-							NULL,		// default process security
-							NULL,		// default thread security
+							nullptr,		// default process security
+							nullptr,		// default thread security
 							FALSE,		// don't inherit handles
 							CREATE_SUSPENDED,
-							NULL,		// no new environment
-							NULL,		// no new cwd
+							nullptr,		// no new environment
+							nullptr,		// no new cwd
 							&startupInfo, &CS10ProcInfo) != 0;
 
 		RpcStringFree((RPC_CSTR*)&GUIDStr);
@@ -257,14 +257,14 @@ namespace cse
 								std::string(BGSEEMAIN->GetAPPPath()) + std::string(WAVPath) +
 								"\" --decode";
 
-		bool Result = CreateProcess(NULL,
+		bool Result = CreateProcess(nullptr,
 									(LPSTR)DecoderArgs.c_str(),
-									NULL,		// default process security
-									NULL,		// default thread security
+									nullptr,		// default process security
+									nullptr,		// default thread security
 									FALSE,		// don't inherit handles
 									NULL,
-									NULL,		// no new environment
-									NULL,		// no new cwd
+									nullptr,		// no new environment
+									nullptr,		// no new cwd
 									&StartupInfo, &ProcInfo) != 0;
 
 		if (Result == false)

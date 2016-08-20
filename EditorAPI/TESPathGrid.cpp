@@ -20,7 +20,7 @@ void TESPathGridPoint::UnlinkFromReference( void )
 	if (linkedRef)
 	{
 		parentGrid->UnlinkPointFromReference(this, linkedRef);
-		linkedRef = NULL;
+		linkedRef = nullptr;
 	}
 }
 
@@ -71,7 +71,7 @@ void TESPathGrid::UnlinkPointFromReference( TESPathGridPoint* Point, TESObjectRE
 {
 	if (Ref)
 	{
-		tList<TESPathGridPoint>* LinkedNodes = NULL;
+		tList<TESPathGridPoint>* LinkedNodes = nullptr;
 		if (thisCall<UInt32>(0x004ADB90, &linkedGridPoints, Ref, &LinkedNodes))	// NiTPointerMap_LookupByKey
 		{
 			thisCall<void>(0x00452AE0, LinkedNodes, Point);

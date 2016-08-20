@@ -318,7 +318,7 @@ namespace cse
 		bool ReferenceVisibilityValidator::IsCulled(TESObjectREFR* Ref)
 		{
 			NiNode* Node = Ref->GetNiNode();
-			if (Node == NULL || Node->IsCulled())
+			if (Node == nullptr || Node->IsCulled())
 				return true;
 			else
 				return false;
@@ -332,7 +332,7 @@ namespace cse
 
 		RenderWindowSelectionManager::~RenderWindowSelectionManager()
 		{
-			ReferenceGroupManager = NULL;
+			ReferenceGroupManager = nullptr;
 		}
 
 		void RenderWindowSelectionManager::AddToSelection(TESObjectREFR* Ref, bool AddSelectionBox) const
@@ -551,12 +551,12 @@ namespace cse
 			FreezeInactiveRefs = false;
 			CameraFrustumBuffer = { 0 };
 			CurrentMouseCoord = { 0 };
-			CurrentMouseRef = NULL;
-			CurrentMousePathGridPoint = NULL;
+			CurrentMouseRef = nullptr;
+			CurrentMousePathGridPoint = nullptr;
 			ShowInitiallyDisabledRefs = true;
 			ShowInitiallyDisabledRefChildren = true;
 			UseGrassTextureOverlay = false;
-			GrassOverlayTexture = NULL;
+			GrassOverlayTexture = nullptr;
 			StaticCameraPivot.Scale(0);
 			PaintingSelection = false;
 			SelectionPaintingMode = kSelectionPaintingMode_NotSet;
@@ -592,7 +592,7 @@ namespace cse
 				UseGrassTextureOverlay = false;
 				_TES->ReloadLandscapeTextures();
 				TESRender::DeleteNiRefObject(GrassOverlayTexture);
-				GrassOverlayTexture = NULL;
+				GrassOverlayTexture = nullptr;
 			}
 
 			Initialized = false;
@@ -704,7 +704,7 @@ namespace cse
 								case IDC_RENDERWINDOWCONTEXT_SAVEEXTERIORSNAPSHOT:
 									FORMAT_STR(NewItemText, "Save Current Exterior Cell Snapshot");
 
-									if (*TESRenderWindow::ActiveCell == NULL || _TES->currentInteriorCell)
+									if (*TESRenderWindow::ActiveCell == nullptr || _TES->currentInteriorCell)
 										DisableItem = true;
 									else
 									{
@@ -957,9 +957,9 @@ namespace cse
 											ThisRef->baseForm->formType != TESForm::kFormType_NPC &&
 											ThisRef->baseForm->formType != TESForm::kFormType_Creature)
 										{
-											ThisRef->extraData.ModExtraGlobal(NULL);
+											ThisRef->extraData.ModExtraGlobal(nullptr);
 											ThisRef->extraData.ModExtraRank(-1);
-											ThisRef->extraData.ModExtraOwnership(NULL);
+											ThisRef->extraData.ModExtraOwnership(nullptr);
 
 											TESForm* Owner = (TESForm*)BatchData->Ownership.Owner;
 											ThisRef->extraData.ModExtraOwnership(Owner);
@@ -1165,11 +1165,11 @@ namespace cse
 					break;
 				case IDC_RENDERWINDOWCONTEXT_SAVEEXTERIORSNAPSHOT:
 					{
-						SME_ASSERT(*TESRenderWindow::ActiveCell && _TES->currentInteriorCell == NULL);
+						SME_ASSERT(*TESRenderWindow::ActiveCell && _TES->currentInteriorCell == nullptr);
 
 						TESLODTextureGenerator::SaveExteriorSnapshot(*TESRenderWindow::ActiveCell,
 																	 settings::renderer::kExteriorSnapshotResolution.GetData().i,
-																	 NULL);
+																	 nullptr);
 					}
 
 					break;
@@ -1261,7 +1261,7 @@ namespace cse
 						SetTimerPeriod = false;
 						UInt32 Period = 1;
 
-						SetTimer(hWnd, TESRenderWindow::kTimer_ViewportUpdate, Period, NULL);
+						SetTimer(hWnd, TESRenderWindow::kTimer_ViewportUpdate, Period, nullptr);
 					}
 
 					if (TESLODTextureGenerator::GeneratorState != TESLODTextureGenerator::kState_NotInUse)
@@ -1341,7 +1341,7 @@ namespace cse
 								else if ((SelectionReason & RenderWindowSelectionManager::kReason_FrozenInactive) ||
 									(SelectionReason & RenderWindowSelectionManager::kReason_FrozenSelf))
 								{
-									Icon = LoadCursor(NULL, IDC_NO);
+									Icon = LoadCursor(nullptr, IDC_NO);
 								}
 							}
 						}
@@ -1389,8 +1389,8 @@ namespace cse
 						}
 					}
 
-					_RENDERWIN_XSTATE.CurrentMouseRef = NULL;
-					_RENDERWIN_XSTATE.CurrentMousePathGridPoint = NULL;
+					_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
+					_RENDERWIN_XSTATE.CurrentMousePathGridPoint = nullptr;
 
 					if (GetActiveWindow() == hWnd && *TESRenderWindow::LandscapeEditFlag == 0 && (_RENDERWIN_XSTATE.PaintingSelection || GetCapture() != hWnd))
 					{
@@ -1409,12 +1409,12 @@ namespace cse
 										_RENDERSEL->selectionCount == 1 &&
 										_RENDERSEL->selectionList->Data == _RENDERWIN_XSTATE.CurrentMouseRef)
 									{
-										_RENDERWIN_XSTATE.CurrentMouseRef = NULL;
+										_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
 									}
 									else if (ReferenceVisibilityValidator::IsCulled(_RENDERWIN_XSTATE.CurrentMouseRef) ||
 											 ReferenceVisibilityValidator::ShouldBeInvisible(_RENDERWIN_XSTATE.CurrentMouseRef))
 									{
-										_RENDERWIN_XSTATE.CurrentMouseRef = NULL;
+										_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
 									}
 								}
 							}
@@ -1430,7 +1430,7 @@ namespace cse
 				break;
 			case WM_MOUSELEAVE:
 			case WM_NCMOUSELEAVE:
-				_RENDERWIN_XSTATE.CurrentMouseRef = NULL;
+				_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
 
 				break;
 			case WM_LBUTTONDOWN:
@@ -1692,10 +1692,10 @@ namespace cse
 						else if (GetCapture())
 							break;
 
-						_RENDERWIN_XSTATE.CurrentMouseRef = NULL;
+						_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
 
 						bgsee::RenderWindowFlyCamera* xFreeCamData = BGSEE_GETWINDOWXDATA(bgsee::RenderWindowFlyCamera, ExtraData);
-						SME_ASSERT(xFreeCamData == NULL);
+						SME_ASSERT(xFreeCamData == nullptr);
 
 						xFreeCamData = new bgsee::RenderWindowFlyCamera(new RenderWindowFlyCameraOperator(hWnd,
 																										  TESDialog::kDialogTemplate_RenderWindow));
@@ -1773,8 +1773,8 @@ namespace cse
 					break;
 				case VK_DELETE:
 					// clear the picked objects just in case they are about to be deleted
-					_RENDERWIN_XSTATE.CurrentMouseRef = NULL;
-					_RENDERWIN_XSTATE.CurrentMousePathGridPoint = NULL;
+					_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
+					_RENDERWIN_XSTATE.CurrentMousePathGridPoint = nullptr;
 
 					break;
 				}

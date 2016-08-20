@@ -97,9 +97,9 @@ namespace cse
 
 				CodaScriptCommandHandler(CreateRef)
 				{
-					TESForm* BaseForm = NULL;
-					TESForm* Cell = NULL;
-					TESForm* WorldSpace = NULL;
+					TESForm* BaseForm = nullptr;
+					TESForm* Cell = nullptr;
+					TESForm* WorldSpace = nullptr;
 					struct
 					{
 						double x, y, z;		// can't use a regular Vector3 here as CodaScriptNumericDataTypeT is a double internally
@@ -125,7 +125,7 @@ namespace cse
 					TESObjectREFR* NewRef = _DATAHANDLER->PlaceObjectRef(Base,
 																		&(Vector3(Position.x, Position.y, Position.z)),
 																		&OutRotation,
-																		ParentCell, ParentWorldspace, NULL);
+																		ParentCell, ParentWorldspace, nullptr);
 					if (NewRef)
 						Result->SetFormID(NewRef->formID);
 					else
@@ -136,8 +136,8 @@ namespace cse
 
 				CodaScriptCommandHandler(GetRefPosition)
 				{
-					TESForm* Form = NULL;
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
@@ -161,8 +161,8 @@ namespace cse
 
 				CodaScriptCommandHandler(GetRefRotation)
 				{
-					TESForm* Form = NULL;
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
@@ -186,12 +186,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetRefScale)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -204,12 +204,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetRefPersistent)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -222,12 +222,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetRefDisabled)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -240,12 +240,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetRefVWD)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -258,12 +258,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetRefBaseForm)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -280,12 +280,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetRefCell)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -302,14 +302,14 @@ namespace cse
 
 				CodaScriptCommandHandler(SetRefPosition)
 				{
-					TESForm* Form = NULL;
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 					CodaScriptNumericDataTypeT Value = 0.0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer, &Value);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -330,14 +330,14 @@ namespace cse
 
 				CodaScriptCommandHandler(SetRefRotation)
 				{
-					TESForm* Form = NULL;
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 					CodaScriptNumericDataTypeT Value = 0.0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer, &Value);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -358,13 +358,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetRefScale)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 					CodaScriptNumericDataTypeT Value = 0.0;
 
 					CodaScriptCommandExtractArgs(&Form, &Value);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -377,13 +377,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetRefPersistent)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 					CodaScriptNumericDataTypeT Value = 0.0;
 
 					CodaScriptCommandExtractArgs(&Form, &Value);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -396,13 +396,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetRefDisabled)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 					CodaScriptNumericDataTypeT Value = 0.0;
 
 					CodaScriptCommandExtractArgs(&Form, &Value);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -415,13 +415,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetRefVWD)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 					CodaScriptNumericDataTypeT Value = 0.0;
 
 					CodaScriptCommandExtractArgs(&Form, &Value);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -434,12 +434,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetCellObjects)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESObjectCELL* Cell = CS_CAST(Form, TESForm, TESObjectCELL);
@@ -462,12 +462,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetCellWorldspace)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESObjectCELL* Cell = CS_CAST(Form, TESForm, TESObjectCELL);
@@ -475,7 +475,7 @@ namespace cse
 						return false;
 
 					TESWorldSpace* Worldspace = Cell->GetParentWorldSpace();
-					Result->SetFormID((Worldspace ? Worldspace->formID : NULL));
+					Result->SetFormID((Worldspace ? Worldspace->formID : 0));
 
 					return true;
 				}
@@ -527,12 +527,12 @@ namespace cse
 
 				CodaScriptCommandHandler(AddRefToRenderWindowSelection)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -545,12 +545,12 @@ namespace cse
 
 				CodaScriptCommandHandler(RemoveRefFromRenderWindowSelection)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -563,8 +563,8 @@ namespace cse
 
 				CodaScriptCommandHandler(CreateRenderWindowSelectionGroup)
 				{
-					ICodaScriptDataStore* Array = NULL;
-					CodaScriptStringParameterTypeT GroupName = NULL;
+					ICodaScriptDataStore* Array = nullptr;
+					CodaScriptStringParameterTypeT GroupName = nullptr;
 
 					CodaScriptCommandExtractArgs(&Array, &GroupName);
 					SME_ASSERT(Array && GroupName);
@@ -576,7 +576,7 @@ namespace cse
 						std::vector<TESObjectREFR*> Members;
 						for (int i = 0, j = Utilities->ArraySize(Array); i < j; i++)
 						{
-							ICodaScriptDataStore* Current = NULL;
+							ICodaScriptDataStore* Current = nullptr;
 							if (Utilities->ArrayAt(Array, i, &Current))
 							{
 								if (Current->GetIsReference())
@@ -609,7 +609,7 @@ namespace cse
 
 				CodaScriptCommandHandler(DissolveRenderWindowSelectionGroup)
 				{
-					ICodaScriptDataStore* Array = NULL;
+					ICodaScriptDataStore* Array = nullptr;
 
 					CodaScriptCommandExtractArgs(&Array);
 
@@ -622,7 +622,7 @@ namespace cse
 						std::vector<TESObjectREFR*> Members;
 						for (int i = 0, j = Utilities->ArraySize(Array); i < j; i++)
 						{
-							ICodaScriptDataStore* Current = NULL;
+							ICodaScriptDataStore* Current = nullptr;
 							if (Utilities->ArrayAt(Array, i, &Current))
 							{
 								if (Current->GetIsReference())
@@ -655,12 +655,12 @@ namespace cse
 
 				CodaScriptCommandHandler(FloorRef)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -674,12 +674,12 @@ namespace cse
 
 				CodaScriptCommandHandler(LoadRefIntoRenderWindow)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -696,12 +696,12 @@ namespace cse
 
 				CodaScriptCommandHandler(DeleteRef)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);

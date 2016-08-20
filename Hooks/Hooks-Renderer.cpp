@@ -133,7 +133,7 @@ namespace cse
 					BGSEECONSOLE_MESSAGE("Didn't change tex %d", TexNo);
 				else if (currentTex)
 				{
-					if (strstr(currentTex->fileName, SourcePath) != NULL && _RENDERWIN_XSTATE.UseGrassTextureOverlay == false)
+					if (strstr(currentTex->fileName, SourcePath) != nullptr && _RENDERWIN_XSTATE.UseGrassTextureOverlay == false)
 						BGSEECONSOLE_MESSAGE("Tex changed but overlay is still active!");
 				}
 
@@ -269,7 +269,7 @@ namespace cse
 		void __stdcall DoTESObjectREFREditDialogHook(NiNode* Node, bool State)
 		{
 			// reset the current mouse-over ref, just in case it happens to be the temp ref the edit dlg created
-			_RENDERWIN_XSTATE.CurrentMouseRef = NULL;
+			_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
 		}
 
 		#define _hhName		TESObjectREFRSetupDialog
@@ -787,7 +787,7 @@ namespace cse
 			DeletionList->RemoveAll();
 			FormHeap_Free(DeletionList);
 
-			_RENDERWIN_XSTATE.CurrentMousePathGridPoint = NULL;
+			_RENDERWIN_XSTATE.CurrentMousePathGridPoint = nullptr;
 		}
 
 		#define _hhName		TESPathGridPointDtor
@@ -906,11 +906,11 @@ namespace cse
 
 			if (Cell->objectList.Count())
 			{
-				TESObjectREFR* FirstRef = NULL;
+				TESObjectREFR* FirstRef = nullptr;
 
 				for (TESObjectCELL::ObjectREFRList::Iterator Itr = Cell->objectList.Begin(); Itr.End() == false && Itr.Get(); ++Itr)
 				{
-					if (FirstRef == NULL)
+					if (FirstRef == nullptr)
 						FirstRef = Itr.Get();
 					else if ((FirstRef->formID & 0xFFFFFF) > (Itr->formID & 0xFFFFFF))
 						FirstRef = Itr.Get();
@@ -1001,7 +1001,7 @@ namespace cse
 				jmp		_hhGetVar(Retn)
 			}
 		}
-		
+
 		void __stdcall DoTESRenderControlPerformRelativeScaleHook(TESObjectREFR* Ref, float Scale, bool Relative)
 		{
 			if (Relative == false)
@@ -1103,10 +1103,10 @@ namespace cse
 					Result = false;
 				}
 
-				if (_TES->currentInteriorCell == NULL)
+				if (_TES->currentInteriorCell == nullptr)
 				{
 					TESWorldSpace* CurrentWorldspace = _TES->currentWorldSpace;
-					if (CurrentWorldspace == NULL || _DATAHANDLER->GetExteriorCell(OutPosition->x, OutPosition->y, CurrentWorldspace) == NULL)
+					if (CurrentWorldspace == nullptr || _DATAHANDLER->GetExteriorCell(OutPosition->x, OutPosition->y, CurrentWorldspace) == nullptr)
 					{
 						*OutPosition = PosBuf;
 						*OutRotation = RotBuf;

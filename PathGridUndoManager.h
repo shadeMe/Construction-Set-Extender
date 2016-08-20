@@ -29,7 +29,7 @@ namespace cse
 				~PathGridPointUndoProxy();
 
 				void									HandlePathGridPointDeletion(TESPathGridPoint* Point);
-				void									Undo(PathGridUndoManager* Manager, TESPathGridPoint** CreatedPointOut = NULL);
+				void									Undo(PathGridUndoManager* Manager, TESPathGridPoint** CreatedPointOut = nullptr);
 			};
 		private:
 			typedef boost::shared_ptr<PathGridPointUndoProxy>		UndoProxyHandleT;

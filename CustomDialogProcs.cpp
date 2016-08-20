@@ -187,7 +187,7 @@ namespace cse
 						Edit_SetText(GetDlgItem(hWnd, IDC_COPYPATH_ASSETPATH), Buffer);
 					}
 					else
-						Edit_SetText(GetDlgItem(hWnd, IDC_COPYPATH_ASSETPATH), NULL);
+						Edit_SetText(GetDlgItem(hWnd, IDC_COPYPATH_ASSETPATH), nullptr);
 
 					ReleaseCapture();
 					kDraggingMouse = false;
@@ -265,9 +265,9 @@ namespace cse
 						GetDlgItemText(hWnd, IDC_GLOBALSCRIPT_SCRIPTID, ScriptID, sizeof(ScriptID));
 						GetDlgItemText(hWnd, IDC_GLOBALSCRIPT_DELAY, Delay, sizeof(Delay));
 
-						TESForm* Form = NULL;
-						TESQuest* Quest = NULL;
-						Script* QuestScript = NULL;
+						TESForm* Form = nullptr;
+						TESQuest* Quest = nullptr;
+						Script* QuestScript = nullptr;
 
 						Form = TESForm::LookupByEditorID(QuestID);
 
@@ -473,8 +473,8 @@ namespace cse
 																								  &ZeroVector,
 																								  &ZeroVector,
 																								  CS_CAST(ParentCell, TESForm, TESObjectCELL),
-																								  NULL,
-																								  NULL);
+																								  nullptr,
+																								  nullptr);
 
 												SME::MiscGunk::ToggleFlag(&Ref->formFlags, TESForm::kFormFlags_Disabled, InitiallyDisabled);
 												SME::MiscGunk::ToggleFlag(&Ref->formFlags, TESForm::kFormFlags_QuestItem, true);

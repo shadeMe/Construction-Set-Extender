@@ -320,7 +320,7 @@ namespace cse
 
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex)
 		{
-			TESTopic* Topic = NULL;
+			TESTopic* Topic = nullptr;
 
 			__asm { mov		Topic, ecx }
 			SME_ASSERT(Topic);
@@ -346,7 +346,7 @@ namespace cse
 
 		void __stdcall TESTopicInfoSetInDialogDetour(void* DialogEditorData, HWND Dialog)
 		{
-			TESTopicInfo* TopicInfo = NULL;
+			TESTopicInfo* TopicInfo = nullptr;
 
 			__asm { mov		TopicInfo, ecx }
 			SME_ASSERT(TopicInfo);
@@ -851,7 +851,7 @@ namespace cse
 					for (TESForm::OverrideFileListT::Iterator Itr = Form->fileList.Begin(); !Itr.End(); ++Itr)
 					{
 						TESFile* File = Itr.Get();
-						if (File == NULL)
+						if (File == nullptr)
 							break;
 
 						FORMAT_STR(Buffer, "\t%s\n", File->fileName);
@@ -971,7 +971,7 @@ namespace cse
 						(LPARAM)Buffer))
 					{
 						TESForm* NewBaseForm = TESForm::LookupByEditorID(Buffer);
-						if (NewBaseForm == NULL)
+						if (NewBaseForm == nullptr)
 						{
 							BGSEEUI->MsgBoxE(hWnd, 0, "Invalid editorID '%s'", Buffer);
 							break;
@@ -989,7 +989,7 @@ namespace cse
 							NewBaseForm->formID) == IDYES)
 						{
 							Ref->SetBaseForm(NewBaseForm);
-							Ref->SetNiNode(NULL);
+							Ref->SetNiNode(nullptr);
 							Ref->GenerateNiNode();
 							Ref->parentCell->AddObjectReference(Ref);
 							Ref->SetFromActiveFile(true);
@@ -1013,18 +1013,18 @@ namespace cse
 		{
 			SME_ASSERT(SelectedForm);
 
-			InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
+			InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_SETFORMID, "Set FormID");
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_MARKUNMODIFIED, "Mark As Unmodified");
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_UNDELETE, "Undelete");
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_SHOWOVERRIDES, "Show Override List");
-			InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
+			InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_JUMPTOUSEINFOLIST, "Jump To Central Use Info List");
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_ADDTOTAG, "Add to Active Tag");
 
 			if (SelectedForm->IsReference())
 			{
-				InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
+				InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_EDITBASEFORM, "Edit Base Form");
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_REPLACEBASEFORM, "Replace Base Form");
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_TOGGLEVISIBILITY, "Toggle Visibility");
@@ -1032,17 +1032,17 @@ namespace cse
 			}
 			else if (CS_CAST(SelectedForm, TESForm, TESBoundObject))
 			{
-				InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
+				InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_PREVIEW, "Preview");
 
 				if (SelectedForm->formType == TESForm::kFormType_NPC)
 				{
-					InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
+					InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
 					InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_EXPORTFACETEXTURES, "Export FaceGen Textures");
 				}
 			}
 
-			InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
+			InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
 			InsertMenu(Menu, -1, MF_BYPOSITION | MF_STRING, IDC_CSE_POPUP_GLOBALCOPY, "Copy To Global Clipboard");
 			InsertMenu(Menu, -1, MF_BYPOSITION | MF_STRING, IDC_CSE_POPUP_GLOBALPASTE, "Paste From Global Clipboard");
 		}
@@ -1249,7 +1249,7 @@ namespace cse
 				if (ExistingTempRef)
 					ExistingTempRef->DeleteInstance();
 
-				xWorkingData->localCopy = NULL;
+				xWorkingData->localCopy = nullptr;
 			}
 		}
 
@@ -1511,7 +1511,7 @@ namespace cse
 				SendMessage(StageItemListView, WM_KEYDOWN, (WPARAM)VK_DELETE, NULL);
 			}
 
-			xStageData->selectedStageItem = NULL;
+			xStageData->selectedStageItem = nullptr;
 		}
 
 		#define _hhName		TESQuestRemoveStageData
@@ -1698,7 +1698,7 @@ namespace cse
 			switch (ListViewID)
 			{
 			case 1454:		// dialog response list
-				Data = NULL;
+				Data = nullptr;
 				break;
 			}
 
@@ -1735,7 +1735,7 @@ namespace cse
 		void __stdcall DoTESPackageWndProcAddNewHook(HWND ListView, TESPackage* Package)
 		{
 			HWND Dialog = *TESPackage::WindowHandle;
-			*TESPackage::WindowHandle = NULL;
+			*TESPackage::WindowHandle = nullptr;
 
 			_DATAHANDLER->AddForm(Package);
 

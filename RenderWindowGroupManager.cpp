@@ -174,7 +174,7 @@ namespace cse
 
 		void RenderWindowGroupManager::StandardOutput(const char* Fmt, ...)
 		{
-			if (Fmt == NULL)
+			if (Fmt == nullptr)
 				return;
 
 			char Buffer[0x1000] = { 0 };
@@ -319,7 +319,7 @@ namespace cse
 				return Group->ID.c_str();
 			}
 			else
-				return NULL;
+				return nullptr;
 		}
 
 		bool RenderWindowGroupManager::SelectAffiliatedGroup(TESObjectREFR* Ref, TESRenderSelection* Selection, bool ClearSelection)

@@ -154,7 +154,7 @@ namespace cse
 
 		void PluginCosaveManager::HandleLoad() const
 		{
-			if (_DATAHANDLER->activeFile == NULL)
+			if (_DATAHANDLER->activeFile == nullptr)
 				return;
 			else if (Handlers.size() == 0)
 				return;
@@ -187,7 +187,7 @@ namespace cse
 
 		void PluginCosaveManager::HandleShutdown() const
 		{
-			if (_DATAHANDLER->activeFile == NULL)
+			if (_DATAHANDLER->activeFile == nullptr)
 				return;
 			else if (Handlers.size() == 0)
 				return;
@@ -281,8 +281,8 @@ namespace cse
 			char Buffer[0x100] = { 0 };
 			TESFile* Parent = In->GetOverrideFile(-1);
 			FORMAT_STR(Buffer, "%s{%08X|%d|%s|%s}", kSigil, In->formID, (UInt32)In->formType,
-					   (In->GetEditorID() == NULL ? kNullEditorID : In->GetEditorID()),
-					   (Parent == NULL ? "Oblivion.esm" : Parent->fileName));
+					   (In->GetEditorID() == nullptr ? kNullEditorID : In->GetEditorID()),
+					   (Parent == nullptr ? "Oblivion.esm" : Parent->fileName));
 			Out = Buffer;
 			return Result;
 		}
@@ -357,7 +357,7 @@ namespace cse
 								TESForm* Form = TESForm::LookupByFormID(FormID);
 								if (Form)
 								{
-									bool GoodEditorID = (Form->GetEditorID() == NULL && strcmp(EditorID.c_str(), kNullEditorID) == 0) || Form->editorID.Compare(EditorID.c_str()) == 0;
+									bool GoodEditorID = (Form->GetEditorID() == nullptr && strcmp(EditorID.c_str(), kNullEditorID) == 0) || Form->editorID.Compare(EditorID.c_str()) == 0;
 									if (Form && Form->formType == TypeID && GoodEditorID)
 									{
 										Result = true;

@@ -5,7 +5,7 @@ namespace cse
 {
 	namespace achievements
 	{
-		bgsee::extras::Achievement*		AchievementBase::AllClearAchievement = NULL;
+		bgsee::extras::Achievement*		AchievementBase::AllClearAchievement = nullptr;
 
 		bool AchievementBase::UnlockCallback( bgsee::extras::AchievementManager* Parameter )
 		{
@@ -32,7 +32,7 @@ namespace cse
 		{
 			if (TimerID)
 			{
-				KillTimer(NULL, TimerID);
+				KillTimer(nullptr, TimerID);
 				TimerID = 0;
 			}
 		}
@@ -60,7 +60,7 @@ namespace cse
 			GetLastInputInfo(&InputInfo);
 			UInt32 IdleTime = GetTickCount() - InputInfo.dwTime;
 
-			if (IdleTime >= kIdleTimeOut || GetActiveWindow() == NULL)
+			if (IdleTime >= kIdleTimeOut || GetActiveWindow() == nullptr)
 			{
 				return true;
 			}
@@ -70,7 +70,7 @@ namespace cse
 			}
 		}
 
-		AchievementCheat*	AchievementCheat::Singleton = NULL;
+		AchievementCheat*	AchievementCheat::Singleton = nullptr;
 
 		VOID CALLBACK AchievementCheat::TimerCallback( HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime )
 		{
@@ -94,24 +94,24 @@ namespace cse
 									"0F7F9D05-9679-4E75-9AE3-0B419E6C813A",
 									6)
 		{
-			TimerID = SetTimer(NULL, NULL, 60 * 1000, TimerCallback);
+			TimerID = SetTimer(nullptr, 0, 60 * 1000, TimerCallback);
 			SME_ASSERT(TimerID);
 		}
 
 		AchievementCheat::~AchievementCheat()
 		{
-			Singleton = NULL;
+			Singleton = nullptr;
 		}
 
 		AchievementCheat* AchievementCheat::GetSingleton()
 		{
-			if (Singleton == NULL)
+			if (Singleton == nullptr)
 				Singleton = new AchievementCheat();
 
 			return Singleton;
 		}
 
-		AchievementLost*		AchievementLost::Singleton = NULL;
+		AchievementLost*		AchievementLost::Singleton = nullptr;
 
 		VOID CALLBACK AchievementLost::TimerCallback( HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime )
 		{
@@ -138,18 +138,18 @@ namespace cse
 									"40AB6814-1B55-4906-A564-74E9E37BC2EC",
 									ReqdHours)
 		{
-			TimerID = SetTimer(NULL, NULL, 60 * 1000, TimerCallback);
+			TimerID = SetTimer(nullptr, 0, 60 * 1000, TimerCallback);
 			SME_ASSERT(TimerID);
 		}
 
 		AchievementLost::~AchievementLost()
 		{
-			Singleton = NULL;
+			Singleton = nullptr;
 		}
 
 		AchievementLost* AchievementLost::GetSingleton()
 		{
-			if (Singleton == NULL)
+			if (Singleton == nullptr)
 				Singleton = new AchievementLost(666);
 
 			return Singleton;
@@ -190,7 +190,7 @@ namespace cse
 
 		bool AchievementTimeTriggered::UnlockCallback( bgsee::extras::AchievementManager* Parameter )
 		{
-			time_t CurrentTime = time(NULL);
+			time_t CurrentTime = time(nullptr);
 			tm Now = {0};
 
 			if (localtime_s(&Now, &CurrentTime))
@@ -262,7 +262,7 @@ namespace cse
 
 		void AchievementHappypotamus::GetName( std::string& OutBuffer ) const
 		{
-			time_t CurrentTime = time(NULL);
+			time_t CurrentTime = time(nullptr);
 			tm Now = {0};
 
 			if (localtime_s(&Now, &CurrentTime))
@@ -320,31 +320,31 @@ namespace cse
 			}
 		}
 
-		AchievementBase*			kTheWiseOne				= NULL;
-		AchievementBase*			kFearless				= NULL;
-		AchievementBase*			kAutomaton				= NULL;
-		AchievementBase*			kHeretic				= NULL;
-		AchievementPowerUser*	kPowerUser				= NULL;
-		AchievementBase*  		kAntiChrist				= NULL;
-		AchievementBase*  		kLazyBum				= NULL;
-		AchievementBase*  		kMadScientist			= NULL;
-		AchievementBase*  		kSoprano				= NULL;
-		AchievementBase* 		kWTF					= NULL;
-		AchievementBase*  		kFlyingBlind			= NULL;
-		AchievementBase*  		kPedantic				= NULL;
-		AchievementBase*  		kCardinalSin			= NULL;
-		AchievementBase*  		kMagister				= NULL;
-		AchievementIncremented*  kCommandant				= NULL;
-		AchievementBase*  		kCompartmentalizer		= NULL;
-		AchievementBase* 		kEruditeModder			= NULL;
-		AchievementBase*  		kBobTheBuilder			= NULL;
-		AchievementIncremented*  kLoquacious				= NULL;
-		AchievementBase*  		kSaboteur				= NULL;
-		AchievementBase*  		kOldestTrickInTheBook	= NULL;
-		AchievementBase*  		kOver3000				= NULL;
-		AchievementBase*  		kFunnyGuy				= NULL;
-		AchievementHappypotamus* kHappyBDayMoi			= NULL;
-		AchievementBase*  		kChicken				= NULL;
+		AchievementBase*		kTheWiseOne				= nullptr;
+		AchievementBase*		kFearless				= nullptr;
+		AchievementBase*		kAutomaton				= nullptr;
+		AchievementBase*		kHeretic				= nullptr;
+		AchievementPowerUser*	kPowerUser				= nullptr;
+		AchievementBase*  		kAntiChrist				= nullptr;
+		AchievementBase*  		kLazyBum				= nullptr;
+		AchievementBase*  		kMadScientist			= nullptr;
+		AchievementBase*  		kSoprano				= nullptr;
+		AchievementBase* 		kWTF					= nullptr;
+		AchievementBase*  		kFlyingBlind			= nullptr;
+		AchievementBase*  		kPedantic				= nullptr;
+		AchievementBase*  		kCardinalSin			= nullptr;
+		AchievementBase*  		kMagister				= nullptr;
+		AchievementIncremented*  kCommandant			= nullptr;
+		AchievementBase*  		kCompartmentalizer		= nullptr;
+		AchievementBase* 		kEruditeModder			= nullptr;
+		AchievementBase*  		kBobTheBuilder			= nullptr;
+		AchievementIncremented* kLoquacious				= nullptr;
+		AchievementBase*  		kSaboteur				= nullptr;
+		AchievementBase*  		kOldestTrickInTheBook	= nullptr;
+		AchievementBase*  		kOver3000				= nullptr;
+		AchievementBase*  		kFunnyGuy				= nullptr;
+		AchievementHappypotamus* kHappyBDayMoi			= nullptr;
+		AchievementBase*  		kChicken				= nullptr;
 
 		void Initialize()
 		{

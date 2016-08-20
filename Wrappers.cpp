@@ -11,7 +11,7 @@ namespace cse
 
 	TESFormWrapper::~TESFormWrapper()
 	{
-		WrappedForm = NULL;
+		WrappedForm = nullptr;
 	}
 
 	UInt32 TESFormWrapper::GetFormID( void ) const
@@ -63,7 +63,7 @@ namespace cse
 
 	TESFileWrapper::TESFileWrapper() :
 		bgsee::PluginFileWrapper(),
-		WrappedPlugin(NULL),
+		WrappedPlugin(nullptr),
 		PluginPath("")
 	{
 		;//
@@ -77,7 +77,7 @@ namespace cse
 
 	bool TESFileWrapper::Construct(const char* FileName, bool OverwriteExisting)
 	{
-		SME_ASSERT(WrappedPlugin == NULL);
+		SME_ASSERT(WrappedPlugin == nullptr);
 
 		char Buffer[0x200] = {0};
 		FORMAT_STR(Buffer, "%s\\%s", BGSEEWORKSPACE->GetCurrentWorkspace(), FileName);
@@ -90,7 +90,7 @@ namespace cse
 		if (WrappedPlugin)
 			WrappedPlugin->SetFileIndex(0);
 
-		return WrappedPlugin != NULL;
+		return WrappedPlugin != nullptr;
 	}
 
 	void TESFileWrapper::Purge( void )
@@ -225,7 +225,7 @@ namespace cse
 		SME_ASSERT(Wrapped);
 
 		// refresh the file header
-		SME_ASSERT(Wrapped->bsFile == NULL);
+		SME_ASSERT(Wrapped->bsFile == nullptr);
 
 		CSEFile->Open(false);
 		CSEFile->Close();
@@ -300,7 +300,7 @@ namespace cse
 				TESForm* CurrentForm = TESForm::LookupByEditorID(TempForm->GetEditorID());
 				SME_ASSERT(TempForm->IsReference() == false);
 
-				if (CurrentForm == NULL)
+				if (CurrentForm == nullptr)
 					CurrentForm = TESForm::CreateInstance(TempForm->formType);
 				else
 				{
@@ -315,7 +315,7 @@ namespace cse
 					else if (ReplaceAll == false)
 					{
 						bool Skip = false;
-						switch (BGSEEUI->MsgBoxI(NULL,
+						switch (BGSEEUI->MsgBoxI(nullptr,
 							MB_TASKMODAL | MB_SETFOREGROUND | MB_YESNOCANCEL,
 							"Form %s already exists. Do you wish to replace it?\n\n\"Cancel\" will replace all existing forms.", CurrentForm->GetEditorID()))
 						{
@@ -636,7 +636,7 @@ namespace cse
 
 		if (Serializer->LoadedFormBuffer.size())
 		{
-			if ((*TESRenderWindow::ActiveCell == NULL && _TES->currentInteriorCell == NULL) ||
+			if ((*TESRenderWindow::ActiveCell == nullptr && _TES->currentInteriorCell == nullptr) ||
 				*TESRenderWindow::PathGridEditFlag ||
 				*TESRenderWindow::LandscapeEditFlag)
 			{
@@ -656,7 +656,7 @@ namespace cse
 					TESObjectREFR* Ref = CS_CAST(TempForm, TESForm, TESObjectREFR);
 					SME_ASSERT(Ref);
 
-					if (Ref->baseForm == NULL)
+					if (Ref->baseForm == nullptr)
 					{
 						BGSEECONSOLE_MESSAGE("Couldn't instantiate reference %08X '%s' - Unresolved base form", TempForm->formID, TempForm->GetEditorID());
 						Result = false;
@@ -680,7 +680,7 @@ namespace cse
 					TESObjectCELL* Interior = _TES->currentInteriorCell;
 					TESWorldSpace* Worldspace = _TES->currentWorldSpace;
 					if (Interior)
-						Worldspace = NULL;
+						Worldspace = nullptr;
 
 					for (std::map<TESObjectREFR*, const char*>::iterator Itr = RefEditorIDMap.begin(); Itr != RefEditorIDMap.end(); Itr++)
 					{
@@ -702,7 +702,7 @@ namespace cse
 						NewPosition += NewOrigin;
 
 						TESObjectREFR* NewRef = CS_CAST(TESForm::CreateInstance(TESForm::kFormType_REFR), TESForm, TESObjectREFR);
-						if (NewRef == NULL)
+						if (NewRef == nullptr)
 						{
 							BGSEECONSOLE_MESSAGE("Couldn't create reference @ %0.3f, %0.3f, %0.3f, Cell = %08X, Worldspace = %08X",
 												 NewPosition.x, NewPosition.y, NewPosition.z,
@@ -717,8 +717,8 @@ namespace cse
 							if (EditorID && TESForm::LookupByEditorID(EditorID))
 							{
 								BGSEECONSOLE_MESSAGE("Couldn't set editorID '%s' on instantiated reference %08X - It's already in use", EditorID, NewRef->formID);
-								EditorID = NULL;
-								TempRef->SetEditorID(NULL);
+								EditorID = nullptr;
+								TempRef->SetEditorID(nullptr);
 								Result = false;
 							}
 
@@ -748,7 +748,7 @@ namespace cse
 						ExtraEnableStateParent* xParent = (ExtraEnableStateParent*)TempRef->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
 						if (xParent && xParent->parent)
 						{
-							TESObjectREFR* NewParent = NULL;
+							TESObjectREFR* NewParent = nullptr;
 							for (auto j : AllocationMap)
 							{
 								if (j.first == xParent->parent)
@@ -798,7 +798,7 @@ namespace cse
 		for (auto Itr : Data->LoadedFormBuffer)
 		{
 			TESObjectREFR* ThisRef = (TESObjectREFR*)Itr;
-			if (ThisRef->baseForm == NULL)
+			if (ThisRef->baseForm == nullptr)
 			{
 				Result = false;
 				break;
@@ -825,7 +825,7 @@ namespace cse
 				NewRef->SetBaseForm(NewBase);
 
 				NiNode* Ref3D = NewRef->GenerateNiNode();
-				if (Ref3D == NULL)
+				if (Ref3D == nullptr)
 				{
 					NewRef->DeleteInstance();
 					NewBase->DeleteInstance();
@@ -840,13 +840,13 @@ namespace cse
 						Itr->DeleteInstance();
 					OutPreviewRefs.clear();
 
-					*OutPreviewNode = NULL;
+					*OutPreviewNode = nullptr;
 
 					Result = false;
 					break;
 				}
 				else
-					NewRef->SetNiNode(NULL);
+					NewRef->SetNiNode(nullptr);
 
 				OutPreviewRefs.push_back(NewRef);
 				OutPreviewBaseForms.push_back(NewBase);
@@ -864,7 +864,7 @@ namespace cse
 					NewPos += Itr->position;
 					Itr->SetPosition(NewPos);
 
-					Itr->SetNiNode(NULL);
+					Itr->SetNiNode(nullptr);
 					NiNode* Ref3D = Itr->GenerateNiNode();
 					SME_ASSERT(Ref3D);
 					TESRender::AddToNiNode(Root, Ref3D);
@@ -893,7 +893,7 @@ namespace cse
 			break;
 		default:
 			{
-				TESForm* TempForm = NULL;
+				TESForm* TempForm = nullptr;
 				bool BaseForm = false;
 				switch (CurrentType)
 				{
@@ -1037,7 +1037,7 @@ namespace cse
 
 			TESForm* Existing = TESForm::LookupByEditorID(ThisRef->baseForm->GetEditorID());
 			bool Delinquent = false;
-			if (Existing == NULL)
+			if (Existing == nullptr)
 			{
 				if (StrictBaseFormResolution)
 				{
@@ -1197,13 +1197,13 @@ namespace cse
 					TESFormWrapper* Wrapped = dynamic_cast<TESFormWrapper*>(Itr);
 					SME_ASSERT(Wrapped);
 					TESObjectREFR* ThisRef = (TESObjectREFR*)Wrapped->GetWrappedForm();
-					if (ThisRef->baseForm == NULL)
+					if (ThisRef->baseForm == nullptr)
 					{
 						BGSEECONSOLE_MESSAGE("Reference %08X has no base form!", Itr->GetFormID());
 						FormCheck = false;
 						break;
 					}
-					else if (ThisRef->baseForm->GetEditorID() == NULL || strlen(ThisRef->baseForm->GetEditorID()) < 1)
+					else if (ThisRef->baseForm->GetEditorID() == nullptr || strlen(ThisRef->baseForm->GetEditorID()) < 1)
 					{
 						BGSEECONSOLE_MESSAGE("Reference %08X's base form has no editorID!", Itr->GetFormID());
 						FormCheck = false;

@@ -107,7 +107,7 @@ HWND GetRenderWindowHandle(void)
 FormData* LookupFormByEditorID(const char* EditorID)
 {
 	TESForm* Form = TESForm::LookupByEditorID(EditorID);
-	FormData* Result = NULL;
+	FormData* Result = nullptr;
 
 	if (Form)
 	{
@@ -120,7 +120,7 @@ FormData* LookupFormByEditorID(const char* EditorID)
 
 ScriptData* LookupScriptableByEditorID(const char* EditorID)
 {
-	ScriptData* Result = NULL;
+	ScriptData* Result = nullptr;
 	TESForm* Form = TESForm::LookupByEditorID(EditorID);
 
 	if (Form)
@@ -136,7 +136,7 @@ ScriptData* LookupScriptableByEditorID(const char* EditorID)
 		{
 			Result = new ScriptData();
 			Result->FillScriptData(CS_CAST(Form, TESForm, Script));
-			Result->ParentID = NULL;
+			Result->ParentID = nullptr;
 		}
 		else
 		{
@@ -215,10 +215,10 @@ void LoadFormForEditByFormID(UInt32 FormID)
 
 FormData* ShowPickReferenceDialog(HWND Parent)
 {
-	TESObjectREFR* Ref = RefSelectControl::ShowSelectReferenceDialog(Parent, NULL, true);
+	TESObjectREFR* Ref = RefSelectControl::ShowSelectReferenceDialog(Parent, nullptr, true);
 
 	if (!Ref)
-		return NULL;
+		return nullptr;
 	else
 		return new FormData(Ref);
 }
@@ -288,7 +288,7 @@ bool CompileScript(ScriptCompileData* Data)
 
 	if ((ScriptForm->formFlags & TESForm::kFormFlags_Deleted))
 	{
-		BGSEEUI->MsgBoxI(NULL,
+		BGSEEUI->MsgBoxI(nullptr,
 						MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_OK,
 						"Script %s {%08X} has been deleted, ergo it cannot be compiled.", ScriptForm->editorID.c_str(), ScriptForm->formID);
 
@@ -323,7 +323,7 @@ bool CompileScript(ScriptCompileData* Data)
 				}
 			}
 			else
-				Data->CompileErrorData.ErrorListHead = NULL;
+				Data->CompileErrorData.ErrorListHead = nullptr;
 
 			ScriptForm->SetText(OldText->c_str());
 		}
@@ -350,7 +350,7 @@ void RecompileScripts(void)
 		}
 	}
 
-	HWND NotificationDialog = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), BGSEEUI->GetMainWindow(), NULL, NULL);
+	HWND NotificationDialog = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), BGSEEUI->GetMainWindow(), nullptr, NULL);
 	Static_SetText(GetDlgItem(NotificationDialog, -1), "Please Wait");
 	char Buffer[0x200] = {0};
 
@@ -432,7 +432,7 @@ Script* GetScriptNeighbour(Script* Current, UInt8 Direction)
 	SME_ASSERT(_DATAHANDLER->scripts.Count());
 
 	int Index = _DATAHANDLER->scripts.IndexOf(Current);
-	Script* Result = NULL;
+	Script* Result = nullptr;
 
 	switch (Direction)
 	{
@@ -452,7 +452,7 @@ Script* GetScriptNeighbour(Script* Current, UInt8 Direction)
 		break;
 	}
 
-	if (Result->GetEditorID() == NULL)
+	if (Result->GetEditorID() == nullptr)
 		Result = GetScriptNeighbour(Result, Direction);
 
 	return Result;
@@ -461,15 +461,15 @@ Script* GetScriptNeighbour(Script* Current, UInt8 Direction)
 ScriptData* GetPreviousScriptInList(void* CurrentScript)
 {
 	Script* ScriptForm = CS_CAST(CurrentScript, TESForm, Script);
-	ScriptData* Result = NULL;
-	Script* Switch = NULL;
+	ScriptData* Result = nullptr;
+	Script* Switch = nullptr;
 
 	if (_DATAHANDLER->scripts.Count())
 	{
-		if (ScriptForm == NULL)
+		if (ScriptForm == nullptr)
 		{
 			Switch = _DATAHANDLER->scripts.GetLastItem();
-			if (Switch->GetEditorID() == NULL)
+			if (Switch->GetEditorID() == nullptr)
 				Switch = GetScriptNeighbour(ScriptForm, kDirection_Backward);
 		}
 		else
@@ -488,15 +488,15 @@ ScriptData* GetPreviousScriptInList(void* CurrentScript)
 ScriptData* GetNextScriptInList(void* CurrentScript)
 {
 	Script* ScriptForm = CS_CAST(CurrentScript, TESForm, Script);
-	ScriptData* Result = NULL;
-	Script* Switch = NULL;
+	ScriptData* Result = nullptr;
+	Script* Switch = nullptr;
 
 	if (_DATAHANDLER->scripts.Count())
 	{
-		if (ScriptForm == NULL)
+		if (ScriptForm == nullptr)
 		{
 			Switch = _DATAHANDLER->scripts.GetNthItem(0);
-			if (Switch->GetEditorID() == NULL)
+			if (Switch->GetEditorID() == nullptr)
 				Switch = GetScriptNeighbour(ScriptForm, kDirection_Forward);
 		}
 		else
@@ -761,11 +761,11 @@ void CompileCrossReferencedForms(TESForm* Form)
 void CompileDependencies(const char* EditorID)
 {
 	TESForm* Form = TESForm::LookupByEditorID(EditorID);
-	if (Form == NULL)
+	if (Form == nullptr)
 		return;
 
 	Script* ScriptForm = CS_CAST(Form, TESForm, Script);
-	if (ScriptForm == NULL)
+	if (ScriptForm == nullptr)
 		return;
 
 	BGSEECONSOLE_MESSAGE("Recompiling dependencies of script %s {%08X}...", ScriptForm->editorID.c_str(), ScriptForm->formID);
@@ -859,8 +859,8 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 
 	for (cseOverride::NiTMapIterator Itr = TESForm::EditorIDMap->GetFirstPos(); Itr;)
 	{
-		const char*	 EditorID = NULL;
-		TESForm* Form = NULL;
+		const char*	 EditorID = nullptr;
+		TESForm* Form = nullptr;
 
 		TESForm::EditorIDMap->GetNext(Itr, EditorID, Form);
 		if (EditorID)
@@ -895,7 +895,7 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 	{
 		Data->QuestListHead[QuestCount].FillFormData(Itr.Get());
 		Data->QuestListHead[QuestCount].FullName = Itr.Get()->name.c_str();
-		Data->QuestListHead[QuestCount].ScriptName = NULL;
+		Data->QuestListHead[QuestCount].ScriptName = nullptr;
 		if (Itr.Get()->script)
 			Data->QuestListHead[QuestCount].ScriptName = Itr.Get()->script->editorID.c_str();
 
@@ -921,8 +921,8 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 
 	for (cseOverride::NiTMapIterator Itr = TESForm::EditorIDMap->GetFirstPos(); Itr;)
 	{
-		const char*	 EditorID = NULL;
-		TESForm* Form = NULL;
+		const char*	 EditorID = nullptr;
+		TESForm* Form = nullptr;
 
 		TESForm::EditorIDMap->GetNext(Itr, EditorID, Form);
 		if (EditorID)
@@ -952,11 +952,11 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 void BindScript(const char* EditorID, HWND Parent)
 {
 	TESForm* Form = TESForm::LookupByEditorID(EditorID);
-	if (Form == NULL)
+	if (Form == nullptr)
 		return;
 
 	Script* ScriptForm = CS_CAST(Form, TESForm, Script);
-	if (ScriptForm == NULL)
+	if (ScriptForm == nullptr)
 		return;
 
 	Form = (TESForm*)DialogBox(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_BINDSCRIPT), Parent, (DLGPROC)uiManager::BindScriptDlgProc);
@@ -972,7 +972,7 @@ void BindScript(const char* EditorID, HWND Parent)
 		{
 			BGSEEUI->MsgBoxW(Parent, 0, "Script type doesn't correspond to binding form.");
 		}
-		else if (ScriptableForm == NULL)
+		else if (ScriptableForm == nullptr)
 			BGSEEUI->MsgBoxW(Parent, 0, "Binding form isn't scriptable.");
 		else
 		{
@@ -1173,7 +1173,7 @@ UseInfoListCrossRefData* GetCrossRefDataForForm(const char* EditorID)
 		MagicItemScriptCrossRefArrayT ScriptRefs;
 
 		UInt32 Count = CrossRefList->Count();
-		MagicItem* Item = NULL;
+		MagicItem* Item = nullptr;
 
 		if (Form->formType == TESForm::kFormType_Script)
 		{
@@ -1231,7 +1231,7 @@ UseInfoListCellItemListData* GetCellRefDataForForm(const char* EditorID)
 					Result->UseInfoListCellItemListHead[i].FillFormData(Data->cell);
 					Result->UseInfoListCellItemListHead[i].WorldEditorID = ((!WorldSpace)?"Interior":WorldSpace->editorID.c_str());
 					Result->UseInfoListCellItemListHead[i].RefEditorID = ((!FirstRef || !FirstRef->editorID.c_str())?"<Unnamed>":FirstRef->editorID.c_str());
-					Result->UseInfoListCellItemListHead[i].RefFormID = (FirstRef == NULL ? 0 : FirstRef->formID);
+					Result->UseInfoListCellItemListHead[i].RefFormID = (FirstRef == nullptr ? 0 : FirstRef->formID);
 					Result->UseInfoListCellItemListHead[i].ParentCellInterior = Data->cell->cellFlags & TESObjectCELL::kCellFlags_Interior;
 					Result->UseInfoListCellItemListHead[i].XCoord = Data->cell->cellData.coords->x;
 					Result->UseInfoListCellItemListHead[i].YCoord = Data->cell->cellData.coords->y;
@@ -1252,7 +1252,7 @@ UseInfoListCellItemListData* GetCellRefDataForForm(const char* EditorID)
 #pragma region BatchRefEditor
 bool OwnershipDataSortComparator(TESForm* First, TESForm* Second)
 {
-	if (First->GetEditorID() == NULL || Second->GetEditorID() == NULL)
+	if (First->GetEditorID() == nullptr || Second->GetEditorID() == nullptr)
 		return false;
 
 	return _stricmp(First->GetEditorID(), Second->GetEditorID()) < 0;

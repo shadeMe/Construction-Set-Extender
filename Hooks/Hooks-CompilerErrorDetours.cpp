@@ -195,7 +195,7 @@ namespace cse
 
 		void __stdcall DoResultScriptErrorNotificationHook(void)
 		{
-			BGSEEUI->MsgBoxE(NULL,
+			BGSEEUI->MsgBoxE(nullptr,
 							MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_OK,
 							"Result script compilation failed. Check the console for error messages.");
 		}

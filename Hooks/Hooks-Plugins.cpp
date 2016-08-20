@@ -100,7 +100,7 @@ namespace cse
 			}
 		}
 
-		static HWND				s_LoadIdleWindow = NULL;
+		static HWND				s_LoadIdleWindow = nullptr;
 		static char				s_NumericIDWarningBuffer[0x10] = {0};
 
 		void __stdcall DoLoadPluginsPrologHook(void)
@@ -109,7 +109,7 @@ namespace cse
 			if (ActiveFile && (ActiveFile->fileFlags & TESFile::kFileFlag_Master))
 				SME::MiscGunk::ToggleFlag(&ActiveFile->fileFlags, TESFile::kFileFlag_Master, 0);
 
-			s_LoadIdleWindow = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), BGSEEUI->GetMainWindow(), NULL, NULL);
+			s_LoadIdleWindow = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), BGSEEUI->GetMainWindow(), nullptr, NULL);
 			Static_SetText(GetDlgItem(s_LoadIdleWindow, -1), "Loading Plugins\nPlease Wait");
 		}
 
@@ -236,11 +236,11 @@ namespace cse
 			char Buffer[0x200] = {0};
 			FORMAT_STR(Buffer, "%s%s", Plugin->filePath, Plugin->fileName);
 
-			HANDLE TempFile = CreateFile(Buffer, GENERIC_READ|GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+			HANDLE TempFile = CreateFile(Buffer, GENERIC_READ|GENERIC_WRITE, NULL, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 			if (TempFile == INVALID_HANDLE_VALUE)
 			{
 				BGSEECONSOLE_ERROR("Couldn't open TESFile '%s'!", Buffer);
-				BGSEEUI->MsgBoxE(NULL,
+				BGSEEUI->MsgBoxE(nullptr,
 								MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_OK,
 								"Couldn't open TESFile '%s' for read/write access.\n\nError logged to the console.", Plugin->fileName);
 				return false;
@@ -406,7 +406,7 @@ namespace cse
 				TESFile* ActiveFile = Reference->GetOverrideFile(-1);
 
 				if ((SourceFile == ActiveFile && ActiveFile == SaveFile) ||
-					(SourceFile == NULL && ActiveFile == NULL))
+					(SourceFile == nullptr && ActiveFile == nullptr))
 				{
 					return false;
 				}
@@ -494,7 +494,7 @@ namespace cse
 		{
 			static FILETIME s_SavedTimestamp = {0};
 
-			if (File == NULL)
+			if (File == nullptr)
 				return;
 			else if (settings::plugins::kPreventTimeStampChanges.GetData().i == 0)
 				return;
@@ -502,12 +502,12 @@ namespace cse
 			char Buffer[0x200] = {0};
 			FORMAT_STR(Buffer, "%s\\%s", File->filePath, File->fileName);	// will only work with files in the current workspace
 
-			HANDLE SaveFile = CreateFile(Buffer, GENERIC_READ|GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, 0, NULL);
+			HANDLE SaveFile = CreateFile(Buffer, GENERIC_READ|GENERIC_WRITE, NULL, nullptr, OPEN_EXISTING, 0, nullptr);
 			if (SaveFile == INVALID_HANDLE_VALUE)
 			{
 				// check if the file's from the base workspace
 				FORMAT_STR(Buffer, "%s\\%s\\%s", BGSEEWORKSPACE->GetDefaultWorkspace(), File->filePath, File->fileName);
-				SaveFile = CreateFile(Buffer, GENERIC_READ|GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, 0, NULL);
+				SaveFile = CreateFile(Buffer, GENERIC_READ|GENERIC_WRITE, NULL, nullptr, OPEN_EXISTING, 0, nullptr);
 
 				if (SaveFile == INVALID_HANDLE_VALUE)
 					return;
@@ -516,12 +516,12 @@ namespace cse
 			if (State)
 			{
 				ZeroMemory(&s_SavedTimestamp, sizeof(FILETIME));
-				GetFileTime(SaveFile, NULL, NULL, &s_SavedTimestamp);
+				GetFileTime(SaveFile, nullptr, nullptr, &s_SavedTimestamp);
 			}
 			else
 			{
 				if (s_SavedTimestamp.dwHighDateTime || s_SavedTimestamp.dwLowDateTime)
-					SetFileTime(SaveFile, NULL, NULL, &s_SavedTimestamp);
+					SetFileTime(SaveFile, nullptr, nullptr, &s_SavedTimestamp);
 			}
 
 			CloseHandle(SaveFile);
@@ -529,7 +529,7 @@ namespace cse
 
 		bool __stdcall DoDataHandlerSavePluginRetainTimeStampsHook(bool State)
 		{
-			if (_DATAHANDLER->activeFile == NULL)
+			if (_DATAHANDLER->activeFile == nullptr)
 				return false;
 			else
 				PreserveTESFileTimeStamp(_DATAHANDLER->activeFile, State);

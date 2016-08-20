@@ -14,8 +14,8 @@ BSTextureManager**					BSTextureManager::Singleton = (BSTextureManager**)0x00A8E
 
 UInt8								TESLODTextureGenerator::GeneratorState = TESLODTextureGenerator::kState_NotInUse;
 const char*							TESLODTextureGenerator::LODFullTexturePath = ".\\Data\\Textures\\LandscapeLOD\\Generated\\%i.%02i.%02i.%i.dds";
-const char*							TESLODTextureGenerator::ExteriorSnapshotPathBuffer = NULL;
-TESObjectCELL*						TESLODTextureGenerator::ExteriorSnapshotSource = NULL;
+const char*							TESLODTextureGenerator::ExteriorSnapshotPathBuffer = nullptr;
+TESObjectCELL*						TESLODTextureGenerator::ExteriorSnapshotSource = nullptr;
 
 LPDIRECT3DTEXTURE9*					TESLODTextureGenerator::D3DTexture32x = (LPDIRECT3DTEXTURE9*)0x00A0AAC4;
 LPDIRECT3DTEXTURE9*					TESLODTextureGenerator::D3DTexture64x = (LPDIRECT3DTEXTURE9*)0x00A0AAC0;
@@ -31,14 +31,14 @@ BSRenderedTexture**					TESLODTextureGenerator::BSTexture512x = (BSRenderedTextu
 BSRenderedTexture**					TESLODTextureGenerator::BSTexture1024x = (BSRenderedTexture**)0x00A0AAE8;
 BSRenderedTexture**					TESLODTextureGenerator::BSTexture2048x = (BSRenderedTexture**)0x00A0AAE4;
 
-LPDIRECT3DTEXTURE9					TESLODTextureGenerator::D3DTexture256x = NULL;
-BSRenderedTexture*					TESLODTextureGenerator::BSTexture256x = NULL;
-LPDIRECT3DTEXTURE9					TESLODTextureGenerator::D3DTexture384x = NULL;
-BSRenderedTexture*					TESLODTextureGenerator::BSTexture384x = NULL;
-LPDIRECT3DTEXTURE9					TESLODTextureGenerator::D3DTexture4096x = NULL;
-BSRenderedTexture*					TESLODTextureGenerator::BSTexture4096x = NULL;
-LPDIRECT3DTEXTURE9					TESLODTextureGenerator::D3DTexture6144x = NULL;
-BSRenderedTexture*					TESLODTextureGenerator::BSTexture6144x = NULL;
+LPDIRECT3DTEXTURE9					TESLODTextureGenerator::D3DTexture256x = nullptr;
+BSRenderedTexture*					TESLODTextureGenerator::BSTexture256x = nullptr;
+LPDIRECT3DTEXTURE9					TESLODTextureGenerator::D3DTexture384x = nullptr;
+BSRenderedTexture*					TESLODTextureGenerator::BSTexture384x = nullptr;
+LPDIRECT3DTEXTURE9					TESLODTextureGenerator::D3DTexture4096x = nullptr;
+BSRenderedTexture*					TESLODTextureGenerator::BSTexture4096x = nullptr;
+LPDIRECT3DTEXTURE9					TESLODTextureGenerator::D3DTexture6144x = nullptr;
+BSRenderedTexture*					TESLODTextureGenerator::BSTexture6144x = nullptr;
 
 ModelLoader**						ModelLoader::Singleton = (ModelLoader**)0x00A0DEAC;
 DWORD*								ThreadLocalData::TLSIndex = (DWORD*)0x00A95534;
@@ -55,7 +55,7 @@ TESFile* TESDataHandler::LookupPluginByName(const char* PluginName)
 			return Plugin;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 TESFile* TESDataHandler::LookupPluginByIndex(UInt32 Index)
@@ -116,8 +116,8 @@ void TESDataHandler::CleanCellWaterExtraData( void )
 {
 	for (cseOverride::NiTMapIterator Itr = TESForm::FormIDMap->GetFirstPos(); Itr;)
 	{
-		UInt32 FormID = NULL;
-		TESForm* Form = NULL;
+		UInt32 FormID = 0;
+		TESForm* Form = nullptr;
 
 		TESForm::FormIDMap->GetNext(Itr, FormID, Form);
 		if (FormID && Form)
@@ -130,7 +130,7 @@ void TESDataHandler::CleanCellWaterExtraData( void )
 				if ((Cell->cellFlags & TESObjectCELL::kCellFlags_HasWater) == 0)
 				{
 					Cell->ModExtraCellWaterHeight(0.0);
-					Cell->ModExtraCellWaterType(NULL);
+					Cell->ModExtraCellWaterType(nullptr);
 				}
 			}
 		}
@@ -144,13 +144,13 @@ void TESDataHandler::AutoSave( void )
 
 bool TESDataHandler::PanicSave( bool Initialize /*= false*/ )
 {
-	static TESFile* kSaveFile = NULL;
+	static TESFile* kSaveFile = nullptr;
 
-	if (kSaveFile == NULL && Initialize)
+	if (kSaveFile == nullptr && Initialize)
 	{
 		kSaveFile = TESFile::CreateInstance("Data\\Backup\\", "PanicSave.bak");
 
-		return kSaveFile != NULL;
+		return kSaveFile != nullptr;
 	}
 	else if (kSaveFile)
 	{
@@ -176,7 +176,7 @@ bool TESDataHandler::PanicSave( bool Initialize /*= false*/ )
 			this->activeFile = kSaveFile;
 			bool Result = this->SavePlugin();
 			kSaveFile->DeleteInstance();
-			kSaveFile = NULL;
+			kSaveFile = nullptr;
 
 			if (ActiveFile)
 			{
@@ -238,7 +238,7 @@ void TESDataHandler::RemoveInvalidScripts(void)
 
 		if (Current)
 		{
-			if (Current->editorID.c_str() == NULL && Current->text == NULL && Current->data == NULL)
+			if (Current->editorID.c_str() == nullptr && Current->text == nullptr && Current->data == nullptr)
 				Delinquents.push_back(Current);
 		}
 	}
@@ -256,8 +256,8 @@ void TESDataHandler::FixInteriorCellFogPlane( void )
 {
 	for (cseOverride::NiTMapIterator Itr = TESForm::FormIDMap->GetFirstPos(); Itr;)
 	{
-		UInt32 FormID = NULL;
-		TESForm* Form = NULL;
+		UInt32 FormID = 0;
+		TESForm* Form = nullptr;
 
 		TESForm::FormIDMap->GetNext(Itr, FormID, Form);
 		if (FormID && Form)
@@ -345,8 +345,8 @@ void TES::ReloadLandscapeTextures()
 {
 	for (cseOverride::NiTMapIterator Itr = TESForm::FormIDMap->GetFirstPos(); Itr;)
 	{
-		UInt32 FormID = NULL;
-		TESForm* Form = NULL;
+		UInt32 FormID = 0;
+		TESForm* Form = nullptr;
 
 		TESForm::FormIDMap->GetNext(Itr, FormID, Form);
 		if (FormID && Form)
@@ -394,7 +394,7 @@ BSRenderedTexture* BSTextureManager::CreateTexture( NiRenderer* Renderer, UInt32
 
 LPDIRECT3DTEXTURE9 BSRenderedTexture::ConvertToD3DTexture(UInt32 Width, UInt32 Height)
 {
-	LPDIRECT3DTEXTURE9 D3DTexture = NULL, Result = NULL;
+	LPDIRECT3DTEXTURE9 D3DTexture = nullptr, Result = nullptr;
 	if (Width == 0)
 		Width = this->renderedTexture->unk030->width;
 	if (Height == 0)
@@ -402,7 +402,7 @@ LPDIRECT3DTEXTURE9 BSRenderedTexture::ConvertToD3DTexture(UInt32 Width, UInt32 H
 
 	D3DXCreateTexture(_NIRENDERER->device, Width, Height, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, &D3DTexture);
 	hooks::_MemHdlr(ConvertNiRenderedTexToD3DBaseTex).WriteJump();
-	Result = cdeclCall<LPDIRECT3DTEXTURE9>(0x004113E0, this->renderedTexture, 0, 0, Width, D3DTexture, 0, 1, NULL);
+	Result = cdeclCall<LPDIRECT3DTEXTURE9>(0x004113E0, this->renderedTexture, 0, 0, Width, D3DTexture, 0, 1, nullptr);
 	hooks::_MemHdlr(ConvertNiRenderedTexToD3DBaseTex).WriteBuffer();
 	SAFERELEASE_D3D(D3DTexture);
 
@@ -430,7 +430,7 @@ void TESLODTextureGenerator::SaveExteriorSnapshot( TESObjectCELL* Exterior, UInt
 
 	// load the cell into the render window first
 	Vector3 Coords((XCoord << 12) + 2048.0, (YCoord << 12) + 2048.0, 0);
-	_TES->LoadCellIntoViewPort(&Coords, NULL);
+	_TES->LoadCellIntoViewPort(&Coords, nullptr);
 
 	if (Resolution > 6144)
 		Resolution = 6144;
@@ -455,9 +455,9 @@ void TESLODTextureGenerator::SaveExteriorSnapshot( TESObjectCELL* Exterior, UInt
 	}
 
 	char PathBuffer[MAX_PATH] = {0};
-	if (SavePath == NULL)
+	if (SavePath == nullptr)
 	{
-		CreateDirectory("Data\\Textures\\Landscape\\", NULL);
+		CreateDirectory("Data\\Textures\\Landscape\\", nullptr);
 		FORMAT_STR(PathBuffer, "Data\\Textures\\Landscape\\Snapshot_%i.%i.dds", XCoord, YCoord);
 		ExteriorSnapshotPathBuffer = PathBuffer;
 	}
@@ -471,8 +471,8 @@ void TESLODTextureGenerator::SaveExteriorSnapshot( TESObjectCELL* Exterior, UInt
 	hooks::_MemHdlr(GeneratePartialLODFilePath).WriteBuffer();
 	BGSEECONSOLE_MESSAGE("Saved exterior cell %i,%i snapshot to %s", XCoord, YCoord, ExteriorSnapshotPathBuffer);
 
-	ExteriorSnapshotPathBuffer = NULL;
-	ExteriorSnapshotSource = NULL;
+	ExteriorSnapshotPathBuffer = nullptr;
+	ExteriorSnapshotSource = nullptr;
 }
 
 void TESLODTextureGenerator::CreateTextureBuffers( void )

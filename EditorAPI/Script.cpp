@@ -17,7 +17,7 @@ Script::VariableInfo* Script::LookupVariableInfoByName(const char* Name)
 			return Variable;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 Script::RefVariable* Script::LookupRefVariableByIndex(UInt32 Index)
@@ -34,12 +34,12 @@ Script::RefVariable* Script::LookupRefVariableByIndex(UInt32 Index)
 		Idx++;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 bool Script::Compile(bool AsResultScript)
 {
-	if (this->text == NULL)
+	if (this->text == nullptr)
 		return false;
 
 	if (AsResultScript)
@@ -87,8 +87,8 @@ UInt32 Script::GetEffectItemReferences(ScriptMagicItemCrossRefArrayT& OutList)
 
 	for (cseOverride::NiTMapIterator Itr = TESForm::FormIDMap->GetFirstPos(); Itr;)
 	{
-		UInt32 FormID = NULL;
-		TESForm* Form = NULL;
+		UInt32 FormID = 0;
+		TESForm* Form = nullptr;
 
 		TESForm::FormIDMap->GetNext(Itr, FormID, Form);
 		if (FormID && Form)
@@ -118,7 +118,7 @@ UInt32 Script::GetEffectItemReferences(ScriptMagicItemCrossRefArrayT& OutList)
 void Script::RemoveCompiledData(void)
 {
 	FormHeap_Free(data);
-	data = NULL;
+	data = nullptr;
 
 	info.dataLength = 0;
 	info.lastVarIdx = 0;

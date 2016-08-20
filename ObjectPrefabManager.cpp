@@ -8,10 +8,10 @@ namespace cse
 	namespace objectPrefabs
 	{
 		PrefabObjectPreviewData::PrefabObjectPreviewData() :
-			Parent(NULL),
+			Parent(nullptr),
 			BaseForms(),
 			References(),
-			RootNode(NULL)
+			RootNode(nullptr)
 		{
 			;//
 		}
@@ -36,7 +36,7 @@ namespace cse
 		void PrefabObjectPreviewData::Attach(TESPreviewControl* To)
 		{
 			SME_ASSERT(To);
-			SME_ASSERT(Parent == NULL);
+			SME_ASSERT(Parent == nullptr);
 			SME_ASSERT(RootNode);
 
 			Parent = To;
@@ -53,8 +53,8 @@ namespace cse
 				Parent->CenterCamera();
 				Parent->Present();
 
-				Parent = NULL;
-				RootNode = NULL;
+				Parent = nullptr;
+				RootNode = nullptr;
 			}
 		}
 
@@ -221,7 +221,7 @@ namespace cse
 			SME_ASSERT(PreviewControl);
 
 			if (Deserialize() != kState_Good)
-				return NULL;
+				return nullptr;
 			else
 			{
 				PrefabObjectPreviewData* Data = new PrefabObjectPreviewData;
@@ -230,7 +230,7 @@ namespace cse
 				else
 				{
 					delete Data;
-					return NULL;
+					return nullptr;
 				}
 			}
 		}
@@ -361,7 +361,7 @@ namespace cse
 									Result = TRUE;
 
 									int NewIndex = ChangeData->iItem;
-									Instance.CurrentSelection = NULL;
+									Instance.CurrentSelection = nullptr;
 									SAFEDELETE(Instance.PreviewData);
 
 									PrefabObject* NewSelection = (PrefabObject*)ChangeData->lParam;
@@ -371,7 +371,7 @@ namespace cse
 
 										NewSelection->SetInDialog(hWnd);
 										Instance.PreviewData = NewSelection->GeneratePreviewData(Instance.Renderer);
-										if (Instance.PreviewData == NULL)
+										if (Instance.PreviewData == nullptr)
 											BGSEECONSOLE_MESSAGE("Couldn't generate preview data for prefab %s", NewSelection->FileName.c_str());
 										else
 											Instance.PreviewData->Attach(Instance.Renderer);
@@ -466,8 +466,8 @@ namespace cse
 			TimeCounter = -1;
 			Renderer->RemoveGroundPlane();
 
-			SetTimer(Dialog, IDC_OBJECTPREFAB_FILTERINPUTTIMERID, 500, NULL);
-			SetTimer(Dialog, IDC_OBJECTPREFAB_PREVIEWTIMERID, 5, NULL);
+			SetTimer(Dialog, IDC_OBJECTPREFAB_FILTERINPUTTIMERID, 500, nullptr);
+			SetTimer(Dialog, IDC_OBJECTPREFAB_PREVIEWTIMERID, 5, nullptr);
 
 			ReloadPrefabs();
 
@@ -483,13 +483,13 @@ namespace cse
 			TESListView::ClearColumnHeaders(PrefabDetailsList);
 
 			SAFEDELETE(PreviewData);
-			CurrentSelection = NULL;
+			CurrentSelection = nullptr;
 
-			MainDialog = NULL;
+			MainDialog = nullptr;
 
 			TimeCounter = -1;
-			Renderer = NULL;
-			ExtraDataList = NULL;
+			Renderer = nullptr;
+			ExtraDataList = nullptr;
 
 			LoadedPrefabs.clear();
 
@@ -513,7 +513,7 @@ namespace cse
 
 			TESListView::ClearItems(LoadedPrefabsList);
 			SAFEDELETE(PreviewData);
-			CurrentSelection = NULL;
+			CurrentSelection = nullptr;
 
 			char Buffer[0x100] = { 0 };
 			GetWindowText(FilterBox, Buffer, sizeof(Buffer));
@@ -570,7 +570,7 @@ namespace cse
 			SME_ASSERT(MainDialog);
 
 			SAFEDELETE(PreviewData);
-			CurrentSelection = NULL;
+			CurrentSelection = nullptr;
 
 			LoadedPrefabs.clear();
 			LoadPrefabsInDirectory(kRepositoryPath().c_str());
@@ -596,7 +596,7 @@ namespace cse
 				for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 				{
 					TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
-					if (Ref == NULL)
+					if (Ref == nullptr)
 					{
 						BGSEECONSOLE_MESSAGE("Object %08X is not a reference!", Itr->Data->formID);
 						Result = false;
@@ -684,8 +684,8 @@ namespace cse
 				kRepositoryPath().c_str(),
 				"Object Prefab Files\0*.cseprefab\0\0",
 				"Select Object Prefab File",
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
 				Save == false,
 				Save,
 				SelectPath,
@@ -736,7 +736,7 @@ namespace cse
 
 					LoadedPrefabs.erase(Itr);
 					if (CurrentSelection == Data)
-						CurrentSelection = NULL;
+						CurrentSelection = nullptr;
 
 					return true;
 				}
@@ -761,12 +761,12 @@ namespace cse
 
 		ObjectPrefabManager::ObjectPrefabManager() :
 			LoadedPrefabs(),
-			CurrentSelection(NULL),
-			PreviewData(NULL),
-			MainDialog(NULL),
+			CurrentSelection(nullptr),
+			PreviewData(nullptr),
+			MainDialog(nullptr),
 			TimeCounter(0),
-			ExtraDataList(NULL),
-			Renderer(NULL),
+			ExtraDataList(nullptr),
+			Renderer(nullptr),
 			RefreshingList(false)
 		{
 			;//

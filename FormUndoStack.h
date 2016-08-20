@@ -16,7 +16,7 @@ namespace cse
 
 			friend class FormUndoStackOperator;
 		public:
-			FormUndoProxy(TESForm* ParentForm, TESForm* CopySource = NULL);
+			FormUndoProxy(TESForm* ParentForm, TESForm* CopySource = nullptr);
 			virtual ~FormUndoProxy();
 
 			virtual UInt32							GetFormID(void) const;

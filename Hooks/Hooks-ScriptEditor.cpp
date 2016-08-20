@@ -40,7 +40,7 @@ namespace cse
 
 		void __stdcall InstantiateScriptEditor(HWND ParentWindow)
 		{
-			Script* AuxScript = NULL;
+			Script* AuxScript = nullptr;
 			if (ParentWindow)
 				AuxScript = (Script*)TESComboBox::GetSelectedItemData(GetDlgItem(ParentWindow, kAssetFileButton_Script));
 

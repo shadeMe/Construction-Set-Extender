@@ -123,7 +123,7 @@ namespace cse
 		case CSEInterface::kCSEInterface_Script:
 			return &kCSEScriptInterface;
 		default:
-			return NULL;
+			return nullptr;
 		}
 	}
 

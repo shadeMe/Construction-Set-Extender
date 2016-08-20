@@ -118,12 +118,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCFullName)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESFullName* Component = CS_CAST(Form, TESForm, TESFullName);
@@ -137,12 +137,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCDescription)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESDescription* Component = CS_CAST(Form, TESForm, TESDescription);
@@ -156,12 +156,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCTexturePath)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESTexture* Component = CS_CAST(Form, TESForm, TESTexture);
@@ -175,12 +175,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCModelPath)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESModel* Component = CS_CAST(Form, TESForm, TESModel);
@@ -194,12 +194,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCModelBoundRadius)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESModel* Component = CS_CAST(Form, TESForm, TESModel);
@@ -213,12 +213,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCScript)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESScriptableForm* Component = CS_CAST(Form, TESForm, TESScriptableForm);
@@ -237,12 +237,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCUses)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESUsesForm* Component = CS_CAST(Form, TESForm, TESUsesForm);
@@ -256,12 +256,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCValue)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESValueForm* Component = CS_CAST(Form, TESForm, TESValueForm);
@@ -275,12 +275,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCHealth)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESHealthForm* Component = CS_CAST(Form, TESForm, TESHealthForm);
@@ -294,12 +294,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCWeight)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESWeightForm* Component = CS_CAST(Form, TESForm, TESWeightForm);
@@ -313,12 +313,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCQuality)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESQualityForm* Component = CS_CAST(Form, TESForm, TESQualityForm);
@@ -332,12 +332,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCAttackDamage)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESAttackDamageForm* Component = CS_CAST(Form, TESForm, TESAttackDamageForm);
@@ -351,12 +351,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCAttributes)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESAttributes* Component = CS_CAST(Form, TESForm, TESAttributes);
@@ -378,12 +378,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCSpellListEntries)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESSpellList* Component = CS_CAST(Form, TESForm, TESSpellList);
@@ -405,12 +405,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCLeveledListEntries)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESLeveledList* Component = CS_CAST(Form, TESForm, TESLeveledList);
@@ -441,12 +441,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCLeveledListChanceNone)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESLeveledList* Component = CS_CAST(Form, TESForm, TESLeveledList);
@@ -460,12 +460,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCContainerEntries)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESContainer* Component = CS_CAST(Form, TESForm, TESContainer);
@@ -495,12 +495,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCActorBaseDataFactionList)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESActorBaseData* Component = CS_CAST(Form, TESForm, TESActorBaseData);
@@ -530,12 +530,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCActorBaseDataMagicka)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESActorBaseData* Component = CS_CAST(Form, TESForm, TESActorBaseData);
@@ -549,12 +549,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCActorBaseDataFatigue)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESActorBaseData* Component = CS_CAST(Form, TESForm, TESActorBaseData);
@@ -568,12 +568,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCActorBaseDataBarterGold)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESActorBaseData* Component = CS_CAST(Form, TESForm, TESActorBaseData);
@@ -587,12 +587,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCActorBaseDataLevel)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESActorBaseData* Component = CS_CAST(Form, TESForm, TESActorBaseData);
@@ -615,12 +615,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCAIFormAIStats)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESAIForm* Component = CS_CAST(Form, TESForm, TESAIForm);
@@ -642,12 +642,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCAIFormAITrainingSkill)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESAIForm* Component = CS_CAST(Form, TESForm, TESAIForm);
@@ -661,12 +661,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCAIFormAITrainingLevel)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESAIForm* Component = CS_CAST(Form, TESForm, TESAIForm);
@@ -680,12 +680,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCAIFormAIPackageList)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESAIForm* Component = CS_CAST(Form, TESForm, TESAIForm);
@@ -707,12 +707,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCReactionFormReactionEntries)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESReactionForm* Component = CS_CAST(Form, TESForm, TESReactionForm);
@@ -742,12 +742,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCSoundFilePath)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESSoundFile* Component = CS_CAST(Form, TESForm, TESSoundFile);
@@ -761,12 +761,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCBipedModelSlotMask)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESBipedModelForm* Component = CS_CAST(Form, TESForm, TESBipedModelForm);
@@ -780,12 +780,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCBipedModelMaleBipedModelPath)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESBipedModelForm* Component = CS_CAST(Form, TESForm, TESBipedModelForm);
@@ -799,12 +799,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCBipedModelFemaleBipedModelPath)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESBipedModelForm* Component = CS_CAST(Form, TESForm, TESBipedModelForm);
@@ -818,12 +818,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCBipedModelMaleGroundModelPath)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESBipedModelForm* Component = CS_CAST(Form, TESForm, TESBipedModelForm);
@@ -837,12 +837,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCBipedModelFemaleGroundModelPath)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESBipedModelForm* Component = CS_CAST(Form, TESForm, TESBipedModelForm);
@@ -856,12 +856,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCBipedModelMaleIconPath)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESBipedModelForm* Component = CS_CAST(Form, TESForm, TESBipedModelForm);
@@ -875,12 +875,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCBipedModelFemaleIconPath)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESBipedModelForm* Component = CS_CAST(Form, TESForm, TESBipedModelForm);
@@ -894,12 +894,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCEnchantableFormEnchantment)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESEnchantableForm* Component = CS_CAST(Form, TESForm, TESEnchantableForm);
@@ -918,12 +918,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCEnchantableFormType)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESEnchantableForm* Component = CS_CAST(Form, TESForm, TESEnchantableForm);
@@ -937,12 +937,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCProduceFormIngredient)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESProduceForm* Component = CS_CAST(Form, TESForm, TESProduceForm);
@@ -961,12 +961,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCProduceFormChance)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESProduceForm* Component = CS_CAST(Form, TESForm, TESProduceForm);
@@ -990,12 +990,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCModelListModels)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESModelList* Component = CS_CAST(Form, TESForm, TESModelList);
@@ -1017,13 +1017,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCFullName)
 				{
-					TESForm* Form = NULL;
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESFullName* Component = CS_CAST(Form, TESForm, TESFullName);
@@ -1039,13 +1039,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCDescription)
 				{
-					TESForm* Form = NULL;
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESDescription* Component = CS_CAST(Form, TESForm, TESDescription);
@@ -1061,13 +1061,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCTexturePath)
 				{
-					TESForm* Form = NULL;
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESTexture* Component = CS_CAST(Form, TESForm, TESTexture);
@@ -1083,13 +1083,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCModelPath)
 				{
-					TESForm* Form = NULL;
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESModel* Component = CS_CAST(Form, TESForm, TESModel);
@@ -1105,13 +1105,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCModelBoundRadius)
 				{
-					TESForm* Form = NULL;
-					CodaScriptNumericDataTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptNumericDataTypeT Buffer = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESModel* Component = CS_CAST(Form, TESForm, TESModel);
@@ -1127,13 +1127,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCScript)
 				{
-					TESForm* Form = NULL;
-					TESForm* Buffer = NULL;
+					TESForm* Form = nullptr;
+					TESForm* Buffer = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(2, &Form, &Buffer);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESScriptableForm* Component = CS_CAST(Form, TESForm, TESScriptableForm);
@@ -1153,13 +1153,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCUses)
 				{
-					TESForm* Form = NULL;
-					CodaScriptNumericDataTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptNumericDataTypeT Buffer = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESUsesForm* Component = CS_CAST(Form, TESForm, TESUsesForm);
@@ -1175,13 +1175,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCValue)
 				{
-					TESForm* Form = NULL;
-					CodaScriptNumericDataTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptNumericDataTypeT Buffer = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESValueForm* Component = CS_CAST(Form, TESForm, TESValueForm);
@@ -1197,13 +1197,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCHealth)
 				{
-					TESForm* Form = NULL;
-					CodaScriptNumericDataTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptNumericDataTypeT Buffer = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESHealthForm* Component = CS_CAST(Form, TESForm, TESHealthForm);
@@ -1219,13 +1219,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCWeight)
 				{
-					TESForm* Form = NULL;
-					CodaScriptNumericDataTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptNumericDataTypeT Buffer = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESWeightForm* Component = CS_CAST(Form, TESForm, TESWeightForm);
@@ -1241,13 +1241,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCQuality)
 				{
-					TESForm* Form = NULL;
-					CodaScriptNumericDataTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptNumericDataTypeT Buffer = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESQualityForm* Component = CS_CAST(Form, TESForm, TESQualityForm);
@@ -1264,13 +1264,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCAttackDamage)
 				{
-					TESForm* Form = NULL;
-					CodaScriptNumericDataTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptNumericDataTypeT Buffer = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESAttackDamageForm* Component = CS_CAST(Form, TESForm, TESAttackDamageForm);
@@ -1286,14 +1286,14 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCAttribute)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 					CodaScriptNumericDataTypeT Buffer = 0;
 					CodaScriptNumericDataTypeT Attribute = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Attribute, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					if (Attribute >= TESAttributes::kAttribute__MAX)
@@ -1313,13 +1313,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCLeveledListChanceNone)
 				{
-					TESForm* Form = NULL;
-					CodaScriptNumericDataTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptNumericDataTypeT Buffer = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESLeveledList* Component = CS_CAST(Form, TESForm, TESLeveledList);
@@ -1336,13 +1336,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCActorBaseDataMagicka)
 				{
-					TESForm* Form = NULL;
-					CodaScriptNumericDataTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptNumericDataTypeT Buffer = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESActorBaseData* Component = CS_CAST(Form, TESForm, TESActorBaseData);
@@ -1358,13 +1358,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCActorBaseDataFatigue)
 				{
-					TESForm* Form = NULL;
-					CodaScriptNumericDataTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptNumericDataTypeT Buffer = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESActorBaseData* Component = CS_CAST(Form, TESForm, TESActorBaseData);
@@ -1380,13 +1380,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCActorBaseDataBarterGold)
 				{
-					TESForm* Form = NULL;
-					CodaScriptNumericDataTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptNumericDataTypeT Buffer = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESActorBaseData* Component = CS_CAST(Form, TESForm, TESActorBaseData);
@@ -1402,13 +1402,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCActorBaseDataLevel)
 				{
-					TESForm* Form = NULL;
-					CodaScriptNumericDataTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptNumericDataTypeT Buffer = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESActorBaseData* Component = CS_CAST(Form, TESForm, TESActorBaseData);
@@ -1424,14 +1424,14 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCAIFormAIStats)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 					CodaScriptNumericDataTypeT Buffer = 0;
 					CodaScriptNumericDataTypeT AIStat = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &AIStat, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 					else if (AIStat >= TESAIForm::kAIStat__MAX)
 						return false;
@@ -1450,13 +1450,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCAIFormAITrainingSkill)
 				{
-					TESForm* Form = NULL;
-					CodaScriptNumericDataTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptNumericDataTypeT Buffer = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 					else if (Buffer >= ActorValues::kActorVal__MAX_Skill || Buffer < ActorValues::kActorVal_Armorer)
 						return false;
@@ -1474,13 +1474,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCAIFormAITrainingLevel)
 				{
-					TESForm* Form = NULL;
-					CodaScriptNumericDataTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptNumericDataTypeT Buffer = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESAIForm* Component = CS_CAST(Form, TESForm, TESAIForm);
@@ -1497,13 +1497,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCSoundFilePath)
 				{
-					TESForm* Form = NULL;
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESSoundFile* Component = CS_CAST(Form, TESForm, TESSoundFile);
@@ -1519,13 +1519,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCBipedModelSlotMask)
 				{
-					TESForm* Form = NULL;
-					CodaScriptNumericDataTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptNumericDataTypeT Buffer = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESBipedModelForm* Component = CS_CAST(Form, TESForm, TESBipedModelForm);
@@ -1541,13 +1541,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCBipedModelMaleBipedModelPath)
 				{
-					TESForm* Form = NULL;
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESBipedModelForm* Component = CS_CAST(Form, TESForm, TESBipedModelForm);
@@ -1563,13 +1563,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCBipedModelFemaleBipedModelPath)
 				{
-					TESForm* Form = NULL;
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESBipedModelForm* Component = CS_CAST(Form, TESForm, TESBipedModelForm);
@@ -1585,13 +1585,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCBipedModelMaleGroundModelPath)
 				{
-					TESForm* Form = NULL;
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESBipedModelForm* Component = CS_CAST(Form, TESForm, TESBipedModelForm);
@@ -1607,13 +1607,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCBipedModelFemaleGroundModelPath)
 				{
-					TESForm* Form = NULL;
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESBipedModelForm* Component = CS_CAST(Form, TESForm, TESBipedModelForm);
@@ -1629,13 +1629,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCBipedModelMaleIconPath)
 				{
-					TESForm* Form = NULL;
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESBipedModelForm* Component = CS_CAST(Form, TESForm, TESBipedModelForm);
@@ -1651,13 +1651,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCBipedModelFemaleIconPath)
 				{
-					TESForm* Form = NULL;
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESBipedModelForm* Component = CS_CAST(Form, TESForm, TESBipedModelForm);
@@ -1673,13 +1673,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCEnchantableFormEnchantment)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 					TESForm* Buffer = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(2, &Form, &Buffer);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESEnchantableForm* Component = CS_CAST(Form, TESForm, TESEnchantableForm);
@@ -1701,13 +1701,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCProduceFormIngredient)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 					TESForm* Buffer = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(2, &Form, &Buffer);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESProduceForm* Component = CS_CAST(Form, TESForm, TESProduceForm);
@@ -1727,14 +1727,14 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCProduceFormChance)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 					CodaScriptNumericDataTypeT Buffer = 0;
 					CodaScriptNumericDataTypeT Season = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Season, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 					else if (Season > 3)
 						return false;
@@ -1767,12 +1767,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCActorBaseDataSex)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESNPC* Component = CS_CAST(Form, TESForm, TESNPC);
@@ -1791,13 +1791,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCActorBaseDataSex)
 				{
-					TESForm* Form = NULL;
-					CodaScriptNumericDataTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptNumericDataTypeT Buffer = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESNPC* Component = CS_CAST(Form, TESForm, TESNPC);
@@ -1816,12 +1816,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetBFCRace)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESRaceForm* Component = CS_CAST(Form, TESForm, TESRaceForm);
@@ -1840,13 +1840,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetBFCRace)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 					TESForm* Buffer = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(2, &Form, &Buffer);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					TESRaceForm* Component = CS_CAST(Form, TESForm, TESRaceForm);

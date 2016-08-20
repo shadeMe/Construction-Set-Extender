@@ -9,9 +9,9 @@ namespace cse
 {
 	namespace hooks
 	{
-		#define SAFERELEASE_BSR(X)		if (X)	{ X->DeleteInstance(); X = NULL; }
+		#define SAFERELEASE_BSR(X)		if (X)	{ X->DeleteInstance(); X = nullptr; }
 
-		static HWND						s_NotificationDialog = NULL;
+		static HWND						s_NotificationDialog = nullptr;
 		static UInt32					s_NotificationMapCounter = 0;
 		static UInt32					s_LODDiffuseMapPartialResolution = 384;		// values higher than 384 will cause buffer overruns
 
@@ -283,7 +283,7 @@ namespace cse
 		bool __stdcall GetIsLODDiffuseMapGeneratorInUse(void)
 		{
 			if (TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kState_NotInUse ||
-				*((TESWorldSpace**)0x00A0AB14) == NULL ||		// current worldspace
+				*((TESWorldSpace**)0x00A0AB14) == nullptr ||		// current worldspace
 				*((UInt32*)0x00A0AAF0) == 0 ||					// LOD gen state
 				*((UInt8*)0x00A0AB13) == 0)						// LOD texture state
 			{
@@ -430,7 +430,7 @@ namespace cse
 		{
 			if (State && TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kState_NotInUse)
 			{
-				s_NotificationDialog = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), BGSEEUI->GetMainWindow(), NULL, NULL);
+				s_NotificationDialog = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), BGSEEUI->GetMainWindow(), nullptr, NULL);
 				Static_SetText(GetDlgItem(s_NotificationDialog, -1), "Please Wait\nDiffuse Map 0/256");
 				TESLODTextureGenerator::GeneratorState = TESLODTextureGenerator::kState_Partials;
 
@@ -446,7 +446,7 @@ namespace cse
 				else if (s_LODDiffuseMapPartialResolution > 384)
 					s_LODDiffuseMapPartialResolution = 384;
 
-				Setting* Current = NULL;
+				Setting* Current = nullptr;
 
 				Current = INISettingCollection::Instance->LookupByName("iFadeNodeMinNearDistance:LOD");
 				SME_ASSERT(Current);
@@ -475,7 +475,7 @@ namespace cse
 				BGSEECONSOLE_MESSAGE("Generated %d partial diffuse map(s) in total", s_NotificationMapCounter);
 				DestroyWindow(s_NotificationDialog);
 
-				s_NotificationDialog = NULL;
+				s_NotificationDialog = nullptr;
 				s_NotificationMapCounter = 0;
 				TESLODTextureGenerator::GeneratorState = TESLODTextureGenerator::kState_NotInUse;
 

@@ -106,9 +106,9 @@ namespace cse
 
 					if (ParentPathGrid->gridPointCount == 0)
 					{
-						if (ParentPathGrid->GetOverrideFile(-1) == NULL || (ParentPathGrid->GetOverrideFile(0) && ParentPathGrid->GetOverrideFile(0)->IsActive()))
+						if (ParentPathGrid->GetOverrideFile(-1) == nullptr || (ParentPathGrid->GetOverrideFile(0) && ParentPathGrid->GetOverrideFile(0)->IsActive()))
 						{
-							ParentPathGrid->parentCell->SetPathGrid(NULL);
+							ParentPathGrid->parentCell->SetPathGrid(nullptr);
 						}
 						else
 						{
@@ -126,7 +126,7 @@ namespace cse
 				TESPathGridPoint* NewPoint = TESPathGridPoint::CreateInstance();
 				TESPathGrid* CurrentPathGrid = ParentCell->pathGrid;
 
-				if (CurrentPathGrid == NULL)
+				if (CurrentPathGrid == nullptr)
 				{
 					TESPathGrid* NewPathGrid = CS_CAST(TESForm::CreateInstance(TESForm::kFormType_PathGrid), TESForm, TESPathGrid);
 					NewPathGrid->SetFromActiveFile(true);
@@ -231,7 +231,7 @@ namespace cse
 
 			if (Stack->size())
 			{
-				UndoProxyArrayT* ProxyList = NULL;
+				UndoProxyArrayT* ProxyList = nullptr;
 
 				do
 				{
@@ -255,10 +255,10 @@ namespace cse
 						delete ProxyList;
 					}
 
-					ProxyList = NULL;
+					ProxyList = nullptr;
 				} while (Stack->size());
 
-				if (ProxyList == NULL)
+				if (ProxyList == nullptr)
 					return;
 
 				UndoProxyArrayT* AltProxyList = new UndoProxyArrayT();
@@ -281,7 +281,7 @@ namespace cse
 						}
 					case kOperation_PointDeletion:
 						{
-							TESPathGridPoint* NewPoint = NULL;
+							TESPathGridPoint* NewPoint = nullptr;
 
 							(*Itr)->Undo(this, &NewPoint);
 

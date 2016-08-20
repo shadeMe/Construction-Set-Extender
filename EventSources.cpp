@@ -102,7 +102,7 @@ namespace cse
 			Form(Form),
 			EventType(Type)
 		{
-			NewEditorID = NULL;
+			NewEditorID = nullptr;
 			NewFormID = 0;
 			ActiveState = false;
 			DeletedState = false;

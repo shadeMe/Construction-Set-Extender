@@ -574,7 +574,7 @@ namespace cse
 					void __stdcall DoSelectCell()
 					{
 						TESObjectCELL* CurrenCell = _TES->currentInteriorCell;
-						if (CurrenCell == NULL)
+						if (CurrenCell == nullptr)
 							CurrenCell = _TES->currentExteriorCell;
 
 						cse::events::dialog::cellView::kSelectCell.HandleSelectCell(CurrenCell);

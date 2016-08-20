@@ -85,9 +85,9 @@ namespace cse
 						BSExtraData* AxData = FormA->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
 						BSExtraData* BxData = FormB->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
 
-						if (AxData && BxData == NULL)
+						if (AxData && BxData == nullptr)
 							Result = -1;
-						else if (AxData == NULL && BxData)
+						else if (AxData == nullptr && BxData)
 							Result = 1;
 						else if (AxData && BxData)
 						{
@@ -108,9 +108,9 @@ namespace cse
 						BSExtraData* AxData = FormA->extraData.GetExtraDataByType(BSExtraData::kExtra_Count);
 						BSExtraData* BxData = FormB->extraData.GetExtraDataByType(BSExtraData::kExtra_Count);
 
-						if (AxData && BxData == NULL)
+						if (AxData && BxData == nullptr)
 							Result = -1;
-						else if (AxData == NULL && BxData)
+						else if (AxData == nullptr && BxData)
 							Result = 1;
 						else if (AxData && BxData)
 						{
@@ -216,7 +216,7 @@ namespace cse
 			case WM_INITDIALOG:
 				{
 					CellViewExtraData* xData = BGSEE_GETWINDOWXDATA(CellViewExtraData, ExtraData);
-					if (xData == NULL)
+					if (xData == nullptr)
 					{
 						xData = new CellViewExtraData();
 						ExtraData->Add(xData);
@@ -316,7 +316,7 @@ namespace cse
 											ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
 											SME_ASSERT(xParent->parent);
 
-											if (xParent->parent->editorID.c_str() == NULL)
+											if (xParent->parent->editorID.c_str() == nullptr)
 											{
 												sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax,
 														  "%08X %s",
@@ -418,8 +418,8 @@ namespace cse
 								   DeltaDlgWidth + BaseCellNameLabelRect->right, BaseCellNameLabelRect->bottom,
 								   NULL);
 
-					InvalidateRect(CellLabel, NULL, TRUE);
-					InvalidateRect(WorldspaceLabel, NULL, TRUE);
+					InvalidateRect(CellLabel, nullptr, TRUE);
+					InvalidateRect(WorldspaceLabel, nullptr, TRUE);
 
 					EndDeferWindowPos(DeferPosData);
 
@@ -484,9 +484,9 @@ namespace cse
 									   BaseCellListRect->right + DeltaDlgWidth - xData->CellFilterLabel.right - 7, xData->CellFilterEditBox.bottom,
 									   SWP_NOMOVE);
 
-						InvalidateRect(XLabel, NULL, TRUE);
-						InvalidateRect(YLabel, NULL, TRUE);
-						InvalidateRect(RefFilterLabel, NULL, TRUE);
+						InvalidateRect(XLabel, nullptr, TRUE);
+						InvalidateRect(YLabel, nullptr, TRUE);
+						InvalidateRect(RefFilterLabel, nullptr, TRUE);
 
 						EndDeferWindowPos(DeferPosData);
 					}
@@ -504,10 +504,10 @@ namespace cse
 						GetWindowText(XEdit, (LPSTR)XCoord, sizeof(XCoord));
 						GetWindowText(YEdit, (LPSTR)YCoord, sizeof(YCoord));
 
-						if (strlen(XCoord) && strlen(YCoord) && _TES->currentInteriorCell == NULL)
+						if (strlen(XCoord) && strlen(YCoord) && _TES->currentInteriorCell == nullptr)
 						{
 							Vector3 Coords((atoi(XCoord) << 12) + 2048.0, (atoi(YCoord) << 12) + 2048.0, 0);
-							_TES->LoadCellIntoViewPort(&Coords, NULL);
+							_TES->LoadCellIntoViewPort(&Coords, nullptr);
 						}
 					}
 

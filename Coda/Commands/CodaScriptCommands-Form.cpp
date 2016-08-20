@@ -45,7 +45,7 @@ namespace cse
 
 				CodaScriptCommandHandler(GetFormByEditorID)
 				{
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 
 					CodaScriptCommandExtractArgs(&Buffer);
 
@@ -75,12 +75,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetEditorID)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					Result->SetString((Form->editorID.c_str())?Form->editorID.c_str():"");
@@ -89,12 +89,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetFormType)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					Result->SetNumber(Form->formType);
@@ -103,13 +103,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetEditorID)
 				{
-					TESForm* Form = NULL;
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					TESForm* Form = nullptr;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form, &Buffer);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					if (Buffer)
@@ -120,13 +120,13 @@ namespace cse
 
 				CodaScriptCommandHandler(SetFormID)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 					CodaScriptNumericDataTypeT FormID = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &FormID);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					if (FormID && Form->formID != FormID)
@@ -137,13 +137,13 @@ namespace cse
 
 				CodaScriptCommandHandler(MarkAsModified)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 					CodaScriptNumericDataTypeT State = 0;
 
 					CodaScriptCommandExtractArgs(&Form, &State);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					Form->SetFromActiveFile(State);
@@ -166,7 +166,7 @@ namespace cse
 					for (cseOverride::NiTMapIterator Itr = TESForm::FormIDMap->GetFirstPos(); Itr;)
 					{
 						UInt32 FormID = NULL;
-						TESForm* Form = NULL;
+						TESForm* Form = nullptr;
 
 						TESForm::FormIDMap->GetNext(Itr, FormID, Form);
 						if (FormID && Form)
@@ -185,12 +185,12 @@ namespace cse
 
 				CodaScriptCommandHandler(GetCellUseList)
 				{
-					TESForm* Form = NULL;
+					TESForm* Form = nullptr;
 
 					CodaScriptCommandExtractArgs(&Form);
 					ExtractFormArguments(1, &Form);
 
-					if (Form == NULL)
+					if (Form == nullptr)
 						return false;
 
 					ICodaScriptDataStore* Array = Utilities->ArrayAllocate();

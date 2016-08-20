@@ -24,7 +24,7 @@ namespace cse
 		InitCallbackQuery(const OBSEInterface* OBSE);
 		virtual ~InitCallbackQuery();
 
-		virtual bool						Handle(void* Parameter = NULL);
+		virtual bool						Handle(void* Parameter = nullptr);
 	};
 
 	class InitCallbackLoad : public bgsee::DaemonCallback
@@ -34,7 +34,7 @@ namespace cse
 		InitCallbackLoad(const OBSEInterface* OBSE);
 		virtual ~InitCallbackLoad();
 
-		virtual bool						Handle(void* Parameter = NULL);
+		virtual bool						Handle(void* Parameter = nullptr);
 	};
 
 	class InitCallbackPostMainWindowInit : public bgsee::DaemonCallback
@@ -42,7 +42,7 @@ namespace cse
 	public:
 		virtual ~InitCallbackPostMainWindowInit();
 
-		virtual bool						Handle(void* Parameter = NULL);
+		virtual bool						Handle(void* Parameter = nullptr);
 	};
 
 	class InitCallbackEpilog : public bgsee::DaemonCallback
@@ -50,7 +50,7 @@ namespace cse
 	public:
 		virtual ~InitCallbackEpilog();
 
-		virtual bool						Handle(void* Parameter = NULL);
+		virtual bool						Handle(void* Parameter = nullptr);
 	};
 
 	class DeinitCallback : public bgsee::DaemonCallback
@@ -58,7 +58,7 @@ namespace cse
 	public:
 		virtual ~DeinitCallback();
 
-		virtual bool						Handle(void* Parameter = NULL);
+		virtual bool						Handle(void* Parameter = nullptr);
 	};
 
 	class CrashCallback : public bgsee::DaemonCallback
@@ -74,7 +74,7 @@ namespace cse
 		CrashCallback();
 		virtual ~CrashCallback();
 
-		virtual bool						Handle(void* Parameter = NULL);
+		virtual bool						Handle(void* Parameter = nullptr);
 	};
 
 	class StartupManager

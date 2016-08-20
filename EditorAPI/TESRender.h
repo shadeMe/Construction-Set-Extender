@@ -17,7 +17,7 @@ public:
 	//*00*/ void**					vtbl;
 
 	// abstract base class
-	virtual void					Render(NiCamera* Camera = NULL, NiNode* NodeToRender = NULL, BSRenderedTexture* RenderToTexture = NULL) = 0;
+	virtual void					Render(NiCamera* Camera = nullptr, NiNode* NodeToRender = nullptr, BSRenderedTexture* RenderToTexture = nullptr) = 0;
 };
 STATIC_ASSERT(sizeof(Renderer) == 0x04);
 
@@ -56,7 +56,7 @@ public:
 		/*08*/ NiCamera*					primaryCamera;
 
 		// methods
-		void								RenderNode(NiCamera* Camera = NULL, NiNode* NodeToRender = NULL, BSRenderedTexture* RenderToTexture = NULL);
+		void								RenderNode(NiCamera* Camera = nullptr, NiNode* NodeToRender = nullptr, BSRenderedTexture* RenderToTexture = nullptr);
 		void								GetCameraPivot(Vector3* OutPivot, float ScaleFactor);
 		const NiVector3*					GetCameraWorldTranslate();
 

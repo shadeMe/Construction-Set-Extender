@@ -23,7 +23,7 @@ TESObjectREFR* TESObjectCELL::FindFirstRef( TESForm* BaseForm, bool MustHaveEdit
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void TESObjectCELL::SetPathGrid( TESPathGrid* PathGrid )
