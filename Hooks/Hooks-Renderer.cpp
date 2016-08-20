@@ -5,9 +5,8 @@
 #include "Hooks-LOD.h"
 
 #pragma warning(push)
-#pragma optimize("", off)
-#pragma warning(disable: 4005 4748)
-#pragma warning (disable: 4410)
+/*#pragma optimize("", off)*/
+#pragma warning(disable: 4005 4748 4410)
 
 
 namespace cse
@@ -52,7 +51,6 @@ namespace cse
 		_DefineHookHdlrWithBuffer(ConvertNiRenderedTexToD3DBaseTex, 0x00411616, 5, 0x85, 0xC0, 0x75, 0x2E, 0x8B);
 		_DefineHookHdlr(DuplicateReferences, 0x0042EC2E);
 		_DefinePatchHdlrWithBuffer(NiDX9RendererPresent, 0x006D5C9D, 2, 0xFF, 0xD0);
-		_DefineHookHdlr(RenderToAuxiliaryViewport, 0x0042D405);
 		_DefineHookHdlr(TESRenderControlPerformRelativeScale, 0x00424700);
 		_DefinePatchHdlr(DataHandlerClosePlugins, 0x0047B2FA);
 		_DefineHookHdlr(TESPathGridRubberBandSelection, 0x0042FBE0);
@@ -199,7 +197,6 @@ namespace cse
 			_MemHdlr(InitialCellLoadCameraPosition).WriteJump();
 			_MemHdlr(LandscapeEditBrushRadius).WriteUInt32((UInt32)&_RENDERWIN_XSTATE.MaxLandscapeEditBrushRadius);
 			_MemHdlr(DuplicateReferences).WriteJump();
-			_MemHdlr(RenderToAuxiliaryViewport).WriteJump();
 			_MemHdlr(TESRenderControlPerformRelativeScale).WriteJump();
 			_MemHdlr(DataHandlerClosePlugins).WriteUInt8(0xEB);
 			_MemHdlr(TESPathGridRubberBandSelection).WriteJump();
@@ -683,10 +680,10 @@ namespace cse
 
 		void __stdcall DoTESPathGridRecordOperation(void)
 		{
-			RenderWindowManager::Instance.GetPathGridUndoManager()->ResetRedoStack();
+			_RENDERWIN_MGR.GetPathGridUndoManager()->ResetRedoStack();
 
 			if (TESRenderWindow::SelectedPathGridPoints->Count())
-				RenderWindowManager::Instance.GetPathGridUndoManager()->RecordOperation(PathGridUndoManager::kOperation_DataChange, TESRenderWindow::SelectedPathGridPoints);
+				_RENDERWIN_MGR.GetPathGridUndoManager()->RecordOperation(PathGridUndoManager::kOperation_DataChange, TESRenderWindow::SelectedPathGridPoints);
 		}
 
 		void __stdcall DoTESPathGridRecordOperationMoveBHook(void)
@@ -760,11 +757,11 @@ namespace cse
 
 		void __stdcall DoTESPathGridDeletePointHook(void)
 		{
-			RenderWindowManager::Instance.GetPathGridUndoManager()->ResetRedoStack();
-			RenderWindowManager::Instance.GetPathGridUndoManager()->HandlePathGridPointDeletion(TESRenderWindow::SelectedPathGridPoints);
+			_RENDERWIN_MGR.GetPathGridUndoManager()->ResetRedoStack();
+			_RENDERWIN_MGR.GetPathGridUndoManager()->HandlePathGridPointDeletion(TESRenderWindow::SelectedPathGridPoints);
 
 			if (TESRenderWindow::SelectedPathGridPoints->Count())
-				RenderWindowManager::Instance.GetPathGridUndoManager()->RecordOperation(PathGridUndoManager::kOperation_PointDeletion, TESRenderWindow::SelectedPathGridPoints);
+				_RENDERWIN_MGR.GetPathGridUndoManager()->RecordOperation(PathGridUndoManager::kOperation_PointDeletion, TESRenderWindow::SelectedPathGridPoints);
 		}
 
 		#define _hhName		TESPathGridDeletePoint
@@ -786,7 +783,7 @@ namespace cse
 		{
 			PathGridPointListT* DeletionList = (PathGridPointListT*)PathGridPointListT::Create(&FormHeap_Allocate);
 			DeletionList->AddAt(Point, eListEnd);
-			RenderWindowManager::Instance.GetPathGridUndoManager()->HandlePathGridPointDeletion(DeletionList);
+			_RENDERWIN_MGR.GetPathGridUndoManager()->HandlePathGridPointDeletion(DeletionList);
 			DeletionList->RemoveAll();
 			FormHeap_Free(DeletionList);
 
@@ -824,8 +821,8 @@ namespace cse
 
 		void __stdcall DoTESPathGridToggleEditModeHook(void)
 		{
-			RenderWindowManager::Instance.GetPathGridUndoManager()->ResetRedoStack();
-			RenderWindowManager::Instance.GetPathGridUndoManager()->ResetUndoStack();
+			_RENDERWIN_MGR.GetPathGridUndoManager()->ResetRedoStack();
+			_RENDERWIN_MGR.GetPathGridUndoManager()->ResetUndoStack();
 		}
 
 		#define _hhName		TESPathGridToggleEditMode
@@ -845,10 +842,10 @@ namespace cse
 
 		void __stdcall DoTESPathGridCreateNewLinkedPointHook(void)
 		{
-			RenderWindowManager::Instance.GetPathGridUndoManager()->ResetRedoStack();
+			_RENDERWIN_MGR.GetPathGridUndoManager()->ResetRedoStack();
 
 			if (TESRenderWindow::SelectedPathGridPoints->Count())
-				RenderWindowManager::Instance.GetPathGridUndoManager()->RecordOperation(PathGridUndoManager::kOperation_PointCreation, TESRenderWindow::SelectedPathGridPoints);
+				_RENDERWIN_MGR.GetPathGridUndoManager()->RecordOperation(PathGridUndoManager::kOperation_PointCreation, TESRenderWindow::SelectedPathGridPoints);
 		}
 
 		#define _hhName		TESPathGridCreateNewLinkedPoint
@@ -1004,44 +1001,7 @@ namespace cse
 				jmp		_hhGetVar(Retn)
 			}
 		}
-
-		void __stdcall DoRenderToAuxiliaryViewportHook(void)
-		{
-			if (AUXVIEWPORT->GetVisible() == false)
-				return;
-
-			if (AUXVIEWPORT->GetFrozen() == false)
-			{
-				AUXVIEWPORT->SyncViewportCamera(_PRIMARYRENDERER->primaryCamera);
-				AUXVIEWPORT->DrawBackBuffer();
-			}
-			else
-				AUXVIEWPORT->Draw(NULL, NULL);
-		}
-
-		#define _hhName		RenderToAuxiliaryViewport
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x0042D415);
-			__asm
-			{
-				pushad
-				call	DoRenderToAuxiliaryViewportHook
-				popad
-
-				mov     ecx, [eax]
-				mov     edx, [ecx]
-				mov     eax, [eax+8]
-				mov     edx, [edx]
-				push    0
-				push    0
-				push	eax
-				call	edx
-
-				jmp		_hhGetVar(Retn)
-			}
-		}
-
+		
 		void __stdcall DoTESRenderControlPerformRelativeScaleHook(TESObjectREFR* Ref, float Scale, bool Relative)
 		{
 			if (Relative == false)
@@ -1541,4 +1501,4 @@ namespace cse
 }
 
 #pragma warning(pop)
-#pragma optimize("", on)
+/*#pragma optimize("", on)*/

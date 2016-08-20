@@ -111,8 +111,8 @@ namespace bfs = boost::filesystem;
 
 using namespace SME;
 using namespace SME::INI;
-using namespace SME::MemoryHandler;
 using namespace SME::Functors;
+using namespace SME::MemoryHandler;
 
 // OBSE
 #include "obse_common\obse_version.h"
@@ -141,7 +141,7 @@ using namespace SME::Functors;
 
 // required for assertions in d'tors (for static instances) as we don't want it to trigger the crash handler recursively
 #ifdef NDEBUG
-#define DEBUG_ASSERT(expr)		BGSEECONSOLE->LogAssertion("CSE", "ASSERTION FAILED (%s, %d): %s", __FILE__, __LINE__, #expr)
+#define DEBUG_ASSERT(_Expression)		(void)( (!!(_Expression)) || (BGSEECONSOLE->LogAssertion("CSE", "ASSERTION FAILED (%s, %d): %s", __FILE__, __LINE__, #_Expression), 0) )
 #else
 #define DEBUG_ASSERT(expr)		SME_ASSERT(expr)
 #endif

@@ -19,7 +19,7 @@ namespace cse
 #define GetErrorMemHdlr(hookaddr)								CompilerErrorOverrideHandler##hookaddr
 #define DefineCompilerErrorOverrideHook(hookaddr, jmpaddr, stackoffset)		\
 	void CompilerErrorOverrideHandler##hookaddr##Hook(void);					\
-	MemHdlr CompilerErrorOverrideHandler##hookaddr##(##hookaddr##, CompilerErrorOverrideHandler##hookaddr##Hook, 0, 0);		\
+	SME::MemoryHandler::MemHdlr CompilerErrorOverrideHandler##hookaddr##(##hookaddr##, CompilerErrorOverrideHandler##hookaddr##Hook, 0, 0);		\
 	void __declspec(naked) CompilerErrorOverrideHandler##hookaddr##Hook(void)	\
 	{																			\
 		static UInt32 CompilerErrorOverrideHandler##hookaddr##RetnAddr = jmpaddr##;		\

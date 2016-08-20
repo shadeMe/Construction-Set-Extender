@@ -557,14 +557,11 @@ namespace cse
 				break;
 			case WM_TIMER:
 				// main render loop
-				if (wParam == TESRenderWindow::kTimer_ViewportUpdate)
+				if (wParam == TESRenderWindow::kTimer_ViewportUpdate && *TESRenderWindow::ActiveCell)
 				{
 					// refresh the viewport if the mouse is in the client area or there are pending notifications
 					if (Parent->State.MouseInClientArea || Parent->NeedsBackgroundUpdate())
 						TESRenderWindow::Redraw();
-
-					Pipeline->NewFrame();
-					Parent->RenderLayers();
 				}
 
 				break;
@@ -652,6 +649,15 @@ namespace cse
 			DetachLayer(&DebugOSDLayer::Instance);
 #endif
 			Initialized = false;
+		}
+
+		void RenderWindowOSD::Draw()
+		{
+			if (Initialized && bgsee::RenderWindowFlyCamera::IsActive() == false)
+			{
+				Pipeline->NewFrame();
+				RenderLayers();
+			}
 		}
 
 		void RenderWindowOSD::Render()
@@ -2220,7 +2226,6 @@ namespace cse
 			ImGui::Columns(1);
 			ImGui::Separator();
 			FilterHelper.Draw();
-			ImGui::Separator();
 			RenderTabContents(CurrentTab);
 
 			ImGui::End();

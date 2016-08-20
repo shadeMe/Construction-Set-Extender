@@ -119,7 +119,9 @@ namespace cse
 			bool			Initialize();
 			void			Deinitialize();
 
-			void			Render();
+			void			Draw();			// draws the attached layers
+			void			Render();		// rendered the queued draw calls from the last Draw() call 
+
 			void			AttachLayer(IRenderWindowOSDLayer* Layer);
 			void			DetachLayer(IRenderWindowOSDLayer* Layer);
 

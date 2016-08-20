@@ -82,7 +82,7 @@ void TESDataHandler::SortScripts()
 
 TESForm* TESDataHandler::CreateForm(UInt8 TypeID)
 {
-	return thisCall<TESForm*>(0x004793F0, this, TypeID);
+	return cdeclCall<TESForm*>(0x004793F0, TypeID);
 }
 
 void TESDataHandler::PopulatePluginArray(const char* WorkingDirectory)

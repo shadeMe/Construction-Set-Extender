@@ -97,12 +97,12 @@ namespace cse
 
 									break;
 								case IDC_MAINMENU_CONSOLE:
-									if (BGSEECONSOLE->GetVisible())
+									if (BGSEECONSOLE->IsVisible())
 										CheckItem = true;
 
 									break;
 								case IDC_MAINMENU_AUXVIEWPORT:
-									if (AUXVIEWPORT->GetVisible())
+									if (AUXVIEWPORT->IsVisible())
 										CheckItem = true;
 
 									break;

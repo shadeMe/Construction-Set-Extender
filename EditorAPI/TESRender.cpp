@@ -67,14 +67,14 @@ void TESRenderWindow::Redraw( bool RefreshPathGrid )
 {
 	if (RefreshPathGrid && *PathGridEditFlag)
 	{
-		RenderWindowManager::Instance.GetPathGridUndoManager()->SetCanReset(false);
+		_RENDERWIN_MGR.GetPathGridUndoManager()->SetCanReset(false);
 
 		SendMessage(*TESRenderWindow::WindowHandle, 0x419, NULL, NULL);
 		TogglePathGridEditMode();
 		SendMessage(*TESRenderWindow::WindowHandle, 0x419, 2, NULL);
 		TogglePathGridEditMode();
 
-		RenderWindowManager::Instance.GetPathGridUndoManager()->SetCanReset(true);
+		_RENDERWIN_MGR.GetPathGridUndoManager()->SetCanReset(true);
 	}
 	else
 		*RefreshFlag = 1;
@@ -239,7 +239,7 @@ bool TESRender::UpdateNode(NiNode* Node, UInt32 UpdateType, float Multiplier)
 
 void TESRender::UpdateAVObject( NiAVObject* Object )
 {
-	thisCall<void>(0x006F25E0, Object, 0.0, true);		// NiAVObject::Update
+	thisCall<void>(0x006F25E0, Object, 0.f, (UInt32)1);		// NiAVObject::Update
 }
 
 void TESRender::UpdateDynamicEffectState(NiAVObject* Object)

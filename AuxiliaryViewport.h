@@ -18,6 +18,7 @@ namespace cse
 
 		NiCamera*							ViewportCamera;
 		bool								Frozen;
+		bool								Rendering;
 
 		AuxiliaryViewport();
 	public:
@@ -26,7 +27,7 @@ namespace cse
 		static AuxiliaryViewport*			GetSingleton();
 		void								Initialize();
 
-		bool								GetFrozen() const;
+		bool								IsFrozen() const;
 		bool								ToggleFrozenState();
 
 		void								SyncViewportCamera(NiCamera* Camera);
@@ -35,6 +36,7 @@ namespace cse
 		void								DrawBackBuffer(void);
 		void								Redraw();
 		void								ClearScreen();
+		bool								IsRenderingPerspective() const;
 
 		static void							RegisterINISettings(bgsee::INISettingDepotT& Depot);
 	};

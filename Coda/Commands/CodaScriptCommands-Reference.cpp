@@ -644,7 +644,7 @@ namespace cse
 						for (int i = 0, j = Members.size(); i < j; i++)
 							Buffer->AddToSelection(Members[i], false);
 
-						if (renderWindow::RenderWindowManager::Instance.GetReferenceGroupManager()->RemoveGroup(Buffer))
+						if (_RENDERWIN_MGR.GetReferenceGroupManager()->RemoveGroup(Buffer))
 							Result->SetNumber(1);
 
 						Buffer->DeleteInstance();

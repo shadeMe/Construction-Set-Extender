@@ -5,12 +5,6 @@
 #include "../Construction Set Extender_Resource.h"
 #include "../Exports.h"
 
-class TESForm;
-class TESObjectCELL;
-class TESWorldSpace;
-
-using namespace	MemoryHandler;
-
 namespace cse
 {
 	namespace hooks

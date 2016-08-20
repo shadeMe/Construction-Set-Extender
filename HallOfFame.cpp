@@ -25,9 +25,7 @@ namespace cse
 
 			TESFullName* Name = CS_CAST(Instance, TESForm, TESFullName);
 			if (Name)
-			{
 				Name->name.Set(Title);
-			}
 
 			TESObject* Object = CS_CAST(Instance, TESForm, TESObject);
 			SME_ASSERT(Object);
@@ -104,8 +102,7 @@ namespace cse
 
 		void HallOfFameSpellItem::Initialize( UInt32 FormID )
 		{
-			void* Throwaway = NULL;
-			SpellItem* Spell = SpellItem::InitializeDefaultPlayerSpell(Throwaway);
+			SpellItem* Spell = SpellItem::InitializeDefaultPlayerSpell();
 			Spell->name.Set(Title);
 			Spell->SetFormID(FormID);
 			Spell->SetEditorID(Name);
@@ -199,32 +196,30 @@ namespace cse
 				return;
 
 			bgsee::extras::ExtenderHOFEntryArrayT Inductees;
+			Inductees.reserve(0x20);
 
 			Inductees.push_back(new HallOfFameEntry("ianpat",						"The Overlord",					TESForm::kFormType_Armor));
 			Inductees.push_back(new HallOfFameEntry("ScruggsywuggsyTheFerret",		"Cthulu-like Being",			TESForm::kFormType_SigilStone));
 			Inductees.push_back(new HallOfFameEntry("behippo",						"Despises Peppermint",			TESForm::kFormType_Apparatus));
 			Inductees.push_back(new HallOfFameEntry("Cipscis",						"ACRONYM",						TESForm::kFormType_AlchemyItem));
-			Inductees.push_back(new HallOfFameEntry("haama",							"Tricksy Ol' Sod",				TESForm::kFormType_Furniture));
+			Inductees.push_back(new HallOfFameEntry("haama",						"Tricksy Ol' Sod",				TESForm::kFormType_Furniture));
 			Inductees.push_back(new HallOfFameEntry("PacificMorrowind",				"The Jack",						TESForm::kFormType_Book));
-			Inductees.push_back(new HallOfFameEntry("tejon",							"Goblin Tinkerer",				TESForm::kFormType_Creature));
+			Inductees.push_back(new HallOfFameEntry("tejon",						"Goblin Tinkerer",				TESForm::kFormType_Creature));
 			Inductees.push_back(new HallOfFameEntry("Lojack",						"Land Ahoy!",					TESForm::kFormType_Creature));
 			Inductees.push_back(new HallOfFameEntry("Vacuity",						"                ",				TESForm::kFormType_Container));
 			Inductees.push_back(new HallOfFameEntry("daemondarque",					"His Majestry, The CTD",		TESForm::kFormType_Ingredient));
 			Inductees.push_back(new HallOfFameEntry("Shikishima",					"Slash-And-Burn",				TESForm::kFormType_Clothing));
-			Inductees.push_back(new HallOfFameEntry("Waruddar",						"He-Whose-Name-I-Could-Never-Spell-Right",
-																														TESForm::kFormType_Key));
-			Inductees.push_back(new HallOfFameEntry("Corepc",						"Has Finally Changed His Avatar",
-																														TESForm::kFormType_Misc));
-			Inductees.push_back(new HallOfFameEntry("AndalayBay",					"Utters The Name Of The Scottish Play Without Flinching",
-																														TESForm::kFormType_Door));
+			Inductees.push_back(new HallOfFameEntry("Waruddar",						"He-Whose-Name-I-Could-Never-Spell-Right", TESForm::kFormType_Key));
+			Inductees.push_back(new HallOfFameEntry("Corepc",						"Has Finally Changed His Avatar", TESForm::kFormType_Misc));
+			Inductees.push_back(new HallOfFameEntry("AndalayBay",					"Utters The Name Of The Scottish Play Without Flinching", TESForm::kFormType_Door));
 			Inductees.push_back(new HallOfFameEntry("SenChan",						"Is A Year Older Now",			TESForm::kFormType_Ammo));
 			Inductees.push_back(new HallOfFameFemaleNPC("lilith",					"Likes Tea. Black. Like Me."));
 			Inductees.push_back(new HallOfFameFemaleNPC("greenwarden",				"The Wise Old Woman of Putney"));
-			Inductees.push_back(new HallOfFameSpellItem("kyoma",						"Deadliest Smiley Alive"));
-			Inductees.push_back(new HallOfFameStaff("DragoonWraith",					"The Mighty ARSE"));
+			Inductees.push_back(new HallOfFameSpellItem("kyoma",					"Deadliest Smiley Alive"));
+			Inductees.push_back(new HallOfFameStaff("DragoonWraith",				"The Mighty ARSE"));
 			Inductees.push_back(new HallOfFameMGEF('HSRJ',							"The Constant Physicist"));
 			Inductees.push_back(new HallOfFameEntry("Arthmoor",						"Bollocks-Breaker",				TESForm::kFormType_SoulGem));
-			Inductees.push_back(new HallOfFameEntry("Vorians",						"Ser Nitpick",				TESForm::kFormType_Activator));
+			Inductees.push_back(new HallOfFameEntry("Vorians",						"Ser Nitpick",					TESForm::kFormType_Activator));
 			Inductees.push_back(new HallOfFameScript("QQuix",						"scn QQuix\n\nbegin function {}\n\tsetFunctionValue \"I was the one who brought up the idea for Coda, CSE's scripting language for the CS environment! Woohoo!!\"\nend"));
 
 			Inductees.push_back(new HallOfFameShadeMe());		// oh yeah!

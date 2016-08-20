@@ -2,7 +2,7 @@
 #include "..\AuxiliaryViewport.h"
 
 #pragma warning(push)
-#pragma optimize("", off)
+/*#pragma optimize("", off)*/
 #pragma warning(disable: 4005 4748)
 
 namespace cse
@@ -615,7 +615,7 @@ namespace cse
 			}
 
 			// render the map's node as it gets updated with each partial's trishape
-			if (AUXVIEWPORT->GetVisible() && AUXVIEWPORT->GetFrozen() == false)
+			if (AUXVIEWPORT->IsVisible() && AUXVIEWPORT->IsFrozen() == false)
 			{
 				thisCall<void>(0x006F28A0, RenderNode);
 				thisCall<void>(0x006F2C10, RenderNode);
@@ -823,4 +823,4 @@ namespace cse
 }
 
 #pragma warning(pop)
-#pragma optimize("", on)
+/*#pragma optimize("", on)*/

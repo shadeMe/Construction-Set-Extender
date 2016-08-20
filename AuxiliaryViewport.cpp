@@ -44,11 +44,18 @@ namespace cse
 
 		switch (uMsg)
 		{
-		case WM_MOVING:
-		case WM_SHOWWINDOW:
+		case WM_SIZE:
 			{
 				AuxiliaryViewport* Instance = dynamic_cast<AuxiliaryViewport*>(UserData->Instance);
-				Instance->Redraw();
+				if (Instance->IsFrozen() == false)
+				{
+					RECT CurrentSize = { 0 };
+					GetClientRect(hWnd, &CurrentSize);
+
+					HWND Placeholder = GetDlgItem(hWnd, IDC_AUXVIEWPORT_PLACEHOLDER);
+					SetWindowPos(Placeholder, HWND_TOP, 0, 0, CurrentSize.right, CurrentSize.bottom, 0);
+					BGSEEUI->GetInvalidationManager()->Redraw(hWnd);
+				}
 			}
 
 			break;
@@ -64,7 +71,8 @@ namespace cse
 													IDR_BGSEE_GENERIC_CONTEXTMENU,
 													BaseDlgProc),
 		ViewportCamera(NULL),
-		Frozen(false)
+		Frozen(false),
+		Rendering(false)
 	{
 		ViewportCamera = (NiCamera*)FormHeap_Allocate(0x124);
 		thisCall<void>(0x006FF430, ViewportCamera);		// ctor
@@ -118,7 +126,7 @@ namespace cse
 
 	bool AuxiliaryViewport::ToggleFrozenState()
 	{
-		if (GetFrozen())
+		if (IsFrozen())
 			Frozen = false;
 		else
 			Frozen = true;
@@ -128,6 +136,8 @@ namespace cse
 
 	void AuxiliaryViewport::Draw( NiNode* NodeToRender, NiCamera* Camera )
 	{
+		SME::MiscGunk::ScopedSetter<bool> Sentry(Rendering, true);
+
 		hooks::_MemHdlr(NiDX9RendererPresent).WriteUInt16(0x9090);
 		if (Camera == NULL)
 			Camera = ViewportCamera;
@@ -143,7 +153,7 @@ namespace cse
 		_NIRENDERER->device->Present(NULL, NULL, DialogHandle, NULL);
 	}
 
-	bool AuxiliaryViewport::GetFrozen() const
+	bool AuxiliaryViewport::IsFrozen() const
 	{
 		return Frozen;
 	}
@@ -155,6 +165,11 @@ namespace cse
 		Depot.push_back(&kINI_Right);
 		Depot.push_back(&kINI_Bottom);
 		Depot.push_back(&kINI_Visible);
+	}
+
+	bool AuxiliaryViewport::IsRenderingPerspective() const
+	{
+		return Rendering;
 	}
 
 }

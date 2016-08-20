@@ -46,7 +46,7 @@ STATIC_ASSERT(sizeof(EnchantmentItem) == 0x11C);
 // 11C
 class SpellItem : public MagicItemForm
 {
-	typedef SpellItem*		(__stdcall *_InitializeDefaultPlayerSpell)(void* Throwaway);
+	typedef SpellItem*		(__cdecl *_InitializeDefaultPlayerSpell)();
 public:
 	enum SpellFlags
 	{

@@ -598,7 +598,7 @@ namespace cse
 			Initialized = false;
 		}
 
-		RenderWindowManager				RenderWindowManager::Instance;
+		RenderWindowManager				_RENDERWIN_MGR;
 
 
 		RenderWindowManager::GlobalEventSink::GlobalEventSink(RenderWindowManager* Parent) :
@@ -614,6 +614,9 @@ namespace cse
 
 			switch (Source->GetTypeID())
 			{
+			case events::TypedEventSource::kType_Plugin_ClearData:
+				Parent->HandleClearData();
+				break;
 			case events::TypedEventSource::kType_Renderer_Release:
 				Parent->HandleD3DRelease();
 				break;
@@ -1278,6 +1281,13 @@ namespace cse
 						_RENDERWIN_MGR.RefreshFOV();
 					}
 
+
+					// update and render the aux viewport's perspective
+					if (AUXVIEWPORT->IsFrozen() == false)
+						AUXVIEWPORT->SyncViewportCamera(_PRIMARYRENDERER->primaryCamera);
+					else if (AUXVIEWPORT->IsVisible())
+						AUXVIEWPORT->Draw(nullptr, nullptr);
+
 					break;
 				}
 
@@ -1372,9 +1382,9 @@ namespace cse
 								}
 
 								if (_RENDERWIN_XSTATE.SelectionPaintingMode == RenderWindowExtendedState::kSelectionPaintingMode_Select)
-									_RENDERWIN_MGR.GetSelectionManager()->AddToSelection(MouseRef, true);
+									_RENDERWIN_MGR.SelectionManager->AddToSelection(MouseRef, true);
 								else
-									_RENDERWIN_MGR.GetSelectionManager()->RemoveFromSelection(MouseRef, true);
+									_RENDERWIN_MGR.SelectionManager->RemoveFromSelection(MouseRef, true);
 							}
 						}
 					}
@@ -1524,7 +1534,7 @@ namespace cse
 					if (*TESRenderWindow::PathGridEditFlag && GetAsyncKeyState(VK_CONTROL))
 					{
 						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_PathGridAdditions);
-						RenderWindowManager::Instance.GetPathGridUndoManager()->PerformUndo();
+						_RENDERWIN_MGR.PGUndoManager->PerformUndo();
 						Return = true;
 					}
 
@@ -1533,7 +1543,7 @@ namespace cse
 					if (*TESRenderWindow::PathGridEditFlag && GetAsyncKeyState(VK_CONTROL))
 					{
 						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_PathGridAdditions);
-						RenderWindowManager::Instance.GetPathGridUndoManager()->PerformRedo();
+						_RENDERWIN_MGR.PGUndoManager->PerformRedo();
 						Return = true;
 					}
 					else
@@ -1563,10 +1573,10 @@ namespace cse
 					{
 						if (GetAsyncKeyState(VK_CONTROL))
 						{
-							RenderWindowManager::Instance.GetPathGridUndoManager()->ResetRedoStack();
+							_RENDERWIN_MGR.PGUndoManager->ResetRedoStack();
 
 							if (TESRenderWindow::SelectedPathGridPoints->Count())
-								RenderWindowManager::Instance.GetPathGridUndoManager()->RecordOperation(PathGridUndoManager::kOperation_DataChange, TESRenderWindow::SelectedPathGridPoints);
+								_RENDERWIN_MGR.PGUndoManager->RecordOperation(PathGridUndoManager::kOperation_DataChange, TESRenderWindow::SelectedPathGridPoints);
 
 							for (tList<TESPathGridPoint>::Iterator Itr = TESRenderWindow::SelectedPathGridPoints->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 							{
@@ -1606,7 +1616,7 @@ namespace cse
 
 						Return = true;
 					}
-					else if (GetAsyncKeyState(VK_SHIFT) && AUXVIEWPORT->GetVisible())
+					else if (GetAsyncKeyState(VK_SHIFT) && AUXVIEWPORT->IsVisible())
 					{
 						if (AUXVIEWPORT->ToggleFrozenState())
 							NotificationOSDLayer::Instance.ShowNotification("Froze auxiliary viewport camera");
@@ -1963,7 +1973,7 @@ namespace cse
 
 		void RenderWindowManager::DeleteRefGroup()
 		{
-			if (RenderWindowManager::Instance.GetReferenceGroupManager()->RemoveGroup(_RENDERSEL) == false)
+			if (GroupManager->RemoveGroup(_RENDERSEL) == false)
 				NotificationOSDLayer::Instance.ShowNotification("Couldn't dissolve the current selection's group.");
 			else
 				NotificationOSDLayer::Instance.ShowNotification("Removed selection group");
@@ -1972,6 +1982,11 @@ namespace cse
 		const TESObjectREFRArrayT& RenderWindowManager::GetActiveRefs() const
 		{
 			return ActiveRefCache;
+		}
+
+		void RenderWindowManager::HandleClearData()
+		{
+			ActiveRefCache.clear();
 		}
 
 		void RenderWindowManager::HandleD3DRelease()
@@ -1997,7 +2012,12 @@ namespace cse
 		void RenderWindowManager::HandlePostSceneGraphRender()
 		{
 			SME_ASSERT(Initialized);
-			OSD->Render();
+
+			if (AUXVIEWPORT->IsRenderingPerspective() == false)
+			{
+				OSD->Draw();
+				OSD->Render();
+			}
 		}
 
 

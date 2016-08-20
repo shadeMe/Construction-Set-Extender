@@ -212,9 +212,9 @@ namespace cse
 		}  \
 	}
 
-#define PatchCommonDialogCancelHandler(name)							WriteRelJump(k##name##CancelCommonDialogHookAddr, (UInt32)##name##CancelCommonDialogHook);
-#define PatchCommonDialogPrologHandler(name)							WriteRelJump(k##name##SelectorCommonDialogHookAddr, (UInt32)##name##SelectorCommonDialogHook);
-#define PatchCommonDialogEpilogHandler(name)							WriteRelJump(k##name##PostCommonDialogHookAddr, (UInt32)##name##PostCommonDialogHook);
+#define PatchCommonDialogCancelHandler(name)							SME::MemoryHandler::WriteRelJump(k##name##CancelCommonDialogHookAddr, (UInt32)##name##CancelCommonDialogHook);
+#define PatchCommonDialogPrologHandler(name)							SME::MemoryHandler::WriteRelJump(k##name##SelectorCommonDialogHookAddr, (UInt32)##name##SelectorCommonDialogHook);
+#define PatchCommonDialogEpilogHandler(name)							SME::MemoryHandler::WriteRelJump(k##name##PostCommonDialogHookAddr, (UInt32)##name##PostCommonDialogHook);
 
 		void ModelSelectorCommonDialogHook(void);
 		void ModelPostCommonDialogHook(void);

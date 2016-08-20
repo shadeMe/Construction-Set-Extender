@@ -266,7 +266,7 @@ public:
 	static UInt8*						LandscapeEditFlag;
 	static UInt8*						DraggingSelection;
 
-	static TESObjectCELL**				ActiveCell;						// points to the current interior cell or the exterior cell at the camera's position
+	static TESObjectCELL**				ActiveCell;						// points to the current interior cell or the exterior cell at the camera's position/current selection
 	static TESLandTexture**				ActiveLandscapeTexture;
 	static TESObjectREFR**				SnapReference;
 

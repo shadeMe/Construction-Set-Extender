@@ -23,7 +23,7 @@ namespace cse
 		DEFINE_BASIC_EVENT_SINK_HANDLER(DataHandlerClearData)
 		{
 			delete BGSEEHALLOFFAME;
-			renderWindow::RenderWindowManager::Instance.GetReferenceGroupManager()->Clear();
+			_RENDERWIN_MGR.GetReferenceGroupManager()->Clear();
 			GameSettingCollection::Instance->ResetCollection();
 			BGSEEUNDOSTACK->Reset();
 		}

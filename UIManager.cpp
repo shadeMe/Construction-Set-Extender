@@ -472,12 +472,12 @@ namespace cse
 			;//
 		}
 
-		inline bool FormEnumerationManager::GetVisibleDeletedForms( void ) const
+		bool FormEnumerationManager::GetVisibleDeletedForms( void ) const
 		{
 			return VisibilityDeletedForms == true;
 		}
 
-		inline bool FormEnumerationManager::GetVisibleUnmodifiedForms( void ) const
+		bool FormEnumerationManager::GetVisibleUnmodifiedForms( void ) const
 		{
 			return VisibilityUnmodifiedForms == true;
 		}

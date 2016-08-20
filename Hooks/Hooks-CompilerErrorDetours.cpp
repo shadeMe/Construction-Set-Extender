@@ -2,7 +2,7 @@
 #include "[Common]/CLIWrapper.h"
 
 #pragma warning(push)
-#pragma optimize("", off)
+/*#pragma optimize("", off)*/
 #pragma warning(disable: 4005 4748)
 
 namespace cse
@@ -238,4 +238,4 @@ namespace cse
 }
 
 #pragma warning(pop)
-#pragma optimize("", on)
+/*#pragma optimize("", on)*/

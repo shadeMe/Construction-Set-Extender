@@ -11,7 +11,7 @@
 #include "..\Console.h"
 
 #pragma warning(push)
-#pragma optimize("", off)
+/*#pragma optimize("", off)*/
 #pragma warning(disable: 4005 4748)
 
 namespace cse
@@ -216,15 +216,15 @@ namespace cse
 
 			const UInt32 kMessageHandlerVTBL = 0x00940760;
 
-			SafeWrite32(kMessageHandlerVTBL + 0, (UInt32)&MessageHandlerOverride);
-			SafeWrite32(kMessageHandlerVTBL + 0x4, (UInt32)&MessageHandlerOverride);
-			SafeWrite32(kMessageHandlerVTBL + 0x8, (UInt32)&MessageHandlerOverride);
-			SafeWrite32(kMessageHandlerVTBL + 0x10, (UInt32)&MessageHandlerOverride);
-			SafeWrite32(kMessageHandlerVTBL + 0x14, (UInt32)&MessageHandlerOverride);
-			SafeWrite32(kMessageHandlerVTBL + 0x18, (UInt32)&MessageHandlerOverride);
-			SafeWrite32(kMessageHandlerVTBL + 0x1C, (UInt32)&MessageHandlerOverride);
-			SafeWrite32(kMessageHandlerVTBL + 0x20, (UInt32)&MessageHandlerOverride);
-			SafeWrite32(kMessageHandlerVTBL + 0x24, (UInt32)&MessageHandlerOverride);
+			SME::MemoryHandler::SafeWrite32(kMessageHandlerVTBL + 0, (UInt32)&MessageHandlerOverride);
+			SME::MemoryHandler::SafeWrite32(kMessageHandlerVTBL + 0x4, (UInt32)&MessageHandlerOverride);
+			SME::MemoryHandler::SafeWrite32(kMessageHandlerVTBL + 0x8, (UInt32)&MessageHandlerOverride);
+			SME::MemoryHandler::SafeWrite32(kMessageHandlerVTBL + 0x10, (UInt32)&MessageHandlerOverride);
+			SME::MemoryHandler::SafeWrite32(kMessageHandlerVTBL + 0x14, (UInt32)&MessageHandlerOverride);
+			SME::MemoryHandler::SafeWrite32(kMessageHandlerVTBL + 0x18, (UInt32)&MessageHandlerOverride);
+			SME::MemoryHandler::SafeWrite32(kMessageHandlerVTBL + 0x1C, (UInt32)&MessageHandlerOverride);
+			SME::MemoryHandler::SafeWrite32(kMessageHandlerVTBL + 0x20, (UInt32)&MessageHandlerOverride);
+			SME::MemoryHandler::SafeWrite32(kMessageHandlerVTBL + 0x24, (UInt32)&MessageHandlerOverride);
 		}
 
 		void __stdcall DoCSInitHook()
@@ -1162,4 +1162,4 @@ namespace cse
 }
 
 #pragma warning(pop)
-#pragma optimize("", on)
+/*#pragma optimize("", on)*/

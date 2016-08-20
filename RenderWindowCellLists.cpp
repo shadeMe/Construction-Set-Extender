@@ -84,7 +84,13 @@ namespace cse
 			if (Cell->GetIsInterior())
 				FORMAT_STR(Location, "Interior");
 			else
-				FORMAT_STR(Location, "%s (%d,%d)", Cell->GetParentWorldSpace()->name.c_str(), Cell->cellData.coords->x, Cell->cellData.coords->y);
+			{
+				const char* WorldspaceName = Cell->GetParentWorldSpace()->name.c_str();
+				if (WorldspaceName == nullptr)
+					WorldspaceName = Cell->GetParentWorldSpace()->GetEditorID();
+
+				FORMAT_STR(Location, "%s (%d,%d)", WorldspaceName, Cell->cellData.coords->x, Cell->cellData.coords->y);
+			}
 
 			char Buffer[0x100] = {0};
 			FORMAT_STR(Buffer, "%s %s %s", EditorID, Name, Location);

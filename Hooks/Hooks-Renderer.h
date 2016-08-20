@@ -44,7 +44,6 @@ namespace cse
 		_DeclareMemHdlr(ConvertNiRenderedTexToD3DBaseTex, "temporary hook that adds the ability to convert NiAPI rendered textures to D3D equivalents");
 		_DeclareMemHdlr(DuplicateReferences, "changes the render window selection to the newly created references after duplication");
 		_DeclareMemHdlr(NiDX9RendererPresent, "temporary hook that prevents the renderer from presenting its render targets");
-		_DeclareMemHdlr(RenderToAuxiliaryViewport, "allows the scenegraph to be rendered to the auxiliary viewport window");
 		_DeclareMemHdlr(TESRenderControlPerformRelativeScale, "allows the selection group to be scaled relative to their nominal center");
 		_DeclareMemHdlr(DataHandlerClosePlugins, "prevents the view port from flashing while loading exterior cells");
 		_DeclareMemHdlr(TESPathGridRubberBandSelection, "fixes a bug that selected all path grid points in the loaded cell(s) when restoring focus to the render window");

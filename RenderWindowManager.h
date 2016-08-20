@@ -223,6 +223,7 @@ namespace cse
 
 			bool										Initialized;
 
+			void										HandleClearData();
 			void										HandleD3DRelease();
 			void										HandleD3DRenew();
 			void										HandlePreSceneGraphRender(NiCamera* Camera,
