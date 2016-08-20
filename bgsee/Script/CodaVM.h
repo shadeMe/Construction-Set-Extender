@@ -62,15 +62,16 @@ namespace bgsee
 
 		class CodaScriptMessageHandler
 		{
-			bool										State;
+			bool										DefaultContextLoggingState;
+			void*										ConsoleContext;
 		public:
 			CodaScriptMessageHandler();
 			~CodaScriptMessageHandler();
 
-			void										Suspend(void);
-			void										Resume(void);
+			void										SuspendDefaultContextLogging(void);
+			void										ResumeDefaultContextLogging(void);
 
-			void										LogMsg(const char* Format, ...);
+			void										Log(const char* Format, ...);
 		};
 
 		class CodaScriptExecutive
@@ -191,7 +192,7 @@ namespace bgsee
 
 			CodaScriptVM();
 
-			CodaScriptExecutionContext*					CreateExecutionContext(std::fstream& Input, CodaScriptMutableDataArrayT* Parameters = NULL);
+			CodaScriptExecutionContext*					CreateExecutionContext(std::fstream& Input, CodaScriptMutableDataArrayT* Parameters = nullptr);
 		public:
 			~CodaScriptVM();
 
@@ -217,7 +218,7 @@ namespace bgsee
 			bool										GetBackgrounderState(void) const;
 			bool										ToggleBackgrounderState(void);
 
-			CodaScriptMessageHandler*					MsgHdlr(void);
+			CodaScriptMessageHandler*					GetMessageHandler(void);
 
 			void										OpenScriptRepository(void) const;
 		};

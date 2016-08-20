@@ -97,7 +97,7 @@ namespace bgsee
 																	ICodaScriptExpressionByteCode** OutByteCode) = 0;
 			virtual void									Evaluate(ICodaScriptSyntaxTreeEvaluator* EvaluationAgent,
 																	ICodaScriptExpressionByteCode* ByteCode,
-																	CodaScriptBackingStore* Result = NULL) = 0;
+																	CodaScriptBackingStore* Result = nullptr) = 0;
 		};
 
 		class ICodaScriptSyntaxTreeVisitor
@@ -132,7 +132,7 @@ namespace bgsee
 
 			virtual void									Traverse(ICodaScriptSyntaxTreeVisitor* Visitor);
 		public:
-			ICodaScriptSyntaxTreeNode(ICodaScriptSyntaxTreeNode* BiologicalParent = NULL);
+			ICodaScriptSyntaxTreeNode(ICodaScriptSyntaxTreeNode* BiologicalParent = nullptr);
 			virtual ~ICodaScriptSyntaxTreeNode() = 0;
 
 			bool											GetIsRoot(void) const;
@@ -389,7 +389,7 @@ namespace bgsee
 			CodaScriptExecutionContext(CodaScriptVM* VirtualMachine,
 									std::fstream& SourceCode,
 									ICodaScriptExpressionParser* ExpressionParser,
-									CodaScriptMutableDataArrayT* Parameters = NULL);
+									CodaScriptMutableDataArrayT* Parameters = nullptr);
 
 			virtual ~CodaScriptExecutionContext();
 

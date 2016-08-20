@@ -59,7 +59,7 @@ namespace bgsee { namespace script { namespace mup {
   void RPN::Add(ptr_tok_type tok)
   {
 	m_vRPN.push_back(tok);
-	if (tok->AsIValue()!=NULL)
+	if (tok->AsIValue()!=nullptr)
 	{
 	  m_nStackPos++;
 	}

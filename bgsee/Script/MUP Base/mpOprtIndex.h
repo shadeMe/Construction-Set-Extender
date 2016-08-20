@@ -56,7 +56,7 @@ namespace bgsee { namespace script { namespace mup {
   class OprtIndex : public IOprtIndex
   {
   public:
-    OprtIndex(IPackage* pPackage=NULL);
+    OprtIndex(IPackage* pPackage=nullptr);
     virtual void At(ptr_val_type& ret, const ptr_val_type *arg, int argc);
     virtual const char_type* GetDesc() const;
     virtual IToken* Clone() const;

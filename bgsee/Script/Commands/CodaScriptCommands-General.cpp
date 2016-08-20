@@ -52,7 +52,6 @@ namespace bgsee
 					else
 						Agent->SetResult(CodaScriptBackingStore(0.0));
 
-					
 					if (ArgumentCount == 2)
 					{
 						// the calling script is requesting destruction
@@ -89,7 +88,7 @@ namespace bgsee
 						PassedParameters.push_back(*Store);
 					}
 
-					bool ExecuteResult = CODAVM->RunScript(ScriptName, (PassedParameters.size() ? &PassedParameters : NULL), &CallResult, ReturnedResult);
+					bool ExecuteResult = CODAVM->RunScript(ScriptName, (PassedParameters.size() ? &PassedParameters : nullptr), &CallResult, ReturnedResult);
 
 					if (ExecuteResult && ReturnedResult)
 						*Result = CallResult;
@@ -137,7 +136,7 @@ namespace bgsee
 
 				CodaScriptCommandHandler(FormatNumber)
 				{
-					CodaScriptStringParameterTypeT FormatString = NULL;
+					CodaScriptStringParameterTypeT FormatString = nullptr;
 					CodaScriptNumericDataTypeT Number = 0.0, InterpretAsUInt32 = 0.0;
 
 					CodaScriptCommandExtractArgs(&FormatString, &Number, &InterpretAsUInt32);
@@ -155,11 +154,11 @@ namespace bgsee
 
 				CodaScriptCommandHandler(PrintToConsole)
 				{
-					CodaScriptStringParameterTypeT Message = NULL;
+					CodaScriptStringParameterTypeT Message = nullptr;
 
 					CodaScriptCommandExtractArgs(&Message);
 
-					BGSEECONSOLE_MESSAGE(Message);
+					ExecutionAgent->GetVM()->GetMessageHandler()->Log("%s", Message);
 					return true;
 				}
 

@@ -108,7 +108,7 @@ namespace bgsee
 			Reset();
 			Type = kDataType_String;
 
-			if (Data == NULL)
+			if (Data == nullptr)
 				Data = "";
 
 			UInt32 Size = strlen(Data);

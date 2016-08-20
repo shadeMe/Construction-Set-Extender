@@ -87,7 +87,7 @@ std::auto_ptr<PackageUnit> PackageUnit::s_pInstance;
 //------------------------------------------------------------------------------
 IPackage* PackageUnit::Instance()
 {
-  if (s_pInstance.get()==NULL)
+  if (s_pInstance.get()==nullptr)
   {
     s_pInstance.reset(new PackageUnit);
   }

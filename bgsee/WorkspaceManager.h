@@ -46,7 +46,7 @@ namespace bgsee
 													WorkspaceManagerOperator* Operator,
 													DefaultDirectoryArrayT& DefaultDirectoryData);	// manager takes ownership of the operator
 
-		bool								SelectCurrentWorkspace(const char* DefaultWorkspacePath = NULL);
+		bool								SelectCurrentWorkspace(const char* DefaultWorkspacePath = nullptr);
 		const char*							GetCurrentWorkspace(void) const;
 		const char*							GetDefaultWorkspace(void) const;
 	};

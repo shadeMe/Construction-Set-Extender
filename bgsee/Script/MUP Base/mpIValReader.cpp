@@ -40,7 +40,7 @@
 namespace bgsee { namespace script { namespace mup {
 //--------------------------------------------------------------------------------------------
     IValueReader::IValueReader()
-      :m_pTokenReader(NULL)
+      :m_pTokenReader(nullptr)
     {}
 
     //--------------------------------------------------------------------------------------------
@@ -65,6 +65,6 @@ namespace bgsee { namespace script { namespace mup {
     {
       const TokenReader::token_buf_type &buf = m_pTokenReader->GetTokens();
       std::size_t size = buf.size();
-      return (pos>=size) ? NULL : buf[size-1-pos].Get();
+      return (pos>=size) ? nullptr : buf[size-1-pos].Get();
     }
 } } }

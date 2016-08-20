@@ -4,7 +4,7 @@
 
 namespace bgsee
 {
-	ChangeLogManager*		ChangeLogManager::Singleton = NULL;
+	ChangeLogManager*		ChangeLogManager::Singleton = nullptr;
 
 	ChangeLog::ChangeLog(const char* Path, const char* FileName)
 	{
@@ -15,7 +15,7 @@ namespace bgsee
 		FilePath = std::string(Path) + "\\" + std::string(Buffer) + ".log";
 		Log = _fsopen(FilePath.c_str(), "w", _SH_DENYNO);
 
-		if (Log == NULL)
+		if (Log == nullptr)
 		{
 			BGSEECONSOLE_MESSAGE("Couldn't initialize change log '%s'", FilePath.c_str());
 			BGSEECONSOLE_MESSAGE("Error Code = %d", errno);
@@ -64,7 +64,7 @@ namespace bgsee
 
 	bool ChangeLog::Copy(const char* DestinationPath, bool Overwrite) const
 	{
-		if (Log == NULL)
+		if (Log == nullptr)
 			return false;
 
 		fflush(Log);
@@ -91,13 +91,13 @@ namespace bgsee
 	
 	void ChangeLog::View() const
 	{
-		ShellExecute(NULL, "open", (LPSTR)FilePath.c_str(), NULL, NULL, SW_SHOW);
+		ShellExecute(nullptr, "open", (LPSTR)FilePath.c_str(), nullptr, nullptr, SW_SHOW);
 	}
 
 	
 	ChangeLogManager* ChangeLogManager::GetSingleton(void)
 	{
-		if (Singleton == NULL)
+		if (Singleton == nullptr)
 			Singleton = new ChangeLogManager();
 
 		return Singleton;
@@ -105,8 +105,8 @@ namespace bgsee
 
 	ChangeLogManager::ChangeLogManager() :
 		LogStack(),
-		SessionLog(NULL),
-		ConsoleMessageContext(NULL),
+		SessionLog(nullptr),
+		ConsoleMessageContext(nullptr),
 		Initialized(false)
 	{
 		ZeroMemory(GUIDString, sizeof(GUIDString));
@@ -136,12 +136,12 @@ namespace bgsee
 		if (ConsoleMessageContext)
 		{
 			BGSEECONSOLE->UnregisterMessageLogContext(ConsoleMessageContext);
-			ConsoleMessageContext = NULL;
+			ConsoleMessageContext = nullptr;
 		}
 
 		Initialized = false;
 
-		Singleton = NULL;
+		Singleton = nullptr;
 	}
 
 	const char* ChangeLogManager::GetTempDirectory( char* OutBuffer, UInt32 BufferSize )
@@ -197,7 +197,7 @@ namespace bgsee
 				BGSEECONSOLE_MESSAGE("User Session Temp Path = %s", TempPath);
 				char Buffer[MAX_PATH] = {0};
 
-				if (!CreateDirectory(GetTempDirectory(Buffer, sizeof(Buffer)), NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
+				if (!CreateDirectory(GetTempDirectory(Buffer, sizeof(Buffer)), nullptr) && GetLastError() != ERROR_ALREADY_EXISTS)
 				{
 					BGSEECONSOLE_ERROR("Couldn't create temp log directory");
 					Initialized = false;
@@ -209,7 +209,7 @@ namespace bgsee
 		{
 			char Buffer[MAX_PATH] = {0};
 
-			SME_ASSERT(SessionLog == NULL);
+			SME_ASSERT(SessionLog == nullptr);
 			SessionLog = new ChangeLog(GetTempDirectory(Buffer, sizeof(Buffer)), "CSE Change Log");
 			this->PushNewActiveLog();
 
@@ -218,7 +218,7 @@ namespace bgsee
 		}
 
 		ConsoleMessageContext = BGSEECONSOLE->RegisterMessageLogContext("Change Log", SessionLog->FilePath.c_str());
-		if (ConsoleMessageContext == NULL)
+		if (ConsoleMessageContext == nullptr)
 		{
 			BGSEECONSOLE_ERROR("Couldn't register console message context");
 			Initialized = false;

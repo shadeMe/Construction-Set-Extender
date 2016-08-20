@@ -4,12 +4,12 @@
 
 namespace bgsee
 {
-	GlobalClipboard*			GlobalClipboard::Singleton = NULL;
+	GlobalClipboard*			GlobalClipboard::Singleton = nullptr;
 	const char*					GlobalClipboard::kClipboardBufferPath = "bgseegc";
 
 	GlobalClipboard::GlobalClipboard() :
-		Operator(NULL),
-		Buffer(NULL),
+		Operator(nullptr),
+		Buffer(nullptr),
 		Initialized(false)
 	{
 		;//
@@ -22,12 +22,12 @@ namespace bgsee
 
 		Initialized = false;
 
-		Singleton = NULL;
+		Singleton = nullptr;
 	}
 
 	GlobalClipboard* GlobalClipboard::GetSingleton()
 	{
-		if (Singleton == NULL)
+		if (Singleton == nullptr)
 			Singleton = new GlobalClipboard();
 
 		return Singleton;
@@ -85,7 +85,7 @@ namespace bgsee
 			}
 
 			if (Result == false)
-				BGSEEUI->MsgBoxE(NULL, MB_TASKMODAL|MB_SETFOREGROUND, "Global copy operation failed! Check the console for more information.");
+				BGSEEUI->MsgBoxE(nullptr, MB_TASKMODAL|MB_SETFOREGROUND, "Global copy operation failed! Check the console for more information.");
 
 			for (FormListT::iterator Itr = Forms.begin(); Itr != Forms.end(); Itr++)
 				delete *Itr;
@@ -108,7 +108,7 @@ namespace bgsee
 		BGSEECONSOLE->Indent();
 
 		FormCollectionSerializer* Deserializer = Operator->GetDeserializer(Buffer);
-		if (Deserializer == NULL)
+		if (Deserializer == nullptr)
 			BGSEECONSOLE_MESSAGE("Unrecognized clipboard buffer serializer/deserializer!");
 		else
 		{
@@ -125,7 +125,7 @@ namespace bgsee
 			Buffer->Purge();
 
 		if (Result == false)
-			BGSEEUI->MsgBoxE(NULL, MB_TASKMODAL|MB_SETFOREGROUND, "Global paste operation failed! Check the console for more information.");
+			BGSEEUI->MsgBoxE(nullptr, MB_TASKMODAL|MB_SETFOREGROUND, "Global paste operation failed! Check the console for more information.");
 
 		BGSEECONSOLE->Exdent();
 

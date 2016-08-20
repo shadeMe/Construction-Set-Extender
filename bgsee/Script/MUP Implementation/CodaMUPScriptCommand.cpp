@@ -12,7 +12,7 @@ namespace bgsee
 			CodaScriptMUPScriptCommand::CodaScriptMUPScriptCommand( ICodaScriptCommand* Source, bool UseAlias ) :
 				ICallback(cmFUNC,
 						(UseAlias && Source->GetAlias() ? Source->GetAlias() : Source->GetName()),
-						Source->GetParameterData(NULL, NULL, NULL)),
+						Source->GetParameterData(nullptr, nullptr, nullptr)),
 				Parent(Source)
 			{
 				;//
@@ -20,7 +20,7 @@ namespace bgsee
 
 			CodaScriptMUPScriptCommand::~CodaScriptMUPScriptCommand()
 			{
-				Parent = NULL;
+				Parent = nullptr;
 			}
 
 			void CodaScriptMUPScriptCommand::Eval( ptr_val_type& ret, const ptr_val_type *arg, int argc )
@@ -31,13 +31,13 @@ namespace bgsee
 				SME_ASSERT(ExecutionAgent && ByteCode);
 
 				CodaScriptMutableDataArrayT WrappedArgs;
-				ICodaScriptCommand::ParameterInfo* ParamArray = NULL;
+				ICodaScriptCommand::ParameterInfo* ParamArray = nullptr;
 				UInt8 ReturnType = ICodaScriptDataStore::kDataType_Invalid;
 				int ParamCount = Parent->GetParameterData(&ParamCount, &ParamArray, &ReturnType);
 
 				if (argc)
 				{
-					if (ParamCount != -1 && ParamArray == NULL)
+					if (ParamCount != -1 && ParamArray == nullptr)
 						throw CodaScriptException(ByteCode->GetSource(),
 												"Non-variadic command '%s' has no parameter data",
 												Parent->GetName());
@@ -121,7 +121,7 @@ namespace bgsee
 				}
 				else
 				{
-					ExecutionAgent->GetVM()->MsgHdlr()->LogMsg("CodaScriptMUPScriptCommand::Eval - Command '%s' failed to evaluate at line %d!",
+					ExecutionAgent->GetVM()->GetMessageHandler()->Log("CodaScriptMUPScriptCommand::Eval - Command '%s' failed to evaluate at line %d!",
 															Parent->GetName(),
 															ByteCode->GetSource()->GetLine());
 				}

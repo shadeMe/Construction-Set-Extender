@@ -289,7 +289,7 @@ namespace bgsee
 				if (UpdateParent)
 					Parent->Children.erase(Match);
 
-				Parent = NULL;
+				Parent = nullptr;
 			}
 		}
 
@@ -302,7 +302,7 @@ namespace bgsee
 		}
 
 		ICodaScriptSyntaxTreeNode::ICodaScriptSyntaxTreeNode( ICodaScriptSyntaxTreeNode* BiologicalParent /*= NULL*/ ) :
-			Parent(NULL), Children()
+			Parent(nullptr), Children()
 		{
 			if (BiologicalParent)
 				Attach(BiologicalParent);
@@ -316,7 +316,7 @@ namespace bgsee
 
 		bool ICodaScriptSyntaxTreeNode::GetIsRoot( void ) const
 		{
-			return (Parent == NULL);
+			return (Parent == nullptr);
 		}
 
 		bool ICodaScriptSyntaxTreeNode::GetIsLeaf( void ) const
@@ -342,9 +342,9 @@ namespace bgsee
 
 		ICodaScriptSyntaxTreeEvaluator::~ICodaScriptSyntaxTreeEvaluator()
 		{
-			VirtualMachine = NULL;
-			ScriptContext = NULL;
-			ParserAgent = NULL;
+			VirtualMachine = nullptr;
+			ScriptContext = nullptr;
+			ParserAgent = nullptr;
 		}
 
 		CodaScriptVariable* ICodaScriptSyntaxTreeEvaluator::LookupVariable( const char* Name )
@@ -391,7 +391,7 @@ namespace bgsee
 		}
 
 		ICodaScriptParseTree::ICodaScriptParseTree(CodaScriptVM* VM) :
-			ICodaScriptSyntaxTreeNode(NULL),
+			ICodaScriptSyntaxTreeNode(nullptr),
 			VirtualMachine(VM)
 		{
 			SME_ASSERT(VirtualMachine);
@@ -423,7 +423,7 @@ namespace bgsee
 		};
 
 		ICodaScriptExecutableCode::ICodaScriptExecutableCode() :
-			Type(kCodeType_Default_INVALID), Line(0), Source(""), ByteCode(NULL)
+			Type(kCodeType_Default_INVALID), Line(0), Source(""), ByteCode(nullptr)
 		{
 			GIC++;
 		}
@@ -589,7 +589,7 @@ namespace bgsee
 		}
 
 		CodaScriptIFBlock::CodaScriptIFBlock( CodaScriptSourceCodeT& Source, UInt32 Line ) :
-			ICodaScriptConditionalCodeBlock(), BranchELSE(NULL), BranchELSEIF()
+			ICodaScriptConditionalCodeBlock(), BranchELSE(nullptr), BranchELSEIF()
 		{
 			this->Type = kCodeType_Block_IF;
 			this->Line = Line;
@@ -748,7 +748,7 @@ namespace bgsee
 
 		CodaScriptVariable* CodaScriptExecutionContext::AddVariable( CodaScriptSourceCodeT& Name )
 		{
-			if (GetVariable(Name) == NULL)
+			if (GetVariable(Name) == nullptr)
 			{
 				CodaScriptVariable* Addend = new CodaScriptVariable(Name,
 																	CodaScriptObjectFactory::BuildDataStoreOwner(
@@ -757,7 +757,7 @@ namespace bgsee
 				return Addend;
 			}
 
-			return NULL;
+			return nullptr;
 		}
 
 		void CodaScriptExecutionContext::SetVariable( CodaScriptSourceCodeT& Name, CodaScriptBackingStore& Value )
@@ -785,7 +785,7 @@ namespace bgsee
 					return *Itr;
 			}
 
-			return NULL;
+			return nullptr;
 		}
 
 		void CodaScriptExecutionContext::ReleaseVariables( void )
@@ -821,7 +821,7 @@ namespace bgsee
 			CodaScriptExecutableCodeStackT CodeStack;
 
 			BlockStack.push(CodaScriptTokenizer::kTokenType_Invalid);
-			CodeStack.push(NULL);
+			CodeStack.push(nullptr);
 
 			while (SourceCode.eof() == false)
 			{
@@ -858,13 +858,13 @@ namespace bgsee
 							}
 							else
 							{
-								VirtualMachine->MsgHdlr()->LogMsg("Line %d: Invalid script name", CurrentLine);
+								VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid script name", CurrentLine);
 								Result = false;
 							}
 						}
 						else
 						{
-							VirtualMachine->MsgHdlr()->LogMsg("Line %d: Scripts should start with a script name declaration", CurrentLine);
+							VirtualMachine->GetMessageHandler()->Log("Line %d: Scripts should start with a script name declaration", CurrentLine);
 							Result = false;
 						}
 
@@ -878,22 +878,22 @@ namespace bgsee
 					case CodaScriptTokenizer::kTokenType_Variable:
 						if (BlockStack.top() != CodaScriptTokenizer::kTokenType_Invalid)
 						{
-							VirtualMachine->MsgHdlr()->LogMsg("Line %d: Variable '%s' declared inside a script block", CurrentLine, SecondToken.c_str());
+							VirtualMachine->GetMessageHandler()->Log("Line %d: Variable '%s' declared inside a script block", CurrentLine, SecondToken.c_str());
 							Result = false;
 						}
 						else if (GetVariable(SecondToken))
 						{
-							VirtualMachine->MsgHdlr()->LogMsg("Line %d: Variable '%s' redeclaration", CurrentLine, SecondToken.c_str());
+							VirtualMachine->GetMessageHandler()->Log("Line %d: Variable '%s' redeclaration", CurrentLine, SecondToken.c_str());
 							Result = false;
 						}
 						else if (SecondToken == "" || SME::StringHelpers::GetHasNonAlnumCharacter(SecondToken))
 						{
-							VirtualMachine->MsgHdlr()->LogMsg("Line %d: Invalid variable name - Only alphabets and digits allowed", CurrentLine);
+							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid variable name - Only alphabets and digits allowed", CurrentLine);
 							Result = false;
 						}
 						else if (VirtualMachine->GetGlobal(SecondToken.c_str()))
 						{
-							VirtualMachine->MsgHdlr()->LogMsg("Line %d: Scope conflict - Global variable '%s' exists", CurrentLine, SecondToken.c_str());
+							VirtualMachine->GetMessageHandler()->Log("Line %d: Scope conflict - Global variable '%s' exists", CurrentLine, SecondToken.c_str());
 							Result = false;
 						}
 						else
@@ -923,12 +923,12 @@ namespace bgsee
 					case CodaScriptTokenizer::kTokenType_Begin:
 						if (BlockStack.top() != CodaScriptTokenizer::kTokenType_Invalid)
 						{
-							VirtualMachine->MsgHdlr()->LogMsg("Line %d: Nested Begin block", CurrentLine);
+							VirtualMachine->GetMessageHandler()->Log("Line %d: Nested Begin block", CurrentLine);
 							Result = false;
 						}
 						else if (GetIsLeaf() == false)
 						{
-							VirtualMachine->MsgHdlr()->LogMsg("Line %d: Multiple Begin blocks", CurrentLine);
+							VirtualMachine->GetMessageHandler()->Log("Line %d: Multiple Begin blocks", CurrentLine);
 							Result = false;
 						}
 						else
@@ -942,12 +942,12 @@ namespace bgsee
 							{
 								if (ParameterIDs.size() > kMaxParameters)
 								{
-									VirtualMachine->MsgHdlr()->LogMsg("Line %d: Too many parameters passed", CurrentLine);
+									VirtualMachine->GetMessageHandler()->Log("Line %d: Too many parameters passed", CurrentLine);
 									Result = false;
 								}
 								else if (Parameters->size() != ParameterIDs.size())
 								{
-									VirtualMachine->MsgHdlr()->LogMsg("Line %d: Incorrect number of parameters passed - Received %d, expected %d", CurrentLine, Parameters->size(), ParameterIDs.size());
+									VirtualMachine->GetMessageHandler()->Log("Line %d: Incorrect number of parameters passed - Received %d, expected %d", CurrentLine, Parameters->size(), ParameterIDs.size());
 									Result = false;
 								}
 								else
@@ -961,7 +961,7 @@ namespace bgsee
 										}
 										else
 										{
-											VirtualMachine->MsgHdlr()->LogMsg("Line %d: Couldn't initialize parameter '%s' - Non-existent variable", CurrentLine, ParameterIDs[i]);
+											VirtualMachine->GetMessageHandler()->Log("Line %d: Couldn't initialize parameter '%s' - Non-existent variable", CurrentLine, ParameterIDs[i]);
 											Result = false;
 										}
 									}
@@ -969,7 +969,7 @@ namespace bgsee
 							}
 							else if (ParameterIDs.size())
 							{
-								VirtualMachine->MsgHdlr()->LogMsg("Line %d: Incorrect number of parameters passed - Received %d, expected %d", CurrentLine, 0, ParameterIDs.size());
+								VirtualMachine->GetMessageHandler()->Log("Line %d: Incorrect number of parameters passed - Received %d, expected %d", CurrentLine, 0, ParameterIDs.size());
 								Result = false;
 							}
 
@@ -986,7 +986,7 @@ namespace bgsee
 					case CodaScriptTokenizer::kTokenType_End:
 						if (BlockStack.top() != CodaScriptTokenizer::kTokenType_Begin)
 						{
-							VirtualMachine->MsgHdlr()->LogMsg("Line %d: Invalid block structure. Command 'End' has no matching 'Begin'", CurrentLine);
+							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid block structure. Command 'End' has no matching 'Begin'", CurrentLine);
 							Result = false;
 						}
 						else
@@ -1002,12 +1002,12 @@ namespace bgsee
 					case CodaScriptTokenizer::kTokenType_While:
 						if (BlockStack.top() == CodaScriptTokenizer::kTokenType_Invalid)
 						{
-							VirtualMachine->MsgHdlr()->LogMsg("Line %d: Invalid block structure. Script commands must be inside a 'Begin' block", CurrentLine);
+							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid block structure. Script commands must be inside a 'Begin' block", CurrentLine);
 							Result = false;
 						}
 						else if (Tokenizer.GetParsedTokenCount() < 2)
 						{
-							VirtualMachine->MsgHdlr()->LogMsg("Line %d: Invalid condition expression", CurrentLine);
+							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid condition expression", CurrentLine);
 							Result = false;
 						}
 						else
@@ -1027,12 +1027,12 @@ namespace bgsee
 					case CodaScriptTokenizer::kTokenType_ForEach:
 						if (BlockStack.top() == CodaScriptTokenizer::kTokenType_Invalid)
 						{
-							VirtualMachine->MsgHdlr()->LogMsg("Line %d: Invalid block structure. Script commands must be inside a 'Begin' block", CurrentLine);
+							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid block structure. Script commands must be inside a 'Begin' block", CurrentLine);
 							Result = false;
 						}
 						else if (Tokenizer.GetParsedTokenCount() < 4)
 						{
-							VirtualMachine->MsgHdlr()->LogMsg("Line %d: Invalid ForEach expression", CurrentLine);
+							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid ForEach expression", CurrentLine);
 							Result = false;
 						}
 						else
@@ -1052,7 +1052,7 @@ namespace bgsee
 					case CodaScriptTokenizer::kTokenType_Loop:
 						if (BlockStack.top() != CodaScriptTokenizer::kTokenType_Loop)
 						{
-							VirtualMachine->MsgHdlr()->LogMsg("Line %d: Invalid block structure. Command 'Loop' has no matching 'While' or 'ForEach'", CurrentLine);
+							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid block structure. Command 'Loop' has no matching 'While' or 'ForEach'", CurrentLine);
 							Result = false;
 						}
 						else
@@ -1068,12 +1068,12 @@ namespace bgsee
 					case CodaScriptTokenizer::kTokenType_If:
 						if (BlockStack.top() == CodaScriptTokenizer::kTokenType_Invalid)
 						{
-							VirtualMachine->MsgHdlr()->LogMsg("Line %d: Invalid block structure. Script commands must be inside a 'Begin' block", CurrentLine);
+							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid block structure. Script commands must be inside a 'Begin' block", CurrentLine);
 							Result = false;
 						}
 						else if (Tokenizer.GetParsedTokenCount() < 2)
 						{
-							VirtualMachine->MsgHdlr()->LogMsg("Line %d: Invalid condition expression", CurrentLine);
+							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid condition expression", CurrentLine);
 							Result = false;
 						}
 						else
@@ -1095,12 +1095,12 @@ namespace bgsee
 						if (BlockStack.top() != CodaScriptTokenizer::kTokenType_If &&
 							BlockStack.top() != (CodaScriptTokenizer::kTokenType_If|CodaScriptTokenizer::kTokenType_ElseIf))
 						{
-							VirtualMachine->MsgHdlr()->LogMsg("Line %d: Invalid block structure. Command 'Else(If)' has no/incorrectly matching/matched 'If'/'Else(If)'", CurrentLine);
+							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid block structure. Command 'Else(If)' has no/incorrectly matching/matched 'If'/'Else(If)'", CurrentLine);
 							Result = false;
 						}
 						else if (FirstKeyword == CodaScriptTokenizer::kTokenType_ElseIf && Tokenizer.GetParsedTokenCount() < 2)
 						{
-							VirtualMachine->MsgHdlr()->LogMsg("Line %d: Invalid condition expression", CurrentLine);
+							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid condition expression", CurrentLine);
 							Result = false;
 						}
 						else
@@ -1121,7 +1121,7 @@ namespace bgsee
 								CodeStack.pop();		// pop previous ELSE(IF)
 							}
 
-							ICodaScriptExecutableCode* NewNode = NULL;
+							ICodaScriptExecutableCode* NewNode = nullptr;
 							ICodaScriptExecutableCode* TopNode = CodeStack.top();
 							SME_ASSERT(TopNode && TopNode->GetType() == ICodaScriptExecutableCode::kCodeType_Block_IF);
 							CodaScriptIFBlock* IFBlock = dynamic_cast<CodaScriptIFBlock*>(TopNode);
@@ -1132,13 +1132,13 @@ namespace bgsee
 								NewNode = ElseIfBlock;
 								IFBlock->BranchELSEIF.push_back(ElseIfBlock);
 							}
-							else if (IFBlock->BranchELSE == NULL)
+							else if (IFBlock->BranchELSE == nullptr)
 							{
 								NewNode = IFBlock->BranchELSE = new CodaScriptELSEBlock(SourceLine, CurrentLine);
 							}
 							else
 							{
-								VirtualMachine->MsgHdlr()->LogMsg("Line %d: Invalid block structure. Multiple 'Else' blocks", CurrentLine);
+								VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid block structure. Multiple 'Else' blocks", CurrentLine);
 								Result = false;
 							}
 
@@ -1151,7 +1151,7 @@ namespace bgsee
 						if (BlockStack.top() != CodaScriptTokenizer::kTokenType_If &&
 							BlockStack.top() != (CodaScriptTokenizer::kTokenType_If|CodaScriptTokenizer::kTokenType_ElseIf))
 						{
-							VirtualMachine->MsgHdlr()->LogMsg("Line %d: Invalid block structure. Command 'EndIf' has no/incorrectly matching/matched 'If'/'Else(If)'", CurrentLine);
+							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid block structure. Command 'EndIf' has no/incorrectly matching/matched 'If'/'Else(If)'", CurrentLine);
 							Result = false;
 						}
 						else
@@ -1182,7 +1182,7 @@ namespace bgsee
 							case CodaScriptTokenizer::kTokenType_Continue:
 								if (!GetKeywordInStack(BlockStack, CodaScriptTokenizer::kTokenType_Loop))
 								{
-									VirtualMachine->MsgHdlr()->LogMsg("Line %d: Command 'Break'/'Loop' called outside a loop context", CurrentLine);
+									VirtualMachine->GetMessageHandler()->Log("Line %d: Command 'Break'/'Loop' called outside a loop context", CurrentLine);
 									Result = false;
 								}
 
@@ -1191,7 +1191,7 @@ namespace bgsee
 
 							if (BlockStack.top() == CodaScriptTokenizer::kTokenType_Invalid)
 							{
-								VirtualMachine->MsgHdlr()->LogMsg("Line %d: Invalid block structure. Script commands must be inside a 'Begin' block", CurrentLine);
+								VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid block structure. Script commands must be inside a 'Begin' block", CurrentLine);
 								Result = false;
 							}
 
@@ -1228,7 +1228,7 @@ namespace bgsee
 			{
 				SME_ASSERT(this->Children.size() == 1);
 				SME_ASSERT(BlockStack.size() == 1 && BlockStack.top() == CodaScriptTokenizer::kTokenType_Invalid);
-				SME_ASSERT(CodeStack.size() == 1 && CodeStack.top() == NULL);
+				SME_ASSERT(CodeStack.size() == 1 && CodeStack.top() == nullptr);
 
 				// generate bytecode
 				Compile(VirtualMachine);
@@ -1309,11 +1309,11 @@ namespace bgsee
 			}
 			catch (CodaScriptException& E)
 			{
-				VirtualMachine->MsgHdlr()->LogMsg("Compiler Error - %s", E.Get());
+				VirtualMachine->GetMessageHandler()->Log("Compiler Error - %s", E.Get());
 			}
 			catch (...)
 			{
-				VirtualMachine->MsgHdlr()->LogMsg("Unknown Compiler Error!");
+				VirtualMachine->GetMessageHandler()->Log("Unknown Compiler Error!");
 			}
 			BGSEECONSOLE->Exdent();
 
@@ -1348,15 +1348,15 @@ namespace bgsee
 #define CODASCRIPT_COMPILERERROR_CATCHER									\
 			catch (CodaScriptException& E)									\
 			{																\
-				BGSEECONSOLE_MESSAGE("Compiler Error - %s", E.Get());		\
+				GetVM()->GetMessageHandler()->Log("Compiler Error - %s", E.Get());		\
 			}																\
 			catch (std::exception& E)										\
 			{																\
-				BGSEECONSOLE_MESSAGE("Compiler Error - %s", E.what());		\
+				GetVM()->GetMessageHandler()->Log("Compiler Error - %s", E.what());		\
 			}																\
 			catch (...)														\
 			{																\
-				BGSEECONSOLE_MESSAGE("Unknown Compiler Error");				\
+				GetVM()->GetMessageHandler()->Log("Unknown Compiler Error");				\
 			}																\
 			Failed = true;													\
 			return;
@@ -1460,7 +1460,7 @@ namespace bgsee
 
 		void CodaScriptSyntaxTreeExecuteVisitor::SetResult( const CodaScriptBackingStore& Value )
 		{
-			SME_ASSERT(Result == NULL);
+			SME_ASSERT(Result == nullptr);
 
 			Result = new CodaScriptBackingStore(Value);
 		}
@@ -1469,7 +1469,7 @@ namespace bgsee
 																				CodaScriptExecutionContext* Context,
 																				ICodaScriptExpressionParser* Parser ) :
 			ICodaScriptSyntaxTreeEvaluator(VM, Context, Parser),
-			Result(NULL),
+			Result(nullptr),
 			ExecutingLoops(),
 			ExecutionState(kExecutionState_Default)
 		{
@@ -1504,7 +1504,7 @@ namespace bgsee
 			if (ExecutingLoops.size())
 				return ExecutingLoops.top();
 			else
-				return NULL;
+				return nullptr;
 		}
 
 		CodaScriptBackingStore* CodaScriptSyntaxTreeExecuteVisitor::GetResult( void ) const
@@ -1527,15 +1527,15 @@ namespace bgsee
 #define CODASCRIPT_EXECUTEERROR_CATCHER										\
 			catch (CodaScriptException& E)									\
 			{																\
-				BGSEECONSOLE_MESSAGE("Evaluate Error - %s", E.Get());		\
+				GetVM()->GetMessageHandler()->Log("Evaluate Error - %s", E.Get());		\
 			}																\
 			catch (std::exception& E)										\
 			{																\
-				BGSEECONSOLE_MESSAGE("Evaluate Error - %s", E.what());		\
+				GetVM()->GetMessageHandler()->Log("Evaluate Error - %s", E.what());		\
 			}																\
 			catch (...)														\
 			{																\
-				BGSEECONSOLE_MESSAGE("Unknown Evaluate Error");				\
+				GetVM()->GetMessageHandler()->Log("Unknown Evaluate Error");				\
 			}																\
 			SetState(kExecutionState_Terminate);							\
 			return;
@@ -1614,7 +1614,7 @@ namespace bgsee
 
 				if (ExecutionState == kExecutionState_Terminate)
 					break;
-				else if (ExecutionState == kExecutionState_Break && Result == NULL)
+				else if (ExecutionState == kExecutionState_Break && Result == nullptr)
 					ExecutionState = kExecutionState_Default;
 
 				if (Node->State == ICodaScriptLoopBlock::kLoopState_Break)
@@ -1634,11 +1634,11 @@ namespace bgsee
 			CODASCRIPT_EXECUTEHNDLR_PROLOG
 
 			ICodaScriptLoopBlock::LoopStackOperator Operator(Node, this);
-			CodaScriptVariable* Iterator = NULL;
+			CodaScriptVariable* Iterator = nullptr;
 
 			if (Node->IteratorName == "")
 				throw CodaScriptException(Node, "Invalid expression - No iterator specified");
-			else if ((Iterator = this->LookupVariable(Node->IteratorName.c_str())) == NULL)
+			else if ((Iterator = this->LookupVariable(Node->IteratorName.c_str())) == nullptr)
 				throw CodaScriptException(Node, "Invalid iterator '%s'", Node->IteratorName.c_str());
 
 			CodaScriptBackingStore ArrayResult((CodaScriptNumericDataTypeT)0),
@@ -1663,7 +1663,7 @@ namespace bgsee
 
 				if (ExecutionState == kExecutionState_Terminate)
 					break;
-				else if (ExecutionState == kExecutionState_Break && Result == NULL)
+				else if (ExecutionState == kExecutionState_Break && Result == nullptr)
 					ExecutionState = kExecutionState_Default;
 
 				if (Node->State == ICodaScriptLoopBlock::kLoopState_Break)
@@ -1708,7 +1708,7 @@ namespace bgsee
 
 		CodaScriptBackingStore* CodaScriptCommandHandlerUtilities::CreateWrapper( CodaScriptBackingStore* Source )
 		{
-			CodaScriptBackingStore* Result = NULL;
+			CodaScriptBackingStore* Result = nullptr;
 			if (Source)
 				Result = new CodaScriptBackingStore(Source);
 			else
@@ -1767,7 +1767,7 @@ namespace bgsee
 			SME_ASSERT(Wrapper && Wrapper->GetType() == ICodaScriptDataStore::kDataType_Array);
 
 			SME_ASSERT(OutBuffer);
-			CodaScriptBackingStore* BufferWrapper = CreateWrapper(NULL);
+			CodaScriptBackingStore* BufferWrapper = CreateWrapper(nullptr);
 			if (Wrapper->GetArray()->At(Index, *BufferWrapper))
 			{
 				*OutBuffer = BufferWrapper;

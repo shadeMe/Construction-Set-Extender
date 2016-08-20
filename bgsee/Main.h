@@ -18,7 +18,7 @@ namespace bgsee
 			;//
 		}
 
-		virtual bool				Handle(void* Parameter = NULL) = 0;
+		virtual bool				Handle(void* Parameter = nullptr) = 0;
 	};
 
 	class Daemon
@@ -68,7 +68,7 @@ namespace bgsee
 	{
 		SME::INI::INIManager*		ParentManager;
 	public:
-		INIManagerSetterFunctor(SME::INI::INIManager* Parent = NULL);
+		INIManagerSetterFunctor(SME::INI::INIManager* Parent = nullptr);
 
 		void						operator()(const char* Key, const char* Section, const char* Value);
 		void						operator()(const char* Section, const char* Value);
@@ -79,7 +79,7 @@ namespace bgsee
 	{
 		SME::INI::INIManager*		ParentManager;
 	public:
-		INIManagerGetterFunctor(SME::INI::INIManager* Parent = NULL);
+		INIManagerGetterFunctor(SME::INI::INIManager* Parent = nullptr);
 
 		int							operator()(const char* Key, const char* Section, const char* Default, char* OutBuffer, UInt32 Size);
 		int							operator()(const char* Section, char* OutBuffer, UInt32 Size);
@@ -148,7 +148,7 @@ namespace bgsee
 			DefaultInitCallback();
 			virtual ~DefaultInitCallback();
 
-			virtual bool			Handle(void* Parameter = NULL);
+			virtual bool			Handle(void* Parameter = nullptr);
 		};
 
 		static int CALLBACK			CrashCallback(CR_CRASH_CALLBACK_INFO* pInfo);
@@ -160,7 +160,7 @@ namespace bgsee
 			DefaultDeinitCallback(Main* Parent);
 			virtual ~DefaultDeinitCallback();
 
-			virtual bool			Handle(void* Parameter = NULL);
+			virtual bool			Handle(void* Parameter = nullptr);
 		};
 
 		friend class DefaultInitCallback;

@@ -55,7 +55,7 @@ std::auto_ptr<PackageCommon> PackageCommon::s_pInstance;
 //------------------------------------------------------------------------------
 IPackage* PackageCommon::Instance()
 {
-  if (s_pInstance.get()==NULL)
+  if (s_pInstance.get()==nullptr)
   {
     s_pInstance.reset(new PackageCommon);
   }

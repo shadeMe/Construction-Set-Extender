@@ -104,7 +104,7 @@ namespace bgsee { namespace script { namespace mup {
   //---------------------------------------------------------------------------
   ICallback* IValue::AsICallback()
   {
-	return NULL;
+	return nullptr;
   }
 
   //---------------------------------------------------------------------------

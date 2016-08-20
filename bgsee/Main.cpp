@@ -286,9 +286,9 @@ namespace bgsee
 	Main::DefaultInitCallback::DefaultInitCallback() :
 		DaemonCallback()
 	{
-		DisplayName = NULL;
-		ReleaseName = NULL;
-		APPPath = NULL;
+		DisplayName = nullptr;
+		ReleaseName = nullptr;
+		APPPath = nullptr;
 		ExtenderVersion = 0x0;
 		ModuleHandle = 0x0;
 		EditorSupportedVersion = EditorCurrentVersion = 0x0;
@@ -321,7 +321,7 @@ namespace bgsee
 			Daemon::WaitForDebugger();
 		}
 
-		if (ModuleHandle == NULL)
+		if (ModuleHandle == nullptr)
 		{
 			BGSEECONSOLE_MESSAGE("Couldn't fetch module handle");
 			return false;
@@ -361,7 +361,7 @@ namespace bgsee
 		bool DirectoyCheckOverride = DirectoryCheckOverrideFile.Open(std::string(APPPath + std::string("\\BGSEE_DirectoryCheckOverride")).c_str());
 
 		if (DirectoyCheckOverride == false &&
-			ProgFilesSubstring != NULL && ProgFilesSubstring == APPPath &&
+			ProgFilesSubstring != nullptr && ProgFilesSubstring == APPPath &&
 			OSInfo.dwMajorVersion > 5)
 		{
 			BGSEECONSOLE_MESSAGE("Editor/game is installed to the Program Files directory - An unprotected directory like 'C:\\Games\\' is required");
@@ -381,7 +381,7 @@ namespace bgsee
 
 			if (IsAdmin)
 			{
-				if (CheckTokenMembership( NULL, AdministratorsGroup, &IsAdmin) == FALSE)
+				if (CheckTokenMembership( nullptr, AdministratorsGroup, &IsAdmin) == FALSE)
 					IsAdmin = FALSE;
 
 				FreeSid(AdministratorsGroup);
@@ -410,14 +410,14 @@ namespace bgsee
 		}
 
 		bool HasDotNet = false;
-		ICLRMetaHost* MetaHost = NULL;
+		ICLRMetaHost* MetaHost = nullptr;
 
 		if (SUCCEEDED(CLRCreateInstance(CLSID_CLRMetaHost, IID_ICLRMetaHost,(LPVOID*)&MetaHost)))
 		{
 			std::wstring VersionString(SME::StringHelpers::FormatWideString(DotNETFrameworkVersionString));
 			std::wstring ConfigName(SME::StringHelpers::FormatWideString("%s\\%s.config", APPPath, BGSEEMAIN->ParentEditorGetLongName()));
 
-			ICLRRuntimeInfo* RequiredRuntime = NULL;
+			ICLRRuntimeInfo* RequiredRuntime = nullptr;
 			if (SUCCEEDED(MetaHost->GetRuntime(VersionString.c_str(), IID_ICLRRuntimeInfo, (LPVOID*)&RequiredRuntime)))
 			{
 				DWORD StartupFlags = STARTUP_LOADER_OPTIMIZATION_MASK|STARTUP_LOADER_OPTIMIZATION_SINGLE_DOMAIN;
@@ -429,7 +429,7 @@ namespace bgsee
 				if (SUCCEEDED(RequiredRuntime->SetDefaultStartupFlags(StartupFlags, ConfigName.c_str())) &&
 					SUCCEEDED(RequiredRuntime->BindAsLegacyV2Runtime()))
 				{
-					ICLRRuntimeHost* CLRHost = NULL;
+					ICLRRuntimeHost* CLRHost = nullptr;
 					if (SUCCEEDED(RequiredRuntime->GetInterface(CLSID_CLRRuntimeHost, IID_ICLRRuntimeHost, (LPVOID*)&CLRHost)))
 					{
 						HasDotNet = true;
@@ -445,7 +445,7 @@ namespace bgsee
 			return false;
 		}
 
-		HRESULT COMLibInitState = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+		HRESULT COMLibInitState = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 		if (COMLibInitState != S_OK)				// ensure the main thread's COM apartment state is set to STA so that common controls work correctly
 		{
 			BGSEECONSOLE_MESSAGE("COM apartment state couldn't be set to STA - Result = %d", COMLibInitState);
@@ -503,7 +503,7 @@ namespace bgsee
 		return true;
 	}
 
-	Main*			Main::Singleton = NULL;
+	Main*			Main::Singleton = nullptr;
 
 	static const char*	kXSEShortName[] =					// key = ParentEditorID
 	{
@@ -541,7 +541,7 @@ namespace bgsee
 		SAFEDELETE(ExtenderDaemon);
 		SAFEDELETE(ExtenderINIManager);
 
-		Singleton = NULL;
+		Singleton = nullptr;
 
 		if (CrashRptSupport)
 		{
@@ -557,7 +557,7 @@ namespace bgsee
 		FORMAT_STR(ExtenderShortName, "SMAE");
 		ExtenderReleaseName = "Lemon Tea";
 		ExtenderVersion = 0x57ADE00E;
-		ExtenderModuleHandle = NULL;
+		ExtenderModuleHandle = nullptr;
 
 		ParentEditorID = kExtenderParentEditor_Unknown;
 		ParentEditorName = "Editor";
@@ -570,9 +570,9 @@ namespace bgsee
 		ScriptExtenderPluginHandle = 0xFFFFFFFF;
 		ScriptExtenderCurrentVersion = 0x0;
 
-		ExtenderINIManager = NULL;
-		ExtenderConsole = NULL;
-		ExtenderDaemon = NULL;
+		ExtenderINIManager = nullptr;
+		ExtenderConsole = nullptr;
+		ExtenderDaemon = nullptr;
 		CrashRptSupport = false;
 
 		Initialized = false;
@@ -580,7 +580,7 @@ namespace bgsee
 
 	__declspec(noinline) Main* Main::GetSingleton()
 	{
-		if (Singleton == NULL)
+		if (Singleton == nullptr)
 			Singleton = new Main();
 
 		return Singleton;
@@ -604,7 +604,7 @@ namespace bgsee
 		FORMAT_STR(ExtenderShortName, "%s", ShortName);
 		ExtenderReleaseName = ReleaseName;
 		ExtenderVersion = Version;
-		if (DisplayName == NULL)
+		if (DisplayName == nullptr)
 			ExtenderDisplayName = ExtenderLongName;
 		else
 			ExtenderDisplayName = DisplayName;
@@ -655,12 +655,12 @@ namespace bgsee
 		{
 			CR_INSTALL_INFO CrashRptData = {0};
 			CrashRptData.cb = sizeof(CR_INSTALL_INFO);
-			CrashRptData.pszAppName = NULL;
-			CrashRptData.pszAppVersion = NULL;
-			CrashRptData.pszEmailSubject = NULL;
+			CrashRptData.pszAppName = nullptr;
+			CrashRptData.pszAppVersion = nullptr;
+			CrashRptData.pszEmailSubject = nullptr;
 			CrashRptData.pszEmailTo = "shademe.here+bgsee@gmail.com";
-			CrashRptData.pszUrl = NULL;
-			CrashRptData.pszPrivacyPolicyURL = NULL;
+			CrashRptData.pszUrl = nullptr;
+			CrashRptData.pszPrivacyPolicyURL = nullptr;
 			CrashRptData.dwFlags |= CR_INST_ALL_POSSIBLE_HANDLERS;
 
 			CrashRptData.uPriorities[CR_SMAPI] = 1;
@@ -684,7 +684,7 @@ namespace bgsee
 				TCHAR Buffer[0x200] = {0};
 				crGetLastErrorMsg(Buffer, sizeof(Buffer));
 
-				MessageBox(NULL,
+				MessageBox(nullptr,
 					"Failed to initialize CrashRpt!\n\nCheck the logs for more information.",
 					"Bethesda Game Studios Editor Extender",
 					MB_TASKMODAL|MB_SETFOREGROUND|MB_ICONERROR|MB_OK);
@@ -695,24 +695,24 @@ namespace bgsee
 			else
 			{
 				crAddFile2(GetConsole()->GetLogPath(),
-					NULL, "BGSEE Debug Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
+					nullptr, "BGSEE Debug Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
 				crAddFile2(GetINIPath(),
-					NULL, "BGSEE INI File", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
+					nullptr, "BGSEE INI File", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
 				crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)EditorID]) + ".log")).c_str(),
-					NULL, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
+					nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
 				crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)EditorID]) + "_editor.log")).c_str(),
-					NULL, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
+					nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
 				crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)EditorID]) + "_loader.log")).c_str(),
-					NULL, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
+					nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
 				crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)EditorID]) + "_steam_loader.log")).c_str(),
-					NULL, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
+					nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
-				crAddScreenshot2(CR_AS_PROCESS_WINDOWS, NULL);
+				crAddScreenshot2(CR_AS_PROCESS_WINDOWS, 0);
 			}
 		}
 

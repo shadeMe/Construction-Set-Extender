@@ -37,7 +37,7 @@ namespace bgsee
 
 			static HallOfFameManager*					GetSingleton(void);
 
-			bool										Initialize(ExtenderHOFEntryArrayT& Entries, UInt32 StartingFormID = 0x450);
+			bool										Initialize(const ExtenderHOFEntryArrayT& Entries, const UInt32 StartingFormID = 0x450);
 														// takes ownership of the entries
 
 			UInt32										GetBaseFormID(void) const;

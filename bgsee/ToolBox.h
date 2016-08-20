@@ -59,7 +59,7 @@ namespace bgsee
 		bool								Initialize(INIManagerGetterFunctor& Getter, INIManagerSetterFunctor& Setter, bool LoadFromINI = true);
 
 		void								ShowGUI(HINSTANCE ResourceInstance, HWND Parent);
-		void								ShowToolListMenu(HINSTANCE ResourceInstance, HWND Parent, POINT* Coords = NULL);
+		void								ShowToolListMenu(HINSTANCE ResourceInstance, HWND Parent, POINT* Coords = nullptr);
 	};
 
 #define BGSEETOOLBOX						bgsee::ToolBox::GetSingleton()

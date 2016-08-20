@@ -86,7 +86,7 @@ namespace bgsee
 																								CodaScriptMUPParserByteCode* ByteCode ) :
 				Parent(Parent),
 				ByteCode(ByteCode),
-				EvalAgent(NULL)
+				EvalAgent(nullptr)
 			{
 				SME_ASSERT(Parent && ByteCode);
 
@@ -96,7 +96,7 @@ namespace bgsee
 			CodaScriptMUPExpressionParser::ByteCodeAgentStackOperator::ByteCodeAgentStackOperator( CodaScriptMUPExpressionParser* Parent,
 																								ICodaScriptSyntaxTreeEvaluator* Agent ) :
 				Parent(Parent),
-				ByteCode(NULL),
+				ByteCode(nullptr),
 				EvalAgent(Agent)
 			{
 				SME_ASSERT(Parent && Agent);
@@ -268,7 +268,7 @@ namespace bgsee
 							// by default an opening bracket sets parameter count to 1
 							// in preparation of arguments to come. If the last token
 							// was an opening bracket we know better...
-							if (pTokPrev.Get()!=NULL && pTokPrev->GetCode()==cmIO)
+							if (pTokPrev.Get()!=nullptr && pTokPrev->GetCode()==cmIO)
 								--stArgCount.top();
 
 							ApplyRemainingOprt(stOpt);
@@ -288,7 +288,7 @@ namespace bgsee
 								stOpt.pop(); // Take opening bracket from stack
 
 								IOprtIndex *pOprtIndex = pTok->AsIOprtIndex();
-								MUP_ASSERT(pOprtIndex!=NULL);
+								MUP_ASSERT(pOprtIndex!=nullptr);
 
 								pOprtIndex->SetNumArgsPresent(iArgc);
 								OutByteCode->RPNStack.Add(pTok);
@@ -306,7 +306,7 @@ namespace bgsee
 							// by default an opening bracket sets parameter count to 1
 							// in preparation of arguments to come. If the last token
 							// was an opening bracket we know better...
-							if (pTokPrev.Get()!=NULL && pTokPrev->GetCode()==cmBO)
+							if (pTokPrev.Get()!=nullptr && pTokPrev->GetCode()==cmBO)
 								--stArgCount.top();
 
 							ApplyRemainingOprt(stOpt);
@@ -508,7 +508,7 @@ namespace bgsee
 
 			CodaScriptMUPExpressionParser::~CodaScriptMUPExpressionParser()
 			{
-				SME_ASSERT(m_ByteCodeStack.size() == NULL && m_EvalAgentStack.size() == NULL);
+				SME_ASSERT(m_ByteCodeStack.size() == 0 && m_EvalAgentStack.size() == 0);
 			}
 
 			void CodaScriptMUPExpressionParser::AddValueReader( IValueReader *a_pReader )
@@ -687,7 +687,7 @@ namespace bgsee
 					}
 					catch (ParserError& E)
 					{
-						throw CodaScriptException(NULL, "P[%d] %s", E.GetPos(), E.GetMsg().c_str());
+						throw CodaScriptException(nullptr, "P[%d] %s", E.GetPos(), E.GetMsg().c_str());
 					}
 
 					m_CSVarDef[ParentContext][Var->GetName()] = ptr_tok_type(new Variable(Bound));
@@ -715,7 +715,7 @@ namespace bgsee
 					ByteCodeAgentStackOperator PrologByteCode(this, new CodaScriptMUPParserByteCode(this, SourceCode));
 					CodaScriptMUPParserByteCode* NewByteCode = PrologByteCode.ByteCode;
 
-					*OutByteCode = NULL;
+					*OutByteCode = nullptr;
 
 					try									// ugly, but meh
 					{
@@ -907,7 +907,7 @@ namespace bgsee
 				if (m_ByteCodeStack.size())
 					return m_ByteCodeStack.top();
 				else
-					return NULL;
+					return nullptr;
 			}
 
 			ICodaScriptSyntaxTreeEvaluator* CodaScriptMUPExpressionParser::GetCurrentEvaluationAgent( void ) const
@@ -915,7 +915,7 @@ namespace bgsee
 				if (m_EvalAgentStack.size())
 					return m_EvalAgentStack.top();
 				else
-					return NULL;
+					return nullptr;
 			}
 		}
 	}

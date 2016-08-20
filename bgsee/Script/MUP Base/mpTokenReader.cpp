@@ -126,13 +126,13 @@ namespace bgsee { namespace script { namespace mup {
 		,m_nSynFlags(0)
 		,m_vTokens()
 		,m_eLastTokCode(cmUNKNOWN)
-		,m_pFunDef(NULL)
-		,m_pOprtDef(NULL)
-		,m_pInfixOprtDef(NULL)
-		,m_pPostOprtDef(NULL)
-		,m_pConstDef(NULL)
-		,m_pDynVarShadowValues(NULL)
-		,m_pVarDef(NULL)
+		,m_pFunDef(nullptr)
+		,m_pOprtDef(nullptr)
+		,m_pInfixOprtDef(nullptr)
+		,m_pPostOprtDef(nullptr)
+		,m_pConstDef(nullptr)
+		,m_pDynVarShadowValues(nullptr)
+		,m_pVarDef(nullptr)
 		,m_vValueReader()
 		,m_UsedVar()
 		,m_fZero(0)
@@ -973,7 +973,7 @@ namespace bgsee { namespace script { namespace mup {
 			throw ParserError(err);
 		}
 
-		a_Tok = ptr_tok_type(new Variable(NULL));      // bind variable to empty variable
+		a_Tok = ptr_tok_type(new Variable(nullptr));      // bind variable to empty variable
 
 		a_Tok->SetIdent(sTok);
 		m_UsedVar[sTok] = a_Tok;     // add new variable to used-var-list

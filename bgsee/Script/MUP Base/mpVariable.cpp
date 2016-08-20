@@ -293,7 +293,7 @@ namespace bgsee { namespace script { namespace mup {
   //-----------------------------------------------------------------------------------------------
   CodaScriptMUPValue* Variable::AsValue()
   {
-	return NULL;
+	return nullptr;
   }
 
   //-----------------------------------------------------------------------------------------------

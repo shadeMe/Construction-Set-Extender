@@ -335,7 +335,7 @@ namespace bgsee
 		~UIManager();
 
 		static UIManager*						GetSingleton();
-		bool									Initialize(const char* MainWindowClassName, HMENU MainMenuHandle = NULL);
+		bool									Initialize(const char* MainWindowClassName, HMENU MainMenuHandle = nullptr);
 
 		int										MsgBoxI(HWND Parent, UINT Flags, const char* Format, ...);
 		int										MsgBoxI(UINT Flags, const char* Format, ...);
@@ -414,7 +414,7 @@ namespace bgsee
 		bool							ToggleVisibility(void);		// returns the new state
 		bool							ToggleTopmost(void);
 
-		bool							GetVisible(void) const;
+		bool							IsVisible(void) const;
 		bool							GetTopmost(void) const;
 		bool							GetInitialized(void) const;
 	};

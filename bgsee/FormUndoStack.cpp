@@ -3,7 +3,7 @@
 
 namespace bgsee
 {
-	FormUndoStack*		FormUndoStack::Singleton = NULL;
+	FormUndoStack*		FormUndoStack::Singleton = nullptr;
 	const char*				FormUndoStack::kMessageLogContextName = "Undo Stack";
 	int						FormUndoProxy::GIC = 0;
 
@@ -28,10 +28,10 @@ namespace bgsee
 
 
 	FormUndoStack::FormUndoStack() :
-		Operator(NULL),
+		Operator(nullptr),
 		UndoStack(),
 		RedoStack(),
-		ConsoleMessageContext(NULL),
+		ConsoleMessageContext(nullptr),
 		WalkingStacks(false),
 		Initialized(false)
 	{
@@ -61,12 +61,12 @@ namespace bgsee
 			SHOW_LEAKAGE_MESSAGE("BGSEEFormUndoStack");
 		}
 
-		Singleton = NULL;
+		Singleton = nullptr;
 	}
 
 	FormUndoStack* FormUndoStack::GetSingleton( void )
 	{
-		if (Singleton == NULL)
+		if (Singleton == nullptr)
 			Singleton = new FormUndoStack();
 
 		return Singleton;
@@ -84,7 +84,7 @@ namespace bgsee
 		this->Operator = Operator;
 		ConsoleMessageContext = BGSEECONSOLE->RegisterMessageLogContext(kMessageLogContextName);
 
-		if (ConsoleMessageContext == NULL)
+		if (ConsoleMessageContext == nullptr)
 		{
 			Initialized = false;
 
@@ -137,7 +137,7 @@ namespace bgsee
 			UndoProxyHandleT Proxy = Stack.top();
 			Stack.pop();
 
-			FormUndoProxy* AltProxy = NULL;
+			FormUndoProxy* AltProxy = nullptr;
 			if (Operator->PreUndoRedoCallback(Proxy.get(), &AltProxy))
 			{
 				SME_ASSERT(AltProxy);

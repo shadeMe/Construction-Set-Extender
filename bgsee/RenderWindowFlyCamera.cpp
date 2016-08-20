@@ -22,9 +22,9 @@ namespace bgsee
 	{
 		this->Operator = Operator;
 
-		DInput = NULL;
-		DIMouse = NULL;
-		DIKeyboard = NULL;
+		DInput = nullptr;
+		DIMouse = nullptr;
+		DIKeyboard = nullptr;
 		ZeroMemory(&DIMouseState, sizeof(DIMouseState));
 		ZeroMemory(&DIKeyboardState, sizeof(DIKeyboardState));
 		InputValid = false;
@@ -77,19 +77,19 @@ namespace bgsee
 			DIRECTINPUT_VERSION,
 			IID_IDirectInput8,
 			(void**)&DInput,
-			NULL))))
+			nullptr))))
 		{
 			BGSEECONSOLE_MESSAGE("Couldn't initialize DirectInput for fly camera mode! Result = %d (%08X)", Result, Result);
 			return InputValid;
 		}
 
-		if (FAILED((Result = DInput->CreateDevice(GUID_SysKeyboard, &DIKeyboard, NULL))))
+		if (FAILED((Result = DInput->CreateDevice(GUID_SysKeyboard, &DIKeyboard, nullptr))))
 		{
 			BGSEECONSOLE_MESSAGE("Couldn't create DirectInput Keyboard object for fly camera mode! Result = %d (%08X)", Result, Result);
 			return InputValid;
 		}
 
-		if (FAILED((Result = DInput->CreateDevice(GUID_SysMouse, &DIMouse, NULL))))
+		if (FAILED((Result = DInput->CreateDevice(GUID_SysMouse, &DIMouse, nullptr))))
 		{
 			BGSEECONSOLE_MESSAGE("Couldn't create DirectInput Mouse object for fly camera mode! Result = %d (%08X)", Result, Result);
 			return InputValid;

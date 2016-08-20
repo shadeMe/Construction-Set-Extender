@@ -134,7 +134,7 @@ namespace bgsee
 
 			void					CheckBufferLength(size_t AddendLength);		// clears the buffer preemptively if it's approaching its limit 
 		public:
-			MessageLogContext(const char* ContextName, const char* ContextLogPath = NULL);
+			MessageLogContext(const char* ContextName, const char* ContextLogPath = nullptr);
 			virtual ~MessageLogContext();
 
 			enum
@@ -272,7 +272,7 @@ namespace bgsee
 		void						ExdentAll();
 		void						Pad(UInt32 Count);
 
-		void*						RegisterMessageLogContext(const char* Name, const char* LogPath = NULL);	// returns the context object
+		void*						RegisterMessageLogContext(const char* Name, const char* LogPath = nullptr);	// returns the context object
 		void						UnregisterMessageLogContext(void* Context);									// destroys the pointer
 		void						PrintToMessageLogContext(void* Context, bool HideTimestamp, const char* Format, ...);
 

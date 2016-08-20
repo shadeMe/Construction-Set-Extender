@@ -6,7 +6,7 @@
 
 namespace bgsee
 {
-	ToolBox*						ToolBox::Singleton = NULL;
+	ToolBox*						ToolBox::Singleton = nullptr;
 
 	const char*						ToolBox::kINISection = "ToolBox";
 
@@ -21,7 +21,7 @@ namespace bgsee
 		HWND ParamBox =  GetDlgItem(hWnd, IDC_BGSEE_TOOLBOX_PARAMBOX);
 
 		DlgUserData* UserData = (DlgUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
-		ToolBox* Instance = NULL;
+		ToolBox* Instance = nullptr;
 
 		if (UserData)
 			Instance = UserData->Instance;
@@ -29,10 +29,10 @@ namespace bgsee
 		switch (uMsg)
 		{
 		case IDM_BGSEE_TOOLBOX_RESETINPUTFIELDS:
-			SetWindowText(TitleBox, NULL);
-			SetWindowText(CmdLineBox, NULL);
-			SetWindowText(InitDirBox, NULL);
-			SetWindowText(ParamBox, NULL);
+			SetWindowText(TitleBox, nullptr);
+			SetWindowText(CmdLineBox, nullptr);
+			SetWindowText(InitDirBox, nullptr);
+			SetWindowText(ParamBox, nullptr);
 			break;
 		case WM_COMMAND:
 			switch (LOWORD(wParam))
@@ -67,7 +67,7 @@ namespace bgsee
 					}
 
 					Tool* NewTool = Instance->AddTool(TitleBuffer, CmdLineBuffer, InitDirBuffer, ParamsBuffer);
-					if (NewTool == NULL)
+					if (NewTool == nullptr)
 					{
 						BGSEEUI->MsgBoxE(hWnd, NULL, "Enter a unique tool title.");
 						break;
@@ -134,12 +134,12 @@ namespace bgsee
 					SelectFile.lStructSize = sizeof(OPENFILENAME);
 					SelectFile.hwndOwner = hWnd;
 					SelectFile.lpstrFilter = "All Files\0*.*\0\0";
-					SelectFile.lpstrCustomFilter = NULL;
+					SelectFile.lpstrCustomFilter = nullptr;
 					SelectFile.nFilterIndex = 0;
 					SelectFile.lpstrFile = FilePath;
 					SelectFile.nMaxFile = sizeof(FilePath);
-					SelectFile.lpstrFileTitle = NULL;
-					SelectFile.lpstrInitialDir = NULL;
+					SelectFile.lpstrFileTitle = nullptr;
+					SelectFile.lpstrInitialDir = nullptr;
 					SelectFile.lpstrTitle = "Select a file";
 					SelectFile.Flags = OFN_FILEMUSTEXIST|OFN_PATHMUSTEXIST|OFN_HIDEREADONLY|OFN_NOCHANGEDIR;
 
@@ -156,12 +156,12 @@ namespace bgsee
 
 					BROWSEINFO FolderInfo = {0};
 					FolderInfo.hwndOwner = hWnd;
-					FolderInfo.iImage = NULL;
+					FolderInfo.iImage = 0;
 					FolderInfo.pszDisplayName = FolderPath;
 					FolderInfo.lpszTitle = "Select an initial directory for the tool";
 					FolderInfo.ulFlags = BIF_NEWDIALOGSTYLE|BIF_RETURNONLYFSDIRS;
-					FolderInfo.pidlRoot = NULL;
-					FolderInfo.lpfn = NULL;
+					FolderInfo.pidlRoot = nullptr;
+					FolderInfo.lpfn = nullptr;
 					FolderInfo.lParam = NULL;
 
 					PIDLIST_ABSOLUTE ReturnPath = SHBrowseForFolder(&FolderInfo);
@@ -268,10 +268,10 @@ namespace bgsee
 
 	bool ToolBox::Tool::Run() const
 	{
-		DWORD Result = (DWORD)ShellExecute(NULL,
+		DWORD Result = (DWORD)ShellExecute(nullptr,
 										"open",
 										CommandLine.c_str(),
-										(Parameters.length() ? Parameters.c_str() : NULL),
+										(Parameters.length() ? Parameters.c_str() : nullptr),
 										InitialDir.c_str(),
 										SW_SHOW);
 
@@ -293,7 +293,7 @@ namespace bgsee
 
 		ToolArrayT::iterator Match;
 		if (LookupToolByTitle(Title, Match))
-			return NULL;
+			return nullptr;
 
 		Tool* NewTool = new Tool(Title, CmdLine, InitDir, Params);
 		RegisteredTools.push_back(NewTool);
@@ -352,7 +352,7 @@ namespace bgsee
 
 	void ToolBox::INISaveToolList( void )
 	{
-		INISetter(kINISection, NULL);
+		INISetter(kINISection, nullptr);
 
 		for (ToolArrayT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++)
 		{
@@ -424,12 +424,12 @@ namespace bgsee
 
 		Initialized = false;
 
-		Singleton = NULL;
+		Singleton = nullptr;
 	}
 
 	ToolBox* ToolBox::GetSingleton()
 	{
-		if (Singleton == NULL)
+		if (Singleton == nullptr)
 			Singleton = new ToolBox();
 
 		return Singleton;
@@ -474,7 +474,7 @@ namespace bgsee
 
 		HMENU ToolMenu = CreatePopupMenu();
 		AppendMenu(ToolMenu, NULL, IDC_BGSEE_TOOLBOX_TOOLMENU_MANAGE, "Manage");
-		AppendMenu(ToolMenu, MF_SEPARATOR, NULL, NULL);
+		AppendMenu(ToolMenu, MF_SEPARATOR, NULL, nullptr);
 
 		int i = 1;
 		for (ToolArrayT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++, i++)
@@ -489,7 +489,7 @@ namespace bgsee
 			InsertMenuItem(ToolMenu, GetMenuItemCount(ToolMenu) /*-1*/, TRUE, &ToolMenuItem);
 		}
 
-		int Selection = TrackPopupMenu(ToolMenu, TPM_LEFTALIGN|TPM_LEFTBUTTON|TPM_NONOTIFY|TPM_RETURNCMD, Point.x, Point.y, 0, Parent, NULL);
+		int Selection = TrackPopupMenu(ToolMenu, TPM_LEFTALIGN|TPM_LEFTBUTTON|TPM_NONOTIFY|TPM_RETURNCMD, Point.x, Point.y, 0, Parent, nullptr);
 		switch (Selection)
 		{
 		case 0:

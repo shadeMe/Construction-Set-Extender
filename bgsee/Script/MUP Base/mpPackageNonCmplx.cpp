@@ -46,7 +46,7 @@ std::auto_ptr<PackageNonCmplx> PackageNonCmplx::s_pInstance;
 //------------------------------------------------------------------------------
 IPackage* PackageNonCmplx::Instance()
 {
-  if (s_pInstance.get()==NULL)
+  if (s_pInstance.get()==nullptr)
   {
     s_pInstance.reset(new PackageNonCmplx);
   }

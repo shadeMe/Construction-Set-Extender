@@ -260,25 +260,25 @@ namespace bgsee { namespace script { namespace mup {
   //---------------------------------------------------------------------------
   ICallback* IToken::AsICallback()
   {
-    return NULL;
+    return nullptr;
   }
 
   //---------------------------------------------------------------------------
   IValue* IToken::AsIValue()
   {
-    return NULL;
+    return nullptr;
   }
 
   //---------------------------------------------------------------------------
   IPrecedence* IToken::AsIPrecedence()
   {
-    return NULL;
+    return nullptr;
   }
 
   //------------------------------------------------------------------------------
   IOprtIndex* IToken::AsIOprtIndex()
   {
-    return NULL;
+    return nullptr;
   }
 
   //------------------------------------------------------------------------------

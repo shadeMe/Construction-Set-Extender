@@ -93,7 +93,7 @@ namespace bgsee
 
 					bool Throwaway = false;
 					for (int i = 0; i < DroppedScripts.size(); i++)
-						CODAVM->RunScript(DroppedScripts[i], NULL, NULL, Throwaway);
+						CODAVM->RunScript(DroppedScripts[i], nullptr, nullptr, Throwaway);
 
 					BGSEECONSOLE->Exdent();
 				}
@@ -113,7 +113,7 @@ namespace bgsee
 						CheckMenuItem(ContextsMenu, ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_DEFAULT, MFS_UNCHECKED);
 
 					if (Instance->SecondaryContexts.size())
-						InsertMenu(ContextsMenu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
+						InsertMenu(ContextsMenu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
 
 					int i = 1;
 					for (ContextArrayT::const_iterator Itr = Instance->SecondaryContexts.begin(); Itr != Instance->SecondaryContexts.end(); Itr++, i++)
@@ -137,7 +137,7 @@ namespace bgsee
 					UIExtraData* xData = (UIExtraData*)UserData->ExtraData;
 					SME_ASSERT(xData);
 
-					xData->SelectedContext = NULL;
+					xData->SelectedContext = nullptr;
 
 					MENUITEMINFO ContextMenuItem = {0};
 					ContextMenuItem.cbSize = sizeof(MENUITEMINFO);
@@ -226,14 +226,14 @@ namespace bgsee
 				int HorScrollWidth = GetSystemMetrics(SM_CXHSCROLL) + 4;
 				HDWP DeferPosData = BeginDeferWindowPos(2);
 
-				DeferWindowPos(DeferPosData, MessageLog, NULL,
+				DeferWindowPos(DeferPosData, MessageLog, nullptr,
 							xData->MessageLogInitBounds.left,
 							xData->MessageLogInitBounds.top,
 							DeltaDlgWidth + xData->MessageLogInitBounds.right + VerticalScrollWidth,
 							CurrentRect.bottom + xData->MessageLogInitBounds.bottom - xData->DialogInitBounds.bottom + HorScrollWidth,
 							NULL);
 
-				DeferWindowPos(DeferPosData, CommandLine, NULL,
+				DeferWindowPos(DeferPosData, CommandLine, nullptr,
 							xData->CommandLineInitBounds.left,
 							DeltaDlgHeight + xData->CommandLineInitBounds.top,
 							DeltaDlgWidth + xData->CommandLineInitBounds.right,
@@ -301,7 +301,7 @@ namespace bgsee
 				switch (Instance->GetActiveContext()->GetState())
 				{
 				case MessageLogContext::kState_Reset:
-					Edit_SetText(hWnd, NULL);
+					Edit_SetText(hWnd, nullptr);
 					break;
 				case MessageLogContext::kState_Update:
 					{
@@ -378,7 +378,7 @@ namespace bgsee
 						Instance->CommandLineHistory.push(Buffer);
 					}
 
-					Edit_SetText(hWnd, NULL);
+					Edit_SetText(hWnd, nullptr);
 				}
 
 				return TRUE;
@@ -468,7 +468,7 @@ namespace bgsee
 	void Console::MessageLogContext::OpenLog() const
 	{
 		if (HasLog())
-			ShellExecute(NULL, "open", (LPSTR)LogPath.c_str(), NULL, NULL, SW_SHOW);
+			ShellExecute(nullptr, "open", (LPSTR)LogPath.c_str(), nullptr, nullptr, SW_SHOW);
 	}
 
 	bool Console::MessageLogContext::HasLog() const
@@ -501,7 +501,7 @@ namespace bgsee
 
 	Console::DefaultDebugLogContext::DefaultDebugLogContext( Console* Parent, const char* DebugLogPath ) :
 		Console::MessageLogContext("", DebugLogPath),
-		DebugLog(NULL),
+		DebugLog(nullptr),
 		Parent(Parent),
 		PrintCallbacks()
 	{
@@ -672,16 +672,16 @@ namespace bgsee
 		if (DebugLog)
 		{
 			fclose(DebugLog);
-			DebugLog = NULL;
+			DebugLog = nullptr;
 		}
 	}
 
 	bool Console::DefaultDebugLogContext::Open( const char* Path )
 	{
-		SME_ASSERT(DebugLog == NULL && Path);
+		SME_ASSERT(DebugLog == nullptr && Path);
 
 		DebugLog = _fsopen(Path, "w", _SH_DENYWR);
-		return DebugLog != NULL;
+		return DebugLog != nullptr;
 	}
 
 	Console::ConsoleCommandTable::ConsoleCommandTable() : CommandList()
@@ -752,15 +752,15 @@ namespace bgsee
 	{
 		ConsoleCommandArrayT::iterator Match;
 		if (LookupCommandByName(Name, Match) == false)
-			return NULL;
+			return nullptr;
 
 		return *Match;
 	}
 
 	Console::UIExtraData::UIExtraData() :
-		SelectedContext(NULL),
-		MessageLogFont(NULL),
-		CommandLineFont(NULL),
+		SelectedContext(nullptr),
+		MessageLogFont(nullptr),
+		CommandLineFont(nullptr),
 		DialogInitBounds(),
 		MessageLogInitBounds(),
 		CommandLineInitBounds()
@@ -805,7 +805,7 @@ namespace bgsee
 
 	void Console::ClearMessageLog( void )
 	{
-		Edit_SetText(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), NULL);
+		Edit_SetText(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), nullptr);
 	}
 
 	void Console::SetTitle( const char* Prefix )
@@ -939,12 +939,12 @@ namespace bgsee
 		DialogTemplateID = IDD_BGSEE_CONSOLE;
 		DialogContextMenuID = IDR_BGSEE_CONSOLE_CONTEXTMENU;
 		CallbackDlgProc = &Console::BaseDlgProc;
-		WarningManager = NULL;
+		WarningManager = nullptr;
 	}
 
 	Console::~Console()
 	{
-		ActiveContext = NULL;
+		ActiveContext = nullptr;
 		SAFEDELETE(PrimaryContext);
 		ReleaseSecondaryContexts();
 
@@ -985,14 +985,14 @@ namespace bgsee
 		SetTimer(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG),
 				IDC_BGSEE_CONSOLE_MESSAGELOG_REFRESHTIMER,
 				kINI_UpdatePeriod.GetData().i,
-				NULL);
+				nullptr);
 
 		INILoadUIState(&kINI_Top, &kINI_Left, &kINI_Right, &kINI_Bottom, &kINI_Visible);
 	}
 
 	void Console::InitializeWarningManager( INIManagerGetterFunctor Getter, INIManagerSetterFunctor Setter, ConsoleWarningRegistrar& Registrar )
 	{
-		SME_ASSERT(WarningManager == NULL);
+		SME_ASSERT(WarningManager == nullptr);
 
 		WarningManager = new ConsoleWarningManager(Getter, Setter);
 		Registrar.operator()(WarningManager);
@@ -1024,12 +1024,12 @@ namespace bgsee
 
 		LPVOID ErrorMsg;
 		FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS,
-					NULL,
+					nullptr,
 					GetLastError(),
 					MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 					(LPTSTR)&ErrorMsg,
 					0,
-					NULL);
+					nullptr);
 		FORMAT_STR(Buffer, "Error Message: %s", ErrorMsg);
 		LocalFree(ErrorMsg);
 
@@ -1094,7 +1094,7 @@ namespace bgsee
 	{
 		ContextArrayT::iterator Match;
 		if (LookupSecondaryContextByName(Name, Match))
-			return NULL;
+			return nullptr;
 
 		MessageLogContext* NewContext = new MessageLogContext(Name, LogPath);
 		SecondaryContexts.push_back(NewContext);
@@ -1242,7 +1242,7 @@ namespace bgsee
 		HWND ListView = GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_WARNINGS_WARNINGSLIST);
 
 		DlgUserData* UserData = (DlgUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
-		ConsoleWarningManager* Instance = NULL;
+		ConsoleWarningManager* Instance = nullptr;
 
 		if (UserData)
 			Instance = UserData->Instance;
@@ -1287,7 +1287,7 @@ namespace bgsee
 						ConsoleWarning* Current = (ConsoleWarning*)Item.lParam;
 
 						Current->Enabled = Current->Enabled == false;
-						InvalidateRect(hWnd, NULL, TRUE);
+						InvalidateRect(hWnd, nullptr, TRUE);
 					}
 
 					break;
@@ -1344,7 +1344,7 @@ namespace bgsee
 
 	void ConsoleWarningManager::INISaveWarnings( void )
 	{
-		INISetter(kINISection, NULL);
+		INISetter(kINISection, nullptr);
 
 		for (WarningListT::iterator Itr = WarningDepot.begin(); Itr != WarningDepot.end(); Itr++)
 		{
@@ -1386,7 +1386,7 @@ namespace bgsee
 				return *Itr;
 		}
 
-		return NULL;
+		return nullptr;
 	}
 
 	ConsoleWarning* ConsoleWarningManager::LookupWarning( ConsoleWarning::WarningCallSiteT CallSite ) const
@@ -1400,7 +1400,7 @@ namespace bgsee
 			}
 		}
 
-		return NULL;
+		return nullptr;
 	}
 
 	ConsoleWarningManager::ConsoleWarningManager( INIManagerGetterFunctor Getter, INIManagerSetterFunctor Setter ) :

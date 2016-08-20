@@ -56,7 +56,7 @@ namespace bgsee
 
 				CodaScriptCommandHandler(StringLength)
 				{
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 
 					CodaScriptCommandExtractArgs(&Buffer);
 
@@ -68,7 +68,7 @@ namespace bgsee
 
 				CodaScriptCommandHandler(StringCompare)
 				{
-					CodaScriptStringParameterTypeT BufferA = NULL, BufferB = NULL;
+					CodaScriptStringParameterTypeT BufferA = nullptr, BufferB = nullptr;
 					double IgnoreCase = 0;
 
 					CodaScriptCommandExtractArgs(&BufferA, &BufferB, &IgnoreCase);
@@ -86,7 +86,7 @@ namespace bgsee
 
 				CodaScriptCommandHandler(StringErase)
 				{
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 					double StartIndex = 0, Length = 0;
 
 					CodaScriptCommandExtractArgs(&Buffer, &StartIndex, &Length);
@@ -103,7 +103,7 @@ namespace bgsee
 
 				CodaScriptCommandHandler(StringFind)
 				{
-					CodaScriptStringParameterTypeT BufferA = NULL, BufferB = NULL;
+					CodaScriptStringParameterTypeT BufferA = nullptr, BufferB = nullptr;
 					double StartIndex = 0, IgnoreCase = 0;
 
 					CodaScriptCommandExtractArgs(&BufferA, &BufferB, &StartIndex, &IgnoreCase);
@@ -126,7 +126,7 @@ namespace bgsee
 
 				CodaScriptCommandHandler(StringInsert)
 				{
-					CodaScriptStringParameterTypeT BufferA = NULL, BufferB = NULL;
+					CodaScriptStringParameterTypeT BufferA = nullptr, BufferB = nullptr;
 					double InsertIndex = 0;
 
 					CodaScriptCommandExtractArgs(&BufferA, &BufferB, &InsertIndex);
@@ -143,7 +143,7 @@ namespace bgsee
 
 				CodaScriptCommandHandler(StringSubStr)
 				{
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 					double StartIndex = 0, Length = 0;
 
 					CodaScriptCommandExtractArgs(&Buffer, &StartIndex, &Length);
@@ -160,7 +160,7 @@ namespace bgsee
 
 				CodaScriptCommandHandler(StringIsNumber)
 				{
-					CodaScriptStringParameterTypeT Buffer = NULL;
+					CodaScriptStringParameterTypeT Buffer = nullptr;
 
 					CodaScriptCommandExtractArgs(&Buffer);
 

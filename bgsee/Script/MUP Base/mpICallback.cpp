@@ -48,7 +48,7 @@ namespace bgsee { namespace script { namespace mup {
                        int a_nArgc,
                        const IPackage *a_pPackage)
     :IToken(a_iCode, a_szName)
-    ,m_pParent(NULL)
+    ,m_pParent(nullptr)
     ,m_pPackage(a_pPackage)
     ,m_nArgc(a_nArgc)
     ,m_nArgsPresent(-1)
@@ -67,7 +67,7 @@ namespace bgsee { namespace script { namespace mup {
   //---------------------------------------------------------------------------
   IValue* ICallback::AsIValue()
   {
-    return NULL;
+    return nullptr;
   }
   
   //------------------------------------------------------------------------------

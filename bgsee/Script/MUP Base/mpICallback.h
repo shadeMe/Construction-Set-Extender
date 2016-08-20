@@ -56,7 +56,7 @@ namespace bgsee { namespace script { namespace mup {
       ICallback(ECmdCode a_iCode,
                 const char_type *a_szName,
                 int a_nArgNum = 1,
-                const IPackage *a_pPackage = NULL);
+                const IPackage *a_pPackage = nullptr);
       virtual ~ICallback();
 
       virtual ICallback* AsICallback();

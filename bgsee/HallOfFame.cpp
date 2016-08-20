@@ -16,39 +16,39 @@ namespace bgsee
 			;//
 		}
 
-		HallOfFameManager*			HallOfFameManager::Singleton = NULL;
+		HallOfFameManager*			HallOfFameManager::Singleton = nullptr;
 
 		HallOfFameManager::HallOfFameManager() :
 			BaseFormID(0x450),
 			Inductees(),
 			Initialized(false)
 		{
-			;//
+			Inductees.reserve(0x20);
 		}
 
 		HallOfFameManager::~HallOfFameManager()
 		{
-			for (ExtenderHOFEntryArrayT::iterator Itr = Inductees.begin(); Itr != Inductees.end(); Itr++)
+			for each (auto Itr in Inductees)
 			{
-				(*Itr)->Deinitialize();
-				delete *Itr;
+				Itr->Deinitialize();
+				delete Itr;
 			}
 
 			Inductees.clear();
 			Initialized = false;
 
-			Singleton = NULL;
+			Singleton = nullptr;
 		}
 
 		HallOfFameManager* HallOfFameManager::GetSingleton( void )
 		{
-			if (Singleton == NULL)
+			if (Singleton == nullptr)
 				Singleton = new HallOfFameManager();
 
 			return Singleton;
 		}
 
-		bool HallOfFameManager::Initialize( ExtenderHOFEntryArrayT& Entries, UInt32 StartingFormID  )
+		bool HallOfFameManager::Initialize( const ExtenderHOFEntryArrayT& Entries, const UInt32 StartingFormID )
 		{
 			if (Initialized)
 				return false;
@@ -57,12 +57,13 @@ namespace bgsee
 
 			Initialized = true;
 			BaseFormID = StartingFormID;
-			Inductees = Entries;
+			Inductees.assign(Entries.begin(), Entries.end());
 
-			for (ExtenderHOFEntryArrayT::iterator Itr = Inductees.begin(); Itr != Inductees.end(); Itr++)
+			int FormIDCounter = StartingFormID;
+			for each (auto Itr in Inductees)
 			{
-				(*Itr)->Initialize(StartingFormID);
-				StartingFormID++;
+				Itr->Initialize(FormIDCounter);
+				FormIDCounter += 1;
 			}
 
 			return Initialized;
@@ -75,9 +76,9 @@ namespace bgsee
 
 		bool HallOfFameManager::GetIsInductee( UInt32 FormID ) const
 		{
-			for (ExtenderHOFEntryArrayT::const_iterator Itr = Inductees.begin(); Itr != Inductees.end(); Itr++)
+			for each (auto Itr in Inductees)
 			{
-				if ((*Itr)->GetFormID() == FormID)
+				if (Itr->GetFormID() == FormID)
 					return true;
 			}
 

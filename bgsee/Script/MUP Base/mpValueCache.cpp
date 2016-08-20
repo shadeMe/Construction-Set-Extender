@@ -59,7 +59,7 @@ namespace bgsee { namespace script { namespace mup {
     for (std::size_t i=0; i<m_vCache.size(); ++i)
     {
       delete m_vCache[i];
-      m_vCache[i] = NULL;
+      m_vCache[i] = nullptr;
     }
 
     m_nIdx = -1;
@@ -69,7 +69,7 @@ namespace bgsee { namespace script { namespace mup {
   void ValueCache::ReleaseToCache(CodaScriptMUPValue *pValue)
   {
 //    std::cout << "dbg: " << ct << " ptr: " << this << " void ValueCache::ReleaseToCache(Value *pValue) \n";
-    if (pValue==NULL)
+    if (pValue==nullptr)
       return;
 
     assert(pValue->GetRef()==0);
@@ -88,11 +88,11 @@ namespace bgsee { namespace script { namespace mup {
   //------------------------------------------------------------------------------
   CodaScriptMUPValue* ValueCache::CreateFromCache()
   {
-    CodaScriptMUPValue *pValue = NULL;
+    CodaScriptMUPValue *pValue = nullptr;
     if (m_nIdx>=0)
     {
       pValue = m_vCache[m_nIdx];
-      m_vCache[m_nIdx] = NULL;
+      m_vCache[m_nIdx] = nullptr;
       m_nIdx--;
     }
     else

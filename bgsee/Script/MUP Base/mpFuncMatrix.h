@@ -50,7 +50,7 @@ namespace bgsee { namespace script { namespace mup {
   class FunMatrixOnes : public ICallback
   {
   public:
-    FunMatrixOnes(IPackage *pPackage = NULL);
+    FunMatrixOnes(IPackage *pPackage = nullptr);
     virtual ~FunMatrixOnes();
     virtual void Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int a_iArgc);
     virtual const char_type* GetDesc() const;

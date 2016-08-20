@@ -15,14 +15,14 @@ namespace bgsee
 
 		sprintf_s(this->FontFace, sizeof(this->FontFace), "%s", FontFace);
 
-		if (DrawArea == NULL)
+		if (DrawArea == nullptr)
 			ZeroMemory(&this->DrawArea, sizeof(RECT));
 		else
 			memcpy(&this->DrawArea, DrawArea, sizeof(RECT));
 	}
 
 	RenderChannelBase::RenderChannelBase( INT FontHeight, INT FontWidth, UINT FontWeight, const char* FontFace, D3DCOLOR Color, RECT* DrawArea, DWORD DrawFormat, UInt32 DrawAreaFlags ) :
-		Font(NULL),
+		Font(nullptr),
 		Valid(false),
 		InputParams(FontHeight, FontWidth, FontWeight, FontFace, Color, DrawArea, DrawFormat, DrawAreaFlags)
 	{
@@ -55,7 +55,7 @@ namespace bgsee
 			}
 		}
 
-		SME_ASSERT(Font == NULL);
+		SME_ASSERT(Font == nullptr);
 		HRESULT OpResult = D3DXCreateFont(Device,
 										InputParams.FontHeight, InputParams.FontWidth,
 										InputParams.FontWeight, 0, FALSE,
@@ -128,7 +128,7 @@ namespace bgsee
 		TaskRegistry(),
 		TimerID(0)
 	{
-		TimerID = SetTimer(NULL, NULL, kTimerPeriod, &UpdateTimerProc);
+		TimerID = SetTimer(nullptr, 0, kTimerPeriod, &UpdateTimerProc);
 		SME_ASSERT(TimerID);
 	}
 
@@ -235,7 +235,7 @@ namespace bgsee
 
 	bool DynamicRenderChannel::Queue(float DurationInSeconds, const char* Format, ...)
 	{
-		if (Valid == false || Format == NULL)
+		if (Valid == false || Format == nullptr)
 			return false;
 
 		char Buffer[0x1000] = {0};
@@ -251,12 +251,12 @@ namespace bgsee
 		return true;
 	}
 
-	RenderWindowPainter* RenderWindowPainter::Singleton = NULL;
+	RenderWindowPainter* RenderWindowPainter::Singleton = nullptr;
 
 	RenderWindowPainter::RenderWindowPainter() :
 		RegisteredChannels(),
-		Operator(NULL),
-		OutputSprite(NULL),
+		Operator(nullptr),
+		OutputSprite(nullptr),
 		Enabled(true),
 		Initialized(false)
 	{
@@ -271,7 +271,7 @@ namespace bgsee
 		for each (auto Itr in RegisteredChannels)
 			Itr->ReleaseD3D();
 
-		Singleton = NULL;
+		Singleton = nullptr;
 	}
 
 	bool RenderWindowPainter::Initialize(RenderWindowPainterOperator* Operator)
@@ -289,7 +289,7 @@ namespace bgsee
 
 	bool RenderWindowPainter::CreateD3D( void )
 	{
-		SME_ASSERT(OutputSprite == NULL);
+		SME_ASSERT(OutputSprite == nullptr);
 
 		bool Result = true;
 		HRESULT OpResult = D3DXCreateSprite(Operator->GetD3DDevice(), &OutputSprite);
@@ -310,7 +310,7 @@ namespace bgsee
 
 	RenderWindowPainter* RenderWindowPainter::GetSingleton(void)
 	{
-		if (Singleton == NULL)
+		if (Singleton == nullptr)
 			Singleton = new RenderWindowPainter();
 
 		return Singleton;
@@ -320,7 +320,7 @@ namespace bgsee
 	{
 		if (Initialized == false)
 			return;
-		else if (Enabled == false || OutputSprite == NULL)
+		else if (Enabled == false || OutputSprite == nullptr)
 			return;
 
 		OutputSprite->Begin(D3DXSPRITE_ALPHABLEND|D3DXSPRITE_SORT_TEXTURE);

@@ -49,7 +49,7 @@ namespace bgsee { namespace script { namespace mup {
   class OprtTranspose : public IOprtPostfix
   {
   public:
-    OprtTranspose(IPackage* pPackage=NULL);
+    OprtTranspose(IPackage* pPackage=nullptr);
     virtual void Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int a_iArgc);
     virtual const char_type* GetDesc() const;
     virtual IToken* Clone() const;

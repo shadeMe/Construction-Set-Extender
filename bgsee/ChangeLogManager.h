@@ -13,7 +13,7 @@ namespace bgsee
 
 		ChangeLog(const char* Path, const char* FileName);
 
-		void							WriteChange(const char* Message, bool StampTime, bool Flush, void* ConsoleMessageContext = NULL);
+		void							WriteChange(const char* Message, bool StampTime, bool Flush, void* ConsoleMessageContext = nullptr);
 		bool							Copy(const char* DestinationPath, bool Overwrite) const;
 		void							Finalize();
 	public:

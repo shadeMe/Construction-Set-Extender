@@ -5,11 +5,11 @@
 
 namespace bgsee
 {
-	WorkspaceManager* WorkspaceManager::Singleton = NULL;
+	WorkspaceManager* WorkspaceManager::Singleton = nullptr;
 
 	WorkspaceManager::WorkspaceManager()
 	{
-		Operator = NULL;
+		Operator = nullptr;
 		Initialized = false;
 	}
 
@@ -32,7 +32,7 @@ namespace bgsee
 		{
 			FORMAT_STR(Buffer, "%s%s", WorkspacePath, Itr->c_str());
 
-			if (CreateDirectory(Buffer, NULL) == FALSE && GetLastError() != ERROR_ALREADY_EXISTS)
+			if (CreateDirectory(Buffer, nullptr) == FALSE && GetLastError() != ERROR_ALREADY_EXISTS)
 			{
 				BGSEECONSOLE_ERROR("Couldn't create directory '%s'", Buffer);
 			}
@@ -46,12 +46,12 @@ namespace bgsee
 
 		Initialized = false;
 
-		Singleton = NULL;
+		Singleton = nullptr;
 	}
 
 	WorkspaceManager* WorkspaceManager::GetSingleton()
 	{
-		if (Singleton == NULL)
+		if (Singleton == nullptr)
 			Singleton = new WorkspaceManager();
 
 		return Singleton;
@@ -85,16 +85,16 @@ namespace bgsee
 
 		char WorkspacePath[MAX_PATH] = {0};
 
-		if (DefaultWorkspacePath == NULL)
+		if (DefaultWorkspacePath == nullptr)
 		{
 			BROWSEINFO WorkspaceInfo = {0};
 			WorkspaceInfo.hwndOwner = BGSEEUI->GetMainWindow();
-			WorkspaceInfo.iImage = NULL;
+			WorkspaceInfo.iImage = 0;
 			WorkspaceInfo.pszDisplayName = WorkspacePath;
 			WorkspaceInfo.lpszTitle = "Select a valid workspace inside the root game directory";
 			WorkspaceInfo.ulFlags = BIF_NEWDIALOGSTYLE|BIF_RETURNONLYFSDIRS;
-			WorkspaceInfo.pidlRoot = NULL;
-			WorkspaceInfo.lpfn = NULL;
+			WorkspaceInfo.pidlRoot = nullptr;
+			WorkspaceInfo.lpfn = nullptr;
 			WorkspaceInfo.lParam = NULL;
 
 			PIDLIST_ABSOLUTE ReturnPath = SHBrowseForFolder(&WorkspaceInfo);

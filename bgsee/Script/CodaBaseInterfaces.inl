@@ -118,9 +118,9 @@ namespace bgsee
 
 			virtual const char*					GetDescription(void) = 0;
 			virtual const char*					GetDocumentation(void) = 0;		// can contain HTML markup
-			virtual int							GetParameterData(int* OutParameterCount = NULL,
-																ParameterInfo** OutParameterInfoArray = NULL,
-																UInt8* OutResultType = NULL) = 0;
+			virtual int							GetParameterData(int* OutParameterCount = nullptr,
+																ParameterInfo** OutParameterInfoArray = nullptr,
+																UInt8* OutResultType = nullptr) = 0;
 																				// returns parameter count
 																				// parameter count must be -1 for variadic functions
 

@@ -70,7 +70,7 @@ namespace bgsee
 			return true;
 		}
 
-		AchievementManager*			AchievementManager::Singleton = NULL;
+		AchievementManager*			AchievementManager::Singleton = nullptr;
 
 		AchievementManager::AchievementManager() :
 			RegistryKeyRoot(""),
@@ -128,7 +128,7 @@ namespace bgsee
 		template <typename T>
 		bool AchievementManager::GetRegValue( const char* Name, T* OutValue, const char* Key )
 		{
-			HKEY AchievementKey = NULL;
+			HKEY AchievementKey = nullptr;
 
 			if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, Key, NULL, KEY_ALL_ACCESS, &AchievementKey) == ERROR_SUCCESS)
 			{
@@ -146,7 +146,7 @@ namespace bgsee
 		template <typename T>
 		bool AchievementManager::SetRegValue( const char* Name, T Value, const char* Key )
 		{
-			HKEY AchievementKey = NULL;
+			HKEY AchievementKey = nullptr;
 
 			if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, Key, NULL, KEY_ALL_ACCESS, &AchievementKey) == ERROR_SUCCESS)
 			{
@@ -172,12 +172,12 @@ namespace bgsee
 			AchievementDepot.clear();
 			Initialized = false;
 
-			Singleton = NULL;
+			Singleton = nullptr;
 		}
 
 		AchievementManager* AchievementManager::GetSingleton( void )
 		{
-			if (Singleton == NULL)
+			if (Singleton == nullptr)
 				Singleton = new AchievementManager();
 
 			return Singleton;
@@ -196,25 +196,25 @@ namespace bgsee
 			this->ResourceInstance = ResourceInstance;
 			this->AchievementDepot = Achievements;
 
-			HKEY BaseAchievementKey = NULL, ExtraDataAchievementKey = NULL;
+			HKEY BaseAchievementKey = nullptr, ExtraDataAchievementKey = nullptr;
 			if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
 							RegistryKeyRoot.c_str(),
-							NULL, NULL, NULL,
+							NULL, nullptr, NULL,
 							KEY_ALL_ACCESS,
-							NULL,
+							nullptr,
 							&BaseAchievementKey,
-							NULL) != ERROR_SUCCESS)
+							nullptr) != ERROR_SUCCESS)
 			{
 				BGSEECONSOLE_ERROR("Couldn't create root registry key!");
 			}
 
 			if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
 							RegistryKeyExtraData.c_str(),
-							NULL, NULL, NULL,
+							NULL, nullptr, NULL,
 							KEY_ALL_ACCESS,
-							NULL,
+							nullptr,
 							&ExtraDataAchievementKey,
-							NULL) != ERROR_SUCCESS)
+							nullptr) != ERROR_SUCCESS)
 			{
 				BGSEECONSOLE_ERROR("Couldn't create extradata registry key!");
 			}
@@ -275,7 +275,7 @@ namespace bgsee
 
 				BGSEEUI->ModelessDialog(ResourceInstance,
 					MAKEINTRESOURCE(IDD_BGSEE_ACHIEVEMENTUNLOCKED),
-					NULL,
+					nullptr,
 					NotificationDlgProc,
 					(LPARAM)UserData);
 			}
@@ -288,8 +288,8 @@ namespace bgsee
 		INT_PTR CALLBACK AchievementManager::NotificationDlgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 		{
 			NotificationUserData* UserData = (NotificationUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
-			AchievementManager* Instance = NULL;
-			Achievement* UnlockedAchievement = NULL;
+			AchievementManager* Instance = nullptr;
+			Achievement* UnlockedAchievement = nullptr;
 
 			if (UserData)
 			{
@@ -381,7 +381,7 @@ namespace bgsee
 
 					SendDlgItemMessage(hWnd, IDC_BGSEE_ACHIEVEMENTUNLOCKED_ICON, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)UserData->Icon);
 
-					SetTimer(hWnd, TIMERID_VISIBLE, 6500, NULL);
+					SetTimer(hWnd, TIMERID_VISIBLE, 6500, nullptr);
 					AnimateWindow(hWnd, 155, AW_BLEND);
 				}
 

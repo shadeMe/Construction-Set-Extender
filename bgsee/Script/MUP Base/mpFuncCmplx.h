@@ -49,7 +49,7 @@ namespace bgsee { namespace script { namespace mup {
   class FunCmplxReal : public ICallback
   {
   public:
-    FunCmplxReal(IPackage *pPackage = NULL);
+    FunCmplxReal(IPackage *pPackage = nullptr);
     virtual ~FunCmplxReal();
     virtual void Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int a_iArgc);
     virtual const char_type* GetDesc() const;

@@ -141,7 +141,7 @@ namespace bgsee
 																		ICodaScriptExpressionByteCode** OutByteCode);
 				virtual void									Evaluate(ICodaScriptSyntaxTreeEvaluator* EvaluationAgent,
 																		ICodaScriptExpressionByteCode* ByteCode,
-																		CodaScriptBackingStore* Result = NULL);
+																		CodaScriptBackingStore* Result = nullptr);
 			};
 		}
 	}

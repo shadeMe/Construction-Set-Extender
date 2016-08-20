@@ -16,7 +16,7 @@ namespace bgsee
 				IValue(cmVAL),
 				m_cType(cType),
 				m_iFlags(flNONE),
-				m_pCache(NULL),
+				m_pCache(nullptr),
 				m_DataStore(0.0),
 				m_StringBuffer(new string_type())
 			{
@@ -29,7 +29,7 @@ namespace bgsee
 				case 'f':
 					break;
 				case 's':
-					m_DataStore.SetString(NULL);
+					m_DataStore.SetString(nullptr);
 					break;
 				default:
 					SME_ASSERT(cType == 'i' || cType == 'f' || cType == 's');		// type's always one of the three, array handling is opaque to the implementation
@@ -42,7 +42,7 @@ namespace bgsee
 				IValue(cmVAL),
 				m_cType('f'),
 				m_iFlags(flNONE),
-				m_pCache(NULL),
+				m_pCache(nullptr),
 				m_DataStore((CodaScriptNumericDataTypeT)val),
 				m_StringBuffer(new string_type())
 			{
@@ -54,7 +54,7 @@ namespace bgsee
 				IValue(cmVAL),
 				m_cType('s'),
 				m_iFlags(flNONE),
-				m_pCache(NULL),
+				m_pCache(nullptr),
 				m_DataStore(val.c_str()),
 				m_StringBuffer(new string_type(val))
 			{
@@ -66,7 +66,7 @@ namespace bgsee
 				IValue(cmVAL),
 				m_cType('s'),
 				m_iFlags(flNONE),
-				m_pCache(NULL),
+				m_pCache(nullptr),
 				m_DataStore(val),
 				m_StringBuffer(new string_type(val))
 			{
@@ -77,7 +77,7 @@ namespace bgsee
 				ICodaScriptDataStoreOwner(),
 				IValue(cmVAL),
 				m_iFlags(flNONE),
-				m_pCache(NULL),
+				m_pCache(nullptr),
 				m_DataStore(),
 				m_StringBuffer(new string_type())
 			{
@@ -89,7 +89,7 @@ namespace bgsee
 			CodaScriptMUPValue::CodaScriptMUPValue( const IValue &a_Val ) :
 				ICodaScriptDataStoreOwner(),
 				IValue(cmVAL),
-				m_pCache(NULL),
+				m_pCache(nullptr),
 				m_DataStore(),
 				m_StringBuffer(new string_type())
 			{
@@ -117,7 +117,7 @@ namespace bgsee
 				IValue(cmVAL),
 				m_cType('i'),
 				m_iFlags(flNONE),
-				m_pCache(NULL),
+				m_pCache(nullptr),
 				m_DataStore(val),
 				m_StringBuffer(new string_type())
 			{
@@ -137,7 +137,7 @@ namespace bgsee
 				IValue(cmVAL),
 				m_cType('i'),
 				m_iFlags(flNONE),
-				m_pCache(NULL),
+				m_pCache(nullptr),
 				m_DataStore(val),
 				m_StringBuffer(new string_type())
 			{
@@ -157,7 +157,7 @@ namespace bgsee
 				IValue(cmVAL),
 				m_cType('i'),
 				m_iFlags(flNONE),
-				m_pCache(NULL),
+				m_pCache(nullptr),
 				m_DataStore(val),
 				m_StringBuffer(new string_type())
 			{
@@ -169,7 +169,7 @@ namespace bgsee
 				IValue(cmVAL),
 				m_cType('i'),
 				m_iFlags(flNONE),
-				m_pCache(NULL),
+				m_pCache(nullptr),
 				m_DataStore(val),
 				m_StringBuffer(new string_type())
 			{
@@ -198,7 +198,7 @@ namespace bgsee
 					CodaScriptMUPArrayDataType* Array = dynamic_cast<CodaScriptMUPArrayDataType*>(m_DataStore.GetArray().get());
 					SME_ASSERT(Array);
 
-					CodaScriptMUPValue* Out = NULL;
+					CodaScriptMUPValue* Out = nullptr;
 					Array->At(nRow, &Out);
 					SME_ASSERT(Out);
 

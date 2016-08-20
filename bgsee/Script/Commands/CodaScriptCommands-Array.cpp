@@ -44,8 +44,8 @@ namespace bgsee
 
 				CodaScriptCommandHandler(ArrayInsert)
 				{
-					ICodaScriptDataStore* Array = NULL;
-					ICodaScriptDataStore* Element = NULL;
+					ICodaScriptDataStore* Array = nullptr;
+					ICodaScriptDataStore* Element = nullptr;
 					CodaScriptNumericDataTypeT Index = -1;
 
 					CodaScriptCommandExtractArgs(&Array, &Element, &Index);
@@ -60,7 +60,7 @@ namespace bgsee
 
 				CodaScriptCommandHandler(ArrayErase)
 				{
-					ICodaScriptDataStore* Array = NULL;
+					ICodaScriptDataStore* Array = nullptr;
 					CodaScriptNumericDataTypeT Index = -1;
 
 					CodaScriptCommandExtractArgs(&Array, &Index);
@@ -74,7 +74,7 @@ namespace bgsee
 
 				CodaScriptCommandHandler(ArrayClear)
 				{
-					ICodaScriptDataStore* Array = NULL;
+					ICodaScriptDataStore* Array = nullptr;
 
 					CodaScriptCommandExtractArgs(&Array);
 
@@ -87,7 +87,7 @@ namespace bgsee
 
 				CodaScriptCommandHandler(ArraySize)
 				{
-					ICodaScriptDataStore* Array = NULL;
+					ICodaScriptDataStore* Array = nullptr;
 
 					CodaScriptCommandExtractArgs(&Array);
 

@@ -93,14 +93,14 @@ namespace bgsee
 				}
 			}
 
-			return NULL;
+			return nullptr;
 		}
 
 		bool CodaScriptCommandRegistry::RegisterCommand( const char* Category, ICodaScriptCommand* Command )
 		{
 			SME_ASSERT(Command->GetName());
 
-			if (Category == NULL)
+			if (Category == nullptr)
 				Category = "Uncategorized";
 
 			std::string Buffer = Category;
@@ -183,7 +183,7 @@ namespace bgsee
 						const char*	Alias = Command->GetAlias();
 
 						int ParameterCount = 0;
-						ICodaScriptCommand::ParameterInfo* ParameterData = NULL;
+						ICodaScriptCommand::ParameterInfo* ParameterData = nullptr;
 						UInt8 ResultType = ICodaScriptDataStore::kDataType_Invalid;
 						Command->GetParameterData(&ParameterCount, &ParameterData, &ResultType);
 
@@ -229,7 +229,7 @@ namespace bgsee
 				DocStream.close();
 			}
 
-			ShellExecute(NULL, "open", (LPSTR)"coda_command_doc.html", NULL, NULL, SW_SHOW);
+			ShellExecute(nullptr, "open", (LPSTR)"coda_command_doc.html", nullptr, nullptr, SW_SHOW);
 		}
 
 		CodaScriptCommandRegistrar::CodaScriptCommandRegistrar( const char* Category ) :
@@ -279,35 +279,33 @@ namespace bgsee
 		}
 
 		CodaScriptMessageHandler::CodaScriptMessageHandler() :
-			State(true)
+			ConsoleContext(nullptr),
+			DefaultContextLoggingState(true)
 		{
-			;//
+			ConsoleContext = BGSEECONSOLE->RegisterMessageLogContext("Coda Script");
 		}
 
 		CodaScriptMessageHandler::~CodaScriptMessageHandler()
 		{
-			;//
+			BGSEECONSOLE->UnregisterMessageLogContext(ConsoleContext);
 		}
 
-		void CodaScriptMessageHandler::Suspend( void )
+		void CodaScriptMessageHandler::SuspendDefaultContextLogging( void )
 		{
-			SME_ASSERT(State == true);
+			SME_ASSERT(DefaultContextLoggingState == true);
 
-			State = false;
+			DefaultContextLoggingState = false;
 		}
 
-		void CodaScriptMessageHandler::Resume( void )
+		void CodaScriptMessageHandler::ResumeDefaultContextLogging( void )
 		{
-			SME_ASSERT(State == false);
+			SME_ASSERT(DefaultContextLoggingState == false);
 
-			State = true;
+			DefaultContextLoggingState = true;
 		}
 
-		void CodaScriptMessageHandler::LogMsg( const char* Format, ... )
+		void CodaScriptMessageHandler::Log( const char* Format, ... )
 		{
-			if (State == false)
-				return;
-
 			va_list Args;
 			char Buffer[0x1000] = {0};
 
@@ -315,7 +313,9 @@ namespace bgsee
 			vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
 			va_end(Args);
 
-			BGSEECONSOLE_MESSAGE(Buffer);
+			BGSEECONSOLE->PrintToMessageLogContext(ConsoleContext, false, Buffer);
+			if (DefaultContextLoggingState)
+				BGSEECONSOLE_MESSAGE(Buffer);
 		}
 
 		const UInt32											CodaScriptExecutive::kMaxRecursionLimit = 30;
@@ -347,7 +347,7 @@ namespace bgsee
 
 			if (ExecutionStack.size() >= kMaxRecursionLimit)
 			{
-				MessageHandler->LogMsg("Maximum script recursion depth hit");
+				MessageHandler->Log("Maximum script recursion depth hit");
 				return false;
 			}
 
@@ -366,7 +366,7 @@ namespace bgsee
 			if (ProfilerEnabled)
 			{
 				double ElapsedTime = Profiler.EndProfiling() * 1.0;
-				MessageHandler->LogMsg("Profiler: %s [%.4f ms]", Context->ScriptName.c_str(), ElapsedTime);
+				MessageHandler->Log("Profiler: %s [%.4f ms]", Context->ScriptName.c_str(), ElapsedTime);
 			}
 
 			return ExecuteResult;
@@ -377,7 +377,7 @@ namespace bgsee
 			if (ExecutionStack.size())
 				return ExecutionStack.top();
 			else
-				return NULL;
+				return nullptr;
 		}
 
 		void CodaScriptExecutive::RegisterINISettings( INISettingDepotT& Depot )
@@ -386,7 +386,7 @@ namespace bgsee
 		}
 
 
-		
+
 		const std::string										CodaScriptBackgrounder::kDepotName	= "Background";
 
 #define CODASCRIPTBACKGROUNDER_INISECTION						"CodaBackgrounder"
@@ -400,9 +400,7 @@ namespace bgsee
 		VOID CALLBACK CodaScriptBackgrounder::CallbackProc( HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime )
 		{
 			if (CODAVM->Backgrounder && CODAVM->Backgrounder->TimerID == idEvent)
-			{
 				CODAVM->Backgrounder->Tick(CODAVM->Executive);
-			}
 		}
 
 		void CodaScriptBackgrounder::ResetCache( CodaScriptBackgroundExecutionCacheT& Cache, bool Renew /*= false*/ )
@@ -426,7 +424,7 @@ namespace bgsee
 						BGSEECONSOLE_MESSAGE("Script: %s", Itr.Get()->cFileName);
 						BGSEECONSOLE->Indent();
 
-						CodaScriptExecutionContext* BackgroundScript = CODAVM->CreateExecutionContext(InputStream, NULL);
+						CodaScriptExecutionContext* BackgroundScript = CODAVM->CreateExecutionContext(InputStream, nullptr);
 						if (BackgroundScript->GetIsValid())
 						{
 							BGSEECONSOLE_MESSAGE("Success: %s [%.6f s]", BackgroundScript->ScriptName.c_str(), BackgroundScript->PollingInterval);
@@ -447,13 +445,13 @@ namespace bgsee
 		{
 			SME_ASSERT(Backgrounding == false);
 
-			KillTimer(NULL, TimerID);
+			KillTimer(nullptr, TimerID);
 			TimerID = 0;
 
 			if (Renew)
 			{
 				UInt32 UpdatePeriod = kINI_UpdatePeriod.GetData().i;
-				TimerID = SetTimer(NULL, 0, UpdatePeriod, &CallbackProc);
+				TimerID = SetTimer(nullptr, 0, UpdatePeriod, &CallbackProc);
 				SME_ASSERT(TimerID);
 			}
 		}
@@ -474,9 +472,9 @@ namespace bgsee
 						bool Throwaway = false;
 
 						BGSEECONSOLE->Indent();
-						CODAVM->MsgHdlr()->Suspend();
-						bool ExecuteResult = Executive->Execute(BackgroundScript, NULL, Throwaway);
-						CODAVM->MsgHdlr()->Resume();
+						CODAVM->GetMessageHandler()->SuspendDefaultContextLogging();
+						bool ExecuteResult = Executive->Execute(BackgroundScript, nullptr, Throwaway);
+						CODAVM->GetMessageHandler()->ResumeDefaultContextLogging();
 						BGSEECONSOLE->Exdent();
 
 						if (BackgroundScript->GetIsValid() == false)
@@ -602,8 +600,8 @@ namespace bgsee
 			switch (uMsg)
 			{
 			case IDM_BGSEE_CODAGLOBALDATASTORE_CLEAREDITFIELD:
-				SetWindowText(NameBox, NULL);
-				SetWindowText(ValueBox, NULL);
+				SetWindowText(NameBox, nullptr);
+				SetWindowText(ValueBox, nullptr);
 				break;
 			case IDM_BGSEE_CODAGLOBALDATASTORE_RELOADVARLIST:
 				{
@@ -647,7 +645,7 @@ namespace bgsee
 							break;
 						}
 
-						CodaScriptVariable* GlobalVar = NULL;
+						CodaScriptVariable* GlobalVar = nullptr;
 						bool ExistingVar = false;
 
 						if (IsDlgButtonChecked(hWnd, IDC_BGSEE_CODAGLOBALDATASTORE_ADDSTRING) == BST_CHECKED)
@@ -753,7 +751,7 @@ namespace bgsee
 
 		bool CodaScriptGlobalDataStore::Add( CodaScriptVariable* Variable )
 		{
-			if (Lookup(Variable->GetName()) == NULL)
+			if (Lookup(Variable->GetName()) == nullptr)
 			{
 				Cache.push_back(Variable);
 				return true;
@@ -767,7 +765,7 @@ namespace bgsee
 		{
 			CodaScriptVariable* Global = Lookup(Name);
 
-			if (Global == NULL)
+			if (Global == nullptr)
 			{
 				ICodaScriptDataStoreOwner* StoreOwner = CodaScriptObjectFactory::BuildDataStoreOwner(CodaScriptObjectFactory::kFactoryType_MUP);
 				Global = new CodaScriptVariable(std::string(Name), StoreOwner);
@@ -816,7 +814,7 @@ namespace bgsee
 					return Global;
 			}
 
-			return NULL;
+			return nullptr;
 		}
 
 		bool CodaScriptGlobalDataStore::Lookup( CodaScriptVariable* Variable, CodaScriptVariableArrayT::iterator& Match )
@@ -878,7 +876,7 @@ namespace bgsee
 
 		void CodaScriptGlobalDataStore::INISaveState( void )
 		{
-			INISettingSetter(CODASCRIPTGLOBALDATASTORE_INISECTION, NULL);
+			INISettingSetter(CODASCRIPTGLOBALDATASTORE_INISECTION, nullptr);
 			char Buffer[0x512] = {0};
 
 			for (CodaScriptVariableArrayT::iterator Itr = Cache.begin(); Itr != Cache.end(); Itr++)
@@ -936,7 +934,7 @@ namespace bgsee
 		}
 
 		const std::string										CodaScriptVM::kSourceExtension	= ".coda";
-		CodaScriptVM*											CodaScriptVM::Singleton			= NULL;
+		CodaScriptVM*											CodaScriptVM::Singleton			= nullptr;
 		bgsee::ConsoleCommandInfo				CodaScriptVM::kDumpCodaDocsConsoleCommandData =
 		{
 			"DumpCodaDocs",
@@ -951,12 +949,12 @@ namespace bgsee
 
 		CodaScriptVM::CodaScriptVM() :
 			BaseDirectory(),
-			CommandRegistry(NULL),
-			MessageHandler(NULL),
-			Executive(NULL),
-			Backgrounder(NULL),
-			GlobalStore(NULL),
-			ExpressionParser(NULL),
+			CommandRegistry(nullptr),
+			MessageHandler(nullptr),
+			Executive(nullptr),
+			Backgrounder(nullptr),
+			GlobalStore(nullptr),
+			ExpressionParser(nullptr),
 			Initialized(false)
 		{
 			;//
@@ -1013,12 +1011,12 @@ namespace bgsee
 
 			Initialized = false;
 
-			Singleton = NULL;
+			Singleton = nullptr;
 		}
 
 		CodaScriptVM* CodaScriptVM::GetSingleton()
 		{
-			if (Singleton == NULL)
+			if (Singleton == nullptr)
 				Singleton = new CodaScriptVM();
 
 			return Singleton;
@@ -1140,7 +1138,7 @@ namespace bgsee
 			return GlobalStore->GetCache();
 		}
 
-		CodaScriptMessageHandler* CodaScriptVM::MsgHdlr( void )
+		CodaScriptMessageHandler* CodaScriptVM::GetMessageHandler( void )
 		{
 			SME_ASSERT(Initialized);
 
@@ -1174,7 +1172,7 @@ namespace bgsee
 		{
 			SME_ASSERT(Initialized);
 
-			ShellExecute(NULL, "open", BaseDirectory.GetFullPath().c_str(), NULL, NULL, SW_SHOW);
+			ShellExecute(nullptr, "open", BaseDirectory.GetFullPath().c_str(), nullptr, nullptr, SW_SHOW);
 		}
 
 		ICodaScriptExpressionParser* CodaScriptObjectFactory::BuildExpressionParser( UInt8 Type )
@@ -1184,7 +1182,7 @@ namespace bgsee
 			case CodaScriptObjectFactory::kFactoryType_MUP:
 				return new mup::CodaScriptMUPExpressionParser();
 			default:
-				return NULL;
+				return nullptr;
 			}
 		}
 
@@ -1195,7 +1193,7 @@ namespace bgsee
 			case CodaScriptObjectFactory::kFactoryType_MUP:
 				return new mup::CodaScriptMUPValue((mup::float_type)0.0);
 			default:
-				return NULL;
+				return nullptr;
 			}
 		}
 

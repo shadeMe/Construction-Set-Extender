@@ -114,7 +114,7 @@ namespace bgsee
 
 	bool WindowExtraDataCollection::Remove( WindowExtraDataIDT ID )
 	{
-		if (Lookup(ID) == NULL)
+		if (Lookup(ID) == nullptr)
 			return false;
 		else
 			DataStore.erase(ID);
@@ -130,11 +130,11 @@ namespace bgsee
 				return Itr->second;
 		}
 
-		return NULL;
+		return nullptr;
 	}
 
 	WindowSubclasser::DialogSubclassData::DialogSubclassData() :
-		Original(NULL),
+		Original(nullptr),
 		ActiveHandles(),
 		Subclasses()
 	{
@@ -153,7 +153,7 @@ namespace bgsee
 		for (SubclassProcArrayT::iterator Itr = SubclassBuffer.begin(); Itr != SubclassBuffer.end(); Itr++)
 		{
 			DialogSubclassUserData* UserData = (DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
-			if (UserData == NULL)
+			if (UserData == nullptr)
 			{
 				// the dialog was destroyed inside a callback
 				break;
@@ -172,9 +172,9 @@ namespace bgsee
 	}
 
 	WindowSubclasser::WindowSubclassData::WindowSubclassData() :
-		Original(NULL),
+		Original(nullptr),
 		Subclasses(),
-		UserData(NULL)
+		UserData(nullptr)
 	{
 		;//
 	}
@@ -190,7 +190,7 @@ namespace bgsee
 		for (SubclassProcArrayT::iterator Itr = SubclassBuffer.begin(); Itr != SubclassBuffer.end(); Itr++)
 		{
 			WindowSubclassUserData* UserData = (WindowSubclassUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
-			if (UserData == NULL)
+			if (UserData == nullptr)
 				break;
 
 			LRESULT CurrentResult = (*Itr)(hWnd, uMsg, wParam, lParam, ReturnMark, &UserData->ExtraData);
@@ -206,19 +206,19 @@ namespace bgsee
 	}
 
 	WindowSubclasser::DialogSubclassUserData::DialogSubclassUserData() :
-		Instance(NULL),
-		Data(NULL),
+		Instance(nullptr),
+		Data(nullptr),
 		InitParam(NULL),
 		ExtraData(),
-		TemplateID(NULL),
+		TemplateID(0),
 		Initialized(false)
 	{
 		;//
 	}
 
 	WindowSubclasser::WindowSubclassUserData::WindowSubclassUserData() :
-		Instance(NULL),
-		Data(NULL),
+		Instance(nullptr),
+		Data(nullptr),
 		OriginalUserData(NULL),
 		ExtraData()
 	{
@@ -382,7 +382,7 @@ namespace bgsee
 	}
 
 	WindowSubclasser::WindowSubclasser() :
-		EditorMainWindow(NULL),
+		EditorMainWindow(nullptr),
 		DialogSubclasses(),
 		RegularWindowSubclasses()
 	{
@@ -552,8 +552,8 @@ namespace bgsee
 			std::string FileName = Itr.Get()->cFileName;
 			std::string FullPath = SourceDepot() + "\\" + FileName;
 
-			HINSTANCE Module = (HINSTANCE)LoadLibraryEx(FullPath.c_str(), NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE|LOAD_LIBRARY_AS_DATAFILE);
-			if (Module == NULL)
+			HINSTANCE Module = (HINSTANCE)LoadLibraryEx(FullPath.c_str(), nullptr, LOAD_LIBRARY_AS_IMAGE_RESOURCE|LOAD_LIBRARY_AS_DATAFILE);
+			if (Module == nullptr)
 			{
 				BGSEECONSOLE_ERROR("BGSEEResourceTemplateHotSwapper::PopulateTemplateMap - Failed to load resource library '%s'!", FullPath.c_str());
 				continue;
@@ -574,7 +574,7 @@ namespace bgsee
 	{
 		for (TemplateResourceInstanceMapT::iterator Itr = TemplateMap.begin(); Itr != TemplateMap.end(); Itr++)
 		{
-			if (FreeLibrary(Itr->second) == NULL)
+			if (FreeLibrary(Itr->second) == FALSE)
 				BGSEECONSOLE_ERROR("BGSEEResourceTemplateHotSwapper::ReleaseTemplateMap - Failed to release resource library for template %d", Itr->first);
 		}
 
@@ -588,7 +588,7 @@ namespace bgsee
 		if (Match != TemplateMap.end())
 			return Match->second;
 		else
-			return NULL;
+			return nullptr;
 	}
 
 	ResourceTemplateHotSwapper::ResourceTemplateHotSwapper( std::string SourcePath ) :
@@ -708,7 +708,7 @@ namespace bgsee
 		if (PerformOperation)
 		{
 			SetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_DRAWFRAME | SWP_SHOWWINDOW);
-			InvalidateRect(Window, NULL, TRUE);
+			InvalidateRect(Window, nullptr, TRUE);
 		}
 	}
 
@@ -805,18 +805,18 @@ namespace bgsee
 
 	void WindowInvalidationManager::Redraw(HWND Window)
 	{
-		RedrawWindow(Window, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+		RedrawWindow(Window, nullptr, nullptr, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
 	}
 
-	UIManager*						UIManager::Singleton = NULL;
+	UIManager*						UIManager::Singleton = nullptr;
 	SME::UIHelpers::CSnapWindow			UIManager::WindowEdgeSnapper;
 
 	UIManager::IATPatchData::IATPatchData() :
-		DLL(NULL),
-		Import(NULL),
-		Location(NULL),
-		OriginalFunction(NULL),
-		CallbackFunction(NULL),
+		DLL(nullptr),
+		Import(nullptr),
+		Location(nullptr),
+		OriginalFunction(nullptr),
+		CallbackFunction(nullptr),
 		Replaced(false)
 	{
 		;//
@@ -898,8 +898,8 @@ namespace bgsee
 	{
 		SME_ASSERT(BGSEEUI->Subclasser && BGSEEUI->DialogHotSwapper);
 
-		DLGPROC Replacement = NULL;
-		WindowSubclasser::DialogSubclassUserData* UserData = NULL;
+		DLGPROC Replacement = nullptr;
+		WindowSubclasser::DialogSubclassUserData* UserData = nullptr;
 		HINSTANCE Alternate = BGSEEUI->DialogHotSwapper->GetAlternateResourceInstance((UInt32)lpTemplateName);
 
 		if (Alternate)
@@ -927,8 +927,8 @@ namespace bgsee
 		SME_ASSERT(BGSEEUI->Subclasser && BGSEEUI->DialogHotSwapper);
 		SME_ASSERT(hInstance == BGSEEUI->EditorResourceInstance->operator()());
 
-		DLGPROC Replacement = NULL;
-		WindowSubclasser::DialogSubclassUserData* UserData = NULL;
+		DLGPROC Replacement = nullptr;
+		WindowSubclasser::DialogSubclassUserData* UserData = nullptr;
 		HINSTANCE Alternate = BGSEEUI->DialogHotSwapper->GetAlternateResourceInstance((ResourceTemplateT)lpTemplateName);
 
 		if (Alternate)
@@ -957,7 +957,7 @@ namespace bgsee
 	void UIManager::PatchIAT( UInt8 PatchType, void* Callback )
 	{
 		const char* DLLName = "USER32.DLL";
-		const char* ImportName = NULL;
+		const char* ImportName = nullptr;
 
 		SME_ASSERT(PatchType < kIATPatch__MAX);
 
@@ -980,15 +980,15 @@ namespace bgsee
 		IATPatchData* Patch = &PatchDepot[PatchType];
 		Patch->DLL = DLLName;
 		Patch->Import = ImportName;
-		Patch->Location = NULL;
+		Patch->Location = nullptr;
 
-		UInt8* Base = (UInt8*)GetModuleHandle(NULL);
+		UInt8* Base = (UInt8*)GetModuleHandle(nullptr);
 		IMAGE_DOS_HEADER* DOSHeader = (IMAGE_DOS_HEADER*)Base;
 		IMAGE_NT_HEADERS* NTHeader = (IMAGE_NT_HEADERS*)(Base + DOSHeader->e_lfanew);
 
 		IMAGE_IMPORT_DESCRIPTOR* IAT = (IMAGE_IMPORT_DESCRIPTOR*)(Base + NTHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
 
-		for(; IAT->Characteristics && Patch->Location == NULL; ++IAT)
+		for(; IAT->Characteristics && Patch->Location == nullptr; ++IAT)
 		{
 			if(!_stricmp(DLLName, (const char*)(Base + IAT->Name)))
 			{
@@ -1023,14 +1023,14 @@ namespace bgsee
 	UIManager::UIManager() :
 		OwnerThreadID(0),
 		EditorWindowClassName(""),
-		EditorWindowHandle(NULL),
-		EditorResourceInstance(NULL),
-		EditorMainMenuReplacement(NULL),
-		Subclasser(NULL),
-		DialogHotSwapper(NULL),
-		MenuHotSwapper(NULL),
-		Styler(NULL),
-		InvalidationManager(NULL),
+		EditorWindowHandle(nullptr),
+		EditorResourceInstance(nullptr),
+		EditorMainMenuReplacement(nullptr),
+		Subclasser(nullptr),
+		DialogHotSwapper(nullptr),
+		MenuHotSwapper(nullptr),
+		Styler(nullptr),
+		InvalidationManager(nullptr),
 		Initialized(false)
 	{
 		OwnerThreadID = GetCurrentThreadId();
@@ -1054,12 +1054,12 @@ namespace bgsee
 
 		Initialized = false;
 
-		Singleton = NULL;
+		Singleton = nullptr;
 	}
 
 	__declspec(noinline) UIManager* UIManager::GetSingleton()
 	{
-		if (Singleton == NULL)
+		if (Singleton == nullptr)
 			Singleton = new UIManager();
 
 		return Singleton;
@@ -1299,7 +1299,7 @@ namespace bgsee
 		bool SkipDefaultProc = false;
 		LRESULT DlgProcResult = FALSE;
 		DlgUserData* UserData = (DlgUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
-		GenericModelessDialog* Instance = NULL;
+		GenericModelessDialog* Instance = nullptr;
 
 		if (UserData)
 			 Instance = UserData->Instance;
@@ -1353,7 +1353,7 @@ namespace bgsee
 				if (PtInRect((LPRECT) &Rect, Point))
 				{
 					ClientToScreen(hWnd, (LPPOINT)&Point);
-					TrackPopupMenu(Instance->ContextMenuHandle, TPM_LEFTALIGN|TPM_LEFTBUTTON, Point.x, Point.y, 0, hWnd, NULL);
+					TrackPopupMenu(Instance->ContextMenuHandle, TPM_LEFTALIGN|TPM_LEFTBUTTON, Point.x, Point.y, 0, hWnd, nullptr);
 				}
 			}
 
@@ -1441,7 +1441,7 @@ namespace bgsee
 			SkipCallback = true;
 			delete UserData;
 
-			UserData = NULL;
+			UserData = nullptr;
 			SetWindowLongPtr(hWnd, GWL_USERDATA, NULL);
 
 			break;
@@ -1529,9 +1529,9 @@ namespace bgsee
 	{
 		SME_ASSERT(Parent && Resource && DialogTemplate && ContextMenuTemplate && CallbackProc);
 
-		DialogHandle = NULL;
-		ContextMenuHandle = NULL;
-		ContextMenuParentHandle = NULL;
+		DialogHandle = nullptr;
+		ContextMenuHandle = nullptr;
+		ContextMenuParentHandle = nullptr;
 		ParentHandle = Parent;
 		ResourceInstance = Resource;
 		DialogTemplateID = DialogTemplate;
@@ -1549,14 +1549,14 @@ namespace bgsee
 
 	GenericModelessDialog::GenericModelessDialog()
 	{
-		DialogHandle = NULL;
-		ContextMenuHandle = NULL;
-		ContextMenuParentHandle = NULL;
-		ParentHandle = NULL;
-		ResourceInstance = NULL;
-		DialogTemplateID = NULL;
-		DialogContextMenuID = NULL;
-		CallbackDlgProc = NULL;
+		DialogHandle = nullptr;
+		ContextMenuHandle = nullptr;
+		ContextMenuParentHandle = nullptr;
+		ParentHandle = nullptr;
+		ResourceInstance = nullptr;
+		DialogTemplateID = 0;
+		DialogContextMenuID = 0;
+		CallbackDlgProc = nullptr;
 		Visible = false;
 		Topmost = false;
 		AspectRatio = 0.0f;
@@ -1565,7 +1565,7 @@ namespace bgsee
 
 	GenericModelessDialog::~GenericModelessDialog()
 	{
-		if (DialogHandle == NULL || ContextMenuParentHandle == NULL)
+		if (DialogHandle == nullptr || ContextMenuParentHandle == nullptr)
 			return;
 
 		BGSEEUI->GetWindowHandleCollection(UIManager::kHandleCollection_MainWindowChildren)->Remove(DialogHandle);
@@ -1576,7 +1576,7 @@ namespace bgsee
 
 	void GenericModelessDialog::Create( LPARAM InitParam, bool Hide, bool OverrideCreation )
 	{
-		if (DialogHandle || ContextMenuParentHandle || CallbackDlgProc == NULL)
+		if (DialogHandle || ContextMenuParentHandle || CallbackDlgProc == nullptr)
 			return;
 
 		DlgUserData* UserData = new DlgUserData();
@@ -1607,7 +1607,7 @@ namespace bgsee
 		return SetTopmost((Topmost == false));
 	}
 
-	bool GenericModelessDialog::GetVisible( void ) const
+	bool GenericModelessDialog::IsVisible( void ) const
 	{
 		return Visible;
 	}
@@ -1619,6 +1619,6 @@ namespace bgsee
 
 	bool GenericModelessDialog::GetInitialized( void ) const
 	{
-		return (DialogHandle != NULL);
+		return (DialogHandle != nullptr);
 	}
 }
