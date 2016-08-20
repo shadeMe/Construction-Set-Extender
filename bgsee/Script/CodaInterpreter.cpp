@@ -15,7 +15,7 @@ namespace bgsee
 
 			int QuoteStack = 0;
 			int Idx = 0;
-			for each (char Itr in Source)
+			for (char Itr : Source)
 			{
 				if (Itr == '"')
 				{

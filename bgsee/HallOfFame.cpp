@@ -28,7 +28,7 @@ namespace bgsee
 
 		HallOfFameManager::~HallOfFameManager()
 		{
-			for each (auto Itr in Inductees)
+			for (auto Itr: Inductees)
 			{
 				Itr->Deinitialize();
 				delete Itr;
@@ -60,7 +60,7 @@ namespace bgsee
 			Inductees.assign(Entries.begin(), Entries.end());
 
 			int FormIDCounter = StartingFormID;
-			for each (auto Itr in Inductees)
+			for (auto Itr : Inductees)
 			{
 				Itr->Initialize(FormIDCounter);
 				FormIDCounter += 1;
@@ -76,7 +76,7 @@ namespace bgsee
 
 		bool HallOfFameManager::GetIsInductee( UInt32 FormID ) const
 		{
-			for each (auto Itr in Inductees)
+			for (auto Itr : Inductees)
 			{
 				if (Itr->GetFormID() == FormID)
 					return true;

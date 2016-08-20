@@ -118,10 +118,8 @@ namespace bgsee
 
 	void DynamicRenderChannelScheduler::UpdateTasks(DWORD CurrentTickCount)
 	{
-		for each (auto Itr in TaskRegistry)
-		{
+		for (auto Itr : TaskRegistry)
 			Itr->UpdateTasks(CurrentTickCount);
-		}
 	}
 
 	DynamicRenderChannelScheduler::DynamicRenderChannelScheduler() :
@@ -141,7 +139,7 @@ namespace bgsee
 	{
 		SME_ASSERT(Channel);
 
-		for each (auto Itr in TaskRegistry)
+		for (auto Itr : TaskRegistry)
 		{
 			if (Itr == Channel)
 				return false;
@@ -268,7 +266,7 @@ namespace bgsee
 		ReleaseD3D();
 		delete Operator;
 
-		for each (auto Itr in RegisteredChannels)
+		for (auto Itr : RegisteredChannels)
 			Itr->ReleaseD3D();
 
 		Singleton = nullptr;
@@ -325,7 +323,7 @@ namespace bgsee
 
 		OutputSprite->Begin(D3DXSPRITE_ALPHABLEND|D3DXSPRITE_SORT_TEXTURE);
 
-		for each (auto Itr in RegisteredChannels)
+		for (auto Itr : RegisteredChannels)
 			Itr->Render(OutputSprite);
 
 		OutputSprite->End();
@@ -345,7 +343,7 @@ namespace bgsee
 		else
 			Result = CreateD3D();
 
-		for each (auto Itr in RegisteredChannels)
+		for (auto Itr : RegisteredChannels)
 		{
 			if (Release)
 				Itr->ReleaseD3D();
@@ -359,7 +357,7 @@ namespace bgsee
 	bool RenderWindowPainter::RegisterRenderChannel( RenderChannelBase* Channel )
 	{
 		SME_ASSERT(Initialized && Channel);
-		for each (auto Itr in RegisteredChannels)
+		for (auto Itr : RegisteredChannels)
 		{
 			if (Itr == Channel)
 				return false;
