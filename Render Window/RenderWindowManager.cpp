@@ -1,4 +1,4 @@
-#include "RenderWindowManager.h"
+#include "Render Window\RenderWindowManager.h"
 #include "Construction Set Extender_Resource.h"
 #include "AuxiliaryViewport.h"
 #include "ObjectPaletteManager.h"
@@ -1101,7 +1101,7 @@ namespace cse
 					break;
 				case IDC_RENDERWINDOWCONTEXT_GROUP:
 					{
-						if (_RENDERWIN_MGR.GetReferenceGroupManager()->IsSelectionGroupable(_RENDERSEL))
+						if (_RENDERWIN_MGR.GetGroupManager()->IsSelectionGroupable(_RENDERSEL))
 							_RENDERWIN_MGR.CreateRefGroup();
 
 						Return = true;
@@ -1879,7 +1879,7 @@ namespace cse
 			Initialized = false;
 		}
 
-		RenderWindowGroupManager* RenderWindowManager::GetReferenceGroupManager() const
+		RenderWindowGroupManager* RenderWindowManager::GetGroupManager() const
 		{
 			SME_ASSERT(Initialized);
 			return GroupManager;
@@ -1930,7 +1930,10 @@ namespace cse
 		{
 			static char NewGroupNameBuffer[0x100] = { 0 };
 
-			ImGui::InputText("Name", NewGroupNameBuffer, sizeof(NewGroupNameBuffer));
+			bool EnterKey = false;
+			if (ImGui::InputText("Name", NewGroupNameBuffer, sizeof(NewGroupNameBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
+				EnterKey = true;
+
 			bool InvalidName = GroupManager->GetGroupExists(NewGroupNameBuffer);
 			if (InvalidName)
 				ImGui::Text("Group already exists!");
@@ -1939,15 +1942,18 @@ namespace cse
 
 			ImGui::Separator();
 			bool Close = false;
-			if (ImGui::Button("OK", ImVec2(120, 0)) && InvalidName == false)
+			if (ImGui::Button("OK", ImVec2(120, 0)) || EnterKey)
 			{
-				if (GroupManager->AddGroup(NewGroupNameBuffer, _RENDERSEL) == false)
-					NotificationOSDLayer::Instance.ShowNotification("Couldn't add current selection to a new group.");
-				else
-					NotificationOSDLayer::Instance.ShowNotification("Created new selection group");
+				if (InvalidName == false)
+				{
+					if (GroupManager->AddGroup(NewGroupNameBuffer, _RENDERSEL) == false)
+						NotificationOSDLayer::Instance.ShowNotification("Couldn't add current selection to a new group.");
+					else
+						NotificationOSDLayer::Instance.ShowNotification("Created new selection group");
 
-				achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefGrouping);
-				Close = true;
+					achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefGrouping);
+					Close = true;
+				}
 			}
 
 			ImGui::SameLine();
@@ -1968,6 +1974,7 @@ namespace cse
 		{
 			ModalWindowProviderOSDLayer::Instance.ShowModal("New Reference Group",
 															std::bind(&RenderWindowManager::RenderModalNewRefGroup, this, std::placeholders::_1, std::placeholders::_2),
+															nullptr,
 															ImGuiWindowFlags_AlwaysAutoResize);
 		}
 

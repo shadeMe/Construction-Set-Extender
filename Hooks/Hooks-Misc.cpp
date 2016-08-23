@@ -2,7 +2,7 @@
 #include "Hooks-Dialog.h"
 #include "Hooks-Plugins.h"
 #include "Hooks-Renderer.h"
-#include "..\RenderWindowManager.h"
+#include "Render Window\RenderWindowManager.h"
 #include "..\AuxiliaryViewport.h"
 #include "..\Achievements.h"
 #include "..\HallOfFame.h"

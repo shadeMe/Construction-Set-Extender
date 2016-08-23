@@ -1,6 +1,6 @@
 #include "TESRender.h"
 #include "Core.h"
-#include "RenderWindowManager.h"
+#include "Render Window\RenderWindowManager.h"
 
 using namespace cse;
 using namespace cse::renderWindow;

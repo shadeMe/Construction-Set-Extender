@@ -1,6 +1,6 @@
 #include "[Common]\CLIWrapper.h"
 #include "PluginAPIManager.h"
-#include "RenderWindowManager.h"
+#include "Render Window\RenderWindowManager.h"
 
 namespace cse
 {

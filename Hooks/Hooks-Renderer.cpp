@@ -1,7 +1,7 @@
 #include "Hooks-Renderer.h"
-#include "RenderWindowManager.h"
+#include "Render Window\RenderWindowManager.h"
 #include "AuxiliaryViewport.h"
-#include "PathGridUndoManager.h"
+#include "Render Window\PathGridUndoManager.h"
 #include "Hooks-LOD.h"
 
 #pragma warning(push)

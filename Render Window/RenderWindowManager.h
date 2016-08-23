@@ -244,13 +244,13 @@ namespace cse
 			bool										InitializeOSD();		// separate as the renderer is only initialized after the main windows are created
 			void										Deinitialize();
 
-			RenderWindowGroupManager*					GetReferenceGroupManager() const;
+			RenderWindowGroupManager*					GetGroupManager() const;
 			PathGridUndoManager*						GetPathGridUndoManager() const;
 			RenderWindowSelectionManager*				GetSelectionManager() const;
+			const TESObjectREFRArrayT&					GetActiveRefs() const;
 
 			void										InvokeContextMenuTool(int Identifier);
 			void										RefreshFOV();
-			const TESObjectREFRArrayT&					GetActiveRefs() const;
 
 			static RenderWindowManager					Instance;
 		};

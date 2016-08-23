@@ -1,6 +1,6 @@
 #include "CellViewWindowOverrides.h"
 #include "Construction Set Extender_Resource.h"
-#include "RenderWindowManager.h"
+#include "Render Window\RenderWindowManager.h"
 #include "UIManager.h"
 
 namespace cse

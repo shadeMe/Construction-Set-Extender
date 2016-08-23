@@ -5,21 +5,26 @@ namespace cse
 {
 	namespace renderWindow
 	{
-		UInt32 RenderWindowGroupManager::GroupData::ValidateMembers(MemberRosterT& OutDelinquents)
+		void RenderWindowGroupManager::GroupData::ValidateMembers(MemberRosterT& OutDelinquents, TESObjectREFRArrayT* OutValidMembers)
 		{
+			if (OutValidMembers)
+				OutValidMembers->clear();
+			OutDelinquents.clear();
+
 			for (MemberRosterT::iterator Itr = Members.begin(); Itr != Members.end();)
 			{
-				if (RenderWindowGroupManager::GetReferenceExists(*Itr) == false)
+				TESObjectREFR* ValidRef = nullptr;
+				if (RenderWindowGroupManager::GetReferenceExists(*Itr, ValidRef) == false)
 				{
 					OutDelinquents.push_back(*Itr);
 					Itr = Members.erase(Itr);
 					continue;
 				}
+				else if (OutValidMembers)
+					OutValidMembers->push_back(ValidRef);
 
 				Itr++;
 			}
-
-			return GetSize();
 		}
 
 		void RenderWindowGroupManager::GroupData::AddMember(ReferenceHandleT Ref)
@@ -83,7 +88,7 @@ namespace cse
 			}
 		}
 
-		bool RenderWindowGroupManager::GetReferenceExists(ReferenceHandleT Ref)
+		bool RenderWindowGroupManager::GetReferenceExists(ReferenceHandleT Ref, TESObjectREFR*& OutResolvedRef)
 		{
 			TESForm* Form = TESForm::LookupByFormID(Ref);
 
@@ -91,13 +96,14 @@ namespace cse
 			{
 				SME_ASSERT(Form->formType == TESForm::kFormType_ACHR || Form->formType == TESForm::kFormType_ACRE || Form->formType == TESForm::kFormType_REFR);
 
+				OutResolvedRef = CS_CAST(Form, TESForm, TESObjectREFR);
 				return (Form->IsDeleted() == false);
 			}
 			else
 				return false;
 		}
 
-		bool RenderWindowGroupManager::GetGroupExists(GroupIDT ID)
+		bool RenderWindowGroupManager::GetGroupExists(GroupIDT ID) const
 		{
 			GroupDataHandleT Existing = LookupGroup(ID);
 			if (Existing)
@@ -106,12 +112,24 @@ namespace cse
 				return false;
 		}
 
-		bool RenderWindowGroupManager::GetGroupExists(const char* ID)
+		bool RenderWindowGroupManager::GetGroupExists(const char* ID) const
 		{
 			return GetGroupExists(GroupIDT(ID));
 		}
 
-		RenderWindowGroupManager::GroupDataHandleT RenderWindowGroupManager::LookupGroup(GroupIDT ID)
+		bool RenderWindowGroupManager::GetGroupData(const char* ID, TESObjectREFRArrayT& OutMembers)
+		{
+			GroupDataHandleT Exisiting = LookupGroup(ID);
+			if (Exisiting)
+			{
+				if (ValidateGroup(Exisiting, &OutMembers))
+					return true;
+			}
+
+			return false;
+		}
+
+		RenderWindowGroupManager::GroupDataHandleT RenderWindowGroupManager::LookupGroup(GroupIDT ID) const
 		{
 			for (auto Itr : RegisteredGroups)
 			{
@@ -122,7 +140,7 @@ namespace cse
 			return nullptr;
 		}
 
-		RenderWindowGroupManager::GroupDataHandleT RenderWindowGroupManager::GetParentGroup(ReferenceHandleT Ref)
+		RenderWindowGroupManager::GroupDataHandleT RenderWindowGroupManager::GetParentGroup(ReferenceHandleT Ref) const
 		{
 			if (ReferenceTable.count(Ref))
 				return GroupDataHandleT(ReferenceTable.at(Ref));
@@ -130,18 +148,18 @@ namespace cse
 				return GroupDataHandleT(nullptr);
 		}
 
-		bool RenderWindowGroupManager::ValidateGroup(GroupDataHandleT Group)
+		bool RenderWindowGroupManager::ValidateGroup(GroupDataHandleT Group, TESObjectREFRArrayT* OutValidMembers)
 		{
 			MemberRosterT Delinquents;
-			Group->ValidateMembers(Delinquents);
+			Group->ValidateMembers(Delinquents, OutValidMembers);
 
 			for (auto Itr : Delinquents)
 				ReferenceTable.erase(Itr);
 
 			if (Group->GetSize() <= 1)
 			{
-				StandardOutput("Empty group %s dissolved", Group->GetID().c_str());
-				DeregisterGroup(Group, false);
+				StandardOutput("Empty group '%s' dissolved", Group->GetID().c_str());
+				DeregisterGroup(Group, true);
 				return false;
 			}
 			else
@@ -172,7 +190,7 @@ namespace cse
 			}
 		}
 
-		void RenderWindowGroupManager::StandardOutput(const char* Fmt, ...)
+		void RenderWindowGroupManager::StandardOutput(const char* Fmt, ...) const
 		{
 			if (Fmt == nullptr)
 				return;
@@ -222,7 +240,7 @@ namespace cse
 			bool Result = true;
 			if (GetGroupExists(ID))
 			{
-				StandardOutput("Group with ID %s already exists", ID.c_str());
+				StandardOutput("Group with ID '%s' already exists", ID.c_str());
 				Result = false;
 			}
 			else if (IsSelectionGroupable(Selection) == false)
@@ -264,7 +282,7 @@ namespace cse
 
 					if (CurrentGroup != Exisiting)
 					{
-						StandardOutput("Group ID mismatch - Reference %08X must be a member of group %s, not %s",
+						StandardOutput("Group ID mismatch - Reference %08X must be a member of group '%s', not '%s'",
 									   FormID, CurrentGroup->GetID().c_str(), Exisiting->GetID().c_str());
 						Result = false;
 					}
@@ -286,7 +304,25 @@ namespace cse
 			return Result;
 		}
 
-		void RenderWindowGroupManager::Orphanize(TESObjectREFR* Ref)
+		bool RenderWindowGroupManager::RemoveParentGroup(TESObjectREFR* Ref)
+		{
+			SME_ASSERT(Ref);
+
+			ReferenceHandleT FormID(Ref->formID);
+			GroupDataHandleT Group(GetParentGroup(FormID));
+			if (Group)
+			{
+				DeregisterGroup(Group, true);
+				return true;
+			}
+			else
+			{
+				StandardOutput("Reference %08X is not a member of any group", Ref);
+				return false;
+			}
+		}
+
+		bool RenderWindowGroupManager::Orphanize(TESObjectREFR* Ref)
 		{
 			SME_ASSERT(Ref);
 
@@ -295,19 +331,24 @@ namespace cse
 			if (Group)
 			{
 				Group->RemoveMember(FormID);
+				ReferenceTable.erase(FormID);
+
 				if (Group->GetSize() <= 1)
 				{
-					StandardOutput("Empty group %s dissolved", Group->GetID().c_str());
-					DeregisterGroup(Group, false);
+					StandardOutput("Empty group '%s' dissolved", Group->GetID().c_str());
+					DeregisterGroup(Group, true);
 				}
 
-				ReferenceTable.erase(FormID);
+				return true;
 			}
 			else
+			{
 				StandardOutput("Reference %08X is not a member of any group", Ref);
+				return false;
+			}
 		}
 
-		const char* RenderWindowGroupManager::GetParentGroupID(TESObjectREFR* Ref)
+		const char* RenderWindowGroupManager::GetParentGroupID(TESObjectREFR* Ref) const
 		{
 			SME_ASSERT(Ref);
 
@@ -342,7 +383,7 @@ namespace cse
 			return Result;
 		}
 
-		bool RenderWindowGroupManager::IsSelectionGroupable(TESRenderSelection* Selection)
+		bool RenderWindowGroupManager::IsSelectionGroupable(TESRenderSelection* Selection) const
 		{
 			SME_ASSERT(Selection);
 
@@ -361,7 +402,7 @@ namespace cse
 
 					if (Exisiting != nullptr)
 					{
-						StandardOutput("Reference %08X is already a member of group %s", FormID, Exisiting->GetID().c_str());
+						StandardOutput("Reference %08X is already a member of group '%s'", FormID, Exisiting->GetID().c_str());
 						Result = false;
 					}
 				}

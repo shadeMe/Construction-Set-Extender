@@ -11,7 +11,7 @@
 #include "ObjectPaletteManager.h"
 #include "ObjectPrefabManager.h"
 #include "AuxiliaryViewport.h"
-#include "RenderWindowManager.h"
+#include "Render Window\RenderWindowManager.h"
 #include "CustomDialogProcs.h"
 
 #include <bgsee\ToolBox.h>

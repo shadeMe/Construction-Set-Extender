@@ -100,6 +100,9 @@
     <Filter Include="Components\UI Manager">
       <UniqueIdentifier>{e0cbcf87-cc2c-4a4e-9a9b-8102df1d48f4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Components\Render Window\OSD Layers">
+      <UniqueIdentifier>{d0c1189e-a0eb-45e4-a2bc-d45b0a2fa648}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="[Common]\CLIWrapper.cpp">
@@ -281,12 +284,6 @@
     <ClCompile Include="Coda\Coda.cpp">
       <Filter>Components\Coda</Filter>
     </ClCompile>
-    <ClCompile Include="PathGridUndoManager.cpp">
-      <Filter>Components\Render Window</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderWindowManager.cpp">
-      <Filter>Components\Render Window</Filter>
-    </ClCompile>
     <ClCompile Include="Hooks\Hooks-AssetSelector.cpp">
       <Filter>Hooks</Filter>
     </ClCompile>
@@ -294,20 +291,11 @@
     <ClCompile Include="PluginAPIManager.cpp">
       <Filter>Interop\Plugin</Filter>
     </ClCompile>
-    <ClCompile Include="RenderWindowGroupManager.cpp">
-      <Filter>Components\Render Window</Filter>
-    </ClCompile>
     <ClCompile Include="OldCSInteropManager.cpp">
       <Filter>Interop\CS 1.0</Filter>
     </ClCompile>
     <ClCompile Include="[Common]\OldCSInteropData.cpp">
       <Filter>Interop\CS 1.0</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderWindowLayerManager.cpp">
-      <Filter>Components\Render Window</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderWindowOSD.cpp">
-      <Filter>Components\Render Window</Filter>
     </ClCompile>
     <ClCompile Include="IMGUI\imgui.cpp">
       <Filter>Components\IMGUI</Filter>
@@ -330,9 +318,6 @@
     <ClCompile Include="Serialization.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="RenderWindowCellLists.cpp">
-      <Filter>Components\Render Window</Filter>
-    </ClCompile>
     <ClCompile Include="EditorAPI\TESLandTexture.cpp">
       <Filter>EditorAPI\Forms\World</Filter>
     </ClCompile>
@@ -353,6 +338,39 @@
     </ClCompile>
     <ClCompile Include="MiscWindowOverrides.cpp">
       <Filter>Components\UI Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="Render Window\DefaultOverlayOSDLayer.cpp">
+      <Filter>Components\Render Window\OSD Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="Render Window\ActiveRefCollectionsOSDLayer.cpp">
+      <Filter>Components\Render Window\OSD Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="Render Window\MouseOverTooltipOSDLayer.cpp">
+      <Filter>Components\Render Window\OSD Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="Render Window\SelectionControlsOSDLayer.cpp">
+      <Filter>Components\Render Window\OSD Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="Render Window\ToolbarOSDLayer.cpp">
+      <Filter>Components\Render Window\OSD Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="Render Window\PathGridUndoManager.cpp">
+      <Filter>Components\Render Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Render Window\RenderWindowCellLists.cpp">
+      <Filter>Components\Render Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Render Window\RenderWindowGroupManager.cpp">
+      <Filter>Components\Render Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Render Window\RenderWindowLayerManager.cpp">
+      <Filter>Components\Render Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Render Window\RenderWindowManager.cpp">
+      <Filter>Components\Render Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Render Window\RenderWindowOSD.cpp">
+      <Filter>Components\Render Window</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -766,12 +784,6 @@
     <ClInclude Include="Coda\Coda.h">
       <Filter>Components\Coda</Filter>
     </ClInclude>
-    <ClInclude Include="PathGridUndoManager.h">
-      <Filter>Components\Render Window</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderWindowManager.h">
-      <Filter>Components\Render Window</Filter>
-    </ClInclude>
     <ClInclude Include="Hooks\Hooks-AssetSelector.h">
       <Filter>Hooks</Filter>
     </ClInclude>
@@ -779,20 +791,11 @@
     <ClInclude Include="PluginAPIManager.h">
       <Filter>Interop\Plugin</Filter>
     </ClInclude>
-    <ClInclude Include="RenderWindowGroupManager.h">
-      <Filter>Components\Render Window</Filter>
-    </ClInclude>
     <ClInclude Include="OldCSInteropManager.h">
       <Filter>Interop\CS 1.0</Filter>
     </ClInclude>
     <ClInclude Include="[Common]\OldCSInteropData.h">
       <Filter>Interop\CS 1.0</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderWindowLayerManager.h">
-      <Filter>Components\Render Window</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderWindowOSD.h">
-      <Filter>Components\Render Window</Filter>
     </ClInclude>
     <ClInclude Include="IMGUI\imconfig.h">
       <Filter>Components\IMGUI</Filter>
@@ -824,9 +827,6 @@
     <ClInclude Include="Serialization.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="RenderWindowCellLists.h">
-      <Filter>Components\Render Window</Filter>
-    </ClInclude>
     <ClInclude Include="UIManager.h">
       <Filter>Components\UI Manager</Filter>
     </ClInclude>
@@ -844,6 +844,39 @@
     </ClInclude>
     <ClInclude Include="MiscWindowOverrides.h">
       <Filter>Components\UI Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\DefaultOverlayOSDLayer.h">
+      <Filter>Components\Render Window\OSD Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\ActiveRefCollectionsOSDLayer.h">
+      <Filter>Components\Render Window\OSD Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\MouseOverTooltipOSDLayer.h">
+      <Filter>Components\Render Window\OSD Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\SelectionControlsOSDLayer.h">
+      <Filter>Components\Render Window\OSD Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\ToolbarOSDLayer.h">
+      <Filter>Components\Render Window\OSD Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\PathGridUndoManager.h">
+      <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\RenderWindowCellLists.h">
+      <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\RenderWindowGroupManager.h">
+      <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\RenderWindowLayerManager.h">
+      <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\RenderWindowManager.h">
+      <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\RenderWindowOSD.h">
+      <Filter>Components\Render Window</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

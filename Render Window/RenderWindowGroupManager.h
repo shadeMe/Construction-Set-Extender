@@ -23,7 +23,7 @@ namespace cse
 			public:
 				GroupData(GroupIDT ID, TESRenderSelection* Selection);
 
-				UInt32									ValidateMembers(MemberRosterT& OutDelinquents);		// returns the new size
+				void									ValidateMembers(MemberRosterT& OutDelinquents, TESObjectREFRArrayT* OutValidMembers);
 				void									AddMember(ReferenceHandleT Ref);
 				void									RemoveMember(ReferenceHandleT Ref);
 				void									ConvertToSelection(TESRenderSelection* Selection, bool ClearSelection);
@@ -36,14 +36,16 @@ namespace cse
 			typedef std::map<ReferenceHandleT, GroupDataHandleT>		GroupDataReferenceMapT;
 			typedef std::vector<GroupDataHandleT>						GroupDataArrayT;
 
-			static bool									GetReferenceExists(ReferenceHandleT Ref);
-			bool										GetGroupExists(GroupIDT ID);
-			GroupDataHandleT							LookupGroup(GroupIDT ID);
-			GroupDataHandleT							GetParentGroup(ReferenceHandleT Ref);
-			bool										ValidateGroup(GroupDataHandleT Group);		// returns false if the group has <= 1 member
+			static bool									GetReferenceExists(ReferenceHandleT Ref, TESObjectREFR*& OutResolvedRef);
+
+			bool										GetGroupExists(GroupIDT ID) const;
+			GroupDataHandleT							LookupGroup(GroupIDT ID) const;
+			GroupDataHandleT							GetParentGroup(ReferenceHandleT Ref) const;
+
+			bool										ValidateGroup(GroupDataHandleT Group, TESObjectREFRArrayT* OutValidMembers = nullptr);		// returns false if the group has <= 1 member
 			void										RegisterGroup(GroupDataHandleT Group, bool RegisterRefs);
 			void										DeregisterGroup(GroupDataHandleT Group, bool DeregisterRefs);
-			void										StandardOutput(const char* Fmt, ...);
+			void										StandardOutput(const char* Fmt, ...) const;
 
 			GroupDataReferenceMapT						ReferenceTable;
 			GroupDataArrayT								RegisteredGroups;
@@ -56,14 +58,16 @@ namespace cse
 			void										Deinitialize();
 
 			bool										AddGroup(GroupIDT ID, TESRenderSelection* Selection);		// returns false if any of the refs in the selection were already a part of some group
-			bool										RemoveGroup(TESRenderSelection* Selection);
-			void										Orphanize(TESObjectREFR* Ref);				// removes the ref from its parent group, if any
-			const char*									GetParentGroupID(TESObjectREFR* Ref);		// returns NULL if not a member of any group
-																									// if the ref is a part of a group, replaces the selection with the group and returns true. returns false otherwise
+			bool										RemoveGroup(TESRenderSelection* Selection);	
+			bool										RemoveParentGroup(TESObjectREFR* Ref);
+			bool										Orphanize(TESObjectREFR* Ref);								// removes the ref from its parent group, returns true if successful
+			const char*									GetParentGroupID(TESObjectREFR* Ref) const;					// returns NULL if not a member of any group
+																													// if the ref is a part of a group, replaces the selection with the group and returns true. returns false otherwise
 			bool										SelectAffiliatedGroup(TESObjectREFR* Ref, TESRenderSelection* Selection, bool ClearSelection);
-			bool										IsSelectionGroupable(TESRenderSelection* Selection);
+			bool										IsSelectionGroupable(TESRenderSelection* Selection) const;
 			void										Clear();
-			bool										GetGroupExists(const char* ID);
+			bool										GetGroupExists(const char* ID) const;
+			bool										GetGroupData(const char* ID, TESObjectREFRArrayT& OutMembers);		// returns false if the group doesn't exist, true otherwise
 		};
 	}
 }

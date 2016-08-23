@@ -3,7 +3,7 @@
 #include "ObjectPaletteManager.h"
 #include "DialogImposterManager.h"
 #include "HallOfFame.h"
-#include "RenderWindowManager.h"
+#include "Render Window\RenderWindowManager.h"
 #include "FormUndoStack.h"
 #include "[Common]\CLIWrapper.h"
 
@@ -23,7 +23,7 @@ namespace cse
 		DEFINE_BASIC_EVENT_SINK_HANDLER(DataHandlerClearData)
 		{
 			delete BGSEEHALLOFFAME;
-			_RENDERWIN_MGR.GetReferenceGroupManager()->Clear();
+			_RENDERWIN_MGR.GetGroupManager()->Clear();
 			GameSettingCollection::Instance->ResetCollection();
 			BGSEEUNDOSTACK->Reset();
 		}

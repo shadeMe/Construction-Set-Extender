@@ -1,5 +1,5 @@
 #include "CodaScriptCommands-Reference.h"
-#include "RenderWindowManager.h"
+#include "Render Window\RenderWindowManager.h"
 
 #define PI	3.151592653589793
 
@@ -598,7 +598,7 @@ namespace cse
 						for (int i = 0, j = Members.size(); i < j; i++)
 							SelBuffer->AddToSelection(Members[i], false);
 
-						if (_RENDERWIN_MGR.GetReferenceGroupManager()->AddGroup(GroupName, SelBuffer))
+						if (_RENDERWIN_MGR.GetGroupManager()->AddGroup(GroupName, SelBuffer))
 							Result->SetNumber(1);
 
 						SelBuffer->DeleteInstance();
@@ -644,7 +644,7 @@ namespace cse
 						for (int i = 0, j = Members.size(); i < j; i++)
 							Buffer->AddToSelection(Members[i], false);
 
-						if (_RENDERWIN_MGR.GetReferenceGroupManager()->RemoveGroup(Buffer))
+						if (_RENDERWIN_MGR.GetGroupManager()->RemoveGroup(Buffer))
 							Result->SetNumber(1);
 
 						Buffer->DeleteInstance();
