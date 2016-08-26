@@ -10,6 +10,8 @@ namespace cse
 
 		class ImGuiDX9
 		{
+			typedef std::vector<ImGuiID>		ImGuiWidgetIDArrayT;
+
 			LPDIRECT3DVERTEXBUFFER9			VertexBuffer;
 			LPDIRECT3DINDEXBUFFER9			IndexBuffer;
 
@@ -24,12 +26,19 @@ namespace cse
 			HWND							RenderWindowHandle;
 			IDirect3DDevice9*				D3DDevice;
 			bool							MouseDoubleClicked[2];		// for the left and right mouse buttons
+
+			// when the active widget is whitelisted, input events are allowed to be handled by the org wnd proc
+			ImGuiWidgetIDArrayT				PassthroughWhitelistMouseEvents;
+
 			bool							Initialized;
 
 			static void						RenderDrawLists(ImDrawData* draw_data);
 
 			bool							CreateFontsTexture();
 			void							Shutdown();
+
+			bool							IsActiveItemInWhitelist(const ImGuiWidgetIDArrayT& Whitelist) const;
+			bool							HasActiveItem() const;
 		public:
 			ImGuiDX9();
 			~ImGuiDX9();
@@ -42,10 +51,20 @@ namespace cse
 			bool			CreateDeviceObjects();
 
 			bool			UpdateInputState(HWND, UINT msg, WPARAM wParam, LPARAM lParam);		// returns true if the message was processed
-			bool			NeedsInput() const;													// returns true if the GUI needs mouse/keyboard input
+			void			NeedsInput(bool& OutNeedsMouse, bool& OutNeedsKeyboard, bool& OutNeedsTextInput) const;
+			void			WhitelistItemForMouseEvents();										// adds the last item to the mouse event whitelist
+			bool			CanAllowInputEventPassthrough(UINT msg, WPARAM wParam, LPARAM lParam, bool& OutNeedsMouse, bool& OutNeedsKeyboard) const;		// returns false if the message/input event needs to be handled exclusively by the GUI
+
 			bool			IsInitialized() const;
 			bool			IsDraggingWindow() const;
 			bool			IsPopupHovered() const;												// must be called inside a BeginPopup block
+			bool			IsHoveringWindow() const;
+
+			void*			GetLastItemID() const;
+			void*			GetMouseHoverItemID() const;
+
+			void*			GetCurrentWindow() const;
+			void*			GetHoveredWindow() const;
 		};
 
 		class RenderWindowOSD
@@ -63,7 +82,9 @@ namespace cse
 
 			struct GUIState
 			{
-				bool					MouseInClientArea;					// set to true when the mouse is inside the window
+				bool		MouseInClientArea;				// true when the mouse is inside the window
+				bool		ConsumeMouseInputEvents;		// true when the OSD wnd proc needs exclusive access to the mouse
+				bool		ConsumeKeyboardInputEvents;		// same as above but for the keyboard
 
 				GUIState();
 			};
@@ -149,7 +170,11 @@ namespace cse
 				void				Update(ImGuiDX9* GUI);				// must be called inside a ImGui::Begin() block
 			};
 
-			StateData				State;
+			struct Helpers
+			{
+				static std::string			GetRefEditorID(TESObjectREFR* Ref);
+				static bool					ResolveReference(UInt32 FormID, TESObjectREFR*& OutRef);		// returns false if the formID didn't resolve to a valid ref, true otherwise
+			};
 		public:
 			IRenderWindowOSDLayer(INISetting& Toggle, UInt32 Priority);
 			IRenderWindowOSDLayer(UInt32 Priority);
@@ -240,6 +265,5 @@ namespace cse
 
 			static ModalWindowProviderOSDLayer		Instance;
 		};
-
 	}
 }

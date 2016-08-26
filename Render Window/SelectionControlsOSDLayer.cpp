@@ -120,7 +120,8 @@ namespace cse
 		}
 
 		SelectionControlsOSDLayer::SelectionControlsOSDLayer() :
-			IRenderWindowOSDLayer(settings::renderWindowOSD::kShowSelectionControls, IRenderWindowOSDLayer::kPriority_SelectionControls)
+			IRenderWindowOSDLayer(settings::renderWindowOSD::kShowSelectionControls, IRenderWindowOSDLayer::kPriority_SelectionControls),
+			WindowState()
 		{
 			LocalTransformation = 1;
 			AlignmentAxisX = AlignmentAxisY = AlignmentAxisZ = true;
@@ -150,11 +151,11 @@ namespace cse
 				return;
 			}
 
-			State.Update(GUI);
+			WindowState.Update(GUI);
 
 			bool SingleSel = _RENDERSEL->selectionCount == 1;
 
-			if (State.TextInput.GotFocus || State.DragInput.DragBegin)
+			if (WindowState.TextInput.GotFocus || WindowState.DragInput.DragBegin)
 			{
 				if (_RENDERSEL->selectionCount)
 				{
@@ -218,14 +219,15 @@ namespace cse
 				ImGui::SliderFloat("Scale##single_scale", &Scale, 0.01f, 10.f);
 				ImGui::NewLine();
 
-				if (State.DragInput.Active || State.TextInput.Active || State.TextInput.LostFocus || State.DragInput.DragEnd)
+				if (WindowState.DragInput.Active || WindowState.TextInput.Active ||
+					WindowState.TextInput.LostFocus || WindowState.DragInput.DragEnd)
 				{
 					ThisRef->SetPosition(Position);
 					ThisRef->SetRotation(Rotation);
 					ThisRef->SetScale(Scale);
 				}
 
-				if (State.TextInput.LostFocus || State.DragInput.DragEnd)
+				if (WindowState.TextInput.LostFocus || WindowState.DragInput.DragEnd)
 					ThisRef->SetFromActiveFile(true);
 			}
 			else if (_RENDERSEL->selectionCount)

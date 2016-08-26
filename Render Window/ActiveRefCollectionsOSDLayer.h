@@ -22,7 +22,6 @@ namespace cse
 
 			void							RenderRefTableContents(int Tab);
 			void							RenderTabContents(int Tab);
-			static std::string				GetRefEditorID(TESObjectREFR* Ref);
 
 			struct EditGroupMembersData
 			{

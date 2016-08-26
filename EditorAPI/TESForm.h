@@ -230,6 +230,7 @@ public:
 STATIC_ASSERT(sizeof(TESForm) == 0x24);
 
 typedef std::vector<TESForm*>	TESFormArrayT;
+typedef std::vector<UInt32>		FormIDArrayT;
 
 /*
 	This class is apparently used to centralize code for certain types of dialog windows in the CS.

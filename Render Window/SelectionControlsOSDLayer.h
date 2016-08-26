@@ -12,6 +12,7 @@ namespace cse
 			bool					AlignmentAxisX;
 			bool					AlignmentAxisY;
 			bool					AlignmentAxisZ;
+			StateData				WindowState;
 
 			void					EditReference(TESObjectREFR* Ref);
 			void					EditBaseForm(TESObjectREFR* Ref);

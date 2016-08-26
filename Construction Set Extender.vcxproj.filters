@@ -103,6 +103,9 @@
     <Filter Include="Components\Render Window\OSD Layers">
       <UniqueIdentifier>{d0c1189e-a0eb-45e4-a2bc-d45b0a2fa648}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Components\IMGUI\Fonts">
+      <UniqueIdentifier>{64aeb62c-7a16-40e9-837b-19d1fe1276f9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="[Common]\CLIWrapper.cpp">
@@ -877,6 +880,15 @@
     </ClInclude>
     <ClInclude Include="Render Window\RenderWindowOSD.h">
       <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="IconFontCppHeaders\IconsFontAwesome.h">
+      <Filter>Components\IMGUI\Fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="IconFontCppHeaders\IconsKenney.h">
+      <Filter>Components\IMGUI\Fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="IconFontCppHeaders\IconsMaterialDesign.h">
+      <Filter>Components\IMGUI\Fonts</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

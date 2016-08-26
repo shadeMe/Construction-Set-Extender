@@ -487,6 +487,9 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClInclude Include="GlobalClipboard.h" />
     <ClInclude Include="HallOfFame.h" />
     <ClInclude Include="Hooks\Hooks-Events.h" />
+    <ClInclude Include="IconFontCppHeaders\IconsFontAwesome.h" />
+    <ClInclude Include="IconFontCppHeaders\IconsKenney.h" />
+    <ClInclude Include="IconFontCppHeaders\IconsMaterialDesign.h" />
     <ClInclude Include="IMGUI\imconfig.h" />
     <ClInclude Include="IMGUI\imgui.h" />
     <ClInclude Include="IMGUI\imgui_internal.h" />

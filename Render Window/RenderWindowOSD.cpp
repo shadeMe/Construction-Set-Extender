@@ -1,6 +1,7 @@
 ﻿#include "RenderWindowOSD.h"
 #include "Render Window\RenderWindowManager.h"
 #include "IMGUI\imgui_internal.h"
+#include "IconFontCppHeaders\IconsMaterialDesign.h"
 
 #include "ActiveRefCollectionsOSDLayer.h"
 #include "DefaultOverlayOSDLayer.h"
@@ -161,10 +162,26 @@ namespace cse
 			config.OversampleH = 8;
 			config.OversampleV = 8;
 
-			std::string FontPath(BGSEEWORKSPACE->GetDefaultWorkspace());
-			FontPath.append("Data\\Fonts\\").append(settings::renderWindowOSD::kFontFace().s);
-			if (GetFileAttributes(FontPath.c_str()) != INVALID_FILE_ATTRIBUTES)
-				io.Fonts->AddFontFromFileTTF(FontPath.c_str(), settings::renderWindowOSD::kFontSize().i, &config);
+			io.Fonts->Clear();
+
+			std::string FontPathRoot(BGSEEWORKSPACE->GetDefaultWorkspace());
+			FontPathRoot.append("Data\\Fonts\\");
+			std::string MainFontPath(FontPathRoot + std::string(settings::renderWindowOSD::kFontFace().s));
+			std::string IconFontPath(FontPathRoot + std::string("MaterialIcons-Regular.ttf"));
+
+			if (GetFileAttributes(MainFontPath.c_str()) != INVALID_FILE_ATTRIBUTES)
+				io.Fonts->AddFontFromFileTTF(MainFontPath.c_str(), settings::renderWindowOSD::kFontSize().i, &config);
+
+			// merge icons from MD
+			static const ImWchar icons_ranges[] = { ICON_MIN_MD, ICON_MAX_MD, 0 };
+			ImFontConfig icons_config;
+			icons_config.MergeMode = true;
+			icons_config.OversampleH = 2;
+			icons_config.OversampleV = 2;
+			icons_config.PixelSnapH = true;
+			icons_config.MergeGlyphCenterV = true;
+			if (GetFileAttributes(IconFontPath.c_str()) != INVALID_FILE_ATTRIBUTES)
+				io.Fonts->AddFontFromFileTTF(IconFontPath.c_str(), settings::renderWindowOSD::kFontSize().i + 2, &icons_config, icons_ranges);
 
 			unsigned char* pixels;
 			int width, height, bytes_per_pixel;
@@ -187,7 +204,8 @@ namespace cse
 			return true;
 		}
 
-		ImGuiDX9::ImGuiDX9()
+		ImGuiDX9::ImGuiDX9() :
+			PassthroughWhitelistMouseEvents()
 		{
 			VertexBuffer = nullptr;
 			IndexBuffer = nullptr;
@@ -198,6 +216,7 @@ namespace cse
 			TicksPerSecond = 0;
 			RenderWindowHandle = nullptr;
 			D3DDevice = nullptr;
+			PassthroughWhitelistMouseEvents.reserve(20);
 			MouseDoubleClicked[0] = MouseDoubleClicked[1] = false;
 			Initialized = false;
 		}
@@ -252,6 +271,72 @@ namespace cse
 			ImGui::Shutdown();
 		}
 
+		bool ImGuiDX9::IsActiveItemInWhitelist(const ImGuiWidgetIDArrayT& Whitelist) const
+		{
+			ImGuiID Active = ImGui::GetCurrentContext()->ActiveId;
+			if (Active == NULL || std::find(PassthroughWhitelistMouseEvents.begin(), PassthroughWhitelistMouseEvents.end(), Active) == PassthroughWhitelistMouseEvents.end())
+				return false;
+			else
+				return true;
+		}
+
+		bool ImGuiDX9::CanAllowInputEventPassthrough(UINT msg, WPARAM wParam, LPARAM lParam, bool& OutNeedsMouse, bool& OutNeedsKeyboard) const
+		{
+			// check if the GUI needs input, skip the org wndproc if true
+			// the check is performed on the previous frame's state but it works for our purposes
+			bool MouseEvent = false, KeyboardEvent = false, CharacterEvent = false;
+			switch (msg)
+			{
+			case WM_LBUTTONDOWN:
+			case WM_LBUTTONUP:
+			case WM_RBUTTONDOWN:
+			case WM_RBUTTONUP:
+			case WM_MBUTTONDOWN:
+			case WM_MBUTTONUP:
+			case WM_MOUSEWHEEL:
+			case WM_MOUSEMOVE:
+			case WM_LBUTTONDBLCLK:
+			case WM_RBUTTONDBLCLK:
+				MouseEvent = true;
+				break;
+			case WM_CHAR:
+				if (wParam > 0 && wParam < 0x10000)
+					CharacterEvent = true;
+				break;
+			case WM_KEYDOWN:
+			case WM_KEYUP:
+				KeyboardEvent = true;
+				break;
+			}
+
+			bool NeedsMouse = false, NeedsKeyboard = false, NeedsTextInput = false;
+			NeedsInput(NeedsMouse, NeedsKeyboard, NeedsTextInput);
+
+			bool MouseWhitelisted = IsActiveItemInWhitelist(PassthroughWhitelistMouseEvents);
+			OutNeedsMouse = OutNeedsKeyboard = false;
+
+			if (MouseEvent)
+			{
+				OutNeedsMouse = NeedsMouse && MouseWhitelisted == false;
+				return OutNeedsMouse == false;
+			}
+			else if (KeyboardEvent)
+			{
+				if (HasActiveItem() && (NeedsKeyboard || NeedsTextInput))
+					OutNeedsKeyboard = true;
+
+				return OutNeedsKeyboard == false;
+			}
+			else
+				return true;
+		}
+
+		bool ImGuiDX9::HasActiveItem() const
+		{
+			ImGuiID Active = ImGui::GetCurrentContext()->ActiveId;
+			return Active != NULL;
+		}
+
 		void ImGuiDX9::NewFrame()
 		{
 			SME_ASSERT(Initialized);
@@ -303,6 +388,9 @@ namespace cse
 			style.Colors[ImGuiCol_Button] = ImVec4(0.35f, 0.55f, 0.61f, 0.51f);
 			style.Colors[ImGuiCol_Header] = ImVec4(0.69f, 0.42f, 0.39f, 0.00f);
 			style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.69f, 0.42f, 0.44f, 0.44f);
+
+			// clear the input event whitelists
+			PassthroughWhitelistMouseEvents.clear();
 
 			// Start the frame
 			ImGui::NewFrame();
@@ -403,10 +491,19 @@ namespace cse
 			return false;
 		}
 
-		bool ImGuiDX9::NeedsInput() const
+		void ImGuiDX9::NeedsInput(bool& OutNeedsMouse, bool& OutNeedsKeyboard, bool& OutNeedsTextInput) const
 		{
 			ImGuiIO& io = ImGui::GetIO();
-			return io.WantCaptureMouse || io.WantCaptureKeyboard || io.WantTextInput;
+			OutNeedsMouse = io.WantCaptureMouse;
+			OutNeedsKeyboard = io.WantCaptureKeyboard;
+			OutNeedsTextInput = io.WantTextInput;
+		}
+
+		void ImGuiDX9::WhitelistItemForMouseEvents()
+		{
+			ImGuiID LastItem = ImGui::GetCurrentWindow()->DC.LastItemId;
+			if (std::find(PassthroughWhitelistMouseEvents.begin(), PassthroughWhitelistMouseEvents.end(), LastItem) == PassthroughWhitelistMouseEvents.end())
+				PassthroughWhitelistMouseEvents.push_back(LastItem);
 		}
 
 		bool ImGuiDX9::IsInitialized() const
@@ -437,6 +534,31 @@ namespace cse
 			return g.HoveredWindow == Itr.Window;
 		}
 
+		bool ImGuiDX9::IsHoveringWindow() const
+		{
+			return ImGui::GetCurrentWindowRead() && ImGui::IsRootWindowOrAnyChildHovered();
+		}
+
+		void* ImGuiDX9::GetLastItemID() const
+		{
+			return (void*)ImGui::GetCurrentWindow()->DC.LastItemId;
+		}
+
+		void* ImGuiDX9::GetMouseHoverItemID() const
+		{
+			return (void*)ImGui::GetCurrentContext()->HoveredId;
+		}
+
+		void* ImGuiDX9::GetCurrentWindow() const
+		{
+			return ImGui::GetCurrentWindow();
+		}
+
+		void* ImGuiDX9::GetHoveredWindow() const
+		{
+			return ImGui::GetCurrentContext()->HoveredWindow;
+		}
+
 		RenderWindowOSD::DialogExtraData::DialogExtraData(RenderWindowOSD* OSD) :
 			bgsee::WindowExtraData(kTypeID),
 			Parent(OSD)
@@ -452,6 +574,7 @@ namespace cse
 		RenderWindowOSD::GUIState::GUIState()
 		{
 			MouseInClientArea = false;
+			ConsumeMouseInputEvents = ConsumeKeyboardInputEvents = false;
 		}
 
 		// lParam = DialogExtraData*
@@ -489,23 +612,16 @@ namespace cse
 			// get input data and flag the viewport for update
 			if (Pipeline->UpdateInputState(hWnd, uMsg, wParam, lParam))
 			{
+				Parent->State.ConsumeMouseInputEvents = Parent->State.ConsumeKeyboardInputEvents = false;
 				if (GetCapture() != hWnd && GetActiveWindow() == hWnd)
 				{
 					TESRenderWindow::Redraw();
 
-					// check if the GUI needs input, skip the org wndproc if true
-					// the check is performed on the previous frame's state but it works for our purposes
-					if (Pipeline->NeedsInput())
+					if (Pipeline->CanAllowInputEventPassthrough(uMsg, wParam, lParam,
+																Parent->State.ConsumeMouseInputEvents,
+																Parent->State.ConsumeKeyboardInputEvents) == false)
 					{
-						if (uMsg != WM_KEYDOWN && uMsg != WM_KEYUP)
-							Return = true;
-						else
-						{
-							// special-case shortcuts
-							ImGuiIO& io = ImGui::GetIO();
-							if (io.WantTextInput)
-								Return = true;
-						}
+						Return = true;
 					}
 				}
 			}
@@ -700,7 +816,7 @@ namespace cse
 			if (Initialized == false)
 				return false;
 			else
-				return Pipeline->NeedsInput() || ImGui::IsRootWindowOrAnyChildHovered();
+				return State.ConsumeMouseInputEvents || State.ConsumeKeyboardInputEvents || Pipeline->IsHoveringWindow();
 		}
 
 
@@ -733,7 +849,7 @@ namespace cse
 
 			if (GUI->IsDraggingWindow())
 				return;
-			else if (ImGui::IsMouseHoveringWindow() == false)
+			else if (ImGui::IsMouseHoveringWindow() == false && Active == false)
 				return;
 
 			if (ImGui::IsMouseDragging() && ImGui::IsAnyItemActive())
@@ -766,18 +882,50 @@ namespace cse
 			DragInput.Update(GUI);
 		}
 
+		std::string IRenderWindowOSDLayer::Helpers::GetRefEditorID(TESObjectREFR* Ref)
+		{
+			SME_ASSERT(Ref && Ref->baseForm);
+
+			const char* EditorID = Ref->GetEditorID();
+			if (EditorID == nullptr)
+			{
+				EditorID = Ref->baseForm->GetEditorID();
+
+				if (EditorID == nullptr)
+					return "<No-EditorID>";
+				else
+					return std::string(EditorID).append("*");
+			}
+			else
+				return EditorID;
+		}
+
+
+		bool IRenderWindowOSDLayer::Helpers::ResolveReference(UInt32 FormID, TESObjectREFR*& OutRef)
+		{
+			TESForm* Form = TESForm::LookupByFormID(FormID);
+
+			if (Form)
+			{
+				SME_ASSERT(Form->formType == TESForm::kFormType_ACHR || Form->formType == TESForm::kFormType_ACRE || Form->formType == TESForm::kFormType_REFR);
+
+				OutRef = CS_CAST(Form, TESForm, TESObjectREFR);
+				return (Form->IsDeleted() == false);
+			}
+			else
+				return false;
+		}
+
 		IRenderWindowOSDLayer::IRenderWindowOSDLayer(INISetting& Toggle, UInt32 Priority) :
 			Toggle(&Toggle),
-			Priority(Priority),
-			State()
+			Priority(Priority)
 		{
 			;//
 		}
 
 		IRenderWindowOSDLayer::IRenderWindowOSDLayer(UInt32 Priority) :
 			Toggle(nullptr),
-			Priority(Priority),
-			State()
+			Priority(Priority)
 		{
 			;//
 		}
@@ -904,6 +1052,7 @@ namespace cse
 		void DebugOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
 			ImGui::ShowTestWindow();
+			ImGui::ShowMetricsWindow();
 		}
 
 		bool DebugOSDLayer::NeedsBackgroundUpdate()

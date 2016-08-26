@@ -7,30 +7,38 @@ namespace cse
 	{
 		class ToolbarOSDLayer : public IRenderWindowOSDLayer
 		{
-			static constexpr float			kPopupTimeout = 0.2;		// in seconds
+			static constexpr float			kTimeoutPopup = 0.1;		// in seconds
 			enum : int
 			{
 				kPopup__NONE = -1,
 
 				kPopup_SnapControls,
-				kPopup_CameraMult,
-				kPopup_ReferenceMult,
+				kPopup_MovementControls,
+				kPopup_VisibilityToggles,
 
 				kPopup__MAX
 			};
 
-			int				ActivePopupID;
-			float			ActivePopupTimeout;
-			bool			ActivePopupClosing;
-			bool			PopupButtonHoverState[kPopup__MAX];			// true if the popup's button is being hovered, false otherwise
 
-			void			RenderPopup(int PopupID, ImGuiDX9* GUI);
-			void			CheckPopupButtonHoverChange(int PopupID, bool& OutHovering, bool& OutBeginHover, bool& OutEndHover);
+			int						ActivePopup;
+			float					ActivePopupTimeout;
+			bool					CloseActivePopup;
+			bool					PopupButtonHoverState[kPopup__MAX];			// true if the popup's button is being hovered, false otherwise
+			StateData				PopupStateData[kPopup__MAX];
+			ImGuiTextFilter			RefFilter;
+			FormIDArrayT			FilterRefs;
+			FormIDArrayT::const_iterator	PreviousFilterRef;
+
+			void			CheckPopupButtonHoverChange(int PopupID, ImGuiDX9* GUI, void* ParentToolbarWindow,
+														bool& OutHovering, bool& OutBeginHover, bool& OutEndHover);
+			void			RenderPopup(int PopupID, ImGuiDX9* GUI, void* ParentToolbarWindow, const ImVec2& ButtonSize, const ImVec4* ButtonColor = nullptr);
 			void			TickActivePopup();
 
-			bool							BottomExpanded;
+			int				RefFilterCompletionCallback(ImGuiTextEditCallbackData* Data);
+			void			HandleRefFilterChange();
 
-			void							RenderBottomToolbar(ImGuiDX9* GUI);
+			void			RenderMainToolbar(ImGuiDX9* GUI);
+			void			RenderTopToolbar(ImGuiDX9* GUI);
 		public:
 			ToolbarOSDLayer();
 			virtual ~ToolbarOSDLayer();

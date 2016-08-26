@@ -19,7 +19,7 @@ namespace cse
 
 			for (auto Itr : ActiveRefs)
 			{
-				std::string EditorID(GetRefEditorID(Itr));
+				std::string EditorID(Helpers::GetRefEditorID(Itr));
 				UInt32 FormID = Itr->formID;
 				const char* Type = TESForm::GetFormTypeIDLongName(Itr->baseForm->formType);
 
@@ -144,7 +144,7 @@ namespace cse
 								int NonMatchCount = 0;
 								for (auto Member : GroupMembers)
 								{
-									std::string EditorID(GetRefEditorID(Member));
+									std::string EditorID(Helpers::GetRefEditorID(Member));
 									UInt32 FormID = Member->formID;
 
 									FORMAT_STR(FilterBuffer, "%s %08X", EditorID.c_str(), FormID);
@@ -200,7 +200,7 @@ namespace cse
 
 								for (auto Member : GroupMembers)
 								{
-									std::string EditorID(GetRefEditorID(Member));
+									std::string EditorID(Helpers::GetRefEditorID(Member));
 									UInt32 FormID = Member->formID;
 
 									FORMAT_STR(FilterBuffer, "%s (%08X)\n", EditorID.c_str(), FormID);
@@ -344,24 +344,6 @@ namespace cse
 			}
 		}
 
-		std::string ActiveRefCollectionsOSDLayer::GetRefEditorID(TESObjectREFR* Ref)
-		{
-			SME_ASSERT(Ref && Ref->baseForm);
-
-			const char* EditorID = Ref->GetEditorID();
-			if (EditorID == nullptr)
-			{
-				EditorID = Ref->baseForm->GetEditorID();
-
-				if (EditorID == nullptr)
-					return "<No-EditorID>";
-				else
-					return std::string(EditorID).append("*");
-			}
-			else
-				return EditorID;
-		}
-
 		bool ActiveRefCollectionsOSDLayer::RenderModalEditGroupMembers(RenderWindowOSD* OSD, ImGuiDX9* GUI, void* UserData)
 		{
 			static ImGuiTextFilter FilterHelper;
@@ -408,7 +390,7 @@ namespace cse
 					bool Removed = false;
 					for (TESObjectREFRArrayT::iterator Member = Data->MemberList.begin(); Member != Data->MemberList.end(); ++Member)
 					{
-						std::string EditorID(GetRefEditorID(*Member));
+						std::string EditorID(Helpers::GetRefEditorID(*Member));
 						UInt32 FormID = (*Member)->formID;
 						const char* Type = TESForm::GetFormTypeIDLongName((*Member)->baseForm->formType);
 
