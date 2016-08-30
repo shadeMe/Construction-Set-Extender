@@ -11,7 +11,8 @@ namespace bgsee
 		InitCallbacks(),
 		DeinitCallbacks(),
 		CrashHandlerCallbacks(),
-		FullInitComplete(false)
+		FullInitComplete(false),
+		Deinitializing(false)
 	{
 		;//
 	}
@@ -71,6 +72,8 @@ namespace bgsee
 
 	bool Daemon::ExecuteDeinitCallbacks( void )
 	{
+		FlagDeinitialization();
+
 		for (DaemonCallbackArrayT::const_iterator Itr = DeinitCallbacks.begin(); Itr != DeinitCallbacks.end(); Itr++)
 			(*Itr)->Handle();
 
@@ -111,6 +114,18 @@ namespace bgsee
 	bool Daemon::GetFullInitComplete( void ) const
 	{
 		return FullInitComplete;
+	}
+
+	void Daemon::FlagDeinitialization(void)
+	{
+		SME_ASSERT(Deinitializing == false);
+
+		Deinitializing = true;
+	}
+
+	bool Daemon::IsDeinitializing(void) const
+	{
+		return Deinitializing;
 	}
 
 	const char*		Main::INIManager::kSectionPrefix = "BGSEE::";

@@ -42,10 +42,12 @@ namespace bgsee
 		DaemonCallbackArrayT		CrashHandlerCallbacks;
 
 		bool						FullInitComplete;
+		bool						Deinitializing;
 
 		bool						ExecuteDeinitCallbacks(void);
 		bool						ExecuteCrashCallbacks(CR_CRASH_CALLBACK_INFO* Data);
 		void						ReleaseCallbacks(DaemonCallbackArrayT& CallbackList);
+		void						FlagDeinitialization(void);
 
 		friend class				Main;
 	public:
@@ -54,11 +56,12 @@ namespace bgsee
 
 
 		void						RegisterInitCallback(UInt8 CallbackType, DaemonCallback* Callback);		// takes ownership of pointer, no parameter
-		void						RegisterDeinitCallback(DaemonCallback* Callback);							// takes ownership of pointer, no parameter
-		void						RegisterCrashCallback(DaemonCallback* Callback);							// takes ownership of pointer, parameter = CR_CRASH_CALLBACK_INFO*
-																													// if a callback returns true, the editor process is not terminated
+		void						RegisterDeinitCallback(DaemonCallback* Callback);						// takes ownership of pointer, no parameter
+		void						RegisterCrashCallback(DaemonCallback* Callback);						// takes ownership of pointer, parameter = CR_CRASH_CALLBACK_INFO*
+																											// if a callback returns true, the editor process is not terminated
 		bool						ExecuteInitCallbacks(UInt8 CallbackType);
 		bool						GetFullInitComplete(void) const;
+		bool						IsDeinitializing(void) const;
 
 		static void					WaitForDebugger(void);
 	};
