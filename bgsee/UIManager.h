@@ -380,15 +380,15 @@ namespace bgsee
 
 		struct DlgUserData
 		{
-			GenericModelessDialog*			Instance;
-			LPARAM							ExtraData;					// upon init, holds the InitParam parameter (if any)
-			bool							Initialized;				// set once the WM_INITDIALOG message is sent to the dlg
+			GenericModelessDialog*		Instance;
+			LPARAM						ExtraData;					// upon init, holds the InitParam parameter (if any)
+			bool						Initialized;				// set once the WM_INITDIALOG message is sent to the dlg
 		};
 
 		HWND							DialogHandle;
 		HWND							ParentHandle;
-		HMENU							ContextMenuHandle;				// all menu items must be a part of a sub-menu at index 0
-		HMENU							ContextMenuParentHandle;		// handle of the base menu
+		HMENU							ContextMenuHandle;			// all menu items must be a part of a sub-menu at index 0
+		HMENU							ContextMenuParentHandle;	// handle of the base menu
 		HINSTANCE						ResourceInstance;
 		ResourceTemplateT				DialogTemplateID;
 		ResourceTemplateT				DialogContextMenuID;
@@ -401,8 +401,8 @@ namespace bgsee
 		virtual void					INILoadUIState(INISetting* Top, INISetting* Left, INISetting* Right, INISetting* Bottom, INISetting* Visible);
 		virtual void					INISaveUIState(INISetting* Top, INISetting* Left, INISetting* Right, INISetting* Bottom, INISetting* Visible);
 
-		bool							SetVisibility(bool State);
-		bool							SetTopmost(bool State);
+		virtual bool					SetVisibility(bool State);
+		virtual bool					SetTopmost(bool State);
 
 		virtual void					Create(LPARAM InitParam, bool Hide, bool OverrideCreation = false);
 
@@ -411,8 +411,8 @@ namespace bgsee
 		GenericModelessDialog(HWND Parent, HINSTANCE Resource, ResourceTemplateT DialogTemplate, ResourceTemplateT ContextMenuTemplate, MessageCallback CallbackProc, float AspectRatio = 0.0f);
 		virtual ~GenericModelessDialog();
 
-		bool							ToggleVisibility(void);		// returns the new state
-		bool							ToggleTopmost(void);
+		virtual bool					ToggleVisibility(void);		// returns the new state
+		virtual bool					ToggleTopmost(void);
 
 		bool							IsVisible(void) const;
 		bool							GetTopmost(void) const;
