@@ -357,7 +357,6 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClCompile Include="Coda\Commands\CodaScriptCommands-Reference.cpp" />
     <ClCompile Include="Coda\Coda.cpp" />
     <ClCompile Include="Achievements.cpp" />
-    <ClCompile Include="AuxiliaryViewport.cpp" />
     <ClCompile Include="Console.cpp" />
     <ClCompile Include="CustomDialogProcs.cpp" />
     <ClCompile Include="EditorAPI\TESLandTexture.cpp" />
@@ -378,6 +377,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClCompile Include="ObjectPrefabManager.cpp" />
     <ClCompile Include="ObjectWindowOverrides.cpp" />
     <ClCompile Include="Render Window\ActiveRefCollectionsOSDLayer.cpp" />
+    <ClCompile Include="Render Window\AuxiliaryViewport.cpp" />
     <ClCompile Include="Render Window\DefaultOverlayOSDLayer.cpp" />
     <ClCompile Include="Render Window\MouseOverTooltipOSDLayer.cpp" />
     <ClCompile Include="Render Window\PathGridUndoManager.cpp" />
@@ -480,7 +480,6 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClInclude Include="Coda\Commands\CodaScriptCommands-Reference.h" />
     <ClInclude Include="Coda\Coda.h" />
     <ClInclude Include="Achievements.h" />
-    <ClInclude Include="AuxiliaryViewport.h" />
     <ClInclude Include="Console.h" />
     <ClInclude Include="CustomDialogProcs.h" />
     <ClInclude Include="EventSinks.h" />
@@ -506,6 +505,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClInclude Include="ObjectPrefabManager.h" />
     <ClInclude Include="ObjectWindowOverrides.h" />
     <ClInclude Include="Render Window\ActiveRefCollectionsOSDLayer.h" />
+    <ClInclude Include="Render Window\AuxiliaryViewport.h" />
     <ClInclude Include="Render Window\DefaultOverlayOSDLayer.h" />
     <ClInclude Include="Render Window\MouseOverTooltipOSDLayer.h" />
     <ClInclude Include="Render Window\PathGridUndoManager.h" />
