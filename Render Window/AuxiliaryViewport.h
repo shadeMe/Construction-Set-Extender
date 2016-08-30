@@ -15,10 +15,32 @@ namespace cse
 		static INISetting					kINI_Right;
 		static INISetting					kINI_Bottom;
 		static INISetting					kINI_Visible;
+		static INISetting					kINI_PanSpeed;
+		static INISetting					kINI_ZoomSpeed;
+		static INISetting					kINI_RotationSpeed;
 
+		class GlobalEventSink : public SME::MiscGunk::IEventSink
+		{
+			AuxiliaryViewport*				Parent;
+		public:
+			GlobalEventSink(AuxiliaryViewport* Parent);
+
+			virtual void					Handle(SME::MiscGunk::IEventData* Data);
+		};
+
+		NiNode*								CameraRoot;
 		NiCamera*							ViewportCamera;
-		bool								Frozen;
+		bool								Panning;
+		bool								Zooming;
+		bool								Rotating;
+		POINT								LastMouseCoords;
 		bool								Rendering;
+		GlobalEventSink*					EventSink;
+
+		void								BeginMouseCapture(HWND hWnd, bool& StateFlag);
+		void								EndMouseCapture(bool& StateFlag);
+		void								DrawBackBuffer(void);
+		void								SyncWithPrimaryCamera();
 
 		AuxiliaryViewport();
 	public:
@@ -27,16 +49,12 @@ namespace cse
 		static AuxiliaryViewport*			GetSingleton();
 		void								Initialize();
 
-		bool								IsFrozen() const;
-		bool								ToggleFrozenState();
-
-		void								SyncViewportCamera(NiCamera* Camera);
-
+		void								SetCameraFOV(float FOV);
 		void								Draw(NiNode* NodeToRender, NiCamera* Camera);
-		void								DrawBackBuffer(void);
 		void								Redraw();
 		void								ClearScreen();
 		bool								IsRenderingPerspective() const;
+		virtual bool						ToggleVisibility() override;
 
 		static void							RegisterINISettings(bgsee::INISettingDepotT& Depot);
 	};

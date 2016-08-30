@@ -239,11 +239,11 @@ void TESRender::PrimaryRenderer::ScaleReferenceSelection(int Offset, bool Global
 	cdeclCall<void>(0x00424650, Offset, Global);
 }
 
-bool TESRender::UpdateNode(NiNode* Node, UInt32 UpdateType, float Multiplier)
+bool TESRender::UpdateNode(NiAVObject* Node, UInt32 UpdateType, float Multiplier, bool UpdateOnSuccess)
 {
 	bool Result = cdeclCall<bool>(0x00430080, Node, UpdateType, Multiplier);
 
-	if (Result)
+	if (Result && UpdateOnSuccess)
 		UpdateAVObject(Node);
 
 	return Result;
@@ -259,7 +259,7 @@ void TESRender::UpdateDynamicEffectState(NiAVObject* Object)
 	thisCall<void>(0x006F2C10, Object);
 }
 
-void TESRender::RotateNode(NiNode* Node, Vector3* Pivot, int XOffset, int YOffset, float SpeedMultiplier)
+void TESRender::RotateNode(NiAVObject* Node, Vector3* Pivot, int XOffset, int YOffset, float SpeedMultiplier)
 {
 	cdeclCall<void>(0x00430420, Node, Pivot, XOffset, YOffset, SpeedMultiplier);
 }
@@ -391,6 +391,13 @@ NiProperty* TESRender::CreateProperty(UInt8 Type)
 NiSourceTexture* TESRender::CreateSourceTexture(const char* FilePath)
 {
 	return cdeclCall<NiSourceTexture*>(0x006F8410, FilePath, 0x00A00900, 1);
+}
+
+NiCamera* TESRender::CreateCamera()
+{
+	NiCamera* NewCam = (NiCamera*)FormHeap_Allocate(0x124);
+	thisCall<void>(0x006FF430, NewCam);
+	return NewCam;
 }
 
 TESPathGridPoint* TESRender::PickPathGridPointAtCoords(int X, int Y)

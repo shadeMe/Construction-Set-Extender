@@ -1282,11 +1282,12 @@ namespace cse
 					}
 
 
-					// update and render the aux viewport's perspective
-					if (AUXVIEWPORT->IsFrozen() == false)
-						AUXVIEWPORT->SyncViewportCamera(_PRIMARYRENDERER->primaryCamera);
-					else if (AUXVIEWPORT->IsVisible())
+					// render the aux viewport's perspective
+					if (*TESRenderWindow::RefreshFlag && *TESRenderWindow::ActiveCell &&
+						TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kState_NotInUse)
+					{
 						AUXVIEWPORT->Draw(nullptr, nullptr);
+					}
 
 					break;
 				}
@@ -1617,13 +1618,9 @@ namespace cse
 
 						Return = true;
 					}
-					else if (GetAsyncKeyState(VK_SHIFT) && AUXVIEWPORT->IsVisible())
+					else if (GetAsyncKeyState(VK_SHIFT))
 					{
-						if (AUXVIEWPORT->ToggleFrozenState())
-							NotificationOSDLayer::Instance.ShowNotification("Froze auxiliary viewport camera");
-						else
-							NotificationOSDLayer::Instance.ShowNotification("Released auxiliary viewport camera");
-
+						AUXVIEWPORT->ToggleVisibility();
 						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_AuxViewPort);
 						Return = true;
 					}
@@ -1922,6 +1919,10 @@ namespace cse
 
 			TESRender::SetCameraFOV(_PRIMARYRENDERER->primaryCamera, CameraFOV);
 			memcpy(&_RENDERWIN_XSTATE.CameraFrustumBuffer, &_PRIMARYRENDERER->primaryCamera->m_kViewFrustum, sizeof(NiFrustum));
+
+			// update the aux viewport cam's frustum as well
+			AUXVIEWPORT->SetCameraFOV(CameraFOV);
+
 			TESRenderWindow::Redraw();
 		}
 

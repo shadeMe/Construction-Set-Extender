@@ -3,7 +3,7 @@
 #include "Hooks-Plugins.h"
 #include "Hooks-Renderer.h"
 #include "Render Window\RenderWindowManager.h"
-#include "..\AuxiliaryViewport.h"
+#include "Render Window\AuxiliaryViewport.h"
 #include "..\Achievements.h"
 #include "..\HallOfFame.h"
 #include "..\WorkspaceManager.h"

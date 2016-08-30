@@ -19,7 +19,7 @@
 #include "UIManager.h"
 #include "WorkspaceManager.h"
 #include "ChangeLogManager.h"
-#include "AuxiliaryViewport.h"
+#include "Render Window\AuxiliaryViewport.h"
 #include "OldCSInteropManager.h"
 #include "Coda\Coda.h"
 #include "GlobalClipboard.h"

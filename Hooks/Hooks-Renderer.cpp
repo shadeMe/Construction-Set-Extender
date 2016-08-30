@@ -1,6 +1,6 @@
 #include "Hooks-Renderer.h"
 #include "Render Window\RenderWindowManager.h"
-#include "AuxiliaryViewport.h"
+#include "Render Window\AuxiliaryViewport.h"
 #include "Render Window\PathGridUndoManager.h"
 #include "Hooks-LOD.h"
 
@@ -1502,7 +1502,10 @@ namespace cse
 
 		SHORT WINAPI GetAsyncKeyStateOverride(int vKey)
 		{
-			return _RENDERWIN_MGR.GetHotKeyManager()->HandleGetAsyncKeyState(vKey);
+			if (BGSEEMAIN->GetDaemon()->IsDeinitializing())
+				return GetAsyncKeyState(vKey);
+			else
+				return _RENDERWIN_MGR.GetHotKeyManager()->HandleGetAsyncKeyState(vKey);
 		}
 
 		#define _hhName		PatchGetAsyncKeyState

@@ -1,5 +1,5 @@
 #include "Hooks-LOD.h"
-#include "..\AuxiliaryViewport.h"
+#include "Render Window\AuxiliaryViewport.h"
 
 #pragma warning(push)
 /*#pragma optimize("", off)*/
@@ -615,7 +615,7 @@ namespace cse
 			}
 
 			// render the map's node as it gets updated with each partial's trishape
-			if (AUXVIEWPORT->IsVisible() && AUXVIEWPORT->IsFrozen() == false)
+			if (AUXVIEWPORT->IsVisible())
 			{
 				thisCall<void>(0x006F28A0, RenderNode);
 				thisCall<void>(0x006F2C10, RenderNode);

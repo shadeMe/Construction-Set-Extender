@@ -251,6 +251,8 @@ namespace cse
 					case kType_GrassOverlay:
 						return _RENDERWIN_XSTATE.UseGrassTextureOverlay;
 					}
+
+					return false;
 				}
 
 			}
@@ -654,23 +656,23 @@ namespace cse
 			});
 
 
-			impl::ToggleVisibilityRWA ToggleVisibilityObjects;
-			impl::ToggleVisibilityRWA ToggleVisibilityMarkers;
-			impl::ToggleVisibilityRWA ToggleVisibilityWireframe;
-			impl::ToggleVisibilityRWA ToggleVisibilityBrightLight;
-			impl::ToggleVisibilityRWA ToggleVisibilitySky;
-			impl::ToggleVisibilityRWA ToggleVisibilitySolidSubspaces;
-			impl::ToggleVisibilityRWA ToggleVisibilityCollisionGeom;
-			impl::ToggleVisibilityRWA ToggleVisibilityLeaves;
-			impl::ToggleVisibilityRWA ToggleVisibilityTrees;
-			impl::ToggleVisibilityRWA ToggleVisibilityWater;
-			impl::ToggleVisibilityRWA ToggleVisibilityLandscape;
-			impl::ToggleVisibilityRWA ToggleVisibilityCellBorders;
-			impl::ToggleVisibilityRWA ToggleVisibilityParentChildIndicator;
-			impl::ToggleVisibilityRWA ToggleVisibilityPathGridLinkedRefIndicator;
-			impl::ToggleVisibilityRWA ToggleVisibilityInitiallyDisabledRefs;
-			impl::ToggleVisibilityRWA ToggleVisibilityInitiallyDisabledRefsChildren;
-			impl::ToggleVisibilityRWA ToggleVisibilityGrassOverlay;
+			impl::ToggleVisibilityRWA ToggleVisibilityObjects(impl::ToggleVisibilityRWA::kType_Objects);
+			impl::ToggleVisibilityRWA ToggleVisibilityMarkers(impl::ToggleVisibilityRWA::kType_Markers);
+			impl::ToggleVisibilityRWA ToggleVisibilityWireframe(impl::ToggleVisibilityRWA::kType_Wireframe);
+			impl::ToggleVisibilityRWA ToggleVisibilityBrightLight(impl::ToggleVisibilityRWA::kType_BrightLight);
+			impl::ToggleVisibilityRWA ToggleVisibilitySky(impl::ToggleVisibilityRWA::kType_Sky);
+			impl::ToggleVisibilityRWA ToggleVisibilitySolidSubspaces(impl::ToggleVisibilityRWA::kType_SolidSubspaces);
+			impl::ToggleVisibilityRWA ToggleVisibilityCollisionGeom(impl::ToggleVisibilityRWA::kType_CollisionGeom);
+			impl::ToggleVisibilityRWA ToggleVisibilityLeaves(impl::ToggleVisibilityRWA::kType_Leaves);
+			impl::ToggleVisibilityRWA ToggleVisibilityTrees(impl::ToggleVisibilityRWA::kType_Trees);
+			impl::ToggleVisibilityRWA ToggleVisibilityWater(impl::ToggleVisibilityRWA::kType_Water);
+			impl::ToggleVisibilityRWA ToggleVisibilityLandscape(impl::ToggleVisibilityRWA::kType_Land);
+			impl::ToggleVisibilityRWA ToggleVisibilityCellBorders(impl::ToggleVisibilityRWA::kType_CellBorders);
+			impl::ToggleVisibilityRWA ToggleVisibilityParentChildIndicator(impl::ToggleVisibilityRWA::kType_ParentChildIndicator);
+			impl::ToggleVisibilityRWA ToggleVisibilityPathGridLinkedRefIndicator(impl::ToggleVisibilityRWA::kType_PathGridLinkedRefIndicator);
+			impl::ToggleVisibilityRWA ToggleVisibilityInitiallyDisabledRefs(impl::ToggleVisibilityRWA::kType_InitiallyDisabledRefs);
+			impl::ToggleVisibilityRWA ToggleVisibilityInitiallyDisabledRefsChildren(impl::ToggleVisibilityRWA::kType_InitiallyDisabledRefsChildren);
+			impl::ToggleVisibilityRWA ToggleVisibilityGrassOverlay(impl::ToggleVisibilityRWA::kType_GrassOverlay);
 
 			impl::BasicRWA FocusOnRefFilter("", []() {
 

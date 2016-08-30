@@ -10,7 +10,7 @@
 #include "DialogImposterManager.h"
 #include "ObjectPaletteManager.h"
 #include "ObjectPrefabManager.h"
-#include "AuxiliaryViewport.h"
+#include "Render Window\AuxiliaryViewport.h"
 #include "Render Window\RenderWindowManager.h"
 #include "CustomDialogProcs.h"
 

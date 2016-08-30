@@ -82,8 +82,8 @@ public:
 		kNodeUpdate_Unk07,
 		kNodeUpdate_Unk08,
 		kNodeUpdate_Unk09,
-		kNodeUpdate_Unk010,
-		kNodeUpdate_Unk011,
+		kNodeUpdate_Unk10,
+		kNodeUpdate_Unk11,
 	};
 
 	// 30
@@ -141,8 +141,8 @@ public:
 	STATIC_ASSERT(sizeof(Scenegraph) == 0x20);
 
 	// methods
-	static bool								UpdateNode(NiNode* Node, UInt32 UpdateType, float Multiplier);
-	static void								RotateNode(NiNode* Node, Vector3* Pivot, int XOffset, int YOffset, float SpeedMultiplier);
+	static bool								UpdateNode(NiAVObject* Node, UInt32 UpdateType, float Multiplier, bool UpdateOnSuccess = true);
+	static void								RotateNode(NiAVObject* Node, Vector3* Pivot, int XOffset, int YOffset, float SpeedMultiplier);
 	static void								SetCameraFOV(NiCamera* Camera, float FOV, float Width = -1, float Height = -1);		// horizontal FOV
 	static TESObjectREFR*					PickRefAtCoords(int X, int Y);
 	static TESPathGridPoint*				PickPathGridPointAtCoords(int X, int Y);
@@ -159,6 +159,7 @@ public:
 	static NiProperty*						GetProperty(NiAVObject* In, UInt16 ID);
 	static NiProperty*						CreateProperty(UInt8 Type);		// increments ref count
 	static NiSourceTexture*					CreateSourceTexture(const char* FilePath);
+	static NiCamera*						CreateCamera();
 
 
 	static NiDX9Renderer**					NiRendererSingleton;

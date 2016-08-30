@@ -61,6 +61,39 @@ namespace cse
 			;//
 		}
 
+		SHORT RenderWindowHotKeyManager::HandleGetAsyncKeyState(int vKey)
+		{
+			KeyStateOverride* Override = nullptr;
+			switch (vKey)
+			{
+			case VK_SHIFT:
+			case VK_CONTROL:
+			case VK_MENU:
+				{
+					if (vKey == VK_SHIFT)
+						Override = &OverriddenKeyStates[kKey_Shift];
+					else if (vKey == VK_CONTROL)
+						Override = &OverriddenKeyStates[kKey_Control];
+					else
+						Override = &OverriddenKeyStates[kKey_Alt];
+
+					if (Override->Active)
+					{
+						SHORT Result = 0;
+						if (Override->NewState)
+							Result |= 1 << 15;
+
+						return Result;
+					}
+				}
+
+				break;
+			}
+
+			// key not handled/overridden, call the original function
+			return GetAsyncKeyState(vKey);
+		}
+
 		void RenderWindowHotKeyManager::SendDefaultHotKey(UInt8 VirtualKey, bool Shift, bool Control)
 		{
 			if (Shift)
