@@ -651,6 +651,7 @@ public:
 	static void								DeinitializeCSWindows();
 	static void		 						SetTitleModified(bool State);
 	static void								AutoSave();				// should probably be in TES/TESDataHandler
+	static void								InvokeMainMenuTool(int Identifier);
 
 	static HINSTANCE*						Instance;
 	static HWND*							WindowHandle;
@@ -675,6 +676,8 @@ public:
 		kMainMenu_View_CellViewWindow = 40200,
 		kMainMenu_View_RenderWindow = 40423,
 		kMainMenu_View_ObjectWindow = 40199,
+		kMainMenu_View_Sky = 40223,
+		kMainMenu_Edit_SearchReplace = 40179,
 	};
 
 	enum

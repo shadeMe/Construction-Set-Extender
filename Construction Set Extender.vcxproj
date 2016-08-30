@@ -381,8 +381,10 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClCompile Include="Render Window\DefaultOverlayOSDLayer.cpp" />
     <ClCompile Include="Render Window\MouseOverTooltipOSDLayer.cpp" />
     <ClCompile Include="Render Window\PathGridUndoManager.cpp" />
+    <ClCompile Include="Render Window\RenderWindowActions.cpp" />
     <ClCompile Include="Render Window\RenderWindowCellLists.cpp" />
     <ClCompile Include="Render Window\RenderWindowGroupManager.cpp" />
+    <ClCompile Include="Render Window\RenderWindowHotKeys.cpp" />
     <ClCompile Include="Render Window\RenderWindowLayerManager.cpp" />
     <ClCompile Include="Render Window\RenderWindowManager.cpp" />
     <ClCompile Include="Render Window\RenderWindowOSD.cpp" />
@@ -507,8 +509,10 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClInclude Include="Render Window\DefaultOverlayOSDLayer.h" />
     <ClInclude Include="Render Window\MouseOverTooltipOSDLayer.h" />
     <ClInclude Include="Render Window\PathGridUndoManager.h" />
+    <ClInclude Include="Render Window\RenderWindowActions.h" />
     <ClInclude Include="Render Window\RenderWindowCellLists.h" />
     <ClInclude Include="Render Window\RenderWindowGroupManager.h" />
+    <ClInclude Include="Render Window\RenderWindowHotKeys.h" />
     <ClInclude Include="Render Window\RenderWindowLayerManager.h" />
     <ClInclude Include="Render Window\RenderWindowManager.h" />
     <ClInclude Include="Render Window\RenderWindowOSD.h" />

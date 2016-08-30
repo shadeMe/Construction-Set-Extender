@@ -241,7 +241,7 @@ namespace cse
 		private:
 			struct ModalData
 			{
-				std::string						WindowName;		// salted with random integer to prevent collisions
+				std::string						WindowName;		// salted with a random integer to prevent collisions
 				ModalRenderDelegateT			Delegate;
 				void*							UserData;
 				ImGuiWindowFlags_				Flags;

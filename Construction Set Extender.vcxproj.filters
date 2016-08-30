@@ -375,6 +375,12 @@
     <ClCompile Include="Render Window\RenderWindowOSD.cpp">
       <Filter>Components\Render Window</Filter>
     </ClCompile>
+    <ClCompile Include="Render Window\RenderWindowActions.cpp">
+      <Filter>Components\Render Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Render Window\RenderWindowHotKeys.cpp">
+      <Filter>Components\Render Window</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -889,6 +895,12 @@
     </ClInclude>
     <ClInclude Include="IconFontCppHeaders\IconsMaterialDesign.h">
       <Filter>Components\IMGUI\Fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\RenderWindowActions.h">
+      <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\RenderWindowHotKeys.h">
+      <Filter>Components\Render Window</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

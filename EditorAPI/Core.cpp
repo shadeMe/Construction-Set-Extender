@@ -319,6 +319,11 @@ int TES::PurgeExteriorCellBufer(bool SkipCurrentGrid /*= false*/, TESWorldSpace*
 	return thisCall<int>(0x004755E0, this, SkipCurrentGrid, ParentWorldSpace);
 }
 
+void TES::SetRenderWindowVisibility(UInt32 HideType, bool State, UInt8 ExteriorCellStartIdx /*= 0*/)
+{
+	thisCall<void>(0x00476870, this, HideType, (UInt32)State, ExteriorCellStartIdx);
+}
+
 void TES::PurgeLoadedResources()
 {
 	TESRenderWindow::Reset();
@@ -365,6 +370,14 @@ void TES::ReloadLandscapeTextures()
 	}
 
 	TESRenderWindow::Refresh3D();
+}
+
+bhkWorldM* TES::GetHavokWorld() const
+{
+	if (currentInteriorCell)
+		return currentInteriorCell->GetExtraHavok();
+	else
+		return *((bhkWorldM**)0x00A1316C);
 }
 
 UInt8 FileFinder::FindFile(const char* Path, UInt32 Unk02, UInt32 Unk03, int Unk04)

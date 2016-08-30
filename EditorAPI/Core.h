@@ -4,6 +4,7 @@
 #include "obse\NiObjects.h"
 #include "obse\NiProperties.h"
 #include "obse\NiRenderer.h"
+#include "obse\NiHavok.h"
 
 #include "TESForm.h"
 #include "TESSkill.h"
@@ -226,7 +227,7 @@ public:
 	/*44*/ UInt32					unk44;
 	/*48*/ SInt32					unk48;					// seen caching extXCoord
 	/*4C*/ SInt32					unk4C;					// seen caching extYCoord
-	/*50*/ UInt8					unk50;					// set/reset when testing cells
+	/*50*/ UInt8					drawCellBorders;		// for exteriors
 	/*51*/ UInt8					unk51;
 	/*52*/ UInt8					unk52;
 	/*53*/ UInt8					unk53;					// passed to a TESObjectLAND method (recreates land bounds if set?)
@@ -249,6 +250,16 @@ public:
 
 	virtual bool					VFn00(UInt32 arg1, UInt32 arg2, UInt32 arg3, UInt32 arg4, TESWorldSpace* worldspace = nullptr);		// calls worldspace->vtbl0x183, if worldspace == NULL, uses the currentWorldspace member
 
+	enum
+	{
+		kRenderWindowHide_Actors			= 0,
+		kRenderWindowHide_Markers			= 1,
+		kRenderWindowHide_Land				= 2,
+		kRenderWindowHide_Water				= 3,
+		kRenderWindowHide_StaticObjects		= 4,
+		kRenderWindowHide_ActiveObjects		= 5
+	};
+
 	// methods
 	void							LoadCellIntoViewPort(const Vector3* CameraCoordData, TESObjectREFR* Reference);	// arg1 = Camera position if arg is valid, else arg1 = ext. cell coords
 																													// coord format: (x << 12) + 2048, (y << 12) + 2048
@@ -256,10 +267,12 @@ public:
 	float							GetSkyTOD(void);		// this one too
 	void							SetCurrentWorldspace(TESWorldSpace* Worldspace);
 	int								PurgeExteriorCellBufer(bool SkipCurrentGrid = false, TESWorldSpace* ParentWorldSpace = nullptr);		// returns the no of cells purged
+	void							SetRenderWindowVisibility(UInt32 HideType, bool State, UInt8 ExteriorCellStartIdx = 0);
 
 	void							PurgeLoadedResources();
 	TESObjectCELL*					GetCurrentCell() const;
 	void							ReloadLandscapeTextures();
+	bhkWorldM*						GetHavokWorld() const;
 
 	static TES**					Singleton;
 };

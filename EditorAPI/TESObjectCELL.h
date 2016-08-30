@@ -1,6 +1,7 @@
 #pragma once
 
 #include "obse\NiNodes.h"
+#include "obse\NiHavok.h"
 
 #include "TESForm.h"
 #include "ExtraDataList.h"
@@ -106,6 +107,7 @@ public:
 	void						SetPathGrid(TESPathGrid* PathGrid);
 	TESObjectLAND*				GetLand();
 	void						AddReferenceNiNode(TESObjectREFR* Ref);
+	bhkWorldM*					GetExtraHavok();
 
 	void						AddObjectReference(TESObjectREFR* Ref);
 	void						RemoveObjectReference(TESObjectREFR* Ref);

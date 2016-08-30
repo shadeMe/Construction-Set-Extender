@@ -35,15 +35,27 @@ TESObjectREFR**						TESRenderWindow::SnapReference = (TESObjectREFR**)0x00A0B05
 
 UInt8*								TESRenderWindow::LandscapeEditFlag = (UInt8*)0x00A0BC35;
 UInt8*								TESRenderWindow::DraggingSelection = (UInt8*)0x00A0BBF6;
+
+UInt8*								TESRenderWindow::KeyState_Shift = (UInt8*)0x00A0BC5D;
+UInt8*								TESRenderWindow::KeyState_Control = (UInt8*)0x00A0BC5E;
+UInt8*								TESRenderWindow::KeyState_SpaceMMB = (UInt8*)0x00A0BC5F;
+
 UInt8*								TESRenderWindow::PathGridEditFlag = (UInt8*)0x00A0BC5C;
 UInt8*								TESRenderWindow::RefreshFlag = (UInt8*)0x00A0BC4D;
 UInt32*								TESRenderWindow::StateFlags = (UInt32*)0x00A0B058;
+UInt8*								TESRenderWindow::NonLandObjectsHiddenFlag = (UInt8*)0x00A0BBF9;
+UInt8*								TESRenderWindow::LandscapeHiddenFlag = (UInt8*)0x00A0BBFA;
+UInt8*								TESRenderWindow::WaterHiddenFlag = (UInt8*)0x00A0BBFB;
+UInt8*								TESRenderWindow::FullBrightLightingFlag = (UInt8*)0x000A8E696;
+UInt8*								TESRenderWindow::SkyFlag = (UInt8*)0x00A0B629;
+UInt8*								TESRenderWindow::LightRadiusFlag = (UInt8*)0x00A0B12C;
 
 HCURSOR*							TESRenderWindow::CursorMove = (HCURSOR*)0x00A0BAB4;
 HCURSOR*							TESRenderWindow::CursorSelect = (HCURSOR*)0x00A0BAB0;
 HCURSOR*							TESRenderWindow::CursorArrow = (HCURSOR*)0x00A0BABC;
 
 TESPreviewControl::PreviewControlListT*		TESPreviewControl::ActivePreviewControls = (TESPreviewControl::PreviewControlListT*)0x00A0BE90;
+BSTreeManager**						BSTreeManager::Singleton = (BSTreeManager**)0x00A25608;
 
 void TESRenderWindow::Reset()
 {
@@ -450,3 +462,4 @@ bool TESRender::PickData::PerformPick(Vector3* Arg1, Vector3* Arg2, bool KeepExi
 {
 	return thisCall<bool>(0x005E6030, this, Arg1, Arg2, KeepExisting);
 }
+

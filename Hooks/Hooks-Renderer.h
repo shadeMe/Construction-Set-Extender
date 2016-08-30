@@ -69,6 +69,7 @@ namespace cse
 		_DeclareMemHdlr(RotateCameraDrag, "prevent the shift key from rotating the camera when lasso'ing");
 		_DeclareMemHdlr(RubberbandSelectionDragDeselectRefs, "allow ref drag deselection with the Shift key");
 		_DeclareMemHdlr(LandscapeTextureLoad, "adds support for landscape texture swaps");
+		_DeclareMemHdlr(PatchGetAsyncKeyState, "adds support for custom hotkeys");
 
 		void __stdcall RenderWindowReferenceSelectionDetour(TESObjectREFR* Ref, bool ShowSelectionBox);
 	}

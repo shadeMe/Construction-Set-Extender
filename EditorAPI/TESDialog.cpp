@@ -109,6 +109,11 @@ void TESCSMain::AutoSave()
 	cdeclCall<UInt32>(0x004307C0);
 }
 
+void TESCSMain::InvokeMainMenuTool(int Identifier)
+{
+	SendMessage(*WindowHandle, WM_COMMAND, Identifier, NULL);
+}
+
 UInt32 TESDialog::GetDialogTemplateForFormType(UInt8 FormTypeID)
 {
 	return cdeclCall<UInt32>(0x00442050, FormTypeID);

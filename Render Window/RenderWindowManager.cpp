@@ -1573,18 +1573,19 @@ namespace cse
 					{
 						if (GetAsyncKeyState(VK_CONTROL))
 						{
-							_RENDERWIN_MGR.PGUndoManager->ResetRedoStack();
+							_RENDERWIN_MGR.GetPathGridUndoManager()->ResetRedoStack();
 
 							if (TESRenderWindow::SelectedPathGridPoints->Count())
-								_RENDERWIN_MGR.PGUndoManager->RecordOperation(PathGridUndoManager::kOperation_DataChange, TESRenderWindow::SelectedPathGridPoints);
+								_RENDERWIN_MGR.GetPathGridUndoManager()->RecordOperation(PathGridUndoManager::kOperation_DataChange, TESRenderWindow::SelectedPathGridPoints);
 
 							for (tList<TESPathGridPoint>::Iterator Itr = TESRenderWindow::SelectedPathGridPoints->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 							{
 								TESPathGridPoint* Point = Itr.Get();
 								Point->UnlinkFromReference();
 								Point->HideSelectionRing();
-								achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_PathGridAdditions);
 							}
+
+							achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_PathGridAdditions);
 
 							TESRenderWindow::Redraw(true);
 
@@ -1797,6 +1798,7 @@ namespace cse
 			OSD = new RenderWindowOSD();
 			CellLists = new RenderWindowCellLists();
 			EventSink = new GlobalEventSink(this);
+			HotKeyManager = new RenderWindowHotKeyManager();
 			ActiveRefCache.reserve(200);
 
 			Initialized = false;
@@ -1812,6 +1814,7 @@ namespace cse
 			SAFEDELETE(OSD);
 			SAFEDELETE(EventSink);
 			SAFEDELETE(CellLists);
+			SAFEDELETE(HotKeyManager);
 
 			Initialized = false;
 		}
@@ -1895,6 +1898,12 @@ namespace cse
 		{
 			SME_ASSERT(Initialized);
 			return SelectionManager;
+		}
+
+		RenderWindowHotKeyManager* RenderWindowManager::GetHotKeyManager() const
+		{
+			SME_ASSERT(Initialized);
+			return HotKeyManager;
 		}
 
 		void RenderWindowManager::InvokeContextMenuTool(int Identifier)

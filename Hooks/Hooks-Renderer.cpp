@@ -75,6 +75,7 @@ namespace cse
 		_DefineHookHdlr(TESRenderRotateSelectionWorldB, 0x00426043);
 		_DefineHookHdlr(RotateCameraDrag, 0x0042CBFD);
 		_DefineHookHdlr(LandscapeTextureLoad, 0x005232E0);
+		_DefineHookHdlr(PatchGetAsyncKeyState, 0x0042753B);
 
 #ifndef NDEBUG
 		void __stdcall DoTestHook1(NiSourceTexture* def,
@@ -220,6 +221,7 @@ namespace cse
 			_MemHdlr(TESRenderRotateSelectionWorldB).WriteJump();
 			_MemHdlr(RotateCameraDrag).WriteJump();
 			_MemHdlr(LandscapeTextureLoad).WriteJump();
+			_MemHdlr(PatchGetAsyncKeyState).WriteJump();
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -1494,6 +1496,22 @@ namespace cse
 				call	DoLandscapeTextureLoad
 				test	eax, eax
 
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		SHORT WINAPI GetAsyncKeyStateOverride(int vKey)
+		{
+			return _RENDERWIN_MGR.GetHotKeyManager()->HandleGetAsyncKeyState(vKey);
+		}
+
+		#define _hhName		PatchGetAsyncKeyState
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00427541);
+			__asm
+			{
+				mov		esi, GetAsyncKeyStateOverride
 				jmp		_hhGetVar(Retn)
 			}
 		}

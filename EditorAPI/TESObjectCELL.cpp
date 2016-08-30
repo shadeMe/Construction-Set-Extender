@@ -65,3 +65,8 @@ void TESObjectCELL::AddReferenceNiNode(TESObjectREFR* Ref)
 {
 	thisCall<void>(0x00534460, this, Ref);
 }
+
+bhkWorldM* TESObjectCELL::GetExtraHavok()
+{
+	return thisCall<bhkWorldM*>(0x004180C0, this);
+}

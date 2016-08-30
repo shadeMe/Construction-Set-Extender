@@ -8,6 +8,8 @@
 class	TESForm;
 class	TESObjectREFR;
 class	Sky;
+class	BSTreeNode;
+class	BSTreeModel;
 
 // 4
 class Renderer
@@ -260,11 +262,21 @@ public:
 	static TESRender::PickData*			PickBuffer;
 
 	static UInt32*						StateFlags;
+	static UInt8*						NonLandObjectsHiddenFlag;
+	static UInt8*						LandscapeHiddenFlag;
+	static UInt8*						WaterHiddenFlag;
+	static UInt8*						FullBrightLightingFlag;
+	static UInt8*						SkyFlag;
+	static UInt8*						LightRadiusFlag;
 
 	static UInt8*						RefreshFlag;
 	static UInt8*						PathGridEditFlag;
 	static UInt8*						LandscapeEditFlag;
 	static UInt8*						DraggingSelection;
+
+	static UInt8*						KeyState_Shift;
+	static UInt8*						KeyState_Control;
+	static UInt8*						KeyState_SpaceMMB;
 
 	static TESObjectCELL**				ActiveCell;						// points to the current interior cell or the exterior cell at the camera's position/current selection
 	static TESLandTexture**				ActiveLandscapeTexture;
@@ -394,3 +406,31 @@ public:
 	static PreviewControlListT*			ActivePreviewControls;
 };
 STATIC_ASSERT(sizeof(TESPreviewControl) == 0x68);
+
+
+// arbitrarily named
+// 28
+class BSTreeManager
+{
+public:
+	typedef cseOverride::NiTPointerMap<TESObjectTREE*, NiPointer<BSTreeModel>*>	TreeObjModelMapT;
+	typedef LockFreeMap<BSTreeNode*>	TreeRefNodeMapT;		// key = TESObjectREFR*
+
+	// members
+	/*00*/ TreeObjModelMapT*		treeModelMap;
+	/*04*/ UInt32					unk04;
+	/*08*/ NiZBufferProperty*		zBuffer;		// smart ptr
+	/*0C*/ NiMaterialProperty*		material;		// smart ptr
+	/*10*/ NiVertexColorProperty*	vertexColor;	// smart ptr
+	/*14*/ NiAlphaProperty*			alpha;
+	/*18*/ BSXFlags*				bsxFlags;
+	/*1C*/ float					unk1C;
+	/*20*/ UInt8					drawTrees;
+	/*21*/ UInt8					drawLeaves;
+	/*22*/ UInt8					unk22;
+	/*23*/ UInt8					forceFullLOD;
+	/*24*/ TreeRefNodeMapT*			treeRefMap;
+
+	static BSTreeManager**			Singleton;
+};
+STATIC_ASSERT(sizeof(BSTreeManager) == 0x28);
