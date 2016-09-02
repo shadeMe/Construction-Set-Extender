@@ -651,7 +651,7 @@ public:
 	static void								DeinitializeCSWindows();
 	static void		 						SetTitleModified(bool State);
 	static void								AutoSave();				// should probably be in TES/TESDataHandler
-	static void								InvokeMainMenuTool(int Identifier);
+	static void								InvokeMainMenuTool(int Identifier);		// works with toolbar items too
 
 	static HINSTANCE*						Instance;
 	static HWND*							WindowHandle;

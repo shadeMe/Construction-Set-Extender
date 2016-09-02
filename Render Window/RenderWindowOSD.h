@@ -123,24 +123,8 @@ namespace cse
 		// queues ImGui drawcalls
 		class IRenderWindowOSDLayer
 		{
-			const INISetting*				Toggle;
-			UInt32							Priority;
+			const INISetting*		Toggle;
 		protected:
-			enum
-			{
-				kPriority_Notifications = 1001,
-				kPriority_MouseTooltip = 1000,
-				kPriority_Toolbar = 999,
-
-				kPriority_SelectionControls = 998,
-				kPriority_CellLists = 997,
-				kPriority_ActiveRefCollections = 996,
-
-				kPriority_Debug = 2,
-				kPriority_DefaultOverlay = 1,
-				kPriority_ModalProvider = 0,
-			};
-
 			// tracked over multiple frames
 			struct StateData
 			{
@@ -167,7 +151,7 @@ namespace cse
 
 				StateData();
 
-				void				Update(ImGuiDX9* GUI);				// must be called inside a ImGui::Begin() block
+				void				Update(ImGuiDX9* GUI);							// must be called inside a ImGui::Begin() block
 			};
 
 			struct Helpers
@@ -176,8 +160,7 @@ namespace cse
 				static bool					ResolveReference(UInt32 FormID, TESObjectREFR*& OutRef);		// returns false if the formID didn't resolve to a valid ref, true otherwise
 			};
 		public:
-			IRenderWindowOSDLayer(INISetting& Toggle, UInt32 Priority);
-			IRenderWindowOSDLayer(UInt32 Priority);
+			IRenderWindowOSDLayer(const INISetting* Toggle = nullptr);
 			virtual ~IRenderWindowOSDLayer() = 0
 			{
 				;//
@@ -185,8 +168,6 @@ namespace cse
 
 			virtual void					Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI) = 0;
 			virtual bool					NeedsBackgroundUpdate() = 0;			// returns true if the layer needs to be rendered when the render window doesn't have input focus
-
-			virtual UInt32					GetPriority() const;					// layers with higher priority get rendered first
 			virtual bool					IsEnabled() const;
 		};
 

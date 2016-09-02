@@ -676,7 +676,8 @@ BEGIN
             MENUITEM "Cell Lists",                  IDC_RENDERWINDOWCONTEXT_OSD_CELLLISTS
             MENUITEM "Active Reference Collections", IDC_RENDERWINDOWCONTEXT_OSD_ACTIVEREFERENCECOLLECTIONS
         END
-        MENUITEM "Render Window Properties",    293
+        MENUITEM "Render Window Properties...", 293
+        MENUITEM "Render Window Hotkeys...",    IDC_RENDERWINDOWCONTEXT_RENDERWINDOWHOTKEYS
         MENUITEM SEPARATOR
         MENUITEM "Unload Current Cell(s)",      IDC_RENDERWINDOWCONTEXT_UNLOADCURRENTCELLS
     END

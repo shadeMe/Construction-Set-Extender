@@ -59,6 +59,16 @@ namespace cse
 		bool ShiftDown = GetAsyncKeyState(VK_SHIFT);
 		switch (uMsg)
 		{
+		case WM_LBUTTONDOWN:
+			Return = true;
+			Instance->BeginMouseCapture(hWnd, Instance->RotatingInPlace);
+
+			break;
+		case WM_LBUTTONUP:
+			Return = true;
+			Instance->EndMouseCapture(Instance->RotatingInPlace);
+
+			break;
 		case WM_MBUTTONDOWN:
 			Return = true;
 			Instance->BeginMouseCapture(hWnd, Instance->Panning);
@@ -148,20 +158,28 @@ namespace cse
 				Instance->LastMouseCoords.x = CurrentCoords.x;
 				Instance->LastMouseCoords.y = CurrentCoords.y;
 
-				if (Instance->Panning || Instance->Rotating || Instance->Zooming)
+				if (Instance->Panning || Instance->Rotating || Instance->RotatingInPlace || Instance->Zooming)
 				{
 					Return = true;
 					NiMatrix33* CameraRootWorldRotate = &Instance->CameraRoot->m_worldRotate;
 					Vector3* CameraRootLocalTranslate = (Vector3*)&Instance->CameraRoot->m_localTranslate;
 
-					if (Instance->Rotating)
+					if (Instance->Rotating || Instance->RotatingInPlace)
 					{
-						// calculate the pivot as a point in front of the current camera pos
-						Vector3 Offset(CameraRootWorldRotate->data[1], CameraRootWorldRotate->data[4], CameraRootWorldRotate->data[7]);
-						Offset.Scale(-1000.f);
+						// calculate the pivot as a point in front of the current camera pos when not rotating in place
+						Vector3 Pivot;
 
-						Vector3 Pivot(*CameraRootLocalTranslate);
-						Pivot += Offset;
+						if (Instance->RotatingInPlace == false)
+						{
+							Vector3 Offset(CameraRootWorldRotate->data[1], CameraRootWorldRotate->data[4], CameraRootWorldRotate->data[7]);
+							Offset.Scale(-1000.f);
+
+							Pivot = *CameraRootLocalTranslate;
+							Pivot += Offset;
+
+						}
+						else
+							Pivot.x = Pivot.y = Pivot.z = (float)3.4028235e38;
 
 						TESRender::RotateNode(Instance->CameraRoot,
 											  &Pivot,
@@ -233,6 +251,7 @@ namespace cse
 		Panning(false),
 		Zooming(false),
 		Rotating(false),
+		RotatingInPlace(false),
 		LastMouseCoords{ 0 },
 		Rendering(false),
 		EventSink(nullptr)

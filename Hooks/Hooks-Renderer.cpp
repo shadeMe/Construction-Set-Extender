@@ -1505,7 +1505,7 @@ namespace cse
 			if (BGSEEMAIN->GetDaemon()->IsDeinitializing())
 				return GetAsyncKeyState(vKey);
 			else
-				return _RENDERWIN_MGR.GetHotKeyManager()->HandleGetAsyncKeyState(vKey);
+				return _RENDERWIN_MGR.GetHotKeyManager()->HandleDefaultWndProcAsyncKeyState(vKey);
 		}
 
 		#define _hhName		PatchGetAsyncKeyState

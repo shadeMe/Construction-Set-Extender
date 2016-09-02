@@ -126,7 +126,7 @@ namespace cse
 		}
 
 		RenderWindowCellLists::OSDLayer::OSDLayer(RenderWindowCellLists* Parent) :
-			IRenderWindowOSDLayer(settings::renderWindowOSD::kShowCellLists, IRenderWindowOSDLayer::kPriority_CellLists),
+			IRenderWindowOSDLayer(&settings::renderWindowOSD::kShowCellLists),
 			Parent(Parent),
 			FilterHelper()
 		{

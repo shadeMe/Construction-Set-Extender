@@ -13,8 +13,7 @@ CSE		---->
 	BUGFIX			=
 		> Object window columns like Auto calc, Enchantment type, Count don't sort consistently
 			>> Columns not handled by default = 3, 24, 41, 54. Some others are incorrectly handled
-		> Render window fixed camera pivot bug
-			>> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=23984155
+		> Render window fixed camera pivot is broken; reimplement
 		> If you edit a land record, then switch to either a parent or child worldspace which contains that same cell, frequently the edits are not displayed in the render window, instead you see the unedited land height (however collision is handled correctly so Fing an object will drop it to where the land should be) - additionally, when editing a land record in a child worldspace, sometimes these edits get saved into a NEW land record for the child worldspace instead of being allocated to the existing land record of the parent worldspace. I believe the land record from the parent landscape is the one which gets displayed in-game when such an overlap exists.
 
 
@@ -23,7 +22,6 @@ CSE		---->
 		> Wildcard find/replace
 		> Add an option to restore a saved backup for some esp/esm, instead of manually recover it from Data/Backup folder and moving it back to Data folder.
 		> Render window gizmos
-		> Named ref groups
 		> Selection mask
 		> Hide mouse when transforming
 		> Show Target NPCs context menu tool
@@ -37,7 +35,7 @@ CSE		---->
 
 
 	MISC			=
-		> Update to C++11/14
+
 
 
 SE		---->

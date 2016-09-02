@@ -456,7 +456,7 @@ namespace cse
 		}
 
 		ActiveRefCollectionsOSDLayer::ActiveRefCollectionsOSDLayer() :
-			IRenderWindowOSDLayer(settings::renderWindowOSD::kShowActiveRefCollections, kPriority_ActiveRefCollections),
+			IRenderWindowOSDLayer(&settings::renderWindowOSD::kShowActiveRefCollections),
 			CurrentTab(kTab_Invisible),
 			FilterHelper()
 		{

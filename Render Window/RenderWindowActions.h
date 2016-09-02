@@ -10,15 +10,17 @@ namespace cse
 			class IRenderWindowAction
 			{
 			protected:
+				std::string				Name;
 				std::string				Description;
 			public:
-				IRenderWindowAction(std::string Desc);
+				IRenderWindowAction(std::string Name, std::string Desc);
 				virtual ~IRenderWindowAction() = 0
 				{
 					;//
 				}
 
 				virtual void			operator()() = 0;
+				virtual const char*		GetName() const;
 				virtual const char*		GetDescription() const;
 			};
 
@@ -30,7 +32,7 @@ namespace cse
 
 					ActionDelegateT		Delegate;
 				public:
-					BasicRWA(std::string Desc, ActionDelegateT Delegate);
+					BasicRWA(std::string Name, std::string Desc, ActionDelegateT Delegate);
 					virtual ~BasicRWA();
 
 					virtual void		operator()() override;
@@ -40,7 +42,7 @@ namespace cse
 				{
 					SME::INI::INISetting&	Setting;
 				public:
-					ToggleINISettingRWA(std::string Desc, SME::INI::INISetting& Setting);
+					ToggleINISettingRWA(std::string Name, std::string Desc, SME::INI::INISetting& Setting);
 					virtual ~ToggleINISettingRWA();
 
 					virtual void		operator()() override;
@@ -51,7 +53,7 @@ namespace cse
 				public:
 					enum : int
 					{
-						kType__NONE		= 0,
+						kType__NONE		= -1,
 
 						kType_Objects,
 						kType_Markers,
@@ -119,25 +121,10 @@ namespace cse
 			extern impl::BasicRWA ToggleSnapToGrid;
 			extern impl::BasicRWA ToggleSnapToAngle;
 
-			extern impl::ToggleVisibilityRWA ToggleVisibilityObjects;
-			extern impl::ToggleVisibilityRWA ToggleVisibilityMarkers;
-			extern impl::ToggleVisibilityRWA ToggleVisibilityWireframe;
-			extern impl::ToggleVisibilityRWA ToggleVisibilityBrightLight;
-			extern impl::ToggleVisibilityRWA ToggleVisibilitySky;
-			extern impl::ToggleVisibilityRWA ToggleVisibilitySolidSubspaces;
-			extern impl::ToggleVisibilityRWA ToggleVisibilityCollisionGeom;
-			extern impl::ToggleVisibilityRWA ToggleVisibilityLeaves;
-			extern impl::ToggleVisibilityRWA ToggleVisibilityTrees;
-			extern impl::ToggleVisibilityRWA ToggleVisibilityWater;
-			extern impl::ToggleVisibilityRWA ToggleVisibilityLandscape;
-			extern impl::ToggleVisibilityRWA ToggleVisibilityCellBorders;
-			extern impl::ToggleVisibilityRWA ToggleVisibilityParentChildIndicator;
-			extern impl::ToggleVisibilityRWA ToggleVisibilityPathGridLinkedRefIndicator;
-			extern impl::ToggleVisibilityRWA ToggleVisibilityInitiallyDisabledRefs;
-			extern impl::ToggleVisibilityRWA ToggleVisibilityInitiallyDisabledRefsChildren;
-			extern impl::ToggleVisibilityRWA ToggleVisibilityGrassOverlay;
+			extern impl::ToggleVisibilityRWA ToggleVisibility[];
 
 			extern impl::BasicRWA FocusOnRefFilter;
+			extern impl::BasicRWA JumpToExteriorCell;
 		}
 	}
 }

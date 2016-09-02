@@ -8,7 +8,7 @@ namespace cse
 		DefaultOverlayOSDLayer		DefaultOverlayOSDLayer::Instance;
 
 		DefaultOverlayOSDLayer::DefaultOverlayOSDLayer() :
-			IRenderWindowOSDLayer(settings::renderWindowOSD::kShowInfoOverlay, IRenderWindowOSDLayer::kPriority_DefaultOverlay)
+			IRenderWindowOSDLayer(&settings::renderWindowOSD::kShowInfoOverlay)
 		{
 			;//
 		}
@@ -101,7 +101,7 @@ namespace cse
 						TESObjectREFR* Selection = CS_CAST(_RENDERSEL->selectionList->Data, TESForm, TESObjectREFR);
 						if (Selection)	// in the off-chance that the selection contains a regular form
 						{
-							ImGui::TextColored(ImColor(R, G, B), "%s(%08X)", ((Selection->editorID.Size()) ? (Selection->editorID.c_str()) : ("")), Selection->formID); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+							ImGui::TextColored(ImColor(R, G, B), "%s(%08X)%s", ((Selection->editorID.Size()) ? (Selection->editorID.c_str()) : ("")), Selection->formID, Selection->IsActive() ? "*" : ""); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
 							ImGui::TextColored(ImColor(R, G, B), "%s", TESForm::GetFormTypeIDLongName(Selection->baseForm->formType)); ImGui::NextColumn();
 
 							ImGui::TextColored(ImColor(R, G, B), "Base Form:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);

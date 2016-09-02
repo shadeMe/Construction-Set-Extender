@@ -13,6 +13,7 @@ namespace cse
 
 			virtual void						Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI);
 			virtual bool						NeedsBackgroundUpdate();
+			virtual bool						IsEnabled() const;
 
 			static MouseOverTooltipOSDLayer		Instance;
 		};

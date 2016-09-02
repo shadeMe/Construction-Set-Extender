@@ -4,6 +4,7 @@
 #include "Achievements.h"
 #include "[Common]\CLIWrapper.h"
 #include "AuxiliaryViewport.h"
+#include "ToolbarOSDLayer.h"
 
 namespace cse
 {
@@ -11,10 +12,16 @@ namespace cse
 	{
 		namespace actions
 		{
-			IRenderWindowAction::IRenderWindowAction(std::string Desc) :
+			IRenderWindowAction::IRenderWindowAction(std::string Name, std::string Desc) :
+				Name(Name),
 				Description(Desc)
 			{
 				;//
+			}
+
+			const char* IRenderWindowAction::GetName() const
+			{
+				return Name.c_str();
 			}
 
 			const char* IRenderWindowAction::GetDescription() const
@@ -25,8 +32,8 @@ namespace cse
 			namespace impl
 			{
 
-				BasicRWA::BasicRWA(std::string Desc, ActionDelegateT Delegate) :
-					IRenderWindowAction(Desc),
+				BasicRWA::BasicRWA(std::string Name, std::string Desc, ActionDelegateT Delegate) :
+					IRenderWindowAction(Name, Desc),
 					Delegate(Delegate)
 				{
 					SME_ASSERT(Delegate);
@@ -43,8 +50,8 @@ namespace cse
 					TESRenderWindow::Redraw();
 				}
 
-				ToggleINISettingRWA::ToggleINISettingRWA(std::string Desc, SME::INI::INISetting& Setting) :
-					IRenderWindowAction(Desc),
+				ToggleINISettingRWA::ToggleINISettingRWA(std::string Name, std::string Desc, SME::INI::INISetting& Setting) :
+					IRenderWindowAction(Name, Desc),
 					Setting(Setting)
 				{
 					SME_ASSERT(Setting.GetType() == SME::INI::INISetting::kType_Integer ||
@@ -63,71 +70,57 @@ namespace cse
 				}
 
 				ToggleVisibilityRWA::ToggleVisibilityRWA(int Type) :
-					IRenderWindowAction(""),
+					IRenderWindowAction("", ""),
 					Type(Type)
 				{
 					SME_ASSERT(Type > kType__NONE && Type < kType__MAX);
 
-					Description = "Toggle visibility of ";
-					switch (Type)
+					static const char* kNames[actions::impl::ToggleVisibilityRWA::kType__MAX] =
 					{
-					case kType_Objects:
-						Description.append("non-land objects");
-						break;
-					case kType_Markers:
-						Description.append("markers");
-						break;
-					case kType_Wireframe:
-						Description = "Toggle wireframe rendering";
-						break;
-					case kType_BrightLight:
-						Description = "Toggle bright light rendering";
-						break;
-					case kType_Sky:
-						Description.append("the sky");
-						break;
-					case kType_SolidSubspaces:
-						Description.append("solid subspaces");
-						break;
-					case kType_CollisionGeom:
-						Description.append("collision geometry");
-						break;
-					case kType_Leaves:
-						Description.append("leaves");
-						break;
-					case kType_Trees:
-						Description.append("trees");
-						break;
-					case kType_Water:
-						Description.append("water");
-						break;
-					case kType_CellBorders:
-						Description.append("cell borders");
-						break;
-					case kType_Land:
-						Description.append("landscape");
-						break;
-					case kType_LightRadius:
-						Description.append("light radius");
-						break;
-					case kType_ParentChildIndicator:
-						Description.append("parent-child indicators");
-						break;
-					case kType_PathGridLinkedRefIndicator:
-						Description.append("path grid point linked reference indicators");
-						break;
-					case kType_InitiallyDisabledRefs:
-						Description.append("initially disabled references");
-						break;
-					case kType_InitiallyDisabledRefsChildren:
-						Description.append("initially disabled refrences' children");
-						break;
-					case kType_GrassOverlay:
-						Description.append("the grass overlay texture");
-						break;
-					}
+						"Toggle Objects",
+						"Toggle Markers",
+						"Toggle Wireframe",
+						"Toggle Bright Light",
+						"Toggle Sky",
+						"Toggle Solid Subspaces",
+						"Toggle Collision Geometry",
+						"Toggle Leaves",
+						"Toggle Trees",
+						"Toggle Water",
+						"Toggle Cell Borders",
+						"Toggle Landscape",
+						"Toggle Light Radius",
+						"Toggle Parent Child Indicator",
+						"Toggle Path Grid Linked Reference Indicator",
+						"Toggle Initially Disabled References",
+						"Toggle Initially Disabled References' Children",
+						"Toggle Grass Overlay"
+					};
 
-					Description.append(".");
+					static const char* kDescriptions[actions::impl::ToggleVisibilityRWA::kType__MAX] =
+					{
+						"Toggle visibility of non-land objects.",
+						"Toggle visibility of markers.",
+						"Toggle wireframe rendering.",
+						"Toggle bright light rendering.",
+						"Toggle visibility of the sky.",
+						"Toggle visibility of solid subspaces.",
+						"Toggle visibility of collision geometry.",
+						"Toggle visibility of leaves.",
+						"Toggle visibility of trees.",
+						"Toggle visibility of water.",
+						"Toggle visibility of cell borders.",
+						"Toggle visibility of landscape.",
+						"Toggle visibility of light radius.",
+						"Toggle visibility of parent-child indicators.",
+						"Toggle visibility of path grid point linked reference indicators.",
+						"Toggle visibility of initially disabled references.",
+						"Toggle visibility of initially disabled references' children.",
+						"Toggle visibility of the grass overlay texture."
+					};
+
+					Name = kNames[Type];
+					Description = kDescriptions[Type];
 				}
 
 				ToggleVisibilityRWA::~ToggleVisibilityRWA()
@@ -140,20 +133,20 @@ namespace cse
 					switch (Type)
 					{
 					case kType_Objects:
-						_RENDERWIN_MGR.GetHotKeyManager()->SendDefaultHotKey('C', true, false);
+						_RENDERWIN_MGR.GetHotKeyManager()->SendBuiltinHotKey('C', true, false);
 						break;
 					case kType_Markers:
-						_RENDERWIN_MGR.GetHotKeyManager()->SendDefaultHotKey('M', false, false);
+						_RENDERWIN_MGR.GetHotKeyManager()->SendBuiltinHotKey('M', false, false);
 						break;
 					case kType_Wireframe:
-						_RENDERWIN_MGR.GetHotKeyManager()->SendDefaultHotKey('W', false, false);
+						_RENDERWIN_MGR.GetHotKeyManager()->SendBuiltinHotKey('W', false, false);
 						break;
 					case kType_BrightLight:
-						_RENDERWIN_MGR.GetHotKeyManager()->SendDefaultHotKey('A', false, false);
+						_RENDERWIN_MGR.GetHotKeyManager()->SendBuiltinHotKey('A', false, false);
 						break;
 					case kType_Sky:
 						// using the key message is a bit of bother as it alters the stored Y key state
-						// we could override it in the hotkey manager but we just route the message to the main window (which is what the shortcut does anyway)
+						// we could override it in the hotkey manager, but we just route the message to the main window (which is what the shortcut does anyway)
 						TESCSMain::InvokeMainMenuTool(TESCSMain::kMainMenu_View_Sky);
 						break;
 					case kType_SolidSubspaces:
@@ -163,7 +156,7 @@ namespace cse
 						}
 						break;
 					case kType_CollisionGeom:
-						_RENDERWIN_MGR.GetHotKeyManager()->SendDefaultHotKey(VK_F4, false, false);
+						_RENDERWIN_MGR.GetHotKeyManager()->SendBuiltinHotKey(VK_F4, false, false);
 						break;
 					case kType_Leaves:
 						(*BSTreeManager::Singleton)->drawLeaves = (*BSTreeManager::Singleton)->drawLeaves == false;
@@ -172,16 +165,16 @@ namespace cse
 						(*BSTreeManager::Singleton)->drawTrees = (*BSTreeManager::Singleton)->drawTrees == false;
 						break;
 					case kType_Water:
-						_RENDERWIN_MGR.GetHotKeyManager()->SendDefaultHotKey('W', true, false);
+						_RENDERWIN_MGR.GetHotKeyManager()->SendBuiltinHotKey('W', true, false);
 						break;
 					case kType_CellBorders:
-						_RENDERWIN_MGR.GetHotKeyManager()->SendDefaultHotKey('B', false, false);
+						_RENDERWIN_MGR.GetHotKeyManager()->SendBuiltinHotKey('B', false, false);
 						break;
 					case kType_Land:
-						_RENDERWIN_MGR.GetHotKeyManager()->SendDefaultHotKey('L', true, false);
+						_RENDERWIN_MGR.GetHotKeyManager()->SendBuiltinHotKey('L', true, false);
 						break;
 					case kType_LightRadius:
-						_RENDERWIN_MGR.GetHotKeyManager()->SendDefaultHotKey('L', false, false);
+						_RENDERWIN_MGR.GetHotKeyManager()->SendBuiltinHotKey('L', false, false);
 						break;
 					case kType_ParentChildIndicator:
 						settings::renderer::kParentChildVisualIndicator.ToggleData();
@@ -197,6 +190,8 @@ namespace cse
 						break;
 					case kType_GrassOverlay:
 						_RENDERWIN_XSTATE.UseGrassTextureOverlay = _RENDERWIN_XSTATE.UseGrassTextureOverlay == false;
+						_TES->ReloadLandscapeTextures();
+						break;
 					}
 
 					TESRenderWindow::Redraw(Type == kType_PathGridLinkedRefIndicator);
@@ -257,7 +252,7 @@ namespace cse
 
 			}
 
-			impl::BasicRWA InvertSelection("Invert the current reference selection.", []() {
+			impl::BasicRWA InvertSelection("Invert Selection", "Invert the current reference selection.", []() {
 				if (*TESRenderWindow::PathGridEditFlag == 0)
 				{
 					const TESObjectREFRArrayT& Refs = _RENDERWIN_MGR.GetActiveRefs();
@@ -279,7 +274,7 @@ namespace cse
 				}
 			});
 
-			impl::BasicRWA SelectAll("Select all references in the active cell/grid.", []() {
+			impl::BasicRWA SelectAll("Select All", "Select all references in the active cell/grid.", []() {
 				const TESObjectREFRArrayT& Refs = _RENDERWIN_MGR.GetActiveRefs();
 				_RENDERSEL->ClearSelection(true);
 
@@ -296,7 +291,8 @@ namespace cse
 				}
 			});
 
-			impl::BasicRWA GroupSelection("Group references into a single selectable entity.", []() {
+
+			impl::BasicRWA GroupSelection("Group", "Group references into a single selectable entity.", []() {
 				ModalWindowProviderOSDLayer::ModalRenderDelegateT RenderModalNewGroup([](RenderWindowOSD*, ImGuiDX9*, void*)->bool {
 					static char NewGroupNameBuffer[0x100] = { 0 };
 
@@ -349,14 +345,14 @@ namespace cse
 				}
 			});
 
-			impl::BasicRWA UngroupSelection("Dissolve a group into its individual references.", []() {
+			impl::BasicRWA UngroupSelection("Ungroup", "Dissolve a group into its individual references.", []() {
 				if (_RENDERWIN_MGR.GetGroupManager()->RemoveGroup(_RENDERSEL) == false)
 					NotificationOSDLayer::Instance.ShowNotification("Couldn't dissolve the current selection's group.");
 				else
 					NotificationOSDLayer::Instance.ShowNotification("Removed selection group");
 			});
 
-			impl::BasicRWA OrphanizeSelection("Remove the reference from its parent group, if any.", []() {
+			impl::BasicRWA OrphanizeSelection("Orphanize", "Remove the reference from its parent group, if any.", []() {
 				for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 				{
 					TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
@@ -365,7 +361,7 @@ namespace cse
 			});
 
 
-			impl::BasicRWA FreezeSelection("Prevent references from being selected.", []() {
+			impl::BasicRWA FreezeSelection("Freeze", "Prevent references from being selected.", []() {
 				for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 				{
 					TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
@@ -375,7 +371,7 @@ namespace cse
 				achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefFreezing);
 			});
 
-			impl::BasicRWA ThawSelection("Allow previously frozen references to be selected.", []() {
+			impl::BasicRWA ThawSelection("Thaw", "Allow previously frozen references to be selected.", []() {
 				for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 				{
 					TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
@@ -383,7 +379,7 @@ namespace cse
 				}
 			});
 
-			impl::BasicRWA ThawAll("", []() {
+			impl::BasicRWA ThawAll("Thaw All", "Defrost all frozen references.", []() {
 				const TESObjectREFRArrayT& Refs = _RENDERWIN_MGR.GetActiveRefs();
 				for (TESObjectREFRArrayT::const_iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr)
 				{
@@ -394,12 +390,12 @@ namespace cse
 				NotificationOSDLayer::Instance.ShowNotification("Thawed all of the active cell/grid's references");
 			});
 
-			impl::BasicRWA ToggleFreezeInactive("Prevent references that don't belong to the active plugin from being selected.", []() {
+			impl::BasicRWA ToggleFreezeInactive("Toggle Freeze Inactive", "Prevent references that don't belong to the active plugin from being selected.", []() {
 				_RENDERWIN_XSTATE.FreezeInactiveRefs = _RENDERWIN_XSTATE.FreezeInactiveRefs == false;
 			});
 
 
-			impl::BasicRWA ToggleSelectionVisibility("Hide the reference.", []() {
+			impl::BasicRWA ToggleSelectionVisibility("Hide", "Hide the reference.", []() {
 				for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 				{
 					TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
@@ -409,7 +405,7 @@ namespace cse
 				achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefVisibility);
 			});
 
-			impl::BasicRWA ToggleSelectionChildrenVisibility("Hide the reference's enable-state children.", []() {
+			impl::BasicRWA ToggleSelectionChildrenVisibility("Hide Children", "Hide the reference's enable-state children.", []() {
 				for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 				{
 					TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
@@ -419,7 +415,7 @@ namespace cse
 				achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefVisibility);
 			});
 
-			impl::BasicRWA RevealAll("Show all hidden references.", []() {
+			impl::BasicRWA RevealAll("Reveal All", "Show all hidden references.", []() {
 				const TESObjectREFRArrayT& Refs = _RENDERWIN_MGR.GetActiveRefs();
 				for (TESObjectREFRArrayT::const_iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr)
 				{
@@ -436,7 +432,7 @@ namespace cse
 			});
 
 
-			impl::BasicRWA DimSelectionOpacity("Make the reference partially transparent.", []() {
+			impl::BasicRWA DimSelectionOpacity("Dim Opacity", "Make the reference partially transparent.", []() {
 				float Alpha = settings::renderer::kRefToggleOpacityAlpha().f;
 				if (Alpha < 0.1)
 					Alpha = 0.1;
@@ -448,7 +444,7 @@ namespace cse
 				}
 			});
 
-			impl::BasicRWA ResetSelectionOpacity("Make the reference fully opaque.", []() {
+			impl::BasicRWA ResetSelectionOpacity("Reset Opacity", "Make the reference fully opaque.", []() {
 				for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 				{
 					TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
@@ -457,7 +453,7 @@ namespace cse
 			});
 
 
-			impl::BasicRWA UnlinkPathGridSelection("Remove the path grid point's linked reference, if any", []() {
+			impl::BasicRWA UnlinkPathGridSelection("Unlink Path Grid Reference", "Remove the path grid point's linked reference, if any", []() {
 				_RENDERWIN_MGR.GetPathGridUndoManager()->ResetRedoStack();
 
 				if (TESRenderWindow::SelectedPathGridPoints->Count())
@@ -473,7 +469,7 @@ namespace cse
 				achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_PathGridAdditions);
 			});
 
-			impl::BasicRWA ShowBatchEditor("Display the batch reference editor.", []() {
+			impl::BasicRWA ShowBatchEditor("Batch Editor", "Display the batch reference editor.", []() {
 				const TESObjectREFRArrayT& Refs = _RENDERWIN_MGR.GetActiveRefs();
 				UInt32 RefCount = Refs.size();
 
@@ -621,7 +617,7 @@ namespace cse
 				}
 			});
 
-			impl::BasicRWA ShowUseInfo("Display the reference's usage info.", []() {
+			impl::BasicRWA ShowUseInfo("Use Info", "Display the reference's usage info.", []() {
 				for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 				{
 					TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
@@ -629,55 +625,137 @@ namespace cse
 				}
 			});
 
-			impl::BasicRWA ShowSearchReplace("Display the Search/Replace dialog.", []() {
+			impl::BasicRWA ShowSearchReplace("Search/Replace", "Display the Search/Replace dialog.", []() {
 				TESCSMain::InvokeMainMenuTool(TESCSMain::kMainMenu_Edit_SearchReplace);
 			});
 
 
-			impl::BasicRWA ToggleAuxViewport("Toggle the auxiliary viewport window", []() {
+			impl::BasicRWA ToggleAuxViewport("Toggle Auxiliary Viewport", "Show the auxiliary viewport window.", []() {
 				AUXVIEWPORT->ToggleVisibility();
 			});
 
-			impl::ToggleINISettingRWA ToggleStaticCameraPivot("Toggle the static camera pivot", settings::renderer::kFixedCameraPivot);
-			impl::BasicRWA ToggleAlternateMovementSettings("Toggles the alternate movement settings", []() {
+			impl::ToggleINISettingRWA ToggleStaticCameraPivot("Toggle Static Camera Pivot", "Use a fixed camera pivot when rotating without a selection.", settings::renderer::kFixedCameraPivot);
+			impl::BasicRWA ToggleAlternateMovementSettings("Toggle Alternate Movement Settings", "Use the auxiliary movement speed settings.", []() {
 				_RENDERWIN_XSTATE.UseAlternateMovementSettings = _RENDERWIN_XSTATE.UseAlternateMovementSettings == false;
 			});
 
-			impl::BasicRWA TogglePathGridEditMode("", []() {
-
+			impl::BasicRWA TogglePathGridEditMode("Toggle Path Grid Mode", "Toggle path grid editing mode.", []() {
+				TESCSMain::InvokeMainMenuTool(TESCSMain::kToolbar_PathGridEdit);
 			});
 
-			impl::BasicRWA ToggleSnapToGrid("", []() {
+			impl::BasicRWA ToggleSnapToGrid("Toggle Snap-To-Grid", "Toggle reference movement snap to grid.", []() {
+				UInt32 Flags = *TESRenderWindow::StateFlags;
 
+				if ((Flags & TESRenderWindow::kRenderWindowState_SnapToGrid))
+					Flags &= ~TESRenderWindow::kRenderWindowState_SnapToGrid;
+				else
+					Flags |= TESRenderWindow::kRenderWindowState_SnapToGrid;
+
+				*TESRenderWindow::StateFlags = Flags;
 			});
 
-			impl::BasicRWA ToggleSnapToAngle("", []() {
+			impl::BasicRWA ToggleSnapToAngle("Toggle Snap-To-Angle", "Toggle reference rotation snap to angle.", []() {
+				UInt32 Flags = *TESRenderWindow::StateFlags;
 
+				if ((Flags & TESRenderWindow::kRenderWindowState_SnapToAngle))
+					Flags &= ~TESRenderWindow::kRenderWindowState_SnapToAngle;
+				else
+					Flags |= TESRenderWindow::kRenderWindowState_SnapToAngle;
+
+				*TESRenderWindow::StateFlags = Flags;
 			});
 
+			impl::ToggleVisibilityRWA ToggleVisibility[impl::ToggleVisibilityRWA::kType__MAX] =
+			{
+				(impl::ToggleVisibilityRWA::kType_Objects),
+				(impl::ToggleVisibilityRWA::kType_Markers),
+				(impl::ToggleVisibilityRWA::kType_Wireframe),
+				(impl::ToggleVisibilityRWA::kType_BrightLight),
+				(impl::ToggleVisibilityRWA::kType_Sky),
+				(impl::ToggleVisibilityRWA::kType_SolidSubspaces),
+				(impl::ToggleVisibilityRWA::kType_CollisionGeom),
+				(impl::ToggleVisibilityRWA::kType_Leaves),
+				(impl::ToggleVisibilityRWA::kType_Trees),
+				(impl::ToggleVisibilityRWA::kType_Water),
+				(impl::ToggleVisibilityRWA::kType_CellBorders),
+				(impl::ToggleVisibilityRWA::kType_Land),
+				(impl::ToggleVisibilityRWA::kType_LightRadius),
+				(impl::ToggleVisibilityRWA::kType_ParentChildIndicator),
+				(impl::ToggleVisibilityRWA::kType_PathGridLinkedRefIndicator),
+				(impl::ToggleVisibilityRWA::kType_InitiallyDisabledRefs),
+				(impl::ToggleVisibilityRWA::kType_InitiallyDisabledRefsChildren),
+				(impl::ToggleVisibilityRWA::kType_GrassOverlay)
+			};
 
-			impl::ToggleVisibilityRWA ToggleVisibilityObjects(impl::ToggleVisibilityRWA::kType_Objects);
-			impl::ToggleVisibilityRWA ToggleVisibilityMarkers(impl::ToggleVisibilityRWA::kType_Markers);
-			impl::ToggleVisibilityRWA ToggleVisibilityWireframe(impl::ToggleVisibilityRWA::kType_Wireframe);
-			impl::ToggleVisibilityRWA ToggleVisibilityBrightLight(impl::ToggleVisibilityRWA::kType_BrightLight);
-			impl::ToggleVisibilityRWA ToggleVisibilitySky(impl::ToggleVisibilityRWA::kType_Sky);
-			impl::ToggleVisibilityRWA ToggleVisibilitySolidSubspaces(impl::ToggleVisibilityRWA::kType_SolidSubspaces);
-			impl::ToggleVisibilityRWA ToggleVisibilityCollisionGeom(impl::ToggleVisibilityRWA::kType_CollisionGeom);
-			impl::ToggleVisibilityRWA ToggleVisibilityLeaves(impl::ToggleVisibilityRWA::kType_Leaves);
-			impl::ToggleVisibilityRWA ToggleVisibilityTrees(impl::ToggleVisibilityRWA::kType_Trees);
-			impl::ToggleVisibilityRWA ToggleVisibilityWater(impl::ToggleVisibilityRWA::kType_Water);
-			impl::ToggleVisibilityRWA ToggleVisibilityLandscape(impl::ToggleVisibilityRWA::kType_Land);
-			impl::ToggleVisibilityRWA ToggleVisibilityCellBorders(impl::ToggleVisibilityRWA::kType_CellBorders);
-			impl::ToggleVisibilityRWA ToggleVisibilityParentChildIndicator(impl::ToggleVisibilityRWA::kType_ParentChildIndicator);
-			impl::ToggleVisibilityRWA ToggleVisibilityPathGridLinkedRefIndicator(impl::ToggleVisibilityRWA::kType_PathGridLinkedRefIndicator);
-			impl::ToggleVisibilityRWA ToggleVisibilityInitiallyDisabledRefs(impl::ToggleVisibilityRWA::kType_InitiallyDisabledRefs);
-			impl::ToggleVisibilityRWA ToggleVisibilityInitiallyDisabledRefsChildren(impl::ToggleVisibilityRWA::kType_InitiallyDisabledRefsChildren);
-			impl::ToggleVisibilityRWA ToggleVisibilityGrassOverlay(impl::ToggleVisibilityRWA::kType_GrassOverlay);
 
-			impl::BasicRWA FocusOnRefFilter("", []() {
-
+			impl::BasicRWA FocusOnRefFilter("Focus Ref Filter", "Move keyboard focus to the bottom toolbar's reference filter text input.", []() {
+				if (ToolbarOSDLayer::Instance.IsEnabled())
+					ToolbarOSDLayer::Instance.FocusOnRefFilter();
 			});
 
+			impl::BasicRWA JumpToExteriorCell("Jump To Exterior", "Warp to the exterior cell at the given coordinates.", []() {
+				bool OnLoad = true;
+				ModalWindowProviderOSDLayer::ModalRenderDelegateT RenderModalJumpToCell([OnLoad](RenderWindowOSD*, ImGuiDX9*, void*) mutable->bool {
+					static char CellCoordBuffer[0x100] = { 0 };
+					if (OnLoad)
+					{
+						OnLoad = false;
+						ImGui::SetKeyboardFocusHere(1);
+					}
+					bool EnterKey = false;
+					if (ImGui::InputText("Coordinates", CellCoordBuffer, sizeof(CellCoordBuffer),
+										 ImGuiInputTextFlags_EnterReturnsTrue))
+					{
+						EnterKey = true;
+					}
+
+					int X = 0, Y = 0;
+					bool InvalidInput = sscanf_s(CellCoordBuffer, "%d %d", &X, &Y) != 2;
+					if (strlen(CellCoordBuffer) == 0)
+						InvalidInput = true;
+
+					if (InvalidInput)
+						ImGui::Text("X and Y coordinates must be separated by a whitespace");
+					else
+						ImGui::Text("Destination coordinates: %d, %d", X, Y);
+
+					ImGui::Separator();
+					bool Close = false;
+					if (ImGui::Button("OK", ImVec2(120, 0)) || EnterKey)
+					{
+						if (InvalidInput == false)
+						{
+							Vector3 Coords((X << 12) + 2048.0, (Y << 12) + 2048.0, 0);
+							_TES->LoadCellIntoViewPort(&Coords, nullptr);
+							Close = true;
+						}
+					}
+
+					ImGui::SameLine();
+					if (ImGui::Button("Cancel", ImVec2(120, 0)))
+						Close = true;
+
+					if (Close)
+					{
+						ZeroMemory(CellCoordBuffer, sizeof(CellCoordBuffer));
+						return true;
+					}
+					else
+						return false;
+				});
+
+				if (_TES->currentInteriorCell)
+				{
+					NotificationOSDLayer::Instance.ShowNotification("This tool can only be used in an exterior worldspace");
+				}
+				else
+				{
+					ModalWindowProviderOSDLayer::Instance.ShowModal("Jump to Exterior Cell",
+																	RenderModalJumpToCell,
+																	nullptr,
+																	ImGuiWindowFlags_AlwaysAutoResize);
+				}
+			});
 		}
 
 	}

@@ -7,6 +7,7 @@
 #include "GlobalClipboard.h"
 #include "[Common]\CLIWrapper.h"
 #include "Hooks\Hooks-Renderer.h"
+#include "RenderWindowActions.h"
 
 namespace cse
 {
@@ -1214,6 +1215,13 @@ namespace cse
 					Return = true;
 
 					break;
+				case IDC_RENDERWINDOWCONTEXT_RENDERWINDOWHOTKEYS:
+					Return = true;
+
+					if (*TESRenderWindow::ActiveCell)
+						_RENDERWIN_MGR.HotKeyManager->ShowHotKeyEditor();
+
+					break;
 				}
 
 				break;
@@ -1365,13 +1373,41 @@ namespace cse
 					_RENDERWIN_XSTATE.CurrentMouseCoord.x = GET_X_LPARAM(lParam);
 					_RENDERWIN_XSTATE.CurrentMouseCoord.y = GET_Y_LPARAM(lParam);
 
+					_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
+					_RENDERWIN_XSTATE.CurrentMousePathGridPoint = nullptr;
+
+					if (GetActiveWindow() != hWnd)
+						break;
+
+					if (*TESRenderWindow::LandscapeEditFlag == 0)
+					{
+						if (*TESRenderWindow::PathGridEditFlag == 0)
+						{
+							_RENDERWIN_XSTATE.CurrentMouseRef = TESRender::PickRefAtCoords(_RENDERWIN_XSTATE.CurrentMouseCoord.x,
+																						   _RENDERWIN_XSTATE.CurrentMouseCoord.y);
+							if (_RENDERWIN_XSTATE.CurrentMouseRef)
+							{
+								if (ReferenceVisibilityValidator::IsCulled(_RENDERWIN_XSTATE.CurrentMouseRef) ||
+									ReferenceVisibilityValidator::ShouldBeInvisible(_RENDERWIN_XSTATE.CurrentMouseRef))
+								{
+									_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
+								}
+							}
+						}
+						else
+						{
+							_RENDERWIN_XSTATE.CurrentMousePathGridPoint = TESRender::PickPathGridPointAtCoords(_RENDERWIN_XSTATE.CurrentMouseCoord.x,
+																											   _RENDERWIN_XSTATE.CurrentMouseCoord.y);
+						}
+					}
+
 					if (_RENDERWIN_XSTATE.PaintingSelection)
 					{
 						Return = true;
 						// paint only when the control key is held down
 						if (GetAsyncKeyState(VK_CONTROL))
 						{
-							TESObjectREFR* MouseRef = TESRender::PickRefAtCoords(_RENDERWIN_XSTATE.CurrentMouseCoord.x, _RENDERWIN_XSTATE.CurrentMouseCoord.y);
+							TESObjectREFR* MouseRef = _RENDERWIN_XSTATE.CurrentMouseRef;
 							if (MouseRef)
 							{
 								if (_RENDERWIN_XSTATE.SelectionPaintingMode == RenderWindowExtendedState::kSelectionPaintingMode_NotSet)
@@ -1386,43 +1422,6 @@ namespace cse
 									_RENDERWIN_MGR.SelectionManager->AddToSelection(MouseRef, true);
 								else
 									_RENDERWIN_MGR.SelectionManager->RemoveFromSelection(MouseRef, true);
-							}
-						}
-					}
-
-					_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
-					_RENDERWIN_XSTATE.CurrentMousePathGridPoint = nullptr;
-
-					if (GetActiveWindow() == hWnd && *TESRenderWindow::LandscapeEditFlag == 0 && (_RENDERWIN_XSTATE.PaintingSelection || GetCapture() != hWnd))
-					{
-						int Enabled = settings::renderWindowOSD::kShowMouseRef.GetData().i;
-						int ControlModified = settings::renderWindowOSD::kMouseRefCtrlModified.GetData().i;
-
-						if (Enabled && (_RENDERWIN_XSTATE.PaintingSelection || ControlModified == false || GetAsyncKeyState(VK_CONTROL)))
-						{
-							if (*TESRenderWindow::PathGridEditFlag == 0)
-							{
-								_RENDERWIN_XSTATE.CurrentMouseRef = TESRender::PickRefAtCoords(_RENDERWIN_XSTATE.CurrentMouseCoord.x,
-																							  _RENDERWIN_XSTATE.CurrentMouseCoord.y);
-								if (_RENDERWIN_XSTATE.CurrentMouseRef)
-								{
-									if (_RENDERWIN_XSTATE.PaintingSelection == false &&
-										_RENDERSEL->selectionCount == 1 &&
-										_RENDERSEL->selectionList->Data == _RENDERWIN_XSTATE.CurrentMouseRef)
-									{
-										_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
-									}
-									else if (ReferenceVisibilityValidator::IsCulled(_RENDERWIN_XSTATE.CurrentMouseRef) ||
-											 ReferenceVisibilityValidator::ShouldBeInvisible(_RENDERWIN_XSTATE.CurrentMouseRef))
-									{
-										_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
-									}
-								}
-							}
-							else
-							{
-								_RENDERWIN_XSTATE.CurrentMousePathGridPoint = TESRender::PickPathGridPointAtCoords(_RENDERWIN_XSTATE.CurrentMouseCoord.x,
-																												_RENDERWIN_XSTATE.CurrentMouseCoord.y);
 							}
 						}
 					}
@@ -1620,7 +1619,8 @@ namespace cse
 					}
 					else if (GetAsyncKeyState(VK_SHIFT))
 					{
-						AUXVIEWPORT->ToggleVisibility();
+						actions::JumpToExteriorCell();
+	//					AUXVIEWPORT->ToggleVisibility();
 						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_AuxViewPort);
 						Return = true;
 					}
@@ -1844,6 +1844,7 @@ namespace cse
 #endif
 			CellLists->Initialize(OSD);
 			GroupManager->Initialize();
+			HotKeyManager->Initialize();
 
 			_RENDERWIN_XSTATE.Initialize();
 			Initialized = true;
@@ -1867,6 +1868,7 @@ namespace cse
 			events::renderer::kPreSceneGraphRender.RemoveSink(EventSink);
 			events::renderer::kPostSceneGraphRender.RemoveSink(EventSink);
 
+			HotKeyManager->Deinitialize();
 			GroupManager->Deinitialize();
 			CellLists->Deinitialize(OSD);
 			OSD->Deinitialize();

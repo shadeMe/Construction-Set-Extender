@@ -32,7 +32,8 @@ namespace cse
 		NiCamera*							ViewportCamera;
 		bool								Panning;
 		bool								Zooming;
-		bool								Rotating;
+		bool								Rotating;				// moving the camera around a pivot
+		bool								RotatingInPlace;		// rotating the camera in place
 		POINT								LastMouseCoords;
 		bool								Rendering;
 		GlobalEventSink*					EventSink;

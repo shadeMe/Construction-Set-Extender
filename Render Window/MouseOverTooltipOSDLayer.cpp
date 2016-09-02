@@ -8,7 +8,7 @@ namespace cse
 		MouseOverTooltipOSDLayer	MouseOverTooltipOSDLayer::Instance;
 
 		MouseOverTooltipOSDLayer::MouseOverTooltipOSDLayer() :
-			IRenderWindowOSDLayer(IRenderWindowOSDLayer::kPriority_MouseTooltip)
+			IRenderWindowOSDLayer()
 		{
 
 		}
@@ -59,11 +59,12 @@ namespace cse
 				if (ParentGroup)
 					FORMAT_STR(RefGroupBuffer, "\nGroup: %s", ParentGroup);
 
-				FORMAT_STR(Buffer, "%s%s%08X%s %s%s%s",
-					(Ref->GetEditorID() ? Ref->GetEditorID() : ""),
+				FORMAT_STR(Buffer, "%s%s%08X%s%s %s%s%s",
+						(Ref->GetEditorID() ? Ref->GetEditorID() : ""),
 						   (Ref->GetEditorID() ? "(" : ""),
 						   Ref->formID,
 						   (Ref->GetEditorID() ? ")" : ""),
+						   Ref->IsActive() ? "*" : "",
 						   BaseBuffer,
 						   xBuffer,
 						   RefGroupBuffer);
@@ -98,5 +99,12 @@ namespace cse
 			return false;
 		}
 
+		bool MouseOverTooltipOSDLayer::IsEnabled() const
+		{
+			int Enabled = settings::renderWindowOSD::kShowMouseRef.GetData().i;
+			int ControlModified = settings::renderWindowOSD::kMouseRefCtrlModified.GetData().i;
+
+			return Enabled && (ControlModified == false || GetAsyncKeyState(VK_CONTROL));
+		}
 	}
 }

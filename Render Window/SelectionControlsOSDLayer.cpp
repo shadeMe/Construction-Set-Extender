@@ -120,7 +120,7 @@ namespace cse
 		}
 
 		SelectionControlsOSDLayer::SelectionControlsOSDLayer() :
-			IRenderWindowOSDLayer(settings::renderWindowOSD::kShowSelectionControls, IRenderWindowOSDLayer::kPriority_SelectionControls),
+			IRenderWindowOSDLayer(&settings::renderWindowOSD::kShowSelectionControls),
 			WindowState()
 		{
 			LocalTransformation = 1;
@@ -179,8 +179,9 @@ namespace cse
 
 				ImGui::Columns(2, "Ref Info", false);
 				{
-					ImGui::TextWrapped("%s(%08X) [%s]", ThisRef->editorID.Size() ? ThisRef->editorID.c_str() : "",
+					ImGui::TextWrapped("%s(%08X)%s [%s]", ThisRef->editorID.Size() ? ThisRef->editorID.c_str() : "",
 									   ThisRef->formID,
+									   ThisRef->IsActive() ? "*" : "",
 									   TESForm::GetFormTypeIDLongName(ThisRef->baseForm->formType));
 					ImGui::NextColumn();
 

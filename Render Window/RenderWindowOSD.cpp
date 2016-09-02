@@ -389,7 +389,7 @@ namespace cse
 			style.Colors[ImGuiCol_Header] = ImVec4(0.69f, 0.42f, 0.39f, 0.00f);
 			style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.69f, 0.42f, 0.44f, 0.44f);
 
-			// clear the input event whitelists
+			// clear the input event whitelists every frame
 			PassthroughWhitelistMouseEvents.clear();
 
 			// Start the frame
@@ -527,6 +527,7 @@ namespace cse
 		{
 			ImGuiContext& g = *GImGui;
 			int popup_idx = g.CurrentPopupStack.Size - 1;
+			SME_ASSERT(popup_idx >= 0);
 			if (popup_idx < 0 || popup_idx > g.OpenPopupStack.Size || g.CurrentPopupStack[popup_idx].PopupId != g.OpenPopupStack[popup_idx].PopupId)
 				return false;
 
@@ -617,7 +618,13 @@ namespace cse
 				{
 					TESRenderWindow::Redraw();
 
-					if (Pipeline->CanAllowInputEventPassthrough(uMsg, wParam, lParam,
+					// consume all input if we have modal windows open
+					if (ModalWindowProviderOSDLayer::Instance.HasOpenModals())
+					{
+						Parent->State.ConsumeMouseInputEvents = Parent->State.ConsumeKeyboardInputEvents = true;
+						Return = true;
+					}
+					else if (Pipeline->CanAllowInputEventPassthrough(uMsg, wParam, lParam,
 																Parent->State.ConsumeMouseInputEvents,
 																Parent->State.ConsumeKeyboardInputEvents) == false)
 					{
@@ -758,7 +765,8 @@ namespace cse
 
 		void RenderWindowOSD::Draw()
 		{
-			if (Initialized && bgsee::RenderWindowFlyCamera::IsActive() == false)
+			if (Initialized &&
+				bgsee::RenderWindowFlyCamera::IsActive() == false)
 			{
 				Pipeline->NewFrame();
 				RenderLayers();
@@ -767,7 +775,8 @@ namespace cse
 
 		void RenderWindowOSD::Render()
 		{
-			if (Initialized && bgsee::RenderWindowFlyCamera::IsActive() == false)
+			if (Initialized &&
+				bgsee::RenderWindowFlyCamera::IsActive() == false )
 			{
 				if (RenderingLayers == false)
 				{
@@ -784,11 +793,7 @@ namespace cse
 			if (std::find(AttachedLayers.begin(), AttachedLayers.end(), Layer) != AttachedLayers.end())
 				BGSEECONSOLE_MESSAGE("Attempting to re-add the same OSD layer");
 			else
-			{
 				AttachedLayers.push_back(Layer);
-				std::sort(AttachedLayers.begin(), AttachedLayers.end(),
-						  [](const IRenderWindowOSDLayer* LHS, const IRenderWindowOSDLayer* RHS) { return LHS->GetPriority() > RHS->GetPriority(); });
-			}
 		}
 
 		void RenderWindowOSD::DetachLayer(IRenderWindowOSDLayer* Layer)
@@ -916,23 +921,10 @@ namespace cse
 				return false;
 		}
 
-		IRenderWindowOSDLayer::IRenderWindowOSDLayer(INISetting& Toggle, UInt32 Priority) :
-			Toggle(&Toggle),
-			Priority(Priority)
+		IRenderWindowOSDLayer::IRenderWindowOSDLayer(const INISetting* Toggle) :
+			Toggle(Toggle)
 		{
 			;//
-		}
-
-		IRenderWindowOSDLayer::IRenderWindowOSDLayer(UInt32 Priority) :
-			Toggle(nullptr),
-			Priority(Priority)
-		{
-			;//
-		}
-
-		UInt32 IRenderWindowOSDLayer::GetPriority() const
-		{
-			return Priority;
 		}
 
 		bool IRenderWindowOSDLayer::IsEnabled() const
@@ -965,7 +957,7 @@ namespace cse
 		}
 
 		NotificationOSDLayer::NotificationOSDLayer() :
-			IRenderWindowOSDLayer(settings::renderWindowOSD::kShowNotifications, IRenderWindowOSDLayer::kPriority_Notifications),
+			IRenderWindowOSDLayer(&settings::renderWindowOSD::kShowNotifications),
 			Notifications()
 		{
 			;//
@@ -1039,7 +1031,7 @@ namespace cse
 		DebugOSDLayer			DebugOSDLayer::Instance;
 
 		DebugOSDLayer::DebugOSDLayer() :
-			IRenderWindowOSDLayer(IRenderWindowOSDLayer::kPriority_Debug)
+			IRenderWindowOSDLayer()
 		{
 
 		}
@@ -1078,7 +1070,7 @@ namespace cse
 		}
 
 		ModalWindowProviderOSDLayer::ModalWindowProviderOSDLayer() :
-			IRenderWindowOSDLayer(kPriority_ModalProvider),
+			IRenderWindowOSDLayer(),
 			OpenModals()
 		{
 			;//
@@ -1105,8 +1097,9 @@ namespace cse
 					Top.Open = true;
 				}
 
-				if (ImGui::BeginPopupModal(Top.WindowName.c_str(), nullptr, Top.Flags))
+				if (ImGui::BeginPopupModal(Top.WindowName.c_str(), nullptr, Top.Flags | ImGuiWindowFlags_NoSavedSettings))
 				{
+					ImGui::SetNextWindowPosCenter(ImGuiSetCond_Once);
 					if (Top.Delegate(OSD, GUI, Top.UserData))
 					{
 						ImGui::CloseCurrentPopup();
@@ -1126,6 +1119,7 @@ namespace cse
 		void ModalWindowProviderOSDLayer::ShowModal(const char* Name, ModalRenderDelegateT Delegate, void* UserData, ImGuiWindowFlags_ Flags)
 		{
 			SME_ASSERT(Name && Delegate);
+			SME_ASSERT(*TESRenderWindow::ActiveCell);		// ### modal doesn't show up when called when the scenegraph is empty
 
 			// flag the current open modal, if any, as closed
 			if (OpenModals.size())

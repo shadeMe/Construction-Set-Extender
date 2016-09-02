@@ -2,6 +2,7 @@
 #include "Render Window\RenderWindowManager.h"
 #include "Construction Set Extender_Resource.h"
 #include "IconFontCppHeaders\IconsMaterialDesign.h"
+#include "RenderWindowActions.h"
 
 namespace cse
 {
@@ -179,11 +180,51 @@ namespace cse
 							}
 
 							break;
+						case kPopup_VisibilityToggles:
+							{
+								ImGui::PushID("visibility_toggle_menu_item");
+								{
+									static const char* kNames[actions::impl::ToggleVisibilityRWA::kType__MAX] =
+									{
+										"Objects",
+										"Markers",
+										"Wireframe",
+										"Bright Light",
+										"Sky",
+										"Solid Subspaces",
+										"Collision Geometry",
+										"Leaves",
+										"Trees",
+										"Water",
+										"Cell Borders",
+										"Landscape",
+										"Light Radius",
+										"Parent Child Indicator",
+										"Path Grid Linked Reference Indicator",
+										"Initially Disabled References",
+										"Initially Disabled References' Children",
+										"Grass Overlay"
+									};
+
+									bool Toggles[actions::impl::ToggleVisibilityRWA::kType__MAX] = { false };
+									for (int i = 0; i < actions::impl::ToggleVisibilityRWA::kType__MAX; i++)
+									{
+
+										Toggles[i] = actions::impl::ToggleVisibilityRWA::IsVisible(i);
+										if (ImGui::Checkbox(kNames[i], &Toggles[i]))
+											actions::ToggleVisibility[i]();
+									}
+								}
+								ImGui::PopID();
+							}
+
+							break;
 						}
 
 						if (Hovering == false && GUI->IsPopupHovered())
 						{
-							// reset the timeout every frame if the mouse is hovering over the popup
+							// reset the timeout/prevent ticking every frame when the mouse is hovering over the popup
+							PreventActivePopupTicking = true;
 							ActivePopupTimeout = kTimeoutPopup;
 						}
 					}
@@ -222,6 +263,11 @@ namespace cse
 		{
 			if (ModalWindowProviderOSDLayer::Instance.HasOpenModals())
 				return;
+			else if (PreventActivePopupTicking)
+			{
+				PreventActivePopupTicking = false;
+				return;
+			}
 
 			if (ActivePopup != kPopup__NONE && ActivePopupTimeout != 0.f && CloseActivePopup == false)
 			{
@@ -358,6 +404,12 @@ namespace cse
 					ImGui::SetTooltip("Type in the text box to find references matching the filter string.\nCycle through matches with the TAB key.");
 				POP_TRANSPARENT_BUTTON_COLORS;
 				ImGui::SameLine(0, 10);
+
+				if (SetRefFilterFocus)
+				{
+					SetRefFilterFocus = false;
+					ImGui::SetKeyboardFocusHere();
+				}
 				if (ImGui::InputText("##find_ref_textbox", RefFilter.InputBuf, sizeof(RefFilter.InputBuf),
 									 ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CallbackCompletion,
 									 [](ImGuiTextEditCallbackData* Data)->int { ToolbarOSDLayer* Parent = (ToolbarOSDLayer*)Data->UserData; return Parent->RefFilterCompletionCallback(Data); },
@@ -368,7 +420,11 @@ namespace cse
 				GUI->WhitelistItemForMouseEvents();
 				ImGui::SameLine(0, 10);
 				if (strlen(RefFilter.InputBuf))
+				{
 					ImGui::Text(ICON_MD_FILTER_LIST " %d", FilterRefs.size());
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("%d references match the filter.", FilterRefs.size());
+				}
 				else
 					ImGui::Dummy(ImVec2(5, 5));
 
@@ -492,7 +548,7 @@ namespace cse
 		}
 
 		ToolbarOSDLayer::ToolbarOSDLayer() :
-			IRenderWindowOSDLayer(settings::renderWindowOSD::kShowToolbar, IRenderWindowOSDLayer::kPriority_Toolbar),
+			IRenderWindowOSDLayer(&settings::renderWindowOSD::kShowToolbar),
 			PopupStateData(),
 			RefFilter(),
 			FilterRefs()
@@ -506,6 +562,7 @@ namespace cse
 
 			FilterRefs.reserve(100);
 			PreviousFilterRef = FilterRefs.end();
+			SetRefFilterFocus = false;
 		}
 
 		ToolbarOSDLayer::~ToolbarOSDLayer()
@@ -525,5 +582,11 @@ namespace cse
 		{
 			return false;
 		}
+
+		void ToolbarOSDLayer::FocusOnRefFilter()
+		{
+			SetRefFilterFocus = true;
+		}
+
 	}
 }
