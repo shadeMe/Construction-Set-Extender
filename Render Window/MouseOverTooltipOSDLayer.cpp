@@ -26,6 +26,8 @@ namespace cse
 				return;
 			else if (*TESRenderWindow::PathGridEditFlag && _RENDERWIN_XSTATE.CurrentMousePathGridPoint == nullptr)
 				return;
+			else if (GetCapture() == *TESRenderWindow::WindowHandle && _RENDERWIN_XSTATE.PaintingSelection == false)
+				return;
 
 			SME_ASSERT((void*)_RENDERWIN_XSTATE.CurrentMouseRef != (void*)_RENDERWIN_XSTATE.CurrentMousePathGridPoint);
 

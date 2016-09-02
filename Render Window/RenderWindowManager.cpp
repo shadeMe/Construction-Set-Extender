@@ -1247,6 +1247,12 @@ namespace cse
 				// defer to the OSD window proc
 				return DlgProcResult;
 			}
+			else if (_RENDERWIN_MGR.HotKeyManager->HandleInput(uMsg, wParam, lParam))
+			{
+				// key input was handled, consume message
+				Return = true;
+				return DlgProcResult;
+			}
 
 			switch (uMsg)
 			{
@@ -1262,7 +1268,7 @@ namespace cse
 			case WM_TIMER:
 				switch (wParam)
 				{
-				case TESRenderWindow::kTimer_ViewportUpdate:			// update timer
+				case TESRenderWindow::kTimer_ViewportUpdate:
 					static bool SetTimerPeriod = true;
 					if (SetTimerPeriod)
 					{
@@ -1336,7 +1342,7 @@ namespace cse
 
 						if (*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0)
 						{
-							TESObjectREFR* MouseRef = TESRender::PickRefAtCoords(_RENDERWIN_XSTATE.CurrentMouseCoord.x, _RENDERWIN_XSTATE.CurrentMouseCoord.y);
+							TESObjectREFR* MouseRef = _RENDERWIN_XSTATE.CurrentMouseRef;
 							if (MouseRef)
 							{
 								UInt32 SelectionReason = 0;
@@ -1404,8 +1410,8 @@ namespace cse
 					if (_RENDERWIN_XSTATE.PaintingSelection)
 					{
 						Return = true;
-						// paint only when the control key is held down
-						if (GetAsyncKeyState(VK_CONTROL))
+						// paint only when the alt key is held down
+						if (GetAsyncKeyState(VK_MENU))
 						{
 							TESObjectREFR* MouseRef = _RENDERWIN_XSTATE.CurrentMouseRef;
 							if (MouseRef)
@@ -1431,6 +1437,7 @@ namespace cse
 			case WM_MOUSELEAVE:
 			case WM_NCMOUSELEAVE:
 				_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
+				_RENDERWIN_XSTATE.CurrentMousePathGridPoint = nullptr;
 
 				break;
 			case WM_LBUTTONDOWN:
@@ -1488,7 +1495,7 @@ namespace cse
 			case WM_KEYUP:
 				switch (wParam)
 				{
-				case 0x43:		// C
+				case 'C':
 					{
 						int SwitchEnabled = settings::renderer::kSwitchCAndY.GetData().i;
 						if (SwitchEnabled && GetAsyncKeyState(VK_CONTROL) == FALSE)
@@ -1499,7 +1506,7 @@ namespace cse
 					}
 
 					break;
-				case 0x59:		// Y
+				case 'Y':
 					{
 						int SwitchEnabled = settings::renderer::kSwitchCAndY.GetData().i;
 						if (SwitchEnabled && GetAsyncKeyState(VK_CONTROL) == FALSE)
@@ -1516,21 +1523,7 @@ namespace cse
 			case WM_KEYDOWN:
 				switch (wParam)
 				{
-				case VK_SHIFT:
-					_PRIMARYRENDERER->GetCameraPivot(&_RENDERWIN_XSTATE.StaticCameraPivot, 0.18);
-
-					break;
-				case VK_F1:		// F1
-					for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
-					{
-						TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
-						TESDialog::ShowUseReportDialog(Ref);
-					}
-
-					Return = true;
-
-					break;
-				case 0x5A:		// Z
+				case 'Z':
 					if (*TESRenderWindow::PathGridEditFlag && GetAsyncKeyState(VK_CONTROL))
 					{
 						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_PathGridAdditions);
@@ -1539,7 +1532,7 @@ namespace cse
 					}
 
 					break;
-				case 0x59:		// Y
+				case 'Y':
 					if (*TESRenderWindow::PathGridEditFlag && GetAsyncKeyState(VK_CONTROL))
 					{
 						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_PathGridAdditions);
@@ -1557,7 +1550,7 @@ namespace cse
 					}
 
 					break;
-				case 0x43:		// C
+				case 'C':
 					{
 						int SwitchEnabled = settings::renderer::kSwitchCAndY.GetData().i;
 						if (SwitchEnabled && GetAsyncKeyState(VK_CONTROL) == FALSE)
@@ -1567,114 +1560,6 @@ namespace cse
 						}
 					}
 
-					break;
-				case 0x52:		// R
-					if (*TESRenderWindow::PathGridEditFlag)
-					{
-						if (GetAsyncKeyState(VK_CONTROL))
-						{
-							_RENDERWIN_MGR.GetPathGridUndoManager()->ResetRedoStack();
-
-							if (TESRenderWindow::SelectedPathGridPoints->Count())
-								_RENDERWIN_MGR.GetPathGridUndoManager()->RecordOperation(PathGridUndoManager::kOperation_DataChange, TESRenderWindow::SelectedPathGridPoints);
-
-							for (tList<TESPathGridPoint>::Iterator Itr = TESRenderWindow::SelectedPathGridPoints->Begin(); !Itr.End() && Itr.Get(); ++Itr)
-							{
-								TESPathGridPoint* Point = Itr.Get();
-								Point->UnlinkFromReference();
-								Point->HideSelectionRing();
-							}
-
-							achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_PathGridAdditions);
-
-							TESRenderWindow::Redraw(true);
-
-							Return = true;
-						}
-						else
-						{
-							std::list<TESPathGridPoint*> Delinquents;
-
-							for (tList<TESPathGridPoint>::Iterator Itr = TESRenderWindow::SelectedPathGridPoints->Begin(); !Itr.End() && Itr.Get(); ++Itr)
-							{
-								if (Itr.Get()->linkedRef)
-									Delinquents.push_back(Itr.Get());
-
-								Itr.Get()->HideSelectionRing();
-							}
-
-							// remove from selection
-							for (std::list<TESPathGridPoint*>::iterator Itr = Delinquents.begin(); Itr != Delinquents.end(); Itr++)
-								thisCall<void>(0x00452AE0, TESRenderWindow::SelectedPathGridPoints, *Itr);
-						}
-					}
-
-					break;
-				case 0x51:		// Q
-					if (GetAsyncKeyState(VK_CONTROL))
-					{
-						SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_USEALTERNATEMOVEMENTSETTINGS, NULL);
-
-						Return = true;
-					}
-					else if (GetAsyncKeyState(VK_SHIFT))
-					{
-						actions::JumpToExteriorCell();
-	//					AUXVIEWPORT->ToggleVisibility();
-						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_AuxViewPort);
-						Return = true;
-					}
-
-					break;
-				case 0x45:		// E
-					if (GetAsyncKeyState(VK_SHIFT))
-					{
-						SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_COPLANARDROP, NULL);
-
-						Return = true;
-					}
-
-					break;
-				case 0x56:		// V
-					if (GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_CONTROL) && GetAsyncKeyState(VK_MENU))
-					{
-						SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_INVERTSELECTION, NULL);
-
-						Return = true;
-					}
-
-					break;
-				case 0x32:		// 2
-					SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_TOGGLEVISIBILITY, NULL);
-					TESRenderWindow::Redraw();
-
-					Return = true;
-					break;
-				case 0x33:		// 3
-				case 0x34:		// 4
-					for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
-					{
-						TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
-						if (wParam == 0x33)
-						{
-							float Alpha = settings::renderer::kRefToggleOpacityAlpha().f;
-							if (Alpha < 0.1)
-								Alpha = 0.1;
-
-							Ref->SetAlpha(Alpha);
-						}
-						else
-							Ref->SetAlpha();
-					}
-
-					TESRenderWindow::Redraw();
-
-					Return = true;
-					break;
-				case 0x47:		// G
-					SendMessage(BGSEEUI->GetMainWindow(), WM_COMMAND, TESCSMain::kToolbar_PathGridEdit, NULL);
-
-					Return = true;
 					break;
 				case VK_F5:
 					{
@@ -1704,38 +1589,7 @@ namespace cse
 					}
 
 					break;
-				case 0x41:		// A
-					if (GetAsyncKeyState(VK_CONTROL))
-					{
-						Return = true;
-
-						const TESObjectREFRArrayT& Refs = _RENDERWIN_MGR.GetActiveRefs();
-						for (TESObjectREFRArrayT::const_iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr)
-						{
-							TESObjectREFR* Ref = *Itr;
-
-							if (_RENDERSEL->HasObject(Ref) == false &&
-								(Ref->formFlags & TESObjectREFR::kSpecialFlags_3DInvisible) == false &&
-								(Ref->formFlags & TESObjectREFR::kSpecialFlags_Frozen) == false)
-							{
-								_RENDERSEL->AddToSelection(Ref, true);
-							}
-						}
-					}
-
-					break;
-				case 0x4B:		// K
-					Return = true;
-
-					if (*TESRenderWindow::PathGridEditFlag == 0)
-						settings::renderer::kParentChildVisualIndicator.ToggleData();
-					else
-						settings::renderer::kPathGridLinkedRefIndicator.ToggleData();
-
-					TESRenderWindow::Redraw(*TESRenderWindow::PathGridEditFlag);
-
-					break;
-				case 0x46:		// F
+				case 'F':
 					if (*TESRenderWindow::PathGridEditFlag)
 					{
 						// prevent the linked ref indicator trishape from interfering with the fall operation

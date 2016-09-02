@@ -9,19 +9,36 @@ namespace cse
 			// functor that performs a render window action/operation
 			class IRenderWindowAction
 			{
+			public:
+				// render window modes in which the action can be executed
+				enum
+				{
+					kMode_ReferenceEdit		= 1 << 0,
+					kMode_PathGridEdit		= 1 << 1,
+					kMode_LandscapeEdit		= 1 << 2,
+
+					kMode_All				= kMode_ReferenceEdit | kMode_PathGridEdit | kMode_LandscapeEdit,
+				};
 			protected:
 				std::string				Name;
 				std::string				Description;
+				UInt8					ExecutionContext;
 			public:
-				IRenderWindowAction(std::string Name, std::string Desc);
+				IRenderWindowAction(std::string Name, std::string Desc, UInt8 Context);
 				virtual ~IRenderWindowAction() = 0
 				{
 					;//
 				}
 
-				virtual void			operator()() = 0;
+				virtual bool			operator()() = 0;			// returns false if the operation was not performed, true otherwise
 				virtual const char*		GetName() const;
 				virtual const char*		GetDescription() const;
+
+				bool					IsExecutableInReferenceEdit() const;
+				bool					IsExecutableInPathGridEdit() const;
+				bool					IsExecutableInLandscapeEdit() const;
+				bool					IsExecutableInCurrentContext() const;
+				bool					HasSameExecutionContext(const IRenderWindowAction& RHS);	// returns true if any of the RHS' contexts match
 			};
 
 			namespace impl
@@ -33,19 +50,20 @@ namespace cse
 					ActionDelegateT		Delegate;
 				public:
 					BasicRWA(std::string Name, std::string Desc, ActionDelegateT Delegate);
+					BasicRWA(std::string Name, std::string Desc, UInt8 Context, ActionDelegateT Delegate);
 					virtual ~BasicRWA();
 
-					virtual void		operator()() override;
+					virtual bool		operator()() override;
 				};
 
 				class ToggleINISettingRWA : public IRenderWindowAction
 				{
 					SME::INI::INISetting&	Setting;
 				public:
-					ToggleINISettingRWA(std::string Name, std::string Desc, SME::INI::INISetting& Setting);
+					ToggleINISettingRWA(std::string Name, std::string Desc, UInt8 Context, SME::INI::INISetting& Setting);
 					virtual ~ToggleINISettingRWA();
 
-					virtual void		operator()() override;
+					virtual bool		operator()() override;
 				};
 
 				class ToggleVisibilityRWA : public IRenderWindowAction
@@ -82,7 +100,7 @@ namespace cse
 					ToggleVisibilityRWA(int Type);
 					virtual ~ToggleVisibilityRWA();
 
-					virtual void			operator()() override;
+					virtual bool			operator()() override;
 
 					static bool				IsVisible(int Type);
 				};
@@ -107,6 +125,7 @@ namespace cse
 			extern impl::BasicRWA DimSelectionOpacity;
 			extern impl::BasicRWA ResetSelectionOpacity;
 
+			extern impl::BasicRWA LinkPathGridSelection;
 			extern impl::BasicRWA UnlinkPathGridSelection;
 
 			extern impl::BasicRWA ShowBatchEditor;

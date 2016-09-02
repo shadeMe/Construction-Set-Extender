@@ -14,6 +14,7 @@ CSE		---->
 		> Object window columns like Auto calc, Enchantment type, Count don't sort consistently
 			>> Columns not handled by default = 3, 24, 41, 54. Some others are incorrectly handled
 		> Render window fixed camera pivot is broken; reimplement
+		> Fix switch C/Y implementation
 		> If you edit a land record, then switch to either a parent or child worldspace which contains that same cell, frequently the edits are not displayed in the render window, instead you see the unedited land height (however collision is handled correctly so Fing an object will drop it to where the land should be) - additionally, when editing a land record in a child worldspace, sometimes these edits get saved into a NEW land record for the child worldspace instead of being allocated to the existing land record of the parent worldspace. I believe the land record from the parent landscape is the one which gets displayed in-game when such an overlap exists.
 
 

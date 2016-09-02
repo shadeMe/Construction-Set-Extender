@@ -61,10 +61,8 @@ namespace cse
 			RenderWindowHotKey(const char* GUID, actions::IRenderWindowAction& Action, KeyCombo Active);
 			RenderWindowHotKey(const char* GUID, actions::IRenderWindowAction& Action, KeyCombo Active, KeyCombo Builtin);
 
-			bool							operator==(const KeyCombo& RHS);
-
-			bool							HandleActiveKeyCombo(SHORT Key);		// returns true if the key combo was handled
-			bool							HandleBuiltinKeyCombo(SHORT Key);		// returns true if the built-in key combo was handled
+			bool							HandleActiveKeyCombo(SHORT Key, bool& OutActionResult, bool& OutIsInvalidContext);		// returns true if the key combo was triggered
+			bool							HandleBuiltinKeyCombo(SHORT Key);		// returns true if the built-in key combo was triggered
 			bool							IsOverride() const;						// returns true if the hotkey overrides a built-in key combo
 			void							SetActiveCombo(SHORT Key, UInt8 Modifiers);
 			void							Save(bgsee::INIManagerSetterFunctor& INI, const char* Section) const;
@@ -103,7 +101,8 @@ namespace cse
 			void				SetKeyStateOverride(UInt8 Type, bool NewState);
 			void				ResetKeyStateOverride(UInt8 Type);
 
-			RenderWindowHotKey*	LookupHotKey(KeyCombo Key);		// returns nullptr if nothing's found
+			RenderWindowHotKey*	LookupHotKey(KeyCombo Key);		// returns nullptr if nothing's found,
+			RenderWindowHotKey*	LookupHotKey(KeyCombo Key, actions::IRenderWindowAction& Action);	// filters with the action's execution context
 			void				RegisterHotKey(const char* GUID, actions::IRenderWindowAction& Action, KeyCombo& Combo);
 			void				RegisterHotKey(const char* GUID, actions::IRenderWindowAction& Action, KeyCombo& Combo, KeyCombo& Default);
 

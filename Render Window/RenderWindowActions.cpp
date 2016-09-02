@@ -12,11 +12,12 @@ namespace cse
 	{
 		namespace actions
 		{
-			IRenderWindowAction::IRenderWindowAction(std::string Name, std::string Desc) :
+			IRenderWindowAction::IRenderWindowAction(std::string Name, std::string Desc, UInt8 Context) :
 				Name(Name),
-				Description(Desc)
+				Description(Desc),
+				ExecutionContext(Context)
 			{
-				;//
+				SME_ASSERT(ExecutionContext != NULL);
 			}
 
 			const char* IRenderWindowAction::GetName() const
@@ -29,11 +30,60 @@ namespace cse
 				return Description.c_str();
 			}
 
+			bool IRenderWindowAction::IsExecutableInLandscapeEdit() const
+			{
+				return ExecutionContext & kMode_LandscapeEdit;
+			}
+
+			bool IRenderWindowAction::IsExecutableInCurrentContext() const
+			{
+				bool Ref = *TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0;
+				bool PathGrid = *TESRenderWindow::PathGridEditFlag;
+				bool Landscape = *TESRenderWindow::LandscapeEditFlag;
+
+				if (Ref && IsExecutableInReferenceEdit())
+					return true;
+				else if (PathGrid && IsExecutableInPathGridEdit())
+					return true;
+				else if (Landscape && IsExecutableInLandscapeEdit())
+					return true;
+				else
+					return false;
+			}
+
+			bool IRenderWindowAction::HasSameExecutionContext(const IRenderWindowAction& RHS)
+			{
+				if (IsExecutableInReferenceEdit() && RHS.IsExecutableInReferenceEdit())
+					return true;
+				else if (IsExecutableInPathGridEdit() && RHS.IsExecutableInPathGridEdit())
+					return true;
+				else if (IsExecutableInLandscapeEdit() && RHS.IsExecutableInLandscapeEdit())
+					return true;
+				else
+					return false;
+			}
+
+			bool IRenderWindowAction::IsExecutableInPathGridEdit() const
+			{
+				return ExecutionContext & kMode_PathGridEdit;
+			}
+
+			bool IRenderWindowAction::IsExecutableInReferenceEdit() const
+			{
+				return ExecutionContext & kMode_ReferenceEdit;
+			}
+
 			namespace impl
 			{
-
 				BasicRWA::BasicRWA(std::string Name, std::string Desc, ActionDelegateT Delegate) :
-					IRenderWindowAction(Name, Desc),
+					IRenderWindowAction(Name, Desc, kMode_ReferenceEdit),
+					Delegate(Delegate)
+				{
+					SME_ASSERT(Delegate);
+				}
+
+				BasicRWA::BasicRWA(std::string Name, std::string Desc, UInt8 Context, ActionDelegateT Delegate) :
+					IRenderWindowAction(Name, Desc, Context),
 					Delegate(Delegate)
 				{
 					SME_ASSERT(Delegate);
@@ -44,14 +94,18 @@ namespace cse
 					;//
 				}
 
-				void BasicRWA::operator()()
+				bool BasicRWA::operator()()
 				{
+					if (IsExecutableInCurrentContext() == false)
+						return false;
+
 					Delegate();
 					TESRenderWindow::Redraw();
+					return true;
 				}
 
-				ToggleINISettingRWA::ToggleINISettingRWA(std::string Name, std::string Desc, SME::INI::INISetting& Setting) :
-					IRenderWindowAction(Name, Desc),
+				ToggleINISettingRWA::ToggleINISettingRWA(std::string Name, std::string Desc, UInt8 Context, SME::INI::INISetting& Setting) :
+					IRenderWindowAction(Name, Desc, Context),
 					Setting(Setting)
 				{
 					SME_ASSERT(Setting.GetType() == SME::INI::INISetting::kType_Integer ||
@@ -63,14 +117,18 @@ namespace cse
 					;//
 				}
 
-				void ToggleINISettingRWA::operator()()
+				bool ToggleINISettingRWA::operator()()
 				{
+					if (IsExecutableInCurrentContext() == false)
+						return false;
+
 					Setting.ToggleData();
 					TESRenderWindow::Redraw();
+					return true;
 				}
 
 				ToggleVisibilityRWA::ToggleVisibilityRWA(int Type) :
-					IRenderWindowAction("", ""),
+					IRenderWindowAction("", "", kMode_All),
 					Type(Type)
 				{
 					SME_ASSERT(Type > kType__NONE && Type < kType__MAX);
@@ -128,8 +186,11 @@ namespace cse
 					;//
 				}
 
-				void ToggleVisibilityRWA::operator()()
+				bool ToggleVisibilityRWA::operator()()
 				{
+					if (IsExecutableInCurrentContext() == false)
+						return false;
+
 					switch (Type)
 					{
 					case kType_Objects:
@@ -195,6 +256,7 @@ namespace cse
 					}
 
 					TESRenderWindow::Redraw(Type == kType_PathGridLinkedRefIndicator);
+					return true;
 				}
 
 				bool ToggleVisibilityRWA::IsVisible(int Type)
@@ -253,24 +315,21 @@ namespace cse
 			}
 
 			impl::BasicRWA InvertSelection("Invert Selection", "Invert the current reference selection.", []() {
-				if (*TESRenderWindow::PathGridEditFlag == 0)
+				const TESObjectREFRArrayT& Refs = _RENDERWIN_MGR.GetActiveRefs();
+				if (Refs.size())
 				{
-					const TESObjectREFRArrayT& Refs = _RENDERWIN_MGR.GetActiveRefs();
-					if (Refs.size())
+					TESRenderSelection* Buffer = TESRenderSelection::CreateInstance(_RENDERSEL);
+					_RENDERSEL->ClearSelection(true);
+
+					for (TESObjectREFRArrayT::const_iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr)
 					{
-						TESRenderSelection* Buffer = TESRenderSelection::CreateInstance(_RENDERSEL);
-						_RENDERSEL->ClearSelection(true);
+						TESObjectREFR* Ref = *Itr;
 
-						for (TESObjectREFRArrayT::const_iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr)
-						{
-							TESObjectREFR* Ref = *Itr;
-
-							if (Buffer->HasObject(Ref) == false)
-								_RENDERSEL->AddToSelection(Ref, true);
-						}
-
-						Buffer->DeleteInstance();
+						if (Buffer->HasObject(Ref) == false)
+							_RENDERSEL->AddToSelection(Ref, true);
 					}
+
+					Buffer->DeleteInstance();
 				}
 			});
 
@@ -453,7 +512,35 @@ namespace cse
 			});
 
 
-			impl::BasicRWA UnlinkPathGridSelection("Unlink Path Grid Reference", "Remove the path grid point's linked reference, if any", []() {
+			impl::BasicRWA LinkPathGridSelection("Link Path Grid Reference", "Link the path grid point to a reference.",
+												 IRenderWindowAction::kMode_PathGridEdit, []() {
+				if (TESRenderWindow::SelectedPathGridPoints->IsEmpty())
+					return;
+
+				std::vector<TESPathGrid*> ParentGrids;
+				TESObjectREFR* LinkRef = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, nullptr, true);
+
+				if (LinkRef)
+				{
+					for (tList<TESPathGridPoint>::Iterator Itr = TESRenderWindow::SelectedPathGridPoints->Begin();
+						 !Itr.End() && Itr.Get();
+						 ++Itr)
+					{
+						TESPathGridPoint* Point = Itr.Get();
+						if (Point->linkedRef)
+							Point->UnlinkFromReference();
+
+						ParentGrids.push_back(Point->parentGrid);
+						Point->LinkToReference(LinkRef);
+					}
+
+					for (auto Itr : ParentGrids)
+						Itr->GenerateNiNode();
+				}
+			});
+
+			impl::BasicRWA UnlinkPathGridSelection("Unlink Path Grid Reference", "Remove the path grid point's linked reference, if any",
+												   IRenderWindowAction::kMode_PathGridEdit, []() {
 				_RENDERWIN_MGR.GetPathGridUndoManager()->ResetRedoStack();
 
 				if (TESRenderWindow::SelectedPathGridPoints->Count())
@@ -630,20 +717,26 @@ namespace cse
 			});
 
 
-			impl::BasicRWA ToggleAuxViewport("Toggle Auxiliary Viewport", "Show the auxiliary viewport window.", []() {
+			impl::BasicRWA ToggleAuxViewport("Toggle Auxiliary Viewport", "Show the auxiliary viewport window.",
+											 IRenderWindowAction::kMode_All, []() {
 				AUXVIEWPORT->ToggleVisibility();
+				achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_AuxViewPort);
 			});
 
-			impl::ToggleINISettingRWA ToggleStaticCameraPivot("Toggle Static Camera Pivot", "Use a fixed camera pivot when rotating without a selection.", settings::renderer::kFixedCameraPivot);
-			impl::BasicRWA ToggleAlternateMovementSettings("Toggle Alternate Movement Settings", "Use the auxiliary movement speed settings.", []() {
+			impl::ToggleINISettingRWA ToggleStaticCameraPivot("Toggle Static Camera Pivot", "Use a fixed camera pivot when rotating without a selection.",
+															  IRenderWindowAction::kMode_All, settings::renderer::kFixedCameraPivot);
+			impl::BasicRWA ToggleAlternateMovementSettings("Toggle Alternate Movement Settings", "Use the auxiliary movement speed settings.",
+														   IRenderWindowAction::kMode_All, []() {
 				_RENDERWIN_XSTATE.UseAlternateMovementSettings = _RENDERWIN_XSTATE.UseAlternateMovementSettings == false;
 			});
 
-			impl::BasicRWA TogglePathGridEditMode("Toggle Path Grid Mode", "Toggle path grid editing mode.", []() {
+			impl::BasicRWA TogglePathGridEditMode("Toggle Path Grid Mode", "Toggle path grid editing mode.",
+												  IRenderWindowAction::kMode_All, []() {
 				TESCSMain::InvokeMainMenuTool(TESCSMain::kToolbar_PathGridEdit);
 			});
 
-			impl::BasicRWA ToggleSnapToGrid("Toggle Snap-To-Grid", "Toggle reference movement snap to grid.", []() {
+			impl::BasicRWA ToggleSnapToGrid("Toggle Snap-To-Grid", "Toggle reference movement snap to grid.",
+											IRenderWindowAction::kMode_All, []() {
 				UInt32 Flags = *TESRenderWindow::StateFlags;
 
 				if ((Flags & TESRenderWindow::kRenderWindowState_SnapToGrid))
@@ -654,7 +747,8 @@ namespace cse
 				*TESRenderWindow::StateFlags = Flags;
 			});
 
-			impl::BasicRWA ToggleSnapToAngle("Toggle Snap-To-Angle", "Toggle reference rotation snap to angle.", []() {
+			impl::BasicRWA ToggleSnapToAngle("Toggle Snap-To-Angle", "Toggle reference rotation snap to angle.",
+											 IRenderWindowAction::kMode_All, []() {
 				UInt32 Flags = *TESRenderWindow::StateFlags;
 
 				if ((Flags & TESRenderWindow::kRenderWindowState_SnapToAngle))
@@ -688,12 +782,14 @@ namespace cse
 			};
 
 
-			impl::BasicRWA FocusOnRefFilter("Focus Ref Filter", "Move keyboard focus to the bottom toolbar's reference filter text input.", []() {
+			impl::BasicRWA FocusOnRefFilter("Focus Ref Filter", "Move keyboard focus to the bottom toolbar's reference filter text input.",
+											IRenderWindowAction::kMode_All, []() {
 				if (ToolbarOSDLayer::Instance.IsEnabled())
 					ToolbarOSDLayer::Instance.FocusOnRefFilter();
 			});
 
-			impl::BasicRWA JumpToExteriorCell("Jump To Exterior", "Warp to the exterior cell at the given coordinates.", []() {
+			impl::BasicRWA JumpToExteriorCell("Jump To Exterior", "Warp to the exterior cell at the given coordinates.",
+											  IRenderWindowAction::kMode_All, []() {
 				bool OnLoad = true;
 				ModalWindowProviderOSDLayer::ModalRenderDelegateT RenderModalJumpToCell([OnLoad](RenderWindowOSD*, ImGuiDX9*, void*) mutable->bool {
 					static char CellCoordBuffer[0x100] = { 0 };

@@ -46,18 +46,14 @@ namespace cse
 
 		bool KeyCombo::IsActivated(SHORT Key) const
 		{
+			bool Control = ((Modifiers & kModifier_Control) && GetAsyncKeyState(VK_CONTROL)) || ((Modifiers & kModifier_Control) == false && GetAsyncKeyState(VK_CONTROL) == NULL);
+			bool Shift = ((Modifiers & kModifier_Shift) && GetAsyncKeyState(VK_SHIFT)) || ((Modifiers & kModifier_Shift) == false && GetAsyncKeyState(VK_SHIFT) == NULL);
+			bool Alt = ((Modifiers & kModifier_Alt) && GetAsyncKeyState(VK_MENU)) || ((Modifiers & kModifier_Alt) == false && GetAsyncKeyState(VK_MENU) == NULL);
+
 			if (Key == KeyCode)
 			{
-				if ((Modifiers & kModifier_Control) == false || GetAsyncKeyState(VK_CONTROL))
-				{
-					if ((Modifiers & kModifier_Shift) == false || GetAsyncKeyState(VK_SHIFT))
-					{
-						if ((Modifiers & kModifier_Alt) == false || GetAsyncKeyState(VK_MENU))
-						{
-							return true;
-						}
-					}
-				}
+				if (Control && Shift && Alt)
+					return true;
 			}
 
 			return false;
@@ -236,19 +232,13 @@ namespace cse
 			SME_ASSERT(BuiltinKey.IsValid());
 		}
 
-		bool RenderWindowHotKey::operator==(const KeyCombo& RHS)
+		bool RenderWindowHotKey::HandleActiveKeyCombo(SHORT Key, bool& OutActionResult, bool& OutIsInvalidContext)
 		{
-			if (ActiveKey == RHS)
-				return true;
-			else
-				return false;
-		}
-
-		bool RenderWindowHotKey::HandleActiveKeyCombo(SHORT Key)
-		{
+			OutIsInvalidContext = false;
 			if (ActiveKey.IsActivated(Key))
 			{
-				BoundAction();
+				OutIsInvalidContext = BoundAction.IsExecutableInCurrentContext() == false;
+				OutActionResult = BoundAction();
 				return true;
 			}
 			else
@@ -315,7 +305,18 @@ namespace cse
 		{
 			for (auto& Itr : HotKeys)
 			{
-				if (Itr == Key)
+				if (Itr.ActiveKey == Key)
+					return &Itr;
+			}
+
+			return nullptr;
+		}
+
+		RenderWindowHotKey* RenderWindowHotKeyManager::LookupHotKey(KeyCombo Key, actions::IRenderWindowAction& Action)
+		{
+			for (auto& Itr : HotKeys)
+			{
+				if (Itr.ActiveKey == Key && Itr.BoundAction.HasSameExecutionContext(Action))
 					return &Itr;
 			}
 
@@ -324,14 +325,14 @@ namespace cse
 
 		void RenderWindowHotKeyManager::RegisterHotKey(const char* GUID, actions::IRenderWindowAction& Action, KeyCombo& Combo)
 		{
-			SME_ASSERT(LookupHotKey(Combo) == nullptr);
+			SME_ASSERT(LookupHotKey(Combo, Action) == nullptr);
 
 			HotKeys.push_back(RenderWindowHotKey(GUID, Action, Combo));
 		}
 
 		void RenderWindowHotKeyManager::RegisterHotKey(const char* GUID, actions::IRenderWindowAction& Action, KeyCombo& Combo, KeyCombo& Default)
 		{
-			SME_ASSERT(LookupHotKey(Combo) == nullptr);
+			SME_ASSERT(LookupHotKey(Combo, Action) == nullptr);
 
 			HotKeys.push_back(RenderWindowHotKey(GUID, Action, Combo, Default));
 		}
@@ -493,7 +494,7 @@ namespace cse
 
 			const ImVec4 RedColor = ImColor::HSV(0, 0.6f, 0.6f);
 			bool KeyConflict = false;
-			RenderWindowHotKey* Existing = LookupHotKey(NewBinding);
+			RenderWindowHotKey* Existing = LookupHotKey(NewBinding, CurrentHotKey->BoundAction);
 			if (Existing && Existing != CurrentHotKey)
 				KeyConflict = true;
 
@@ -583,6 +584,8 @@ namespace cse
 			RegisterHotKey("{9726EE0A-C9C1-4BCA-8B2E-3B72BDBB513D}", actions::DimSelectionOpacity, KeyCombo(VK_OEM_MINUS, NULL));
 			RegisterHotKey("{247D9B08-3BFE-4E1C-B268-AED18D4B633B}", actions::ResetSelectionOpacity, KeyCombo(VK_OEM_PLUS, NULL));
 
+			RegisterHotKey("{6936B05E-A7C5-4922-B138-2F63BCAFE7BE}", actions::LinkPathGridSelection,
+						   KeyCombo('R', NULL), KeyCombo('R', NULL));
 			RegisterHotKey("{6D68753D-AEE1-4573-9B8A-4A9E4B17497C}", actions::UnlinkPathGridSelection, KeyCombo('R', KeyCombo::kModifier_Shift));
 
 			RegisterHotKey("{F42F86FA-8BE7-4CC8-A6BA-779A963EEF89}", actions::ShowBatchEditor, KeyCombo(VK_OEM_PERIOD, NULL));
@@ -620,14 +623,23 @@ namespace cse
 			{
 				// walk through the hotkeys and check for activation
 				bool NoHandlers = true;
+				bool InvalidContext = false;
+				bool ActionResult = false;
 				for (auto& Itr : HotKeys)
 				{
-					if (Itr.HandleActiveKeyCombo(wParam))
+					bool CurrentKeyHasBadContext = false;
+					if (Itr.HandleActiveKeyCombo(wParam, ActionResult, CurrentKeyHasBadContext))
 					{
 						NoHandlers = false;
-						break;
+						InvalidContext = true;
+
+						if (ActionResult)
+							break;
 					}
 				}
+
+				if (ActionResult == false && InvalidContext)
+					NotificationOSDLayer::Instance.ShowNotification("This action cannot be performed in the current edit mode.");
 
 				if (NoHandlers == false)
 					Handled = true;
@@ -636,7 +648,7 @@ namespace cse
 					// check if any of the hotkeys are overrides and consume the input accordingly
 					for (auto& Itr : HotKeys)
 					{
-						if (Itr.IsOverride() && Itr.BuiltinKey.IsActivated(wParam))
+						if (Itr.HandleBuiltinKeyCombo(wParam))
 						{
 							Handled = true;
 							break;
