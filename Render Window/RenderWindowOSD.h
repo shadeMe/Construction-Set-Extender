@@ -82,6 +82,7 @@ namespace cse
 
 			struct GUIState
 			{
+				bool		RedrawSingleFrame;
 				bool		MouseInClientArea;				// true when the mouse is inside the window
 				bool		ConsumeMouseInputEvents;		// true when the OSD wnd proc needs exclusive access to the mouse
 				bool		ConsumeKeyboardInputEvents;		// same as above but for the keyboard
@@ -175,21 +176,23 @@ namespace cse
 		{
 			struct Notification
 			{
-				static const int		kNotificationDisplayTime = 2.5 * 1000;		// in ms
+				static const int		kNotificationDisplayTime = 2 * 1000;
 
 				std::string		Message;
 				ULONGLONG		StartTickCount;
+				int				Duration;				// in ms
 
-				Notification(std::string Message);
+				Notification(std::string Message, int Duration = kNotificationDisplayTime);
 
 				bool			HasElapsed();
+				ULONGLONG		GetRemainingTicks() const;
 			};
 
 			typedef std::queue<Notification>			NotificationQueueT;
 
-			NotificationQueueT		Notifications;
+			NotificationQueueT		Queue;
 
-			bool					HasNotifications();
+			bool					Tick();		// returns true if there are pending notifications
 			const Notification&		GetNextNotification() const;
 		public:
 			NotificationOSDLayer();
@@ -199,6 +202,7 @@ namespace cse
 			virtual bool					NeedsBackgroundUpdate();
 
 			void							ShowNotification(const char* Format, ...);
+			void							ClearNotificationQueue();		// removes all but the currently showing notification
 
 			static NotificationOSDLayer		Instance;
 		};

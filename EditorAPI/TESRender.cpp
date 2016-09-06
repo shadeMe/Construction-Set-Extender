@@ -39,6 +39,12 @@ UInt8*								TESRenderWindow::DraggingSelection = (UInt8*)0x00A0BBF6;
 UInt8*								TESRenderWindow::KeyState_Shift = (UInt8*)0x00A0BC5D;
 UInt8*								TESRenderWindow::KeyState_Control = (UInt8*)0x00A0BC5E;
 UInt8*								TESRenderWindow::KeyState_SpaceMMB = (UInt8*)0x00A0BC5F;
+UInt8*								TESRenderWindow::KeyState_X = (UInt8*)0x00A0BC1F;
+UInt8*								TESRenderWindow::KeyState_Y = (UInt8*)0x00A0BC1E;
+UInt8*								TESRenderWindow::KeyState_Z = (UInt8*)0x00A0BC1D;
+UInt8*								TESRenderWindow::KeyState_V = (UInt8*)0x00A0BC1C;
+UInt8*								TESRenderWindow::KeyState_S = (UInt8*)0x00A0BC20;
+
 
 UInt8*								TESRenderWindow::PathGridEditFlag = (UInt8*)0x00A0BC5C;
 UInt8*								TESRenderWindow::RefreshFlag = (UInt8*)0x00A0BC4D;

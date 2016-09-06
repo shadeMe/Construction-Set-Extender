@@ -2,6 +2,74 @@
 #include "RenderWindowActions.h"
 #include "RenderWindowOSD.h"
 
+/************************************************************************/
+/*
+default bindings:
+
+key	(* - hold down)			action									context
+===========================================================================
+ctrl		f11				disable warnings
+ctrl		f10				test all cells							ref
+			f10				show scenegraph
+alt			left			step selection anim back?				ref
+alt			right			step selection anim forward?			ref
+ctrl+shift	p				reload all pathgrids
+			p				generate active exterior local map
+			a				toggle bright light
+			h				toggle landscape edit mode
+			o				toggle vertex color paint mode (broken)	land
+			f4				toggle collision geom
+			f5				refresh render window
+			up				move cam +Y axis
+			down			move cam -Y axis
+			left			move cam -X axis
+			right			move cam +X axis
+shift		up				pitch cam +
+shift		down			pitch cam -
+shift		left			yaw cam +
+shift		right			yaw cam -
+			home			roll cam +
+			pg up			roll cam -
+			i				show land use dialog					land
+space		i				show object data info (broken)
+ctrl+shift
++space		r				show selected ref info					ref
+			r				link path grid point selection			pathgrid
+			m				toggle markers
+shift		w				toggle water
+			w				toggle global wireframe
+shift		l				toggle landscape
+			l				toggle light radius
+			f				fall									ref pathgrid
+ctrl		s				save plugin
+ctrl		x				cut selection							ref
+ctrl		y				redo									ref
+ctrl		z				undo									ref
+			backspace		undo									ref
+ctrl+alt	c				cull light selection					ref
+shift		c				toggle objects
+ctrl		c				auto-link path grid point selection		pathgrid
+ctrl		c				copy selection							ref
+			c+z				fall cam to landscape exterior
+			c				center cam
+			q				toggle vertex coloring mode				land
+			t				top cam
+ctrl		d				duplicate selection						ref
+			d				deselect all							ref
+			scroll lock		run havok sim							ref
+			del				delete selection						ref pathgrid
+			1				toggle selection wireframe				ref
+ctrl+shift	b				check bounds
+shift*						rotate cam
+space*						pan cam
+			v*				zoom cam
+			x*				transform X axis						ref pathgrid
+			y*				transform Y axis						ref pathgrid
+			z*				transform Z axis						ref pathgrid
+			s*				scale selection							ref
+*/
+/************************************************************************/
+
 namespace cse
 {
 	namespace renderWindow
@@ -45,7 +113,7 @@ namespace cse
 
 			static int				Serialize(const KeyCombo& Combo);
 			static KeyCombo			Deserialize(int Serialized);
-			static std::string		GetKeyName(SHORT Key);
+			static std::string		GetKeyName(SHORT Key);					// virtual key code
 		};
 
 		class RenderWindowHotKey

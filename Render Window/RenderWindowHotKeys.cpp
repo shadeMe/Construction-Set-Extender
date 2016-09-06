@@ -564,43 +564,46 @@ namespace cse
 			SME_ASSERT(Initialized == false);
 
 			// register the hotkeys first and then load state from the INI file
-			RegisterHotKey("{6EC6F5E2-AE52-4475-AC27-5418375B5FB8}", actions::InvertSelection, KeyCombo('V', KeyCombo::kModifier_CTRL_SHIFT));
+			RegisterHotKey("6EC6F5E2-AE52-4475-AC27-5418375B5FB8", actions::InvertSelection, KeyCombo('V', KeyCombo::kModifier_CTRL_SHIFT));
 
-			RegisterHotKey("{F2BF346D-EC8F-4A33-975D-0E7A9C7424EE}", actions::SelectAll, KeyCombo('A', KeyCombo::kModifier_Control));
+			RegisterHotKey("F2BF346D-EC8F-4A33-975D-0E7A9C7424EE", actions::SelectAll, KeyCombo('A', KeyCombo::kModifier_Control));
 
-			RegisterHotKey("{A1FE6205-5F69-4808-BD4B-F0D297AA215C}", actions::GroupSelection, KeyCombo('G', KeyCombo::kModifier_Control));
-			RegisterHotKey("{C028EA1C-76CF-4984-A820-1240E9001679}", actions::UngroupSelection, KeyCombo('U', KeyCombo::kModifier_Control));
-			RegisterHotKey("{2C7E9F71-E42E-4455-8069-46EAD79541D1}", actions::OrphanizeSelection, KeyCombo('U', KeyCombo::kModifier_CTRL_ALT));
+			RegisterHotKey("CADFE174-ED60-4B9A-8562-34ED58DB2882", actions::AlignPosition, KeyCombo('X', KeyCombo::kModifier_Shift));
+			RegisterHotKey("82E93C1E-CAEE-4E27-8B3F-7719F7E980D6", actions::AlignRotation, KeyCombo('C', KeyCombo::kModifier_Shift));
 
-			RegisterHotKey("{30A153E0-6E49-42C0-8346-3F0EE5DDEE75}", actions::FreezeSelection, KeyCombo('W', KeyCombo::kModifier_Control));
-			RegisterHotKey("{24780B09-E7DB-4020-A3D2-4656465CC828}", actions::ThawSelection, KeyCombo('E', KeyCombo::kModifier_Control));
-			RegisterHotKey("{44431BAA-E7C9-4D36-93E8-8DE5A7F5A498}", actions::ThawAll, KeyCombo(VK_F2, NULL));
-			RegisterHotKey("{0C513C52-86FE-45D5-87AF-461EC2A9FA1B}", actions::ToggleFreezeInactive, KeyCombo('E', KeyCombo::kModifier_CTRL_SHIFT));
 
-			RegisterHotKey("{765B64A2-572D-4D9B-BBDC-197225E6E76C}", actions::ToggleSelectionVisibility, KeyCombo('2', NULL));
-			RegisterHotKey("{C6D5E817-81C1-415A-ADDE-6A7CD41C12A0}", actions::ToggleSelectionChildrenVisibility, KeyCombo('3', NULL));
-			RegisterHotKey("{F54BA759-71C1-4E09-ADD7-EA9D88D63CBB}", actions::RevealAll, KeyCombo(VK_F3, NULL));
+			RegisterHotKey("A1FE6205-5F69-4808-BD4B-F0D297AA215C", actions::GroupSelection, KeyCombo('G', KeyCombo::kModifier_Control));
+			RegisterHotKey("C028EA1C-76CF-4984-A820-1240E9001679", actions::UngroupSelection, KeyCombo('U', KeyCombo::kModifier_Control));
+			RegisterHotKey("2C7E9F71-E42E-4455-8069-46EAD79541D1", actions::OrphanizeSelection, KeyCombo('U', KeyCombo::kModifier_CTRL_ALT));
 
-			RegisterHotKey("{9726EE0A-C9C1-4BCA-8B2E-3B72BDBB513D}", actions::DimSelectionOpacity, KeyCombo(VK_OEM_MINUS, NULL));
-			RegisterHotKey("{247D9B08-3BFE-4E1C-B268-AED18D4B633B}", actions::ResetSelectionOpacity, KeyCombo(VK_OEM_PLUS, NULL));
+			RegisterHotKey("30A153E0-6E49-42C0-8346-3F0EE5DDEE75", actions::FreezeSelection, KeyCombo('W', KeyCombo::kModifier_Control));
+			RegisterHotKey("24780B09-E7DB-4020-A3D2-4656465CC828", actions::ThawSelection, KeyCombo('E', KeyCombo::kModifier_Control));
+			RegisterHotKey("44431BAA-E7C9-4D36-93E8-8DE5A7F5A498", actions::ThawAll, KeyCombo(VK_F2, NULL));
+			RegisterHotKey("0C513C52-86FE-45D5-87AF-461EC2A9FA1B", actions::ToggleFreezeInactive, KeyCombo('E', KeyCombo::kModifier_CTRL_SHIFT));
 
-			RegisterHotKey("{6936B05E-A7C5-4922-B138-2F63BCAFE7BE}", actions::LinkPathGridSelection,
-						   KeyCombo('R', NULL), KeyCombo('R', NULL));
-			RegisterHotKey("{6D68753D-AEE1-4573-9B8A-4A9E4B17497C}", actions::UnlinkPathGridSelection, KeyCombo('R', KeyCombo::kModifier_Shift));
+			RegisterHotKey("765B64A2-572D-4D9B-BBDC-197225E6E76C", actions::ToggleSelectionVisibility, KeyCombo('2', NULL));
+			RegisterHotKey("C6D5E817-81C1-415A-ADDE-6A7CD41C12A0", actions::ToggleSelectionChildrenVisibility, KeyCombo('3', NULL));
+			RegisterHotKey("F54BA759-71C1-4E09-ADD7-EA9D88D63CBB", actions::RevealAll, KeyCombo(VK_F3, NULL));
 
-			RegisterHotKey("{F42F86FA-8BE7-4CC8-A6BA-779A963EEF89}", actions::ShowBatchEditor, KeyCombo(VK_OEM_PERIOD, NULL));
-			RegisterHotKey("{D233EB54-BED6-4720-96A6-86442A97E6A6}", actions::ShowUseInfo, KeyCombo(VK_F1, NULL));
-			RegisterHotKey("{F11C7C9E-CF74-4C2D-877D-39427F7C81CD}", actions::ShowSearchReplace, KeyCombo('F', KeyCombo::kModifier_CTRL_SHIFT));
+			RegisterHotKey("9726EE0A-C9C1-4BCA-8B2E-3B72BDBB513D", actions::DimSelectionOpacity, KeyCombo(VK_OEM_MINUS, NULL));
+			RegisterHotKey("247D9B08-3BFE-4E1C-B268-AED18D4B633B", actions::ResetSelectionOpacity, KeyCombo(VK_OEM_PLUS, NULL));
 
-			RegisterHotKey("{BBA57061-EE4C-4C0E-8598-C7CE0706E957}", actions::ToggleAuxViewport, KeyCombo(VK_OEM_3, KeyCombo::kModifier_CTRL_SHIFT));
+			RegisterHotKey("6936B05E-A7C5-4922-B138-2F63BCAFE7BE", actions::LinkPathGridSelection, KeyCombo('R', NULL), KeyCombo('R', NULL));
+			RegisterHotKey("6D68753D-AEE1-4573-9B8A-4A9E4B17497C", actions::UnlinkPathGridSelection, KeyCombo('R', KeyCombo::kModifier_Shift));
 
-			RegisterHotKey("{2C35CC8B-2CA1-4867-92FD-A64ED6DE1148}", actions::ToggleAlternateMovementSettings, KeyCombo('Q', KeyCombo::kModifier_Shift));
-			RegisterHotKey("{E2240B02-1D0B-4885-931F-137DCD6E6D90}", actions::TogglePathGridEditMode, KeyCombo('G', NULL));
-			RegisterHotKey("{1A6CD699-8265-48BB-964F-8F6CF55E0103}", actions::ToggleSnapToGrid, KeyCombo('S', KeyCombo::kModifier_Shift));
-			RegisterHotKey("{DECA2E00-6FB7-4638-8563-108326891DEA}", actions::ToggleSnapToAngle, KeyCombo('D', KeyCombo::kModifier_Shift));
+			RegisterHotKey("F42F86FA-8BE7-4CC8-A6BA-779A963EEF89", actions::ShowBatchEditor, KeyCombo(VK_OEM_PERIOD, NULL));
+			RegisterHotKey("D233EB54-BED6-4720-96A6-86442A97E6A6", actions::ShowUseInfo, KeyCombo(VK_F1, NULL));
+			RegisterHotKey("F11C7C9E-CF74-4C2D-877D-39427F7C81CD", actions::ShowSearchReplace, KeyCombo('F', KeyCombo::kModifier_CTRL_SHIFT));
 
-			RegisterHotKey("{F5862ECB-7413-4C56-A5AF-E5EED401FC17}", actions::FocusOnRefFilter, KeyCombo('F', KeyCombo::kModifier_Control));
-			RegisterHotKey("{959D48C0-43FE-47B5-BD61-9D78EEA277FC}", actions::JumpToExteriorCell, KeyCombo('J', KeyCombo::kModifier_Control));
+			RegisterHotKey("BBA57061-EE4C-4C0E-8598-C7CE0706E957", actions::ToggleAuxViewport, KeyCombo(VK_OEM_3, KeyCombo::kModifier_CTRL_SHIFT));
+
+			RegisterHotKey("2C35CC8B-2CA1-4867-92FD-A64ED6DE1148", actions::ToggleAlternateMovementSettings, KeyCombo('Q', KeyCombo::kModifier_Shift));
+			RegisterHotKey("E2240B02-1D0B-4885-931F-137DCD6E6D90", actions::TogglePathGridEditMode, KeyCombo('G', NULL));
+			RegisterHotKey("1A6CD699-8265-48BB-964F-8F6CF55E0103", actions::ToggleSnapToGrid, KeyCombo('S', KeyCombo::kModifier_Shift));
+			RegisterHotKey("DECA2E00-6FB7-4638-8563-108326891DEA", actions::ToggleSnapToAngle, KeyCombo('D', KeyCombo::kModifier_Shift));
+
+			RegisterHotKey("F5862ECB-7413-4C56-A5AF-E5EED401FC17", actions::FocusOnRefFilter, KeyCombo('F', KeyCombo::kModifier_Control));
+			RegisterHotKey("959D48C0-43FE-47B5-BD61-9D78EEA277FC", actions::JumpToExteriorCell, KeyCombo('J', KeyCombo::kModifier_Control));
 
 
 			LoadFromINI();
@@ -624,21 +627,21 @@ namespace cse
 				// walk through the hotkeys and check for activation
 				bool NoHandlers = true;
 				bool InvalidContext = false;
-				bool ActionResult = false;
+				bool ActionCompleted = false;
 				for (auto& Itr : HotKeys)
 				{
 					bool CurrentKeyHasBadContext = false;
-					if (Itr.HandleActiveKeyCombo(wParam, ActionResult, CurrentKeyHasBadContext))
+					if (Itr.HandleActiveKeyCombo(wParam, ActionCompleted, CurrentKeyHasBadContext))
 					{
 						NoHandlers = false;
 						InvalidContext = true;
 
-						if (ActionResult)
+						if (ActionCompleted)
 							break;
 					}
 				}
 
-				if (ActionResult == false && InvalidContext)
+				if (ActionCompleted == false && InvalidContext)
 					NotificationOSDLayer::Instance.ShowNotification("This action cannot be performed in the current edit mode.");
 
 				if (NoHandlers == false)

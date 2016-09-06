@@ -574,6 +574,7 @@ namespace cse
 
 		RenderWindowOSD::GUIState::GUIState()
 		{
+			RedrawSingleFrame = false;
 			MouseInClientArea = false;
 			ConsumeMouseInputEvents = ConsumeKeyboardInputEvents = false;
 		}
@@ -673,7 +674,15 @@ namespace cse
 				{
 					// refresh the viewport if the mouse is in the client area or there are pending notifications
 					if (Parent->State.MouseInClientArea || Parent->NeedsBackgroundUpdate())
+					{
 						TESRenderWindow::Redraw();
+						Parent->State.RedrawSingleFrame = true;
+					}
+					else if (Parent->State.RedrawSingleFrame)
+					{
+						TESRenderWindow::Redraw();
+						Parent->State.RedrawSingleFrame = false;
+					}
 				}
 
 				break;
@@ -935,9 +944,10 @@ namespace cse
 
 		NotificationOSDLayer		NotificationOSDLayer::Instance;
 
-		NotificationOSDLayer::Notification::Notification(std::string Message) :
+		NotificationOSDLayer::Notification::Notification(std::string Message, int Duration) :
 			Message(Message),
-			StartTickCount(0)
+			StartTickCount(0),
+			Duration(Duration)
 		{
 			ZeroMemory(&StartTickCount, sizeof(StartTickCount));
 		}
@@ -950,54 +960,69 @@ namespace cse
 				return false;
 			}
 
-			if (GetTickCount64() - StartTickCount > kNotificationDisplayTime)
+			if (GetTickCount64() - StartTickCount > Duration)
 				return true;
 			else
 				return false;
 		}
 
+		ULONGLONG NotificationOSDLayer::Notification::GetRemainingTicks() const
+		{
+			return Duration - (GetTickCount64() - StartTickCount);
+		}
+
 		NotificationOSDLayer::NotificationOSDLayer() :
 			IRenderWindowOSDLayer(&settings::renderWindowOSD::kShowNotifications),
-			Notifications()
+			Queue()
 		{
 			;//
 		}
 
 		NotificationOSDLayer::~NotificationOSDLayer()
 		{
-			while (Notifications.size())
-				Notifications.pop();
+			while (Queue.size())
+				Queue.pop();
 		}
 
 		void NotificationOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
-			if (HasNotifications() == false)
+			if (Tick() == false)
 				return;
 
 			ImGui::SetNextWindowPos(ImVec2(10, *TESRenderWindow::ScreeHeight - 150));
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1, 3));
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(3, 3));
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3, 3));
 			if (!ImGui::Begin("Notification Overlay", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize |
 							  ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoInputs))
 			{
 				ImGui::End();
+				ImGui::PopStyleVar(3);
 				return;
 			}
 
-			ImGui::Text("%s", GetNextNotification().Message.c_str());
+			const Notification& Current = GetNextNotification();
+			float RemainingTime = Current.GetRemainingTicks() / (float)Current.Duration;
+
+			ImGui::Text("%s", Current.Message.c_str());
+			ImGui::InvisibleButton("nichts", ImVec2(10, 2));
+			ImGui::ProgressBar(RemainingTime, ImVec2(-1, 2));
 			ImGui::End();
+			ImGui::PopStyleVar(3);
 		}
 
 		bool NotificationOSDLayer::NeedsBackgroundUpdate()
 		{
-			return HasNotifications();
+			return Tick();
 		}
 
-		bool NotificationOSDLayer::HasNotifications()
+		bool NotificationOSDLayer::Tick()
 		{
-			while (Notifications.size())
+			while (Queue.size())
 			{
-				Notification& Next = Notifications.front();
+				Notification& Next = Queue.front();
 				if (Next.HasElapsed())
-					Notifications.pop();
+					Queue.pop();
 				else
 					return true;
 			}
@@ -1007,9 +1032,9 @@ namespace cse
 
 		const NotificationOSDLayer::Notification& NotificationOSDLayer::GetNextNotification() const
 		{
-			SME_ASSERT(Notifications.size() > 0);
+			SME_ASSERT(Queue.size() > 0);
 
-			return Notifications.front();
+			return Queue.front();
 		}
 
 		void NotificationOSDLayer::ShowNotification(const char* Format, ...)
@@ -1024,9 +1049,22 @@ namespace cse
 			va_end(Args);
 
 			if (strlen(Buffer))
-				Notifications.push(Notification(Buffer));
+				Queue.push(Notification(Buffer));
 		}
 
+
+		void NotificationOSDLayer::ClearNotificationQueue()
+		{
+			if (Queue.size() <= 1)
+				return;
+
+			Notification Current(Queue.front());
+
+			while (Queue.size())
+				Queue.pop();
+
+			Queue.push(Current);
+		}
 
 		DebugOSDLayer			DebugOSDLayer::Instance;
 

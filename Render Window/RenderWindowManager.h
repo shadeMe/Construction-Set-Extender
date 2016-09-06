@@ -234,10 +234,6 @@ namespace cse
 																				  BSRenderedTexture* RenderTarget);
 			void										HandlePostSceneGraphRender();
 			void										CacheActiveRefs();
-
-			bool										RenderModalNewRefGroup(RenderWindowOSD* OSD, ImGuiDX9* GUI);
-			void										CreateRefGroup();
-			void										DeleteRefGroup();
 		public:
 			RenderWindowManager();
 			~RenderWindowManager();

@@ -278,6 +278,11 @@ public:
 	static UInt8*						KeyState_Shift;
 	static UInt8*						KeyState_Control;
 	static UInt8*						KeyState_SpaceMMB;
+	static UInt8*						KeyState_X;
+	static UInt8*						KeyState_Y;
+	static UInt8*						KeyState_Z;
+	static UInt8*						KeyState_S;
+	static UInt8*						KeyState_V;
 
 	static TESObjectCELL**				ActiveCell;						// points to the current interior cell or the exterior cell at the camera's position/current selection
 	static TESLandTexture**				ActiveLandscapeTexture;

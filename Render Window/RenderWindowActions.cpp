@@ -312,6 +312,88 @@ namespace cse
 					return false;
 				}
 
+				AlignReferencesRWA::AlignReferencesRWA(UInt8 Alignment, UInt8 Axis) :
+					IRenderWindowAction("", "", kMode_ReferenceEdit),
+					Alignment(Alignment),
+					Axis(Axis)
+				{
+					SME_ASSERT(Alignment == kAlign_Position || Alignment == kAlign_Rotation);
+
+					if (Alignment == kAlign_Position)
+					{
+						Name = "Align Position";
+						Description = "Align the reference's position to the target reference.";
+					}
+					else
+					{
+						Name = "Align Rotation";
+						Description = "Align the reference's rotation to the target reference.";
+					}
+				}
+
+				AlignReferencesRWA::~AlignReferencesRWA()
+				{
+					;//
+				}
+
+				bool AlignReferencesRWA::operator()()
+				{
+					if (IsExecutableInCurrentContext() == false)
+						return false;
+
+					bool AlignmentAxisX = Axis & kAxis_X;
+					bool AlignmentAxisY = Axis & kAxis_Y;
+					bool AlignmentAxisZ = Axis & kAxis_Z;
+
+					if (_RENDERSEL->selectionCount)
+					{
+						TESObjectREFR* AlignRef = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, nullptr, false);
+						if (AlignRef)
+						{
+							const Vector3& AlignPos = *AlignRef->GetPosition();
+							const Vector3& AlignRot = *AlignRef->GetRotation();
+
+							for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+							{
+								TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
+								if (Ref == AlignRef)
+									continue;
+
+								if (Alignment == kAlign_Position)
+								{
+									Vector3 NewPos(*Ref->GetPosition());
+									if (AlignmentAxisX)
+										NewPos.x = AlignPos.x;
+									if (AlignmentAxisY)
+										NewPos.y = AlignPos.y;
+									if (AlignmentAxisZ)
+										NewPos.z = AlignPos.z;
+
+									Ref->SetPosition(NewPos);
+								}
+								else
+								{
+									Vector3 NewRot(*Ref->GetRotation());
+									if (AlignmentAxisX)
+										NewRot.x = AlignRot.x;
+									if (AlignmentAxisY)
+										NewRot.y = AlignRot.y;
+									if (AlignmentAxisZ)
+										NewRot.z = AlignRot.z;
+
+									Ref->SetRotation(NewRot, true);
+								}
+
+								Ref->SetFromActiveFile(true);
+							}
+
+							NotificationOSDLayer::Instance.ShowNotification("Selection %s aligned to %08X", Alignment == kAlign_Position ? "position" : "rotation", AlignRef->formID);
+							achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefAlignment);
+						}
+					}
+
+					return true;
+				}
 			}
 
 			impl::BasicRWA InvertSelection("Invert Selection", "Invert the current reference selection.", []() {
@@ -350,6 +432,8 @@ namespace cse
 				}
 			});
 
+			impl::AlignReferencesRWA AlignPosition(impl::AlignReferencesRWA::kAlign_Position, impl::AlignReferencesRWA::kAxis_ALL);
+			impl::AlignReferencesRWA AlignRotation(impl::AlignReferencesRWA::kAlign_Rotation, impl::AlignReferencesRWA::kAxis_ALL);
 
 			impl::BasicRWA GroupSelection("Group", "Group references into a single selectable entity.", []() {
 				ModalWindowProviderOSDLayer::ModalRenderDelegateT RenderModalNewGroup([](RenderWindowOSD*, ImGuiDX9*, void*)->bool {
@@ -451,6 +535,11 @@ namespace cse
 
 			impl::BasicRWA ToggleFreezeInactive("Toggle Freeze Inactive", "Prevent references that don't belong to the active plugin from being selected.", []() {
 				_RENDERWIN_XSTATE.FreezeInactiveRefs = _RENDERWIN_XSTATE.FreezeInactiveRefs == false;
+
+				if (_RENDERWIN_XSTATE.FreezeInactiveRefs)
+					NotificationOSDLayer::Instance.ShowNotification("Inactive references frozen");
+				else
+					NotificationOSDLayer::Instance.ShowNotification("Inactive references thawed");
 			});
 
 
@@ -727,7 +816,14 @@ namespace cse
 															  IRenderWindowAction::kMode_All, settings::renderer::kFixedCameraPivot);
 			impl::BasicRWA ToggleAlternateMovementSettings("Toggle Alternate Movement Settings", "Use the auxiliary movement speed settings.",
 														   IRenderWindowAction::kMode_All, []() {
-				_RENDERWIN_XSTATE.UseAlternateMovementSettings = _RENDERWIN_XSTATE.UseAlternateMovementSettings == false;
+				_RENDERWIN_XSTATE.UseAlternateMovementSettings = (_RENDERWIN_XSTATE.UseAlternateMovementSettings == false);
+
+				if (_RENDERWIN_XSTATE.UseAlternateMovementSettings == false)
+					NotificationOSDLayer::Instance.ShowNotification("Using vanilla movement settings");
+				else
+					NotificationOSDLayer::Instance.ShowNotification("Using alternate movement settings");
+
+				achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_AlternateRenderWindowMovement);
 			});
 
 			impl::BasicRWA TogglePathGridEditMode("Toggle Path Grid Mode", "Toggle path grid editing mode.",

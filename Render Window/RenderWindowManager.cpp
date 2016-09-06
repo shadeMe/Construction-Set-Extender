@@ -242,41 +242,6 @@ namespace cse
 
 		void DebugSceneGraphModifier::PreRender(RenderData& Data)
 		{
-			GridCellArray* CellGrid = _TES->gridCellArray;
-			for (int i = 0; i < CellGrid->size; i++)
-			{
-				for (int j = 0; j < CellGrid->size; j++)
-				{
-					GridCellArray::GridEntry* Data = CellGrid->GetCellEntry(i, j);
-					if (Data && Data->cell)
-					{
-						TESObjectLAND* Land = Data->cell->land;
-						if (Land)
-						{
-							for (int k = 0; k < 3; k++)
-							{
-								NiNode* Node = Land->GetQuadLandNode(k);
-								NiTriStrips* LandTriStrips = NI_CAST(Node->m_children.data[0], NiTriStrips);
-								if (LandTriStrips)
-								{
-									BSShaderProperty* ShaderProp = (BSShaderProperty*)TESRender::GetProperty(LandTriStrips, BSShaderPPLightingProperty::kType);
-									BSShaderPPLightingProperty* PPLighting = NI_CAST(ShaderProp, BSShaderPPLightingProperty);
-									if (PPLighting)
-									{
-										int TexNo = 0;
-										while (TexNo < 9)
-										{
-											NiSourceTexture* currentTex = NI_CAST(PPLighting->diffuse[TexNo], NiSourceTexture);
-											const char* SourcePath = settings::renderer::kGrassOverlayTexturePath().s;
-											TexNo++;
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
 		}
 
 		void DebugSceneGraphModifier::PostRender(RenderData& Data)
@@ -744,10 +709,6 @@ namespace cse
 										CheckItem = true;
 
 									break;
-								case IDC_RENDERWINDOWCONTEXT_GRASSOVERLAY:
-									CheckItem = _RENDERWIN_XSTATE.UseGrassTextureOverlay;
-
-									break;
 								default:
 									UpdateItem = false;
 									break;
@@ -802,14 +763,7 @@ namespace cse
 				{
 				case IDC_RENDERWINDOWCONTEXT_USEALTERNATEMOVEMENTSETTINGS:
 					{
-						_RENDERWIN_XSTATE.UseAlternateMovementSettings = (_RENDERWIN_XSTATE.UseAlternateMovementSettings == false);
-
-						if (_RENDERWIN_XSTATE.UseAlternateMovementSettings == false)
-							NotificationOSDLayer::Instance.ShowNotification("Using vanilla movement settings");
-						else
-							NotificationOSDLayer::Instance.ShowNotification("Using alternate movement settings");
-
-						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_AlternateRenderWindowMovement);
+						actions::ToggleAlternateMovementSettings();
 						Return = true;
 					}
 
@@ -840,279 +794,79 @@ namespace cse
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_FREEZEINACTIVE:
-					_RENDERWIN_XSTATE.FreezeInactiveRefs = (_RENDERWIN_XSTATE.FreezeInactiveRefs == false);
-
-					if (_RENDERWIN_XSTATE.FreezeInactiveRefs)
-						NotificationOSDLayer::Instance.ShowNotification("Inactive references frozen");
-					else
-						NotificationOSDLayer::Instance.ShowNotification("Inactive references thawed");
+					{
+						actions::ToggleFreezeInactive();
+						Return = true;
+					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_INVERTSELECTION:
-					if (*TESRenderWindow::PathGridEditFlag == 0)
 					{
-						const TESObjectREFRArrayT& Refs = _RENDERWIN_MGR.GetActiveRefs();
-						if (Refs.size())
-						{
-							TESRenderSelection* Buffer = TESRenderSelection::CreateInstance(_RENDERSEL);
-							_RENDERSEL->ClearSelection(true);
-
-							for (TESObjectREFRArrayT::const_iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr)
-							{
-								TESObjectREFR* Ref = *Itr;
-
-								if (Buffer->HasObject(Ref) == false)
-									_RENDERSEL->AddToSelection(Ref, true);
-							}
-
-							Buffer->DeleteInstance();
-							TESRenderWindow::Redraw();
-						}
+						actions::InvertSelection();
+						Return = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_BATCHREFERENCEEDITOR:
 					{
-						const TESObjectREFRArrayT& Refs = _RENDERWIN_MGR.GetActiveRefs();
-						UInt32 RefCount = Refs.size();
-
-						if (RefCount > 1)
-						{
-							int i = 0;
-							componentDLLInterface::CellObjectData* RefData = new componentDLLInterface::CellObjectData[RefCount];
-							componentDLLInterface::BatchRefData* BatchData = new componentDLLInterface::BatchRefData();
-
-							for (TESObjectREFRArrayT::const_iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr, ++i)
-							{
-								TESObjectREFR* ThisRef = *Itr;
-								componentDLLInterface::CellObjectData* ThisRefData = &RefData[i];
-
-								ThisRefData->EditorID = (!ThisRef->editorID.c_str()) ? ThisRef->baseForm->editorID.c_str() : ThisRef->editorID.c_str();
-								ThisRefData->FormID = ThisRef->formID;
-								ThisRefData->TypeID = ThisRef->baseForm->formType;
-								ThisRefData->Flags = ThisRef->formFlags;
-								ThisRefData->Selected = false;
-
-								for (TESRenderSelection::SelectedObjectsEntry* j = _RENDERSEL->selectionList; j != 0; j = j->Next)
-								{
-									if (j->Data && j->Data == ThisRef)
-									{
-										ThisRefData->Selected = true;
-										break;
-									}
-								}
-
-								ThisRefData->ParentForm = ThisRef;
-							}
-
-							BatchData->CellObjectListHead = RefData;
-							BatchData->ObjectCount = RefCount;
-
-							if (cliWrapper::interfaces::BE->ShowBatchRefEditorDialog(BatchData))
-							{
-								for (UInt32 k = 0; k < RefCount; k++)
-								{
-									TESObjectREFR* ThisRef = (TESObjectREFR*)RefData[k].ParentForm;
-									componentDLLInterface::CellObjectData* ThisRefData = &RefData[k];
-									bool Modified = false;
-
-									if (ThisRefData->Selected)
-									{
-										if (BatchData->World3DData.UsePosX())	ThisRef->position.x = BatchData->World3DData.PosX, Modified = true;
-										if (BatchData->World3DData.UsePosY())	ThisRef->position.y = BatchData->World3DData.PosY, Modified = true;
-										if (BatchData->World3DData.UsePosZ())	ThisRef->position.z = BatchData->World3DData.PosZ, Modified = true;
-
-										if (BatchData->World3DData.PosChanged())
-											ThisRef->SetPosition(ThisRef->position.x, ThisRef->position.y, ThisRef->position.z);
-
-										if (BatchData->World3DData.UseRotX())	ThisRef->rotation.x = BatchData->World3DData.RotX * PI / 180, Modified = true;
-										if (BatchData->World3DData.UseRotY())	ThisRef->rotation.y = BatchData->World3DData.RotY * PI / 180, Modified = true;
-										if (BatchData->World3DData.UseRotZ())	ThisRef->rotation.z = BatchData->World3DData.RotZ * PI / 180, Modified = true;
-
-										if (BatchData->World3DData.RotChanged())
-											ThisRef->SetRotation(ThisRef->rotation.x, ThisRef->rotation.y, ThisRef->rotation.z, true);
-
-										if (BatchData->World3DData.UseScale())	ThisRef->SetScale(BatchData->World3DData.Scale), Modified = true;
-
-										if (BatchData->Flags.UsePersistent())
-											ThisRef->SetPersistent(BatchData->Flags.Persistent), Modified = true;
-
-										if (BatchData->Flags.UseDisabled())
-											ThisRef->SetInitiallyDisabled(BatchData->Flags.Disabled), Modified = true;
-
-										if (BatchData->Flags.UseVWD())
-											ThisRef->SetVWD(BatchData->Flags.VWD), Modified = true;
-
-										if (BatchData->EnableParent.UseEnableParent())
-										{
-											TESObjectREFR* Parent = (TESObjectREFR*)BatchData->EnableParent.Parent;
-											if (Parent != ThisRef)
-											{
-												ThisRef->extraData.ModExtraEnableStateParent(Parent);
-												ThisRef->SetExtraEnableStateParentOppositeState(BatchData->EnableParent.OppositeState);
-												Modified = true;
-											}
-										}
-
-										if (BatchData->Ownership.UseOwnership() &&
-											ThisRef->baseForm->formType != TESForm::kFormType_NPC &&
-											ThisRef->baseForm->formType != TESForm::kFormType_Creature)
-										{
-											ThisRef->extraData.ModExtraGlobal(nullptr);
-											ThisRef->extraData.ModExtraRank(-1);
-											ThisRef->extraData.ModExtraOwnership(nullptr);
-
-											TESForm* Owner = (TESForm*)BatchData->Ownership.Owner;
-											ThisRef->extraData.ModExtraOwnership(Owner);
-
-											if (BatchData->Ownership.UseNPCOwner())
-												ThisRef->extraData.ModExtraGlobal((TESGlobal*)BatchData->Ownership.Global);
-											else
-												ThisRef->extraData.ModExtraRank(BatchData->Ownership.Rank);
-
-											Modified = true;
-										}
-
-										if (BatchData->Extra.UseCharge())		ThisRef->ModExtraCharge((float)BatchData->Extra.Charge), Modified = true;
-										if (BatchData->Extra.UseHealth())		ThisRef->ModExtraHealth((float)BatchData->Extra.Health), Modified = true;
-										if (BatchData->Extra.UseTimeLeft())		ThisRef->ModExtraTimeLeft((float)BatchData->Extra.TimeLeft), Modified = true;
-										if (BatchData->Extra.UseSoulLevel())	ThisRef->ModExtraSoul(BatchData->Extra.SoulLevel), Modified = true;
-										if (BatchData->Extra.UseCount())
-										{
-											switch (ThisRef->baseForm->formType)
-											{
-											case TESForm::kFormType_Apparatus:
-											case TESForm::kFormType_Armor:
-											case TESForm::kFormType_Book:
-											case TESForm::kFormType_Clothing:
-											case TESForm::kFormType_Ingredient:
-											case TESForm::kFormType_Misc:
-											case TESForm::kFormType_Weapon:
-											case TESForm::kFormType_Ammo:
-											case TESForm::kFormType_SoulGem:
-											case TESForm::kFormType_Key:
-											case TESForm::kFormType_AlchemyItem:
-											case TESForm::kFormType_SigilStone:
-												ThisRef->extraData.ModExtraCount(BatchData->Extra.Count), Modified = true;
-
-												break;
-											case TESForm::kFormType_Light:
-												TESObjectLIGH* Light = CS_CAST(ThisRef->baseForm, TESForm, TESObjectLIGH);
-												if (Light)
-												{
-													if (Light->IsCarriable())
-														ThisRef->extraData.ModExtraCount(BatchData->Extra.Count), Modified = true;
-												}
-
-												break;
-											}
-										}
-									}
-
-									if (Modified)
-										ThisRef->SetFromActiveFile(true);
-
-									achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_BatchEditor);
-								}
-							}
-
-							delete BatchData;
-						}
-
-						break;
+						actions::ShowBatchEditor();
+						Return = true;
 					}
+
+					break;
 				case IDC_RENDERWINDOWCONTEXT_THAWALLINCELL:
+					{
+						actions::ThawAll();
+						Return = true;
+					}
+
+					break;
 				case IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL:
 					{
-						const TESObjectREFRArrayT& Refs = _RENDERWIN_MGR.GetActiveRefs();
-						for (TESObjectREFRArrayT::const_iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr)
-						{
-							TESObjectREFR* Ref = *Itr;
-
-							switch (LOWORD(wParam))
-							{
-							case IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL:
-								if (Ref->GetInvisible())
-									Ref->ToggleInvisiblity();
-
-								if (Ref->GetChildrenInvisible())
-									Ref->ToggleChildrenInvisibility();
-
-								break;
-							case IDC_RENDERWINDOWCONTEXT_THAWALLINCELL:
-								Ref->SetFrozen(false);
-
-								break;
-							}
-						}
-
-						switch (LOWORD(wParam))
-						{
-						case IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL:
-							NotificationOSDLayer::Instance.ShowNotification("Reset visibility flags on the active cell/grid's references");
-
-							break;
-						case IDC_RENDERWINDOWCONTEXT_THAWALLINCELL:
-							NotificationOSDLayer::Instance.ShowNotification("Thawed all of the active cell/grid's references");
-
-							break;
-						}
-
-						TESRenderWindow::Redraw();
+						actions::RevealAll();
 						Return = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_TOGGLEVISIBILITY:
-				case IDC_RENDERWINDOWCONTEXT_TOGGLECHILDRENVISIBILITY:
-				case IDC_RENDERWINDOWCONTEXT_FREEZE:
-				case IDC_RENDERWINDOWCONTEXT_THAW:
-					for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 					{
-						TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
-
-						switch (LOWORD(wParam))
-						{
-						case IDC_RENDERWINDOWCONTEXT_TOGGLEVISIBILITY:
-							Ref->ToggleInvisiblity();
-							achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefVisibility);
-
-							break;
-						case IDC_RENDERWINDOWCONTEXT_TOGGLECHILDRENVISIBILITY:
-							Ref->ToggleChildrenInvisibility();
-							achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefVisibility);
-
-							break;
-						case IDC_RENDERWINDOWCONTEXT_FREEZE:
-							Ref->SetFrozen(true);
-							achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefFreezing);
-
-							break;
-						case IDC_RENDERWINDOWCONTEXT_THAW:
-							Ref->SetFrozen(false);
-							achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefFreezing);
-
-							break;
-						}
+						actions::ToggleSelectionVisibility();
+						Return = true;
 					}
 
-					TESRenderWindow::Redraw();
-					Return = true;
+					break;
+				case IDC_RENDERWINDOWCONTEXT_TOGGLECHILDRENVISIBILITY:
+					{
+						actions::ToggleSelectionChildrenVisibility();
+						Return = true;
+					}
+
+					break;
+				case IDC_RENDERWINDOWCONTEXT_FREEZE:
+					{
+						actions::FreezeSelection();
+						Return = true;
+					}
+
+					break;
+				case IDC_RENDERWINDOWCONTEXT_THAW:
+					{
+						actions::ThawSelection();
+						Return = true;
+					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_GROUP:
 					{
-						if (_RENDERWIN_MGR.GetGroupManager()->IsSelectionGroupable(_RENDERSEL))
-							_RENDERWIN_MGR.CreateRefGroup();
-
+						actions::GroupSelection();
 						Return = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_UNGROUP:
 					{
+						actions::UngroupSelection();
 						Return = true;
-						_RENDERWIN_MGR.DeleteRefGroup();
 					}
 
 					break;
@@ -1207,12 +961,6 @@ namespace cse
 						settings::renderWindowOSD::kShowActiveRefCollections.ToggleData();
 						Return = true;
 					}
-
-					break;
-				case IDC_RENDERWINDOWCONTEXT_GRASSOVERLAY:
-					_RENDERWIN_XSTATE.UseGrassTextureOverlay = _RENDERWIN_XSTATE.UseGrassTextureOverlay == false;
-					_TES->ReloadLandscapeTextures();
-					Return = true;
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_RENDERWINDOWHOTKEYS:
@@ -1561,13 +1309,6 @@ namespace cse
 					}
 
 					break;
-				case VK_F5:
-					{
-						_RENDERWIN_MGR.RefreshFOV();
-						SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL, NULL);
-					}
-
-					break;
 				case VK_OEM_3:	// ~
 					{
 						if (TESLODTextureGenerator::GeneratorState != TESLODTextureGenerator::kState_NotInUse)
@@ -1792,66 +1533,6 @@ namespace cse
 			});
 		}
 
-		bool RenderWindowManager::RenderModalNewRefGroup(RenderWindowOSD* OSD, ImGuiDX9* GUI)
-		{
-			static char NewGroupNameBuffer[0x100] = { 0 };
-
-			bool EnterKey = false;
-			if (ImGui::InputText("Name", NewGroupNameBuffer, sizeof(NewGroupNameBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
-				EnterKey = true;
-
-			bool InvalidName = GroupManager->GetGroupExists(NewGroupNameBuffer);
-			if (InvalidName)
-				ImGui::Text("Group already exists!");
-			else if (strlen(NewGroupNameBuffer) == 0)
-				InvalidName = true;
-
-			ImGui::Separator();
-			bool Close = false;
-			if (ImGui::Button("OK", ImVec2(120, 0)) || EnterKey)
-			{
-				if (InvalidName == false)
-				{
-					if (GroupManager->AddGroup(NewGroupNameBuffer, _RENDERSEL) == false)
-						NotificationOSDLayer::Instance.ShowNotification("Couldn't add current selection to a new group.");
-					else
-						NotificationOSDLayer::Instance.ShowNotification("Created new selection group");
-
-					achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefGrouping);
-					Close = true;
-				}
-			}
-
-			ImGui::SameLine();
-			if (ImGui::Button("Cancel", ImVec2(120, 0)))
-				Close = true;
-
-			if (Close)
-			{
-				// clear the buffer for the next use
-				ZeroMemory(NewGroupNameBuffer, sizeof(NewGroupNameBuffer));
-				return true;
-			}
-			else
-				return false;
-		}
-
-		void RenderWindowManager::CreateRefGroup()
-		{
-			ModalWindowProviderOSDLayer::Instance.ShowModal("New Reference Group",
-															std::bind(&RenderWindowManager::RenderModalNewRefGroup, this, std::placeholders::_1, std::placeholders::_2),
-															nullptr,
-															ImGuiWindowFlags_AlwaysAutoResize);
-		}
-
-		void RenderWindowManager::DeleteRefGroup()
-		{
-			if (GroupManager->RemoveGroup(_RENDERSEL) == false)
-				NotificationOSDLayer::Instance.ShowNotification("Couldn't dissolve the current selection's group.");
-			else
-				NotificationOSDLayer::Instance.ShowNotification("Removed selection group");
-		}
-
 		const TESObjectREFRArrayT& RenderWindowManager::GetActiveRefs() const
 		{
 			return ActiveRefCache;
@@ -1886,6 +1567,7 @@ namespace cse
 		{
 			SME_ASSERT(Initialized);
 
+			// no OSD for the aux viewport
 			if (AUXVIEWPORT->IsRenderingPerspective() == false)
 			{
 				OSD->Draw();

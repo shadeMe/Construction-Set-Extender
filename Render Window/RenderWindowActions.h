@@ -51,7 +51,7 @@ namespace cse
 				public:
 					BasicRWA(std::string Name, std::string Desc, ActionDelegateT Delegate);
 					BasicRWA(std::string Name, std::string Desc, UInt8 Context, ActionDelegateT Delegate);
-					virtual ~BasicRWA();
+					virtual ~BasicRWA() override;
 
 					virtual bool		operator()() override;
 				};
@@ -61,7 +61,7 @@ namespace cse
 					SME::INI::INISetting&	Setting;
 				public:
 					ToggleINISettingRWA(std::string Name, std::string Desc, UInt8 Context, SME::INI::INISetting& Setting);
-					virtual ~ToggleINISettingRWA();
+					virtual ~ToggleINISettingRWA() override;
 
 					virtual bool		operator()() override;
 				};
@@ -98,16 +98,46 @@ namespace cse
 					int				Type;
 				public:
 					ToggleVisibilityRWA(int Type);
-					virtual ~ToggleVisibilityRWA();
+					virtual ~ToggleVisibilityRWA() override;
 
 					virtual bool			operator()() override;
 
 					static bool				IsVisible(int Type);
 				};
+
+				class AlignReferencesRWA : public IRenderWindowAction
+				{
+				public:
+					enum
+					{
+						kAlign_Position		= 1,
+						kAlign_Rotation		= 2,
+					};
+
+					enum
+					{
+						kAxis_X		= 1 << 0,
+						kAxis_Y		= 1 << 1,
+						kAxis_Z		= 1 << 2,
+
+						kAxis_ALL	= kAxis_X | kAxis_Y | kAxis_Z,
+					};
+				protected:
+					UInt8				Alignment;
+					UInt8				Axis;
+				public:
+					AlignReferencesRWA(UInt8 Alignment, UInt8 Axis);
+					virtual ~AlignReferencesRWA() override;
+
+					virtual bool			operator()() override;
+				};
 			}
 
 			extern impl::BasicRWA InvertSelection;
 			extern impl::BasicRWA SelectAll;
+
+			extern impl::AlignReferencesRWA AlignPosition;
+			extern impl::AlignReferencesRWA AlignRotation;
 
 			extern impl::BasicRWA GroupSelection;
 			extern impl::BasicRWA UngroupSelection;
@@ -144,6 +174,7 @@ namespace cse
 
 			extern impl::BasicRWA FocusOnRefFilter;
 			extern impl::BasicRWA JumpToExteriorCell;
+
 		}
 	}
 }
