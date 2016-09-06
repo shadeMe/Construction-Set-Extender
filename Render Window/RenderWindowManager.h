@@ -3,7 +3,7 @@
 #include "PathGridUndoManager.h"
 #include "RenderWindowOSD.h"
 #include "RenderWindowCellLists.h"
-#include "RenderWindowHotKeys.h"
+#include "RenderWindowInput.h"
 #include <bgsee\RenderWindowFlyCamera.h>
 
 namespace cse

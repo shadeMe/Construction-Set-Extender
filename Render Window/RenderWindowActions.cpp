@@ -1,5 +1,5 @@
 #include "RenderWindowActions.h"
-#include "RenderWindowHotKeys.h"
+#include "RenderWindowInput.h"
 #include "RenderWindowManager.h"
 #include "Achievements.h"
 #include "[Common]\CLIWrapper.h"
