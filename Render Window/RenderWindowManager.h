@@ -219,7 +219,7 @@ namespace cse
 			RenderWindowSelectionManager*				SelectionManager;
 			RenderWindowOSD*							OSD;
 			RenderWindowCellLists*						CellLists;
-			RenderWindowHotKeyManager*					HotKeyManager;
+			input::RenderWindowKeyboardManager*			KeyboardInputManager;
 			GlobalEventSink*							EventSink;
 			TESObjectREFRArrayT							ActiveRefCache;
 
@@ -245,10 +245,8 @@ namespace cse
 			RenderWindowGroupManager*					GetGroupManager() const;
 			PathGridUndoManager*						GetPathGridUndoManager() const;
 			RenderWindowSelectionManager*				GetSelectionManager() const;
-			RenderWindowHotKeyManager*					GetHotKeyManager() const;
 			const TESObjectREFRArrayT&					GetActiveRefs() const;
 
-			void										InvokeContextMenuTool(int Identifier);
 			void										RefreshFOV();
 
 			static RenderWindowManager					Instance;

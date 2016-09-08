@@ -75,7 +75,8 @@ namespace cse
 		_DefineHookHdlr(TESRenderRotateSelectionWorldB, 0x00426043);
 		_DefineHookHdlr(RotateCameraDrag, 0x0042CBFD);
 		_DefineHookHdlr(LandscapeTextureLoad, 0x005232E0);
-		_DefineHookHdlr(PatchGetAsyncKeyState, 0x0042753B);
+		_DefineHookHdlr(PatchGetAsyncKeyStateA, 0x0042753B);
+		_DefineJumpHdlr(PatchGetAsyncKeyStateB, 0x00427541, 0x00427593);
 
 #ifndef NDEBUG
 		void __stdcall DoTestHook1(NiSourceTexture* def,
@@ -221,7 +222,8 @@ namespace cse
 			_MemHdlr(TESRenderRotateSelectionWorldB).WriteJump();
 			_MemHdlr(RotateCameraDrag).WriteJump();
 			_MemHdlr(LandscapeTextureLoad).WriteJump();
-			_MemHdlr(PatchGetAsyncKeyState).WriteJump();
+			_MemHdlr(PatchGetAsyncKeyStateA).WriteJump();
+			_MemHdlr(PatchGetAsyncKeyStateB).WriteJump();
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -1502,13 +1504,40 @@ namespace cse
 
 		SHORT WINAPI GetAsyncKeyStateOverride(int vKey)
 		{
-			if (BGSEEMAIN->GetDaemon()->IsDeinitializing())
-				return GetAsyncKeyState(vKey);
-			else
-				return _RENDERWIN_MGR.GetHotKeyManager()->HandleDefaultWndProcAsyncKeyState(vKey);
+			// our second GetAsyncKeyState patch renders this override ineffective for all but the Alt modifier
+			// to correctly account for remapped holdable keys, we'll need to check the state of the new binding
+			// skipping the sanity checks works too (which is what we do with the second patch)
+			UInt8 Modifier = NULL;
+			switch (vKey)
+			{
+			case VK_SHIFT:
+				Modifier = renderWindow::input::BuiltIn::kModifier_Shift;
+				break;
+			case VK_CONTROL:
+				Modifier = renderWindow::input::BuiltIn::kModifier_Control;
+				break;
+			case VK_MENU:
+				Modifier = renderWindow::input::BuiltIn::kModifier_Alt;
+				break;
+			case VK_SPACE:
+				Modifier = renderWindow::input::BuiltIn::kModifier_Space;
+				break;
+			}
+
+			if (Modifier && renderWindow::input::BuiltIn::ModifierOverride::Instance.IsActive(Modifier))
+			{
+				SHORT Result = 0;
+				if (renderWindow::input::BuiltIn::ModifierOverride::Instance.GetOverrideState(Modifier))
+					Result |= 1 << 15;
+
+				return Result;
+			}
+
+			// key not handled/overridden, call the original function
+			return GetAsyncKeyState(vKey);
 		}
 
-		#define _hhName		PatchGetAsyncKeyState
+		#define _hhName		PatchGetAsyncKeyStateA
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x00427541);

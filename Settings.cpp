@@ -48,7 +48,6 @@ namespace cse
 			Depot.push_back(&renderer::kAltCamZoomSpeed);
 			Depot.push_back(&renderer::kAltCamPanSpeed);
 			Depot.push_back(&renderer::kCoplanarRefDrops);
-			Depot.push_back(&renderer::kSwitchCAndY);
 			Depot.push_back(&renderer::kFixedCameraPivot);
 			Depot.push_back(&renderer::kCameraFOV);
 			Depot.push_back(&renderer::kExteriorSnapshotResolution);
@@ -162,7 +161,6 @@ namespace cse
 			INISetting		kAltCamZoomSpeed("AltCamZoomSpeed", RENDERER_INISECTION, "Alternate render window camera zoom speed", (float)0.5);
 			INISetting		kAltCamPanSpeed("AltCamPanSpeed", RENDERER_INISECTION, "Alternate render window camera pan speed", (float)5.0);
 			INISetting		kCoplanarRefDrops("CoplanarRefDrops", RENDERER_INISECTION, "Place new references co-planar with the object at the cursor location", (SInt32)1);
-			INISetting		kSwitchCAndY("SwitchCAndY", RENDERER_INISECTION, "Switch the functionalities of the C and Y hotkeys", (SInt32)0);
 			INISetting		kFixedCameraPivot("FixedCameraPivot", RENDERER_INISECTION, "Use a static pivot when rotating the viewport camera without a selection", (SInt32)0);
 			INISetting		kCameraFOV("CameraFOV", RENDERER_INISECTION, "Default camera field of vision", (float)90);
 			INISetting		kExteriorSnapshotResolution("ExteriorSnapshotResolution", RENDERER_INISECTION, "Resolution of the exterior cell snapshot texture. Size must be a power of 2", (SInt32)1024);

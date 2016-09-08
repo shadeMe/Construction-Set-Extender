@@ -1,6 +1,5 @@
 #include "ToolbarOSDLayer.h"
 #include "Render Window\RenderWindowManager.h"
-#include "Construction Set Extender_Resource.h"
 #include "IconFontCppHeaders\IconsMaterialDesign.h"
 #include "RenderWindowActions.h"
 
@@ -184,7 +183,7 @@ namespace cse
 							{
 								ImGui::PushID("visibility_toggle_menu_item");
 								{
-									static const char* kNames[actions::impl::ToggleVisibilityRWA::kType__MAX] =
+									static const char* kNames[actions::ToggleVisibilityRWA::kType__MAX] =
 									{
 										"Objects",
 										"Markers",
@@ -206,11 +205,11 @@ namespace cse
 										"Grass Overlay"
 									};
 
-									bool Toggles[actions::impl::ToggleVisibilityRWA::kType__MAX] = { false };
-									for (int i = 0; i < actions::impl::ToggleVisibilityRWA::kType__MAX; i++)
+									bool Toggles[actions::ToggleVisibilityRWA::kType__MAX] = { false };
+									for (int i = 0; i < actions::ToggleVisibilityRWA::kType__MAX; i++)
 									{
 
-										Toggles[i] = actions::impl::ToggleVisibilityRWA::IsVisible(i);
+										Toggles[i] = actions::ToggleVisibilityRWA::IsVisible(i);
 										if (ImGui::Checkbox(kNames[i], &Toggles[i]))
 											actions::ToggleVisibility[i]();
 									}
@@ -460,7 +459,7 @@ namespace cse
 				ImGui::SameLine(0, 20);
 
 				if (ImGui::Button(ICON_MD_LOCK_OPEN "##thaw_all_refs", TOOLBAR_BUTTON_SIZE))
-					_RENDERWIN_MGR.InvokeContextMenuTool(IDC_RENDERWINDOWCONTEXT_THAWALLINCELL);
+					actions::ThawAll();
 
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Thaw all Frozen References");
@@ -468,7 +467,7 @@ namespace cse
 				ImGui::SameLine(0, 20);
 
 				if (ImGui::Button(ICON_MD_FLIP_TO_FRONT "##reveal_all_refs", TOOLBAR_BUTTON_SIZE))
-					_RENDERWIN_MGR.InvokeContextMenuTool(IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL);
+					actions::RevealAll();
 
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Reveal all Invisible References");

@@ -102,7 +102,7 @@ public:
 	const char*					GetEditorID() const;
 
 	TESWorldSpace*				GetParentWorldSpace();
-	bool						GetIsInterior();
+	bool						IsInterior();
 	TESObjectREFR*				FindFirstRef(TESForm* BaseForm, bool MustHaveEditorID = false);
 	void						SetPathGrid(TESPathGrid* PathGrid);
 	TESObjectLAND*				GetLand();

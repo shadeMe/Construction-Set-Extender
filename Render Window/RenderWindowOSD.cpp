@@ -467,10 +467,12 @@ namespace cse
 				io.MousePos.x = (signed short)(lParam);
 				io.MousePos.y = (signed short)(lParam >> 16);
 				return true;
+			case WM_SYSKEYDOWN:
 			case WM_KEYDOWN:
 				if (wParam < 256)
 					io.KeysDown[wParam] = 1;
 				return true;
+			case WM_SYSKEYUP:
 			case WM_KEYUP:
 				if (wParam < 256)
 					io.KeysDown[wParam] = 0;
@@ -1093,18 +1095,26 @@ namespace cse
 
 		ModalWindowProviderOSDLayer			ModalWindowProviderOSDLayer::Instance;
 
-		ModalWindowProviderOSDLayer::ModalData::ModalData(const char* Name, ModalRenderDelegateT Delegate, void* UserData, ImGuiWindowFlags_ Flags) :
+		ModalWindowProviderOSDLayer::ModalData::ModalData(const char* Name, ModalRenderDelegateT Delegate,
+														  void* UserData, ImGuiWindowFlags Flags, const ImVec2& Size, ImGuiSetCond SizeCond) :
 			WindowName(Name),
 			Delegate(Delegate),
 			UserData(UserData),
 			Flags(Flags),
-			Open(false)
+			Open(false),
+			WindowSize(Size),
+			SizeSetCondition(SizeCond)
 		{
 			char Buffer[0x100] = {0};
 			SME::MersenneTwister::init_genrand(GetTickCount());
 			FORMAT_STR(Buffer, "##%d_%s", SME::MersenneTwister::genrand_int32(), Name);
 
 			WindowName.append(Buffer);
+
+			if (WindowSize.x != 0.f && WindowSize.y != 0.f)
+				HasCustomSize = true;
+			else
+				HasCustomSize = false;
 		}
 
 		ModalWindowProviderOSDLayer::ModalWindowProviderOSDLayer() :
@@ -1135,9 +1145,12 @@ namespace cse
 					Top.Open = true;
 				}
 
+				if (Top.HasCustomSize)
+					ImGui::SetNextWindowSize(Top.WindowSize, Top.SizeSetCondition);
+
+				ImGui::SetNextWindowPosCenter(ImGuiSetCond_Once);
 				if (ImGui::BeginPopupModal(Top.WindowName.c_str(), nullptr, Top.Flags | ImGuiWindowFlags_NoSavedSettings))
 				{
-					ImGui::SetNextWindowPosCenter(ImGuiSetCond_Once);
 					if (Top.Delegate(OSD, GUI, Top.UserData))
 					{
 						ImGui::CloseCurrentPopup();
@@ -1154,7 +1167,8 @@ namespace cse
 			return false;
 		}
 
-		void ModalWindowProviderOSDLayer::ShowModal(const char* Name, ModalRenderDelegateT Delegate, void* UserData, ImGuiWindowFlags_ Flags)
+		void ModalWindowProviderOSDLayer::ShowModal(const char* Name, ModalRenderDelegateT Delegate, void* UserData,
+													ImGuiWindowFlags Flags, const ImVec2& Size, ImGuiSetCond SizeCond)
 		{
 			SME_ASSERT(Name && Delegate);
 			SME_ASSERT(*TESRenderWindow::ActiveCell);		// ### modal doesn't show up when called when the scenegraph is empty
@@ -1167,7 +1181,7 @@ namespace cse
 					Top.Open = false;
 			}
 
-			ModalData NewModal(Name, Delegate, UserData, Flags);
+			ModalData NewModal(Name, Delegate, UserData, Flags, Size, SizeCond);
 			OpenModals.push(NewModal);
 		}
 

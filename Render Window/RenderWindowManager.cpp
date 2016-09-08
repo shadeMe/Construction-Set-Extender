@@ -642,11 +642,6 @@ namespace cse
 										CheckItem = true;
 
 									break;
-								case IDC_RENDERWINDOWCONTEXT_SWITCHCNY:
-									if (settings::renderer::kSwitchCAndY.GetData().i)
-										CheckItem = true;
-
-									break;
 								case IDC_RENDERWINDOWCONTEXT_STATICCAMERAPIVOT:
 									if (settings::renderer::kFixedCameraPivot.GetData().i)
 										CheckItem = true;
@@ -777,13 +772,6 @@ namespace cse
 					break;
 				case IDC_RENDERWINDOWCONTEXT_UNLOADCURRENTCELLS:
 					TESRenderWindow::Reset();
-
-					break;
-				case IDC_RENDERWINDOWCONTEXT_SWITCHCNY:
-					{
-						settings::renderer::kSwitchCAndY.ToggleData();
-						Return = true;
-					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_OFFSETDUPLICATEDREFSINTHEZAXIS:
@@ -967,7 +955,7 @@ namespace cse
 					Return = true;
 
 					if (*TESRenderWindow::ActiveCell)
-						_RENDERWIN_MGR.HotKeyManager->ShowHotKeyEditor();
+						_RENDERWIN_MGR.KeyboardInputManager->ShowHotKeyEditor();
 
 					break;
 				}
@@ -995,11 +983,11 @@ namespace cse
 				// defer to the OSD window proc
 				return DlgProcResult;
 			}
-			else if (_RENDERWIN_MGR.HotKeyManager->HandleInput(uMsg, wParam, lParam))
+			else if (_RENDERWIN_MGR.KeyboardInputManager->HandleInput(uMsg, wParam, lParam))
 			{
 				// key input was handled, consume message
 				Return = true;
-				return DlgProcResult;
+				return FALSE;
 			}
 
 			switch (uMsg)
@@ -1240,75 +1228,10 @@ namespace cse
 				}
 
 				break;
-			case WM_KEYUP:
-				switch (wParam)
-				{
-				case 'C':
-					{
-						int SwitchEnabled = settings::renderer::kSwitchCAndY.GetData().i;
-						if (SwitchEnabled && GetAsyncKeyState(VK_CONTROL) == FALSE)
-						{
-							BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, 0x59, lParam);
-							Return = true;
-						}
-					}
 
-					break;
-				case 'Y':
-					{
-						int SwitchEnabled = settings::renderer::kSwitchCAndY.GetData().i;
-						if (SwitchEnabled && GetAsyncKeyState(VK_CONTROL) == FALSE)
-						{
-							BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, 0x43, lParam);
-							Return = true;
-						}
-					}
-
-					break;
-				}
-
-				break;
 			case WM_KEYDOWN:
 				switch (wParam)
 				{
-				case 'Z':
-					if (*TESRenderWindow::PathGridEditFlag && GetAsyncKeyState(VK_CONTROL))
-					{
-						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_PathGridAdditions);
-						_RENDERWIN_MGR.PGUndoManager->PerformUndo();
-						Return = true;
-					}
-
-					break;
-				case 'Y':
-					if (*TESRenderWindow::PathGridEditFlag && GetAsyncKeyState(VK_CONTROL))
-					{
-						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_PathGridAdditions);
-						_RENDERWIN_MGR.PGUndoManager->PerformRedo();
-						Return = true;
-					}
-					else
-					{
-						int SwitchEnabled = settings::renderer::kSwitchCAndY.GetData().i;
-						if (SwitchEnabled && GetAsyncKeyState(VK_CONTROL) == FALSE)
-						{
-							BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, 0x43, lParam);
-							Return = true;
-						}
-					}
-
-					break;
-				case 'C':
-					{
-						int SwitchEnabled = settings::renderer::kSwitchCAndY.GetData().i;
-						if (SwitchEnabled && GetAsyncKeyState(VK_CONTROL) == FALSE)
-						{
-							BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, 0x59, lParam);
-							Return = true;
-						}
-					}
-
-					break;
 				case VK_OEM_3:	// ~
 					{
 						if (TESLODTextureGenerator::GeneratorState != TESLODTextureGenerator::kState_NotInUse)
@@ -1328,46 +1251,6 @@ namespace cse
 						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_FlyCamera);
 						Return = true;
 					}
-
-					break;
-				case 'F':
-					if (*TESRenderWindow::PathGridEditFlag)
-					{
-						// prevent the linked ref indicator trishape from interfering with the fall operation
-						Return = true;
-						std::vector<NiAVObject*> Delinquents;
-
-						for (tList<TESPathGridPoint>::Iterator Itr = TESRenderWindow::SelectedPathGridPoints->Begin(); !Itr.End() && Itr.Get(); ++Itr)
-						{
-							NiNode* Node = Itr.Get()->pointNiNode;
-							if (Node)
-							{
-								for (int i = 0; i < Node->m_children.numObjs; i++)
-								{
-									NiAVObject* Child = Node->m_children.data[i];
-									if (Child && Child->IsCulled() == false && TESRender::GetProperty(Child, NiWireframeProperty::kType))
-									{
-										// the bounding box trishape is the only child with the wireframe property
-										Delinquents.push_back(Child);
-										Child->SetCulled(true);
-									}
-								}
-							}
-						}
-
-						// execute the operation
-						BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, wParam, lParam);
-
-						// reset culled state
-						for (auto Itr : Delinquents)
-							Itr->SetCulled(false);
-					}
-
-					break;
-				case VK_DELETE:
-					// clear the picked objects just in case they are about to be deleted
-					_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
-					_RENDERWIN_XSTATE.CurrentMousePathGridPoint = nullptr;
 
 					break;
 				}
@@ -1390,7 +1273,7 @@ namespace cse
 			OSD = new RenderWindowOSD();
 			CellLists = new RenderWindowCellLists();
 			EventSink = new GlobalEventSink(this);
-			HotKeyManager = new RenderWindowHotKeyManager();
+			KeyboardInputManager = new input::RenderWindowKeyboardManager();
 			ActiveRefCache.reserve(200);
 
 			Initialized = false;
@@ -1406,7 +1289,7 @@ namespace cse
 			SAFEDELETE(OSD);
 			SAFEDELETE(EventSink);
 			SAFEDELETE(CellLists);
-			SAFEDELETE(HotKeyManager);
+			SAFEDELETE(KeyboardInputManager);
 
 			Initialized = false;
 		}
@@ -1439,7 +1322,7 @@ namespace cse
 #endif
 			CellLists->Initialize(OSD);
 			GroupManager->Initialize();
-			HotKeyManager->Initialize();
+			KeyboardInputManager->Initialize();
 
 			_RENDERWIN_XSTATE.Initialize();
 			Initialized = true;
@@ -1463,7 +1346,7 @@ namespace cse
 			events::renderer::kPreSceneGraphRender.RemoveSink(EventSink);
 			events::renderer::kPostSceneGraphRender.RemoveSink(EventSink);
 
-			HotKeyManager->Deinitialize();
+			KeyboardInputManager->Deinitialize();
 			GroupManager->Deinitialize();
 			CellLists->Deinitialize(OSD);
 			OSD->Deinitialize();
@@ -1492,18 +1375,6 @@ namespace cse
 		{
 			SME_ASSERT(Initialized);
 			return SelectionManager;
-		}
-
-		RenderWindowHotKeyManager* RenderWindowManager::GetHotKeyManager() const
-		{
-			SME_ASSERT(Initialized);
-			return HotKeyManager;
-		}
-
-		void RenderWindowManager::InvokeContextMenuTool(int Identifier)
-		{
-			SME_ASSERT(Initialized);
-			SendMessage(*TESRenderWindow::WindowHandle, WM_COMMAND, Identifier, NULL);
 		}
 
 		void RenderWindowManager::RefreshFOV()

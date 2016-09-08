@@ -381,6 +381,9 @@
     <ClCompile Include="Render Window\RenderWindowInput.cpp">
       <Filter>Components\Render Window</Filter>
     </ClCompile>
+    <ClCompile Include="Render Window\RenderWindowCommon.cpp">
+      <Filter>Components\Render Window</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -900,6 +903,9 @@
       <Filter>Components\Render Window</Filter>
     </ClInclude>
     <ClInclude Include="Render Window\RenderWindowInput.h">
+      <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\RenderWindowCommon.h">
       <Filter>Components\Render Window</Filter>
     </ClInclude>
   </ItemGroup>

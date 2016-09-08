@@ -823,7 +823,7 @@ namespace cse
 
 		void __stdcall DoInteriorCellDuplicateHook(TESObjectCELL* Source, TESObjectCELL* Copy)
 		{
-			if (Source->GetIsInterior() && Copy->GetIsInterior() &&
+			if (Source->IsInterior() && Copy->IsInterior() &&
 				Source->cellData.lighting && Copy->cellData.lighting)
 			{
 				Copy->cellData.lighting->ambient = Source->cellData.lighting->ambient;

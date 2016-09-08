@@ -202,6 +202,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <WholeProgramOptimization>true</WholeProgramOptimization>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <AdditionalDependencies>ComCtl32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -383,6 +384,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClCompile Include="Render Window\PathGridUndoManager.cpp" />
     <ClCompile Include="Render Window\RenderWindowActions.cpp" />
     <ClCompile Include="Render Window\RenderWindowCellLists.cpp" />
+    <ClCompile Include="Render Window\RenderWindowCommon.cpp" />
     <ClCompile Include="Render Window\RenderWindowGroupManager.cpp" />
     <ClCompile Include="Render Window\RenderWindowInput.cpp" />
     <ClCompile Include="Render Window\RenderWindowLayerManager.cpp" />
@@ -511,6 +513,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClInclude Include="Render Window\PathGridUndoManager.h" />
     <ClInclude Include="Render Window\RenderWindowActions.h" />
     <ClInclude Include="Render Window\RenderWindowCellLists.h" />
+    <ClInclude Include="Render Window\RenderWindowCommon.h" />
     <ClInclude Include="Render Window\RenderWindowGroupManager.h" />
     <ClInclude Include="Render Window\RenderWindowInput.h" />
     <ClInclude Include="Render Window\RenderWindowLayerManager.h" />

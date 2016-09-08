@@ -78,13 +78,13 @@ void TESObjectREFR::SetPosition( float X, float Y, float Z )
 	TESObjectCELL* ExteriorAtCoordsProlog = nullptr;
 	TESObjectCELL* ExteriorAtCoordsEpilog = nullptr;
 
-	if (parentCell && parentCell->GetIsInterior() == false)
+	if (parentCell && parentCell->IsInterior() == false)
 		ExteriorAtCoordsProlog = _DATAHANDLER->GetExteriorCell(position.x, position.y, position.z, false, parentCell->GetParentWorldSpace());
 
 	thisCall<void>(0x00544250, this, X, Y, Z);									// TESObjectREFR::SetPosition
 	thisCall<void>(0x0053FD10, this, position.x, position.y, position.z);		// TESObjectREFR::SetExtraEditorMoveDataPosition
 
-	if (parentCell && parentCell->GetIsInterior() == false)
+	if (parentCell && parentCell->IsInterior() == false)
 	{
 		ExteriorAtCoordsEpilog = _DATAHANDLER->GetExteriorCell(position.x, position.y, position.z, false, parentCell->GetParentWorldSpace());
 		if (ExteriorAtCoordsProlog != ExteriorAtCoordsEpilog)

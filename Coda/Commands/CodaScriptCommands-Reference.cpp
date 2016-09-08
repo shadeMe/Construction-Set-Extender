@@ -115,7 +115,7 @@ namespace cse
 					TESObjectCELL* ParentCell = CS_CAST(Cell, TESForm, TESObjectCELL);
 					TESWorldSpace* ParentWorldspace = CS_CAST(WorldSpace, TESForm, TESWorldSpace);
 
-					if (!Base || !ParentCell || (ParentCell->GetIsInterior() == false && !ParentWorldspace))
+					if (!Base || !ParentCell || (ParentCell->IsInterior() == false && !ParentWorldspace))
 						return false;
 
 					// convert rotation to radians first

@@ -457,7 +457,7 @@ namespace cse
 											bool InitiallyDisabled = IsDlgButtonChecked(hWnd, IDC_BINDSCRIPT_OBJECTREFERENCEDISABLED);
 											TESObjectCELL* ParentCell = CS_CAST(GetWindowLongPtr(SelParentCellBtn, GWL_USERDATA), TESForm, TESObjectCELL);
 
-											if (!ParentCell || ParentCell->GetIsInterior() == 0)
+											if (!ParentCell || ParentCell->IsInterior() == 0)
 												BGSEEUI->MsgBoxE(hWnd, 0, "Invalid/exterior cell selected as parent.");
 											else
 											{

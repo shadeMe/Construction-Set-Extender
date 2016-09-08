@@ -5,7 +5,7 @@ TESWorldSpace* TESObjectCELL::GetParentWorldSpace()
 	return thisCall<TESWorldSpace*>(0x00532E50, this);
 }
 
-bool TESObjectCELL::GetIsInterior()
+bool TESObjectCELL::IsInterior()
 {
 	return thisCall<bool>(0x00532240, this);
 }

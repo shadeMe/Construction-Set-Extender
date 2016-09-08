@@ -81,7 +81,7 @@ namespace cse
 			char Location[0x100] = { 0 };
 			Out.Selection = Cell;
 
-			if (Cell->GetIsInterior())
+			if (Cell->IsInterior())
 				FORMAT_STR(Location, "Interior");
 			else
 			{

@@ -1,7 +1,7 @@
 #include "SelectionControlsOSDLayer.h"
 #include "Render Window\RenderWindowManager.h"
 #include "Achievements.h"
-#include "Construction Set Extender_Resource.h"
+#include "RenderWindowActions.h"
 
 namespace cse
 {
@@ -268,10 +268,10 @@ namespace cse
 				{
 					ImGui::Text("Grouping:"); ImGui::NextColumn();
 					if (ImGui::Button("Group##group_sel", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)))
-						_RENDERWIN_MGR.InvokeContextMenuTool(IDC_RENDERWINDOWCONTEXT_GROUP);
+						actions::GroupSelection();
 					ImGui::NextColumn();
 					if (ImGui::Button("Ungroup##ungroup_sel", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)))
-						_RENDERWIN_MGR.InvokeContextMenuTool(IDC_RENDERWINDOWCONTEXT_UNGROUP);
+						actions::UngroupSelection();
 					ImGui::NextColumn();
 				}
 				ImGui::Columns(1);

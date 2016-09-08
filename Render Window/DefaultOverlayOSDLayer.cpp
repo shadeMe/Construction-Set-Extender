@@ -43,7 +43,7 @@ namespace cse
 				if (CurrentCell)
 				{
 					char Buffer[0x50] = { 0 };
-					if (CurrentCell->GetIsInterior())
+					if (CurrentCell->IsInterior())
 						FORMAT_STR(Buffer, "%s (%08X)   ", CurrentCell->GetEditorID(), CurrentCell->formID);
 					else
 					{
@@ -146,7 +146,7 @@ namespace cse
 							}
 
 							char cBuffer[0x50] = { 0 };
-							if (Selection->parentCell->GetIsInterior() == false)
+							if (Selection->parentCell->IsInterior() == false)
 							{
 								ImGui::TextColored(ImColor(R, G, B), "Parent Cell:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
 								ImGui::TextColored(ImColor(R, G, B), "%s(%08X) %d,%d   ", Selection->parentCell->GetEditorID(), Selection->parentCell->formID,

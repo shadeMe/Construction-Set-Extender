@@ -359,7 +359,7 @@ void TES::ReloadLandscapeTextures()
 			if (Form->formType == TESForm::kFormType_Cell)
 			{
 				TESObjectCELL* Cell = CS_CAST(Form, TESForm, TESObjectCELL);
-				if (Cell->GetIsInterior() == false)
+				if (Cell->IsInterior() == false)
 				{
 					TESObjectLAND* Land = Cell->GetLand();
 					if (Land && Land->landData && Land->landData->nodeData)
@@ -434,7 +434,7 @@ GridCellArray::GridEntry* GridCellArray::GetCellEntry( SInt32 X, SInt32 Y )
 
 void TESLODTextureGenerator::SaveExteriorSnapshot( TESObjectCELL* Exterior, UInt32 Resolution, const char* SavePath )
 {
-	SME_ASSERT(Exterior && Exterior->GetIsInterior() == false && Resolution);
+	SME_ASSERT(Exterior && Exterior->IsInterior() == false && Resolution);
 	SME_ASSERT(GeneratorState == kState_NotInUse);
 
 	ExteriorSnapshotSource = Exterior;

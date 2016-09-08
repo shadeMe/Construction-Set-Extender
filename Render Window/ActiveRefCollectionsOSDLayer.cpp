@@ -1,6 +1,6 @@
 #include "ActiveRefCollectionsOSDLayer.h"
 #include "Render Window\RenderWindowManager.h"
-#include "Construction Set Extender_Resource.h"
+#include "RenderWindowActions.h"
 
 namespace cse
 {
@@ -271,12 +271,12 @@ namespace cse
 						if (Tab == kTab_Invisible)
 						{
 							if (ImGui::Button("Reveal All", ImVec2(ImGui::GetColumnWidth() - 15, 20)))
-								_RENDERWIN_MGR.InvokeContextMenuTool(IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL);
+								actions::RevealAll();
 						}
 						else
 						{
 							if (ImGui::Button("Thaw All", ImVec2(ImGui::GetColumnWidth() - 15, 20)))
-								_RENDERWIN_MGR.InvokeContextMenuTool(IDC_RENDERWINDOWCONTEXT_THAWALLINCELL);
+								actions::ThawAll();
 						}
 
 						ImGui::NextColumn();
@@ -316,7 +316,7 @@ namespace cse
 						ImGui::NextColumn();
 
 						if (ImGui::Button("Group Current Selection", ImVec2(ImGui::GetColumnWidth() - 15, 20)))
-							_RENDERWIN_MGR.InvokeContextMenuTool(IDC_RENDERWINDOWCONTEXT_GROUP);
+							actions::GroupSelection();
 						ImGui::NextColumn();
 					}
 					ImGui::Columns();
