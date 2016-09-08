@@ -68,6 +68,7 @@
 #include <numeric>
 #include <functional>
 #include <regex>
+#include <unordered_map>
 
 // RPC
 #include <Rpc.h>

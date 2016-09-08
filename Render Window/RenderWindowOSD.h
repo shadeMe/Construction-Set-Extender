@@ -126,35 +126,6 @@ namespace cse
 		{
 			const INISetting*		Toggle;
 		protected:
-			// tracked over multiple frames
-			struct StateData
-			{
-				struct TextInputData
-				{
-					bool	Active;
-					bool	GotFocus;
-					bool	LostFocus;
-
-					void	Update(ImGuiDX9* GUI);
-				};
-
-				struct DragInputData
-				{
-					bool	Active;
-					bool	DragBegin;
-					bool	DragEnd;
-
-					void	Update(ImGuiDX9* GUI);
-				};
-
-				TextInputData		TextInput;
-				DragInputData		DragInput;
-
-				StateData();
-
-				void				Update(ImGuiDX9* GUI);							// must be called inside a ImGui::Begin() block
-			};
-
 			struct Helpers
 			{
 				static std::string			GetRefEditorID(TESObjectREFR* Ref);
@@ -170,6 +141,73 @@ namespace cse
 			virtual void					Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI) = 0;
 			virtual bool					NeedsBackgroundUpdate() = 0;			// returns true if the layer needs to be rendered when the render window doesn't have input focus
 			virtual bool					IsEnabled() const;
+		};
+
+		// tracked over multiple frames
+		struct OSDLayerStateData
+		{
+			struct TextInputData
+			{
+				bool	Active;
+				bool	GotFocus;
+				bool	LostFocus;
+
+				void	Update(ImGuiDX9* GUI);
+			};
+
+			struct DragInputData
+			{
+				bool	Active;
+				bool	DragBegin;
+				bool	DragEnd;
+
+				void	Update(ImGuiDX9* GUI);
+			};
+
+			TextInputData		TextInput;
+			DragInputData		DragInput;
+
+			OSDLayerStateData();
+
+			void				Update(ImGuiDX9* GUI);							// must be called inside a ImGui::Begin() block
+		};
+
+		class MouseOverPopupProvider
+		{
+		public:
+			typedef int							PopupIDT;
+			typedef std::function<void()>		RenderDelegateT;
+		private:
+			static constexpr float				kTimeout = 0.1;		// in seconds
+			static const PopupIDT				kInvalidID = -1;
+
+			struct PopupData
+			{
+				std::string			PopupName;
+				bool				ButtonHoverState;	// true if the popup's buttons is being hovered
+				OSDLayerStateData	PopupState;
+				RenderDelegateT		DrawPopup;			// draws the popup contents
+				RenderDelegateT		DrawButton;			// draws (just) the button
+
+				PopupData(const char* Name, RenderDelegateT DrawButton, RenderDelegateT DrawPopup);
+
+				void				CheckButtonHoverChange(ImGuiDX9* GUI, void* ParentWindow,
+														   bool& OutHovering, bool& OutBeginHover, bool& OutEndHover);
+			};
+
+			typedef std::vector<PopupData>		PopupDataArrayT;
+
+			PopupDataArrayT			RegisteredPopups;
+			PopupIDT				ActivePopup;
+			float					ActivePopupTimeout;
+			bool					CloseActivePopup;
+			bool					PreventActivePopupTicking;
+		public:
+			MouseOverPopupProvider();
+
+			PopupIDT				RegisterPopup(const char* Name, RenderDelegateT DrawButton, RenderDelegateT DrawPopup);
+			void					Draw(PopupIDT ID, ImGuiDX9* GUI, void* ParentWindow);
+			void					Update();		// called at the start of the layer's Draw method
 		};
 
 		class NotificationOSDLayer : public IRenderWindowOSDLayer

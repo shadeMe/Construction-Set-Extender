@@ -836,68 +836,6 @@ namespace cse
 		}
 
 
-		void IRenderWindowOSDLayer::StateData::TextInputData::Update(ImGuiDX9* GUI)
-		{
-			GotFocus = LostFocus = false;
-
-			if (ImGui::IsMouseHoveringWindow() == false)
-				return;
-
-			ImGuiIO& io = ImGui::GetIO();
-			if (io.WantTextInput)
-			{
-				if (Active == false)
-				{
-					Active = true;
-					GotFocus = true;
-				}
-			}
-			else if (Active)
-			{
-				Active = false;
-				LostFocus = true;
-			}
-		}
-
-		void IRenderWindowOSDLayer::StateData::DragInputData::Update(ImGuiDX9* GUI)
-		{
-			DragBegin = DragEnd = false;
-
-			if (GUI->IsDraggingWindow())
-				return;
-			else if (ImGui::IsMouseHoveringWindow() == false && Active == false)
-				return;
-
-			if (ImGui::IsMouseDragging() && ImGui::IsAnyItemActive())
-			{
-				if (Active == false)
-				{
-					Active = true;
-					DragBegin = true;
-				}
-			}
-			else if (ImGui::IsMouseDragging() == false)
-			{
-				if (Active)
-				{
-					Active = false;
-					DragEnd = true;
-				}
-			}
-		}
-
-		IRenderWindowOSDLayer::StateData::StateData()
-		{
-			TextInput.Active = TextInput.GotFocus = TextInput.LostFocus = false;
-			DragInput.Active = DragInput.DragBegin = DragInput.DragEnd = false;
-		}
-
-		void IRenderWindowOSDLayer::StateData::Update(ImGuiDX9* GUI)
-		{
-			TextInput.Update(GUI);
-			DragInput.Update(GUI);
-		}
-
 		std::string IRenderWindowOSDLayer::Helpers::GetRefEditorID(TESObjectREFR* Ref)
 		{
 			SME_ASSERT(Ref && Ref->baseForm);
@@ -943,6 +881,218 @@ namespace cse
 			return Toggle == nullptr || Toggle->GetData().i == 1;
 		}
 
+
+
+		void OSDLayerStateData::TextInputData::Update(ImGuiDX9* GUI)
+		{
+			GotFocus = LostFocus = false;
+
+			if (ImGui::IsMouseHoveringWindow() == false)
+				return;
+
+			ImGuiIO& io = ImGui::GetIO();
+			if (io.WantTextInput)
+			{
+				if (Active == false)
+				{
+					Active = true;
+					GotFocus = true;
+				}
+			}
+			else if (Active)
+			{
+				Active = false;
+				LostFocus = true;
+			}
+		}
+
+		void OSDLayerStateData::DragInputData::Update(ImGuiDX9* GUI)
+		{
+			DragBegin = DragEnd = false;
+
+			if (GUI->IsDraggingWindow())
+				return;
+			else if (ImGui::IsMouseHoveringWindow() == false && Active == false)
+				return;
+
+			if (ImGui::IsMouseDragging() && ImGui::IsAnyItemActive())
+			{
+				if (Active == false)
+				{
+					Active = true;
+					DragBegin = true;
+				}
+			}
+			else if (ImGui::IsMouseDragging() == false)
+			{
+				if (Active)
+				{
+					Active = false;
+					DragEnd = true;
+				}
+			}
+		}
+
+		OSDLayerStateData::OSDLayerStateData()
+		{
+			TextInput.Active = TextInput.GotFocus = TextInput.LostFocus = false;
+			DragInput.Active = DragInput.DragBegin = DragInput.DragEnd = false;
+		}
+
+		void OSDLayerStateData::Update(ImGuiDX9* GUI)
+		{
+			TextInput.Update(GUI);
+			DragInput.Update(GUI);
+		}
+
+
+		MouseOverPopupProvider::PopupData::PopupData(const char* Name, RenderDelegateT DrawButton, RenderDelegateT DrawPopup) :
+			PopupName(Name),
+			ButtonHoverState(false),
+			PopupState(),
+			DrawButton(DrawButton),
+			DrawPopup(DrawPopup)
+		{
+			SME_ASSERT(Name && DrawButton && DrawPopup);
+		}
+
+
+		void MouseOverPopupProvider::PopupData::CheckButtonHoverChange(ImGuiDX9* GUI, void* ParentWindow, bool& OutHovering, bool& OutBeginHover, bool& OutEndHover)
+		{
+			// assuming the last item was the popup's button
+			if (ImGui::IsItemHoveredRect() && GUI->GetHoveredWindow() == ParentWindow)
+			{
+				OutHovering = true;
+				if (ButtonHoverState == false)
+				{
+					ButtonHoverState = true;
+					OutBeginHover = true;
+				}
+			}
+			else
+			{
+				if (ButtonHoverState)
+				{
+					ButtonHoverState = false;
+					OutEndHover = true;
+				}
+			}
+		}
+
+		MouseOverPopupProvider::MouseOverPopupProvider() :
+			RegisteredPopups(),
+			ActivePopup(kInvalidID),
+			ActivePopupTimeout(0),
+			CloseActivePopup(false),
+			PreventActivePopupTicking(false)
+		{
+			;//
+		}
+
+		MouseOverPopupProvider::PopupIDT MouseOverPopupProvider::RegisterPopup(const char* Name, RenderDelegateT DrawButton, RenderDelegateT DrawPopup)
+		{
+			RegisteredPopups.push_back(PopupData(Name, DrawButton, DrawPopup));
+			return RegisteredPopups.size() - 1;
+		}
+
+		void MouseOverPopupProvider::Draw(PopupIDT ID, ImGuiDX9* GUI, void* ParentWindow)
+		{
+			SME_ASSERT(ID != kInvalidID);
+			SME_ASSERT(GUI && ParentWindow);
+			SME_ASSERT(ID < RegisteredPopups.size());
+
+			PopupData& PopupData = RegisteredPopups.at(ID);
+			bool Hovering = false, BeginHover = false, EndHover = false;
+			const char* PopupStrID = PopupData.PopupName.c_str();
+
+			// draw the button
+			PopupData.DrawButton();
+
+			// just render the button if there are open modals
+			if (ModalWindowProviderOSDLayer::Instance.HasOpenModals())
+				return;
+
+			OSDLayerStateData& CurrentState = PopupData.PopupState;
+			bool ActiveStateDragging = false;
+			if (ActivePopup != kInvalidID)
+			{
+				OSDLayerStateData& ActiveState = RegisteredPopups.at(ActivePopup).PopupState;
+				if (ActiveState.DragInput.Active)
+					ActiveStateDragging = true;
+			}
+
+			PopupData.CheckButtonHoverChange(GUI, ParentWindow, Hovering, BeginHover, EndHover);
+
+			if (BeginHover && ActiveStateDragging == false)
+			{
+				ActivePopup = ID;
+				ActivePopupTimeout = 0.f;
+			}
+			else if (EndHover && ActiveStateDragging == false)
+			{
+				ActivePopupTimeout = kTimeout;
+			}
+
+			if (ActivePopup == ID)
+			{
+				if (BeginHover)
+					ImGui::OpenPopup(PopupStrID);
+
+				if (ImGui::BeginPopup(PopupStrID))
+				{
+					CurrentState.Update(GUI);
+
+					if (CloseActivePopup)
+					{
+						CloseActivePopup = false;
+						ActivePopupTimeout = 0.f;
+						ActivePopup = kInvalidID;
+						ImGui::CloseCurrentPopup();
+					}
+					else
+					{
+						// render the contents of the current popup
+						PopupData.DrawPopup();
+
+						if (Hovering == false && GUI->IsPopupHovered())
+						{
+							// reset the timeout/prevent ticking every frame when the mouse is hovering over the popup
+							PreventActivePopupTicking = true;
+							ActivePopupTimeout = kTimeout;
+						}
+					}
+
+					ImGui::EndPopup();
+				}
+			}
+		}
+
+		void MouseOverPopupProvider::Update()
+		{
+			if (ModalWindowProviderOSDLayer::Instance.HasOpenModals())
+				return;
+			else if (PreventActivePopupTicking)
+			{
+				PreventActivePopupTicking = false;
+				return;
+			}
+
+			if (ActivePopup != kInvalidID && ActivePopupTimeout != 0.f && CloseActivePopup == false)
+			{
+				SME_ASSERT(ActivePopup < RegisteredPopups.size());
+
+				OSDLayerStateData& ActiveState = RegisteredPopups.at(ActivePopup).PopupState;
+				if (ActiveState.DragInput.Active == false)
+				{
+					ActivePopupTimeout -= ImGui::GetIO().DeltaTime;
+					if (ActivePopupTimeout <= 0.f)
+					{
+						CloseActivePopup = true;
+						ActivePopupTimeout = 0.f;
+					}
+				}
+			}
+		}
 
 		NotificationOSDLayer		NotificationOSDLayer::Instance;
 
@@ -1189,5 +1339,7 @@ namespace cse
 		{
 			return OpenModals.size() != 0;
 		}
+
+
 	}
 }

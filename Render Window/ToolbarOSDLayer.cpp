@@ -15,274 +15,6 @@ namespace cse
 
 		ToolbarOSDLayer				ToolbarOSDLayer::Instance;
 
-		void ToolbarOSDLayer::RenderPopup(int PopupID, ImGuiDX9* GUI, void* ParentToolbarWindow, const ImVec2& ButtonSize, const ImVec4* ButtonColor)
-		{
-			SME_ASSERT(PopupID > kPopup__NONE && PopupID < kPopup__MAX);
-
-			bool Hovering = false, BeginHover = false, EndHover = false;
-			const ImVec4 MainColor = ImColor::HSV(4 / 7.0f, 0.6f, 0.6f);
-			if (ButtonColor == nullptr)
-				ButtonColor = &MainColor;
-			const char* PopupStrID = nullptr;
-
-			ImGui::PushStyleColor(ImGuiCol_Button, *ButtonColor);
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, *ButtonColor);
-			ImGui::PushStyleColor(ImGuiCol_ButtonActive, *ButtonColor);
-
-			switch (PopupID)
-			{
-			case kPopup_SnapControls:
-				ImGui::Button(ICON_MD_GRID_ON "##popupbtn_snap_controls", ButtonSize);
-				PopupStrID = "popup_snap_controls";
-				break;
-			case kPopup_MovementControls:
-				ImGui::Button(ICON_MD_ZOOM_OUT_MAP "##popupbtn_movement_controls", ButtonSize);
-				PopupStrID = "popup_movement_controls";
-				break;
-			case kPopup_VisibilityToggles:
-				ImGui::Button(ICON_MD_REMOVE_RED_EYE "##popupbtn_visibility_toggles", ButtonSize);
-				PopupStrID = "popup_visibility_toggles";
-				break;
-			}
-
-			ImGui::PopStyleColor(3);
-
-			// just render the button if there are open modals
-			if (ModalWindowProviderOSDLayer::Instance.HasOpenModals())
-				return;
-
-			StateData& CurrentState = PopupStateData[PopupID];
-			bool ActiveStateDragging = false;
-			if (ActivePopup != kPopup__NONE && PopupStateData[ActivePopup].DragInput.Active)
-				ActiveStateDragging = true;
-
-			CheckPopupButtonHoverChange(PopupID, GUI, ParentToolbarWindow, Hovering, BeginHover, EndHover);
-
-			if (BeginHover && ActiveStateDragging == false)
-			{
-				ActivePopup = PopupID;
-				ActivePopupTimeout = 0.f;
-			}
-			else if (EndHover && ActiveStateDragging == false)
-			{
-				ActivePopupTimeout = kTimeoutPopup;
-			}
-
-			if (ActivePopup == PopupID)
-			{
-				if (BeginHover)
-					ImGui::OpenPopup(PopupStrID);
-
-				if (ImGui::BeginPopup(PopupStrID))
-				{
-					CurrentState.Update(GUI);
-
-					if (CloseActivePopup)
-					{
-						CloseActivePopup = false;
-						ActivePopupTimeout = 0.f;
-						ActivePopup = kPopup__NONE;
-						ImGui::CloseCurrentPopup();
-					}
-					else
-					{
-						// render the contents of the current popup
-						switch (PopupID)
-						{
-						case kPopup_SnapControls:
-							{
-								UInt32 Flags = *TESRenderWindow::StateFlags;
-								bool SnapGrid = Flags & TESRenderWindow::kRenderWindowState_SnapToGrid;
-								bool SnapAngle = Flags & TESRenderWindow::kRenderWindowState_SnapToAngle;
-								int GridVal = *(UInt32*)TESRenderWindow::SnapGridDistance;
-								int AngleVal = *(UInt32*)TESRenderWindow::SnapAngle;
-								TESObjectREFR* SnapRef = *TESRenderWindow::SnapReference;
-
-								if (ImGui::Checkbox("Snap Grid   ", &SnapGrid))
-								{
-									if (SnapGrid)
-										Flags |= TESRenderWindow::kRenderWindowState_SnapToGrid;
-									else
-										Flags &= ~TESRenderWindow::kRenderWindowState_SnapToGrid;
-								}
-								ImGui::SameLine();
-								ImGui::PushItemWidth(40);
-								ImGui::DragInt("##gridDist", &GridVal, 1, 0, 5000);
-								ImGui::PopItemWidth();
-
-								ImGui::Separator();
-
-								if (ImGui::Checkbox("Snap Angle ", &SnapAngle))
-								{
-									if (SnapAngle)
-										Flags |= TESRenderWindow::kRenderWindowState_SnapToAngle;
-									else
-										Flags &= ~TESRenderWindow::kRenderWindowState_SnapToAngle;
-								}
-								ImGui::SameLine();
-								ImGui::PushItemWidth(40);
-								ImGui::DragInt("##anglVal", &AngleVal, 1, 0, 500);
-								ImGui::PopItemWidth();
-
-								ImGui::Separator();
-
-								ImGui::Text("Snap Reference:");
-								if (SnapRef)
-								{
-									const char* SnapRefID = SnapRef->GetEditorID();
-									ImGui::TextWrapped("%s%s%08X%s", (SnapRefID ? SnapRefID : ""), (SnapRefID ? " (" : ""), SnapRef->formID, (SnapRefID ? ")" : ""));
-								}
-								else
-									ImGui::Text("None");
-
-								if (ImGui::Button("Set", ImVec2(70, 25)))
-								{
-									TESObjectREFR* NewSnap = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, SnapRef, true);
-									if (NewSnap)
-										SnapRef = NewSnap;
-								}
-								ImGui::SameLine();
-								if (ImGui::Button("Clear", ImVec2(70, 25)))
-									SnapRef = nullptr;
-
-								*(UInt32*)TESRenderWindow::SnapGridDistance = GridVal;
-								*(UInt32*)TESRenderWindow::SnapAngle = AngleVal;
-								*TESRenderWindow::StateFlags = Flags;
-								*TESRenderWindow::SnapReference = SnapRef;
-							}
-
-							break;
-						case kPopup_MovementControls:
-							{
-								float CamPan = *TESRenderWindow::CameraPanSpeed;
-								float CamZoom = *TESRenderWindow::CameraZoomSpeed;
-								float CamRot = *TESRenderWindow::CameraRotationSpeed;
-								float RefMov = *TESRenderWindow::RefMovementSpeed;
-								float RefRot = *TESRenderWindow::RefRotationSpeed;
-
-								ImGui::PushItemWidth(150);
-								ImGui::Text("Camera:");
-								ImGui::DragFloat("##Cam. Pan", &CamPan, 0.05f, 0.01, 10, "Pan: %.3f");
-								ImGui::DragFloat("##Cam. Rotation", &CamRot, 0.05f, 0.01, 10, "Rotation: %.3f");
-								ImGui::DragFloat("##Cam. Zoom", &CamZoom, 0.05f, 0.01, 10, "Zoom: %.3f");
-
-								ImGui::Text("Reference:");
-								ImGui::DragFloat("##Ref. Move", &RefMov, 0.05f, 0.01, 10, "Movement: %.3f");
-								ImGui::DragFloat("##Ref. Rotation", &RefRot, 0.05f, 0.01, 10, "Rotation: %.3f");
-								ImGui::PopItemWidth();
-
-								*TESRenderWindow::CameraPanSpeed = CamPan;
-								*TESRenderWindow::CameraZoomSpeed = CamZoom;
-								*TESRenderWindow::CameraRotationSpeed = CamRot;
-								*TESRenderWindow::RefMovementSpeed = RefMov;
-								*TESRenderWindow::RefRotationSpeed = RefRot;
-							}
-
-							break;
-						case kPopup_VisibilityToggles:
-							{
-								ImGui::PushID("visibility_toggle_menu_item");
-								{
-									static const char* kNames[actions::ToggleVisibilityRWA::kType__MAX] =
-									{
-										"Objects",
-										"Markers",
-										"Wireframe",
-										"Bright Light",
-										"Sky",
-										"Solid Subspaces",
-										"Collision Geometry",
-										"Leaves",
-										"Trees",
-										"Water",
-										"Cell Borders",
-										"Landscape",
-										"Light Radius",
-										"Parent Child Indicator",
-										"Path Grid Linked Reference Indicator",
-										"Initially Disabled References",
-										"Initially Disabled References' Children",
-										"Grass Overlay"
-									};
-
-									bool Toggles[actions::ToggleVisibilityRWA::kType__MAX] = { false };
-									for (int i = 0; i < actions::ToggleVisibilityRWA::kType__MAX; i++)
-									{
-
-										Toggles[i] = actions::ToggleVisibilityRWA::IsVisible(i);
-										if (ImGui::Checkbox(kNames[i], &Toggles[i]))
-											actions::ToggleVisibility[i]();
-									}
-								}
-								ImGui::PopID();
-							}
-
-							break;
-						}
-
-						if (Hovering == false && GUI->IsPopupHovered())
-						{
-							// reset the timeout/prevent ticking every frame when the mouse is hovering over the popup
-							PreventActivePopupTicking = true;
-							ActivePopupTimeout = kTimeoutPopup;
-						}
-					}
-
-					ImGui::EndPopup();
-				}
-			}
-		}
-
-		void ToolbarOSDLayer::CheckPopupButtonHoverChange(int PopupID, ImGuiDX9* GUI, void* ParentToolbarWindow,
-														  bool& OutHovering, bool& OutBeginHover, bool& OutEndHover)
-		{
-			SME_ASSERT(PopupID > kPopup__NONE && PopupID < kPopup__MAX);
-
-			// assuming the last item was one of the buttons
-			if (ImGui::IsItemHoveredRect() && GUI->GetHoveredWindow() == ParentToolbarWindow)
-			{
-				OutHovering = true;
-				if (PopupButtonHoverState[PopupID] == false)
-				{
-					PopupButtonHoverState[PopupID] = true;
-					OutBeginHover = true;
-				}
-			}
-			else
-			{
-				if (PopupButtonHoverState[PopupID])
-				{
-					PopupButtonHoverState[PopupID] = false;
-					OutEndHover = true;
-				}
-			}
-		}
-
-		void ToolbarOSDLayer::TickActivePopup()
-		{
-			if (ModalWindowProviderOSDLayer::Instance.HasOpenModals())
-				return;
-			else if (PreventActivePopupTicking)
-			{
-				PreventActivePopupTicking = false;
-				return;
-			}
-
-			if (ActivePopup != kPopup__NONE && ActivePopupTimeout != 0.f && CloseActivePopup == false)
-			{
-				StateData& ActiveState = PopupStateData[ActivePopup];
-				if (ActiveState.DragInput.Active == false)
-				{
-					ActivePopupTimeout -= ImGui::GetIO().DeltaTime;
-					if (ActivePopupTimeout <= 0.f)
-					{
-						CloseActivePopup = true;
-						ActivePopupTimeout = 0.f;
-					}
-				}
-			}
-		}
-
 		int ToolbarOSDLayer::RefFilterCompletionCallback(ImGuiTextEditCallbackData* Data)
 		{
 			if ((Data->EventFlag & ImGuiInputTextFlags_CallbackCompletion))
@@ -391,9 +123,9 @@ namespace cse
 			{
 				ImGui::TextWrapped("Movement Controls: ");
 				ImGui::SameLine(0, 10);
-				RenderPopup(kPopup_SnapControls, GUI, CurrentToolbarWindow, TOOLBAR_BUTTON_SIZE);
+				PopupProvider.Draw(PopupSnapControls, GUI, CurrentToolbarWindow);
 				ImGui::SameLine(0, 10);
-				RenderPopup(kPopup_MovementControls, GUI, CurrentToolbarWindow, TOOLBAR_BUTTON_SIZE);
+				PopupProvider.Draw(PopupMovementControls, GUI, CurrentToolbarWindow);
 				ImGui::SameLine(0, 20);
 
 				ImGui::NextColumn();
@@ -536,10 +268,7 @@ namespace cse
 				return;
 			}
 
-			void* CurrentToolbarWindow = GUI->GetCurrentWindow();
-
-			ImColor VisibilityButtonColor(0, 0, 0, 0);
-			RenderPopup(kPopup_VisibilityToggles, GUI, CurrentToolbarWindow, ImVec2(0, 0), &VisibilityButtonColor.Value);
+			PopupProvider.Draw(PopupVisibilityToggles, GUI, GUI->GetCurrentWindow());
 
 			ImGui::End();
 			ImGui::PopStyleVar(3);
@@ -547,17 +276,166 @@ namespace cse
 		}
 
 		ToolbarOSDLayer::ToolbarOSDLayer() :
-			IRenderWindowOSDLayer(&settings::renderWindowOSD::kShowToolbar),
-			PopupStateData(),
-			RefFilter(),
-			FilterRefs()
+			IRenderWindowOSDLayer(&settings::renderWindowOSD::kShowToolbar)
 		{
-			ActivePopup = kPopup__NONE;
-			ActivePopupTimeout = 0.f;
-			CloseActivePopup = false;
+			PopupSnapControls = PopupProvider.RegisterPopup("popup_snap_controls",
+															[]() {
+				const ImVec4 MainColor = ImColor::HSV(4 / 7.0f, 0.6f, 0.6f);
 
-			for (int i = kPopup__NONE + 1; i < kPopup__MAX; i++)
-				PopupButtonHoverState[i] = false;
+				ImGui::PushStyleColor(ImGuiCol_Button, MainColor);
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, MainColor);
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, MainColor);
+
+				ImGui::Button(ICON_MD_GRID_ON "##popupbtn_snap_controls", TOOLBAR_BUTTON_SIZE);
+
+				ImGui::PopStyleColor(3);
+			},
+															[]() {
+				UInt32 Flags = *TESRenderWindow::StateFlags;
+				bool SnapGrid = Flags & TESRenderWindow::kRenderWindowState_SnapToGrid;
+				bool SnapAngle = Flags & TESRenderWindow::kRenderWindowState_SnapToAngle;
+				int GridVal = *(UInt32*)TESRenderWindow::SnapGridDistance;
+				int AngleVal = *(UInt32*)TESRenderWindow::SnapAngle;
+				TESObjectREFR* SnapRef = *TESRenderWindow::SnapReference;
+
+				if (ImGui::Checkbox("Snap Grid   ", &SnapGrid))
+				{
+					if (SnapGrid)
+						Flags |= TESRenderWindow::kRenderWindowState_SnapToGrid;
+					else
+						Flags &= ~TESRenderWindow::kRenderWindowState_SnapToGrid;
+				}
+				ImGui::SameLine();
+				ImGui::PushItemWidth(40);
+				ImGui::DragInt("##gridDist", &GridVal, 1, 0, 5000);
+				ImGui::PopItemWidth();
+
+				ImGui::Separator();
+
+				if (ImGui::Checkbox("Snap Angle ", &SnapAngle))
+				{
+					if (SnapAngle)
+						Flags |= TESRenderWindow::kRenderWindowState_SnapToAngle;
+					else
+						Flags &= ~TESRenderWindow::kRenderWindowState_SnapToAngle;
+				}
+				ImGui::SameLine();
+				ImGui::PushItemWidth(40);
+				ImGui::DragInt("##anglVal", &AngleVal, 1, 0, 500);
+				ImGui::PopItemWidth();
+
+				ImGui::Separator();
+
+				ImGui::Text("Snap Reference:");
+				if (SnapRef)
+				{
+					const char* SnapRefID = SnapRef->GetEditorID();
+					ImGui::TextWrapped("%s%s%08X%s", (SnapRefID ? SnapRefID : ""), (SnapRefID ? " (" : ""), SnapRef->formID, (SnapRefID ? ")" : ""));
+				}
+				else
+					ImGui::Text("None");
+
+				if (ImGui::Button("Set", ImVec2(70, 25)))
+				{
+					TESObjectREFR* NewSnap = RefSelectControl::ShowSelectReferenceDialog(*TESRenderWindow::WindowHandle, SnapRef, true);
+					if (NewSnap)
+						SnapRef = NewSnap;
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Clear", ImVec2(70, 25)))
+					SnapRef = nullptr;
+
+				*(UInt32*)TESRenderWindow::SnapGridDistance = GridVal;
+				*(UInt32*)TESRenderWindow::SnapAngle = AngleVal;
+				*TESRenderWindow::StateFlags = Flags;
+				*TESRenderWindow::SnapReference = SnapRef;
+			});
+
+			PopupMovementControls= PopupProvider.RegisterPopup("popup_movement_controls",
+															   []() {
+				const ImVec4 MainColor = ImColor::HSV(4 / 7.0f, 0.6f, 0.6f);
+
+				ImGui::PushStyleColor(ImGuiCol_Button, MainColor);
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, MainColor);
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, MainColor);
+
+				ImGui::Button(ICON_MD_ZOOM_OUT_MAP "##popupbtn_movement_controls", TOOLBAR_BUTTON_SIZE);
+
+				ImGui::PopStyleColor(3);
+			},
+															   []() {
+				float CamPan = *TESRenderWindow::CameraPanSpeed;
+				float CamZoom = *TESRenderWindow::CameraZoomSpeed;
+				float CamRot = *TESRenderWindow::CameraRotationSpeed;
+				float RefMov = *TESRenderWindow::RefMovementSpeed;
+				float RefRot = *TESRenderWindow::RefRotationSpeed;
+
+				ImGui::PushItemWidth(150);
+				ImGui::Text("Camera:");
+				ImGui::DragFloat("##Cam. Pan", &CamPan, 0.05f, 0.01, 10, "Pan: %.3f");
+				ImGui::DragFloat("##Cam. Rotation", &CamRot, 0.05f, 0.01, 10, "Rotation: %.3f");
+				ImGui::DragFloat("##Cam. Zoom", &CamZoom, 0.05f, 0.01, 10, "Zoom: %.3f");
+
+				ImGui::Text("Reference:");
+				ImGui::DragFloat("##Ref. Move", &RefMov, 0.05f, 0.01, 10, "Movement: %.3f");
+				ImGui::DragFloat("##Ref. Rotation", &RefRot, 0.05f, 0.01, 10, "Rotation: %.3f");
+				ImGui::PopItemWidth();
+
+				*TESRenderWindow::CameraPanSpeed = CamPan;
+				*TESRenderWindow::CameraZoomSpeed = CamZoom;
+				*TESRenderWindow::CameraRotationSpeed = CamRot;
+				*TESRenderWindow::RefMovementSpeed = RefMov;
+				*TESRenderWindow::RefRotationSpeed = RefRot;
+			});
+
+			PopupVisibilityToggles = PopupProvider.RegisterPopup("popup_visibility_toggles",
+																 []() {
+				const ImVec4 MainColor(0, 0, 0, 0);
+
+				ImGui::PushStyleColor(ImGuiCol_Button, MainColor);
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, MainColor);
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, MainColor);
+
+				ImGui::Button(ICON_MD_REMOVE_RED_EYE "##popupbtn_visibility_toggles", ImVec2(0, 0));
+
+				ImGui::PopStyleColor(3);
+			},
+																 []() {
+				ImGui::PushID("visibility_toggle_menu_item");
+				{
+					static const char* kNames[actions::ToggleVisibilityRWA::kType__MAX] =
+					{
+						"Objects",
+						"Markers",
+						"Wireframe",
+						"Bright Light",
+						"Sky",
+						"Solid Subspaces",
+						"Collision Geometry",
+						"Leaves",
+						"Trees",
+						"Water",
+						"Cell Borders",
+						"Landscape",
+						"Light Radius",
+						"Parent Child Indicator",
+						"Path Grid Linked Reference Indicator",
+						"Initially Disabled References",
+						"Initially Disabled References' Children",
+						"Grass Overlay"
+					};
+
+					bool Toggles[actions::ToggleVisibilityRWA::kType__MAX] = { false };
+					for (int i = 0; i < actions::ToggleVisibilityRWA::kType__MAX; i++)
+					{
+
+						Toggles[i] = actions::ToggleVisibilityRWA::IsVisible(i);
+						if (ImGui::Checkbox(kNames[i], &Toggles[i]))
+							actions::ToggleVisibility[i]();
+					}
+				}
+				ImGui::PopID();
+			});
 
 			FilterRefs.reserve(100);
 			PreviousFilterRef = FilterRefs.end();
@@ -571,7 +449,7 @@ namespace cse
 
 		void ToolbarOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
-			TickActivePopup();
+			PopupProvider.Update();
 
 			RenderMainToolbar(GUI);
 			RenderTopToolbar(GUI);
