@@ -199,6 +199,8 @@ namespace cse
 				extern BuiltInKeyComboRWA ToggleSelectionWireframe;
 				extern BuiltInKeyComboRWA CheckBounds;
 				extern BuiltInKeyComboRWA ToggleCellBorders;
+				extern BuiltInKeyComboRWA Paste;
+				extern BuiltInKeyComboRWA PasteInPlace;
 			}
 		}
 	}

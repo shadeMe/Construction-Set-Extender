@@ -57,7 +57,7 @@ namespace cse
 				bool Shift = ((Modifiers & kModifier_Shift) && GetAsyncKeyState(VK_SHIFT)) || ((Modifiers & kModifier_Shift) == false && GetAsyncKeyState(VK_SHIFT) == NULL);
 				bool Alt = ((Modifiers & kModifier_Alt) && GetAsyncKeyState(VK_MENU)) || ((Modifiers & kModifier_Alt) == false && GetAsyncKeyState(VK_MENU) == NULL);
 
-				if (Key == KeyCode)
+				if ((Key == NULL && GetAsyncKeyState(KeyCode)) || (Key && Key == KeyCode))
 				{
 					if (Control && Shift && Alt)
 						return true;
@@ -318,6 +318,36 @@ namespace cse
 			}
 
 
+			UInt8* HoldableKeyOverride::GetBaseState() const
+			{
+				switch (BuiltInKey)
+				{
+				case BuiltIn::kHoldable_Control:
+					return TESRenderWindow::KeyState_Control;
+				case BuiltIn::kHoldable_Shift:
+					return TESRenderWindow::KeyState_Shift;
+				case BuiltIn::kHoldable_Space:
+					return TESRenderWindow::KeyState_SpaceMMB;
+				case BuiltIn::kHoldable_X:
+					return TESRenderWindow::KeyState_X;
+				case BuiltIn::kHoldable_Y:
+					return TESRenderWindow::KeyState_Y;
+				case BuiltIn::kHoldable_Z:
+					return TESRenderWindow::KeyState_Z;
+				case BuiltIn::kHoldable_S:
+					return TESRenderWindow::KeyState_S;
+				case BuiltIn::kHoldable_V:
+					return TESRenderWindow::KeyState_V;
+				}
+
+				return nullptr;
+			}
+
+			SHORT HoldableKeyOverride::GetBuiltInKey() const
+			{
+				return BuiltInKey;
+			}
+
 			const char* HoldableKeyOverride::GetName() const
 			{
 				return Name.c_str();
@@ -325,7 +355,7 @@ namespace cse
 
 			const char* HoldableKeyOverride::GetDescription() const
 			{
-				return "Hold key down to active action";
+				return "";
 			}
 
 			void HoldableKeyOverride::SetActiveBinding(const BasicKeyBinding& NewBinding)
@@ -346,7 +376,7 @@ namespace cse
 				{
 				case WM_KEYDOWN:
 				case WM_KEYUP:
-					if (wParam == ActiveBinding.GetKeyCode())
+					if (ActiveBinding.IsActivated(wParam))
 					{
 						Result.Triggered = true;
 						if (GetExecutionContext().IsExecutable())
@@ -571,73 +601,72 @@ namespace cse
 			{
 				static ImGuiTextFilter Filter;
 
-				ImGui::Columns(2, "header", false);
+				Filter.Draw("Filter", 350); ImGui::SameLine(0, 20);
+				ImGui::Text("Double click on a hotkey to remap it.");
+
+				ImGui::BeginChild("hotkey_child_frame", ImVec2(0, 500));
 				{
-					Filter.Draw();
-					ImGui::NextColumn();
-					if (ImGui::Button("Close", ImVec2(120, 0)))
+					ImGui::Columns(3, "hotkey_list");
 					{
-						Filter.Clear();
-						return true;
-					}
-					ImGui::NextColumn();
-				}
-				ImGui::Columns();
-				ImGui::TextWrapped("Double click on a hotkey to remap it.");
-
-				ImGui::Columns(3, "hotkey_list");
-				{
-					int i = 0;
-					IHotKey* Selection = nullptr;
-					for (auto& Itr : HotKeys)
-					{
-						const char* Name = Itr->GetName();
-						const char* Desc = Itr->GetDescription();
-						std::string Key(Itr->GetActiveBinding().GetDescription());
-
-						if (Itr->IsEditable() == false)
-							continue;
-						else if (Filter.PassFilter(Name) == false && Filter.PassFilter(Desc) == false)
-							continue;
-
-						char Buffer[0x100] = { 0 };
-						FORMAT_STR(Buffer, "%s %s-%d", Name, Desc, i);
-						bool Selected = false;
-
-						ImGui::PushID(Buffer);
+						int i = 0;
+						IHotKey* Selection = nullptr;
+						for (auto& Itr : HotKeys)
 						{
-							if (ImGui::Selectable(Name, false,
-												  ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick | ImGuiSelectableFlags_DontClosePopups) &&
-								ImGui::IsMouseDoubleClicked(0))
+							const char* Name = Itr->GetName();
+							const char* Desc = Itr->GetDescription();
+							std::string Key(Itr->GetActiveBinding().GetDescription());
+
+							if (Itr->IsEditable() == false)
+								continue;
+							else if (Filter.PassFilter(Name) == false && Filter.PassFilter(Desc) == false)
+								continue;
+
+							char Buffer[0x100] = { 0 };
+							FORMAT_STR(Buffer, "%s %s-%d", Name, Desc, i);
+							bool Selected = false;
+
+							ImGui::PushID(Buffer);
 							{
-								Selection = Itr.get();
+								if (ImGui::Selectable(Name, false,
+													  ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick | ImGuiSelectableFlags_DontClosePopups) &&
+									ImGui::IsMouseDoubleClicked(0))
+								{
+									Selection = Itr.get();
+								}
+
+								ImGui::NextColumn();
+								ImGui::Selectable(Key.c_str());
+								ImGui::NextColumn();
+								ImGui::Selectable(Desc, false, NULL, ImVec2(200, 0));
+								if (ImGui::IsItemHovered())
+									ImGui::SetTooltip(Desc);
+								ImGui::NextColumn();
 							}
+							ImGui::PopID();
 
-							ImGui::NextColumn();
-							ImGui::Selectable(Key.c_str());
-							ImGui::NextColumn();
-							ImGui::Selectable(Desc, false, NULL, ImVec2(200, 0));
-							if (ImGui::IsItemHovered())
-								ImGui::SetTooltip(Desc);
-							ImGui::NextColumn();
+							i++;
 						}
-						ImGui::PopID();
 
-						i++;
+						if (Selection)
+						{
+							ModalWindowProviderOSDLayer::Instance.ShowModal("Edit Binding",
+																			std::bind(&RenderWindowKeyboardManager::RenderModalBindingEditor, this,
+																					  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+																			Selection,
+																			ImGuiWindowFlags_AlwaysAutoResize);
+						}
 					}
-
-					if (Selection)
-					{
-						ModalWindowProviderOSDLayer::Instance.ShowModal("Edit Hotkey Binding",
-																		std::bind(&RenderWindowKeyboardManager::RenderModalBindingEditor, this,
-																				  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
-																		Selection,
-																		ImGuiWindowFlags_AlwaysAutoResize);
-					}
+					ImGui::Columns();
 				}
-				ImGui::Columns();
+				ImGui::EndChild();
 
-				return false;
+				if (ImGui::Button("Close", ImVec2(75, 0)))
+				{
+					Filter.Clear();
+					return true;
+				}
+				else
+					return false;
 			}
 
 			bool RenderWindowKeyboardManager::RenderModalBindingEditor(RenderWindowOSD* OSD, ImGuiDX9* GUI, void* UserData)
@@ -801,9 +830,51 @@ namespace cse
 					return false;
 			}
 
+			void RenderWindowKeyboardManager::PerformConsistencyChecks(UINT uMsg, WPARAM wParam, LPARAM lParam)
+			{
+				// ensure that the holdable key base states correspond to the active state of the override key
+				for (auto& Itr : HotKeys)
+				{
+					if (Itr->GetHandlerType() == IKeyboardEventHandler::kType_Stateful)
+					{
+						HoldableKeyOverride* Override = dynamic_cast<HoldableKeyOverride*>(Itr.get());
+						UInt8* BaseState = Override->GetBaseState();
+						SHORT BuiltInKey = Override->GetBuiltInKey();
+						if (Override->GetActiveBinding().IsActivated())
+						{
+							if (*BaseState == 0)
+							{
+								// this ought never happen (except when triggering the MMB and Space at the same time)
+								// however, GetAsyncKeyState might return true if the key was pressed sometime after its previous call
+								// so we just ignore this eventuality
+							}
+						}
+						else
+						{
+							if (*BaseState == 1)
+							{
+								// special case for Space as the base state is set when holding down the middle mouse button too
+								if (BuiltInKey != BuiltIn::kHoldable_Space)
+								{
+									// reset the base state
+									*BaseState = 0;
+								}
+								else if (GetAsyncKeyState(VK_MBUTTON) == NULL)
+								{
+									// MMB isn't down either, reset
+									*BaseState = 0;
+								}
+
+							}
+						}
+					}
+				}
+			}
+
 			RenderWindowKeyboardManager::RenderWindowKeyboardManager() :
 				HotKeys(),
-				DeletedBindings()
+				DeletedBindings(),
+				MessageLogContext(nullptr)
 			{
 				Initialized = false;
 			}
@@ -817,10 +888,12 @@ namespace cse
 			{
 				SME_ASSERT(Initialized == false);
 
+				MessageLogContext = BGSEECONSOLE->RegisterMessageLogContext("Render Window Keyboard Input");
+
 				DeletedBindings.push_back(BuiltIn::KeyBinding('O'));
 				DeletedBindings.push_back(BuiltIn::KeyBinding('I', BuiltIn::kModifier_Space));
 
-				RegisterHoldableOverride("D17061A6-7FD7-4E79-BCCB-AC4899A14B47", BuiltIn::kHoldable_Control, false);		// not editable as it just functions a regular modifier
+				RegisterHoldableOverride("D17061A6-7FD7-4E79-BCCB-AC4899A14B47", BuiltIn::kHoldable_Control, false);		// not editable as it just functions like a regular modifier
 				RegisterHoldableOverride("206281B3-6694-4C99-9AA2-E1B94720C9BC", BuiltIn::kHoldable_Shift, true);
 				RegisterHoldableOverride("4C52B079-91D6-4BA0-854B-B7028A293C49", BuiltIn::kHoldable_Space, true);
 				RegisterHoldableOverride("76C93A6E-2777-42DB-B80B-82C0A0578E79", BuiltIn::kHoldable_X, true);
@@ -874,8 +947,10 @@ namespace cse
 				RegisterComboKeyOverride("B519BADD-0127-4DCE-9557-ADE428BE7F62", actions::builtIn::ToggleSelectionWireframe);
 				RegisterComboKeyOverride("8014F8CD-6B41-413D-803F-8B22BE6EF412", actions::builtIn::CheckBounds);
 				RegisterComboKeyOverride("B2AA4948-41C0-45A3-A1B3-8AFBDC55D459", actions::builtIn::ToggleCellBorders);
+				RegisterComboKeyOverride("B292405B-F209-49A2-9017-ED2AC49DE5BD", actions::builtIn::Paste);
+				RegisterComboKeyOverride("4B73B74C-7015-44A8-8C2C-105B5A67272C", actions::builtIn::PasteInPlace);
 
-				RegisterActionableKeyHandler("6EC6F5E2-AE52-4475-AC27-5418375B5FB8", actions::InvertSelection, BasicKeyBinding('V', BasicKeyBinding::kModifier_CTRL_SHIFT));
+				RegisterActionableKeyHandler("6EC6F5E2-AE52-4475-AC27-5418375B5FB8", actions::InvertSelection, BasicKeyBinding('D', BasicKeyBinding::kModifier_CTRL_SHIFT));
 				RegisterActionableKeyHandler("F2BF346D-EC8F-4A33-975D-0E7A9C7424EE", actions::SelectAll, BasicKeyBinding('A', BasicKeyBinding::kModifier_Control));
 				RegisterActionableKeyHandler("CADFE174-ED60-4B9A-8562-34ED58DB2882", actions::AlignPosition, BasicKeyBinding('X', BasicKeyBinding::kModifier_Shift));
 				RegisterActionableKeyHandler("82E93C1E-CAEE-4E27-8B3F-7719F7E980D6", actions::AlignRotation, BasicKeyBinding('Z', BasicKeyBinding::kModifier_Shift));
@@ -913,11 +988,16 @@ namespace cse
 				SME_ASSERT(Initialized);
 
 				SaveToINI();
+				BGSEECONSOLE->UnregisterMessageLogContext(MessageLogContext);
+				MessageLogContext = nullptr;
 				Initialized = false;
 			}
 
 			bool RenderWindowKeyboardManager::HandleInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
+				if (Initialized == false)
+					return true;
+
 				bool ConsumeMessage = false;
 				const char* MessageName = nullptr;
 
@@ -955,7 +1035,7 @@ namespace cse
 								if (Output.Triggered)
 								{
 #ifndef NDEBUG
-									BGSEECONSOLE_MESSAGE("Handled Stateful Event (MSG=%s): Name: '%s' | %s",
+									BGSEECONSOLE->PrintToMessageLogContext(MessageLogContext, false, "Handled Stateful Event (MSG=%s): Name: '%s' | %s",
 														 MessageName,
 														 Itr->GetName(),
 														 Itr->GetActiveBinding().GetDescription().c_str());
@@ -970,7 +1050,7 @@ namespace cse
 
 						// execute stateless handlers next
 						IKeyboardEventHandler::EventResult StatelessResult;
-						const char* InvalidHandlerName = nullptr;
+						IHotKey* InvalidContext = nullptr;
 						for (auto& Itr : HotKeys)
 						{
 							if (Itr->GetHandlerType() == IKeyboardEventHandler::kType_Stateless)
@@ -982,7 +1062,7 @@ namespace cse
 									if (Output.Success)
 									{
 #ifndef NDEBUG
-										BGSEECONSOLE_MESSAGE("Handled Stateless Event (MSG=%s): Name: '%s' | %s",
+										BGSEECONSOLE->PrintToMessageLogContext(MessageLogContext, false, "Handled Stateless Event (MSG=%s): Name: '%s' | %s",
 															 MessageName,
 															 Itr->GetName(),
 															 Itr->GetActiveBinding().GetDescription().c_str());
@@ -993,7 +1073,7 @@ namespace cse
 									else if (Output.InvalidContext)
 									{
 										StatelessResult.InvalidContext = true;
-										InvalidHandlerName = Itr->GetName();
+										InvalidContext = Itr.get();
 									}
 
 									ConsumeMessage = true;
@@ -1001,8 +1081,16 @@ namespace cse
 							}
 						}
 
+						static IHotKey* LastInvalidContext = nullptr;
 						if (StatelessResult.Triggered && StatelessResult.Success == false && StatelessResult.InvalidContext)
-							NotificationOSDLayer::Instance.ShowNotification("'%s' cannot be performed in the current edit mode.", InvalidHandlerName);
+						{
+							if (InvalidContext != LastInvalidContext)
+							{
+								LastInvalidContext = InvalidContext;
+								NotificationOSDLayer::Instance.ShowNotification("'%s' cannot be performed in the current edit mode.",
+																				LastInvalidContext->GetName());
+							}
+						}
 
 						// consume built-in events
 						for (auto& Itr : HotKeys)
@@ -1011,7 +1099,7 @@ namespace cse
 							if (Output.Triggered)
 							{
 #ifndef NDEBUG
-								BGSEECONSOLE_MESSAGE("Consumed Built-In Event (MSG=%s): Name: '%s' | %s",
+								BGSEECONSOLE->PrintToMessageLogContext(MessageLogContext, false, "Consumed Built-In Event (MSG=%s): Name: '%s' | %s",
 													 MessageName,
 													 Itr->GetName(),
 													 Itr->GetActiveBinding().GetDescription().c_str());
@@ -1039,15 +1127,17 @@ namespace cse
 					break;
 				}
 
+				// performed at the end as potential KEYDOWN events need to be handled beforehand
+				PerformConsistencyChecks(uMsg, wParam, lParam);
 				return ConsumeMessage;
 			}
 
 			void RenderWindowKeyboardManager::ShowHotKeyEditor()
 			{
-				ModalWindowProviderOSDLayer::Instance.ShowModal("Render Window Keyboard Mapping",
+				ModalWindowProviderOSDLayer::Instance.ShowModal("Render Window Keyboard Bindings",
 																std::bind(&RenderWindowKeyboardManager::RenderModalHotKeyEditor, this, std::placeholders::_1, std::placeholders::_2),
 																nullptr,
-																NULL, ImVec2(700, 600), ImGuiSetCond_Once);
+																ImGuiWindowFlags_NoResize, ImVec2(700, 600), ImGuiSetCond_Once);
 			}
 
 

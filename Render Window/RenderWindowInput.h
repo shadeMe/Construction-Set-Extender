@@ -66,6 +66,8 @@ ctrl		d				duplicate selection						ref
 			1				toggle selection wireframe				ref
 ctrl+shift	b				check bounds
 			b				toggle cell borders
+ctrl		v				paste									ref
+ctrl+shift	v				paste in place							ref
 ---------------------------------------------------------------------------------
 ctrl*
 shift*						rotate cam
@@ -108,7 +110,7 @@ namespace cse
 				};
 
 				std::string		GetDescription() const;
-				bool			IsActivated(SHORT Key) const;					// returns true if the key combo has been triggerred
+				bool			IsActivated(SHORT Key = NULL) const;			// returns true if the key combo has been triggerred
 
 				bool			IsValid() const;								// returns false if the main key code is invalid
 				void			Set(SHORT Key, bool Control, bool Shift, bool Alt);
@@ -194,6 +196,9 @@ namespace cse
 				HoldableKeyOverride(const char* GUID, SHORT BuiltIn, bool Editable);
 				inline virtual ~HoldableKeyOverride() override = default;
 
+				UInt8*					GetBaseState() const;
+				SHORT					GetBuiltInKey() const;
+
 				virtual const char*		GetName() const override;
 				virtual const char*		GetDescription() const override;
 
@@ -248,6 +253,7 @@ namespace cse
 
 				HotKeyArrayT				HotKeys;
 				BuiltInKeyBindingArrayT		DeletedBindings;		// default combos that shouldn't be executed, e.g., broken bindings
+				void*						MessageLogContext;
 				bool						Initialized;
 
 				IHotKey*			LookupHotKey(BasicKeyBinding Key, UInt8 HandlerType, ExecutionContext Context = ExecutionContext(ExecutionContext::kMode_All), bool OnlyMatchKeyCode = false);
@@ -261,6 +267,8 @@ namespace cse
 
 				bool				RenderModalHotKeyEditor(RenderWindowOSD* OSD, ImGuiDX9* GUI);
 				bool				RenderModalBindingEditor(RenderWindowOSD* OSD, ImGuiDX9* GUI, void* UserData);
+
+				void				PerformConsistencyChecks(UINT uMsg, WPARAM wParam, LPARAM lParam);
 			public:
 				RenderWindowKeyboardManager();
 				~RenderWindowKeyboardManager();

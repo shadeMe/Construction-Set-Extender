@@ -1504,27 +1504,11 @@ namespace cse
 
 		SHORT WINAPI GetAsyncKeyStateOverride(int vKey)
 		{
-			// our second GetAsyncKeyState patch renders this override ineffective for all but the Alt modifier
-			// to correctly account for remapped holdable keys, we'll need to check the state of the new binding
-			// skipping the sanity checks works too (which is what we do with the second patch)
-			UInt8 Modifier = NULL;
-			switch (vKey)
-			{
-			case VK_SHIFT:
-				Modifier = renderWindow::input::BuiltIn::kModifier_Shift;
-				break;
-			case VK_CONTROL:
-				Modifier = renderWindow::input::BuiltIn::kModifier_Control;
-				break;
-			case VK_MENU:
-				Modifier = renderWindow::input::BuiltIn::kModifier_Alt;
-				break;
-			case VK_SPACE:
-				Modifier = renderWindow::input::BuiltIn::kModifier_Space;
-				break;
-			}
+			// we only need to handle Alt here as the rest are handled by the input manager
+			SME_ASSERT(vKey == VK_MENU);
 
-			if (Modifier && renderWindow::input::BuiltIn::ModifierOverride::Instance.IsActive(Modifier))
+			UInt8 Modifier = renderWindow::input::BuiltIn::kModifier_Alt;
+			if (renderWindow::input::BuiltIn::ModifierOverride::Instance.IsActive(Modifier))
 			{
 				SHORT Result = 0;
 				if (renderWindow::input::BuiltIn::ModifierOverride::Instance.GetOverrideState(Modifier))
@@ -1533,7 +1517,7 @@ namespace cse
 				return Result;
 			}
 
-			// key not handled/overridden, call the original function
+			// key not overridden, call the original function
 			return GetAsyncKeyState(vKey);
 		}
 

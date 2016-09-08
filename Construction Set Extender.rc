@@ -480,17 +480,17 @@ BEGIN
         MENUITEM "Colorize Active Records",     IDC_MAINMENU_COLORIZEACTIVEFORMS
         MENUITEM "Colorize Record Overrides",   IDC_MAINMENU_COLORIZEFORMOVERRIDES
         MENUITEM SEPARATOR
-        MENUITEM "Mar&kers\tM",                 40030, CHECKED
-        MENUITEM "&Light Radius\tL",            40031, CHECKED
-        MENUITEM "&Wireframe\tW",               40118
-        MENUITEM "&Bright Light\tA",            40206
-        MENUITEM "Sk&y\tY",                     40223
+        MENUITEM "Markers",                     40030, CHECKED
+        MENUITEM "Light Radius",                40031, CHECKED
+        MENUITEM "Wireframe",                   40118
+        MENUITEM "Bright Light",                40206
+        MENUITEM "Sky",                         40223
         MENUITEM "Solid Subspaces",             40482
-        MENUITEM "Collision Geometry\tF4",      40189
-        MENUITEM "Lea&ves\tV",                  290, CHECKED
+        MENUITEM "Collision Geometry",          40189
+        MENUITEM "Leaves",                      290, CHECKED
         MENUITEM "Trees",                       40480, CHECKED
-        MENUITEM "Parent-Child Indicator\tK",   IDC_MAINMENU_PARENTCHILDINDICATORS
-        MENUITEM "Path Grid Linked Ref Indicator\tK", IDC_MAINMENU_PATHGRIDLINKEDREFINDICATORS
+        MENUITEM "Parent-Child Indicator",      IDC_MAINMENU_PARENTCHILDINDICATORS
+        MENUITEM "Path Grid Linked Ref Indicator", IDC_MAINMENU_PATHGRIDLINKEDREFINDICATORS
         POPUP "Path Grid Linked Ref Indicator Visibility..."
         BEGIN
             MENUITEM "Elements to hide when the global toggle is off", ID_PATHGRIDLINKEDREFINDICATORVISIBILITY_ELEMENTSTOHIDE, INACTIVE
@@ -504,7 +504,7 @@ BEGIN
         MENUITEM "Initially Disabled References' Children", IDC_MAINMENU_CHILDREFERENCESOFTHEDISABLED
         MENUITEM SEPARATOR
         MENUITEM "&Isometric",                  40032
-        MENUITEM "To&p\tT",                     40033
+        MENUITEM "Top",                         40033
     END
     POPUP "Worl&d"
     BEGIN
@@ -555,7 +555,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Run Havok Sim",               40426
         MENUITEM SEPARATOR
-        MENUITEM "&Landscape Editing\tH",       40191
+        MENUITEM "Landscape Editing",           40191
         MENUITEM "Heightmap Editing",           284
         MENUITEM SEPARATOR
         MENUITEM "Create Local &Maps",          40471
@@ -675,7 +675,7 @@ BEGIN
             MENUITEM "Active Reference Collections", IDC_RENDERWINDOWCONTEXT_OSD_ACTIVEREFERENCECOLLECTIONS
         END
         MENUITEM "Render Window Properties...", 293
-        MENUITEM "Render Window Hotkeys...",    IDC_RENDERWINDOWCONTEXT_RENDERWINDOWHOTKEYS
+        MENUITEM "Render Window Key Bindings...", IDC_RENDERWINDOWCONTEXT_RENDERWINDOWHOTKEYS
         MENUITEM SEPARATOR
         MENUITEM "Unload Current Cell(s)",      IDC_RENDERWINDOWCONTEXT_UNLOADCURRENTCELLS
     END

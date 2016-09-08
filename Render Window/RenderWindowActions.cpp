@@ -259,11 +259,11 @@ namespace cse
 				case kType_Trees:
 					return (*BSTreeManager::Singleton)->drawTrees;
 				case kType_Water:
-					return *TESRenderWindow::WaterHiddenFlag;
+					return *TESRenderWindow::WaterHiddenFlag == 0;
 				case kType_CellBorders:
 					return _TES->drawCellBorders;
 				case kType_Land:
-					return *TESRenderWindow::LandscapeHiddenFlag;
+					return *TESRenderWindow::LandscapeHiddenFlag == 0;
 				case kType_LightRadius:
 					return *TESRenderWindow::LightRadiusFlag;
 				case kType_ParentChildIndicator:
@@ -1053,6 +1053,10 @@ namespace cse
 				BuiltInKeyComboRWA CheckBounds("Check All Bounds", "Perform bounds check on loaded objects.",
 											   ExecutionContext::kMode_All, Key('B', BuiltIn::kModifier_Control | BuiltIn::kModifier_Shift));
 				BuiltInKeyComboRWA ToggleCellBorders("Toggle Cell Borders", "Toggle visibility of cell borders.", ExecutionContext::kMode_All, Key('B'));
+				BuiltInKeyComboRWA Paste("Paste Selection", "Paste the reference selection in front of the camera.",
+										 ExecutionContext::kMode_ReferenceEdit, Key('V', BuiltIn::kModifier_Control));
+				BuiltInKeyComboRWA PasteInPlace("Paste Selection In Place", "Paste the reference selection at its original coordinates.",
+										 ExecutionContext::kMode_ReferenceEdit, Key('V', BuiltIn::kModifier_Control | BuiltIn::kModifier_Shift));
 			}
 
 		}
