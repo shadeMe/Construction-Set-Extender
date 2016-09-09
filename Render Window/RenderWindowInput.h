@@ -179,6 +179,7 @@ namespace cse
 
 				virtual const BasicKeyBinding&	GetActiveBinding() const;
 				virtual void					SetActiveBinding(const BasicKeyBinding& NewBinding);
+				virtual bool					IsActiveBindingTriggered(SHORT Key = NULL) const;
 
 				void							Save(bgsee::INIManagerSetterFunctor& INI, const char* Section) const;
 				bool							Load(bgsee::INIManagerGetterFunctor& INI, const char* Section);		// returns false if unsuccessful
@@ -203,6 +204,7 @@ namespace cse
 				virtual const char*		GetDescription() const override;
 
 				virtual void			SetActiveBinding(const BasicKeyBinding& NewBinding) override;
+				virtual bool			IsActiveBindingTriggered(SHORT Key = NULL) const override;
 
 				virtual const UInt8		GetHandlerType() const override;
 				virtual EventResult		HandleActive(UINT uMsg, WPARAM wParam, LPARAM lParam) override;

@@ -61,7 +61,6 @@ namespace cse
 		_DefineHookHdlr(RenderWindowAxisHotkeysMovePathGridPoints, 0x0042BF17);
 		_DefinePatchHdlr(RenderWindowAxisHotkeysRotateReferences, 0x0042CBBD + 2);
 		_DefineHookHdlr(BSFadeNodeDrawTransparency, 0x004BC527);
-		_DefineHookHdlr(RenderWindowCameraRotationPivot, 0x0042CBFD);
 		_DefinePatchHdlrWithBuffer(CellViewSetCurrentCell, 0x00409170, 1, 0x53);
 		_DefineJumpHdlr(RenderWindowCursorSwap, 0x0042CA34, 0x0042CAA3);
 		_DefinePatchHdlr(RenderWindowCopySelection, 0x0042E8A6 + 1);
@@ -209,7 +208,6 @@ namespace cse
 			_MemHdlr(RenderWindowAxisHotkeysMovePathGridPoints).WriteJump();
 			_MemHdlr(RenderWindowAxisHotkeysRotateReferences).WriteUInt32(0x00A0BC1E);
 			_MemHdlr(BSFadeNodeDrawTransparency).WriteJump();
-			_MemHdlr(RenderWindowCameraRotationPivot).WriteJump();
 			_MemHdlr(RenderWindowCursorSwap).WriteJump();
 			_MemHdlr(RenderWindowCopySelection).WriteUInt8(0x0);
 			_MemHdlr(TESPathGridPointGenerateNiNodeA).WriteJump();
@@ -1237,41 +1235,7 @@ namespace cse
 			}
 		}
 
-		bool __stdcall DoRenderWindowCameraRotationPivotHook(Vector3* OutPivot, UInt8* AlternatePivot)
-		{
-			bool Enabled = _RENDERSEL->selectionCount == 0 && settings::renderer::kFixedCameraPivot.GetData().i;
 
-			if (Enabled && GetAsyncKeyState(VK_CONTROL) == FALSE ||
-				(Enabled == false && GetAsyncKeyState(VK_CONTROL)))
-			{
-				*OutPivot = _RENDERWIN_XSTATE.StaticCameraPivot;
-				return true;
-			}
-
-			return false;
-		}
-
-		#define _hhName		RenderWindowCameraRotationPivot
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x0042CC04);
-			_hhSetVar(Jump, 0x0042CCA3);
-			__asm
-			{
-				lea		eax, [esp + 0x1C]
-				push	0x00A0BC21
-				push	eax
-				call	DoRenderWindowCameraRotationPivotHook
-				test	al, al
-				jnz		USECUSTOMPIVOT
-
-				mov		eax, 0x00A0BC21
-				cmp		byte ptr [eax], 0
-				jmp		_hhGetVar(Retn)
-			USECUSTOMPIVOT:
-				jmp		_hhGetVar(Jump)
-			}
-		}
 
 		void __stdcall DoTESPathGridPointGenerateNiNodeA(NiLines* Connector)
 		{
@@ -1442,11 +1406,23 @@ namespace cse
 			}
 		}
 
+		bool __stdcall UseCustomPivot(Vector3* OutPivot, UInt8* AlternatePivot)
+		{
+			if (settings::renderer::kFixedCameraPivot.GetData().i)
+			{
+				*OutPivot = _RENDERWIN_XSTATE.UpdateStaticCameraPivot();
+				return true;
+			}
+
+			return false;
+		}
+
 		#define _hhName		RotateCameraDrag
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x0042CC04);
 			_hhSetVar(Jump, 0x0042C919);
+			_hhSetVar(CustomPivot, 0x0042CCA3);
 			__asm
 			{
 				mov		ecx, 0x00A0BBDC
@@ -1463,11 +1439,21 @@ namespace cse
 				jnz		EXIT
 				popad
 
+				// switch to the static pivot if need be
+				lea		eax, [esp + 0x1C]
+				push	0x00A0BC21
+				push	eax
+				call	UseCustomPivot
+				test	al, al
+				jnz		USECUSTOMPIVOT
+
 				mov		ecx, 0x00A0BC21
 				mov		cl, byte ptr[ecx]
 				cmp		cl, 0
 
 				jmp		_hhGetVar(Retn)
+			USECUSTOMPIVOT:
+				jmp		_hhGetVar(CustomPivot)
 			EXIT:
 				popad
 				jmp		_hhGetVar(Jump)

@@ -224,6 +224,11 @@ namespace cse
 				ActiveBinding = NewBinding;
 			}
 
+			bool IHotKey::IsActiveBindingTriggered(SHORT Key) const
+			{
+				return ActiveBinding.IsActivated(Key);
+			}
+
 			void IHotKey::Save(bgsee::INIManagerSetterFunctor& INI, const char* Section) const
 			{
 				if (Editable == false)
@@ -364,6 +369,14 @@ namespace cse
 				ActiveBinding = NewBinding;
 			}
 
+			bool HoldableKeyOverride::IsActiveBindingTriggered(SHORT Key /*= NULL*/) const
+			{
+				if (Key)
+					return ActiveBinding.GetKeyCode() == Key;
+				else
+					return GetAsyncKeyState(ActiveBinding.GetKeyCode());
+			}
+
 			const UInt8 HoldableKeyOverride::GetHandlerType() const
 			{
 				return kType_Stateful;
@@ -376,7 +389,7 @@ namespace cse
 				{
 				case WM_KEYDOWN:
 				case WM_KEYUP:
-					if (ActiveBinding.IsActivated(wParam))
+					if (IsActiveBindingTriggered(wParam))
 					{
 						Result.Triggered = true;
 						if (GetExecutionContext().IsExecutable())
@@ -453,7 +466,7 @@ namespace cse
 
 				if (uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN)
 				{
-					if (ActiveBinding.IsActivated(wParam))
+					if (IsActiveBindingTriggered(wParam))
 					{
 						Result.Triggered = true;
 						if (GetExecutionContext().IsExecutable())
@@ -508,7 +521,7 @@ namespace cse
 
 				if (uMsg == WM_KEYDOWN)
 				{
-					if (ActiveBinding.IsActivated(wParam))
+					if (IsActiveBindingTriggered(wParam))
 					{
 						Result.Triggered = true;
 						if (GetExecutionContext().IsExecutable())
@@ -840,7 +853,7 @@ namespace cse
 						HoldableKeyOverride* Override = dynamic_cast<HoldableKeyOverride*>(Itr.get());
 						UInt8* BaseState = Override->GetBaseState();
 						SHORT BuiltInKey = Override->GetBuiltInKey();
-						if (Override->GetActiveBinding().IsActivated())
+						if (Override->IsActiveBindingTriggered())
 						{
 							if (*BaseState == 0)
 							{
@@ -856,6 +869,11 @@ namespace cse
 								// special case for Space as the base state is set when holding down the middle mouse button too
 								if (BuiltInKey != BuiltIn::kHoldable_Space)
 								{
+#ifndef NDEBUG
+									BGSEECONSOLE->PrintToMessageLogContext(MessageLogContext, false, "Reset Holdable Key: Name: '%s' | %s",
+																		   Itr->GetName(),
+																		   Itr->GetActiveBinding().GetDescription().c_str());
+#endif
 									// reset the base state
 									*BaseState = 0;
 								}
@@ -970,6 +988,7 @@ namespace cse
 				RegisterActionableKeyHandler("F42F86FA-8BE7-4CC8-A6BA-779A963EEF89", actions::ShowBatchEditor, BasicKeyBinding(VK_OEM_PERIOD, NULL));
 				RegisterActionableKeyHandler("D233EB54-BED6-4720-96A6-86442A97E6A6", actions::ShowUseInfo, BasicKeyBinding(VK_F1, NULL));
 				RegisterActionableKeyHandler("F11C7C9E-CF74-4C2D-877D-39427F7C81CD", actions::ShowSearchReplace, BasicKeyBinding('F', BasicKeyBinding::kModifier_CTRL_SHIFT));
+				RegisterActionableKeyHandler("0A6D7417-7C81-4479-B977-E3D32EE485DF", actions::ToggleStaticCameraPivot, BasicKeyBinding('T', BasicKeyBinding::kModifier_Shift));
 				RegisterActionableKeyHandler("BBA57061-EE4C-4C0E-8598-C7CE0706E957", actions::ToggleAuxViewport, BasicKeyBinding(VK_OEM_3, BasicKeyBinding::kModifier_CTRL_SHIFT));
 				RegisterActionableKeyHandler("2C35CC8B-2CA1-4867-92FD-A64ED6DE1148", actions::ToggleAlternateMovementSettings, BasicKeyBinding('Q', BasicKeyBinding::kModifier_Shift));
 				RegisterActionableKeyHandler("E2240B02-1D0B-4885-931F-137DCD6E6D90", actions::TogglePathGridEditMode, BasicKeyBinding('G', NULL));
@@ -1059,6 +1078,7 @@ namespace cse
 								if (Output.Triggered)
 								{
 									StatelessResult.Triggered = true;
+									ConsumeMessage = true;
 									if (Output.Success)
 									{
 #ifndef NDEBUG
@@ -1076,7 +1096,6 @@ namespace cse
 										InvalidContext = Itr.get();
 									}
 
-									ConsumeMessage = true;
 								}
 							}
 						}

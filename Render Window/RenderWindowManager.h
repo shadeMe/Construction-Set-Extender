@@ -192,6 +192,8 @@ namespace cse
 			void						Initialize();
 			void						Deinitialize();
 
+			const Vector3&				UpdateStaticCameraPivot();
+
 
 			static RenderWindowExtendedState		Instance;
 		};

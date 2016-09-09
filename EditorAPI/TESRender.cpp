@@ -204,16 +204,14 @@ void TESRender::PrimaryRenderer::RenderNode( NiCamera* Camera /*= NULL*/, NiNode
 
 void TESRender::PrimaryRenderer::GetCameraPivot( Vector3* OutPivot, float ScaleFactor )
 {
-	NiVector3* CameraPos = &primaryCameraParentNode->m_localTranslate;
+	Vector3* CameraRootLocalTranslate = (Vector3*)&primaryCameraParentNode->m_localTranslate;
+	NiMatrix33* CameraRootWorldRotate = &primaryCameraParentNode->m_worldRotate;
 
-	OutPivot->x = CameraPos->x;
-	OutPivot->y = CameraPos->y;
-	OutPivot->z = CameraPos->z;
+	Vector3 Offset(CameraRootWorldRotate->data[1], CameraRootWorldRotate->data[4], CameraRootWorldRotate->data[7]);
+	Offset.Scale(ScaleFactor);
 
-	Vector3 Buffer(*OutPivot);
-	Buffer.Scale(ScaleFactor);
-
-	*OutPivot += Buffer;
+	*OutPivot = *CameraRootLocalTranslate;
+	*OutPivot += Offset;
 }
 
 const NiVector3* TESRender::PrimaryRenderer::GetCameraWorldTranslate()

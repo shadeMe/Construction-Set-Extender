@@ -54,7 +54,6 @@ namespace cse
 		_DeclareMemHdlr(RenderWindowAxisHotkeysMovePathGridPoints, "");
 		_DeclareMemHdlr(RenderWindowAxisHotkeysRotateReferences, "");
 		_DeclareMemHdlr(BSFadeNodeDrawTransparency, "allows objects to be rendered with arbitrary transparency");
-		_DeclareMemHdlr(RenderWindowCameraRotationPivot, "allows the viewport camera to be rotated around an arbitrary pivot");
 		_DeclareMemHdlr(CellViewSetCurrentCell, "temporary hook to prevent the cell window from gaining focus during render window exterior cell switches");
 		_DeclareMemHdlr(RenderWindowCursorSwap, "prevents the cursor icon changes from screwing themselves up");
 		_DeclareMemHdlr(RenderWindowCopySelection, "prevents the selection's bounding box from being cleared after a copy operation");
@@ -66,7 +65,7 @@ namespace cse
 		_DeclareMemHdlr(RenderWindowMouseMoveHandler, "allows the handler to be triggered even when the viewport is 'dirty'");
 		_DeclareMemHdlr(TESRenderRotateSelectionWorldA, "fixes a bug that prevented the rotation of multiple refs in their local axes");
 		_DeclareMemHdlr(TESRenderRotateSelectionWorldB, "");
-		_DeclareMemHdlr(RotateCameraDrag, "prevent the shift key from rotating the camera when lasso'ing");
+		_DeclareMemHdlr(RotateCameraDrag, "prevent the shift key from rotating the camera when lasso'ing, and add support for a custom camera pivot");
 		_DeclareMemHdlr(RubberbandSelectionDragDeselectRefs, "allow ref drag deselection with the Shift key");
 		_DeclareMemHdlr(LandscapeTextureLoad, "adds support for landscape texture swaps");
 		_DeclareMemHdlr(PatchGetAsyncKeyStateA, "adds support for custom hotkeys");

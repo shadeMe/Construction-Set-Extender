@@ -752,8 +752,15 @@ namespace cse
 				achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_AuxViewPort);
 			});
 
-			ToggleINISettingRWA ToggleStaticCameraPivot("Toggle Static Camera Pivot", "Use a fixed camera pivot when rotating without a selection.",
-															  ExecutionContext::kMode_All, settings::renderer::kFixedCameraPivot);
+			BasicRWA ToggleStaticCameraPivot("Toggle Static Camera Pivot", "Use a fixed camera pivot when rotating without a selection.",
+											 ExecutionContext::kMode_All, []() {
+				settings::renderer::kFixedCameraPivot.ToggleData();
+
+				if (settings::renderer::kFixedCameraPivot().i)
+					NotificationOSDLayer::Instance.ShowNotification("Using fixed camera pivot");
+				else
+					NotificationOSDLayer::Instance.ShowNotification("Using standard camera pivot");
+			});
 			BasicRWA ToggleAlternateMovementSettings("Toggle Alternate Movement Settings", "Use the auxiliary movement speed settings.",
 														   ExecutionContext::kMode_All, []() {
 				_RENDERWIN_XSTATE.UseAlternateMovementSettings = (_RENDERWIN_XSTATE.UseAlternateMovementSettings == false);

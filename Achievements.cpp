@@ -250,7 +250,7 @@ namespace cse
 
 		AchievementHappypotamus::AchievementHappypotamus( const char* Name, const char* Desc, const char* GUID, UInt8 EventDay, UInt8 EventMonth, UInt16 EventYear ) :
 			AchievementTimeTriggered(Name, Desc, IDB_ACHIEVEMENT_CAKE, GUID, EventDay, EventMonth, 0),
-			GeborenJahr(EventYear)
+			Geburtsjahr(EventYear)
 		{
 			;//
 		}
@@ -270,7 +270,7 @@ namespace cse
 			else
 			{
 				char Buffer[0x200] = {0};
-				FORMAT_STR(Buffer, "%u years on and still alive! Go %s!", Now.tm_year + 1900 - GeborenJahr, Name.c_str());
+				FORMAT_STR(Buffer, "%u years on and still alive! Go %s!", Now.tm_year + 1900 - Geburtsjahr, Name.c_str());
 				OutBuffer = Buffer;
 			}
 		}
@@ -348,7 +348,7 @@ namespace cse
 
 		void Initialize()
 		{
-			AchievementBase::AllClearAchievement = new bgsee::extras::Achievement("Totally Jobless", "Collected all achievements",
+			AchievementBase::AllClearAchievement = new bgsee::extras::Achievement("Totally Jobless", "Collected all achievements. You can now demand shadeMe to induct you into the Hall of Fame.",
 																					IDB_ACHIEVEMENT_TOTALLYJOBLESS, "B43425BE-323A-42C5-90ED-DE9CE014D842");
 
 			kTheWiseOne				= new AchievementBase("The Wise One", "Installed the Construction Set Extender",

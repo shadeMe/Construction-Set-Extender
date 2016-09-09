@@ -141,7 +141,7 @@ namespace cse
 
 			extern BasicRWA ToggleAuxViewport;
 
-			extern ToggleINISettingRWA ToggleStaticCameraPivot;
+			extern BasicRWA ToggleStaticCameraPivot;
 			extern BasicRWA ToggleAlternateMovementSettings;
 			extern BasicRWA TogglePathGridEditMode;
 			extern BasicRWA ToggleSnapToGrid;

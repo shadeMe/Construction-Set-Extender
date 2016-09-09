@@ -96,7 +96,7 @@ namespace cse
 		class AchievementHappypotamus : public AchievementTimeTriggered
 		{
 		protected:
-			UInt16							GeborenJahr;
+			UInt16							Geburtsjahr;
 
 			virtual void					GetName(std::string& OutBuffer) const;
 			virtual bool					GetUnlockable(void) const;

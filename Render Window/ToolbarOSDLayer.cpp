@@ -253,7 +253,7 @@ namespace cse
 		{
 			int XSize = *TESRenderWindow::ScreeWidth;
 
-			ImGui::SetNextWindowPos(ImVec2(XSize - 45, 10));
+			ImGui::SetNextWindowPos(ImVec2(XSize - 50, 10));
 
 			ImGui::PushStyleColor(ImGuiCol_WindowBg, ImColor(0, 0, 0, 100));
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(7, 7));
@@ -370,15 +370,29 @@ namespace cse
 				float RefMov = *TESRenderWindow::RefMovementSpeed;
 				float RefRot = *TESRenderWindow::RefRotationSpeed;
 
-				ImGui::PushItemWidth(150);
+				float AltCamPan = settings::renderer::kAltCamPanSpeed().f;
+				float AltCamZoom = settings::renderer::kAltCamZoomSpeed().f;
+				float AltCamRot = settings::renderer::kAltCamRotationSpeed().f;
+				float AltRefMov = settings::renderer::kAltRefMovementSpeed().f;
+				float AltRefRot = settings::renderer::kAltRefRotationSpeed().f;
+
+				ImGui::PushItemWidth(125);
+				ImGui::Text("Default"); ImGui::SameLine(160); ImGui::Text("Alternate");
+				ImGui::Separator();
+
 				ImGui::Text("Camera:");
-				ImGui::DragFloat("##Cam. Pan", &CamPan, 0.05f, 0.01, 10, "Pan: %.3f");
-				ImGui::DragFloat("##Cam. Rotation", &CamRot, 0.05f, 0.01, 10, "Rotation: %.3f");
-				ImGui::DragFloat("##Cam. Zoom", &CamZoom, 0.05f, 0.01, 10, "Zoom: %.3f");
+				ImGui::DragFloat("##DefCam. Pan", &CamPan, 0.05f, 0.01, 10, "Pan: %.3f"); ImGui::SameLine(0, 20);
+				ImGui::DragFloat("##AltCam. Pan", &AltCamPan, 0.05f, 0.01, 10, "Pan: %.3f");
+				ImGui::DragFloat("##DefCam. Rotation", &CamRot, 0.05f, 0.01, 10, "Rotation: %.3f"); ImGui::SameLine(0, 20);
+				ImGui::DragFloat("##AltCam. Rotation", &AltCamRot, 0.05f, 0.01, 10, "Rotation: %.3f");
+				ImGui::DragFloat("##DefCam. Zoom", &CamZoom, 0.05f, 0.01, 10, "Zoom: %.3f"); ImGui::SameLine(0, 20);
+				ImGui::DragFloat("##AltCam. Zoom", &AltCamZoom, 0.05f, 0.01, 10, "Zoom: %.3f");
 
 				ImGui::Text("Reference:");
-				ImGui::DragFloat("##Ref. Move", &RefMov, 0.05f, 0.01, 10, "Movement: %.3f");
-				ImGui::DragFloat("##Ref. Rotation", &RefRot, 0.05f, 0.01, 10, "Rotation: %.3f");
+				ImGui::DragFloat("##DefRef. Move", &RefMov, 0.05f, 0.01, 10, "Movement: %.3f"); ImGui::SameLine(0, 20);
+				ImGui::DragFloat("##AltRef. Move", &AltRefMov, 0.05f, 0.01, 10, "Movement: %.3f");
+				ImGui::DragFloat("##DefRef. Rotation", &RefRot, 0.05f, 0.01, 10, "Rotation: %.3f"); ImGui::SameLine(0, 20);
+				ImGui::DragFloat("##AltRef. Rotation", &AltRefRot, 0.05f, 0.01, 10, "Rotation: %.3f");
 				ImGui::PopItemWidth();
 
 				*TESRenderWindow::CameraPanSpeed = CamPan;
@@ -386,6 +400,12 @@ namespace cse
 				*TESRenderWindow::CameraRotationSpeed = CamRot;
 				*TESRenderWindow::RefMovementSpeed = RefMov;
 				*TESRenderWindow::RefRotationSpeed = RefRot;
+
+				settings::renderer::kAltCamPanSpeed.SetFloat(AltCamPan);
+				settings::renderer::kAltCamZoomSpeed.SetFloat(AltCamZoom);
+				settings::renderer::kAltCamRotationSpeed.SetFloat(AltCamRot);
+				settings::renderer::kAltRefMovementSpeed.SetFloat(AltRefMov);
+				settings::renderer::kAltRefRotationSpeed.SetFloat(AltRefRot);
 			});
 
 			PopupVisibilityToggles = PopupProvider.RegisterPopup("popup_visibility_toggles",

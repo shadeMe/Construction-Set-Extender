@@ -68,6 +68,7 @@ namespace cse
 			extern INISetting					kAltCamPanSpeed;
 			extern INISetting					kCoplanarRefDrops;
 			extern INISetting					kFixedCameraPivot;
+			extern INISetting					kFixedCameraPivotMul;
 			extern INISetting					kCameraFOV;
 			extern INISetting					kExteriorSnapshotResolution;
 			extern INISetting					kZOffsetDuplicatedRefs;

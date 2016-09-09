@@ -567,6 +567,12 @@ namespace cse
 		RenderWindowManager				_RENDERWIN_MGR;
 
 
+		const Vector3& RenderWindowExtendedState::UpdateStaticCameraPivot()
+		{
+			_PRIMARYRENDERER->GetCameraPivot(&StaticCameraPivot, settings::renderer::kFixedCameraPivotMul().f);
+			return StaticCameraPivot;
+		}
+
 		RenderWindowManager::GlobalEventSink::GlobalEventSink(RenderWindowManager* Parent) :
 			Parent(Parent)
 		{
