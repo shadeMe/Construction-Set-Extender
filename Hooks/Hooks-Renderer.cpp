@@ -196,7 +196,7 @@ namespace cse
 			_MemHdlr(TESPathGridShowMultipleSelectionRing).WriteJump();
 			_MemHdlr(TESPathGridDtor).WriteUInt8(0xEB);
 			_MemHdlr(InitialCellLoadCameraPosition).WriteJump();
-			_MemHdlr(LandscapeEditBrushRadius).WriteUInt32((UInt32)&_RENDERWIN_XSTATE.MaxLandscapeEditBrushRadius);
+			_MemHdlr(LandscapeEditBrushRadius).WriteUInt32((UInt32)&RenderWindowExtendedState::MaxLandscapeEditBrushRadius);
 			_MemHdlr(DuplicateReferences).WriteJump();
 			_MemHdlr(TESRenderControlPerformRelativeScale).WriteJump();
 			_MemHdlr(DataHandlerClosePlugins).WriteUInt8(0xEB);
@@ -1048,15 +1048,9 @@ namespace cse
 			}
 		}
 
-		bool __stdcall DoTESPathGridRubberBandSelectionHook(void)
+		bool __stdcall DoTESPathGridRubberBandSelectionHook(TESRenderWindow::RubberBandSelection* Selector)
 		{
-			if (_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.x < 2 &&
-				_RENDERWIN_XSTATE.CurrentMouseLBDragCoordDelta.y < 2)
-			{
-				return false;
-			}
-			else
-				return true;
+			return Selector->hasSelection;
 		}
 
 		#define _hhName		TESPathGridRubberBandSelection
@@ -1066,6 +1060,7 @@ namespace cse
 			__asm
 			{
 				pushad
+				push	ecx
 				call	DoTESPathGridRubberBandSelectionHook
 				test	al, al
 				jz		SKIP

@@ -11,6 +11,8 @@ namespace cse
 			MouseOverPopupProvider::PopupIDT		PopupSnapControls;
 			MouseOverPopupProvider::PopupIDT		PopupMovementControls;
 			MouseOverPopupProvider::PopupIDT		PopupVisibilityToggles;
+			MouseOverPopupProvider::PopupIDT		PopupOSDLayerToggles;
+
 			ImGuiTextFilter							RefFilter;
 			FormIDArrayT							FilterRefs;
 			FormIDArrayT::const_iterator			PreviousFilterRef;

@@ -254,54 +254,26 @@ namespace cse
 			return Result;
 		}
 
-		bool RenderWindowGroupManager::RemoveGroup(TESRenderSelection* Selection)
+		void RenderWindowGroupManager::RemoveSelectionGroups(TESRenderSelection* Selection)
 		{
 			SME_ASSERT(Selection);
 
-			bool Result = true;
-
-			GroupDataHandleT CurrentGroup(nullptr);
-			UInt32 GroupSize = 0;
+			int Count = 0;
 			for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 			{
 				ReferenceHandleT FormID = Itr->Data->formID;
 				GroupDataHandleT Exisiting(GetParentGroup(FormID));
 
-				if (Exisiting == nullptr)
+				if (Exisiting)
 				{
-					StandardOutput("Reference %08X is not a member of an existing group", FormID);
-					Result = false;
-				}
-				else
-				{
-					if (CurrentGroup == nullptr)
-					{
-						CurrentGroup = Exisiting;
-						GroupSize = CurrentGroup->GetSize();
-					}
-
-					if (CurrentGroup != Exisiting)
-					{
-						StandardOutput("Group ID mismatch - Reference %08X must be a member of group '%s', not '%s'",
-									   FormID, CurrentGroup->GetID().c_str(), Exisiting->GetID().c_str());
-						Result = false;
-					}
+					StandardOutput("Group '%s' dissolved", Exisiting->GetID().c_str());
+					DeregisterGroup(Exisiting, true);
+					Count++;
 				}
 			}
 
-			if (Result)
-			{
-				if (GroupSize != Selection->selectionCount)
-				{
-					StandardOutput("Group size mismatch - Expected %d, selection contained %d",
-																	GroupSize, Selection->selectionCount);
-					Result = false;
-				}
-				else
-					DeregisterGroup(CurrentGroup, true);
-			}
-
-			return Result;
+			if (Count == 0)
+				StandardOutput("No groups in selection");
 		}
 
 		bool RenderWindowGroupManager::RemoveParentGroup(TESObjectREFR* Ref)
@@ -409,6 +381,26 @@ namespace cse
 			}
 
 			return Result;
+		}
+
+		int RenderWindowGroupManager::GetSelectionGroups(TESRenderSelection* Selection, std::vector<std::string>& OutGroupIDs) const
+		{
+			OutGroupIDs.clear();
+
+			for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+			{
+				ReferenceHandleT FormID = Itr->Data->formID;
+				GroupDataHandleT Exisiting(GetParentGroup(FormID));
+
+				if (Exisiting)
+				{
+					std::string GroupID(Exisiting->GetID());
+					if (std::find(OutGroupIDs.begin(), OutGroupIDs.end(), GroupID) == OutGroupIDs.end())
+						OutGroupIDs.push_back(GroupID);
+				}
+			}
+
+			return OutGroupIDs.size();
 		}
 
 		void RenderWindowGroupManager::Clear()

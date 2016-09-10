@@ -121,7 +121,7 @@ namespace cse
 		{
 			RenderWindowGroupManager*		ReferenceGroupManager;
 
-			bool							IsSelectable(TESObjectREFR* Ref, bool& OutRegularHandling, UInt32& OutReasonFlags) const;
+			bool							IsSelectable(TESObjectREFR* Ref, bool PaintingSelection, bool& OutRegularHandling, UInt32& OutReasonFlags) const;
 		public:
 			RenderWindowSelectionManager(RenderWindowGroupManager* GroupMan);
 			~RenderWindowSelectionManager();
@@ -135,10 +135,10 @@ namespace cse
 				kReason_FrozenInactive			= 1 << 3,		// ref is frozen by the "Freeze Inactive Refs" tool
 			};
 
-			void							AddToSelection(TESObjectREFR* Ref, bool AddSelectionBox) const;
+			void							AddToSelection(TESObjectREFR* Ref, bool AddSelectionBox, bool PaintingSelection = false) const;
 			void							RemoveFromSelection(TESObjectREFR* Ref, bool RemoveSelectionBox) const;
-			bool							IsSelectable(TESObjectREFR* Ref) const;
-			bool							IsSelectable(TESObjectREFR* Ref, UInt32& OutReasonFlags) const;
+			bool							IsSelectable(TESObjectREFR* Ref, bool PaintingSelection = false) const;
+			bool							IsSelectable(TESObjectREFR* Ref, UInt32& OutReasonFlags, bool PaintingSelection = false) const;
 		};
 
 		class RenderWindowFlyCameraOperator : public bgsee::RenderWindowFlyCameraOperator
@@ -157,34 +157,22 @@ namespace cse
 			virtual void							RefreshRenderWindow(void);
 		};
 
-
 		class RenderWindowExtendedState
 		{
 			bool						Initialized;
 		public:
-			const float					MaxLandscapeEditBrushRadius;
+			static const float			MaxLandscapeEditBrushRadius;
 
 			bool						FreezeInactiveRefs;
 			bool						UseAlternateMovementSettings;
-			POINT						CurrentMouseLBDragCoordDelta;
 			NiFrustum					CameraFrustumBuffer;
 			TESObjectREFR*				CurrentMouseRef;
 			TESPathGridPoint*			CurrentMousePathGridPoint;
-			POINT						CurrentMouseCoord;
 			bool						ShowInitiallyDisabledRefs;
 			bool						ShowInitiallyDisabledRefChildren;
 			bool						UseGrassTextureOverlay;
 			NiSourceTexture*			GrassOverlayTexture;
 			Vector3						StaticCameraPivot;
-			bool						PaintingSelection;
-			UInt8						SelectionPaintingMode;
-
-			enum : UInt8
-			{
-				kSelectionPaintingMode_NotSet = 0,
-				kSelectionPaintingMode_Select,
-				kSelectionPaintingMode_Deselect
-			};
 
 			RenderWindowExtendedState();
 			~RenderWindowExtendedState();
@@ -193,11 +181,7 @@ namespace cse
 			void						Deinitialize();
 
 			const Vector3&				UpdateStaticCameraPivot();
-
-
-			static RenderWindowExtendedState		Instance;
 		};
-#define _RENDERWIN_XSTATE		renderWindow::RenderWindowExtendedState::Instance
 
 		class RenderWindowManager
 		{
@@ -215,6 +199,7 @@ namespace cse
 			static LRESULT CALLBACK						RenderWindowMenuInitSelectSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData);
 			static LRESULT CALLBACK						RenderWindowMasterSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData);
 
+			RenderWindowExtendedState*					ExtendedState;
 			RenderWindowSceneGraphManager*				SceneGraphManager;
 			RenderWindowGroupManager*					GroupManager;
 			PathGridUndoManager*						PGUndoManager;
@@ -222,6 +207,7 @@ namespace cse
 			RenderWindowOSD*							OSD;
 			RenderWindowCellLists*						CellLists;
 			input::RenderWindowKeyboardManager*			KeyboardInputManager;
+			input::RenderWindowMouseManager*			MouseInputManager;
 			GlobalEventSink*							EventSink;
 			TESObjectREFRArrayT							ActiveRefCache;
 
@@ -247,6 +233,8 @@ namespace cse
 			RenderWindowGroupManager*					GetGroupManager() const;
 			PathGridUndoManager*						GetPathGridUndoManager() const;
 			RenderWindowSelectionManager*				GetSelectionManager() const;
+			RenderWindowExtendedState&					GetState() const;
+			input::RenderWindowMouseManager*			GetMouseInputManager() const;
 			const TESObjectREFRArrayT&					GetActiveRefs() const;
 
 			void										RefreshFOV();
@@ -255,7 +243,7 @@ namespace cse
 		};
 
 #define _RENDERWIN_MGR				renderWindow::RenderWindowManager::Instance
-
+#define _RENDERWIN_XSTATE			_RENDERWIN_MGR.GetState()
 
 
 		void Initialize(void);

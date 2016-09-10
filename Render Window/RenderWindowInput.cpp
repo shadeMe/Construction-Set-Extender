@@ -1,4 +1,6 @@
 #include "RenderWindowInput.h"
+#include "RenderWindowManager.h"
+#include "ObjectPaletteManager.h"
 
 namespace cse
 {
@@ -1012,7 +1014,7 @@ namespace cse
 				Initialized = false;
 			}
 
-			bool RenderWindowKeyboardManager::HandleInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
+			bool RenderWindowKeyboardManager::HandleInput(HWND, UINT uMsg, WPARAM wParam, LPARAM lParam, RenderWindowManager*)
 			{
 				if (Initialized == false)
 					return true;
@@ -1159,6 +1161,193 @@ namespace cse
 																ImGuiWindowFlags_NoResize, ImVec2(700, 600), ImGuiSetCond_Once);
 			}
 
+
+			RenderWindowMouseManager::RenderWindowMouseManager() :
+				CurrentMouseCoord{0},
+				PaintingSelection(false),
+				SelectionPaintingMode(kSelectionPainting_NotSet)
+			{
+				;//
+			}
+
+			bool RenderWindowMouseManager::HandleInput(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, RenderWindowManager* Manager)
+			{
+				bool Handled = false;
+
+				switch (uMsg)
+				{
+				case WM_LBUTTONDBLCLK:
+					{
+						if (*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0)
+						{
+							TESObjectREFR* Ref = TESRender::PickRefAtCoords(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+							if (Ref)
+							{
+								if (Manager->GetSelectionManager()->IsSelectable(Ref, PaintingSelection) == false)
+								{
+									// preempt the vanilla handler
+									Handled = true;
+								}
+							}
+						}
+					}
+
+					break;
+				case WM_SETCURSOR:
+					{
+						if (GetCapture() != hWnd)
+						{
+							HCURSOR Icon = *TESRenderWindow::CursorArrow;
+
+							if (*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0)
+							{
+								TESObjectREFR* MouseRef = _RENDERWIN_XSTATE.CurrentMouseRef;
+								if (MouseRef)
+								{
+									UInt32 SelectionReason = 0;
+									if (Manager->GetSelectionManager()->IsSelectable(MouseRef, SelectionReason, PaintingSelection))
+									{
+										if (_RENDERSEL->HasObject(MouseRef))
+											Icon = *TESRenderWindow::CursorMove;
+										else
+											Icon = *TESRenderWindow::CursorSelect;
+									}
+									else if ((SelectionReason & RenderWindowSelectionManager::kReason_FrozenInactive) ||
+										(SelectionReason & RenderWindowSelectionManager::kReason_FrozenSelf))
+									{
+										Icon = LoadCursor(nullptr, IDC_NO);
+									}
+								}
+							}
+
+							if (Icon != *TESRenderWindow::CursorArrow)
+							{
+								HCURSOR CurrentCursor = GetCursor();
+								if (Icon && CurrentCursor != Icon)
+									SetCursor(Icon);
+
+								Handled = true;
+							}
+						}
+					}
+
+					break;
+				case WM_MOUSEMOVE:
+					{
+						CurrentMouseCoord.x = GET_X_LPARAM(lParam);
+						CurrentMouseCoord.y = GET_Y_LPARAM(lParam);
+
+						_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
+						_RENDERWIN_XSTATE.CurrentMousePathGridPoint = nullptr;
+
+						if (GetActiveWindow() != hWnd)
+							break;
+
+						if (*TESRenderWindow::LandscapeEditFlag == 0)
+						{
+							if (*TESRenderWindow::PathGridEditFlag == 0)
+							{
+								_RENDERWIN_XSTATE.CurrentMouseRef = TESRender::PickRefAtCoords(CurrentMouseCoord.x, CurrentMouseCoord.y);
+								if (_RENDERWIN_XSTATE.CurrentMouseRef)
+								{
+									if (ReferenceVisibilityValidator::IsCulled(_RENDERWIN_XSTATE.CurrentMouseRef) ||
+										ReferenceVisibilityValidator::ShouldBeInvisible(_RENDERWIN_XSTATE.CurrentMouseRef))
+									{
+										_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
+									}
+								}
+							}
+							else
+							{
+								_RENDERWIN_XSTATE.CurrentMousePathGridPoint = TESRender::PickPathGridPointAtCoords(CurrentMouseCoord.x,
+																												   CurrentMouseCoord.y);
+							}
+						}
+
+						if (PaintingSelection)
+						{
+							Handled = true;
+							// paint only when the alt key is held down
+							if (GetAsyncKeyState(VK_MENU))
+							{
+								TESObjectREFR* MouseRef = _RENDERWIN_XSTATE.CurrentMouseRef;
+								if (MouseRef)
+								{
+									if (SelectionPaintingMode == kSelectionPainting_NotSet)
+									{
+										if (_RENDERSEL->HasObject(MouseRef))
+											SelectionPaintingMode = kSelectionPainting_Deselect;
+										else
+											SelectionPaintingMode = kSelectionPainting_Select;
+									}
+
+									if (SelectionPaintingMode == kSelectionPainting_Select)
+										Manager->GetSelectionManager()->AddToSelection(MouseRef, true, PaintingSelection);
+									else
+										Manager->GetSelectionManager()->RemoveFromSelection(MouseRef, true);
+								}
+							}
+						}
+					}
+
+					break;
+				case WM_MOUSELEAVE:
+				case WM_NCMOUSELEAVE:
+					_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
+					_RENDERWIN_XSTATE.CurrentMousePathGridPoint = nullptr;
+
+					break;
+				case WM_LBUTTONDOWN:
+					if (GetAsyncKeyState(VK_MENU) && GetAsyncKeyState(VK_CONTROL) &&
+						*TESRenderWindow::LandscapeEditFlag == 0 && *TESRenderWindow::PathGridEditFlag == 0)
+					{
+						SME_ASSERT(PaintingSelection == false && SelectionPaintingMode == kSelectionPainting_NotSet);
+
+						PaintingSelection = true;
+						NotificationOSDLayer::Instance.ShowNotification("Painting reference selection...");
+
+						SetCapture(hWnd);
+						Handled = true;
+					}
+
+					break;
+				case WM_LBUTTONUP:
+					if (PaintingSelection)
+					{
+						PaintingSelection = false;
+						SelectionPaintingMode = kSelectionPainting_NotSet;
+
+						ReleaseCapture();
+						Handled = true;
+					}
+
+					break;
+				case WM_RBUTTONDOWN:
+					if (GetAsyncKeyState(VK_MENU) && GetAsyncKeyState(VK_CONTROL))
+					{
+						// handle it for the button up event
+						Handled = true;
+					}
+
+					break;
+				case WM_RBUTTONUP:
+					if (GetAsyncKeyState(VK_MENU) && GetAsyncKeyState(VK_CONTROL))
+					{
+						// place palette object, if any
+						Handled = true;
+						objectPalette::ObjectPaletteManager::Instance.PlaceObject(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+					}
+
+					break;
+				}
+
+				return Handled;
+			}
+
+			bool RenderWindowMouseManager::IsPaintingSelection() const
+			{
+				return PaintingSelection;
+			}
 
 		}
 

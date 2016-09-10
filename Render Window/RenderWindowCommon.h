@@ -4,6 +4,8 @@ namespace cse
 {
 	namespace renderWindow
 	{
+		class RenderWindowManager;
+
 		// provides logic for executing context specific operations
 		class ExecutionContext
 		{

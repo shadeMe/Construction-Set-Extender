@@ -278,8 +278,27 @@ namespace cse
 				void				Initialize();
 				void				Deinitialize();
 
-				bool				HandleInput(UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true if input was handled/consumed
+				bool				HandleInput(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, RenderWindowManager* Manager);		// returns true if input was handled/consumed
 				void				ShowHotKeyEditor();
+			};
+
+			class RenderWindowMouseManager
+			{
+				POINT			CurrentMouseCoord;
+				bool			PaintingSelection;
+				UInt8			SelectionPaintingMode;
+
+				enum
+				{
+					kSelectionPainting_NotSet = 0,
+					kSelectionPainting_Select,
+					kSelectionPainting_Deselect
+				};
+			public:
+				RenderWindowMouseManager();
+
+				bool			HandleInput(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, RenderWindowManager* Manager);		// returns true if input was handled/consumed
+				bool			IsPaintingSelection() const;
 			};
 		}
 	}

@@ -426,7 +426,7 @@ namespace cse
 							if (_RENDERWIN_MGR.GetGroupManager()->AddGroup(NewGroupNameBuffer, _RENDERSEL) == false)
 								NotificationOSDLayer::Instance.ShowNotification("Couldn't add current selection to a new group.");
 							else
-								NotificationOSDLayer::Instance.ShowNotification("Created new selection group");
+								NotificationOSDLayer::Instance.ShowNotification("Created new selection group '%s'", NewGroupNameBuffer);
 
 							achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefGrouping);
 							Close = true;
@@ -457,10 +457,7 @@ namespace cse
 			});
 
 			BasicRWA UngroupSelection("Ungroup", "Dissolve a group into its individual references.", []() {
-				if (_RENDERWIN_MGR.GetGroupManager()->RemoveGroup(_RENDERSEL) == false)
-					NotificationOSDLayer::Instance.ShowNotification("Couldn't dissolve the current selection's group.");
-				else
-					NotificationOSDLayer::Instance.ShowNotification("Removed selection group");
+				_RENDERWIN_MGR.GetGroupManager()->RemoveSelectionGroups(_RENDERSEL);
 			});
 
 			BasicRWA OrphanizeSelection("Orphanize", "Remove the reference from its parent group, if any.", []() {
