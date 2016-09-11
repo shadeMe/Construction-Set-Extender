@@ -947,7 +947,11 @@ namespace cse
 		{
 			LRESULT DlgProcResult = TRUE;
 			Return = false;
-
+			if (Instance.Initialized == false)
+			{
+				// bugger off
+				return DlgProcResult;
+			}
 			if (bgsee::RenderWindowFlyCamera::IsActive() && uMsg != WM_DESTROY)
 			{
 				// do nothing if the fly camera is active
@@ -1188,6 +1192,12 @@ namespace cse
 		{
 			SME_ASSERT(Initialized);
 			return *ExtendedState;
+		}
+
+		input::RenderWindowKeyboardManager* RenderWindowManager::GetKeyboardInputManager() const
+		{
+			SME_ASSERT(Initialized);
+			return KeyboardInputManager;
 		}
 
 		input::RenderWindowMouseManager* RenderWindowManager::GetMouseInputManager() const

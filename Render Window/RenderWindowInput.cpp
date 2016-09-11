@@ -279,8 +279,79 @@ namespace cse
 				return Context;
 			}
 
+			bool HoldableKeyHandler::IsActiveBindingTriggered(SHORT Key /*= NULL*/) const
+			{
+				if (Key)
+					return ActiveBinding.GetKeyCode() == Key;
+				else
+					return GetAsyncKeyState(ActiveBinding.GetKeyCode());
+			}
+
+			HoldableKeyHandler::HoldableKeyHandler(const char* GUID, const char* Name, const char* Desc, BasicKeyBinding Default) :
+				IHotKey(GUID),
+				Name(Name),
+				Description(Desc)
+			{
+				SetActiveBinding(Default);
+				DefaultBinding = ActiveBinding;
+			}
+
+			bool HoldableKeyHandler::IsHeldDown() const
+			{
+				return IsActiveBindingTriggered();
+			}
+
+			const char* HoldableKeyHandler::GetName() const
+			{
+				return Name.c_str();
+			}
+
+			const char* HoldableKeyHandler::GetDescription() const
+			{
+				return Description.c_str();
+			}
+
+			void HoldableKeyHandler::SetActiveBinding(const BasicKeyBinding& NewBinding)
+			{
+				SME_ASSERT(NewBinding.HasModifiers() == false);
+				SME_ASSERT(NewBinding.GetKeyCode() != VK_CONTROL && NewBinding.GetKeyCode() != VK_MENU);		// special keys
+				ActiveBinding = NewBinding;
+			}
+
+			const UInt8 HoldableKeyHandler::GetHandlerType() const
+			{
+				return kType_Stateful;
+			}
+
+			IKeyboardEventHandler::EventResult HoldableKeyHandler::HandleActive(UINT uMsg, WPARAM wParam, LPARAM lParam)
+			{
+				EventResult Result;
+				switch (uMsg)
+				{
+				case WM_KEYDOWN:
+				case WM_KEYUP:
+					if (IsActiveBindingTriggered(wParam))
+					{
+						Result.Triggered = true;
+						if (GetExecutionContext().IsExecutable())
+							Result.Success = true;
+						else
+							Result.InvalidContext = true;
+					}
+
+					break;
+				}
+
+				return Result;
+			}
+
+			IKeyboardEventHandler::EventResult HoldableKeyHandler::HandleBuiltIn(UINT uMsg, WPARAM wParam, LPARAM lParam)
+			{
+				return EventResult();
+			}
+
 			HoldableKeyOverride::HoldableKeyOverride(const char* GUID, SHORT BuiltIn, bool Editable) :
-				IHotKey(GUID, Editable),
+				HoldableKeyHandler(GUID, "", ""),
 				BuiltInKey(BuiltIn)
 			{
 				SME_ASSERT(BuiltInKey == BuiltIn::kHoldable_Control ||
@@ -322,8 +393,9 @@ namespace cse
 					Name = "Zoom Camera";
 					break;
 				}
-			}
 
+				this->Editable = Editable;
+			}
 
 			UInt8* HoldableKeyOverride::GetBaseState() const
 			{
@@ -355,58 +427,17 @@ namespace cse
 				return BuiltInKey;
 			}
 
-			const char* HoldableKeyOverride::GetName() const
-			{
-				return Name.c_str();
-			}
-
-			const char* HoldableKeyOverride::GetDescription() const
-			{
-				return "";
-			}
-
-			void HoldableKeyOverride::SetActiveBinding(const BasicKeyBinding& NewBinding)
-			{
-				SME_ASSERT(NewBinding.HasModifiers() == false);
-				ActiveBinding = NewBinding;
-			}
-
-			bool HoldableKeyOverride::IsActiveBindingTriggered(SHORT Key /*= NULL*/) const
-			{
-				if (Key)
-					return ActiveBinding.GetKeyCode() == Key;
-				else
-					return GetAsyncKeyState(ActiveBinding.GetKeyCode());
-			}
-
-			const UInt8 HoldableKeyOverride::GetHandlerType() const
-			{
-				return kType_Stateful;
-			}
-
 			IKeyboardEventHandler::EventResult HoldableKeyOverride::HandleActive(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
-				EventResult Result;
-				switch (uMsg)
-				{
-				case WM_KEYDOWN:
-				case WM_KEYUP:
-					if (IsActiveBindingTriggered(wParam))
-					{
-						Result.Triggered = true;
-						if (GetExecutionContext().IsExecutable())
-						{
-							BGSEEUI->GetSubclasser()->TunnelDialogMessage(*TESRenderWindow::WindowHandle,
-																		  uMsg,
-																		  BuiltInKey,
-																		  NULL);
-							Result.Success = true;
-						}
-						else
-							Result.InvalidContext = true;
-					}
+				EventResult Result = HoldableKeyHandler::HandleActive(uMsg, wParam, lParam);
 
-					break;
+				if (Result.Success)
+				{
+					// tunnel the built-in key on success
+					BGSEEUI->GetSubclasser()->TunnelDialogMessage(*TESRenderWindow::WindowHandle,
+																  uMsg,
+																  BuiltInKey,
+																  NULL);
 				}
 
 				return Result;
@@ -562,15 +593,17 @@ namespace cse
 				return nullptr;
 			}
 
-			void RenderWindowKeyboardManager::RegisterHoldableOverride(const char* GUID, SHORT HoldableKey, bool Editable)
+			HoldableKeyOverride* RenderWindowKeyboardManager::RegisterHoldableOverride(const char* GUID, SHORT HoldableKey, bool Editable)
 			{
 				SME_ASSERT(LookupHotKey(BasicKeyBinding(HoldableKey, NULL), IKeyboardEventHandler::kType_Stateful) == nullptr);
 
 				std::unique_ptr<HoldableKeyOverride> Temp(new HoldableKeyOverride(GUID, HoldableKey, Editable));
+				HoldableKeyOverride* Out = Temp.get();
 				HotKeys.push_back(std::move(Temp));
+				return Out;
 			}
 
-			void RenderWindowKeyboardManager::RegisterComboKeyOverride(const char* GUID, actions::BuiltInKeyComboRWA& Action, BasicKeyBinding OverrideKey)
+			ComboKeyOverride* RenderWindowKeyboardManager::RegisterComboKeyOverride(const char* GUID, actions::BuiltInKeyComboRWA& Action, BasicKeyBinding OverrideKey)
 			{
 				if (OverrideKey.IsValid() == false)
 					OverrideKey = BasicKeyBinding(Action.GetBuiltInBinding());
@@ -578,15 +611,29 @@ namespace cse
 				SME_ASSERT(LookupHotKey(OverrideKey, IKeyboardEventHandler::kType_Stateless, Action.GetExecutionContext()) == nullptr);
 
 				std::unique_ptr<ComboKeyOverride> Temp(new ComboKeyOverride(GUID, Action, OverrideKey));
+				ComboKeyOverride* Out = Temp.get();
 				HotKeys.push_back(std::move(Temp));
+				return Out;
 			}
 
-			void RenderWindowKeyboardManager::RegisterActionableKeyHandler(const char* GUID, IRenderWindowAction& Action, BasicKeyBinding Default)
+			ActionableKeyHandler* RenderWindowKeyboardManager::RegisterActionableKeyHandler(const char* GUID, IRenderWindowAction& Action, BasicKeyBinding Default)
 			{
 				SME_ASSERT(LookupHotKey(Default, IKeyboardEventHandler::kType_Stateless, Action.GetExecutionContext()) == nullptr);
 
 				std::unique_ptr<ActionableKeyHandler> Temp(new ActionableKeyHandler(GUID, Action, Default));
+				ActionableKeyHandler* Out = Temp.get();
 				HotKeys.push_back(std::move(Temp));
+				return Out;
+			}
+
+			HoldableKeyHandler* RenderWindowKeyboardManager::RegisterHoldableHandler(const char* GUID, const char* Name, const char* Desc, BasicKeyBinding Default)
+			{
+				SME_ASSERT(LookupHotKey(Default, IKeyboardEventHandler::kType_Stateful) == nullptr);
+
+				std::unique_ptr<HoldableKeyHandler> Temp(new HoldableKeyHandler(GUID, Name, Desc, Default));
+				HoldableKeyHandler* Out = Temp.get();
+				HotKeys.push_back(std::move(Temp));
+				return Out;
 			}
 
 			void RenderWindowKeyboardManager::SaveToINI() const
@@ -847,15 +894,18 @@ namespace cse
 
 			void RenderWindowKeyboardManager::PerformConsistencyChecks(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
-				// ensure that the holdable key base states correspond to the active state of the override key
+				// ensure that the holdable override base states correspond to the active state of the override key
 				for (auto& Itr : HotKeys)
 				{
 					if (Itr->GetHandlerType() == IKeyboardEventHandler::kType_Stateful)
 					{
 						HoldableKeyOverride* Override = dynamic_cast<HoldableKeyOverride*>(Itr.get());
+						if (Override == nullptr)
+							continue;
+
 						UInt8* BaseState = Override->GetBaseState();
 						SHORT BuiltInKey = Override->GetBuiltInKey();
-						if (Override->IsActiveBindingTriggered())
+						if (Override->IsHeldDown())
 						{
 							if (*BaseState == 0)
 							{
@@ -894,6 +944,7 @@ namespace cse
 			RenderWindowKeyboardManager::RenderWindowKeyboardManager() :
 				HotKeys(),
 				DeletedBindings(),
+				Shared(),
 				MessageLogContext(nullptr)
 			{
 				Initialized = false;
@@ -999,6 +1050,10 @@ namespace cse
 				RegisterActionableKeyHandler("F5862ECB-7413-4C56-A5AF-E5EED401FC17", actions::FocusOnRefFilter, BasicKeyBinding('F', BasicKeyBinding::kModifier_Control));
 				RegisterActionableKeyHandler("959D48C0-43FE-47B5-BD61-9D78EEA277FC", actions::JumpToExteriorCell, BasicKeyBinding('J', BasicKeyBinding::kModifier_Control));
 
+				Shared.MoveCameraWithSelection = RegisterHoldableHandler("5AE9F3BA-A336-450C-89B5-C278294A97C1",
+																		 "Move Camera With References",
+																		 "",
+																		 BasicKeyBinding('N'));
 
 				LoadFromINI();
 				Initialized = true;
@@ -1011,14 +1066,12 @@ namespace cse
 				SaveToINI();
 				BGSEECONSOLE->UnregisterMessageLogContext(MessageLogContext);
 				MessageLogContext = nullptr;
+
 				Initialized = false;
 			}
 
 			bool RenderWindowKeyboardManager::HandleInput(HWND, UINT uMsg, WPARAM wParam, LPARAM lParam, RenderWindowManager*)
 			{
-				if (Initialized == false)
-					return true;
-
 				bool ConsumeMessage = false;
 				const char* MessageName = nullptr;
 
@@ -1108,8 +1161,11 @@ namespace cse
 							if (InvalidContext != LastInvalidContext)
 							{
 								LastInvalidContext = InvalidContext;
-								NotificationOSDLayer::Instance.ShowNotification("'%s' cannot be performed in the current edit mode.",
-																				LastInvalidContext->GetName());
+								if (settings::renderer::kNotifyOnInvalidExecutionContext().i)
+								{
+									NotificationOSDLayer::Instance.ShowNotification("'%s' cannot be performed in the current edit mode.",
+																					LastInvalidContext->GetName());
+								}
 							}
 						}
 
@@ -1162,10 +1218,66 @@ namespace cse
 			}
 
 
+			const SharedBindings& RenderWindowKeyboardManager::GetSharedBindings() const
+			{
+				return Shared;
+			}
+
+			POINT RenderWindowMouseManager::CenterCursor(HWND hWnd, bool UpdateBaseCoords)
+			{
+				int X, Y, W, H;
+				GetWindowMetrics(hWnd, X, Y, W, H);
+
+				POINT Center = { X + W / 2, Y + H / 2 };
+				POINT Out(Center);
+				SetCursorPos(Center.x, Center.y);
+
+				if (UpdateBaseCoords)
+				{
+					ScreenToClient(hWnd, &Center);
+					TESRenderWindow::LastMouseCoords->x = Center.x;
+					TESRenderWindow::LastMouseCoords->y = Center.y;
+				}
+
+				return Out;
+			}
+
+			bool RenderWindowMouseManager::IsCenteringCursor(HWND hWnd, LPARAM lParam) const
+			{
+				// ### HACK, kludge to workaround the WM_MOUSEMOVE feedback loop we get when allowing free movement
+				int X, Y, W, H;
+				GetWindowMetrics(hWnd, X, Y, W, H);
+
+				POINT Center = { X + W / 2, Y + H / 2 };
+				ScreenToClient(hWnd, &Center);
+
+				int PosX = GET_X_LPARAM(lParam);
+				int PosY = GET_Y_LPARAM(lParam);
+
+				if (PosX == Center.x && PosY == Center.y)
+					return true;
+				else
+					return false;
+			}
+
+			void RenderWindowMouseManager::GetWindowMetrics(HWND hWnd, int& X, int& Y, int& Width, int& Height) const
+			{
+				RECT WindowRect = { 0 };
+				GetWindowRect(hWnd, &WindowRect);
+
+				Width = WindowRect.right - WindowRect.left;
+				Height = WindowRect.bottom - WindowRect.top;
+
+				X = WindowRect.left;
+				Y = WindowRect.top;
+			}
+
 			RenderWindowMouseManager::RenderWindowMouseManager() :
 				CurrentMouseCoord{0},
 				PaintingSelection(false),
-				SelectionPaintingMode(kSelectionPainting_NotSet)
+				SelectionPaintingMode(kSelectionPainting_NotSet),
+				MouseDownCursorPos{0},
+				FreeMouseMovement(false)
 			{
 				;//
 			}
@@ -1232,22 +1344,33 @@ namespace cse
 					}
 
 					break;
+				case WM_MOUSELEAVE:
+				case WM_NCMOUSELEAVE:
+					_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
+					_RENDERWIN_XSTATE.CurrentMousePathGridPoint = nullptr;
+
+					break;
 				case WM_MOUSEMOVE:
 					{
-						CurrentMouseCoord.x = GET_X_LPARAM(lParam);
-						CurrentMouseCoord.y = GET_Y_LPARAM(lParam);
+						Handled = true;
+
+						POINT MousePos = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+						POINT MouseDelta = { CurrentMouseCoord.x - MousePos.x, CurrentMouseCoord.y - MousePos.y };
+						POINT LastMouseCoord(CurrentMouseCoord);
+						CurrentMouseCoord.x = MousePos.x;
+						CurrentMouseCoord.y = MousePos.y;
+
+						if (FreeMouseMovement && IsCenteringCursor(hWnd, lParam))
+							break;
 
 						_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
 						_RENDERWIN_XSTATE.CurrentMousePathGridPoint = nullptr;
-
-						if (GetActiveWindow() != hWnd)
-							break;
 
 						if (*TESRenderWindow::LandscapeEditFlag == 0)
 						{
 							if (*TESRenderWindow::PathGridEditFlag == 0)
 							{
-								_RENDERWIN_XSTATE.CurrentMouseRef = TESRender::PickRefAtCoords(CurrentMouseCoord.x, CurrentMouseCoord.y);
+								_RENDERWIN_XSTATE.CurrentMouseRef = TESRender::PickRefAtCoords(MousePos.x, MousePos.y);
 								if (_RENDERWIN_XSTATE.CurrentMouseRef)
 								{
 									if (ReferenceVisibilityValidator::IsCulled(_RENDERWIN_XSTATE.CurrentMouseRef) ||
@@ -1259,14 +1382,13 @@ namespace cse
 							}
 							else
 							{
-								_RENDERWIN_XSTATE.CurrentMousePathGridPoint = TESRender::PickPathGridPointAtCoords(CurrentMouseCoord.x,
-																												   CurrentMouseCoord.y);
+								_RENDERWIN_XSTATE.CurrentMousePathGridPoint = TESRender::PickPathGridPointAtCoords(MousePos.x,
+																												   MousePos.y);
 							}
 						}
 
 						if (PaintingSelection)
 						{
-							Handled = true;
 							// paint only when the alt key is held down
 							if (GetAsyncKeyState(VK_MENU))
 							{
@@ -1287,55 +1409,130 @@ namespace cse
 										Manager->GetSelectionManager()->RemoveFromSelection(MouseRef, true);
 								}
 							}
+
+							break;
+						}
+
+						// handle free movement
+						if (FreeMouseMovement)
+						{
+							// center the mouse and tunnel just the offset
+							CenterCursor(hWnd, false);
+
+							POINT ClientPos;
+							ClientPos.x = TESRenderWindow::LastMouseCoords->x - MouseDelta.x;
+							ClientPos.y = TESRenderWindow::LastMouseCoords->y - MouseDelta.y;
+							lParam = MAKELPARAM(ClientPos.x, ClientPos.y);
+						}
+
+						bool MoveCameraWithSel = Manager->GetKeyboardInputManager()->GetSharedBindings().MoveCameraWithSelection->IsHeldDown();
+						Vector3 PrePivot, PostPivot;
+						if (MoveCameraWithSel)
+						{
+							_RENDERSEL->CalculatePositionVectorSum();
+							PrePivot = _RENDERSEL->selectionPositionVectorSum;
+						}
+
+						// tunnel the message
+						BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, wParam, lParam);
+
+						if (MoveCameraWithSel)
+						{
+							_RENDERSEL->CalculatePositionVectorSum();
+							PostPivot = _RENDERSEL->selectionPositionVectorSum;
+
+							Vector3 Diff = PostPivot - PrePivot;
+							Vector3* CameraRootLocalTranslate = (Vector3*)&_PRIMARYRENDERER->primaryCameraParentNode->m_localTranslate;
+							*CameraRootLocalTranslate += Diff;
 						}
 					}
 
 					break;
-				case WM_MOUSELEAVE:
-				case WM_NCMOUSELEAVE:
-					_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
-					_RENDERWIN_XSTATE.CurrentMousePathGridPoint = nullptr;
-
-					break;
 				case WM_LBUTTONDOWN:
-					if (GetAsyncKeyState(VK_MENU) && GetAsyncKeyState(VK_CONTROL) &&
-						*TESRenderWindow::LandscapeEditFlag == 0 && *TESRenderWindow::PathGridEditFlag == 0)
+				case WM_RBUTTONDOWN:
+					Handled = true;
+
+					if (uMsg == WM_RBUTTONDOWN)
 					{
-						SME_ASSERT(PaintingSelection == false && SelectionPaintingMode == kSelectionPainting_NotSet);
+						if (GetAsyncKeyState(VK_MENU) && GetAsyncKeyState(VK_CONTROL))
+						{
+							// handle it for the button up event, early out
+							break;
+						}
+					}
 
-						PaintingSelection = true;
-						NotificationOSDLayer::Instance.ShowNotification("Painting reference selection...");
+					if (uMsg == WM_LBUTTONDOWN)
+					{
+						if (GetAsyncKeyState(VK_MENU) && GetAsyncKeyState(VK_CONTROL) &&
+							*TESRenderWindow::LandscapeEditFlag == 0 && *TESRenderWindow::PathGridEditFlag == 0)
+						{
+							SME_ASSERT(PaintingSelection == false && SelectionPaintingMode == kSelectionPainting_NotSet);
 
-						SetCapture(hWnd);
-						Handled = true;
+							PaintingSelection = true;
+							NotificationOSDLayer::Instance.ShowNotification("Painting reference selection...");
+
+							SetCapture(hWnd);
+							break;
+						}
+					}
+
+					// begin free movement handling
+					GetCursorPos(&MouseDownCursorPos);
+					// tunnel the message to the original proc and check if we need to allow free mouse movement
+					BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, wParam, lParam);
+
+					if (*TESRenderWindow::DraggingSelection || *TESRenderWindow::RotatingSelection)
+					{
+						// landscape edit mode isn't supported as the land coords are calculated from the mouse coords, not their offset
+						SME_ASSERT(*TESRenderWindow::LandscapeEditFlag == 0);
+						if (GetCapture() == hWnd)
+						{
+							SME_ASSERT(FreeMouseMovement == false);
+
+							// hide the cursor and reset it to the center
+							FreeMouseMovement = true;
+							CenterCursor(hWnd, true);
+							while (ShowCursor(FALSE) > 0)
+								;//
+						}
 					}
 
 					break;
 				case WM_LBUTTONUP:
-					if (PaintingSelection)
-					{
-						PaintingSelection = false;
-						SelectionPaintingMode = kSelectionPainting_NotSet;
-
-						ReleaseCapture();
-						Handled = true;
-					}
-
-					break;
-				case WM_RBUTTONDOWN:
-					if (GetAsyncKeyState(VK_MENU) && GetAsyncKeyState(VK_CONTROL))
-					{
-						// handle it for the button up event
-						Handled = true;
-					}
-
-					break;
 				case WM_RBUTTONUP:
-					if (GetAsyncKeyState(VK_MENU) && GetAsyncKeyState(VK_CONTROL))
+					Handled = true;
+
+					if (uMsg == WM_RBUTTONUP)
 					{
-						// place palette object, if any
-						Handled = true;
-						objectPalette::ObjectPaletteManager::Instance.PlaceObject(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+						if (GetAsyncKeyState(VK_MENU) && GetAsyncKeyState(VK_CONTROL))
+						{
+							// place palette object, if any
+							objectPalette::ObjectPaletteManager::Instance.PlaceObject(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+							break;
+						}
+					}
+
+					if (uMsg == WM_LBUTTONUP)
+					{
+						if (PaintingSelection)
+						{
+							PaintingSelection = false;
+							SelectionPaintingMode = kSelectionPainting_NotSet;
+
+							ReleaseCapture();
+							break;
+						}
+					}
+
+					// end free movement handling
+					BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, wParam, lParam);
+					if (FreeMouseMovement)
+					{
+						// restore the cursor
+						FreeMouseMovement = false;
+						SetCursorPos(MouseDownCursorPos.x, MouseDownCursorPos.y);
+						while (ShowCursor(TRUE) < 0)
+							;//
 					}
 
 					break;
@@ -1348,6 +1545,8 @@ namespace cse
 			{
 				return PaintingSelection;
 			}
+
+
 
 		}
 

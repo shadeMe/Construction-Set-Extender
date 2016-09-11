@@ -434,17 +434,17 @@ BEGIN
     END
     POPUP "&Edit"
     BEGIN
-        MENUITEM "&Undo\tCtrl-Z",               40097
-        MENUITEM "&Redo\tCtrl-Y",               40162
+        MENUITEM "Undo",                        40097
+        MENUITEM "Redo",                        40162
         MENUITEM SEPARATOR
         MENUITEM "Global Undo",                 IDC_MAINMENU_GLOBALUNDO
         MENUITEM "Global Redo",                 IDC_MAINMENU_GLOBALREDO
         MENUITEM SEPARATOR
-        MENUITEM "C&ut Render\tCtrl-X",         40098
-        MENUITEM "&Copy Render\tCtrl-C",        40099
-        MENUITEM "&Paste Render\tCtrl-V",       40100
-        MENUITEM "Paste &in Place\tCtrl-Shift-V", 40188
-        MENUITEM "&Duplicate\tCtrl-D",          40185
+        MENUITEM "Cut Render",                  40098
+        MENUITEM "Copy Render",                 40099
+        MENUITEM "Paste Render",                40100
+        MENUITEM "Paste in Place",              40188
+        MENUITEM "Duplicate",                   40185
         MENUITEM SEPARATOR
         MENUITEM "Paste From Global Clipboard", IDC_MAINMENU_PASTEFROMGLOBALCLIPBOARD
         MENUITEM SEPARATOR

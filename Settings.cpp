@@ -58,6 +58,7 @@ namespace cse
 			Depot.push_back(&renderer::kPathGridLinkedRefIndicator);
 			Depot.push_back(&renderer::kPathGridLinkedRefIndicatorFlags);
 			Depot.push_back(&renderer::kGrassOverlayTexturePath);
+			Depot.push_back(&renderer::kNotifyOnInvalidExecutionContext);
 
 			Depot.push_back(&renderWindowOSD::kShowMouseRef);
 			Depot.push_back(&renderWindowOSD::kMouseRefCtrlModified);
@@ -173,7 +174,7 @@ namespace cse
 			INISetting		kPathGridLinkedRefIndicatorFlags("PathGridLinkedRefIndicatorFlags", RENDERER_INISECTION, "Indicator visibility flags",
 							(UInt32)kPathGridLinkedRefIndicatorFlag_HidePointBoundingBox | kPathGridLinkedRefIndicatorFlag_HideLinkedRefNode | kPathGridLinkedRefIndicatorFlag_HideLineConnector);
 			INISetting		kGrassOverlayTexturePath("GrassOverlayTexturePath", RENDERER_INISECTION, "Path relative to the Textures\\Landscape folder that gets applied when the grass overlay is enabled", "CSE_GrassOverlay.dds");
-
+			INISetting		kNotifyOnInvalidExecutionContext("NotifyOnInvalidExecutionContext", RENDERER_INISECTION, "Display a message when an operation is invoked in the wrong edit mode", (SInt32)0);
 		}
 
 		namespace renderWindowOSD

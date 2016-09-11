@@ -35,6 +35,7 @@ TESObjectREFR**						TESRenderWindow::SnapReference = (TESObjectREFR**)0x00A0B05
 
 UInt8*								TESRenderWindow::LandscapeEditFlag = (UInt8*)0x00A0BC35;
 UInt8*								TESRenderWindow::DraggingSelection = (UInt8*)0x00A0BBF6;
+UInt8*								TESRenderWindow::RotatingSelection = (UInt8*)0x00A0BBF5;
 
 UInt8*								TESRenderWindow::KeyState_Shift = (UInt8*)0x00A0BC5D;
 UInt8*								TESRenderWindow::KeyState_Control = (UInt8*)0x00A0BC5E;
@@ -44,6 +45,7 @@ UInt8*								TESRenderWindow::KeyState_Y = (UInt8*)0x00A0BC1E;
 UInt8*								TESRenderWindow::KeyState_Z = (UInt8*)0x00A0BC1D;
 UInt8*								TESRenderWindow::KeyState_V = (UInt8*)0x00A0BC1C;
 UInt8*								TESRenderWindow::KeyState_S = (UInt8*)0x00A0BC20;
+POINT*								TESRenderWindow::LastMouseCoords = (POINT*)0x00A0BC08;
 
 
 UInt8*								TESRenderWindow::PathGridEditFlag = (UInt8*)0x00A0BC5C;

@@ -274,6 +274,7 @@ public:
 	static UInt8*						PathGridEditFlag;
 	static UInt8*						LandscapeEditFlag;
 	static UInt8*						DraggingSelection;
+	static UInt8*						RotatingSelection;
 
 	static UInt8*						KeyState_Shift;
 	static UInt8*						KeyState_Control;
@@ -283,6 +284,7 @@ public:
 	static UInt8*						KeyState_Z;
 	static UInt8*						KeyState_S;
 	static UInt8*						KeyState_V;
+	static POINT*						LastMouseCoords;
 
 	static TESObjectCELL**				ActiveCell;						// points to the current interior cell or the exterior cell at the camera's position/current selection
 	static TESLandTexture**				ActiveLandscapeTexture;

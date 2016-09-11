@@ -234,6 +234,7 @@ namespace cse
 			PathGridUndoManager*						GetPathGridUndoManager() const;
 			RenderWindowSelectionManager*				GetSelectionManager() const;
 			RenderWindowExtendedState&					GetState() const;
+			input::RenderWindowKeyboardManager*			GetKeyboardInputManager() const;
 			input::RenderWindowMouseManager*			GetMouseInputManager() const;
 			const TESObjectREFRArrayT&					GetActiveRefs() const;
 

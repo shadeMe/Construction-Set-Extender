@@ -167,6 +167,8 @@ namespace cse
 				BasicKeyBinding		ActiveBinding;
 				ExecutionContext	Context;
 				bool				Editable;
+
+				virtual bool					IsActiveBindingTriggered(SHORT Key = NULL) const;
 			public:
 				IHotKey(const char* GUID, bool Editable = true, UInt8 Context = ExecutionContext::kMode_All);
 				IHotKey(const char* GUID, bool Editable, const ExecutionContext& Context);
@@ -179,7 +181,6 @@ namespace cse
 
 				virtual const BasicKeyBinding&	GetActiveBinding() const;
 				virtual void					SetActiveBinding(const BasicKeyBinding& NewBinding);
-				virtual bool					IsActiveBindingTriggered(SHORT Key = NULL) const;
 
 				void							Save(bgsee::INIManagerSetterFunctor& INI, const char* Section) const;
 				bool							Load(bgsee::INIManagerGetterFunctor& INI, const char* Section);		// returns false if unsuccessful
@@ -187,12 +188,34 @@ namespace cse
 				bool							IsEditable() const;
 			};
 
+			class HoldableKeyHandler : public IHotKey
+			{
+			protected:
+				std::string				Name;
+				std::string				Description;
+
+				virtual bool			IsActiveBindingTriggered(SHORT Key = NULL) const override;
+			public:
+				HoldableKeyHandler(const char* GUID, const char* Name, const char* Desc, BasicKeyBinding Default = BasicKeyBinding());
+				inline virtual ~HoldableKeyHandler() override = default;
+
+				virtual bool			IsHeldDown() const;		// returns true if the key is held down
+
+				virtual const char*		GetName() const override;
+				virtual const char*		GetDescription() const override;
+
+				virtual void			SetActiveBinding(const BasicKeyBinding& NewBinding) override;
+
+				virtual const UInt8		GetHandlerType() const override;
+				virtual EventResult		HandleActive(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+				virtual EventResult		HandleBuiltIn(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+			};
+
 			// overrides a built-in holdable key
-			class HoldableKeyOverride : public IHotKey
+			class HoldableKeyOverride : public HoldableKeyHandler
 			{
 			protected:
 				SHORT				BuiltInKey;
-				std::string			Name;
 			public:
 				HoldableKeyOverride(const char* GUID, SHORT BuiltIn, bool Editable);
 				inline virtual ~HoldableKeyOverride() override = default;
@@ -200,13 +223,6 @@ namespace cse
 				UInt8*					GetBaseState() const;
 				SHORT					GetBuiltInKey() const;
 
-				virtual const char*		GetName() const override;
-				virtual const char*		GetDescription() const override;
-
-				virtual void			SetActiveBinding(const BasicKeyBinding& NewBinding) override;
-				virtual bool			IsActiveBindingTriggered(SHORT Key = NULL) const override;
-
-				virtual const UInt8		GetHandlerType() const override;
 				virtual EventResult		HandleActive(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 				virtual EventResult		HandleBuiltIn(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 			};
@@ -246,6 +262,11 @@ namespace cse
 				virtual EventResult		HandleBuiltIn(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 			};
 
+			struct SharedBindings
+			{
+				const HoldableKeyHandler*	MoveCameraWithSelection;
+			};
+
 			class RenderWindowKeyboardManager
 			{
 				static const char*			kINISection_HotKeys;
@@ -255,50 +276,62 @@ namespace cse
 
 				HotKeyArrayT				HotKeys;
 				BuiltInKeyBindingArrayT		DeletedBindings;		// default combos that shouldn't be executed, e.g., broken bindings
+				SharedBindings				Shared;
 				void*						MessageLogContext;
 				bool						Initialized;
 
-				IHotKey*			LookupHotKey(BasicKeyBinding Key, UInt8 HandlerType, ExecutionContext Context = ExecutionContext(ExecutionContext::kMode_All), bool OnlyMatchKeyCode = false);
+				IHotKey*					LookupHotKey(BasicKeyBinding Key,
+														 UInt8 HandlerType,
+														 ExecutionContext Context = ExecutionContext(ExecutionContext::kMode_All),
+														 bool OnlyMatchKeyCode = false);
 
-				void				RegisterHoldableOverride(const char* GUID, SHORT HoldableKey, bool Editable);
-				void				RegisterComboKeyOverride(const char* GUID, actions::BuiltInKeyComboRWA& Action, BasicKeyBinding OverrideKey = BasicKeyBinding());
-				void				RegisterActionableKeyHandler(const char* GUID, IRenderWindowAction& Action, BasicKeyBinding Default);
+				HoldableKeyOverride*		RegisterHoldableOverride(const char* GUID, SHORT HoldableKey, bool Editable);
+				ComboKeyOverride*			RegisterComboKeyOverride(const char* GUID, actions::BuiltInKeyComboRWA& Action, BasicKeyBinding OverrideKey = BasicKeyBinding());
+				ActionableKeyHandler*		RegisterActionableKeyHandler(const char* GUID, IRenderWindowAction& Action, BasicKeyBinding Default);
+				HoldableKeyHandler*			RegisterHoldableHandler(const char* GUID, const char* Name, const char* Desc, BasicKeyBinding Default);
 
-				void				SaveToINI() const;
-				void				LoadFromINI();
+				void						SaveToINI() const;
+				void						LoadFromINI();
 
-				bool				RenderModalHotKeyEditor(RenderWindowOSD* OSD, ImGuiDX9* GUI);
-				bool				RenderModalBindingEditor(RenderWindowOSD* OSD, ImGuiDX9* GUI, void* UserData);
+				bool						RenderModalHotKeyEditor(RenderWindowOSD* OSD, ImGuiDX9* GUI);
+				bool						RenderModalBindingEditor(RenderWindowOSD* OSD, ImGuiDX9* GUI, void* UserData);
 
-				void				PerformConsistencyChecks(UINT uMsg, WPARAM wParam, LPARAM lParam);
+				void						PerformConsistencyChecks(UINT uMsg, WPARAM wParam, LPARAM lParam);
 			public:
 				RenderWindowKeyboardManager();
 				~RenderWindowKeyboardManager();
 
-				void				Initialize();
-				void				Deinitialize();
+				void						Initialize();
+				void						Deinitialize();
 
-				bool				HandleInput(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, RenderWindowManager* Manager);		// returns true if input was handled/consumed
-				void				ShowHotKeyEditor();
+				bool						HandleInput(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, RenderWindowManager* Manager);		// returns true if input was handled/consumed
+				void						ShowHotKeyEditor();
+				const SharedBindings&		GetSharedBindings() const;
 			};
 
 			class RenderWindowMouseManager
 			{
-				POINT			CurrentMouseCoord;
-				bool			PaintingSelection;
-				UInt8			SelectionPaintingMode;
-
 				enum
 				{
 					kSelectionPainting_NotSet = 0,
 					kSelectionPainting_Select,
 					kSelectionPainting_Deselect
 				};
+
+				POINT				CurrentMouseCoord;
+				bool				PaintingSelection;
+				UInt8				SelectionPaintingMode;
+				POINT				MouseDownCursorPos;
+				bool				FreeMouseMovement;
+
+				POINT				CenterCursor(HWND hWnd, bool UpdateBaseCoords);			// returns the center coords (in screen area)
+				bool				IsCenteringCursor(HWND hWnd, LPARAM lParam) const;
+				void				GetWindowMetrics(HWND hWnd, int& X, int& Y, int& Width, int& Height) const;
 			public:
 				RenderWindowMouseManager();
 
-				bool			HandleInput(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, RenderWindowManager* Manager);		// returns true if input was handled/consumed
-				bool			IsPaintingSelection() const;
+				bool				HandleInput(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, RenderWindowManager* Manager);		// returns true if input was handled/consumed
+				bool				IsPaintingSelection() const;
 			};
 		}
 	}

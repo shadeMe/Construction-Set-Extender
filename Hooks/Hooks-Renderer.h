@@ -70,6 +70,8 @@ namespace cse
 		_DeclareMemHdlr(LandscapeTextureLoad, "adds support for landscape texture swaps");
 		_DeclareMemHdlr(PatchGetAsyncKeyStateA, "adds support for custom hotkeys");
 		_DeclareMemHdlr(PatchGetAsyncKeyStateB, "");
+		_DeclareMemHdlr(UndoStackUndoOp3, "fixes a bug that caused a CTD when trying to redo/undo an operation");
+		_DeclareMemHdlr(UndoStackRedoOp3, "");
 
 		void __stdcall RenderWindowReferenceSelectionDetour(TESObjectREFR* Ref, bool ShowSelectionBox);
 	}
