@@ -253,6 +253,7 @@ public:
 	static UInt32						GetActiveCellObjects(TESObjectREFRArrayT& OutList, CellObjectListVisitorT Visitor);		// enumerates refs in the current interior/exterior grid and returns the count
 	static bool							GetCellInActiveGrid(TESObjectCELL* Cell);	// returns true if the cell is loaded/visible in the render window
 	static std::string					GetCellGeomDescription(TESObjectCELL* Cell);
+	static Vector3*						CalculatePathGridPointPositionVectorSum(Vector3& OutPosVecSum);
 
 	static HWND*						WindowHandle;
 	static int*							ScreeWidth;

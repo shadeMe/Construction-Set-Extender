@@ -19,36 +19,6 @@ namespace cse
 				virtual void					HandleShutdown(const char* PluginName, const char* CosaveDirectory);
 			};
 
-			class OSDLayer : public IRenderWindowOSDLayer
-			{
-				RenderWindowCellLists*		Parent;
-				ImGuiTextFilter				FilterHelper;
-
-				enum
-				{
-					kList_Bookmark = 0,
-					kList_Recents
-				};
-
-				struct CellListDialogResult
-				{
-					bool				AddBookmark;
-					bool				RemoveBookmark;
-					bool				SelectCell;
-					TESObjectCELL*		Selection;
-
-					CellListDialogResult();
-				};
-
-				void							OnSelectCell(TESObjectCELL* Cell) const;
-				void							AddCellToList(TESObjectCELL* Cell, UInt8 List, CellListDialogResult& Out) const;	// returns true if the context menu item was selected
-			public:
-				OSDLayer(RenderWindowCellLists* Parent);
-
-				virtual void					Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI);
-				virtual bool					NeedsBackgroundUpdate();
-			};
-
 			class GlobalEventSink : public SME::MiscGunk::IEventSink
 			{
 				RenderWindowCellLists*			Parent;
@@ -68,12 +38,34 @@ namespace cse
 			typedef std::list<TESObjectCELL*>		CellListT;
 			typedef std::vector<TESObjectCELL*>		CellArrayT;
 
+			enum
+			{
+				kList_Bookmark = 0,
+				kList_Recents
+			};
+
+			struct CellListDialogResult
+			{
+				bool				AddBookmark;
+				bool				RemoveBookmark;
+				bool				SelectCell;
+				TESObjectCELL*		Selection;
+
+				CellListDialogResult();
+			};
+
 			CellArrayT				Bookmarks;
 			CellListT				RecentlyVisited;
 			GlobalEventSink*		EventSink;
 			CosaveHandler*			CosaveInterface;
-			OSDLayer*				OSDRenderer;
+			ImGuiTextFilter			FilterHelper;
 			bool					Initialized;
+
+			void					RenderPopupButton();
+			void					RenderWindowContents();
+
+			void					OnSelectCell(TESObjectCELL* Cell) const;
+			void					AddCellToList(TESObjectCELL* Cell, UInt8 List, CellListDialogResult& Out) const;	// returns true if the context menu item was selected
 
 			void					SaveBookmarks(const char* PluginName, const char* DirPath) const;
 			void					LoadBookmarks(const char* PluginName, const char* DirPath);
@@ -86,8 +78,8 @@ namespace cse
 			RenderWindowCellLists();
 			~RenderWindowCellLists();
 
-			void					Initialize(RenderWindowOSD* OSD);
-			void					Deinitialize(RenderWindowOSD* OSD);
+			void					Initialize();
+			void					Deinitialize();
 		};
 	}
 }

@@ -552,6 +552,11 @@ void TESCellViewWindow::UpdateCurrentWorldspace()
 	cdeclCall<void>(0x004086E0);
 }
 
+void TESCellViewWindow::SetCurrentCell(Vector3* Position, bool ReloadObjectList)
+{
+	cdeclCall<void>(0x00409170, Position, (UInt32)ReloadObjectList);
+}
+
 void TESObjectWindow::RefreshFormList(void)
 {
 	SendMessage(*TESObjectWindow::WindowHandle, 0x41A, NULL, NULL);

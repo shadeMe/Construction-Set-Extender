@@ -1,12 +1,11 @@
 #include "RenderWindowCellLists.h"
+#include "IconFontCppHeaders\IconsMaterialDesign.h"
+#include "ToolbarOSDLayer.h"
 
 namespace cse
 {
 	namespace renderWindow
 	{
-
-
-
 		RenderWindowCellLists::CosaveHandler::CosaveHandler(RenderWindowCellLists* Parent) :
 			serialization::PluginCosaveManager::IEventHandler(),
 			Parent(Parent)
@@ -27,216 +26,6 @@ namespace cse
 		void RenderWindowCellLists::CosaveHandler::HandleShutdown(const char* PluginName, const char* CosaveDirectory)
 		{
 			;//
-		}
-
-		RenderWindowCellLists::OSDLayer::CellListDialogResult::CellListDialogResult()
-		{
-			AddBookmark = false;
-			RemoveBookmark = false;
-			SelectCell = false;
-			Selection = nullptr;
-		}
-
-		void RenderWindowCellLists::OSDLayer::OnSelectCell(TESObjectCELL* Cell) const
-		{
-			// emulating a mouse click in the cell view dialog to ensure that the right code path is selected
-			// which includes our hooks
-			TESWorldSpace* ParentWorldspace = Cell->GetParentWorldSpace();
-			TESObjectCELL* Buffer = _TES->currentInteriorCell;
-			if (ParentWorldspace == nullptr)
-				_TES->currentInteriorCell = Cell;
-			else
-			{
-				_TES->SetCurrentWorldspace(ParentWorldspace);
-				_TES->currentInteriorCell = nullptr;
-			}
-
-			TESCellViewWindow::UpdateCurrentWorldspace();
-			TESCellViewWindow::RefreshCellList(false);
-			TESCellViewWindow::SetCellSelection(Cell);
-			_TES->currentInteriorCell = Buffer;
-
-			// the cell is selected in the list at this point, so we emulate a double click
-			NMITEMACTIVATE Data = { 0 };
-			Data.hdr.code = -3;		// ### what notification is this?
-			Data.hdr.hwndFrom = *TESCellViewWindow::CellListHandle;
-			Data.hdr.idFrom = TESCellViewWindow::kCellListView;
-			Data.iItem = TESListView::GetItemByData(*TESCellViewWindow::CellListHandle, Cell);
-			SME_ASSERT(Data.iItem != -1);
-			Data.lParam = (LPARAM)Cell;
-			SendMessage(*TESCellViewWindow::WindowHandle, WM_NOTIFY, Data.hdr.idFrom, (LPARAM)&Data);
-
-			SetActiveWindow(*TESRenderWindow::WindowHandle);
-		}
-
-		void RenderWindowCellLists::OSDLayer::AddCellToList(TESObjectCELL* Cell, UInt8 List, CellListDialogResult& Out) const
-		{
-			const char* EditorID = Cell->GetEditorID();
-			if (EditorID == nullptr)
-				EditorID = "";
-			const char* Name = Cell->name.c_str();
-			if (Name == nullptr)
-				Name = "";
-
-			char Location[0x100] = { 0 };
-			Out.Selection = Cell;
-
-			if (Cell->IsInterior())
-				FORMAT_STR(Location, "Interior");
-			else
-			{
-				const char* WorldspaceName = Cell->GetParentWorldSpace()->name.c_str();
-				if (WorldspaceName == nullptr)
-					WorldspaceName = Cell->GetParentWorldSpace()->GetEditorID();
-
-				FORMAT_STR(Location, "%s (%d,%d)", WorldspaceName, Cell->cellData.coords->x, Cell->cellData.coords->y);
-			}
-
-			char Buffer[0x100] = {0};
-			FORMAT_STR(Buffer, "%s %s %s", EditorID, Name, Location);
-			if (FilterHelper.PassFilter(Buffer) == false)
-				return;
-
-			char Label[0x10] = {0};
-			FORMAT_STR(Label, "%08X-%d", Cell->formID, (UInt32)List);
-
-			ImGui::PushID(Label);
-			if (ImGui::Selectable(EditorID, false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(0))
-				Out.SelectCell = true;
-			ImGui::PopID();
-
-			if (List == kList_Bookmark && ImGui::BeginPopupContextItem("BookmarkPopup"))
-			{
-				if (ImGui::Selectable("Remove Bookmark"))
-					Out.RemoveBookmark = true;
-				ImGui::EndPopup();
-			}
-			else if (List == kList_Recents && ImGui::BeginPopupContextItem("RecentsPopup"))
-			{
-				if (ImGui::Selectable("Add Bookmark"))
-					Out.AddBookmark = true;
-				ImGui::EndPopup();
-			}
-
-			ImGui::NextColumn();
-			ImGui::Selectable(Name);
-			ImGui::NextColumn();
-			ImGui::Selectable(Location);
-			ImGui::NextColumn();
-		}
-
-		RenderWindowCellLists::OSDLayer::OSDLayer(RenderWindowCellLists* Parent) :
-			IRenderWindowOSDLayer(&settings::renderWindowOSD::kShowCellLists),
-			Parent(Parent),
-			FilterHelper()
-		{
-			SME_ASSERT(Parent);
-		}
-
-		void RenderWindowCellLists::OSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
-		{
-			ImGui::SetNextWindowPos(ImVec2(10, 300), ImGuiSetCond_FirstUseEver);
-			if (!ImGui::Begin("Cell Lists", nullptr, ImGuiWindowFlags_NoFocusOnAppearing))
-			{
-				ImGui::End();
-				return;
-			}
-
-			FilterHelper.Draw();
-
-			TESObjectCELL* ToSelect = nullptr;
-			if (ImGui::CollapsingHeader("Bookmarks"))
-			{
-				if (_TES->GetCurrentCell() && ImGui::Button("Bookmark Current Cell"))
-					Parent->AddBookmark(_TES->GetCurrentCell());
-
-				if (Parent->Bookmarks.size())
-				{
-					ImGui::Columns(3, "BookmarkList");
-					ImGui::Separator();
-					ImGui::Text("EditorID"); ImGui::NextColumn();
-					ImGui::Text("Name"); ImGui::NextColumn();
-					ImGui::Text("Location"); ImGui::NextColumn();
-					ImGui::Separator();
-
-					TESObjectCELL* ToRemove = nullptr;
-					for (auto Itr : Parent->Bookmarks)
-					{
-						CellListDialogResult Out;
-						AddCellToList(Itr, kList_Bookmark, Out);
-						if (Out.RemoveBookmark)
-						{
-							ToRemove = Out.Selection;
-							break;
-						}
-						else if (Out.SelectCell)
-						{
-							ToSelect = Out.Selection;
-							break;
-						}
-					}
-
-					if (ToRemove)
-						Parent->RemoveBookmark(ToRemove);
-
-					if (ToSelect)
-					{
-						ImGui::End();
-						OnSelectCell(ToSelect);
-						return;
-					}
-
-					ImGui::Columns(1);
-					ImGui::Separator();
-				}
-			}
-
-			if (Parent->RecentlyVisited.size() && ImGui::CollapsingHeader("Recently Visited"))
-			{
-				ImGui::Columns(3, "RecentsList");
-				ImGui::Separator();
-				ImGui::Text("EditorID"); ImGui::NextColumn();
-				ImGui::Text("Name"); ImGui::NextColumn();
-				ImGui::Text("Location"); ImGui::NextColumn();
-				ImGui::Separator();
-
-				TESObjectCELL* ToAdd = nullptr;
-				for (auto Itr : Parent->RecentlyVisited)
-				{
-					CellListDialogResult Out;
-					AddCellToList(Itr, kList_Recents, Out);
-					if (Out.RemoveBookmark)
-					{
-						ToAdd = Out.Selection;
-						break;
-					}
-					else if (Out.SelectCell)
-					{
-						ToSelect = Out.Selection;
-						break;
-					}
-				}
-
-				if (ToAdd)
-					Parent->AddBookmark(ToAdd);
-
-				if (ToSelect)
-				{
-					ImGui::End();
-					OnSelectCell(ToSelect);
-					return;
-				}
-
-				ImGui::Columns(1);
-				ImGui::Separator();
-			}
-
-			ImGui::End();
-		}
-
-		bool RenderWindowCellLists::OSDLayer::NeedsBackgroundUpdate()
-		{
-			return false;
 		}
 
 		RenderWindowCellLists::GlobalEventSink::GlobalEventSink(RenderWindowCellLists* Parent) :
@@ -269,6 +58,212 @@ namespace cse
 
 		const UInt32				RenderWindowCellLists::kVisitedListCapacity = 30;
 		const char*					RenderWindowCellLists::kSaveFileName = "RenderWindowCellBookmarks";
+
+
+		RenderWindowCellLists::CellListDialogResult::CellListDialogResult()
+		{
+			AddBookmark = false;
+			RemoveBookmark = false;
+			SelectCell = false;
+			Selection = nullptr;
+		}
+
+		void RenderWindowCellLists::OnSelectCell(TESObjectCELL* Cell) const
+		{
+			// emulating a mouse click in the cell view dialog to ensure that the right code path is selected
+			// which includes our hooks
+			TESWorldSpace* ParentWorldspace = Cell->GetParentWorldSpace();
+			TESObjectCELL* Buffer = _TES->currentInteriorCell;
+			if (ParentWorldspace == nullptr)
+				_TES->currentInteriorCell = Cell;
+			else
+			{
+				_TES->SetCurrentWorldspace(ParentWorldspace);
+				_TES->currentInteriorCell = nullptr;
+			}
+
+			TESCellViewWindow::UpdateCurrentWorldspace();
+			TESCellViewWindow::RefreshCellList(false);
+			TESCellViewWindow::SetCellSelection(Cell);
+			_TES->currentInteriorCell = Buffer;
+
+			// the cell is selected in the list at this point, so we emulate a double click
+			NMITEMACTIVATE Data = { 0 };
+			Data.hdr.code = -3;		// ### what notification is this?
+			Data.hdr.hwndFrom = *TESCellViewWindow::CellListHandle;
+			Data.hdr.idFrom = TESCellViewWindow::kCellListView;
+			Data.iItem = TESListView::GetItemByData(*TESCellViewWindow::CellListHandle, Cell);
+			SME_ASSERT(Data.iItem != -1);
+			Data.lParam = (LPARAM)Cell;
+			SendMessage(*TESCellViewWindow::WindowHandle, WM_NOTIFY, Data.hdr.idFrom, (LPARAM)&Data);
+
+			SetActiveWindow(*TESRenderWindow::WindowHandle);
+		}
+
+		void RenderWindowCellLists::AddCellToList(TESObjectCELL* Cell, UInt8 List, CellListDialogResult& Out) const
+		{
+			const char* EditorID = Cell->GetEditorID();
+			if (EditorID == nullptr)
+				EditorID = "";
+			const char* Name = Cell->name.c_str();
+			if (Name == nullptr)
+				Name = "";
+
+			char Location[0x100] = { 0 };
+			Out.Selection = Cell;
+
+			if (Cell->IsInterior())
+				FORMAT_STR(Location, "Interior");
+			else
+			{
+				const char* WorldspaceName = Cell->GetParentWorldSpace()->name.c_str();
+				if (WorldspaceName == nullptr)
+					WorldspaceName = Cell->GetParentWorldSpace()->GetEditorID();
+
+				FORMAT_STR(Location, "%s (%d,%d)", WorldspaceName, Cell->cellData.coords->x, Cell->cellData.coords->y);
+			}
+
+			char Buffer[0x100] = { 0 };
+			FORMAT_STR(Buffer, "%s %s %s", EditorID, Name, Location);
+			if (FilterHelper.PassFilter(Buffer) == false)
+				return;
+
+			char Label[0x10] = { 0 };
+			FORMAT_STR(Label, "%08X-%d", Cell->formID, (UInt32)List);
+
+			ImGui::PushID(Label);
+			if (ImGui::Selectable(EditorID, false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(0))
+				Out.SelectCell = true;
+			ImGui::PopID();
+
+			if (List == kList_Bookmark && ImGui::BeginPopupContextItem("BookmarkPopup"))
+			{
+				if (ImGui::Selectable("Remove Bookmark"))
+					Out.RemoveBookmark = true;
+				ImGui::EndPopup();
+			}
+			else if (List == kList_Recents && ImGui::BeginPopupContextItem("RecentsPopup"))
+			{
+				if (ImGui::Selectable("Add Bookmark"))
+					Out.AddBookmark = true;
+				ImGui::EndPopup();
+			}
+
+			ImGui::NextColumn();
+			ImGui::Selectable(Name);
+			ImGui::NextColumn();
+			ImGui::Selectable(Location);
+			ImGui::NextColumn();
+		}
+
+		void RenderWindowCellLists::RenderPopupButton()
+		{
+			const ImVec4 MainColor(0, 0, 0, 0);
+
+			ImGui::PushStyleColor(ImGuiCol_Button, MainColor);
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, MainColor);
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, MainColor);
+
+			ImGui::Button(ICON_MD_FEATURED_PLAY_LIST "##popupbtn_cell_lists", ImVec2(0, 0));
+
+			ImGui::PopStyleColor(3);
+		}
+
+		void RenderWindowCellLists::RenderWindowContents()
+		{
+			FilterHelper.Draw();
+
+			ImGui::BeginChild("hotkey_child_frame", ImVec2(0, 300));
+			{
+				TESObjectCELL* ToSelect = nullptr;
+				if (ImGui::CollapsingHeader("Bookmarks"))
+				{
+					if (_TES->GetCurrentCell() && ImGui::Button("Bookmark Current Cell"))
+						AddBookmark(_TES->GetCurrentCell());
+
+					if (Bookmarks.size())
+					{
+						ImGui::Columns(3, "BookmarkList");
+						ImGui::Separator();
+						ImGui::Text("EditorID"); ImGui::NextColumn();
+						ImGui::Text("Name"); ImGui::NextColumn();
+						ImGui::Text("Location"); ImGui::NextColumn();
+						ImGui::Separator();
+
+						TESObjectCELL* ToRemove = nullptr;
+						for (auto Itr : Bookmarks)
+						{
+							CellListDialogResult Out;
+							AddCellToList(Itr, kList_Bookmark, Out);
+							if (Out.RemoveBookmark)
+							{
+								ToRemove = Out.Selection;
+								break;
+							}
+							else if (Out.SelectCell)
+							{
+								ToSelect = Out.Selection;
+								break;
+							}
+						}
+
+						if (ToRemove)
+							RemoveBookmark(ToRemove);
+
+						if (ToSelect)
+						{
+							ImGui::End();
+							OnSelectCell(ToSelect);
+							return;
+						}
+
+						ImGui::Columns(1);
+						ImGui::Separator();
+					}
+				}
+
+				if (RecentlyVisited.size() && ImGui::CollapsingHeader("Recently Visited"))
+				{
+					ImGui::Columns(3, "RecentsList");
+					ImGui::Separator();
+					ImGui::Text("EditorID"); ImGui::NextColumn();
+					ImGui::Text("Name"); ImGui::NextColumn();
+					ImGui::Text("Location"); ImGui::NextColumn();
+					ImGui::Separator();
+
+					TESObjectCELL* ToAdd = nullptr;
+					for (auto Itr : RecentlyVisited)
+					{
+						CellListDialogResult Out;
+						AddCellToList(Itr, kList_Recents, Out);
+						if (Out.RemoveBookmark)
+						{
+							ToAdd = Out.Selection;
+							break;
+						}
+						else if (Out.SelectCell)
+						{
+							ToSelect = Out.Selection;
+							break;
+						}
+					}
+
+					if (ToAdd)
+						AddBookmark(ToAdd);
+
+					if (ToSelect)
+					{
+						ImGui::End();
+						OnSelectCell(ToSelect);
+						return;
+					}
+
+					ImGui::Columns(1);
+					ImGui::Separator();
+				}
+			}
+			ImGui::EndChild();
+		}
 
 		void RenderWindowCellLists::SaveBookmarks(const char* PluginName, const char* DirPath) const
 		{
@@ -378,11 +373,11 @@ namespace cse
 
 		RenderWindowCellLists::RenderWindowCellLists() :
 			Bookmarks(),
-			RecentlyVisited()
+			RecentlyVisited(),
+			FilterHelper()
 		{
 			EventSink = new GlobalEventSink(this);
 			CosaveInterface = new CosaveHandler(this);
-			OSDRenderer = new OSDLayer(this);
 
 			Bookmarks.reserve(50);
 			Initialized = false;
@@ -395,28 +390,26 @@ namespace cse
 
 			SAFEDELETE(EventSink);
 			SAFEDELETE(CosaveInterface);
-			SAFEDELETE(OSDRenderer);
 		}
 
-		void RenderWindowCellLists::Initialize(RenderWindowOSD* OSD)
+		void RenderWindowCellLists::Initialize()
 		{
 			SME_ASSERT(Initialized == false);
-
-			OSD->AttachLayer(OSDRenderer);
 
 			events::dialog::cellView::kSelectCell.AddSink(EventSink);
 			events::plugin::kClearData.AddSink(EventSink);
 
 			_COSAVE.Register(CosaveInterface);
+			ToolbarOSDLayer::Instance.RegisterTopToolbarButton("celllists_interface",
+															   std::bind(&RenderWindowCellLists::RenderPopupButton, this),
+															   std::bind(&RenderWindowCellLists::RenderWindowContents, this));
 			Initialized = true;
 		}
 
 
-		void RenderWindowCellLists::Deinitialize(RenderWindowOSD* OSD)
+		void RenderWindowCellLists::Deinitialize()
 		{
 			SME_ASSERT(Initialized);
-
-			OSD->DetachLayer(OSDRenderer);
 
 			events::dialog::cellView::kSelectCell.RemoveSink(EventSink);
 			events::plugin::kClearData.RemoveSink(EventSink);

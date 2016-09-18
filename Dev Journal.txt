@@ -17,8 +17,6 @@ CSE		---->
 
 
 	ENHANCEMENT		=
-		> Defer the cell view window update until mouse capture is off
-		> Add free movement for path grid points
 		> Render window layers
 		> Wildcard find/replace
 		> Add an option to restore a saved backup for some esp/esm, instead of manually recover it from Data/Backup folder and moving it back to Data folder.

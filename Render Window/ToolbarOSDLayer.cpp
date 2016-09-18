@@ -101,7 +101,7 @@ namespace cse
 			ImGui::SetNextWindowPos(ImVec2(0, YPos));
 			ImGui::SetNextWindowSize(ImVec2(XSize, YSize));
 
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 5));
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(7, 7));
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
@@ -123,9 +123,9 @@ namespace cse
 			{
 				ImGui::TextWrapped("Movement Controls: ");
 				ImGui::SameLine(0, 10);
-				PopupProvider.Draw(PopupSnapControls, GUI, CurrentToolbarWindow);
+				BottomToolbarPopupProvider.Draw(PopupSnapControls, GUI, CurrentToolbarWindow);
 				ImGui::SameLine(0, 10);
-				PopupProvider.Draw(PopupMovementControls, GUI, CurrentToolbarWindow);
+				BottomToolbarPopupProvider.Draw(PopupMovementControls, GUI, CurrentToolbarWindow);
 				ImGui::SameLine(0, 20);
 
 				ImGui::NextColumn();
@@ -148,7 +148,6 @@ namespace cse
 				{
 					HandleRefFilterChange();
 				}
-				GUI->WhitelistItemForMouseEvents();
 				ImGui::SameLine(0, 10);
 				if (strlen(RefFilter.InputBuf))
 				{
@@ -227,7 +226,7 @@ namespace cse
 
 				ImGui::NextColumn();
 				ImGui::SetColumnOffset(-1, XSize - 40);
-				PopupProvider.Draw(PopupOSDLayerToggles, GUI, CurrentToolbarWindow);
+				BottomToolbarPopupProvider.Draw(PopupVisibilityToggles, GUI, CurrentToolbarWindow);
 
 				ImGui::NextColumn();
 			}
@@ -272,7 +271,10 @@ namespace cse
 				return;
 			}
 
-			PopupProvider.Draw(PopupVisibilityToggles, GUI, GUI->GetCurrentWindow());
+			for (auto Itr : TopToolbarPopupIDs)
+			{
+				TopToolbarPopupProvider.Draw(Itr, GUI, GUI->GetCurrentWindow());
+			}
 
 			ImGui::End();
 			ImGui::PopStyleVar(3);
@@ -282,7 +284,7 @@ namespace cse
 		ToolbarOSDLayer::ToolbarOSDLayer() :
 			IRenderWindowOSDLayer(&settings::renderWindowOSD::kShowToolbar)
 		{
-			PopupSnapControls = PopupProvider.RegisterPopup("popup_snap_controls",
+			PopupSnapControls = BottomToolbarPopupProvider.RegisterPopup("popup_snap_controls",
 															[]() {
 				const ImVec4 MainColor = ImColor::HSV(4 / 7.0f, 0.6f, 0.6f);
 
@@ -355,7 +357,7 @@ namespace cse
 				*TESRenderWindow::SnapReference = SnapRef;
 			});
 
-			PopupMovementControls= PopupProvider.RegisterPopup("popup_movement_controls",
+			PopupMovementControls= BottomToolbarPopupProvider.RegisterPopup("popup_movement_controls",
 															   []() {
 				const ImVec4 MainColor = ImColor::HSV(4 / 7.0f, 0.6f, 0.6f);
 
@@ -412,15 +414,15 @@ namespace cse
 				settings::renderer::kAltRefRotationSpeed.SetFloat(AltRefRot);
 			});
 
-			PopupVisibilityToggles = PopupProvider.RegisterPopup("popup_visibility_toggles",
+			PopupVisibilityToggles = BottomToolbarPopupProvider.RegisterPopup("popup_visibility_toggles",
 																 []() {
-				const ImVec4 MainColor(0, 0, 0, 0);
+				const ImVec4 MainColor = ImColor::HSV(4 / 7.0f, 0.6f, 0.6f);
 
 				ImGui::PushStyleColor(ImGuiCol_Button, MainColor);
 				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, MainColor);
 				ImGui::PushStyleColor(ImGuiCol_ButtonActive, MainColor);
 
-				ImGui::Button(ICON_MD_REMOVE_RED_EYE "##popupbtn_visibility_toggles", ImVec2(0, 0));
+				ImGui::Button(ICON_MD_REMOVE_RED_EYE "##popupbtn_visibility_toggles", TOOLBAR_BUTTON_SIZE);
 
 				ImGui::PopStyleColor(3);
 			},
@@ -461,45 +463,6 @@ namespace cse
 				ImGui::PopID();
 			});
 
-			PopupOSDLayerToggles = PopupProvider.RegisterPopup("popup_osdlayer_toggles",
-															   []() {
-				const ImVec4 MainColor = ImColor::HSV(4 / 7.0f, 0.6f, 0.6f);
-
-				ImGui::PushStyleColor(ImGuiCol_Button, MainColor);
-				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, MainColor);
-				ImGui::PushStyleColor(ImGuiCol_ButtonActive, MainColor);
-
-				ImGui::Button(ICON_MD_PICTURE_IN_PICTURE "##popupbtn_osdlayer_toggles", TOOLBAR_BUTTON_SIZE);
-
-				ImGui::PopStyleColor(3);
-			},
-															   []() {
-				ImGui::PushID("osdlayer_toggle_menu_item");
-				{
-					static const char* kNames[3] =
-					{
-						"Cell Lists",
-						"Selection Controls",
-						"Active Ref Collections"
-					};
-
-					static INISetting* kToggles[3] = 
-					{
-						&settings::renderWindowOSD::kShowCellLists,
-						&settings::renderWindowOSD::kShowSelectionControls,
-						&settings::renderWindowOSD::kShowActiveRefCollections
-					};
-
-					for (int i = 0; i < 3; i++)
-					{
-						bool State = kToggles[i]->GetData().i;
-						if (ImGui::Checkbox(kNames[i], &State))
-							kToggles[i]->ToggleData();
-					}
-				}
-				ImGui::PopID();
-			});
-
 			FilterRefs.reserve(100);
 			PreviousFilterRef = FilterRefs.end();
 			SetRefFilterFocus = false;
@@ -512,7 +475,8 @@ namespace cse
 
 		void ToolbarOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
-			PopupProvider.Update();
+			BottomToolbarPopupProvider.Update();
+			TopToolbarPopupProvider.Update();
 
 			RenderMainToolbar(GUI);
 			RenderTopToolbar(GUI);
@@ -526,6 +490,14 @@ namespace cse
 		void ToolbarOSDLayer::FocusOnRefFilter()
 		{
 			SetRefFilterFocus = true;
+		}
+
+		void ToolbarOSDLayer::RegisterTopToolbarButton(const char* PopupID,
+													   MouseOverPopupProvider::RenderDelegateT DrawButton,
+													   MouseOverPopupProvider::RenderDelegateT DrawPopup)
+		{
+			MouseOverPopupProvider::PopupIDT ID = TopToolbarPopupProvider.RegisterPopup(PopupID, DrawButton, DrawPopup);
+			TopToolbarPopupIDs.push_back(ID);
 		}
 
 	}

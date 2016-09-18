@@ -59,12 +59,15 @@ namespace cse
 			bool			IsDraggingWindow() const;
 			bool			IsPopupHovered() const;												// must be called inside a BeginPopup block
 			bool			IsHoveringWindow() const;
+			bool			IsChildWindowHovering(void* RootWindow) const;						// pass output of GetCurrent/HoveredWindow()
+			bool			HasRootWindow(void* ChildWindow, void* RootWindow) const;			// returns true if the root window is found in the child's parent hierarchy
 
 			void*			GetLastItemID() const;
 			void*			GetMouseHoverItemID() const;
 
 			void*			GetCurrentWindow() const;
 			void*			GetHoveredWindow() const;
+			void*			GetCurrentPopup() const;		// returns the topmost/open/persistent popup
 		};
 
 		class RenderWindowOSD
@@ -86,6 +89,7 @@ namespace cse
 				bool		MouseInClientArea;				// true when the mouse is inside the window
 				bool		ConsumeMouseInputEvents;		// true when the OSD wnd proc needs exclusive access to the mouse
 				bool		ConsumeKeyboardInputEvents;		// same as above but for the keyboard
+				bool		MouseHoveringOSD;				// true if the mouse is hovering over an OSD element
 
 				GUIState();
 			};
@@ -118,7 +122,8 @@ namespace cse
 			void			HandleD3DRelease();
 			void			HandleD3DRenew();
 
-			bool			NeedsInput() const;			// returns true if the OSD requires mouse or keyboard input
+			bool			NeedsInput(UINT uMsg) const;			// returns true if the OSD requires mouse or keyboard input
+			bool			NeedsInput() const;
 		};
 
 		// queues ImGui drawcalls

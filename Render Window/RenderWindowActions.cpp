@@ -419,23 +419,28 @@ namespace cse
 
 					ImGui::Separator();
 					bool Close = false;
-					if (ImGui::Button("OK", ImVec2(120, 0)) || EnterKey)
-					{
-						if (InvalidName == false)
-						{
-							if (_RENDERWIN_MGR.GetGroupManager()->AddGroup(NewGroupNameBuffer, _RENDERSEL) == false)
-								NotificationOSDLayer::Instance.ShowNotification("Couldn't add current selection to a new group.");
-							else
-								NotificationOSDLayer::Instance.ShowNotification("Created new selection group '%s'", NewGroupNameBuffer);
-
-							achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefGrouping);
-							Close = true;
-						}
-					}
-
-					ImGui::SameLine();
-					if (ImGui::Button("Cancel", ImVec2(120, 0)))
+					if (ImGui::IsKeyReleased(VK_ESCAPE))
 						Close = true;
+					else
+					{
+						if (ImGui::Button("OK", ImVec2(120, 0)) || EnterKey)
+						{
+							if (InvalidName == false)
+							{
+								if (_RENDERWIN_MGR.GetGroupManager()->AddGroup(NewGroupNameBuffer, _RENDERSEL) == false)
+									NotificationOSDLayer::Instance.ShowNotification("Couldn't add current selection to a new group.");
+								else
+									NotificationOSDLayer::Instance.ShowNotification("Created new selection group '%s'", NewGroupNameBuffer);
+
+								achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefGrouping);
+								Close = true;
+							}
+						}
+
+						ImGui::SameLine();
+						if (ImGui::Button("Cancel", ImVec2(120, 0)))
+							Close = true;
+					}
 
 					if (Close)
 					{
@@ -830,14 +835,9 @@ namespace cse
 
 			BasicRWA JumpToExteriorCell("Jump To Exterior", "Warp to the exterior cell at the given coordinates.",
 											  ExecutionContext::kMode_All, []() {
-				bool OnLoad = true;
-				ModalWindowProviderOSDLayer::ModalRenderDelegateT RenderModalJumpToCell([OnLoad](RenderWindowOSD*, ImGuiDX9*, void*) mutable->bool {
+				ModalWindowProviderOSDLayer::ModalRenderDelegateT RenderModalJumpToCell([](RenderWindowOSD*, ImGuiDX9*, void*)->bool {
 					static char CellCoordBuffer[0x100] = { 0 };
-					if (OnLoad)
-					{
-						OnLoad = false;
-						ImGui::SetKeyboardFocusHere(1);
-					}
+
 					bool EnterKey = false;
 					if (ImGui::InputText("Coordinates", CellCoordBuffer, sizeof(CellCoordBuffer),
 										 ImGuiInputTextFlags_EnterReturnsTrue))
@@ -857,19 +857,24 @@ namespace cse
 
 					ImGui::Separator();
 					bool Close = false;
-					if (ImGui::Button("OK", ImVec2(120, 0)) || EnterKey)
-					{
-						if (InvalidInput == false)
-						{
-							Vector3 Coords((X << 12) + 2048.0, (Y << 12) + 2048.0, 0);
-							_TES->LoadCellIntoViewPort(&Coords, nullptr);
-							Close = true;
-						}
-					}
-
-					ImGui::SameLine();
-					if (ImGui::Button("Cancel", ImVec2(120, 0)))
+					if (ImGui::IsKeyReleased(VK_ESCAPE))
 						Close = true;
+					else
+					{
+						if (ImGui::Button("OK", ImVec2(120, 0)) || EnterKey)
+						{
+							if (InvalidInput == false)
+							{
+								Vector3 Coords((X << 12) + 2048.0, (Y << 12) + 2048.0, 0);
+								_TES->LoadCellIntoViewPort(&Coords, nullptr);
+								Close = true;
+							}
+						}
+
+						ImGui::SameLine();
+						if (ImGui::Button("Cancel", ImVec2(120, 0)))
+							Close = true;
+					}
 
 					if (Close)
 					{

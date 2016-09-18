@@ -327,6 +327,7 @@ namespace cse
 				POINT				CenterCursor(HWND hWnd, bool UpdateBaseCoords);			// returns the center coords (in screen area)
 				bool				IsCenteringCursor(HWND hWnd, LPARAM lParam) const;
 				void				GetWindowMetrics(HWND hWnd, int& X, int& Y, int& Width, int& Height) const;
+				void				ToggleCellViewUpdate(bool State) const;
 			public:
 				RenderWindowMouseManager();
 

@@ -520,6 +520,7 @@ namespace cse
 			UseGrassTextureOverlay = false;
 			GrassOverlayTexture = nullptr;
 			StaticCameraPivot.Scale(0);
+			DraggingPathGridPoints = false;
 		}
 
 		RenderWindowExtendedState::~RenderWindowExtendedState()
@@ -957,7 +958,7 @@ namespace cse
 				// do nothing if the fly camera is active
 				return DlgProcResult;
 			}
-			else if (Instance.OSD->NeedsInput() && uMsg != WM_DESTROY)
+			else if (Instance.OSD->NeedsInput(uMsg) && uMsg != WM_DESTROY)
 			{
 				// defer to the OSD window proc
 				return DlgProcResult;
@@ -1132,7 +1133,7 @@ namespace cse
 #ifndef NDEBUG
 			SceneGraphManager->AddModifier(&DebugSceneGraphModifier::Instance);
 #endif
-			CellLists->Initialize(OSD);
+			CellLists->Initialize();
 			GroupManager->Initialize();
 			KeyboardInputManager->Initialize();
 
@@ -1159,7 +1160,7 @@ namespace cse
 
 			KeyboardInputManager->Deinitialize();
 			GroupManager->Deinitialize();
-			CellLists->Deinitialize(OSD);
+			CellLists->Deinitialize();
 			OSD->Deinitialize();
 			SceneGraphManager->RemoveModifier(&ReferenceParentChildIndicator::Instance);
 			SceneGraphManager->RemoveModifier(&ReferenceVisibilityModifier::Instance);
@@ -1204,6 +1205,12 @@ namespace cse
 		{
 			SME_ASSERT(Initialized);
 			return MouseInputManager;
+		}
+
+		RenderWindowOSD* RenderWindowManager::GetOSD() const
+		{
+			SME_ASSERT(Initialized);
+			return OSD;
 		}
 
 		void RenderWindowManager::RefreshFOV()

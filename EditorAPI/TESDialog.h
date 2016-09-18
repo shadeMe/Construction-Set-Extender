@@ -864,6 +864,7 @@ public:
 	static void						RefreshObjectList(void);
 	static void						RefreshCellList(bool RefreshWorldspaces = false);
 	static void						UpdateCurrentWorldspace();
+	static void						SetCurrentCell(Vector3* Position, bool ReloadObjectList);
 
 	static HWND*					WindowHandle;
 	static HWND*					ObjectListHandle;

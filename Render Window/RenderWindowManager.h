@@ -173,6 +173,7 @@ namespace cse
 			bool						UseGrassTextureOverlay;
 			NiSourceTexture*			GrassOverlayTexture;
 			Vector3						StaticCameraPivot;
+			bool						DraggingPathGridPoints;
 
 			RenderWindowExtendedState();
 			~RenderWindowExtendedState();
@@ -236,6 +237,7 @@ namespace cse
 			RenderWindowExtendedState&					GetState() const;
 			input::RenderWindowKeyboardManager*			GetKeyboardInputManager() const;
 			input::RenderWindowMouseManager*			GetMouseInputManager() const;
+			RenderWindowOSD*							GetOSD() const;
 			const TESObjectREFRArrayT&					GetActiveRefs() const;
 
 			void										RefreshFOV();

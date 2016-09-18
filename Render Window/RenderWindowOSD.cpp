@@ -171,6 +171,8 @@ namespace cse
 
 			if (GetFileAttributes(MainFontPath.c_str()) != INVALID_FILE_ATTRIBUTES)
 				io.Fonts->AddFontFromFileTTF(MainFontPath.c_str(), settings::renderWindowOSD::kFontSize().i, &config);
+			else
+				io.Fonts->AddFontDefault(&config);
 
 			// merge icons from MD
 			static const ImWchar icons_ranges[] = { ICON_MIN_MD, ICON_MAX_MD, 0 };
@@ -280,12 +282,12 @@ namespace cse
 				return true;
 		}
 
-		bool ImGuiDX9::CanAllowInputEventPassthrough(UINT msg, WPARAM wParam, LPARAM lParam, bool& OutNeedsMouse, bool& OutNeedsKeyboard) const
+		bool ImGuiDX9::CanAllowInputEventPassthrough(UINT uMsg, WPARAM wParam, LPARAM lParam, bool& OutNeedsMouse, bool& OutNeedsKeyboard) const
 		{
 			// check if the GUI needs input, skip the org wndproc if true
 			// the check is performed on the previous frame's state but it works for our purposes
 			bool MouseEvent = false, KeyboardEvent = false, CharacterEvent = false;
-			switch (msg)
+			switch (uMsg)
 			{
 			case WM_LBUTTONDOWN:
 			case WM_LBUTTONUP:
@@ -379,7 +381,7 @@ namespace cse
 			style.GrabRounding = 3.0f;
 
 			style.Colors[ImGuiCol_WindowBg] = ImVec4(0.00f, 0.00f, 0.00f, settings::renderWindowOSD::kWindowBGAlpha().f);
-			style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.00f, 0.00f, 0.00f, settings::renderWindowOSD::kWindowBGAlpha().f);
+			style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.f);
 			style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.90f, 0.80f, 0.80f, 0.49f);
 			style.Colors[ImGuiCol_TitleBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.31f);
 			style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 0.20f);
@@ -542,6 +544,36 @@ namespace cse
 			return ImGui::GetCurrentWindowRead() && ImGui::IsRootWindowOrAnyChildHovered();
 		}
 
+		bool ImGuiDX9::IsChildWindowHovering(void* RootWindow) const
+		{
+			ImGuiContext* RenderContext = ImGui::GetCurrentContext();
+			ImGuiWindow* HoverWindow = RenderContext->HoveredWindow;
+
+			while (HoverWindow && HoverWindow->RootWindow != HoverWindow)
+			{
+				if (HoverWindow->RootWindow == RootWindow)
+					return true;
+				else
+					HoverWindow = HoverWindow->RootWindow;
+			}
+
+			return false;
+		}
+
+		bool ImGuiDX9::HasRootWindow(void* ChildWindow, void* RootWindow) const
+		{
+			ImGuiWindow* Child = (ImGuiWindow*)ChildWindow;
+			while (Child && Child->ParentWindow)
+			{
+				if (Child->ParentWindow == RootWindow)
+					return true;
+				else
+					Child = Child->ParentWindow;
+			}
+
+			return false;
+		}
+
 		void* ImGuiDX9::GetLastItemID() const
 		{
 			return (void*)ImGui::GetCurrentWindow()->DC.LastItemId;
@@ -562,6 +594,15 @@ namespace cse
 			return ImGui::GetCurrentContext()->HoveredWindow;
 		}
 
+		void* ImGuiDX9::GetCurrentPopup() const
+		{
+			ImGuiContext& g = *GImGui;
+			if (g.OpenPopupStack.empty())
+				return nullptr;
+
+			return g.OpenPopupStack.back().Window;
+		}
+
 		RenderWindowOSD::DialogExtraData::DialogExtraData(RenderWindowOSD* OSD) :
 			bgsee::WindowExtraData(kTypeID),
 			Parent(OSD)
@@ -579,6 +620,7 @@ namespace cse
 			RedrawSingleFrame = false;
 			MouseInClientArea = false;
 			ConsumeMouseInputEvents = ConsumeKeyboardInputEvents = false;
+			MouseHoveringOSD = false;
 		}
 
 		// lParam = DialogExtraData*
@@ -617,6 +659,7 @@ namespace cse
 			if (Pipeline->UpdateInputState(hWnd, uMsg, wParam, lParam))
 			{
 				Parent->State.ConsumeMouseInputEvents = Parent->State.ConsumeKeyboardInputEvents = false;
+				Parent->State.MouseHoveringOSD = Pipeline->IsHoveringWindow();
 				if (GetCapture() != hWnd && GetActiveWindow() == hWnd)
 				{
 					TESRenderWindow::Redraw();
@@ -645,12 +688,10 @@ namespace cse
 
 				break;
 			case WM_LBUTTONDBLCLK:
+				if (Parent->NeedsInput(uMsg))
 				{
-					if (Parent->NeedsInput())
-					{
-						// preempt the vanilla handler
-						Return = true;
-					}
+					// preempt the vanilla handler
+					Return = true;
 				}
 
 				break;
@@ -674,7 +715,7 @@ namespace cse
 				// main render loop
 				if (wParam == TESRenderWindow::kTimer_ViewportUpdate && *TESRenderWindow::ActiveCell)
 				{
-					// refresh the viewport if the mouse is in the client area or there are pending notifications
+					// refresh the viewport if the mouse is in the client area or if any of the layers need a background update
 					if (Parent->State.MouseInClientArea || Parent->NeedsBackgroundUpdate())
 					{
 						TESRenderWindow::Redraw();
@@ -827,14 +868,39 @@ namespace cse
 			;// nothing to do here as the device objects get renewed on demand
 		}
 
-		bool RenderWindowOSD::NeedsInput() const
+		bool RenderWindowOSD::NeedsInput(UINT uMsg) const
 		{
 			if (Initialized == false)
 				return false;
-			else
-				return State.ConsumeMouseInputEvents || State.ConsumeKeyboardInputEvents || Pipeline->IsHoveringWindow();
+			else if (State.MouseHoveringOSD)
+				return true;
+			else switch (uMsg)
+			{
+			case WM_LBUTTONDOWN:
+			case WM_LBUTTONUP:
+			case WM_RBUTTONDOWN:
+			case WM_RBUTTONUP:
+			case WM_MBUTTONDOWN:
+			case WM_MBUTTONUP:
+			case WM_MOUSEWHEEL:
+			case WM_MOUSEMOVE:
+			case WM_LBUTTONDBLCLK:
+			case WM_RBUTTONDBLCLK:
+				return State.ConsumeMouseInputEvents;
+			case WM_CHAR:
+			case WM_KEYDOWN:
+			case WM_KEYUP:
+				return State.ConsumeKeyboardInputEvents;
+			default:
+				return false;
+			}
 		}
 
+
+		bool RenderWindowOSD::NeedsInput() const
+		{
+			return Initialized == false || State.MouseHoveringOSD || State.ConsumeKeyboardInputEvents || State.ConsumeMouseInputEvents;
+		}
 
 		std::string IRenderWindowOSDLayer::Helpers::GetRefEditorID(TESObjectREFR* Ref)
 		{
@@ -1021,6 +1087,8 @@ namespace cse
 					ActiveStateDragging = true;
 			}
 
+			// ### if the timeout is increased, the user can hover over another popup button
+			// ### correctly handle that event here
 			PopupData.CheckButtonHoverChange(GUI, ParentWindow, Hovering, BeginHover, EndHover);
 
 			if (BeginHover && ActiveStateDragging == false)
@@ -1038,8 +1106,9 @@ namespace cse
 				if (BeginHover)
 					ImGui::OpenPopup(PopupStrID);
 
-				if (ImGui::BeginPopup(PopupStrID))
+				if (ImGui::BeginPopupWithStyling(PopupStrID, ImGuiWindowFlags_ShowBorders, ImGui::GetStyle().WindowRounding))
 				{
+					void* PopupID = GUI->GetCurrentWindow();
 					CurrentState.Update(GUI);
 
 					if (CloseActivePopup)
@@ -1054,9 +1123,10 @@ namespace cse
 						// render the contents of the current popup
 						PopupData.DrawPopup();
 
-						if (Hovering == false && GUI->IsPopupHovered())
+						if (Hovering == false &&
+							(GUI->IsPopupHovered() || GUI->HasRootWindow(GUI->GetHoveredWindow(), PopupID)))
 						{
-							// reset the timeout/prevent ticking every frame when the mouse is hovering over the popup
+							// reset the timeout/prevent ticking every frame when the mouse is hovering over the popup or its children
 							PreventActivePopupTicking = true;
 							ActivePopupTimeout = kTimeout;
 						}

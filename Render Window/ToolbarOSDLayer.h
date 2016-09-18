@@ -7,11 +7,15 @@ namespace cse
 	{
 		class ToolbarOSDLayer : public IRenderWindowOSDLayer
 		{
-			MouseOverPopupProvider					PopupProvider;
+			typedef std::vector<MouseOverPopupProvider::PopupIDT>		PopupIDArrayT;
+
+			MouseOverPopupProvider					BottomToolbarPopupProvider;
 			MouseOverPopupProvider::PopupIDT		PopupSnapControls;
 			MouseOverPopupProvider::PopupIDT		PopupMovementControls;
 			MouseOverPopupProvider::PopupIDT		PopupVisibilityToggles;
-			MouseOverPopupProvider::PopupIDT		PopupOSDLayerToggles;
+
+			MouseOverPopupProvider					TopToolbarPopupProvider;
+			PopupIDArrayT							TopToolbarPopupIDs;
 
 			ImGuiTextFilter							RefFilter;
 			FormIDArrayT							FilterRefs;
@@ -31,6 +35,9 @@ namespace cse
 			virtual bool			NeedsBackgroundUpdate();
 
 			void					FocusOnRefFilter();		// moves the keyboard focus to the reference filter in the next frame
+			void					RegisterTopToolbarButton(const char* PopupID,
+															 MouseOverPopupProvider::RenderDelegateT DrawButton,
+															 MouseOverPopupProvider::RenderDelegateT DrawPopup);
 
 			static ToolbarOSDLayer			Instance;
 		};

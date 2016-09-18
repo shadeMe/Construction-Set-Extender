@@ -384,6 +384,9 @@
     <ClCompile Include="Render Window\RenderWindowCommon.cpp">
       <Filter>Components\Render Window</Filter>
     </ClCompile>
+    <ClCompile Include="IMGUI\imgui_user.cpp">
+      <Filter>Components\IMGUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -907,6 +910,9 @@
     </ClInclude>
     <ClInclude Include="Render Window\RenderWindowCommon.h">
       <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="IMGUI\imgui_user.h">
+      <Filter>Components\IMGUI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -186,6 +186,12 @@ std::string TESRenderWindow::GetCellGeomDescription(TESObjectCELL* Cell)
 	return Buffer;
 }
 
+Vector3* TESRenderWindow::CalculatePathGridPointPositionVectorSum(Vector3& OutPosVecSum)
+{
+	cdeclCall<void>(0x00426920, &OutPosVecSum, SelectedPathGridPoints);
+	return &OutPosVecSum;
+}
+
 void TESRenderWindow::UndoStack::RecordReference(UInt32 Operation, TESRenderSelection::SelectedObjectsEntry* Selection)
 {
 	thisCall<UInt32>(0x00432D40, this, Operation, Selection);

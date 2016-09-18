@@ -1,6 +1,7 @@
 #include "RenderWindowInput.h"
 #include "RenderWindowManager.h"
 #include "ObjectPaletteManager.h"
+#include "Hooks\Hooks-Renderer.h"
 
 namespace cse
 {
@@ -1272,6 +1273,14 @@ namespace cse
 				Y = WindowRect.top;
 			}
 
+			void RenderWindowMouseManager::ToggleCellViewUpdate(bool State) const
+			{
+				if (State == false)
+					hooks::_MemHdlr(CellViewSetCurrentCell).WriteUInt8(0xC3);		// write an immediate retn
+				else
+					hooks::_MemHdlr(CellViewSetCurrentCell).WriteBuffer();			// write original instruction
+			}
+
 			RenderWindowMouseManager::RenderWindowMouseManager() :
 				CurrentMouseCoord{0},
 				PaintingSelection(false),
@@ -1311,34 +1320,37 @@ namespace cse
 						{
 							HCURSOR Icon = *TESRenderWindow::CursorArrow;
 
-							if (*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0)
+							if (Manager->GetOSD()->NeedsInput() == false)
 							{
-								TESObjectREFR* MouseRef = _RENDERWIN_XSTATE.CurrentMouseRef;
-								if (MouseRef)
+								if (*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0)
 								{
-									UInt32 SelectionReason = 0;
-									if (Manager->GetSelectionManager()->IsSelectable(MouseRef, SelectionReason, PaintingSelection))
+									TESObjectREFR* MouseRef = _RENDERWIN_XSTATE.CurrentMouseRef;
+									if (MouseRef)
 									{
-										if (_RENDERSEL->HasObject(MouseRef))
-											Icon = *TESRenderWindow::CursorMove;
-										else
-											Icon = *TESRenderWindow::CursorSelect;
-									}
-									else if ((SelectionReason & RenderWindowSelectionManager::kReason_FrozenInactive) ||
-										(SelectionReason & RenderWindowSelectionManager::kReason_FrozenSelf))
-									{
-										Icon = LoadCursor(nullptr, IDC_NO);
+										UInt32 SelectionReason = 0;
+										if (Manager->GetSelectionManager()->IsSelectable(MouseRef, SelectionReason, PaintingSelection))
+										{
+											if (_RENDERSEL->HasObject(MouseRef))
+												Icon = *TESRenderWindow::CursorMove;
+											else
+												Icon = *TESRenderWindow::CursorSelect;
+										}
+										else if ((SelectionReason & RenderWindowSelectionManager::kReason_FrozenInactive) ||
+											(SelectionReason & RenderWindowSelectionManager::kReason_FrozenSelf))
+										{
+											Icon = LoadCursor(nullptr, IDC_NO);
+										}
 									}
 								}
-							}
 
-							if (Icon != *TESRenderWindow::CursorArrow)
-							{
-								HCURSOR CurrentCursor = GetCursor();
-								if (Icon && CurrentCursor != Icon)
-									SetCursor(Icon);
+								if (Icon != *TESRenderWindow::CursorArrow)
+								{
+									HCURSOR CurrentCursor = GetCursor();
+									if (Icon && CurrentCursor != Icon)
+										SetCursor(Icon);
 
-								Handled = true;
+									Handled = true;
+								}
 							}
 						}
 					}
@@ -1429,8 +1441,13 @@ namespace cse
 						Vector3 PrePivot, PostPivot;
 						if (MoveCameraWithSel)
 						{
-							_RENDERSEL->CalculatePositionVectorSum();
-							PrePivot = _RENDERSEL->selectionPositionVectorSum;
+							if (_RENDERWIN_XSTATE.DraggingPathGridPoints)
+								TESRenderWindow::CalculatePathGridPointPositionVectorSum(PrePivot);
+							else
+							{
+								_RENDERSEL->CalculatePositionVectorSum();
+								PrePivot = _RENDERSEL->selectionPositionVectorSum;
+							}
 						}
 
 						// tunnel the message
@@ -1438,8 +1455,13 @@ namespace cse
 
 						if (MoveCameraWithSel)
 						{
-							_RENDERSEL->CalculatePositionVectorSum();
-							PostPivot = _RENDERSEL->selectionPositionVectorSum;
+							if (_RENDERWIN_XSTATE.DraggingPathGridPoints)
+								TESRenderWindow::CalculatePathGridPointPositionVectorSum(PostPivot);
+							else
+							{
+								_RENDERSEL->CalculatePositionVectorSum();
+								PostPivot = _RENDERSEL->selectionPositionVectorSum;
+							}
 
 							Vector3 Diff = PostPivot - PrePivot;
 							Vector3* CameraRootLocalTranslate = (Vector3*)&_PRIMARYRENDERER->primaryCameraParentNode->m_localTranslate;
@@ -1481,7 +1503,11 @@ namespace cse
 					// tunnel the message to the original proc and check if we need to allow free mouse movement
 					BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, wParam, lParam);
 
-					if (*TESRenderWindow::DraggingSelection || *TESRenderWindow::RotatingSelection)
+					_RENDERWIN_XSTATE.DraggingPathGridPoints = *TESRenderWindow::PathGridEditFlag &&
+																_RENDERWIN_XSTATE.CurrentMousePathGridPoint &&
+																GetCapture() == hWnd &&
+																uMsg == WM_LBUTTONDOWN;
+					if (*TESRenderWindow::DraggingSelection || *TESRenderWindow::RotatingSelection || _RENDERWIN_XSTATE.DraggingPathGridPoints)
 					{
 						// landscape edit mode isn't supported as the land coords are calculated from the mouse coords, not their offset
 						SME_ASSERT(*TESRenderWindow::LandscapeEditFlag == 0);
@@ -1496,6 +1522,10 @@ namespace cse
 								;//
 						}
 					}
+
+					// defer updating the cell view in exterior worldspaces until we release captue
+					if (*TESRenderWindow::ActiveCell && (*TESRenderWindow::ActiveCell)->IsInterior() == false)
+						ToggleCellViewUpdate(false);
 
 					break;
 				case WM_LBUTTONUP:
@@ -1524,6 +1554,7 @@ namespace cse
 						}
 					}
 
+					_RENDERWIN_XSTATE.DraggingPathGridPoints = false;
 					// end free movement handling
 					BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, wParam, lParam);
 					if (FreeMouseMovement)
@@ -1534,6 +1565,17 @@ namespace cse
 						while (ShowCursor(TRUE) < 0)
 							;//
 					}
+
+					// update the cell view to the current renderwindow cell
+					if (*TESRenderWindow::ActiveCell && (*TESRenderWindow::ActiveCell)->IsInterior() == false)
+					{
+						ToggleCellViewUpdate(true);
+						Vector3 PosCoord;
+						PosCoord.x = ((*TESRenderWindow::ActiveCell)->cellData.coords->x << 12) + 2048;
+						PosCoord.y = ((*TESRenderWindow::ActiveCell)->cellData.coords->y << 12) + 2048;
+						TESCellViewWindow::SetCurrentCell(&PosCoord, true);
+					}
+
 
 					break;
 				}
