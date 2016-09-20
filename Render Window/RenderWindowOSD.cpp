@@ -446,7 +446,9 @@ namespace cse
 			io.KeyAlt = false;
 			io.KeySuper = false;
 			io.MouseDown[0] = io.MouseDown[1] = false;
-			io.KeysDown[VK_MENU] = false;
+
+			for (auto& Key : io.KeysDown)
+				Key = false;
 
 			if (ConsumeNextRButtonDown)
 				ConsumeNextMouseRButtonDown = true;
@@ -726,8 +728,16 @@ namespace cse
 
 				break;
 			case WM_UNINITMENUPOPUP:
-				// reset basic input state
 				Pipeline->ResetInputState(true);
+
+				break;
+			case WM_KILLFOCUS:
+				Pipeline->ResetInputState(false);
+
+				break;
+			case WM_NCACTIVATE:
+				if (wParam == FALSE)
+					Pipeline->ResetInputState(false);
 
 				break;
 			case WM_ACTIVATE:
@@ -1037,14 +1047,21 @@ namespace cse
 		}
 
 
-		MouseOverPopupProvider::PopupData::PopupData(const char* Name, RenderDelegateT DrawButton, RenderDelegateT DrawPopup) :
+		MouseOverPopupProvider::PopupData::PopupData(const char* Name,
+													 RenderDelegateT DrawButton, RenderDelegateT DrawPopup,
+													 UInt8 PositionType, ImVec2& Pos) :
 			PopupName(Name),
 			ButtonHoverState(false),
 			PopupState(),
 			DrawButton(DrawButton),
-			DrawPopup(DrawPopup)
+			DrawPopup(DrawPopup),
+			Position(Pos),
+			PositionType(PositionType)
 		{
 			SME_ASSERT(Name && DrawButton && DrawPopup);
+
+			if (PositionType == kPosition_Absolute)
+				SME_ASSERT(Pos.x > -1 && Pos.y > -1);
 		}
 
 
@@ -1080,9 +1097,11 @@ namespace cse
 			;//
 		}
 
-		MouseOverPopupProvider::PopupIDT MouseOverPopupProvider::RegisterPopup(const char* Name, RenderDelegateT DrawButton, RenderDelegateT DrawPopup)
+		MouseOverPopupProvider::PopupIDT MouseOverPopupProvider::RegisterPopup(const char* Name,
+																			   RenderDelegateT DrawButton, RenderDelegateT DrawPopup,
+																			   UInt8 PositionType, ImVec2& Pos)
 		{
-			RegisteredPopups.push_back(PopupData(Name, DrawButton, DrawPopup));
+			RegisteredPopups.push_back(PopupData(Name, DrawButton, DrawPopup, PositionType, Pos));
 			return RegisteredPopups.size() - 1;
 		}
 
@@ -1112,12 +1131,17 @@ namespace cse
 					ActiveStateDragging = true;
 			}
 
-			// ### if the timeout is increased, the user can hover over another popup button
-			// ### correctly handle that event here
 			PopupData.CheckButtonHoverChange(GUI, ParentWindow, Hovering, BeginHover, EndHover);
-
 			if (BeginHover && ActiveStateDragging == false)
 			{
+				if (ActivePopup != kInvalidID && ActivePopup != ID)
+				{
+					// another popup is active, close it first
+					CloseActivePopup = true;
+					PopupData.ButtonHoverState = false;
+					return;
+				}
+
 				ActivePopup = ID;
 				ActivePopupTimeout = 0.f;
 			}
@@ -1131,8 +1155,29 @@ namespace cse
 				if (BeginHover)
 					ImGui::OpenPopup(PopupStrID);
 
+				// ### HACK HACK
+				// manually update the mouse position to modify the popup's start pos
+				// reset it after the window's created
+				ImGuiIO& io = ImGui::GetIO();
+				ImVec2 MousPosBuffer(io.MousePos);
+
+				switch (PopupData.PositionType)
+				{
+				case kPosition_Absolute:
+					io.MousePos = PopupData.Position;
+					break;
+				case kPosition_Relative:
+					io.MousePos.x += PopupData.Position.x;
+					io.MousePos.y += PopupData.Position.y;
+					break;
+				}
+
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10);
 				if (ImGui::BeginPopupWithStyling(PopupStrID, ImGuiWindowFlags_AlwaysAutoResize, ImGui::GetStyle().WindowRounding))
 				{
+					if (PopupData.PositionType != kPosition_Default)
+						io.MousePos = MousPosBuffer;
+
 					void* PopupID = GUI->GetCurrentWindow();
 					CurrentState.Update(GUI);
 
@@ -1159,6 +1204,7 @@ namespace cse
 
 					ImGui::EndPopup();
 				}
+				ImGui::PopStyleVar();
 			}
 		}
 
@@ -1237,25 +1283,28 @@ namespace cse
 				return;
 
 			ImGui::SetNextWindowPos(ImVec2(10, *TESRenderWindow::ScreeHeight - 150));
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1, 3));
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(3, 3));
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3, 3));
-			if (!ImGui::Begin("Notification Overlay", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize |
-							  ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoInputs))
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+			if (!ImGui::Begin("Notification Overlay", nullptr,
+							  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize |
+							  ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings |
+							  ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoInputs))
 			{
 				ImGui::End();
-				ImGui::PopStyleVar(3);
+				ImGui::PopStyleVar(4);
 				return;
 			}
 
 			const Notification& Current = GetNextNotification();
 			float RemainingTime = Current.GetRemainingTicks() / (float)Current.Duration;
 
-			ImGui::Text("%s", Current.Message.c_str());
-			ImGui::InvisibleButton("nichts", ImVec2(10, 2));
-			ImGui::ProgressBar(RemainingTime, ImVec2(-1, 2));
+			ImGui::Text("  %s  ", Current.Message.c_str());
+			ImGui::Dummy(ImVec2(10, 15));
+			ImGui::ProgressBar(RemainingTime, ImVec2(-1, 1));
 			ImGui::End();
-			ImGui::PopStyleVar(3);
+			ImGui::PopStyleVar(4);
 		}
 
 		bool NotificationOSDLayer::NeedsBackgroundUpdate()

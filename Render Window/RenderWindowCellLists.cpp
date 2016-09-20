@@ -165,6 +165,8 @@ namespace cse
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, MainColor);
 
 			ImGui::Button(ICON_MD_FEATURED_PLAY_LIST "##popupbtn_cell_lists", ImVec2(0, 0));
+			if (ImGui::IsItemHoveredRect())
+				ImGui::SetTooltip("Recent Cells / Bookmarks");
 
 			ImGui::PopStyleColor(3);
 		}
@@ -173,7 +175,7 @@ namespace cse
 		{
 			FilterHelper.Draw();
 
-			ImGui::BeginChild("contents_child_frame", ImVec2(0, 300));
+			ImGui::BeginChild("contents_child_frame", ImVec2(0, 250));
 			{
 				TESObjectCELL* ToSelect = nullptr;
 				if (ImGui::CollapsingHeader("Bookmarks"))

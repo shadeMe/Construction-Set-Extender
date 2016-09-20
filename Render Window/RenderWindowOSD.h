@@ -184,8 +184,15 @@ namespace cse
 		public:
 			typedef int							PopupIDT;
 			typedef std::function<void()>		RenderDelegateT;
+
+			enum
+			{
+				kPosition_Default = 0,		// at mouse coords
+				kPosition_Absolute,			// in screen coords
+				kPosition_Relative,			// relative to the mouse position
+			};
 		private:
-			static constexpr float				kTimeout = 0.1;		// in seconds
+			static constexpr float				kTimeout = 0.25;		// in seconds
 			static const PopupIDT				kInvalidID = -1;
 
 			struct PopupData
@@ -195,8 +202,12 @@ namespace cse
 				OSDLayerStateData	PopupState;
 				RenderDelegateT		DrawPopup;			// draws the popup contents
 				RenderDelegateT		DrawButton;			// draws (just) the button
+				ImVec2				Position;			// position of the popup on appearance
+				UInt8				PositionType;
 
-				PopupData(const char* Name, RenderDelegateT DrawButton, RenderDelegateT DrawPopup);
+				PopupData(const char* Name,
+						  RenderDelegateT DrawButton, RenderDelegateT DrawPopup,
+						  UInt8 PositionType, ImVec2& Pos);
 
 				void				CheckButtonHoverChange(ImGuiDX9* GUI, void* ParentWindow,
 														   bool& OutHovering, bool& OutBeginHover, bool& OutEndHover);
@@ -212,7 +223,9 @@ namespace cse
 		public:
 			MouseOverPopupProvider();
 
-			PopupIDT				RegisterPopup(const char* Name, RenderDelegateT DrawButton, RenderDelegateT DrawPopup);
+			PopupIDT				RegisterPopup(const char* Name,
+												  RenderDelegateT DrawButton, RenderDelegateT DrawPopup,
+												  UInt8 PositionType = kPosition_Default, ImVec2& Pos = ImVec2(0, 0));
 			void					Draw(PopupIDT ID, ImGuiDX9* GUI, void* ParentWindow);
 			void					Update();		// called at the start of the layer's Draw method
 		};

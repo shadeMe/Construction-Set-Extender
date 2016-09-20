@@ -19,7 +19,7 @@ namespace cse
 
 			ImGuiTextFilter							RefFilter;
 			FormIDArrayT							FilterRefs;
-			FormIDArrayT::const_iterator			PreviousFilterRef;
+			int										CurrentFilterRefIndex;
 			bool									SetRefFilterFocus;
 
 			int						RefFilterCompletionCallback(ImGuiTextEditCallbackData* Data);

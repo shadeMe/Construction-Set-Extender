@@ -1062,7 +1062,7 @@ namespace cse
 			EventSink = new GlobalEventSink(this);
 			KeyboardInputManager = new input::RenderWindowKeyboardManager();
 			MouseInputManager = new input::RenderWindowMouseManager();
-			ActiveRefCache.reserve(200);
+			ActiveRefCache.reserve(500);
 
 			Initialized = false;
 		}
@@ -1249,6 +1249,7 @@ namespace cse
 
 			char FilterBuffer[0x200] = { 0 };
 			char Label[0x100] = { 0 };
+			bool HasContents = false;
 
 			for (auto Itr : ActiveRefs)
 			{
@@ -1275,13 +1276,14 @@ namespace cse
 
 						if (TruthCond)
 						{
+							HasContents = true;
 							FORMAT_STR(Label, "%08X-%d", FormID, Type);
 							ImGui::PushID(Label);
 							{
 								if (ImGui::Selectable(EditorID.c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick) &&
 									ImGui::IsMouseDoubleClicked(0))
 								{
-									// TODO select ref?
+									_TES->LoadCellIntoViewPort(nullptr, Itr);
 								}
 
 								if (ImGui::BeginPopupContextItem(InvisibleRefs ? "Invisible_Popup" : "Frozen_Popup"))
@@ -1364,6 +1366,7 @@ namespace cse
 						bool Dissolved = false;
 						for (auto Itr : ActiveGroups)
 						{
+							HasContents = true;
 							if (GroupManager->GetGroupData(Itr.c_str(), GroupMembers))
 							{
 								SME_ASSERT(GroupMembers.size());
@@ -1462,6 +1465,30 @@ namespace cse
 
 				break;
 			}
+
+			if (HasContents == false)
+			{
+				// add a dummy item
+				int Cols = 0;
+				switch (Type)
+				{
+				case kActiveRefCollection_Groups:
+					Cols = 2;
+					break;
+				case kActiveRefCollection_Invisible:
+					Cols = 4;
+					break;
+				case kActiveRefCollection_Frozen:
+					Cols = 3;
+					break;
+				}
+
+				for (int i = 0; i < Cols; i++)
+				{
+					ImGui::TextDisabled("-");
+					ImGui::NextColumn();
+				}
+			}
 		}
 
 		void RenderWindowManager::RenderActiveRefCollectionButton(UInt8 Type)
@@ -1471,19 +1498,25 @@ namespace cse
 			ImGui::PushStyleColor(ImGuiCol_Button, MainColor);
 			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, MainColor);
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, MainColor);
-
+			const char* Hover = nullptr;
 			switch (Type)
 			{
 			case kActiveRefCollection_Invisible:
 				ImGui::Button(ICON_MD_VISIBILITY_OFF "##popupbtn_invisible_refs", ImVec2(0, 0));
+				Hover = "Invisible References";
 				break;
 			case kActiveRefCollection_Frozen:
 				ImGui::Button(ICON_MD_LOCK "##popupbtn_frozen_refs", ImVec2(0, 0));
+				Hover = "Frozen References";
 				break;
 			case kActiveRefCollection_Groups:
 				ImGui::Button(ICON_MD_SELECT_ALL "##popupbtn_ref_groups", ImVec2(0, 0));
+				Hover = "Reference Groups";
 				break;
 			}
+
+			if (Hover && ImGui::IsItemHoveredRect())
+				ImGui::SetTooltip(Hover);
 
 			ImGui::PopStyleColor(3);
 		}

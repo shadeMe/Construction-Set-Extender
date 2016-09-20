@@ -14,6 +14,7 @@ namespace cse
 #define TOOLBAR_BUTTON_SIZE							ImVec2(30, 0)
 
 		ToolbarOSDLayer				ToolbarOSDLayer::Instance;
+		constexpr int				kFilterRefsReset = -9;
 
 		int ToolbarOSDLayer::RefFilterCompletionCallback(ImGuiTextEditCallbackData* Data)
 		{
@@ -21,13 +22,31 @@ namespace cse
 			{
 				if (Data->BufTextLen)
 				{
+					bool CycleBack = ImGui::GetIO().KeyShift;
+					FormIDArrayT::const_iterator Bookend = CycleBack ? FilterRefs.begin() : FilterRefs.end();
+
 					// cycle through the filtered refs
 					while (FilterRefs.size())
 					{
-						if (PreviousFilterRef != FilterRefs.end())
+						if (CurrentFilterRefIndex == kFilterRefsReset)
+						{
+							// first selection, init the index
+							if (FilterRefs.size() == 1)
+								CurrentFilterRefIndex = 0;
+							else if (CycleBack)
+								CurrentFilterRefIndex = FilterRefs.size() - 1;		// last item
+							else
+								CurrentFilterRefIndex = 0;							// first item
+						}
+						else if (CycleBack)
+							CurrentFilterRefIndex--;
+						else
+							CurrentFilterRefIndex++;
+
+						if (CurrentFilterRefIndex > -1 && CurrentFilterRefIndex < FilterRefs.size())
 						{
 							// locate and select the reference
-							TESForm* Form = TESForm::LookupByFormID(*PreviousFilterRef);
+							TESForm* Form = TESForm::LookupByFormID(FilterRefs.at(CurrentFilterRefIndex));
 							TESObjectREFR* NextRef = nullptr;
 							if (Form && Form->IsDeleted() == false)
 							{
@@ -37,19 +56,17 @@ namespace cse
 							}
 							else
 							{
-								// invalid ref, move to the next one
-								PreviousFilterRef = FilterRefs.erase(PreviousFilterRef);
+								// invalid ref, remove it and move to the next one
+								FilterRefs.erase(FilterRefs.begin() + CurrentFilterRefIndex);
 								continue;
 							}
 
 							SME_ASSERT(NextRef);
 							_TES->LoadCellIntoViewPort(nullptr, NextRef);
-
-							++PreviousFilterRef;
 						}
-						else if (PreviousFilterRef == FilterRefs.end())
+						else
 						{
-							PreviousFilterRef = FilterRefs.begin();
+							CurrentFilterRefIndex = kFilterRefsReset;
 							continue;
 						}
 
@@ -80,36 +97,33 @@ namespace cse
 					if (RefFilter.PassFilter(FilterBuffer))
 						FilterRefs.push_back(FormID);
 				}
-
-				PreviousFilterRef = FilterRefs.begin();
 			}
 			else
-			{
 				FilterRefs.clear();
-				PreviousFilterRef = FilterRefs.end();
-			}
+
+			CurrentFilterRefIndex = kFilterRefsReset;
 		}
 
 		void ToolbarOSDLayer::RenderMainToolbar(ImGuiDX9* GUI)
 		{
-			static const int kRegularHeight = 40;
+			static const int kRegularHeight = 45;
 
-			int XSize = *TESRenderWindow::ScreeWidth;
-			int YPos = *TESRenderWindow::ScreeHeight - kRegularHeight;
+			int XSize = *TESRenderWindow::ScreeWidth - 7 * 2;
+			int YPos = *TESRenderWindow::ScreeHeight - kRegularHeight - 5;
 			int YSize = kRegularHeight;
 
-			ImGui::SetNextWindowPos(ImVec2(0, YPos));
+			ImGui::SetNextWindowPos(ImVec2(7, YPos));
 			ImGui::SetNextWindowSize(ImVec2(XSize, YSize));
 
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 5));
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(7, 7));
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(7, 10));
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
-			if (!ImGui::Begin("Main Toolbar", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus |
+			if (!ImGui::Begin("Main Toolbar", nullptr,
+							  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus |
 							  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoScrollbar))
 			{
 				ImGui::End();
-				ImGui::PopStyleVar(4);
+				ImGui::PopStyleVar(3);
 				return;
 			}
 
@@ -126,13 +140,13 @@ namespace cse
 				BottomToolbarPopupProvider.Draw(PopupSnapControls, GUI, CurrentToolbarWindow);
 				ImGui::SameLine(0, 10);
 				BottomToolbarPopupProvider.Draw(PopupMovementControls, GUI, CurrentToolbarWindow);
-				ImGui::SameLine(0, 20);
+				ImGui::SameLine(0, 20); ImGui::InvisibleButton("dummy_btn", ImVec2(10, 10)); ImGui::SameLine(0, 20);
 
 				ImGui::NextColumn();
 				PUSH_TRANSPARENT_BUTTON_COLORS;
 				ImGui::Button(ICON_MD_SEARCH "##find_ref_mouseover", TOOLBAR_BUTTON_SIZE);
 				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Type in the text box to find references matching the filter string.\nCycle through matches with the TAB key.");
+					ImGui::SetTooltip("Type in the text box to find references matching the filter string.\nCycle through matches with the (SHIFT+)TAB key.");
 				POP_TRANSPARENT_BUTTON_COLORS;
 				ImGui::SameLine(0, 10);
 
@@ -249,7 +263,7 @@ namespace cse
 			}
 
 			ImGui::End();
-			ImGui::PopStyleVar(4);
+			ImGui::PopStyleVar(3);
 		}
 
 		void ToolbarOSDLayer::RenderTopToolbar(ImGuiDX9* GUI)
@@ -356,7 +370,9 @@ namespace cse
 				*(UInt32*)TESRenderWindow::SnapAngle = AngleVal;
 				*TESRenderWindow::StateFlags = Flags;
 				*TESRenderWindow::SnapReference = SnapRef;
-			});
+			},
+				MouseOverPopupProvider::kPosition_Relative,
+				ImVec2(-85, -165));
 
 			PopupMovementControls= BottomToolbarPopupProvider.RegisterPopup("popup_movement_controls",
 															   []() {
@@ -413,7 +429,9 @@ namespace cse
 				settings::renderer::kAltCamRotationSpeed.SetFloat(AltCamRot);
 				settings::renderer::kAltRefMovementSpeed.SetFloat(AltRefMov);
 				settings::renderer::kAltRefRotationSpeed.SetFloat(AltRefRot);
-			});
+			},
+				MouseOverPopupProvider::kPosition_Relative,
+				ImVec2(-145, -245));
 
 			PopupVisibilityToggles = BottomToolbarPopupProvider.RegisterPopup("popup_visibility_toggles",
 																 []() {
@@ -462,10 +480,12 @@ namespace cse
 					}
 				}
 				ImGui::PopID();
-			});
+			},
+				MouseOverPopupProvider::kPosition_Relative,
+				ImVec2(0, -10));
 
 			FilterRefs.reserve(100);
-			PreviousFilterRef = FilterRefs.end();
+			CurrentFilterRefIndex = -1;
 			SetRefFilterFocus = false;
 		}
 
@@ -497,7 +517,9 @@ namespace cse
 													   MouseOverPopupProvider::RenderDelegateT DrawButton,
 													   MouseOverPopupProvider::RenderDelegateT DrawPopup)
 		{
-			MouseOverPopupProvider::PopupIDT ID = TopToolbarPopupProvider.RegisterPopup(PopupID, DrawButton, DrawPopup);
+			MouseOverPopupProvider::PopupIDT ID = TopToolbarPopupProvider.RegisterPopup(PopupID, DrawButton, DrawPopup,
+																						MouseOverPopupProvider::kPosition_Relative,
+																						ImVec2(0, 25));
 			TopToolbarPopupIDs.push_back(ID);
 		}
 
