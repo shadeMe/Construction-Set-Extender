@@ -25,7 +25,8 @@ namespace cse
 
 			HWND							RenderWindowHandle;
 			IDirect3DDevice9*				D3DDevice;
-			bool							MouseDoubleClicked[2];		// for the left and right mouse buttons
+			bool							MouseDoubleClicked[2];			// for the left and right mouse buttons
+			bool							ConsumeNextMouseRButtonDown;
 
 			// when the active widget is whitelisted, input events are allowed to be handled by the org wnd proc
 			ImGuiWidgetIDArrayT				PassthroughWhitelistMouseEvents;
@@ -50,6 +51,7 @@ namespace cse
 			void			InvalidateDeviceObjects();
 			bool			CreateDeviceObjects();
 
+			void			ResetInputState(bool ConsumeNextRButtonDown);
 			bool			UpdateInputState(HWND, UINT msg, WPARAM wParam, LPARAM lParam);		// returns true if the message was processed
 			void			NeedsInput(bool& OutNeedsMouse, bool& OutNeedsKeyboard, bool& OutNeedsTextInput) const;
 			void			WhitelistItemForMouseEvents();										// adds the last item to the mouse event whitelist
@@ -130,13 +132,13 @@ namespace cse
 		class IRenderWindowOSDLayer
 		{
 			const INISetting*		Toggle;
-		protected:
+		public:
 			struct Helpers
 			{
 				static std::string			GetRefEditorID(TESObjectREFR* Ref);
 				static bool					ResolveReference(UInt32 FormID, TESObjectREFR*& OutRef);		// returns false if the formID didn't resolve to a valid ref, true otherwise
 			};
-		public:
+
 			IRenderWindowOSDLayer(const INISetting* Toggle = nullptr);
 			virtual ~IRenderWindowOSDLayer() = 0
 			{

@@ -255,8 +255,8 @@ namespace cse
 		void ToolbarOSDLayer::RenderTopToolbar(ImGuiDX9* GUI)
 		{
 			int XSize = *TESRenderWindow::ScreeWidth;
-
-			ImGui::SetNextWindowPos(ImVec2(XSize - 50, 10));
+			int Width = 5 + TopToolbarPopupIDs.size() * 40;
+			ImGui::SetNextWindowPos(ImVec2(XSize - Width, 10));
 
 			ImGui::PushStyleColor(ImGuiCol_WindowBg, ImColor(0, 0, 0, 100));
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(7, 7));
@@ -274,6 +274,7 @@ namespace cse
 			for (auto Itr : TopToolbarPopupIDs)
 			{
 				TopToolbarPopupProvider.Draw(Itr, GUI, GUI->GetCurrentWindow());
+				ImGui::SameLine(0, 10);
 			}
 
 			ImGui::End();

@@ -3,7 +3,6 @@
 #include "IMGUI\imgui_internal.h"
 #include "IconFontCppHeaders\IconsMaterialDesign.h"
 
-#include "ActiveRefCollectionsOSDLayer.h"
 #include "DefaultOverlayOSDLayer.h"
 #include "MouseOverTooltipOSDLayer.h"
 #include "ToolbarOSDLayer.h"
@@ -220,6 +219,7 @@ namespace cse
 			D3DDevice = nullptr;
 			PassthroughWhitelistMouseEvents.reserve(20);
 			MouseDoubleClicked[0] = MouseDoubleClicked[1] = false;
+			ConsumeNextMouseRButtonDown = false;
 			Initialized = false;
 		}
 
@@ -438,6 +438,20 @@ namespace cse
 			return true;
 		}
 
+		void ImGuiDX9::ResetInputState(bool ConsumeNextRButtonDown)
+		{
+			ImGuiIO& io = ImGui::GetIO();
+			io.KeyCtrl = false;
+			io.KeyShift = false;
+			io.KeyAlt = false;
+			io.KeySuper = false;
+			io.MouseDown[0] = io.MouseDown[1] = false;
+			io.KeysDown[VK_MENU] = false;
+
+			if (ConsumeNextRButtonDown)
+				ConsumeNextMouseRButtonDown = true;
+		}
+
 		bool ImGuiDX9::UpdateInputState(HWND, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			ImGuiIO& io = ImGui::GetIO();
@@ -451,7 +465,12 @@ namespace cse
 				io.MouseDown[0] = false;
 				return true;
 			case WM_RBUTTONDOWN:
-				io.MouseDown[1] = true;
+				// ### kludge to workaround the out-of-order dispatching of the button down message when opening the context menu in the render window
+				if (ConsumeNextMouseRButtonDown == false)
+					io.MouseDown[1] = true;
+				else
+					ConsumeNextMouseRButtonDown = false;
+
 				return true;
 			case WM_RBUTTONUP:
 				io.MouseDown[1] = false;
@@ -706,9 +725,17 @@ namespace cse
 				Parent->State.MouseInClientArea = false;
 
 				break;
+			case WM_UNINITMENUPOPUP:
+				// reset basic input state
+				Pipeline->ResetInputState(true);
+
+				break;
 			case WM_ACTIVATE:
 				if (LOWORD(wParam) == WA_INACTIVE)
+				{
+					Pipeline->ResetInputState(false);
 					Parent->State.MouseInClientArea = false;
+				}
 
 				break;
 			case WM_TIMER:
@@ -789,7 +816,6 @@ namespace cse
 			AttachLayer(&NotificationOSDLayer::Instance);
 			AttachLayer(&ToolbarOSDLayer::Instance);
 			AttachLayer(&SelectionControlsOSDLayer::Instance);
-			AttachLayer(&ActiveRefCollectionsOSDLayer::Instance);
 #ifndef NDEBUG
 			AttachLayer(&DebugOSDLayer::Instance);
 #endif
@@ -808,7 +834,6 @@ namespace cse
 			DetachLayer(&NotificationOSDLayer::Instance);
 			DetachLayer(&ToolbarOSDLayer::Instance);
 			DetachLayer(&SelectionControlsOSDLayer::Instance);
-			DetachLayer(&ActiveRefCollectionsOSDLayer::Instance);
 #ifndef NDEBUG
 			DetachLayer(&DebugOSDLayer::Instance);
 #endif
@@ -1106,7 +1131,7 @@ namespace cse
 				if (BeginHover)
 					ImGui::OpenPopup(PopupStrID);
 
-				if (ImGui::BeginPopupWithStyling(PopupStrID, ImGuiWindowFlags_ShowBorders, ImGui::GetStyle().WindowRounding))
+				if (ImGui::BeginPopupWithStyling(PopupStrID, ImGuiWindowFlags_AlwaysAutoResize, ImGui::GetStyle().WindowRounding))
 				{
 					void* PopupID = GUI->GetCurrentWindow();
 					CurrentState.Update(GUI);

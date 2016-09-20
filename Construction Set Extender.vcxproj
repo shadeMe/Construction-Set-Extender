@@ -378,7 +378,6 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClCompile Include="ObjectPaletteManager.cpp" />
     <ClCompile Include="ObjectPrefabManager.cpp" />
     <ClCompile Include="ObjectWindowOverrides.cpp" />
-    <ClCompile Include="Render Window\ActiveRefCollectionsOSDLayer.cpp" />
     <ClCompile Include="Render Window\AuxiliaryViewport.cpp" />
     <ClCompile Include="Render Window\DefaultOverlayOSDLayer.cpp" />
     <ClCompile Include="Render Window\MouseOverTooltipOSDLayer.cpp" />
@@ -508,7 +507,6 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClInclude Include="ObjectPaletteManager.h" />
     <ClInclude Include="ObjectPrefabManager.h" />
     <ClInclude Include="ObjectWindowOverrides.h" />
-    <ClInclude Include="Render Window\ActiveRefCollectionsOSDLayer.h" />
     <ClInclude Include="Render Window\AuxiliaryViewport.h" />
     <ClInclude Include="Render Window\DefaultOverlayOSDLayer.h" />
     <ClInclude Include="Render Window\MouseOverTooltipOSDLayer.h" />

@@ -173,7 +173,7 @@ namespace cse
 		{
 			FilterHelper.Draw();
 
-			ImGui::BeginChild("hotkey_child_frame", ImVec2(0, 300));
+			ImGui::BeginChild("contents_child_frame", ImVec2(0, 300));
 			{
 				TESObjectCELL* ToSelect = nullptr;
 				if (ImGui::CollapsingHeader("Bookmarks"))

@@ -8,6 +8,8 @@
 #include "[Common]\CLIWrapper.h"
 #include "Hooks\Hooks-Renderer.h"
 #include "RenderWindowActions.h"
+#include "IconFontCppHeaders\IconsMaterialDesign.h"
+#include "ToolbarOSDLayer.h"
 
 namespace cse
 {
@@ -674,11 +676,6 @@ namespace cse
 										CheckItem = true;
 
 									break;
-								case IDC_RENDERWINDOWCONTEXT_OSD_CELLLISTS:
-									if (settings::renderWindowOSD::kShowCellLists().i)
-										CheckItem = true;
-
-									break;
 								case IDC_RENDERWINDOWCONTEXT_OSD_SELECTIONCONTROLS:
 									if (settings::renderWindowOSD::kShowSelectionControls().i)
 										CheckItem = true;
@@ -686,11 +683,6 @@ namespace cse
 									break;
 								case IDC_RENDERWINDOWCONTEXT_OSD_TOOLBARS:
 									if (settings::renderWindowOSD::kShowToolbar().i)
-										CheckItem = true;
-
-									break;
-								case IDC_RENDERWINDOWCONTEXT_OSD_ACTIVEREFERENCECOLLECTIONS:
-									if (settings::renderWindowOSD::kShowActiveRefCollections().i)
 										CheckItem = true;
 
 									break;
@@ -892,13 +884,6 @@ namespace cse
 					}
 
 					break;
-				case IDC_RENDERWINDOWCONTEXT_OSD_CELLLISTS:
-					{
-						settings::renderWindowOSD::kShowCellLists.ToggleData();
-						Return = true;
-					}
-
-					break;
 				case IDC_RENDERWINDOWCONTEXT_OSD_INFOOVERLAY:
 					{
 						settings::renderWindowOSD::kShowInfoOverlay.ToggleData();
@@ -916,13 +901,6 @@ namespace cse
 				case IDC_RENDERWINDOWCONTEXT_OSD_TOOLBARS:
 					{
 						settings::renderWindowOSD::kShowToolbar.ToggleData();
-						Return = true;
-					}
-
-					break;
-				case IDC_RENDERWINDOWCONTEXT_OSD_ACTIVEREFERENCECOLLECTIONS:
-					{
-						settings::renderWindowOSD::kShowActiveRefCollections.ToggleData();
 						Return = true;
 					}
 
@@ -1137,6 +1115,29 @@ namespace cse
 			GroupManager->Initialize();
 			KeyboardInputManager->Initialize();
 
+			// register active ref collection popups
+			ToolbarOSDLayer::Instance.RegisterTopToolbarButton("activerefcol_invisible_interface",
+															   std::bind(&RenderWindowManager::RenderActiveRefCollectionButton,
+																		 this,
+																		 kActiveRefCollection_Invisible),
+															   std::bind(&RenderWindowManager::RenderActiveRefCollectionPopup,
+																		 this,
+																		 kActiveRefCollection_Invisible));
+			ToolbarOSDLayer::Instance.RegisterTopToolbarButton("activerefcol_frozen_interface",
+															   std::bind(&RenderWindowManager::RenderActiveRefCollectionButton,
+																		 this,
+																		 kActiveRefCollection_Frozen),
+															   std::bind(&RenderWindowManager::RenderActiveRefCollectionPopup,
+																		 this,
+																		 kActiveRefCollection_Frozen));
+			ToolbarOSDLayer::Instance.RegisterTopToolbarButton("activerefcol_groups_interface",
+															   std::bind(&RenderWindowManager::RenderActiveRefCollectionButton,
+																		 this,
+																		 kActiveRefCollection_Groups),
+															   std::bind(&RenderWindowManager::RenderActiveRefCollectionPopup,
+																		 this,
+																		 kActiveRefCollection_Groups));
+
 			Initialized = true;
 
 			return Initialized;
@@ -1238,6 +1239,468 @@ namespace cse
 				else
 					return true;
 			});
+		}
+
+		void RenderWindowManager::RenderActiveRefCollectionRefTable(UInt8 Type, ImGuiTextFilter& FilterHelper)
+		{
+			const TESObjectREFRArrayT& ActiveRefs = ActiveRefCache;
+			std::vector<std::string> ActiveGroups;
+			ActiveGroups.reserve(0x20);
+
+			char FilterBuffer[0x200] = { 0 };
+			char Label[0x100] = { 0 };
+
+			for (auto Itr : ActiveRefs)
+			{
+				std::string EditorID(IRenderWindowOSDLayer::Helpers::GetRefEditorID(Itr));
+				UInt32 FormID = Itr->formID;
+				const char* FormType = TESForm::GetFormTypeIDLongName(Itr->baseForm->formType);
+
+				switch (Type)
+				{
+				case kActiveRefCollection_Invisible:
+				case kActiveRefCollection_Frozen:
+					{
+						bool InvisibleRefs = Type == kActiveRefCollection_Invisible;
+						FORMAT_STR(FilterBuffer, "%s %08X %s", EditorID.c_str(), FormID, FormType);
+						if (FilterHelper.PassFilter(FilterBuffer) == false)
+							return;
+
+						bool TruthCond = false;
+						UInt32 InvisibleReasons = 0;
+						if (InvisibleRefs)
+							TruthCond = ReferenceVisibilityValidator::ShouldBeInvisible(Itr, InvisibleReasons);
+						else
+							TruthCond = Itr->IsFrozen();
+
+						if (TruthCond)
+						{
+							FORMAT_STR(Label, "%08X-%d", FormID, Type);
+							ImGui::PushID(Label);
+							{
+								if (ImGui::Selectable(EditorID.c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick) &&
+									ImGui::IsMouseDoubleClicked(0))
+								{
+									// TODO select ref?
+								}
+
+								if (ImGui::BeginPopupContextItem(InvisibleRefs ? "Invisible_Popup" : "Frozen_Popup"))
+								{
+									if (InvisibleRefs)
+									{
+										if (ImGui::Selectable("Toggle Invisibility"))
+											Itr->ToggleInvisiblity();
+										if (ImGui::Selectable("Toggle Children Invisibility"))
+											Itr->ToggleInvisiblity();
+									}
+									else
+									{
+										if (ImGui::Selectable("Thaw"))
+											Itr->SetFrozen(false);
+									}
+
+									ImGui::EndPopup();
+								}
+							}
+							ImGui::PopID();
+
+							ImGui::NextColumn();
+							char FormIDBuffer[0x10] = { 0 };
+							FORMAT_STR(FormIDBuffer, "%08X", FormID);
+							ImGui::Selectable(FormIDBuffer);
+							ImGui::NextColumn();
+							ImGui::Selectable(FormType);
+							ImGui::NextColumn();
+
+							if (InvisibleRefs)
+							{
+								std::string FlagsBuffer;
+								if ((InvisibleReasons & ReferenceVisibilityValidator::kReason_InvisibleSelf))
+									FlagsBuffer.append("IS");
+
+								if ((InvisibleReasons & ReferenceVisibilityValidator::kReason_InvisibleChild))
+									FlagsBuffer.append(" IC");
+
+								if ((InvisibleReasons & ReferenceVisibilityValidator::kReason_InitiallyDisabledSelf))
+									FlagsBuffer.append(" DS");
+
+								if ((InvisibleReasons & ReferenceVisibilityValidator::kReason_InitiallyDisabledChild))
+									FlagsBuffer.append(" DC");
+
+								boost::trim(FlagsBuffer);
+								ImGui::Selectable(FlagsBuffer.c_str());
+								ImGui::NextColumn();
+							}
+						}
+
+					}
+
+					break;
+				case kActiveRefCollection_Groups:
+					{
+						const char* ParentGroup = GroupManager->GetParentGroupID(Itr);
+						if (ParentGroup)
+						{
+							// cache unique hits
+							std::string GroupID(ParentGroup);
+							if (std::find(ActiveGroups.begin(), ActiveGroups.end(), GroupID) == ActiveGroups.end())
+								ActiveGroups.push_back(GroupID);
+						}
+					}
+
+					break;
+				}
+			}
+
+			switch (Type)
+			{
+			case kActiveRefCollection_Groups:
+				{
+					if (ActiveGroups.size())
+					{
+						TESObjectREFRArrayT GroupMembers;
+						GroupMembers.reserve(100);
+
+						bool Dissolved = false;
+						for (auto Itr : ActiveGroups)
+						{
+							if (GroupManager->GetGroupData(Itr.c_str(), GroupMembers))
+							{
+								SME_ASSERT(GroupMembers.size());
+
+								// filter with members first
+								int NonMatchCount = 0;
+								for (auto Member : GroupMembers)
+								{
+									std::string EditorID(IRenderWindowOSDLayer::Helpers::GetRefEditorID(Member));
+									UInt32 FormID = Member->formID;
+
+									FORMAT_STR(FilterBuffer, "%s %08X", EditorID.c_str(), FormID);
+									if (FilterHelper.PassFilter(FilterBuffer) == false)
+										NonMatchCount++;
+								}
+
+								// if none of the members match, check the group name
+								if (NonMatchCount == GroupMembers.size())
+								{
+									if (FilterHelper.PassFilter(Itr.c_str()) == false)
+										continue;
+								}
+
+								FORMAT_STR(Label, "%s-group-%d", Itr.c_str(), Type);
+								ImGui::PushID(Label);
+								{
+									if (ImGui::Selectable(Itr.c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick) &&
+										ImGui::IsMouseDoubleClicked(0))
+									{
+										_RENDERWIN_MGR.GetGroupManager()->SelectAffiliatedGroup(GroupMembers[0], _RENDERSEL, true);
+									}
+
+									if (ImGui::BeginPopupContextItem("Group_Popup"))
+									{
+										if (ImGui::Selectable("Dissolve"))
+										{
+											_RENDERWIN_MGR.GetGroupManager()->RemoveParentGroup(GroupMembers[0]);
+											Dissolved = true;
+										}
+
+										if (ImGui::Selectable("Edit Members"))
+										{
+											EditGroupMembersData* UserData = new EditGroupMembersData;
+											UserData->GroupName = Itr;
+											UserData->MemberList = GroupMembers;
+
+											ModalWindowProviderOSDLayer::Instance.ShowModal("Edit Reference Group",
+																							std::bind(&RenderModalEditGroupMembers, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+																							UserData,
+																							ImGuiWindowFlags_AlwaysAutoResize);
+										}
+
+										ImGui::EndPopup();
+									}
+								}
+								ImGui::PopID();
+
+								char CountBuffer[0x100] = { 0 };
+								std::string MemberList;
+								int Count = 0;
+								static constexpr int kMaxDiplayCount = 10;
+
+								for (auto Member : GroupMembers)
+								{
+									std::string EditorID(IRenderWindowOSDLayer::Helpers::GetRefEditorID(Member));
+									UInt32 FormID = Member->formID;
+
+									FORMAT_STR(FilterBuffer, "%s (%08X)\n", EditorID.c_str(), FormID);
+									MemberList.append(FilterBuffer);
+									Count++;
+
+									if (Count == kMaxDiplayCount)
+										break;
+								}
+
+								if (Count == kMaxDiplayCount)
+								{
+									FORMAT_STR(CountBuffer, "\n+%d more references", GroupMembers.size() - Count);
+									MemberList.append(CountBuffer);
+								}
+
+								FORMAT_STR(CountBuffer, "%d", GroupMembers.size());
+
+								ImGui::NextColumn();
+								ImGui::Selectable(CountBuffer);
+								if (ImGui::IsItemHovered())
+									ImGui::SetTooltip(MemberList.c_str());
+								ImGui::NextColumn();
+
+								if (Dissolved)
+									break;
+							}
+						}
+					}
+				}
+
+				break;
+			}
+		}
+
+		void RenderWindowManager::RenderActiveRefCollectionButton(UInt8 Type)
+		{
+			const ImVec4 MainColor(0, 0, 0, 0);
+
+			ImGui::PushStyleColor(ImGuiCol_Button, MainColor);
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, MainColor);
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, MainColor);
+
+			switch (Type)
+			{
+			case kActiveRefCollection_Invisible:
+				ImGui::Button(ICON_MD_VISIBILITY_OFF "##popupbtn_invisible_refs", ImVec2(0, 0));
+				break;
+			case kActiveRefCollection_Frozen:
+				ImGui::Button(ICON_MD_LOCK "##popupbtn_frozen_refs", ImVec2(0, 0));
+				break;
+			case kActiveRefCollection_Groups:
+				ImGui::Button(ICON_MD_SELECT_ALL "##popupbtn_ref_groups", ImVec2(0, 0));
+				break;
+			}
+
+			ImGui::PopStyleColor(3);
+		}
+
+		void RenderWindowManager::RenderActiveRefCollectionPopup(UInt8 Type)
+		{
+			static ImGuiTextFilter TextFilters[kActiveRefCollection__MAX];
+
+			ImGuiTextFilter& CurrentFilter = TextFilters[Type];
+			CurrentFilter.Draw();
+
+			ImGui::BeginChild("contents_child_frame", ImVec2(0, 250));
+			{
+				switch (Type)
+				{
+				case kActiveRefCollection_Invisible:
+				case kActiveRefCollection_Frozen:
+					{
+						bool InvisibleRefs = Type == kActiveRefCollection_Invisible;
+						ImGui::Columns(2, "ref_table_header", false);
+						{
+							if (InvisibleRefs)
+							{
+								ImGui::TextWrapped("Invisible References: (?)");
+								if (ImGui::IsItemHovered())
+									ImGui::SetTooltip("EditorIDs with an asterisk correspond to the reference's base form.\n\nRight click on an item to display the context menu.");
+							}
+							else
+							{
+								ImGui::TextWrapped("Frozen References: (?)");
+								if (ImGui::IsItemHovered())
+									ImGui::SetTooltip("Excluding references frozen with the \"Freeze Inactive Refs\" tool.EditorIDs with an asterisk correspond to the reference's base form.\n\nRight click on an item to display the context menu.");
+							}
+
+							ImGui::NextColumn();
+
+							if (InvisibleRefs)
+							{
+								if (ImGui::Button("Reveal All", ImVec2(ImGui::GetColumnWidth() - 15, 20)))
+									actions::RevealAll();
+							}
+							else
+							{
+								if (ImGui::Button("Thaw All", ImVec2(ImGui::GetColumnWidth() - 15, 20)))
+									actions::ThawAll();
+							}
+
+							ImGui::NextColumn();
+						}
+						ImGui::Columns();
+
+						ImGui::Columns(InvisibleRefs ? 4 : 3, "ref_table_invisible/frozen");
+						{
+							ImGui::Separator();
+							ImGui::Text("EditorID"); ImGui::NextColumn();
+							ImGui::Text("FormID"); ImGui::NextColumn();
+							ImGui::Text("Type"); ImGui::NextColumn();
+
+							if (InvisibleRefs)
+							{
+								ImGui::Text("Reason (?)");
+								if (ImGui::IsItemHovered())
+									ImGui::SetTooltip("DS - Initially Disabled\nDC - Child of Initially Disabled Parent\nIS - Invisible\nIC - Child of Parent with \"Invisible Children\" Flag");
+								ImGui::NextColumn();
+							}
+
+							ImGui::Separator();
+							RenderActiveRefCollectionRefTable(Type, CurrentFilter);
+						}
+						ImGui::Columns();
+						ImGui::Separator();
+					}
+
+					break;
+				case kActiveRefCollection_Groups:
+					{
+						ImGui::Columns(2, "ref_table_header", false);
+						{
+							ImGui::TextWrapped("Reference Groups: (?)");
+							if (ImGui::IsItemHovered())
+								ImGui::SetTooltip("EditorIDs with an asterisk correspond to the reference's base form.\n\nDouble click on an item to select the group.\nRight click on an item to display the context menu.\nHover the cursor over the \"Count\" column to view the first 10 members of the group.");
+							ImGui::NextColumn();
+
+							if (ImGui::Button("Group Current Selection", ImVec2(ImGui::GetColumnWidth() - 15, 20)))
+								actions::GroupSelection();
+							ImGui::NextColumn();
+						}
+						ImGui::Columns();
+
+						ImGui::Columns(2, "ref_table_groups");
+						{
+							ImGui::Separator();
+							ImGui::Text("Name"); ImGui::NextColumn();
+							ImGui::Text("Count"); ImGui::NextColumn();
+
+							ImGui::Separator();
+							RenderActiveRefCollectionRefTable(Type, CurrentFilter);
+						}
+						ImGui::Columns();
+						ImGui::Separator();
+					}
+
+					break;
+				}
+			}
+			ImGui::EndChild();
+		}
+
+		bool RenderWindowManager::RenderModalEditGroupMembers(RenderWindowOSD* OSD, ImGuiDX9* GUI, void* UserData)
+		{
+			static ImGuiTextFilter FilterHelper;
+
+			EditGroupMembersData* Data = (EditGroupMembersData*)UserData;
+			bool Close = false;
+			char FilterBuffer[0x200] = { 0 };
+			char Label[0x100] = { 0 };
+
+			ImGui::Columns(3, "header", false);
+			{
+				int Count = Data->MemberList.size();
+				if (Count <= 1)
+					Count = 0;
+
+				ImGui::Text("Group: %s", Data->GroupName.c_str()); ImGui::NextColumn();
+				ImGui::Text("Count: %d", Count); ImGui::NextColumn();
+				ImGui::TextDisabled("(?) ");
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Right click on a reference to display the context menu.\nIf the group has only one member after removing another, it is automatically dissolved.");
+				ImGui::NextColumn();
+			}
+			ImGui::Columns();
+
+			FilterHelper.Draw();
+
+			if (Data->MemberList.size() <= 1)
+			{
+				ImGui::TextDisabled("No Members (Dissolved).");
+			}
+			else
+			{
+				ImGui::BeginChild("subwindow", ImVec2(0, 300), false);
+				ImGui::Columns(3, "ref_table");
+				{
+					ImGui::Separator();
+					ImGui::Text("EditorID"); ImGui::NextColumn();
+					ImGui::Text("FormID"); ImGui::NextColumn();
+					ImGui::Text("Type"); ImGui::NextColumn();
+					ImGui::Separator();
+
+					int Count = 0;
+					TESObjectREFRArrayT::iterator ToRemove = Data->MemberList.end();
+					bool Removed = false;
+					for (TESObjectREFRArrayT::iterator Member = Data->MemberList.begin(); Member != Data->MemberList.end(); ++Member)
+					{
+						std::string EditorID(IRenderWindowOSDLayer::Helpers::GetRefEditorID(*Member));
+						UInt32 FormID = (*Member)->formID;
+						const char* Type = TESForm::GetFormTypeIDLongName((*Member)->baseForm->formType);
+
+						FORMAT_STR(FilterBuffer, "%s %08X %s", EditorID.c_str(), FormID, Type);
+						if (FilterHelper.PassFilter(FilterBuffer) == false)
+							continue;
+
+						FORMAT_STR(Label, "%08X-%d", FormID, Count);
+						ImGui::PushID(Label);
+						{
+							ImGui::Selectable(EditorID.c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
+							if (ImGui::BeginPopupContextItem("EditGroup_Popup"))
+							{
+								if (ImGui::Selectable("Remove"))
+								{
+									if (_RENDERWIN_MGR.GetGroupManager()->Orphanize(*Member))
+									{
+										ToRemove = Member;
+										Removed = true;
+									}
+								}
+								ImGui::EndPopup();
+							}
+						}
+						ImGui::PopID();
+
+						ImGui::NextColumn();
+						char FormIDBuffer[0x10] = { 0 };
+						FORMAT_STR(FormIDBuffer, "%08X", FormID);
+						ImGui::Selectable(FormIDBuffer);
+						ImGui::NextColumn();
+						ImGui::Selectable(Type);
+						ImGui::NextColumn();
+
+						if (Removed)
+							break;
+
+						Count++;
+					}
+
+					// remove from the modal's cache
+					if (Removed)
+						Data->MemberList.erase(ToRemove);
+				}
+				ImGui::Columns();
+				ImGui::EndChild();
+				ImGui::Separator();
+			}
+
+			if (ImGui::Button("Close", ImVec2(0, 20)))
+				Close = true;
+
+			if (Close)
+			{
+				// release user data
+				delete Data;
+				FilterHelper.Clear();
+
+				return true;
+			}
+			else
+				return false;
 		}
 
 		const TESObjectREFRArrayT& RenderWindowManager::GetActiveRefs() const

@@ -22,7 +22,6 @@ CSE		---->
 		> Add an option to restore a saved backup for some esp/esm, instead of manually recover it from Data/Backup folder and moving it back to Data folder.
 		> Render window gizmos
 		> Selection mask
-		> Hide mouse when transforming
 		> Show Target NPCs context menu tool
 			>> Would it be possible to have the option to view the list of NPCs, a sort of Use Info option just for NPCs who meet the conditions for speaking a response?
 		> Copy From Template tool

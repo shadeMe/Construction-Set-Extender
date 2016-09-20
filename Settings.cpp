@@ -66,11 +66,9 @@ namespace cse
 			Depot.push_back(&renderWindowOSD::kColorRAMUsage);
 
 			Depot.push_back(&renderWindowOSD::kShowInfoOverlay);
-			Depot.push_back(&renderWindowOSD::kShowCellLists);
 			Depot.push_back(&renderWindowOSD::kShowSelectionControls);
 			Depot.push_back(&renderWindowOSD::kShowToolbar);
 			Depot.push_back(&renderWindowOSD::kShowNotifications);
-			Depot.push_back(&renderWindowOSD::kShowActiveRefCollections);
 			Depot.push_back(&renderWindowOSD::kWindowBGAlpha);
 			Depot.push_back(&renderWindowOSD::kFontSize);
 			Depot.push_back(&renderWindowOSD::kFontFace);
@@ -185,11 +183,9 @@ namespace cse
 			INISetting		kMouseRefCtrlModified("MouseRefCtrlModified", RWOSD_INISECTION, "The control key must be held down to display the mouse ref's details", (SInt32)0);
 
 			INISetting		kShowInfoOverlay("ShowInfoOverlay", RWOSD_INISECTION, "Displays details about the current cell, selection, etc on the top-left corner", (SInt32)1);
-			INISetting		kShowCellLists("ShowCellLists", RWOSD_INISECTION, "Displays the cell bookmars/recently visited list", (SInt32)1);
 			INISetting		kShowSelectionControls("ShowSelectionControls", RWOSD_INISECTION, "Displays the selection edit controls", (SInt32)1);
 			INISetting		kShowToolbar("ShowToolbar", RWOSD_INISECTION, "Displays the toolbar", (SInt32)1);
 			INISetting		kShowNotifications("ShowNotifications", RWOSD_INISECTION, "Displays notifications", (SInt32)1);
-			INISetting		kShowActiveRefCollections("ShowActiveRefCollections", RWOSD_INISECTION, "Displays the reference collections list", (SInt32)1);
 
 			INISetting		kColorSelectionStats("ColorSelectionStats", RWOSD_INISECTION, "Foreground color", "189,237,99");
 			INISetting		kColorRAMUsage("ColorRAMUsage", RWOSD_INISECTION, "Foreground color", "230,230,0");

@@ -223,6 +223,26 @@ namespace cse
 																				  BSRenderedTexture* RenderTarget);
 			void										HandlePostSceneGraphRender();
 			void										CacheActiveRefs();
+
+			enum
+			{
+				kActiveRefCollection_Invisible = 0,
+				kActiveRefCollection_Frozen,
+				kActiveRefCollection_Groups,
+
+				kActiveRefCollection__MAX
+			};
+
+			struct EditGroupMembersData
+			{
+				std::string					GroupName;
+				TESObjectREFRArrayT			MemberList;
+			};
+
+			void										RenderActiveRefCollectionRefTable(UInt8 Type, ImGuiTextFilter& FilterHelper);
+			void										RenderActiveRefCollectionButton(UInt8 Type);
+			void										RenderActiveRefCollectionPopup(UInt8 Type);
+			static bool									RenderModalEditGroupMembers(RenderWindowOSD* OSD, ImGuiDX9* GUI, void* UserData);
 		public:
 			RenderWindowManager();
 			~RenderWindowManager();

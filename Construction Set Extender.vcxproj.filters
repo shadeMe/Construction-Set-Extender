@@ -342,9 +342,6 @@
     <ClCompile Include="Render Window\DefaultOverlayOSDLayer.cpp">
       <Filter>Components\Render Window\OSD Layers</Filter>
     </ClCompile>
-    <ClCompile Include="Render Window\ActiveRefCollectionsOSDLayer.cpp">
-      <Filter>Components\Render Window\OSD Layers</Filter>
-    </ClCompile>
     <ClCompile Include="Render Window\MouseOverTooltipOSDLayer.cpp">
       <Filter>Components\Render Window\OSD Layers</Filter>
     </ClCompile>
@@ -858,9 +855,6 @@
       <Filter>Components\UI Manager</Filter>
     </ClInclude>
     <ClInclude Include="Render Window\DefaultOverlayOSDLayer.h">
-      <Filter>Components\Render Window\OSD Layers</Filter>
-    </ClInclude>
-    <ClInclude Include="Render Window\ActiveRefCollectionsOSDLayer.h">
       <Filter>Components\Render Window\OSD Layers</Filter>
     </ClInclude>
     <ClInclude Include="Render Window\MouseOverTooltipOSDLayer.h">

@@ -227,10 +227,10 @@ public:
 	/*44*/ UInt32					unk44;
 	/*48*/ SInt32					unk48;					// seen caching extXCoord
 	/*4C*/ SInt32					unk4C;					// seen caching extYCoord
-	/*50*/ UInt8					drawCellBorders;		// for exteriors
+	/*50*/ UInt8					unk50;					// set when testing cells
 	/*51*/ UInt8					unk51;
 	/*52*/ UInt8					unk52;
-	/*53*/ UInt8					unk53;					// passed to a TESObjectLAND method (recreates land bounds if set?)
+	/*53*/ UInt8					drawCellBorders;		// for exteriors
 	/*54*/ WaterSurfaceManager*		waterSurfaceManager;
 	/*58*/ WaterPlaneData*			waterNodeData;			// for the current interior
 	/*5C*/ Sky*						sky;
