@@ -288,10 +288,17 @@ namespace cse
 					return GetAsyncKeyState(ActiveBinding.GetKeyCode());
 			}
 
+			void HoldableKeyHandler::NotifyListeners(UInt8 Event) const
+			{
+				for (auto& Itr : EventListeners)
+					Itr(Event);
+			}
+
 			HoldableKeyHandler::HoldableKeyHandler(const char* GUID, const char* Name, const char* Desc, BasicKeyBinding Default) :
 				IHotKey(GUID),
 				Name(Name),
-				Description(Desc)
+				Description(Desc),
+				EventListeners()
 			{
 				SetActiveBinding(Default);
 				DefaultBinding = ActiveBinding;
@@ -300,6 +307,13 @@ namespace cse
 			bool HoldableKeyHandler::IsHeldDown() const
 			{
 				return IsActiveBindingTriggered();
+			}
+
+			void HoldableKeyHandler::RegisterListener(HoldableKeyEventDelegateT Delegate)
+			{
+				SME_ASSERT(Delegate);
+
+				EventListeners.push_back(Delegate);
 			}
 
 			const char* HoldableKeyHandler::GetName() const
@@ -335,7 +349,13 @@ namespace cse
 					{
 						Result.Triggered = true;
 						if (GetExecutionContext().IsExecutable())
+						{
 							Result.Success = true;
+							if (uMsg == WM_KEYDOWN)
+								NotifyListeners(kEvent_KeyDown);
+							else
+								NotifyListeners(kEvent_KeyUp);
+						}
 						else
 							Result.InvalidContext = true;
 					}
@@ -966,13 +986,13 @@ namespace cse
 				DeletedBindings.push_back(BuiltIn::KeyBinding('I', BuiltIn::kModifier_Space));
 
 				RegisterHoldableOverride("D17061A6-7FD7-4E79-BCCB-AC4899A14B47", BuiltIn::kHoldable_Control, false);		// not editable as it just functions like a regular modifier
-				RegisterHoldableOverride("206281B3-6694-4C99-9AA2-E1B94720C9BC", BuiltIn::kHoldable_Shift, true);
-				RegisterHoldableOverride("4C52B079-91D6-4BA0-854B-B7028A293C49", BuiltIn::kHoldable_Space, true);
+				Shared.RotateCamera = RegisterHoldableOverride("206281B3-6694-4C99-9AA2-E1B94720C9BC", BuiltIn::kHoldable_Shift, true);
+				Shared.PanCamera = RegisterHoldableOverride("4C52B079-91D6-4BA0-854B-B7028A293C49", BuiltIn::kHoldable_Space, true);
 				RegisterHoldableOverride("76C93A6E-2777-42DB-B80B-82C0A0578E79", BuiltIn::kHoldable_X, true);
 				RegisterHoldableOverride("1CAF7AAF-4E5E-44DE-9877-0428040829E2", BuiltIn::kHoldable_Y, true);
 				RegisterHoldableOverride("8A16BDBA-709B-4464-8B01-5748C0392635", BuiltIn::kHoldable_Z, true);
 				RegisterHoldableOverride("123363FB-D801-400F-B8B5-3CA8F68A2797", BuiltIn::kHoldable_S, true);
-				RegisterHoldableOverride("5B69B450-F18B-467A-8AF7-5615F835F265", BuiltIn::kHoldable_V, true);
+				Shared.ZoomCamera = RegisterHoldableOverride("5B69B450-F18B-467A-8AF7-5615F835F265", BuiltIn::kHoldable_V, true);
 
 				RegisterComboKeyOverride("141C71A5-CF32-4C83-9F30-F87B082AB078", actions::builtIn::ReloadAllPathGrids);
 				RegisterComboKeyOverride("127C4534-8779-4640-8EF3-D9FF83D5C19C", actions::builtIn::GenerateActiveExteriorLocalMap);
@@ -1219,7 +1239,7 @@ namespace cse
 			}
 
 
-			const SharedBindings& RenderWindowKeyboardManager::GetSharedBindings() const
+			SharedBindings& RenderWindowKeyboardManager::GetSharedBindings()
 			{
 				return Shared;
 			}
@@ -1273,20 +1293,87 @@ namespace cse
 				Y = WindowRect.top;
 			}
 
-			void RenderWindowMouseManager::ToggleCellViewUpdate(bool State) const
+			void RenderWindowMouseManager::ToggleCellViewUpdate(bool State)
 			{
-				if (State == false)
-					hooks::_MemHdlr(CellViewSetCurrentCell).WriteUInt8(0xC3);		// write an immediate retn
+				if (*TESRenderWindow::ActiveCell && (*TESRenderWindow::ActiveCell)->IsInterior() == false)
+				{
+					if (CellViewUpdatesDeferred == false && State == false)
+					{
+						// defer updating the cell view in exterior worldspaces until we release captue
+						hooks::_MemHdlr(CellViewSetCurrentCell).WriteUInt8(0xC3);		// write an immediate retn
+						CellViewUpdatesDeferred = true;
+					}
+					else if (CellViewUpdatesDeferred && State)
+					{
+						hooks::_MemHdlr(CellViewSetCurrentCell).WriteBuffer();			// write original instruction
+						CellViewUpdatesDeferred = false;
+
+						// update the cell view to the current renderwindow cell
+						Vector3 PosCoord;
+						PosCoord.x = ((*TESRenderWindow::ActiveCell)->cellData.coords->x << 12) + 2048;
+						PosCoord.y = ((*TESRenderWindow::ActiveCell)->cellData.coords->y << 12) + 2048;
+						TESCellViewWindow::SetCurrentCell(&PosCoord, true);
+					}
+				}
+			}
+
+			void RenderWindowMouseManager::ToggleFreeMouseMovement(HWND hWnd, bool State)
+			{
+				if (State)
+				{
+					if (FreeMouseMovement == false)
+					{
+						GetCursorPos(&MouseDownCursorPos);
+						// hide the cursor and reset it to the center
+						FreeMouseMovement = true;
+						CenterCursor(hWnd, true);
+						while (ShowCursor(FALSE) > 0)
+							;//
+
+						ToggleCellViewUpdate(false);
+					}
+				}
 				else
-					hooks::_MemHdlr(CellViewSetCurrentCell).WriteBuffer();			// write original instruction
+				{
+					if (FreeMouseMovement)
+					{
+						// restore the cursor
+						FreeMouseMovement = false;
+						SetCursorPos(MouseDownCursorPos.x, MouseDownCursorPos.y);
+						while (ShowCursor(TRUE) < 0)
+							;//
+
+						ToggleCellViewUpdate(true);
+					}
+				}
+			}
+
+			void RenderWindowMouseManager::HandleFreeMouseMovementKeyEvent(UInt8 Type)
+			{
+				ToggleFreeMouseMovement(*TESRenderWindow::WindowHandle, Type == HoldableKeyHandler::kEvent_KeyDown);
 			}
 
 			RenderWindowMouseManager::RenderWindowMouseManager() :
-				CurrentMouseCoord{0},
+				CurrentMouseCoord{ 0 },
 				PaintingSelection(false),
 				SelectionPaintingMode(kSelectionPainting_NotSet),
-				MouseDownCursorPos{0},
-				FreeMouseMovement(false)
+				MouseDownCursorPos{ 0 },
+				FreeMouseMovement(false),
+				CellViewUpdatesDeferred(false)
+			{
+				;//
+			}
+
+			void RenderWindowMouseManager::Initialize(SharedBindings& Shared)
+			{
+				// register free mouse movement event listeners
+				HoldableKeyHandler::HoldableKeyEventDelegateT Listener(std::bind(&RenderWindowMouseManager::HandleFreeMouseMovementKeyEvent, this, std::placeholders::_1));
+				Shared.ZoomCamera->RegisterListener(Listener);
+				Shared.PanCamera->RegisterListener(Listener);
+				Shared.RotateCamera->RegisterListener(Listener);
+			}
+
+			void RenderWindowMouseManager::Deinitialize()
 			{
 				;//
 			}
@@ -1498,8 +1585,6 @@ namespace cse
 						}
 					}
 
-					// begin free movement handling
-					GetCursorPos(&MouseDownCursorPos);
 					// tunnel the message to the original proc and check if we need to allow free mouse movement
 					BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, wParam, lParam);
 
@@ -1513,19 +1598,12 @@ namespace cse
 						SME_ASSERT(*TESRenderWindow::LandscapeEditFlag == 0);
 						if (GetCapture() == hWnd)
 						{
-							SME_ASSERT(FreeMouseMovement == false);
-
-							// hide the cursor and reset it to the center
-							FreeMouseMovement = true;
-							CenterCursor(hWnd, true);
-							while (ShowCursor(FALSE) > 0)
-								;//
+							// begin free movement handling
+							ToggleFreeMouseMovement(hWnd, true);
 						}
 					}
 
-					// defer updating the cell view in exterior worldspaces until we release captue
-					if (*TESRenderWindow::ActiveCell && (*TESRenderWindow::ActiveCell)->IsInterior() == false)
-						ToggleCellViewUpdate(false);
+					ToggleCellViewUpdate(false);
 
 					break;
 				case WM_LBUTTONUP:
@@ -1555,27 +1633,11 @@ namespace cse
 					}
 
 					_RENDERWIN_XSTATE.DraggingPathGridPoints = false;
-					// end free movement handling
 					BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, wParam, lParam);
-					if (FreeMouseMovement)
-					{
-						// restore the cursor
-						FreeMouseMovement = false;
-						SetCursorPos(MouseDownCursorPos.x, MouseDownCursorPos.y);
-						while (ShowCursor(TRUE) < 0)
-							;//
-					}
 
-					// update the cell view to the current renderwindow cell
-					if (*TESRenderWindow::ActiveCell && (*TESRenderWindow::ActiveCell)->IsInterior() == false)
-					{
-						ToggleCellViewUpdate(true);
-						Vector3 PosCoord;
-						PosCoord.x = ((*TESRenderWindow::ActiveCell)->cellData.coords->x << 12) + 2048;
-						PosCoord.y = ((*TESRenderWindow::ActiveCell)->cellData.coords->y << 12) + 2048;
-						TESCellViewWindow::SetCurrentCell(&PosCoord, true);
-					}
-
+					// end free movement handling
+					ToggleFreeMouseMovement(hWnd, false);
+					ToggleCellViewUpdate(true);
 
 					break;
 				}

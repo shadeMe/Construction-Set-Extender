@@ -372,7 +372,7 @@ void TES::ReloadLandscapeTextures()
 		}
 	}
 
-	TESRenderWindow::Refresh3D();
+	TESRenderWindow::Refresh3D(false);
 }
 
 bhkWorldM* TES::GetHavokWorld() const

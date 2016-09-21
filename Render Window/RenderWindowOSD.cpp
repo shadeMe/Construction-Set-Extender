@@ -263,6 +263,33 @@ namespace cse
 			io.RenderDrawListsFn = RenderDrawLists;
 			io.UserData = this;
 
+			// set up window styles and colors
+			ImGuiStyle& style = ImGui::GetStyle();
+
+			style.WindowPadding = ImVec2(10, 10);
+			style.WindowRounding = 5.0f;
+			style.ChildWindowRounding = 5.0f;
+			style.FramePadding = ImVec2(5, 3);
+			style.FrameRounding = 4.0f;
+			style.ItemSpacing = ImVec2(12, 8);
+			style.ItemInnerSpacing = ImVec2(8, 6);
+			style.IndentSpacing = 25.0f;
+			style.ScrollbarSize = 15.0f;
+			style.ScrollbarRounding = 9.0f;
+			style.GrabRounding = 3.0f;
+
+			style.Colors[ImGuiCol_WindowBg] = ImVec4(0.00f, 0.00f, 0.00f, settings::renderWindowOSD::kWindowBGAlpha().f);
+			style.Colors[ImGuiCol_PopupBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.85f);
+			style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.f);
+			style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.90f, 0.80f, 0.80f, 0.49f);
+			style.Colors[ImGuiCol_TitleBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.31f);
+			style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 0.20f);
+			style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.00f, 0.00f, 0.00f, 0.78f);
+			style.Colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.40f, 0.40f, 0.80f, 0.53f);
+			style.Colors[ImGuiCol_Button] = ImVec4(0.35f, 0.55f, 0.61f, 0.51f);
+			style.Colors[ImGuiCol_Header] = ImVec4(0.69f, 0.42f, 0.39f, 0.00f);
+			style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.69f, 0.42f, 0.44f, 0.44f);
+
 			Initialized = true;
 			return true;
 		}
@@ -364,32 +391,6 @@ namespace cse
 			io.KeyShift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
 			io.KeyAlt = (GetKeyState(VK_MENU) & 0x8000) != 0;
 			io.KeySuper = false;
-
-			// set up window styles and colors
-			ImGuiStyle& style = ImGui::GetStyle();
-
-			style.WindowPadding = ImVec2(10, 10);
-			style.WindowRounding = 5.0f;
-			style.ChildWindowRounding = 5.0f;
-			style.FramePadding = ImVec2(5, 3);
-			style.FrameRounding = 4.0f;
-			style.ItemSpacing = ImVec2(12, 8);
-			style.ItemInnerSpacing = ImVec2(8, 6);
-			style.IndentSpacing = 25.0f;
-			style.ScrollbarSize = 15.0f;
-			style.ScrollbarRounding = 9.0f;
-			style.GrabRounding = 3.0f;
-
-			style.Colors[ImGuiCol_WindowBg] = ImVec4(0.00f, 0.00f, 0.00f, settings::renderWindowOSD::kWindowBGAlpha().f);
-			style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.f);
-			style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.90f, 0.80f, 0.80f, 0.49f);
-			style.Colors[ImGuiCol_TitleBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.31f);
-			style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 0.20f);
-			style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.00f, 0.00f, 0.00f, 0.78f);
-			style.Colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.40f, 0.40f, 0.80f, 0.53f);
-			style.Colors[ImGuiCol_Button] = ImVec4(0.35f, 0.55f, 0.61f, 0.51f);
-			style.Colors[ImGuiCol_Header] = ImVec4(0.69f, 0.42f, 0.39f, 0.00f);
-			style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.69f, 0.42f, 0.44f, 0.44f);
 
 			// clear the input event whitelists every frame
 			PassthroughWhitelistMouseEvents.clear();

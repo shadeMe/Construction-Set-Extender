@@ -911,7 +911,11 @@ namespace cse
 				BuiltInKeyComboRWA ToggleBrightLight("Toggle Bright Light", "Toggle bright light rendering.", ExecutionContext::kMode_All, Key('A'));
 				BuiltInKeyComboRWA ToggleLandscapeEditMode("Toggle Landscape Edit Mode", "Turn on landscape sculpting/painting mode.", ExecutionContext::kMode_All, Key('H'));
 				BuiltInKeyComboRWA ToggleCollisionGeom("Toggle Collision Geometry", "Toggle visibility of collision geometry.", ExecutionContext::kMode_All, Key(VK_F4));
-				BuiltInKeyComboRWA RefreshRenderWindow("Refresh Render Window", "Reload textures and refresh current cell", ExecutionContext::kMode_All, Key(VK_F5));
+				BuiltInKeyComboRWA RefreshRenderWindow("Refresh Render Window", "Reload textures and refresh current cell", ExecutionContext::kMode_All, Key(VK_F5), [](Key& Key) {
+					// prevent triggering the key when rendering the scene as it'll cause a deadlock
+					SME_ASSERT(_RENDERWIN_MGR.IsRenderingScene() == false);
+					Key.Trigger();
+				});
 				BuiltInKeyComboRWA MoveCamYAxisPos("Move Camera Y-Axis +", "Move camera in the positive Y-axis.", ExecutionContext::kMode_All, Key(VK_UP));
 				BuiltInKeyComboRWA MoveCamYAxisNeg("Move Camera Y-Axis -", "Move camera in the negative Y-axis.", ExecutionContext::kMode_All, Key(VK_DOWN));
 				BuiltInKeyComboRWA MoveCamXAxisPos("Move Camera X-Axis +", "Move camera in the positive X-axis.", ExecutionContext::kMode_All, Key(VK_RIGHT));

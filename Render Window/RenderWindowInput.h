@@ -190,16 +190,29 @@ namespace cse
 
 			class HoldableKeyHandler : public IHotKey
 			{
+			public:
+				enum
+				{
+					kEvent_KeyDown	= 0,
+					kEvent_KeyUp	= 1,
+				};
+
+				typedef std::function<void(UInt8 Event)>	HoldableKeyEventDelegateT;
 			protected:
+				typedef std::vector<HoldableKeyEventDelegateT>		EventDelegateArrayT;
+
 				std::string				Name;
 				std::string				Description;
+				EventDelegateArrayT		EventListeners;
 
 				virtual bool			IsActiveBindingTriggered(SHORT Key = NULL) const override;
+				virtual void			NotifyListeners(UInt8 Event) const;
 			public:
 				HoldableKeyHandler(const char* GUID, const char* Name, const char* Desc, BasicKeyBinding Default = BasicKeyBinding());
 				inline virtual ~HoldableKeyHandler() override = default;
 
 				virtual bool			IsHeldDown() const;		// returns true if the key is held down
+				virtual void			RegisterListener(HoldableKeyEventDelegateT Delegate);		// listeners are notified when a key event is handled successfully
 
 				virtual const char*		GetName() const override;
 				virtual const char*		GetDescription() const override;
@@ -264,7 +277,10 @@ namespace cse
 
 			struct SharedBindings
 			{
-				const HoldableKeyHandler*	MoveCameraWithSelection;
+				HoldableKeyHandler*			MoveCameraWithSelection;
+				HoldableKeyOverride*		RotateCamera;
+				HoldableKeyOverride*		PanCamera;
+				HoldableKeyOverride*		ZoomCamera;
 			};
 
 			class RenderWindowKeyboardManager
@@ -306,7 +322,7 @@ namespace cse
 
 				bool						HandleInput(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, RenderWindowManager* Manager);		// returns true if input was handled/consumed
 				void						ShowHotKeyEditor();
-				const SharedBindings&		GetSharedBindings() const;
+				SharedBindings&				GetSharedBindings();
 			};
 
 			class RenderWindowMouseManager
@@ -323,13 +339,19 @@ namespace cse
 				UInt8				SelectionPaintingMode;
 				POINT				MouseDownCursorPos;
 				bool				FreeMouseMovement;
+				bool				CellViewUpdatesDeferred;
 
 				POINT				CenterCursor(HWND hWnd, bool UpdateBaseCoords);			// returns the center coords (in screen area)
 				bool				IsCenteringCursor(HWND hWnd, LPARAM lParam) const;
 				void				GetWindowMetrics(HWND hWnd, int& X, int& Y, int& Width, int& Height) const;
-				void				ToggleCellViewUpdate(bool State) const;
+				void				ToggleCellViewUpdate(bool State);
+				void				ToggleFreeMouseMovement(HWND hWnd, bool State);
+				void				HandleFreeMouseMovementKeyEvent(UInt8 Type);
 			public:
 				RenderWindowMouseManager();
+
+				void				Initialize(SharedBindings& Shared);
+				void				Deinitialize();
 
 				bool				HandleInput(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, RenderWindowManager* Manager);		// returns true if input was handled/consumed
 				bool				IsPaintingSelection() const;

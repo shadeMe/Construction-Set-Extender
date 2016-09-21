@@ -211,7 +211,7 @@ namespace cse
 			input::RenderWindowMouseManager*			MouseInputManager;
 			GlobalEventSink*							EventSink;
 			TESObjectREFRArrayT							ActiveRefCache;
-
+			bool										RenderingScene;
 			bool										Initialized;
 
 			void										HandleClearData();
@@ -261,6 +261,7 @@ namespace cse
 			const TESObjectREFRArrayT&					GetActiveRefs() const;
 
 			void										RefreshFOV();
+			bool										IsRenderingScene() const;
 
 			static RenderWindowManager					Instance;
 		};

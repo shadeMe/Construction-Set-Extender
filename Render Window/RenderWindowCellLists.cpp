@@ -153,6 +153,8 @@ namespace cse
 			ImGui::Selectable(Name);
 			ImGui::NextColumn();
 			ImGui::Selectable(Location);
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip(Location);
 			ImGui::NextColumn();
 		}
 

@@ -1,6 +1,7 @@
 #include "TESRender.h"
 #include "Core.h"
 #include "Render Window\RenderWindowManager.h"
+#include "Render Window\RenderWindowActions.h"
 
 using namespace cse;
 using namespace cse::renderWindow;
@@ -105,9 +106,12 @@ void TESRenderWindow::TogglePathGridEditMode()
 	cdeclCall<void>(0x00550660);
 }
 
-void TESRenderWindow::Refresh3D()
+void TESRenderWindow::Refresh3D(bool Immediate)
 {
-	SendMessage(*WindowHandle, WM_KEYDOWN, VK_F5, NULL);
+	if (Immediate)
+		actions::builtIn::RefreshRenderWindow();
+	else
+		PostMessage(*WindowHandle, WM_KEYDOWN, VK_F5, NULL);		// post to the message queue
 }
 
 UInt32 TESRenderWindow::GetActiveCellObjects(TESObjectREFRArrayT& OutList, CellObjectListVisitorT Visitor)

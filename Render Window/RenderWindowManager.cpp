@@ -1063,6 +1063,7 @@ namespace cse
 			KeyboardInputManager = new input::RenderWindowKeyboardManager();
 			MouseInputManager = new input::RenderWindowMouseManager();
 			ActiveRefCache.reserve(500);
+			RenderingScene = false;
 
 			Initialized = false;
 		}
@@ -1114,6 +1115,7 @@ namespace cse
 			CellLists->Initialize();
 			GroupManager->Initialize();
 			KeyboardInputManager->Initialize();
+			MouseInputManager->Initialize(KeyboardInputManager->GetSharedBindings());
 
 			// register active ref collection popups
 			ToolbarOSDLayer::Instance.RegisterTopToolbarButton("activerefcol_invisible_interface",
@@ -1159,6 +1161,7 @@ namespace cse
 			events::renderer::kPreSceneGraphRender.RemoveSink(EventSink);
 			events::renderer::kPostSceneGraphRender.RemoveSink(EventSink);
 
+			MouseInputManager->Deinitialize();
 			KeyboardInputManager->Deinitialize();
 			GroupManager->Deinitialize();
 			CellLists->Deinitialize();
@@ -1229,6 +1232,11 @@ namespace cse
 			AUXVIEWPORT->SetCameraFOV(CameraFOV);
 
 			TESRenderWindow::Redraw();
+		}
+
+		bool RenderWindowManager::IsRenderingScene() const
+		{
+			return RenderingScene;
 		}
 
 		void RenderWindowManager::CacheActiveRefs()
@@ -1761,14 +1769,17 @@ namespace cse
 		void RenderWindowManager::HandlePreSceneGraphRender(NiCamera* Camera, NiNode* SceneGraph, NiCullingProcess* CullingProc, BSRenderedTexture* RenderTarget)
 		{
 			SME_ASSERT(Initialized);
+			SME_ASSERT(RenderingScene == false);
 
 			CacheActiveRefs();
+			RenderingScene = true;
 			SceneGraphManager->HandleRender(Camera, SceneGraph, CullingProc, RenderTarget);
 		}
 
 		void RenderWindowManager::HandlePostSceneGraphRender()
 		{
 			SME_ASSERT(Initialized);
+			SME_ASSERT(RenderingScene);
 
 			// no OSD for the aux viewport
 			if (AUXVIEWPORT->IsRenderingPerspective() == false)
@@ -1776,6 +1787,8 @@ namespace cse
 				OSD->Draw();
 				OSD->Render();
 			}
+
+			RenderingScene = false;
 		}
 
 
