@@ -160,6 +160,7 @@ public:
 	static NiProperty*						CreateProperty(UInt8 Type);		// increments ref count
 	static NiSourceTexture*					CreateSourceTexture(const char* FilePath);
 	static NiCamera*						CreateCamera();
+	static NiTexturingProperty*				CreateTexturingProperty(const char* TexturePath);	// increments ref count
 
 
 	static NiDX9Renderer**					NiRendererSingleton;

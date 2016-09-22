@@ -192,7 +192,7 @@ namespace cse
 				kPosition_Relative,			// relative to the mouse position
 			};
 		private:
-			static constexpr float				kTimeout = 0.25;		// in seconds
+			static constexpr float				kTimeout = 0.2;		// in seconds
 			static const PopupIDT				kInvalidID = -1;
 
 			struct PopupData

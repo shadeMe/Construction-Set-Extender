@@ -416,6 +416,14 @@ NiCamera* TESRender::CreateCamera()
 	return NewCam;
 }
 
+NiTexturingProperty* TESRender::CreateTexturingProperty(const char* TexturePath)
+{
+	NiTexturingProperty* Prop = (NiTexturingProperty*)FormHeap_Allocate(sizeof(NiTexturingProperty));
+	thisCall<void>(0x00701030, Prop, TexturePath, 0);
+	Prop->m_uiRefCount++;
+	return Prop;
+}
+
 TESPathGridPoint* TESRender::PickPathGridPointAtCoords(int X, int Y)
 {
 	if (*TESRenderWindow::PathGridEditFlag == 0 || *PathGridSceneRoot == nullptr)

@@ -1,4 +1,5 @@
 #pragma once
+#include "Serialization.h"
 
 namespace cse
 {
@@ -132,5 +133,97 @@ namespace cse
 			};
 
 		}
+
+		typedef UInt32										TESObjectREFRSafeHandleT;
+		typedef std::vector<TESObjectREFRSafeHandleT>		TESObjectREFRSafeArrayT;
+
+
+		// stores refs by formID and supports validation
+		class NamedReferenceCollection
+		{
+		public:
+			typedef std::string									CollectionIDT;
+		protected:
+			CollectionIDT				Name;
+			TESObjectREFRSafeArrayT		Members;
+
+			bool					IsMember(TESObjectREFRSafeHandleT Ref, TESObjectREFRSafeArrayT::iterator& Match);
+			static bool				GetValidRef(TESObjectREFRSafeHandleT Ref, TESObjectREFR*& OutResolvedRef);		// returns false if the ref handle didn't point to a valid reference
+		public:
+			NamedReferenceCollection(const char* Name);
+			NamedReferenceCollection(std::string& InSerialized);
+
+			void					ValidateMembers(TESObjectREFRSafeArrayT& OutDelinquents, TESObjectREFRArrayT* OutValidMembers);
+			void					AddMember(TESObjectREFR* Ref);
+			void					AddMember(TESObjectREFRSafeHandleT Ref);
+			void					RemoveMember(TESObjectREFR* Ref);
+			void					RemoveMember(TESObjectREFRSafeHandleT Ref);
+			void					ClearMembers();
+
+			const char*							GetName() const;
+			const UInt32						GetSize() const;
+			const TESObjectREFRSafeArrayT&		GetMembers() const;
+
+			int						Serialize(std::string& OutSerialized);		// returns the no of members serialized
+			void					Deserialize(std::string& InSerialized);
+		};
+
+		// manages distinct named collections, one-to-one mapping b'ween refs and collections
+		// collections are automatically dissolved if the member count falls under 2
+		class NamedReferenceCollectionManager
+		{
+			class CosaveHandler : public serialization::PluginCosaveManager::IEventHandler
+			{
+				NamedReferenceCollectionManager*	Parent;
+			public:
+				CosaveHandler(NamedReferenceCollectionManager* Parent);
+
+				virtual void						HandleLoad(const char* PluginName, const char* CosaveDirectory);
+				virtual void						HandleSave(const char* PluginName, const char* CosaveDirectory);
+				virtual void						HandleShutdown(const char* PluginName, const char* CosaveDirectory);
+			};
+
+			friend class CosaveHandler;
+		protected:
+			typedef std::unique_ptr<NamedReferenceCollection>									CollectionHandleT;
+			typedef std::vector<CollectionHandleT>												CollectionArrayT;
+			typedef std::unordered_map<TESObjectREFRSafeHandleT, NamedReferenceCollection*>		Ref2CollectionMapT;
+
+			static const char*						kSigilBeginCollection;
+			static const char*						kSigilEndCollection;
+
+			virtual bool							GetCollectionExists(const char* Name) const;
+			virtual NamedReferenceCollection*		LookupCollection(const char* Name) const;
+			virtual NamedReferenceCollection*		GetParentCollection(TESObjectREFRSafeHandleT Ref) const;
+
+			virtual bool							CheckCollsions(NamedReferenceCollection* Collection, bool CheckMembers) const;		// returns false if a collection of the name already exists or if any of the refs are already in another collection
+			virtual bool							ValidateCollection(NamedReferenceCollection* Collection,
+																	   TESObjectREFRArrayT* OutValidMembers = nullptr);					// returns false if the collection has <= 1 member
+			virtual void							RegisterCollection(NamedReferenceCollection* Collection, bool RegisterRefs);		// takes ownership of pointer
+			virtual void							DeregisterCollection(NamedReferenceCollection* Collection, bool DeregisterRefs);	// releases the pointer
+
+			virtual void							StandardOutput(const char* Fmt, ...) const = 0;
+			virtual const char*						GetSaveFileName() const = 0;
+
+			virtual void							Save(const char* PluginName, const char* DirPath);
+			virtual void							Load(const char* PluginName, const char* DirPath);
+
+			virtual void							ClearCollections();
+			virtual bool							AddReference(TESObjectREFR* Ref, NamedReferenceCollection* To);		// returns false if unsuccessful
+			virtual bool							AddReference(TESObjectREFRSafeHandleT Ref, NamedReferenceCollection* To);
+			virtual void							RemoveReference(TESObjectREFR* Ref);
+			virtual void							RemoveReference(TESObjectREFRSafeHandleT Ref);
+
+			CollectionArrayT						RegisteredCollections;
+			Ref2CollectionMapT						ReferenceTable;
+			CosaveHandler*							CosaveInterface;
+			bool									Initialized;
+		public:
+			NamedReferenceCollectionManager();
+			virtual ~NamedReferenceCollectionManager() = 0;
+
+			virtual void							Initialize();
+			virtual void							Deinitialize();
+		};
 	}
 }

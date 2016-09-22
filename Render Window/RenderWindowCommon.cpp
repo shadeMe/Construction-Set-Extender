@@ -281,5 +281,448 @@ namespace cse
 				return Out;
 			}
 		}
+
+		bool NamedReferenceCollection::IsMember(TESObjectREFRSafeHandleT Ref, TESObjectREFRSafeArrayT::iterator& Match)
+		{
+			for (TESObjectREFRSafeArrayT::iterator Itr = Members.begin(); Itr != Members.end(); Itr++)
+			{
+				if (*Itr == Ref)
+				{
+					Match = Itr;
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		bool NamedReferenceCollection::GetValidRef(TESObjectREFRSafeHandleT Ref, TESObjectREFR*& OutResolvedRef)
+		{
+			TESForm* Form = TESForm::LookupByFormID(Ref);
+
+			if (Form)
+			{
+				SME_ASSERT(Form->formType == TESForm::kFormType_ACHR || Form->formType == TESForm::kFormType_ACRE || Form->formType == TESForm::kFormType_REFR);
+
+				OutResolvedRef = CS_CAST(Form, TESForm, TESObjectREFR);
+				return (Form->IsDeleted() == false);
+			}
+			else
+				return false;
+		}
+
+		NamedReferenceCollection::NamedReferenceCollection(const char* Name) :
+			Name(Name),
+			Members()
+		{
+			SME_ASSERT(this->Name.find_first_of("][") == -1);
+			Members.reserve(25);
+		}
+
+		NamedReferenceCollection::NamedReferenceCollection(std::string& InSerialized) :
+			Name(),
+			Members()
+		{
+			Members.reserve(25);
+			Deserialize(InSerialized);
+		}
+
+		void NamedReferenceCollection::ValidateMembers(TESObjectREFRSafeArrayT& OutDelinquents, TESObjectREFRArrayT* OutValidMembers)
+		{
+			if (OutValidMembers)
+				OutValidMembers->clear();
+			OutDelinquents.clear();
+
+			for (TESObjectREFRSafeArrayT::iterator Itr = Members.begin(); Itr != Members.end();)
+			{
+				TESObjectREFR* ValidRef = nullptr;
+				if (GetValidRef(*Itr, ValidRef) == false)
+				{
+					OutDelinquents.push_back(*Itr);
+					Itr = Members.erase(Itr);
+					continue;
+				}
+				else if (OutValidMembers)
+					OutValidMembers->push_back(ValidRef);
+
+				Itr++;
+			}
+		}
+
+		void NamedReferenceCollection::AddMember(TESObjectREFR* Ref)
+		{
+			SME_ASSERT(Ref);
+			AddMember(Ref->formID);
+		}
+
+		void NamedReferenceCollection::AddMember(TESObjectREFRSafeHandleT Ref)
+		{
+			TESObjectREFRSafeArrayT::iterator Match = Members.end();
+			if (IsMember(Ref, Match) == false)
+				Members.push_back(Ref);
+		}
+
+		void NamedReferenceCollection::RemoveMember(TESObjectREFR* Ref)
+		{
+			SME_ASSERT(Ref);
+			RemoveMember(Ref->formID);
+		}
+
+		void NamedReferenceCollection::RemoveMember(TESObjectREFRSafeHandleT Ref)
+		{
+			TESObjectREFRSafeArrayT::iterator Match = Members.end();
+			if (IsMember(Ref, Match))
+				Members.erase(Match);
+		}
+
+		void NamedReferenceCollection::ClearMembers()
+		{
+			Members.clear();
+		}
+
+		const char* NamedReferenceCollection::GetName() const
+		{
+			return Name.c_str();
+		}
+
+		const UInt32 NamedReferenceCollection::GetSize() const
+		{
+			return Members.size();
+		}
+
+		const TESObjectREFRSafeArrayT& NamedReferenceCollection::GetMembers() const
+		{
+			return Members;
+		}
+
+		int NamedReferenceCollection::Serialize(std::string& OutSerialized)
+		{
+			serialization::TESForm2Text Serializer;
+
+			OutSerialized.clear();
+			OutSerialized.append("[" + Name + "]\n");
+
+			TESObjectREFRArrayT ValidMembers;
+			TESObjectREFRSafeArrayT Delinquents;
+
+			ValidateMembers(Delinquents, &ValidMembers);
+			for (auto Itr : ValidMembers)
+			{
+				std::string Buffer;
+				Serializer.Serialize(Itr, Buffer);
+				OutSerialized.append(Buffer).append("\n");
+			}
+
+			return ValidMembers.size();
+		}
+
+		void NamedReferenceCollection::Deserialize(std::string& InSerialized)
+		{
+			serialization::TESForm2Text Deserializer;
+			SME::StringHelpers::Tokenizer Tokenizer(InSerialized.c_str(), "\n");
+
+			std::string Line;
+			int Count = 0;
+
+			Members.clear();
+			while (Tokenizer.NextToken(Line) != -1)
+			{
+				if (Count == 0)
+				{
+					if (Name.empty())
+					{
+						int Start = Line.find("[");
+						int End = Line.find("]");
+						SME_ASSERT(Start != -1 && End != -1);
+
+						Start++;
+						Name = Line.substr(Start, End - Start);
+					}
+					else
+						SME_ASSERT(Line.find("[" + Name + "]") == 0);
+				}
+				else
+				{
+					TESForm* Ref = nullptr;
+					if (Deserializer.Deserialize(Line, &Ref))
+					{
+						SME_ASSERT(Ref->IsReference());
+						AddMember(Ref->formID);
+					}
+				}
+
+				Count++;
+			}
+		}
+
+		NamedReferenceCollectionManager::CosaveHandler::CosaveHandler(NamedReferenceCollectionManager* Parent) :
+			Parent(Parent)
+		{
+			SME_ASSERT(Parent);
+		}
+
+		void NamedReferenceCollectionManager::CosaveHandler::HandleLoad(const char* PluginName, const char* CosaveDirectory)
+		{
+			Parent->Load(PluginName, CosaveDirectory);
+		}
+
+		void NamedReferenceCollectionManager::CosaveHandler::HandleSave(const char* PluginName, const char* CosaveDirectory)
+		{
+			Parent->Save(PluginName, CosaveDirectory);
+		}
+
+		void NamedReferenceCollectionManager::CosaveHandler::HandleShutdown(const char* PluginName, const char* CosaveDirectory)
+		{
+			Parent->Save(PluginName, CosaveDirectory);
+		}
+
+		const char*			NamedReferenceCollectionManager::kSigilBeginCollection	= "{NamedReferenceCollection:Begin}";
+		const char*			NamedReferenceCollectionManager::kSigilEndCollection	= "{NamedReferenceCollection:End}";
+
+		bool NamedReferenceCollectionManager::GetCollectionExists(const char* Name) const
+		{
+			return LookupCollection(Name) != nullptr;
+		}
+
+		NamedReferenceCollection* NamedReferenceCollectionManager::LookupCollection(const char* Name) const
+		{
+			for (auto& Itr : RegisteredCollections)
+			{
+				if (!_stricmp(Itr->GetName(), Name))
+					return Itr.get();
+			}
+
+			return nullptr;
+		}
+
+		NamedReferenceCollection* NamedReferenceCollectionManager::GetParentCollection(TESObjectREFRSafeHandleT Ref) const
+		{
+			if (ReferenceTable.count(Ref))
+				return ReferenceTable.at(Ref);
+			else
+				return nullptr;
+		}
+
+		bool NamedReferenceCollectionManager::CheckCollsions(NamedReferenceCollection* Collection, bool CheckMembers) const
+		{
+			if (LookupCollection(Collection->GetName()))
+				return false;
+			else if (CheckMembers)
+			{
+				for (auto Itr : Collection->GetMembers())
+				{
+					if (ReferenceTable.count(Itr))
+						return false;
+				}
+			}
+
+			return true;
+		}
+
+		bool NamedReferenceCollectionManager::ValidateCollection(NamedReferenceCollection* Collection, TESObjectREFRArrayT* OutValidMembers /*= nullptr*/)
+		{
+			TESObjectREFRSafeArrayT Delinquents;
+			Collection->ValidateMembers(Delinquents, OutValidMembers);
+
+			for (auto Itr : Delinquents)
+				ReferenceTable.erase(Itr);
+
+			if (Collection->GetSize() <= 1)
+			{
+				StandardOutput("Empty collection '%s' dissolved", Collection->GetName());
+				DeregisterCollection(Collection, true);
+				return false;
+			}
+			else
+				return true;
+		}
+
+		void NamedReferenceCollectionManager::RegisterCollection(NamedReferenceCollection* Collection, bool RegisterRefs)
+		{
+			SME_ASSERT(CheckCollsions(Collection, RegisterRefs));
+
+			CollectionHandleT Temp(Collection);
+			RegisteredCollections.push_back(std::move(Temp));
+			if (RegisterRefs)
+			{
+				for (auto Itr : Collection->GetMembers())
+					ReferenceTable[Itr] = Collection;
+			}
+		}
+
+		void NamedReferenceCollectionManager::DeregisterCollection(NamedReferenceCollection* Collection, bool DeregisterRefs)
+		{
+			CollectionArrayT::iterator Match = std::find_if(RegisteredCollections.begin(), RegisteredCollections.end(),
+														 [&Collection](CollectionHandleT& p) { return p.get() == Collection; });
+			SME_ASSERT(Match != RegisteredCollections.end());
+
+			if (DeregisterRefs)
+			{
+				for (auto Itr : Collection->GetMembers())
+					ReferenceTable.erase(Itr);
+			}
+
+			// release at the end as it destroys the pointer
+			RegisteredCollections.erase(Match);
+		}
+
+		void NamedReferenceCollectionManager::Save(const char* PluginName, const char* DirPath)
+		{
+			if (RegisteredCollections.size() == 0)
+				return;
+
+			std::string FilePath(DirPath); FilePath += "\\" + std::string(GetSaveFileName());
+			try
+			{
+				if (bfs::exists(FilePath))
+					bfs::remove(FilePath);
+
+				std::fstream Stream(FilePath.c_str(), std::ios::out);
+				for (auto& Itr : RegisteredCollections)
+				{
+					std::string Temp;
+					int Count = Itr->Serialize(Temp);
+					if (Count)
+						Stream << kSigilBeginCollection << "\n" << Temp << kSigilEndCollection << "\n\n";
+				}
+				Stream.close();
+			}
+			catch (std::exception& e)
+			{
+				BGSEECONSOLE_MESSAGE("Couldn't save named reference collection to '%s'. Error - %s", FilePath.c_str(), e.what());
+			}
+		}
+
+		void NamedReferenceCollectionManager::Load(const char* PluginName, const char* DirPath)
+		{
+			std::string FilePath(DirPath); FilePath += "\\" + std::string(GetSaveFileName());
+			try
+			{
+				ClearCollections();
+				if (bfs::exists(FilePath) == false)
+					return;
+
+				std::string Line;
+				std::string CollectionBlock;
+				bool ExtractingBlock = false;
+
+				std::fstream Stream(FilePath.c_str(), std::ios::in);
+				int Count = 0;
+				while (std::getline(Stream, Line))
+				{
+					Count++;
+					if (Line.length() < 2)
+						continue;
+
+					if (Line.find(kSigilBeginCollection) == 0)
+					{
+						if (ExtractingBlock)
+							throw std::exception("Invalid sigil at line %d", Count);
+
+						ExtractingBlock = true;
+						CollectionBlock.clear();
+						continue;
+					}
+					else if (Line.find(kSigilEndCollection) == 0)
+					{
+						if (ExtractingBlock == false)
+							throw std::exception("Invalid sigil at line %d", Count);
+
+						ExtractingBlock = false;
+
+						NamedReferenceCollection* NewColl = new NamedReferenceCollection(CollectionBlock);
+						RegisterCollection(NewColl, true);
+						continue;
+					}
+					else
+						CollectionBlock += Line + "\n";
+				}
+
+				Stream.close();
+			}
+			catch (std::exception& e)
+			{
+				BGSEECONSOLE_MESSAGE("Couldn't load named reference collection from '%s'. Error - %s", FilePath.c_str(), e.what());
+			}
+		}
+
+		void NamedReferenceCollectionManager::ClearCollections()
+		{
+			ReferenceTable.clear();
+			RegisteredCollections.clear();
+		}
+
+		bool NamedReferenceCollectionManager::AddReference(TESObjectREFR* Ref, NamedReferenceCollection* To)
+		{
+			return AddReference(Ref->formID, To);
+		}
+
+		bool NamedReferenceCollectionManager::AddReference(TESObjectREFRSafeHandleT Ref, NamedReferenceCollection* To)
+		{
+			SME_ASSERT(Ref && To);
+
+			NamedReferenceCollection* Parent = GetParentCollection(Ref);
+			if (Parent && Parent != To)
+			{
+				StandardOutput("Ref %08X is already a member of group '%s'", Ref, Parent->GetName());
+				return false;
+			}
+			else if (Parent == nullptr)
+				To->AddMember(Ref);
+
+			return true;
+		}
+
+		void NamedReferenceCollectionManager::RemoveReference(TESObjectREFR* Ref)
+		{
+			return RemoveReference(Ref->formID);
+		}
+
+		void NamedReferenceCollectionManager::RemoveReference(TESObjectREFRSafeHandleT Ref)
+		{
+			SME_ASSERT(Ref);
+
+			NamedReferenceCollection* Parent = GetParentCollection(Ref);
+			if (Parent)
+			{
+				Parent->RemoveMember(Ref);
+				ReferenceTable.erase(Ref);
+				ValidateCollection(Parent);
+			}
+		}
+
+		NamedReferenceCollectionManager::NamedReferenceCollectionManager() :
+			RegisteredCollections(),
+			ReferenceTable()
+		{
+			CosaveInterface = new CosaveHandler(this);
+			Initialized = false;
+		}
+
+		NamedReferenceCollectionManager::~NamedReferenceCollectionManager()
+		{
+			DEBUG_ASSERT(Initialized == false);
+
+			SAFEDELETE(CosaveInterface);
+			ClearCollections();
+		}
+
+		void NamedReferenceCollectionManager::Initialize()
+		{
+			SME_ASSERT(Initialized == false);
+
+			_COSAVE.Register(CosaveInterface);
+
+			Initialized = true;
+		}
+
+		void NamedReferenceCollectionManager::Deinitialize()
+		{
+			SME_ASSERT(Initialized);
+
+			_COSAVE.Unregister(CosaveInterface);
+
+			Initialized = false;
+		}
 	}
 }

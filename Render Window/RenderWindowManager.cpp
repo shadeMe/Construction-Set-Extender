@@ -234,20 +234,55 @@ namespace cse
 			Stencil = (NiStencilProperty*)TESRender::CreateProperty(NiStencilProperty::kType);
 			Stencil->flags = 0;
 			Stencil->flags |= NiStencilProperty::kTestMode_Always;
+
+			SelectionMask = TESRender::CreateTexturingProperty("Textures\\Effects\\TerrainNoise.dds");
+			thisCall<void>(0x00410B50, SelectionMask, 0);
 		}
 
 		DebugSceneGraphModifier::~DebugSceneGraphModifier()
 		{
 			TESRender::DeleteNiRefObject(MatProp);
 			TESRender::DeleteNiRefObject(Stencil);
+			TESRender::DeleteNiRefObject(SelectionMask);
 		}
 
 		void DebugSceneGraphModifier::PreRender(RenderData& Data)
 		{
+			return;
+
+			for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+			{
+				TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
+				NiNode* Node = Ref->GetNiNode();
+				bool HasProp = false;
+
+				for (NiTListBase<NiProperty>::Node* i = Node->m_propertyList.start; i && i->data; i = i->next)
+				{
+					if (i->data->GetPropertyType() == NiTexturingProperty::kType)
+					{
+						HasProp = true;
+						break;
+					}
+				}
+
+				if (HasProp == false)
+				{
+					TESRender::AddProperty(Node, SelectionMask);
+					TESRender::UpdateDynamicEffectState(Node);
+					TESRender::UpdateAVObject(Node);
+					BGSEECONSOLE_MESSAGE("added sel mask to %08X", Ref->formID);
+				}
+			}
 		}
 
 		void DebugSceneGraphModifier::PostRender(RenderData& Data)
 		{
+			return;
+
+			for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+			{
+				TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
+			}
 		}
 
 		bool ReferenceVisibilityValidator::ShouldBeInvisible(TESObjectREFR* Ref)

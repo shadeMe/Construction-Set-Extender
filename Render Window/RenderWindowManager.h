@@ -1,5 +1,5 @@
 #pragma once
-#include "RenderWindowGroupManager.h"
+#include "RenderWindowGroups.h"
 #include "PathGridUndoManager.h"
 #include "RenderWindowOSD.h"
 #include "RenderWindowCellLists.h"
@@ -89,6 +89,7 @@ namespace cse
 		{
 			NiMaterialProperty*			MatProp;
 			NiStencilProperty*			Stencil;
+			NiTexturingProperty*		SelectionMask;
 		public:
 			DebugSceneGraphModifier();
 			virtual ~DebugSceneGraphModifier();

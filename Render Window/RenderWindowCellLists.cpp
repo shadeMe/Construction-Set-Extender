@@ -315,7 +315,7 @@ namespace cse
 				while (std::getline(Stream, Line))
 				{
 					if (Line.length() < 2)
-						return;
+						continue;
 
 					TESForm* Cell = nullptr;
 					if (Serializer.Deserialize(Line, &Cell))
@@ -323,8 +323,6 @@ namespace cse
 						SME_ASSERT(Cell->formType == TESForm::kFormType_Cell);
 						Bookmarks.push_back(CS_CAST(Cell, TESForm, TESObjectCELL));
 					}
-					else
-						throw std::exception("Invalid bookmark entry");
 				}
 
 				Stream.close();

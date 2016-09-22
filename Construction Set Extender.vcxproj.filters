@@ -357,12 +357,6 @@
     <ClCompile Include="Render Window\RenderWindowCellLists.cpp">
       <Filter>Components\Render Window</Filter>
     </ClCompile>
-    <ClCompile Include="Render Window\RenderWindowGroupManager.cpp">
-      <Filter>Components\Render Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Render Window\RenderWindowLayerManager.cpp">
-      <Filter>Components\Render Window</Filter>
-    </ClCompile>
     <ClCompile Include="Render Window\RenderWindowManager.cpp">
       <Filter>Components\Render Window</Filter>
     </ClCompile>
@@ -383,6 +377,12 @@
     </ClCompile>
     <ClCompile Include="IMGUI\imgui_user.cpp">
       <Filter>Components\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Render Window\RenderWindowLayers.cpp">
+      <Filter>Components\Render Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Render Window\RenderWindowGroups.cpp">
+      <Filter>Components\Render Window</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -872,12 +872,6 @@
     <ClInclude Include="Render Window\RenderWindowCellLists.h">
       <Filter>Components\Render Window</Filter>
     </ClInclude>
-    <ClInclude Include="Render Window\RenderWindowGroupManager.h">
-      <Filter>Components\Render Window</Filter>
-    </ClInclude>
-    <ClInclude Include="Render Window\RenderWindowLayerManager.h">
-      <Filter>Components\Render Window</Filter>
-    </ClInclude>
     <ClInclude Include="Render Window\RenderWindowManager.h">
       <Filter>Components\Render Window</Filter>
     </ClInclude>
@@ -907,6 +901,12 @@
     </ClInclude>
     <ClInclude Include="IMGUI\imgui_user.h">
       <Filter>Components\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\RenderWindowLayers.h">
+      <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\RenderWindowGroups.h">
+      <Filter>Components\Render Window</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
