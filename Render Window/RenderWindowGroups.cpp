@@ -56,7 +56,7 @@ namespace cse
 		}
 
 		RenderWindowGroupManager::RenderWindowGroupManager() :
-			NamedReferenceCollectionManager(),
+			NamedReferenceCollectionManager(kValidationPolicy_DissolveWhenSize, 2),
 			ConsoleContext(nullptr)
 		{
 			;//

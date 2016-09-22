@@ -104,50 +104,24 @@ namespace cse
 			CurrentFilterRefIndex = kFilterRefsReset;
 		}
 
-		void ToolbarOSDLayer::RenderMainToolbar(ImGuiDX9* GUI)
+		void ToolbarOSDLayer::RenderBottomToolbars(ImGuiDX9* GUI)
 		{
 			static const int kRegularHeight = 45;
+			static const int kMinWidthRefFilter = 250;
 
-			int XSize = *TESRenderWindow::ScreeWidth - 7 * 2;
-			int YPos = *TESRenderWindow::ScreeHeight - kRegularHeight - 5;
+			int XSize = kMinWidthRefFilter;
+			int XDel = *TESRenderWindow::ScreenWidth - XSize;
+			int XPos = XDel / 2;
+			int YPos = *TESRenderWindow::ScreenHeight - kRegularHeight - 8;
 			int YSize = kRegularHeight;
 
-			ImGui::SetNextWindowPos(ImVec2(7, YPos));
-			ImGui::SetNextWindowSize(ImVec2(XSize, YSize));
-
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 5));
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(7, 10));
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
-			if (!ImGui::Begin("Main Toolbar", nullptr,
-							  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus |
-							  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoScrollbar))
-			{
-				ImGui::End();
-				ImGui::PopStyleVar(3);
+			if (BeginToolbarWindow("Bottom Ref Filter", XPos, YPos, XSize, YSize, ImVec2(7, 10), ImVec2(5, 5), ImVec2(5, 5)) == false)
 				return;
-			}
-
-			void* CurrentToolbarWindow = GUI->GetCurrentWindow();
-
-			float TOD = _TES->GetSkyTOD();
-			float FOV = settings::renderer::kCameraFOV().f;
-
-			ImGui::PushAllowKeyboardFocus(false);
-			ImGui::Columns(5, "toolbar_contents", false);
+			else
 			{
-				ImGui::TextWrapped("Movement Controls: ");
-				ImGui::SameLine(0, 10);
-				BottomToolbarPopupProvider.Draw(PopupSnapControls, GUI, CurrentToolbarWindow);
-				ImGui::SameLine(0, 10);
-				BottomToolbarPopupProvider.Draw(PopupMovementControls, GUI, CurrentToolbarWindow);
-				ImGui::SameLine(0, 20); ImGui::InvisibleButton("dummy_btn", ImVec2(10, 10)); ImGui::SameLine(0, 20);
-
-				ImGui::NextColumn();
-				PUSH_TRANSPARENT_BUTTON_COLORS;
-				ImGui::Button(ICON_MD_SEARCH "##find_ref_mouseover", TOOLBAR_BUTTON_SIZE);
+				TransparentButton(ICON_MD_SEARCH "##find_ref_mouseover", TOOLBAR_BUTTON_SIZE);
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Type in the text box to find references matching the filter string.\nCycle through matches with the (SHIFT+)TAB key.");
-				POP_TRANSPARENT_BUTTON_COLORS;
 				ImGui::SameLine(0, 10);
 
 				if (SetRefFilterFocus)
@@ -155,6 +129,9 @@ namespace cse
 					SetRefFilterFocus = false;
 					ImGui::SetKeyboardFocusHere();
 				}
+
+				bool HasFilter = strlen(RefFilter.InputBuf);
+				ImGui::PushItemWidth(HasFilter ? 140 : 175);
 				if (ImGui::InputText("##find_ref_textbox", RefFilter.InputBuf, sizeof(RefFilter.InputBuf),
 									 ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CallbackCompletion,
 									 [](ImGuiTextEditCallbackData* Data)->int { ToolbarOSDLayer* Parent = (ToolbarOSDLayer*)Data->UserData; return Parent->RefFilterCompletionCallback(Data); },
@@ -162,138 +139,90 @@ namespace cse
 				{
 					HandleRefFilterChange();
 				}
+				ImGui::PopItemWidth();
+
 				ImGui::SameLine(0, 10);
-				if (strlen(RefFilter.InputBuf))
+				if (HasFilter)
 				{
-					ImGui::Text(ICON_MD_FILTER_LIST " %d", FilterRefs.size());
+					ImGui::Text(ICON_MD_FILTER_LIST " %d ", FilterRefs.size());
 					if (ImGui::IsItemHovered())
 						ImGui::SetTooltip("%d references match the filter.", FilterRefs.size());
 				}
 				else
-					ImGui::Dummy(ImVec2(5, 5));
+					ImGui::Dummy(ImVec2(5, 0));
 
-				ImGui::NextColumn();
-				const char* FreezeInactiveCaption = nullptr;
-				const char* FreezeInactiveToolTip = nullptr;
-				if (_RENDERWIN_XSTATE.FreezeInactiveRefs)
-				{
-					FreezeInactiveCaption = ICON_MD_LOCK " " ICON_MD_STAR "##freeze_inactive_refs";
-					FreezeInactiveToolTip = "Inactive References Frozen";
-
-					ImGui::PushStyleColor(ImGuiCol_Button, ImColor::HSV(0, 0.6f, 0.6f));
-					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImColor::HSV(0, 0.7f, 0.7f));
-					ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImColor::HSV(0, 0.8f, 0.8f));
-				}
-				else
-				{
-					FreezeInactiveCaption = ICON_MD_LOCK_OPEN " " ICON_MD_STAR "##freeze_inactive_refs";
-					FreezeInactiveToolTip = "Inactive References not Frozen";
-
-					ImGui::PushStyleColor(ImGuiCol_Button, ImColor::HSV(2 / 7.0f, 0.6f, 0.6f));
-					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImColor::HSV(2 / 7.0f, 0.7f, 0.7f));
-					ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImColor::HSV(2 / 7.0f, 0.8f, 0.8f));
-				}
-
-				if (ImGui::Button(FreezeInactiveCaption, ImVec2(45, 0)))
-					_RENDERWIN_XSTATE.FreezeInactiveRefs = _RENDERWIN_XSTATE.FreezeInactiveRefs == false;
-
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip(FreezeInactiveToolTip);
-
-				ImGui::PopStyleColor(3);
-				ImGui::SameLine(0, 20);
-
-				if (ImGui::Button(ICON_MD_LOCK_OPEN "##thaw_all_refs", TOOLBAR_BUTTON_SIZE))
-					actions::ThawAll();
-
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Thaw all Frozen References");
-
-				ImGui::SameLine(0, 20);
-
-				if (ImGui::Button(ICON_MD_FLIP_TO_FRONT "##reveal_all_refs", TOOLBAR_BUTTON_SIZE))
-					actions::RevealAll();
-
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Reveal all Invisible References");
-
-				ImGui::NextColumn();
-
-				PUSH_TRANSPARENT_BUTTON_COLORS;
-				ImGui::Button(ICON_MD_ACCESS_TIME " ", TOOLBAR_BUTTON_SIZE);
-				ImGui::SameLine(0, 5);
-				ImGui::PushItemWidth(70);
-				ImGui::DragFloat("##TOD", &TOD, 0.25f, 0.f, 24.f, "%.2f");
-				if (ImGui::IsItemHovered() && ImGui::IsItemActive() == false)
-					ImGui::SetTooltip("Time of Day");
-				ImGui::PopItemWidth();
-				ImGui::SameLine(0, 25);
-
-				ImGui::Button(ICON_MD_PANORAMA_HORIZONTAL " ", TOOLBAR_BUTTON_SIZE);
-				ImGui::SameLine(0, 5);
-				ImGui::PushItemWidth(70);
-				ImGui::DragFloat("##FOV", &FOV, 1.f, 50.f, 120.f, "%.0f");
-				if (ImGui::IsItemHovered() && ImGui::IsItemActive() == false)
-					ImGui::SetTooltip("Camera Field-of-Vision");
-				ImGui::PopItemWidth();
-				POP_TRANSPARENT_BUTTON_COLORS;
-
-				ImGui::NextColumn();
-				ImGui::SetColumnOffset(-1, XSize - 40);
-				BottomToolbarPopupProvider.Draw(PopupVisibilityToggles, GUI, CurrentToolbarWindow);
-
-				ImGui::NextColumn();
+				EndToolbarWindow();
 			}
-			ImGui::Columns();
-			ImGui::PopAllowKeyboardFocus();
 
-			if (TOD < 0 || TOD > 24)
-				TOD = 10;
+			static const int kMinWidthMiscControls = 165;
+			XSize = kMinWidthMiscControls;
+			XPos = *TESRenderWindow::ScreenWidth - XSize - 10;
 
-			if (TOD != _TES->GetSkyTOD())
-				_TES->SetSkyTOD(TOD);
-
-			if (FOV < 50 || FOV > 120)
-				FOV = 75;
-
-			if (settings::renderer::kCameraFOV().f != FOV)
+			if (BeginToolbarWindow("Bottom Misc Popups", XPos, YPos, XSize, YSize, ImVec2(7, 10), ImVec2(5, 5), ImVec2(5, 5)) == false)
+				return;
+			else
 			{
-				settings::renderer::kCameraFOV.SetFloat(FOV);
-				_RENDERWIN_MGR.RefreshFOV();
-			}
+				void* CurrentToolbarWindow = GUI->GetCurrentWindow();
 
-			ImGui::End();
-			ImGui::PopStyleVar(3);
+				BottomToolbarPopupProvider.Draw(PopupSnapControls, GUI, CurrentToolbarWindow);
+				ImGui::SameLine(0, 10);
+				BottomToolbarPopupProvider.Draw(PopupMovementControls, GUI, CurrentToolbarWindow);
+				ImGui::SameLine(0, 10);
+				BottomToolbarPopupProvider.Draw(PopupVisibilityToggles, GUI, CurrentToolbarWindow);
+				ImGui::SameLine(0, 10);
+				BottomToolbarPopupProvider.Draw(PopupMiscControls, GUI, CurrentToolbarWindow);
+
+				EndToolbarWindow();
+			}
 		}
 
 		void ToolbarOSDLayer::RenderTopToolbar(ImGuiDX9* GUI)
 		{
-			int XSize = *TESRenderWindow::ScreeWidth;
+			int XSize = *TESRenderWindow::ScreenWidth;
 			int Width = 5 + TopToolbarPopupIDs.size() * 40;
-			ImGui::SetNextWindowPos(ImVec2(XSize - Width, 10));
 
-			ImGui::PushStyleColor(ImGuiCol_WindowBg, ImColor(0, 0, 0, 100));
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(7, 7));
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(7, 7));
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
-			if (!ImGui::Begin("Top Toolbar", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus |
-							  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_AlwaysAutoResize))
-			{
-				ImGui::End();
-				ImGui::PopStyleVar(3);
-				ImGui::PopStyleColor();
+			if (BeginToolbarWindow("Top Dock", XSize - Width, 10, -1, -1, ImVec2(7, 7), ImVec2(5, 5), ImVec2(7, 7)) == false)
 				return;
-			}
-
-			for (auto Itr : TopToolbarPopupIDs)
+			else
 			{
-				TopToolbarPopupProvider.Draw(Itr, GUI, GUI->GetCurrentWindow());
-				ImGui::SameLine(0, 10);
-			}
+				for (auto Itr : TopToolbarPopupIDs)
+				{
+					TopToolbarPopupProvider.Draw(Itr, GUI, GUI->GetCurrentWindow());
+					ImGui::SameLine(0, 10);
+				}
 
+				EndToolbarWindow();
+			}
+		}
+
+		bool ToolbarOSDLayer::BeginToolbarWindow(const char* Name,
+												 int XPos, int YPos, int Width, int Height,
+												 const ImVec2& WindowPadding, const ImVec2& FramePadding, const ImVec2& ItemSpacing)
+		{
+			bool AutoResize = Width == -1 && Height == -1;
+			ImGui::SetNextWindowPos(ImVec2(XPos, YPos));
+			if (AutoResize == false)
+				ImGui::SetNextWindowSize(ImVec2(Width, Height));
+
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ItemSpacing);
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, WindowPadding);
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, FramePadding);
+			if (!ImGui::Begin(Name, nullptr,
+							  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus |
+							  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoScrollbar |
+							  (AutoResize ? ImGuiWindowFlags_AlwaysAutoResize : NULL)))
+			{
+				EndToolbarWindow();
+				return false;
+			}
+			else
+				return true;
+		}
+
+		void ToolbarOSDLayer::EndToolbarWindow()
+		{
 			ImGui::End();
 			ImGui::PopStyleVar(3);
-			ImGui::PopStyleColor();
 		}
 
 		ToolbarOSDLayer::ToolbarOSDLayer() :
@@ -301,15 +230,9 @@ namespace cse
 		{
 			PopupSnapControls = BottomToolbarPopupProvider.RegisterPopup("popup_snap_controls",
 															[]() {
-				const ImVec4 MainColor = ImColor::HSV(4 / 7.0f, 0.6f, 0.6f);
-
-				ImGui::PushStyleColor(ImGuiCol_Button, MainColor);
-				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, MainColor);
-				ImGui::PushStyleColor(ImGuiCol_ButtonActive, MainColor);
-
+				PUSH_TRANSPARENT_BUTTON_COLORS;
 				ImGui::Button(ICON_MD_GRID_ON "##popupbtn_snap_controls", TOOLBAR_BUTTON_SIZE);
-
-				ImGui::PopStyleColor(3);
+				POP_TRANSPARENT_BUTTON_COLORS;
 			},
 															[]() {
 				UInt32 Flags = *TESRenderWindow::StateFlags;
@@ -378,13 +301,9 @@ namespace cse
 															   []() {
 				const ImVec4 MainColor = ImColor::HSV(4 / 7.0f, 0.6f, 0.6f);
 
-				ImGui::PushStyleColor(ImGuiCol_Button, MainColor);
-				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, MainColor);
-				ImGui::PushStyleColor(ImGuiCol_ButtonActive, MainColor);
-
+				PUSH_TRANSPARENT_BUTTON_COLORS;
 				ImGui::Button(ICON_MD_ZOOM_OUT_MAP "##popupbtn_movement_controls", TOOLBAR_BUTTON_SIZE);
-
-				ImGui::PopStyleColor(3);
+				POP_TRANSPARENT_BUTTON_COLORS;
 			},
 															   []() {
 				float CamPan = *TESRenderWindow::CameraPanSpeed;
@@ -435,15 +354,9 @@ namespace cse
 
 			PopupVisibilityToggles = BottomToolbarPopupProvider.RegisterPopup("popup_visibility_toggles",
 																 []() {
-				const ImVec4 MainColor = ImColor::HSV(4 / 7.0f, 0.6f, 0.6f);
-
-				ImGui::PushStyleColor(ImGuiCol_Button, MainColor);
-				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, MainColor);
-				ImGui::PushStyleColor(ImGuiCol_ButtonActive, MainColor);
-
+				PUSH_TRANSPARENT_BUTTON_COLORS;
 				ImGui::Button(ICON_MD_REMOVE_RED_EYE "##popupbtn_visibility_toggles", TOOLBAR_BUTTON_SIZE);
-
-				ImGui::PopStyleColor(3);
+				POP_TRANSPARENT_BUTTON_COLORS;
 			},
 																 []() {
 				ImGui::PushID("visibility_toggle_menu_item");
@@ -482,7 +395,50 @@ namespace cse
 				ImGui::PopID();
 			},
 				MouseOverPopupProvider::kPosition_Relative,
-				ImVec2(0, -10));
+				ImVec2(-10, -585));
+
+			PopupMiscControls = BottomToolbarPopupProvider.RegisterPopup("popup_misc_controls",
+																		 []() {
+				PUSH_TRANSPARENT_BUTTON_COLORS;
+				ImGui::Button(ICON_MD_MORE_HORIZ "##popupbtn_misc_controls", TOOLBAR_BUTTON_SIZE);
+				POP_TRANSPARENT_BUTTON_COLORS;
+			},
+																		 []() {
+
+				float TOD = _TES->GetSkyTOD();
+				float FOV = settings::renderer::kCameraFOV().f;
+
+				PUSH_TRANSPARENT_BUTTON_COLORS;
+				ImGui::Button(ICON_MD_ACCESS_TIME " ");
+				ImGui::SameLine(0, 2);
+				ImGui::PushItemWidth(50);
+				ImGui::DragFloat("Time of Day##TOD", &TOD, 0.25f, 0.f, 24.f, "%.2f");
+				ImGui::PopItemWidth();
+
+				ImGui::Button(ICON_MD_PANORAMA_HORIZONTAL " ");
+				ImGui::SameLine(0, 2);
+				ImGui::PushItemWidth(50);
+				ImGui::DragFloat("Field-of-Vision##FOV", &FOV, 1.f, 50.f, 120.f, "%.0f");
+				ImGui::PopItemWidth();
+				POP_TRANSPARENT_BUTTON_COLORS;
+
+				if (TOD < 0 || TOD > 24)
+					TOD = 10;
+
+				if (TOD != _TES->GetSkyTOD())
+					_TES->SetSkyTOD(TOD);
+
+				if (FOV < 50 || FOV > 120)
+					FOV = 75;
+
+				if (settings::renderer::kCameraFOV().f != FOV)
+				{
+					settings::renderer::kCameraFOV.SetFloat(FOV);
+					_RENDERWIN_MGR.RefreshFOV();
+				}
+			},
+				MouseOverPopupProvider::kPosition_Relative,
+				ImVec2(-25, -10));
 
 			FilterRefs.reserve(100);
 			CurrentFilterRefIndex = -1;
@@ -499,7 +455,7 @@ namespace cse
 			BottomToolbarPopupProvider.Update();
 			TopToolbarPopupProvider.Update();
 
-			RenderMainToolbar(GUI);
+			RenderBottomToolbars(GUI);
 			RenderTopToolbar(GUI);
 		}
 
@@ -521,6 +477,13 @@ namespace cse
 																						MouseOverPopupProvider::kPosition_Relative,
 																						ImVec2(0, 25));
 			TopToolbarPopupIDs.push_back(ID);
+		}
+
+		void ToolbarOSDLayer::TransparentButton(const char* Name, const ImVec2& Size)
+		{
+			PUSH_TRANSPARENT_BUTTON_COLORS;
+			ImGui::Button(Name, Size);
+			POP_TRANSPARENT_BUTTON_COLORS;
 		}
 
 	}

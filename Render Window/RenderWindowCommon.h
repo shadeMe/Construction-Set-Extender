@@ -169,7 +169,6 @@ namespace cse
 		};
 
 		// manages distinct named collections, one-to-one mapping b'ween refs and collections
-		// collections are automatically dissolved if the member count falls under 2
 		class NamedReferenceCollectionManager
 		{
 			class CosaveHandler : public serialization::PluginCosaveManager::IEventHandler
@@ -192,13 +191,20 @@ namespace cse
 			static const char*						kSigilBeginCollection;
 			static const char*						kSigilEndCollection;
 
+			enum
+			{
+				kValidationPolicy_Default			= 0,
+				kValidationPolicy_DissolveWhenEmpty	= 1,	// dissolve collections that are empty
+				kValidationPolicy_DissolveWhenSize	= 2,	// dissolve collections that are smalled than the threshold size
+			};
+
 			virtual bool							GetCollectionExists(const char* Name) const;
 			virtual NamedReferenceCollection*		LookupCollection(const char* Name) const;
 			virtual NamedReferenceCollection*		GetParentCollection(TESObjectREFRSafeHandleT Ref) const;
 
 			virtual bool							CheckCollsions(NamedReferenceCollection* Collection, bool CheckMembers) const;		// returns false if a collection of the name already exists or if any of the refs are already in another collection
 			virtual bool							ValidateCollection(NamedReferenceCollection* Collection,
-																	   TESObjectREFRArrayT* OutValidMembers = nullptr);					// returns false if the collection has <= 1 member
+																	   TESObjectREFRArrayT* OutValidMembers = nullptr);					// returns false if the collection was dissolved
 			virtual void							RegisterCollection(NamedReferenceCollection* Collection, bool RegisterRefs);		// takes ownership of pointer
 			virtual void							DeregisterCollection(NamedReferenceCollection* Collection, bool DeregisterRefs);	// releases the pointer
 
@@ -217,9 +223,11 @@ namespace cse
 			CollectionArrayT						RegisteredCollections;
 			Ref2CollectionMapT						ReferenceTable;
 			CosaveHandler*							CosaveInterface;
+			UInt8									ValidationPolicy;
+			int										DissolveThreshold;
 			bool									Initialized;
 		public:
-			NamedReferenceCollectionManager();
+			NamedReferenceCollectionManager(UInt8 Policy, int DissolveThreshold = -1);
 			virtual ~NamedReferenceCollectionManager() = 0;
 
 			virtual void							Initialize();

@@ -13,6 +13,7 @@ namespace cse
 			MouseOverPopupProvider::PopupIDT		PopupSnapControls;
 			MouseOverPopupProvider::PopupIDT		PopupMovementControls;
 			MouseOverPopupProvider::PopupIDT		PopupVisibilityToggles;
+			MouseOverPopupProvider::PopupIDT		PopupMiscControls;
 
 			MouseOverPopupProvider					TopToolbarPopupProvider;
 			PopupIDArrayT							TopToolbarPopupIDs;
@@ -25,8 +26,13 @@ namespace cse
 			int						RefFilterCompletionCallback(ImGuiTextEditCallbackData* Data);
 			void					HandleRefFilterChange();
 
-			void					RenderMainToolbar(ImGuiDX9* GUI);
+			void					RenderBottomToolbars(ImGuiDX9* GUI);
 			void					RenderTopToolbar(ImGuiDX9* GUI);
+
+			bool					BeginToolbarWindow(const char* Name, int XPos, int YPos, int Width, int Height,
+													   const ImVec2& WindowPadding, const ImVec2& FramePadding, const ImVec2& ItemSpacing);
+			void					EndToolbarWindow();
+			void					TransparentButton(const char* Name, const ImVec2& Size);
 		public:
 			ToolbarOSDLayer();
 			virtual ~ToolbarOSDLayer();

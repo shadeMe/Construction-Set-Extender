@@ -1598,13 +1598,47 @@ namespace cse
 
 							if (InvisibleRefs)
 							{
-								if (ImGui::Button("Reveal All", ImVec2(ImGui::GetColumnWidth() - 15, 20)))
+								if (ImGui::Button(ICON_MD_FLIP_TO_FRONT "##reveal_all_btn"))
 									actions::RevealAll();
+								if (ImGui::IsItemHovered())
+									ImGui::SetTooltip("Reveal All");
 							}
 							else
 							{
-								if (ImGui::Button("Thaw All", ImVec2(ImGui::GetColumnWidth() - 15, 20)))
+								const char* FreezeInactiveCaption = nullptr;
+								const char* FreezeInactiveToolTip = nullptr;
+								if (_RENDERWIN_XSTATE.FreezeInactiveRefs)
+								{
+									FreezeInactiveCaption = ICON_MD_LOCK " " ICON_MD_STAR "##freeze_inactive_refs";
+									FreezeInactiveToolTip = "Inactive References Frozen";
+
+									ImGui::PushStyleColor(ImGuiCol_Button, ImColor::HSV(0, 0.6f, 0.6f));
+									ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImColor::HSV(0, 0.7f, 0.7f));
+									ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImColor::HSV(0, 0.8f, 0.8f));
+								}
+								else
+								{
+									FreezeInactiveCaption = ICON_MD_LOCK_OPEN " " ICON_MD_STAR "##freeze_inactive_refs";
+									FreezeInactiveToolTip = "Inactive References not Frozen";
+
+									ImGui::PushStyleColor(ImGuiCol_Button, ImColor::HSV(2 / 7.0f, 0.6f, 0.6f));
+									ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImColor::HSV(2 / 7.0f, 0.7f, 0.7f));
+									ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImColor::HSV(2 / 7.0f, 0.8f, 0.8f));
+								}
+
+								if (ImGui::Button(FreezeInactiveCaption, ImVec2(45, 0)))
+									_RENDERWIN_XSTATE.FreezeInactiveRefs = _RENDERWIN_XSTATE.FreezeInactiveRefs == false;
+
+								if (ImGui::IsItemHovered())
+									ImGui::SetTooltip(FreezeInactiveToolTip);
+
+								ImGui::PopStyleColor(3);
+								ImGui::SameLine(0, 10);
+
+								if (ImGui::Button(ICON_MD_LOCK_OPEN "##thaw_all_btn"))
 									actions::ThawAll();
+								if (ImGui::IsItemHovered())
+									ImGui::SetTooltip("Thaw All");
 							}
 
 							ImGui::NextColumn();
@@ -1641,10 +1675,14 @@ namespace cse
 							ImGui::TextWrapped("Reference Groups: (?)");
 							if (ImGui::IsItemHovered())
 								ImGui::SetTooltip("EditorIDs with an asterisk correspond to the reference's base form.\n\nDouble click on an item to select the group.\nRight click on an item to display the context menu.\nHover the cursor over the \"Count\" column to view the first 10 members of the group.");
+
 							ImGui::NextColumn();
 
-							if (ImGui::Button("Group Current Selection", ImVec2(ImGui::GetColumnWidth() - 15, 20)))
+							if (ImGui::Button(ICON_MD_GROUP_WORK "##group_selection"))
 								actions::GroupSelection();
+							if (ImGui::IsItemHovered())
+								ImGui::SetTooltip("Group Current Selection");
+
 							ImGui::NextColumn();
 						}
 						ImGui::Columns();

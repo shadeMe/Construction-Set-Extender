@@ -327,14 +327,15 @@ namespace cse
 			case WM_LBUTTONDBLCLK:
 			case WM_RBUTTONDBLCLK:
 				MouseEvent = true;
+				OutNeedsMouse = false;
 				break;
 			case WM_CHAR:
 				if (wParam > 0 && wParam < 0x10000)
 					CharacterEvent = true;
-				break;
 			case WM_KEYDOWN:
 			case WM_KEYUP:
 				KeyboardEvent = true;
+				OutNeedsKeyboard = false;
 				break;
 			}
 
@@ -342,7 +343,6 @@ namespace cse
 			NeedsInput(NeedsMouse, NeedsKeyboard, NeedsTextInput);
 
 			bool MouseWhitelisted = IsActiveItemInWhitelist(PassthroughWhitelistMouseEvents);
-			OutNeedsMouse = OutNeedsKeyboard = false;
 
 			if (MouseEvent)
 			{
@@ -680,7 +680,6 @@ namespace cse
 			// get input data and flag the viewport for update
 			if (Pipeline->UpdateInputState(hWnd, uMsg, wParam, lParam))
 			{
-				Parent->State.ConsumeMouseInputEvents = Parent->State.ConsumeKeyboardInputEvents = false;
 				Parent->State.MouseHoveringOSD = Pipeline->IsHoveringWindow();
 				if (GetCapture() != hWnd && GetActiveWindow() == hWnd)
 				{
@@ -693,8 +692,8 @@ namespace cse
 						Return = true;
 					}
 					else if (Pipeline->CanAllowInputEventPassthrough(uMsg, wParam, lParam,
-																Parent->State.ConsumeMouseInputEvents,
-																Parent->State.ConsumeKeyboardInputEvents) == false)
+																	 Parent->State.ConsumeMouseInputEvents,
+																	 Parent->State.ConsumeKeyboardInputEvents) == false)
 					{
 						Return = true;
 					}
@@ -1283,7 +1282,7 @@ namespace cse
 			if (Tick() == false)
 				return;
 
-			ImGui::SetNextWindowPos(ImVec2(10, *TESRenderWindow::ScreeHeight - 150));
+			ImGui::SetNextWindowPos(ImVec2(10, *TESRenderWindow::ScreenHeight - 150));
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));

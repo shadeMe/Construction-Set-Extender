@@ -257,8 +257,8 @@ public:
 	static Vector3*						CalculatePathGridPointPositionVectorSum(Vector3& OutPosVecSum);
 
 	static HWND*						WindowHandle;
-	static int*							ScreeWidth;
-	static int*							ScreeHeight;
+	static int*							ScreenWidth;
+	static int*							ScreenHeight;
 	static TESRenderSelection**			ClipboardSelection;
 	static UndoStack**					UndoBuffer;
 	static RubberBandSelection**		RubberBandSelector;

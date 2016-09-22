@@ -527,14 +527,16 @@ namespace cse
 			for (auto Itr : Delinquents)
 				ReferenceTable.erase(Itr);
 
-			if (Collection->GetSize() <= 1)
-			{
-				StandardOutput("Empty collection '%s' dissolved", Collection->GetName());
-				DeregisterCollection(Collection, true);
-				return false;
-			}
-			else
+			if (ValidationPolicy == kValidationPolicy_Default)
+				return true;		// do nothing
+			else if (ValidationPolicy == kValidationPolicy_DissolveWhenSize && Collection->GetSize() >= DissolveThreshold)
 				return true;
+			else if (ValidationPolicy == kValidationPolicy_DissolveWhenEmpty && Collection->GetSize())
+				return true;
+
+			StandardOutput("Collection '%s' dissolved", Collection->GetName());
+			DeregisterCollection(Collection, true);
+			return false;
 		}
 
 		void NamedReferenceCollectionManager::RegisterCollection(NamedReferenceCollection* Collection, bool RegisterRefs)
@@ -691,9 +693,11 @@ namespace cse
 			}
 		}
 
-		NamedReferenceCollectionManager::NamedReferenceCollectionManager() :
+		NamedReferenceCollectionManager::NamedReferenceCollectionManager(UInt8 Policy, int DissolveThreshold) :
 			RegisteredCollections(),
-			ReferenceTable()
+			ReferenceTable(),
+			ValidationPolicy(Policy),
+			DissolveThreshold(DissolveThreshold)
 		{
 			CosaveInterface = new CosaveHandler(this);
 			Initialized = false;
