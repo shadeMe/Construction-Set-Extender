@@ -28,7 +28,12 @@ namespace cse
 			return "RenderWindowGroups";
 		}
 
-		void RenderWindowGroupManager::ConvertToSelection(const TESObjectREFRSafeArrayT& Refs, TESRenderSelection* Selection, bool ClearSelection) const
+		NamedReferenceCollection* RenderWindowGroupManager::DeserializeCollection(const std::string& In) const
+		{
+			return NamedReferenceCollectionManager::DeserializeCollection(In);
+		}
+
+		void RenderWindowGroupManager::ConvertToSelection(const TESObjectREFRArrayT& Refs, TESRenderSelection* Selection, bool ClearSelection) const
 		{
 			SME_ASSERT(Selection);
 
@@ -37,11 +42,8 @@ namespace cse
 
 			for (auto Itr : Refs)
 			{
-				TESObjectREFR* Ref = CS_CAST(TESForm::LookupByFormID(Itr), TESForm, TESObjectREFR);
-				SME_ASSERT(Ref);
-
-				if (Selection->HasObject(Ref) == false)
-					Selection->AddToSelection(Ref, true);
+				if (Selection->HasObject(Itr) == false)
+					Selection->AddToSelection(Itr, true);
 			}
 		}
 
@@ -194,9 +196,10 @@ namespace cse
 			if (Group)
 			{
 				// validate the members first to account for deleted refs
-				if (ValidateCollection(Group))
+				TESObjectREFRArrayT ValidRefs;
+				if (ValidateCollection(Group, &ValidRefs))
 				{
-					ConvertToSelection(Group->GetMembers(), Selection, ClearSelection);
+					ConvertToSelection(ValidRefs, Selection, ClearSelection);
 					Result = true;
 				}
 			}

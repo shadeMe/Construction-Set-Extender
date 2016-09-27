@@ -220,6 +220,32 @@ namespace cse
 				CellViewDialogEventSource			kSelectCell(TypedEventSource::kType_CellView_SelectCell);
 			}
 
+			namespace renderWindow
+			{
+
+				RenderWindowDialogEventSource::RenderWindowDialogEventSource(UInt32 Type) :
+					TypedEventSource(Type)
+				{
+					SME_ASSERT(Type > kType__BEGIN_RENDERWINDOW && Type < kType__END_RENDERWINDOW);
+				}
+
+				void RenderWindowDialogEventSource::HandlePlaceRef(TESObjectREFR* NewRef) const
+				{
+					RenderWindowDialogEventData Data(this, RenderWindowDialogEventData::kType_PlaceRef);
+					Data.PlacedRef = NewRef;
+					Dispatch(&Data);
+				}
+
+				RenderWindowDialogEventData::RenderWindowDialogEventData(const RenderWindowDialogEventSource* Source, UInt32 Type) :
+					IEventData(Source),
+					EventType(Type)
+				{
+					PlacedRef = nullptr;
+				}
+
+				RenderWindowDialogEventSource		kPlaceRef(TypedEventSource::kType_RenderWindow_PlaceRef);
+			}
+
 			BasicEventSource						kCloseAll(TypedEventSource::kType_Dialog_CloseAll);
 		}
 

@@ -145,7 +145,7 @@ namespace cse
 
 			if (VisibleOnly == false && SelectionOnly == false)
 				return true;
-			else if (VisibleOnly && (renderWindow::ReferenceVisibilityValidator::ShouldBeInvisible(Ref) || renderWindow::ReferenceVisibilityValidator::IsCulled(Ref)))
+			else if (VisibleOnly && (renderWindow::ReferenceVisibilityManager::ShouldBeInvisible(Ref) || renderWindow::ReferenceVisibilityManager::IsCulled(Ref)))
 				return false;
 			else if (SelectionOnly && _RENDERSEL->HasObject(Form) == false)
 				return false;

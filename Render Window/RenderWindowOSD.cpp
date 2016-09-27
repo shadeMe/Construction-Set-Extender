@@ -10,6 +10,8 @@
 
 #include <bgsee\RenderWindowFlyCamera.h>
 
+#undef OSD_LOAD_ALL_FONTS
+
 namespace cse
 {
 	namespace renderWindow
@@ -157,33 +159,30 @@ namespace cse
 		{
 			// Build texture atlas
 			ImGuiIO& io = ImGui::GetIO();
-			ImFontConfig config;
-			config.OversampleH = 8;
-			config.OversampleV = 8;
-
 			io.Fonts->Clear();
 
 			std::string FontPathRoot(BGSEEWORKSPACE->GetDefaultWorkspace());
 			FontPathRoot.append("Data\\Fonts\\");
+
+#ifdef OSD_LOAD_ALL_FONTS
+			// load all fonts in the folder for prototyping
+			// ### SLOW!
+			std::string IconFontPath(FontPathRoot + std::string("MaterialIcons-Regular.ttf"));
+			for (IDirectoryIterator Itr(FontPathRoot.c_str(), "*.ttf"); !Itr.Done(); Itr.Next())
+			{
+				std::string FileName(Itr.Get()->cFileName);
+				FileName = FileName.substr(FileName.rfind("\\") + 1);
+
+				std::string MainFontPath(FontPathRoot + "\\" + FileName);
+				if (FileName.find("MaterialIcons-Regular") == -1)
+					AddFontFromFile(MainFontPath.c_str(), IconFontPath.c_str(), ICON_MIN_MD, ICON_MAX_MD);
+			}
+#else
 			std::string MainFontPath(FontPathRoot + std::string(settings::renderWindowOSD::kFontFace().s));
 			std::string IconFontPath(FontPathRoot + std::string("MaterialIcons-Regular.ttf"));
 
-			if (GetFileAttributes(MainFontPath.c_str()) != INVALID_FILE_ATTRIBUTES)
-				io.Fonts->AddFontFromFileTTF(MainFontPath.c_str(), settings::renderWindowOSD::kFontSize().i, &config);
-			else
-				io.Fonts->AddFontDefault(&config);
-
-			// merge icons from MD
-			static const ImWchar icons_ranges[] = { ICON_MIN_MD, ICON_MAX_MD, 0 };
-			ImFontConfig icons_config;
-			icons_config.MergeMode = true;
-			icons_config.OversampleH = 2;
-			icons_config.OversampleV = 2;
-			icons_config.PixelSnapH = true;
-			icons_config.MergeGlyphCenterV = true;
-			if (GetFileAttributes(IconFontPath.c_str()) != INVALID_FILE_ATTRIBUTES)
-				io.Fonts->AddFontFromFileTTF(IconFontPath.c_str(), settings::renderWindowOSD::kFontSize().i + 2, &icons_config, icons_ranges);
-
+			AddFontFromFile(MainFontPath.c_str(), IconFontPath.c_str(), ICON_MIN_MD, ICON_MAX_MD);
+#endif
 			unsigned char* pixels;
 			int width, height, bytes_per_pixel;
 			io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height, &bytes_per_pixel);
@@ -203,6 +202,30 @@ namespace cse
 			io.Fonts->TexID = (void *)FontTexture;
 
 			return true;
+		}
+
+		void ImGuiDX9::AddFontFromFile(const char* FontPath, const char* IconFontPath, ImWchar IconRangeStart, ImWchar IconRangeEnd)
+		{
+			ImGuiIO& io = ImGui::GetIO();
+			ImFontConfig config;
+			config.OversampleH = 8;
+			config.OversampleV = 8;
+
+			if (GetFileAttributes(FontPath) != INVALID_FILE_ATTRIBUTES)
+				io.Fonts->AddFontFromFileTTF(FontPath, settings::renderWindowOSD::kFontSize().i, &config);
+			else
+				io.Fonts->AddFontDefault(&config);
+
+			// merge icons
+			static const ImWchar icons_ranges[] = { IconRangeStart, IconRangeEnd, 0 };
+			ImFontConfig icons_config;
+			icons_config.MergeMode = true;
+			icons_config.OversampleH = 2;
+			icons_config.OversampleV = 2;
+			icons_config.PixelSnapH = true;
+			icons_config.MergeGlyphCenterV = true;
+			if (GetFileAttributes(IconFontPath) != INVALID_FILE_ATTRIBUTES)
+				io.Fonts->AddFontFromFileTTF(IconFontPath, settings::renderWindowOSD::kFontSize().i + 2, &icons_config, icons_ranges);
 		}
 
 		ImGuiDX9::ImGuiDX9() :

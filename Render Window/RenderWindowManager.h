@@ -4,6 +4,7 @@
 #include "RenderWindowOSD.h"
 #include "RenderWindowCellLists.h"
 #include "RenderWindowInput.h"
+#include "RenderWindowLayers.h"
 #include <bgsee\RenderWindowFlyCamera.h>
 
 namespace cse
@@ -100,7 +101,7 @@ namespace cse
 			static DebugSceneGraphModifier			Instance;
 		};
 
-		class ReferenceVisibilityValidator
+		class ReferenceVisibilityManager
 		{
 		public:
 			// reasons why the ref ought to be invisible
@@ -110,6 +111,7 @@ namespace cse
 				kReason_InitiallyDisabledChild		= 1 << 2,		// ref is a child of a parent that is initially disabled
 				kReason_InvisibleSelf				= 1 << 3,		// ref has the "Invisible" flag
 				kReason_InvisibleChild				= 1 << 4,		// ref is a child of a parent that has the "Invisible Children" flag
+				kReason_ParentLayerInvisible		= 1 << 5,		// ref's parent layer is invisible
 			};
 
 			static bool							ShouldBeInvisible(TESObjectREFR* Ref, UInt32& OutReasonFlags);			// returns true if the reference is not supposed to be rendered to the scene
@@ -118,15 +120,10 @@ namespace cse
 		};
 
 
-		class RenderWindowSelectionManager
+		class ReferenceSelectionManager
 		{
-			RenderWindowGroupManager*		ReferenceGroupManager;
-
-			bool							IsSelectable(TESObjectREFR* Ref, bool PaintingSelection, bool& OutRegularHandling, UInt32& OutReasonFlags) const;
+			static bool							IsSelectable(TESObjectREFR* Ref, bool PaintingSelection, bool& OutRegularHandling, UInt32& OutReasonFlags);
 		public:
-			RenderWindowSelectionManager(RenderWindowGroupManager* GroupMan);
-			~RenderWindowSelectionManager();
-
 			// reasons why the ref can(not) be selected
 			enum
 			{
@@ -134,28 +131,29 @@ namespace cse
 				kReason_InvalidVisibility		= 1 << 1,		// ref is invisible
 				kReason_FrozenSelf				= 1 << 2,		// ref has the "Frozen" flag
 				kReason_FrozenInactive			= 1 << 3,		// ref is frozen by the "Freeze Inactive Refs" tool
+				kReason_ParentLayerFrozen		= 1 << 4,		// ref's parent layer is frozen
 			};
 
-			void							AddToSelection(TESObjectREFR* Ref, bool AddSelectionBox, bool PaintingSelection = false) const;
-			void							RemoveFromSelection(TESObjectREFR* Ref, bool RemoveSelectionBox) const;
-			bool							IsSelectable(TESObjectREFR* Ref, bool PaintingSelection = false) const;
-			bool							IsSelectable(TESObjectREFR* Ref, UInt32& OutReasonFlags, bool PaintingSelection = false) const;
+			static void							AddToSelection(TESObjectREFR* Ref, bool AddSelectionBox, bool PaintingSelection = false);
+			static void							RemoveFromSelection(TESObjectREFR* Ref, bool RemoveSelectionBox);
+			static bool							IsSelectable(TESObjectREFR* Ref, bool PaintingSelection = false);
+			static bool							IsSelectable(TESObjectREFR* Ref, UInt32& OutReasonFlags, bool PaintingSelection = false);
 		};
 
 		class RenderWindowFlyCameraOperator : public bgsee::RenderWindowFlyCameraOperator
 		{
-			NiFrustum								ViewportFrustumBuffer;
+			NiFrustum				ViewportFrustumBuffer;
 		public:
 			RenderWindowFlyCameraOperator(HWND ParentWindow, bgsee::ResourceTemplateT TemplateID);
 			virtual ~RenderWindowFlyCameraOperator();
 
-			virtual void							PrologCallback(void);
-			virtual void							EpilogCallback(void);
+			virtual void			PrologCallback(void);
+			virtual void			EpilogCallback(void);
 
-			virtual void							Rotate(int XOffset, int YOffset);
-			virtual void							Move(UInt8 Direction, bool Sprinting, bool Crawling);
+			virtual void			Rotate(int XOffset, int YOffset);
+			virtual void			Move(UInt8 Direction, bool Sprinting, bool Crawling);
 
-			virtual void							RefreshRenderWindow(void);
+			virtual void			RefreshRenderWindow(void);
 		};
 
 		class RenderWindowExtendedState
@@ -205,9 +203,9 @@ namespace cse
 			RenderWindowSceneGraphManager*				SceneGraphManager;
 			RenderWindowGroupManager*					GroupManager;
 			PathGridUndoManager*						PGUndoManager;
-			RenderWindowSelectionManager*				SelectionManager;
 			RenderWindowOSD*							OSD;
 			RenderWindowCellLists*						CellLists;
+			RenderWindowLayerManager*					LayerManager;
 			input::RenderWindowKeyboardManager*			KeyboardInputManager;
 			input::RenderWindowMouseManager*			MouseInputManager;
 			GlobalEventSink*							EventSink;
@@ -254,11 +252,11 @@ namespace cse
 
 			RenderWindowGroupManager*					GetGroupManager() const;
 			PathGridUndoManager*						GetPathGridUndoManager() const;
-			RenderWindowSelectionManager*				GetSelectionManager() const;
 			RenderWindowExtendedState&					GetState() const;
 			input::RenderWindowKeyboardManager*			GetKeyboardInputManager() const;
 			input::RenderWindowMouseManager*			GetMouseInputManager() const;
 			RenderWindowOSD*							GetOSD() const;
+			RenderWindowLayerManager*					GetLayerManager() const;
 			const TESObjectREFRArrayT&					GetActiveRefs() const;
 
 			void										RefreshFOV();

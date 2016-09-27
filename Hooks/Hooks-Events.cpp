@@ -39,6 +39,7 @@ namespace cse
 
 			events::dialog::_MemHdlr(CloseAll).WriteJump();
 			events::dialog::cellView::_MemHdlr(SelectCell).WriteJump();
+			events::dialog::renderWindow::_MemHdlr(PlaceRef).WriteJump();
 		}
 
 		namespace events
@@ -588,6 +589,31 @@ namespace cse
 						{
 							pushad
 							call	DoSelectCell
+							popad
+
+							jmp		_hhGetVar(Retn)
+						}
+					}
+				}
+
+				namespace renderWindow
+				{
+					_DefineHookHdlr(PlaceRef, 0x0042DE45);
+
+
+					#define _hhName		PlaceRef
+					_hhBegin()
+					{
+						_hhSetVar(Retn, 0x0042DE4A);
+						_hhSetVar(Call, 0x0047C610);
+						__asm
+						{
+							call	_hhGetVar(Call)
+
+							pushad
+							lea		ecx, cse::events::dialog::renderWindow::kPlaceRef
+							push	eax
+							call	cse::events::dialog::renderWindow::RenderWindowDialogEventSource::HandlePlaceRef
 							popad
 
 							jmp		_hhGetVar(Retn)

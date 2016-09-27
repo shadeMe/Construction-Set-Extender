@@ -319,7 +319,7 @@ namespace cse
 			Members.reserve(25);
 		}
 
-		NamedReferenceCollection::NamedReferenceCollection(std::string& InSerialized) :
+		NamedReferenceCollection::NamedReferenceCollection(const std::string& InSerialized) :
 			Name(),
 			Members()
 		{
@@ -327,18 +327,22 @@ namespace cse
 			Deserialize(InSerialized);
 		}
 
-		void NamedReferenceCollection::ValidateMembers(TESObjectREFRSafeArrayT& OutDelinquents, TESObjectREFRArrayT* OutValidMembers)
+		void NamedReferenceCollection::ValidateMembers(TESObjectREFRArrayT* OutValidMembers, TESObjectREFRSafeArrayT* OutDelinquents)
 		{
 			if (OutValidMembers)
 				OutValidMembers->clear();
-			OutDelinquents.clear();
+
+			if (OutDelinquents)
+				OutDelinquents->clear();
 
 			for (TESObjectREFRSafeArrayT::iterator Itr = Members.begin(); Itr != Members.end();)
 			{
 				TESObjectREFR* ValidRef = nullptr;
 				if (GetValidRef(*Itr, ValidRef) == false)
 				{
-					OutDelinquents.push_back(*Itr);
+					if (OutDelinquents)
+						OutDelinquents->push_back(*Itr);
+
 					Itr = Members.erase(Itr);
 					continue;
 				}
@@ -380,6 +384,23 @@ namespace cse
 			Members.clear();
 		}
 
+		void NamedReferenceCollection::ConvertToSelection(TESRenderSelection* Selection, bool ClearSelection /*= true*/, bool ShowSelectionBox /*= false*/)
+		{
+			SME_ASSERT(Selection);
+
+			if (ClearSelection)
+				Selection->ClearSelection(true);
+
+			TESObjectREFRArrayT Valid;
+			ValidateMembers(&Valid);
+
+			for (auto Itr : Valid)
+			{
+				if (Selection->HasObject(Itr) == false)
+					Selection->AddToSelection(Itr, ShowSelectionBox);
+			}
+		}
+
 		const char* NamedReferenceCollection::GetName() const
 		{
 			return Name.c_str();
@@ -403,9 +424,7 @@ namespace cse
 			OutSerialized.append("[" + Name + "]\n");
 
 			TESObjectREFRArrayT ValidMembers;
-			TESObjectREFRSafeArrayT Delinquents;
-
-			ValidateMembers(Delinquents, &ValidMembers);
+			ValidateMembers(&ValidMembers);
 			for (auto Itr : ValidMembers)
 			{
 				std::string Buffer;
@@ -416,7 +435,7 @@ namespace cse
 			return ValidMembers.size();
 		}
 
-		void NamedReferenceCollection::Deserialize(std::string& InSerialized)
+		void NamedReferenceCollection::Deserialize(const std::string& InSerialized)
 		{
 			serialization::TESForm2Text Deserializer;
 			SME::StringHelpers::Tokenizer Tokenizer(InSerialized.c_str(), "\n");
@@ -473,7 +492,7 @@ namespace cse
 
 		void NamedReferenceCollectionManager::CosaveHandler::HandleShutdown(const char* PluginName, const char* CosaveDirectory)
 		{
-			Parent->Save(PluginName, CosaveDirectory);
+			;//
 		}
 
 		const char*			NamedReferenceCollectionManager::kSigilBeginCollection	= "{NamedReferenceCollection:Begin}";
@@ -503,6 +522,11 @@ namespace cse
 				return nullptr;
 		}
 
+		NamedReferenceCollection* NamedReferenceCollectionManager::GetParentCollection(TESObjectREFR* Ref) const
+		{
+			return GetParentCollection(Ref->formID);
+		}
+
 		bool NamedReferenceCollectionManager::CheckCollsions(NamedReferenceCollection* Collection, bool CheckMembers) const
 		{
 			if (LookupCollection(Collection->GetName()))
@@ -522,7 +546,7 @@ namespace cse
 		bool NamedReferenceCollectionManager::ValidateCollection(NamedReferenceCollection* Collection, TESObjectREFRArrayT* OutValidMembers /*= nullptr*/)
 		{
 			TESObjectREFRSafeArrayT Delinquents;
-			Collection->ValidateMembers(Delinquents, OutValidMembers);
+			Collection->ValidateMembers(OutValidMembers, &Delinquents);
 
 			for (auto Itr : Delinquents)
 				ReferenceTable.erase(Itr);
@@ -566,6 +590,11 @@ namespace cse
 
 			// release at the end as it destroys the pointer
 			RegisteredCollections.erase(Match);
+		}
+
+		NamedReferenceCollection* NamedReferenceCollectionManager::DeserializeCollection(const std::string& In) const
+		{
+			return new NamedReferenceCollection(In);
 		}
 
 		void NamedReferenceCollectionManager::Save(const char* PluginName, const char* DirPath)
@@ -632,8 +661,9 @@ namespace cse
 
 						ExtractingBlock = false;
 
-						NamedReferenceCollection* NewColl = new NamedReferenceCollection(CollectionBlock);
+						NamedReferenceCollection* NewColl = DeserializeCollection(CollectionBlock);
 						RegisterCollection(NewColl, true);
+						ValidateCollection(NewColl);
 						continue;
 					}
 					else
@@ -666,11 +696,14 @@ namespace cse
 			NamedReferenceCollection* Parent = GetParentCollection(Ref);
 			if (Parent && Parent != To)
 			{
-				StandardOutput("Ref %08X is already a member of group '%s'", Ref, Parent->GetName());
+				StandardOutput("Ref %08X is already a member of collection '%s'", Ref, Parent->GetName());
 				return false;
 			}
 			else if (Parent == nullptr)
+			{
 				To->AddMember(Ref);
+				ReferenceTable.insert(std::make_pair(Ref, To));
+			}
 
 			return true;
 		}

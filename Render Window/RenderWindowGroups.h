@@ -7,11 +7,11 @@ namespace cse
 	{
 		class RenderWindowGroupManager : public NamedReferenceCollectionManager
 		{
+			virtual void						StandardOutput(const char* Fmt, ...) const override;
+			virtual const char*					GetSaveFileName() const override;
+			virtual NamedReferenceCollection*	DeserializeCollection(const std::string& In) const override;
 
-			virtual void				StandardOutput(const char* Fmt, ...) const override;
-			virtual const char*			GetSaveFileName() const override;
-
-			void						ConvertToSelection(const TESObjectREFRSafeArrayT& Refs, TESRenderSelection* Selection, bool ClearSelection) const;
+			void						ConvertToSelection(const TESObjectREFRArrayT& Refs, TESRenderSelection* Selection, bool ClearSelection) const;
 			void						AddToCollection(TESRenderSelection* Selection, NamedReferenceCollection* Collection);
 
 			void*						ConsoleContext;
@@ -35,6 +35,8 @@ namespace cse
 
 			bool						GetGroupExists(const char* ID) const;
 			bool						GetGroupData(const char* ID, TESObjectREFRArrayT& OutMembers);		// returns false if the group doesn't exist, true otherwise
+
+
 		};
 	}
 }

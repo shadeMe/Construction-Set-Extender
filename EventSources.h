@@ -1,6 +1,7 @@
 #pragma once
 
-
+// quite clunky and can be done better with templates
+// if only I had thought of that earlier...
 namespace cse
 {
 	namespace events
@@ -52,6 +53,12 @@ namespace cse
 				kType_CellView_SelectCell,							// when a cell is selected in the cell list
 
 				kType__END_CELLVIEW,
+
+				kType__BEGIN_RENDERWINDOW,
+
+				kType_RenderWindow_PlaceRef,						// when references are dropped into the render window from either the object/prefab/palette windows
+
+				kType__END_RENDERWINDOW,
 
 				kType__END
 			};
@@ -192,6 +199,33 @@ namespace cse
 				};
 
 				extern CellViewDialogEventSource		kSelectCell;
+			}
+
+			namespace renderWindow
+			{
+				class RenderWindowDialogEventSource : public TypedEventSource
+				{
+					RenderWindowDialogEventSource();
+				public:
+					RenderWindowDialogEventSource(UInt32 Type);
+
+					void				HandlePlaceRef(TESObjectREFR* NewRef) const;
+				};
+
+				struct RenderWindowDialogEventData : public SME::MiscGunk::IEventData
+				{
+					enum
+					{
+						kType_PlaceRef = 0,
+					};
+
+					UInt32					EventType;
+					TESObjectREFR*			PlacedRef;
+
+					RenderWindowDialogEventData(const RenderWindowDialogEventSource* Source, UInt32 Type);
+				};
+
+				extern RenderWindowDialogEventSource		kPlaceRef;
 			}
 		}
 

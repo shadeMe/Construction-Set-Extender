@@ -72,6 +72,7 @@ public:
 	void						ToggleInvisiblity(void);
 	void						ToggleChildrenInvisibility(void);
 	void						ToggleSelectionBox(bool State);
+	void						SetInvisible(bool State);
 	void						SetFrozen(bool State);
 	void						SetAlpha(float Alpha = -1.0f);		// pass -1.0f to reset alpha
 

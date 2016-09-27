@@ -1029,6 +1029,8 @@ namespace cse
 
 						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_ObjectPalette);
 						TESRenderWindow::Redraw();
+
+						events::dialog::renderWindow::kPlaceRef.HandlePlaceRef(NewRef);
 						return true;
 					}
 				}

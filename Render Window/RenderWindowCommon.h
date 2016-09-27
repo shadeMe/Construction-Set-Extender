@@ -151,21 +151,23 @@ namespace cse
 			static bool				GetValidRef(TESObjectREFRSafeHandleT Ref, TESObjectREFR*& OutResolvedRef);		// returns false if the ref handle didn't point to a valid reference
 		public:
 			NamedReferenceCollection(const char* Name);
-			NamedReferenceCollection(std::string& InSerialized);
+			explicit NamedReferenceCollection(const std::string& InSerialized);
+			inline virtual ~NamedReferenceCollection() = default;
 
-			void					ValidateMembers(TESObjectREFRSafeArrayT& OutDelinquents, TESObjectREFRArrayT* OutValidMembers);
+			void					ValidateMembers(TESObjectREFRArrayT* OutValidMembers = nullptr, TESObjectREFRSafeArrayT* OutDelinquents = nullptr);
 			void					AddMember(TESObjectREFR* Ref);
 			void					AddMember(TESObjectREFRSafeHandleT Ref);
 			void					RemoveMember(TESObjectREFR* Ref);
 			void					RemoveMember(TESObjectREFRSafeHandleT Ref);
 			void					ClearMembers();
+			void					ConvertToSelection(TESRenderSelection* Selection, bool ClearSelection = true, bool ShowSelectionBox = false);
 
 			const char*							GetName() const;
 			const UInt32						GetSize() const;
 			const TESObjectREFRSafeArrayT&		GetMembers() const;
 
 			int						Serialize(std::string& OutSerialized);		// returns the no of members serialized
-			void					Deserialize(std::string& InSerialized);
+			void					Deserialize(const std::string& InSerialized);
 		};
 
 		// manages distinct named collections, one-to-one mapping b'ween refs and collections
@@ -200,6 +202,7 @@ namespace cse
 
 			virtual bool							GetCollectionExists(const char* Name) const;
 			virtual NamedReferenceCollection*		LookupCollection(const char* Name) const;
+			virtual NamedReferenceCollection*		GetParentCollection(TESObjectREFR* Ref) const;
 			virtual NamedReferenceCollection*		GetParentCollection(TESObjectREFRSafeHandleT Ref) const;
 
 			virtual bool							CheckCollsions(NamedReferenceCollection* Collection, bool CheckMembers) const;		// returns false if a collection of the name already exists or if any of the refs are already in another collection
@@ -210,6 +213,7 @@ namespace cse
 
 			virtual void							StandardOutput(const char* Fmt, ...) const = 0;
 			virtual const char*						GetSaveFileName() const = 0;
+			virtual NamedReferenceCollection*		DeserializeCollection(const std::string& In) const = 0;
 
 			virtual void							Save(const char* PluginName, const char* DirPath);
 			virtual void							Load(const char* PluginName, const char* DirPath);

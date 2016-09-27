@@ -245,8 +245,8 @@ namespace cse
 			return Result;
 		}
 
-		ObjectPrefabManager							ObjectPrefabManager::Instance;
-		const char*										ObjectPrefabManager::kPrefabFileExtension = "cseprefab";
+		ObjectPrefabManager				ObjectPrefabManager::Instance;
+		const char*						ObjectPrefabManager::kPrefabFileExtension = "cseprefab";
 		const bgsee::ResourceLocation	ObjectPrefabManager::kRepositoryPath(CSE_PREFABDEPOT);
 
 #define IDC_OBJECTPREFAB_FILTERINPUTTIMERID		0x200
@@ -671,6 +671,15 @@ namespace cse
 				achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_ObjectPrefabs);
 				if (CurrentSelection->Instantiate() == false)
 					BGSEEUI->MsgBoxE(MainDialog, MB_OK, "Couldn't instantiate the current selection.\n\nCheck the console for more information.");
+				else
+				{
+					// the selection should contain the new refs, raise the PlaceRef event
+					for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+					{
+						TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
+						events::dialog::renderWindow::kPlaceRef.HandlePlaceRef(Ref);
+					}
+				}
 			}
 		}
 

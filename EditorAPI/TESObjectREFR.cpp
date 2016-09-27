@@ -250,7 +250,12 @@ void TESObjectREFR::ToggleSelectionBox( bool State )
 	thisCall<UInt32>(0x00549450, this, State);
 }
 
-void TESObjectREFR::SetNiNode( NiNode* Node )
+void TESObjectREFR::SetInvisible(bool State)
+{
+	SME::MiscGunk::ToggleFlag(&formFlags, kSpecialFlags_3DInvisible, State);
+}
+
+void TESObjectREFR::SetNiNode(NiNode* Node)
 {
 	thisVirtualCall<UInt32>(0x17C, this, Node);
 }

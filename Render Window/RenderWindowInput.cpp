@@ -1391,7 +1391,7 @@ namespace cse
 							TESObjectREFR* Ref = TESRender::PickRefAtCoords(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 							if (Ref)
 							{
-								if (Manager->GetSelectionManager()->IsSelectable(Ref, PaintingSelection) == false)
+								if (ReferenceSelectionManager::IsSelectable(Ref, PaintingSelection) == false)
 								{
 									// preempt the vanilla handler
 									Handled = true;
@@ -1415,15 +1415,16 @@ namespace cse
 									if (MouseRef)
 									{
 										UInt32 SelectionReason = 0;
-										if (Manager->GetSelectionManager()->IsSelectable(MouseRef, SelectionReason, PaintingSelection))
+										if (ReferenceSelectionManager::IsSelectable(MouseRef, SelectionReason, PaintingSelection))
 										{
 											if (_RENDERSEL->HasObject(MouseRef))
 												Icon = *TESRenderWindow::CursorMove;
 											else
 												Icon = *TESRenderWindow::CursorSelect;
 										}
-										else if ((SelectionReason & RenderWindowSelectionManager::kReason_FrozenInactive) ||
-											(SelectionReason & RenderWindowSelectionManager::kReason_FrozenSelf))
+										else if ((SelectionReason & (ReferenceSelectionManager::kReason_FrozenInactive |
+																	 ReferenceSelectionManager::kReason_FrozenSelf |
+																	 ReferenceSelectionManager::kReason_ParentLayerFrozen)) != NULL)
 										{
 											Icon = LoadCursor(nullptr, IDC_NO);
 										}
@@ -1472,8 +1473,8 @@ namespace cse
 								_RENDERWIN_XSTATE.CurrentMouseRef = TESRender::PickRefAtCoords(MousePos.x, MousePos.y);
 								if (_RENDERWIN_XSTATE.CurrentMouseRef)
 								{
-									if (ReferenceVisibilityValidator::IsCulled(_RENDERWIN_XSTATE.CurrentMouseRef) ||
-										ReferenceVisibilityValidator::ShouldBeInvisible(_RENDERWIN_XSTATE.CurrentMouseRef))
+									if (ReferenceVisibilityManager::IsCulled(_RENDERWIN_XSTATE.CurrentMouseRef) ||
+										ReferenceVisibilityManager::ShouldBeInvisible(_RENDERWIN_XSTATE.CurrentMouseRef))
 									{
 										_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
 									}
@@ -1503,9 +1504,9 @@ namespace cse
 									}
 
 									if (SelectionPaintingMode == kSelectionPainting_Select)
-										Manager->GetSelectionManager()->AddToSelection(MouseRef, true, PaintingSelection);
+										ReferenceSelectionManager::AddToSelection(MouseRef, true, PaintingSelection);
 									else
-										Manager->GetSelectionManager()->RemoveFromSelection(MouseRef, true);
+										ReferenceSelectionManager::RemoveFromSelection(MouseRef, true);
 								}
 							}
 

@@ -200,9 +200,9 @@ namespace cse
 			for (auto Itr : Data.LoadedRefs)
 			{
 				UInt32 Reason = 0;
-				if (Itr->IsTemporary() == false && ReferenceVisibilityValidator::ShouldBeInvisible(Itr, Reason))
+				if (Itr->IsTemporary() == false && ReferenceVisibilityManager::ShouldBeInvisible(Itr, Reason))
 				{
-					if (ReferenceVisibilityValidator::IsCulled(Itr) == false)
+					if (ReferenceVisibilityManager::IsCulled(Itr) == false)
 					{
 						NiNode* Node = Itr->GetNiNode();
 						Node->SetCulled(true);
@@ -285,13 +285,13 @@ namespace cse
 			}
 		}
 
-		bool ReferenceVisibilityValidator::ShouldBeInvisible(TESObjectREFR* Ref)
+		bool ReferenceVisibilityManager::ShouldBeInvisible(TESObjectREFR* Ref)
 		{
 			UInt32 Throwaway = 0;
 			return ShouldBeInvisible(Ref, Throwaway);
 		}
 
-		bool ReferenceVisibilityValidator::ShouldBeInvisible(TESObjectREFR* Ref, UInt32& OutReasonFlags)
+		bool ReferenceVisibilityManager::ShouldBeInvisible(TESObjectREFR* Ref, UInt32& OutReasonFlags)
 		{
 			OutReasonFlags = 0;
 
@@ -312,13 +312,16 @@ namespace cse
 					OutReasonFlags |= kReason_InitiallyDisabledChild;
 			}
 
+			if (_RENDERWIN_MGR.GetLayerManager()->IsParentLayerVisible(Ref) == false)
+				OutReasonFlags |= kReason_ParentLayerInvisible;
+
 			if (OutReasonFlags)
 				return true;
 			else
 				return false;
 		}
 
-		bool ReferenceVisibilityValidator::IsCulled(TESObjectREFR* Ref)
+		bool ReferenceVisibilityManager::IsCulled(TESObjectREFR* Ref)
 		{
 			NiNode* Node = Ref->GetNiNode();
 			if (Node == nullptr || Node->IsCulled())
@@ -327,18 +330,7 @@ namespace cse
 				return false;
 		}
 
-		RenderWindowSelectionManager::RenderWindowSelectionManager(RenderWindowGroupManager* GroupMan) :
-			ReferenceGroupManager(GroupMan)
-		{
-			SME_ASSERT(ReferenceGroupManager);
-		}
-
-		RenderWindowSelectionManager::~RenderWindowSelectionManager()
-		{
-			ReferenceGroupManager = nullptr;
-		}
-
-		void RenderWindowSelectionManager::AddToSelection(TESObjectREFR* Ref, bool AddSelectionBox, bool PaintingSelection) const
+		void ReferenceSelectionManager::AddToSelection(TESObjectREFR* Ref, bool AddSelectionBox, bool PaintingSelection)
 		{
 			Ref->ToggleSelectionBox(false);
 
@@ -360,7 +352,7 @@ namespace cse
 				else
 				{
 					// add the parent group to the selection, if any
-					if (ReferenceGroupManager->SelectAffiliatedGroup(Ref, _RENDERSEL, false) == false)
+					if (_RENDERWIN_MGR.GetGroupManager()->SelectAffiliatedGroup(Ref, _RENDERSEL, false) == false)
 						_RENDERSEL->AddToSelection(Ref, AddSelectionBox);
 
 					// recheck the selection for frozen refs that may have been a part of the group
@@ -381,13 +373,13 @@ namespace cse
 			}
 		}
 
-		void RenderWindowSelectionManager::RemoveFromSelection(TESObjectREFR* Ref, bool RemoveSelectionBox) const
+		void ReferenceSelectionManager::RemoveFromSelection(TESObjectREFR* Ref, bool RemoveSelectionBox)
 		{
 			// nothing to do here
 			_RENDERSEL->RemoveFromSelection(Ref, RemoveSelectionBox);
 		}
 
-		bool RenderWindowSelectionManager::IsSelectable(TESObjectREFR* Ref, bool PaintingSelection, bool& OutRegularHandling, UInt32& OutReasonFlags) const
+		bool ReferenceSelectionManager::IsSelectable(TESObjectREFR* Ref, bool PaintingSelection, bool& OutRegularHandling, UInt32& OutReasonFlags)
 		{
 			OutReasonFlags = 0;
 			OutRegularHandling = false;
@@ -400,7 +392,7 @@ namespace cse
 				OutReasonFlags |= kReason_Override;
 			}
 
-			if (ReferenceVisibilityValidator::ShouldBeInvisible(Ref) || ReferenceVisibilityValidator::IsCulled(Ref))
+			if (ReferenceVisibilityManager::ShouldBeInvisible(Ref) || ReferenceVisibilityManager::IsCulled(Ref))
 			{
 				OutReasonFlags |= kReason_InvalidVisibility;
 				Result = false;
@@ -418,17 +410,23 @@ namespace cse
 				Result = false;
 			}
 
+			if (_RENDERWIN_MGR.GetLayerManager()->IsParentLayerFrozen(Ref))
+			{
+				OutReasonFlags |= kReason_ParentLayerFrozen;
+				Result = false;
+			}
+
 			return Result;
 		}
 
-		bool RenderWindowSelectionManager::IsSelectable(TESObjectREFR* Ref, bool PaintingSelection) const
+		bool ReferenceSelectionManager::IsSelectable(TESObjectREFR* Ref, bool PaintingSelection)
 		{
 			bool Throwaway = false;
 			UInt32 ThrowawayEx = 0;
 			return IsSelectable(Ref, PaintingSelection, Throwaway, ThrowawayEx);
 		}
 
-		bool RenderWindowSelectionManager::IsSelectable(TESObjectREFR* Ref, UInt32& OutReasonFlags, bool PaintingSelection) const
+		bool ReferenceSelectionManager::IsSelectable(TESObjectREFR* Ref, UInt32& OutReasonFlags, bool PaintingSelection)
 		{
 			bool Throwaway = false;
 			return IsSelectable(Ref, PaintingSelection, Throwaway, OutReasonFlags);
@@ -1091,9 +1089,9 @@ namespace cse
 			SceneGraphManager = new RenderWindowSceneGraphManager();
 			PGUndoManager = new PathGridUndoManager();
 			GroupManager = new RenderWindowGroupManager();
-			SelectionManager = new RenderWindowSelectionManager(GroupManager);
 			OSD = new RenderWindowOSD();
 			CellLists = new RenderWindowCellLists();
+			LayerManager = new RenderWindowLayerManager();
 			EventSink = new GlobalEventSink(this);
 			KeyboardInputManager = new input::RenderWindowKeyboardManager();
 			MouseInputManager = new input::RenderWindowMouseManager();
@@ -1108,12 +1106,12 @@ namespace cse
 		{
 			SAFEDELETE(ExtendedState);
 			SAFEDELETE(SceneGraphManager);
-			SAFEDELETE(SelectionManager);
 			SAFEDELETE(PGUndoManager);
 			SAFEDELETE(GroupManager);
 			SAFEDELETE(OSD);
 			SAFEDELETE(EventSink);
 			SAFEDELETE(CellLists);
+			SAFEDELETE(LayerManager);
 			SAFEDELETE(KeyboardInputManager);
 			SAFEDELETE(MouseInputManager);
 
@@ -1149,6 +1147,7 @@ namespace cse
 #endif
 			CellLists->Initialize();
 			GroupManager->Initialize();
+			LayerManager->Initialize();
 			KeyboardInputManager->Initialize();
 			MouseInputManager->Initialize(KeyboardInputManager->GetSharedBindings());
 
@@ -1198,6 +1197,7 @@ namespace cse
 
 			MouseInputManager->Deinitialize();
 			KeyboardInputManager->Deinitialize();
+			LayerManager->Deinitialize();
 			GroupManager->Deinitialize();
 			CellLists->Deinitialize();
 			OSD->Deinitialize();
@@ -1222,12 +1222,6 @@ namespace cse
 			return PGUndoManager;
 		}
 
-		RenderWindowSelectionManager * RenderWindowManager::GetSelectionManager() const
-		{
-			SME_ASSERT(Initialized);
-			return SelectionManager;
-		}
-
 		RenderWindowExtendedState& RenderWindowManager::GetState() const
 		{
 			SME_ASSERT(Initialized);
@@ -1250,6 +1244,12 @@ namespace cse
 		{
 			SME_ASSERT(Initialized);
 			return OSD;
+		}
+
+		RenderWindowLayerManager* RenderWindowManager::GetLayerManager() const
+		{
+			SME_ASSERT(Initialized);
+			return LayerManager;
 		}
 
 		void RenderWindowManager::RefreshFOV()
@@ -1313,7 +1313,7 @@ namespace cse
 						bool TruthCond = false;
 						UInt32 InvisibleReasons = 0;
 						if (InvisibleRefs)
-							TruthCond = ReferenceVisibilityValidator::ShouldBeInvisible(Itr, InvisibleReasons);
+							TruthCond = ReferenceVisibilityManager::ShouldBeInvisible(Itr, InvisibleReasons) && InvisibleReasons != ReferenceVisibilityManager::kReason_ParentLayerInvisible;
 						else
 							TruthCond = Itr->IsFrozen();
 
@@ -1328,6 +1328,9 @@ namespace cse
 								{
 									_TES->LoadCellIntoViewPort(nullptr, Itr);
 								}
+
+								if (ImGui::IsItemHovered())
+									ImGui::SetTooltip(EditorID.c_str());
 
 								if (ImGui::BeginPopupContextItem(InvisibleRefs ? "Invisible_Popup" : "Frozen_Popup"))
 								{
@@ -1360,17 +1363,20 @@ namespace cse
 							if (InvisibleRefs)
 							{
 								std::string FlagsBuffer;
-								if ((InvisibleReasons & ReferenceVisibilityValidator::kReason_InvisibleSelf))
+								if ((InvisibleReasons & ReferenceVisibilityManager::kReason_InvisibleSelf))
 									FlagsBuffer.append("IS");
 
-								if ((InvisibleReasons & ReferenceVisibilityValidator::kReason_InvisibleChild))
+								if ((InvisibleReasons & ReferenceVisibilityManager::kReason_InvisibleChild))
 									FlagsBuffer.append(" IC");
 
-								if ((InvisibleReasons & ReferenceVisibilityValidator::kReason_InitiallyDisabledSelf))
+								if ((InvisibleReasons & ReferenceVisibilityManager::kReason_InitiallyDisabledSelf))
 									FlagsBuffer.append(" DS");
 
-								if ((InvisibleReasons & ReferenceVisibilityValidator::kReason_InitiallyDisabledChild))
+								if ((InvisibleReasons & ReferenceVisibilityManager::kReason_InitiallyDisabledChild))
 									FlagsBuffer.append(" DC");
+
+								if ((InvisibleReasons & ReferenceVisibilityManager::kReason_ParentLayerInvisible))
+									FlagsBuffer.append(" IL");
 
 								boost::trim(FlagsBuffer);
 								ImGui::Selectable(FlagsBuffer.c_str());
@@ -1442,6 +1448,9 @@ namespace cse
 										_RENDERWIN_MGR.GetGroupManager()->SelectAffiliatedGroup(GroupMembers[0], _RENDERSEL, true);
 									}
 
+									if (ImGui::IsItemHovered())
+										ImGui::SetTooltip(Itr.c_str());
+
 									if (ImGui::BeginPopupContextItem("Group_Popup"))
 									{
 										if (ImGui::Selectable("Dissolve"))
@@ -1457,7 +1466,8 @@ namespace cse
 											UserData->MemberList = GroupMembers;
 
 											ModalWindowProviderOSDLayer::Instance.ShowModal("Edit Reference Group",
-																							std::bind(&RenderModalEditGroupMembers, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+																							std::bind(&RenderModalEditGroupMembers,
+																									  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
 																							UserData,
 																							ImGuiWindowFlags_AlwaysAutoResize);
 										}
@@ -1585,19 +1595,25 @@ namespace cse
 							{
 								ImGui::TextWrapped("Invisible References: (?)");
 								if (ImGui::IsItemHovered())
-									ImGui::SetTooltip("EditorIDs with an asterisk correspond to the reference's base form.\n\nRight click on an item to display the context menu.");
+									ImGui::SetTooltip("Excluding references whose parent layer is hidden.\nEditorIDs with an asterisk correspond to the reference's base form.\n\nRight click on an item to display the context menu.");
 							}
 							else
 							{
 								ImGui::TextWrapped("Frozen References: (?)");
 								if (ImGui::IsItemHovered())
-									ImGui::SetTooltip("Excluding references frozen with the \"Freeze Inactive Refs\" tool.EditorIDs with an asterisk correspond to the reference's base form.\n\nRight click on an item to display the context menu.");
+									ImGui::SetTooltip("Excluding references whose parent layer is frozen and those that are frozen with the \"Freeze Inactive Refs\" tool.\nEditorIDs with an asterisk correspond to the reference's base form.\n\nRight click on an item to display the context menu.");
 							}
 
 							ImGui::NextColumn();
 
 							if (InvisibleRefs)
 							{
+								if (ImGui::Button(ICON_MD_VISIBILITY_OFF "##hide_selection_btn"))
+									actions::ToggleSelectionVisibility();
+								if (ImGui::IsItemHovered())
+									ImGui::SetTooltip("Toggle Selection Visibility");
+
+								ImGui::SameLine(0, 10);
 								if (ImGui::Button(ICON_MD_FLIP_TO_FRONT "##reveal_all_btn"))
 									actions::RevealAll();
 								if (ImGui::IsItemHovered())
@@ -1633,8 +1649,14 @@ namespace cse
 									ImGui::SetTooltip(FreezeInactiveToolTip);
 
 								ImGui::PopStyleColor(3);
-								ImGui::SameLine(0, 10);
+								ImGui::SameLine(0, 20);
 
+								if (ImGui::Button(ICON_MD_LOCK "##freeze_selection_btn"))
+									actions::FreezeSelection();
+								if (ImGui::IsItemHovered())
+									ImGui::SetTooltip("Freeze Selection");
+
+								ImGui::SameLine(0, 10);
 								if (ImGui::Button(ICON_MD_LOCK_OPEN "##thaw_all_btn"))
 									actions::ThawAll();
 								if (ImGui::IsItemHovered())
@@ -1645,7 +1667,7 @@ namespace cse
 						}
 						ImGui::Columns();
 
-						ImGui::Columns(InvisibleRefs ? 4 : 3, "ref_table_invisible/frozen");
+						ImGui::Columns(InvisibleRefs ? 4 : 3, "ref_table_invisible/frozen", false);
 						{
 							ImGui::Separator();
 							ImGui::Text("EditorID"); ImGui::NextColumn();
@@ -1687,7 +1709,7 @@ namespace cse
 						}
 						ImGui::Columns();
 
-						ImGui::Columns(2, "ref_table_groups");
+						ImGui::Columns(2, "ref_table_groups", false);
 						{
 							ImGui::Separator();
 							ImGui::Text("Name"); ImGui::NextColumn();

@@ -69,6 +69,7 @@
 #include <functional>
 #include <regex>
 #include <unordered_map>
+#include <unordered_set>
 
 // RPC
 #include <Rpc.h>

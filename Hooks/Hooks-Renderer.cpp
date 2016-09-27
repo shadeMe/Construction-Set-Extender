@@ -190,7 +190,7 @@ namespace cse
 
 		void __stdcall RenderWindowReferenceSelectionDetour( TESObjectREFR* Ref, bool ShowSelectionBox )
 		{
-			_RENDERWIN_MGR.GetSelectionManager()->AddToSelection(Ref, ShowSelectionBox);
+			ReferenceSelectionManager::AddToSelection(Ref, ShowSelectionBox);
 		}
 
 		#define _hhName		DoorMarkerProperties

@@ -54,6 +54,11 @@ namespace cse
 				{
 					_DeclareMemHdlr(SelectCell, "");
 				}
+
+				namespace renderWindow
+				{
+					_DeclareMemHdlr(PlaceRef, "");
+				}
 			}
 		}
 
