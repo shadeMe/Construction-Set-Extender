@@ -13,6 +13,7 @@
 #pragma warning(disable: 4018 4244 4267 4305 4288 4312 4311 4800)
 
 // Header Version - Win7+
+#define WINVER			0x0601
 #define _WIN32_WINNT	0x0601
 #define DIRECTINPUT_VERSION 0x0800
 #define DPSAPI_VERSION	1
