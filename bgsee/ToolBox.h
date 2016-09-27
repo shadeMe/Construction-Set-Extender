@@ -12,7 +12,9 @@ namespace bgsee
 		static BOOL CALLBACK				GUIDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 		static ToolBox*						Singleton;
-		ToolBox();
+
+		ToolBox(INIManagerGetterFunctor& Getter, INIManagerSetterFunctor& Setter, bool LoadFromINI);
+		~ToolBox();
 
 		class Tool
 		{
@@ -53,14 +55,13 @@ namespace bgsee
 		void								EnumerateToolsInListBox(HWND ListBox);
 		bool								LookupToolByTitle(const char* Title, ToolArrayT::iterator& Match);
 	public:
-		~ToolBox();
-
-		static ToolBox*						GetSingleton();
-		bool								Initialize(INIManagerGetterFunctor& Getter, INIManagerSetterFunctor& Setter, bool LoadFromINI = true);
+		static ToolBox*						Get();
+		static bool							Initialize(INIManagerGetterFunctor& Getter, INIManagerSetterFunctor& Setter, bool LoadFromINI = true);
+		static void							Deinitialize();
 
 		void								ShowGUI(HINSTANCE ResourceInstance, HWND Parent);
 		void								ShowToolListMenu(HINSTANCE ResourceInstance, HWND Parent, POINT* Coords = nullptr);
 	};
 
-#define BGSEETOOLBOX						bgsee::ToolBox::GetSingleton()
+#define BGSEETOOLBOX						bgsee::ToolBox::Get()
 }

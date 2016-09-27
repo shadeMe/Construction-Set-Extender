@@ -38,6 +38,7 @@ namespace bgsee
 		static ChangeLogManager*		Singleton;
 
 		ChangeLogManager();
+		~ChangeLogManager();
 
 		std::stack<ChangeLog*>			LogStack;
 		ChangeLog*						SessionLog;
@@ -49,11 +50,9 @@ namespace bgsee
 		const char*						GetTempDirectory(char* OutBuffer, UInt32 BufferSize);
 		void							WriteToLogs(const char* Message, bool StampTime);
 	public:
-		~ChangeLogManager();
-
-		static ChangeLogManager*		GetSingleton();
-
-		bool							Initialize();
+		static ChangeLogManager*		Get();
+		static bool						Initialize();
+		static void						Deinitialize();
 
 		void							RecordChange(const char* Format, ...);
 		void							RecordChange(const ChangeEntry& Entry);
@@ -64,5 +63,5 @@ namespace bgsee
 		void							PushNewActiveLog();
 	};
 
-#define BGSEECHANGELOG				bgsee::ChangeLogManager::GetSingleton()
+#define BGSEECHANGELOG				bgsee::ChangeLogManager::Get()
 }

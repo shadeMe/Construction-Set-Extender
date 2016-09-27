@@ -297,7 +297,7 @@ namespace bgsee
 					break;
 
 				SendMessage(hWnd, WM_SETREDRAW, FALSE, 0);
-				
+
 				switch (Instance->GetActiveContext()->GetState())
 				{
 				case MessageLogContext::kState_Reset:
@@ -929,9 +929,14 @@ namespace bgsee
 		SecondaryContexts.clear();
 	}
 
-	Console::Console( const char* LogPath ) :
+	Console*		Console::Singleton = nullptr;
+
+	Console::Console(const char* LogPath) :
 		GenericModelessDialog()
 	{
+		SME_ASSERT(Singleton == nullptr);
+		Singleton = this;
+
 		OwnerThreadID = GetCurrentThreadId();
 		PrimaryContext = new DefaultDebugLogContext(this, LogPath);
 		ActiveContext = PrimaryContext;
@@ -940,6 +945,7 @@ namespace bgsee
 		DialogContextMenuID = IDR_BGSEE_CONSOLE_CONTEXTMENU;
 		CallbackDlgProc = &Console::BaseDlgProc;
 		WarningManager = nullptr;
+
 	}
 
 	Console::~Console()
@@ -966,6 +972,8 @@ namespace bgsee
 		SetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE),
 					GWL_WNDPROC,
 					GetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE), GWL_USERDATA));
+
+		Singleton = nullptr;
 	}
 
 	void Console::InitializeUI( HWND Parent, HINSTANCE Resource )
@@ -1186,7 +1194,27 @@ namespace bgsee
 		Depot.push_back(&kINI_LogTimestamps);
 	}
 
-	ConsoleWarningManager* Console::GetWarningManager( void ) const
+	Console* Console::Get()
+	{
+		return Singleton;
+	}
+
+	bool Console::Initialize(const char* LogPath)
+	{
+		if (Singleton)
+			return false;
+
+		Console* Buffer = new Console(LogPath);
+		return true;
+	}
+
+	void Console::Deinitialize()
+	{
+		SME_ASSERT(Singleton);
+		delete Singleton;
+	}
+
+	ConsoleWarningManager* Console::GetWarningManager(void) const
 	{
 		SME_ASSERT(WarningManager);
 

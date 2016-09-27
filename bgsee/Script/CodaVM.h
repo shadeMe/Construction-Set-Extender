@@ -190,20 +190,25 @@ namespace bgsee
 
 			bool										Initialized;
 
-			CodaScriptVM();
+			CodaScriptVM(ResourceLocation BasePath,
+						 const char* WikiURL,
+						 INIManagerGetterFunctor INIGetter,
+						 INIManagerSetterFunctor INISetter,
+						 CodaScriptRegistrarListT& ScriptCommands);
+			~CodaScriptVM();
 
 			CodaScriptExecutionContext*					CreateExecutionContext(std::fstream& Input, CodaScriptMutableDataArrayT* Parameters = nullptr);
 		public:
-			~CodaScriptVM();
 
 			static const std::string					kSourceExtension;
-			static CodaScriptVM*						GetSingleton();
+			static CodaScriptVM*						Get();
 
-			bool										Initialize(ResourceLocation BasePath,
+			static bool									Initialize(ResourceLocation BasePath,
 																const char* WikiURL,
 																INIManagerGetterFunctor INIGetter,
 																INIManagerSetterFunctor INISetter,
 																CodaScriptRegistrarListT& ScriptCommands);
+			static void									Deinitialize();
 
 			bool										RunScript(std::string ScriptName,					// script name's the same as filename
 																CodaScriptMutableDataArrayT* Parameters,
@@ -222,7 +227,7 @@ namespace bgsee
 
 			void										OpenScriptRepository(void) const;
 		};
-#define CODAVM											bgsee::script::CodaScriptVM::GetSingleton()
+#define CODAVM											bgsee::script::CodaScriptVM::Get()
 
 		class CodaScriptObjectFactory
 		{

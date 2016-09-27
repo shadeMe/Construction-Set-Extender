@@ -132,7 +132,7 @@ namespace bgsee
 
 			friend class			Console;
 
-			void					CheckBufferLength(size_t AddendLength);		// clears the buffer preemptively if it's approaching its limit 
+			void					CheckBufferLength(size_t AddendLength);		// clears the buffer preemptively if it's approaching its limit
 		public:
 			MessageLogContext(const char* ContextName, const char* ContextLogPath = nullptr);
 			virtual ~MessageLogContext();
@@ -227,17 +227,17 @@ namespace bgsee
 		typedef std::vector<MessageLogContext*>	ContextArrayT;
 		typedef std::stack<std::string>			CommandHistoryStackT;
 
-		friend class							DefaultDebugLogContext;
-		friend struct							UIExtraData;
+		friend class				DefaultDebugLogContext;
+		friend struct				UIExtraData;
 
-		DWORD									OwnerThreadID;
-		MessageLogContext*						ActiveContext;
-		DefaultDebugLogContext*					PrimaryContext;
-		ContextArrayT							SecondaryContexts;
-		ConsoleCommandTable						CommandTable;
-		CommandHistoryStackT					CommandLineHistory;
-		CommandHistoryStackT					CommandLineHistoryAuxiliary;
-		ConsoleWarningManager*					WarningManager;
+		DWORD						OwnerThreadID;
+		MessageLogContext*			ActiveContext;
+		DefaultDebugLogContext*		PrimaryContext;
+		ContextArrayT				SecondaryContexts;
+		ConsoleCommandTable			CommandTable;
+		CommandHistoryStackT		CommandLineHistory;
+		CommandHistoryStackT		CommandLineHistoryAuxiliary;
+		ConsoleWarningManager*		WarningManager;
 
 		void						ClearMessageLog(void);
 		void						SetTitle(const char* Prefix);
@@ -251,11 +251,14 @@ namespace bgsee
 		bool						LookupSecondaryContextByName(const char* Name, ContextArrayT::iterator& Match);
 		bool						LookupSecondaryContextByInstance(MessageLogContext* Context, ContextArrayT::iterator& Match);
 		void						ReleaseSecondaryContexts(void);
-	public:
-		static const UInt32			kMaxIndentLevel = 0x10;
+	private:
+		static Console*				Singleton;
 
 		Console(const char* LogPath);
 		virtual ~Console();
+	public:
+		static const UInt32			kMaxIndentLevel = 0x10;
+
 
 		virtual void				InitializeUI(HWND Parent, HINSTANCE Resource);
 		virtual void				InitializeWarningManager(INIManagerGetterFunctor Getter,
@@ -291,5 +294,9 @@ namespace bgsee
 		ConsoleWarningManager*		GetWarningManager(void) const;
 
 		static void					RegisterINISettings(INISettingDepotT& Depot);
+
+		static Console*				Get();
+		static bool					Initialize(const char* LogPath);
+		static void					Deinitialize();
 	};
 }

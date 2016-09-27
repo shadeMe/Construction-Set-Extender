@@ -7,10 +7,23 @@ namespace bgsee
 {
 	WorkspaceManager* WorkspaceManager::Singleton = nullptr;
 
-	WorkspaceManager::WorkspaceManager()
+	WorkspaceManager::WorkspaceManager(const char* DefaultDirectory, WorkspaceManagerOperator* Operator, DefaultDirectoryArrayT& DefaultDirectoryData)
 	{
-		Operator = nullptr;
-		Initialized = false;
+		SME_ASSERT(Singleton == nullptr);
+		Singleton = this;
+
+		SME_ASSERT(DefaultDirectory && Operator && DefaultDirectoryData.size() > 1);
+
+		this->DefaultDirectory = DefaultDirectory;
+		this->CurrentDirectory = DefaultDirectory;
+		this->Operator = Operator;
+
+		for (DefaultDirectoryArrayT::iterator Itr = DefaultDirectoryData.begin(); Itr != DefaultDirectoryData.end(); Itr++)
+			DefaultDirectories.push_back(*Itr);
+
+		CreateDefaultDirectories(DefaultDirectory);
+
+		Initialized = true;
 	}
 
 	void WorkspaceManager::SetWorkingDirectory( const char* WorkspacePath )
@@ -49,40 +62,28 @@ namespace bgsee
 		Singleton = nullptr;
 	}
 
-	WorkspaceManager* WorkspaceManager::GetSingleton()
+	WorkspaceManager* WorkspaceManager::Get()
 	{
-		if (Singleton == nullptr)
-			Singleton = new WorkspaceManager();
-
 		return Singleton;
 	}
 
-	bool WorkspaceManager::Initialize( const char* DefaultDirectory,
-											WorkspaceManagerOperator* Operator,
-											DefaultDirectoryArrayT& DefaultDirectoryData )
+	bool WorkspaceManager::Initialize( const char* DefaultDirectory, WorkspaceManagerOperator* Operator, DefaultDirectoryArrayT& DefaultDirectoryData )
 	{
-		if (Initialized)
+		if (Singleton)
 			return false;
 
-		SME_ASSERT(DefaultDirectory && Operator && DefaultDirectoryData.size() > 1);
-
-		this->DefaultDirectory = DefaultDirectory;
-		this->CurrentDirectory = DefaultDirectory;
-		this->Operator = Operator;
-
-		for (DefaultDirectoryArrayT::iterator Itr = DefaultDirectoryData.begin(); Itr != DefaultDirectoryData.end(); Itr++)
-			DefaultDirectories.push_back(*Itr);
-
-		CreateDefaultDirectories(DefaultDirectory);
-
-		Initialized = true;
-		return Initialized;
+		WorkspaceManager* Buffer = new WorkspaceManager(DefaultDirectory, Operator, DefaultDirectoryData);
+		return Buffer->Initialized;
 	}
 
-	bool WorkspaceManager::SelectCurrentWorkspace( const char* DefaultWorkspacePath )
+	void WorkspaceManager::Deinitialize()
 	{
-		SME_ASSERT(Initialized);
+		SME_ASSERT(Singleton);
+		delete Singleton;
+	}
 
+	bool WorkspaceManager::SelectCurrentWorkspace(const char* DefaultWorkspacePath)
+	{
 		char WorkspacePath[MAX_PATH] = {0};
 
 		if (DefaultWorkspacePath == nullptr)
@@ -141,15 +142,11 @@ namespace bgsee
 
 	const char* WorkspaceManager::GetCurrentWorkspace( void ) const
 	{
-		SME_ASSERT(Initialized);
-
 		return CurrentDirectory.c_str();
 	}
 
 	const char* WorkspaceManager::GetDefaultWorkspace( void ) const
 	{
-		SME_ASSERT(Initialized);
-
 		return DefaultDirectory.c_str();
 	}
 

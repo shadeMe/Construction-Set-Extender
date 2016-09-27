@@ -72,14 +72,69 @@ namespace bgsee
 
 		AchievementManager*			AchievementManager::Singleton = nullptr;
 
-		AchievementManager::AchievementManager() :
+		AchievementManager::AchievementManager(const char* ExtenderLongName, HINSTANCE ResourceInstance, ExtenderAchievementArrayT& Achievements) :
 			RegistryKeyRoot(""),
 			RegistryKeyExtraData(""),
 			AchievementDepot(),
 			ResourceInstance(0),
 			Initialized(false)
 		{
-			;//
+			SME_ASSERT(Singleton == nullptr);
+			Singleton = this;
+
+			SME_ASSERT(ExtenderLongName && ResourceInstance);
+
+			this->Initialized = true;
+			this->RegistryKeyRoot = "Software\\Imitation Camel\\" + std::string(ExtenderLongName) + "\\Achievements\\";
+			this->RegistryKeyExtraData = RegistryKeyRoot + "ExtraData\\";
+			this->ResourceInstance = ResourceInstance;
+			this->AchievementDepot = Achievements;
+
+			HKEY BaseAchievementKey = nullptr, ExtraDataAchievementKey = nullptr;
+			if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+							   RegistryKeyRoot.c_str(),
+							   NULL, nullptr, NULL,
+							   KEY_ALL_ACCESS,
+							   nullptr,
+							   &BaseAchievementKey,
+							   nullptr) != ERROR_SUCCESS)
+			{
+				BGSEECONSOLE_ERROR("Couldn't create root registry key!");
+			}
+
+			if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+							   RegistryKeyExtraData.c_str(),
+							   NULL, nullptr, NULL,
+							   KEY_ALL_ACCESS,
+							   nullptr,
+							   &ExtraDataAchievementKey,
+							   nullptr) != ERROR_SUCCESS)
+			{
+				BGSEECONSOLE_ERROR("Couldn't create extradata registry key!");
+			}
+
+			UInt32 UnlockedCount = 0;
+			for (ExtenderAchievementArrayT::iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
+			{
+				LoadAchievementState(*Itr);
+
+				if ((*Itr)->GetUnlocked())
+					UnlockedCount++;
+				else if ((*Itr)->State == Achievement::kState_Triggered)
+				{
+					Unlock(*Itr, true);
+					UnlockedCount++;
+				}
+			}
+
+			BGSEECONSOLE_MESSAGE("Unlocked Achievements: %d/%d", UnlockedCount, GetTotalAchievements());
+			BGSEECONSOLE->Indent();
+			for (ExtenderAchievementArrayT::iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
+			{
+				if ((*Itr)->GetUnlocked())
+					BGSEECONSOLE_MESSAGE((*Itr)->Name.c_str());
+			}
+			BGSEECONSOLE->Exdent();
 		}
 
 		void AchievementManager::SaveAchievementState( Achievement* Achievement, bool StateOnly )
@@ -175,79 +230,29 @@ namespace bgsee
 			Singleton = nullptr;
 		}
 
-		AchievementManager* AchievementManager::GetSingleton( void )
+		AchievementManager* AchievementManager::Get( void )
 		{
-			if (Singleton == nullptr)
-				Singleton = new AchievementManager();
-
 			return Singleton;
 		}
 
 		bool AchievementManager::Initialize( const char* ExtenderLongName, HINSTANCE ResourceInstance, ExtenderAchievementArrayT& Achievements )
 		{
-			if (Initialized)
+			if (Singleton)
 				return false;
 
-			SME_ASSERT(ExtenderLongName && ResourceInstance);
-
-			this->Initialized = true;
-			this->RegistryKeyRoot = "Software\\Imitation Camel\\" + std::string(ExtenderLongName) + "\\Achievements\\";
-			this->RegistryKeyExtraData = RegistryKeyRoot + "ExtraData\\";
-			this->ResourceInstance = ResourceInstance;
-			this->AchievementDepot = Achievements;
-
-			HKEY BaseAchievementKey = nullptr, ExtraDataAchievementKey = nullptr;
-			if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
-							RegistryKeyRoot.c_str(),
-							NULL, nullptr, NULL,
-							KEY_ALL_ACCESS,
-							nullptr,
-							&BaseAchievementKey,
-							nullptr) != ERROR_SUCCESS)
-			{
-				BGSEECONSOLE_ERROR("Couldn't create root registry key!");
-			}
-
-			if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
-							RegistryKeyExtraData.c_str(),
-							NULL, nullptr, NULL,
-							KEY_ALL_ACCESS,
-							nullptr,
-							&ExtraDataAchievementKey,
-							nullptr) != ERROR_SUCCESS)
-			{
-				BGSEECONSOLE_ERROR("Couldn't create extradata registry key!");
-			}
-
-			UInt32 UnlockedCount = 0;
-			for (ExtenderAchievementArrayT::iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
-			{
-				LoadAchievementState(*Itr);
-
-				if ((*Itr)->GetUnlocked())
-					UnlockedCount++;
-				else if ((*Itr)->State == Achievement::kState_Triggered)
-				{
-					Unlock(*Itr, true);
-					UnlockedCount++;
-				}
-			}
-
-			BGSEECONSOLE_MESSAGE("Unlocked Achievements: %d/%d", UnlockedCount, GetTotalAchievements());
-			BGSEECONSOLE->Indent();
-			for (ExtenderAchievementArrayT::iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
-			{
-				if ((*Itr)->GetUnlocked())
-					BGSEECONSOLE_MESSAGE((*Itr)->Name.c_str());
-			}
-			BGSEECONSOLE->Exdent();
-
-			return Initialized;
+			AchievementManager* Buffer = new AchievementManager(ExtenderLongName, ResourceInstance, Achievements);
+			return Buffer->Initialized;
 		}
 
-		void AchievementManager::Unlock( Achievement* Achievement, bool ForceUnlock, bool TriggerOnly, bool PreserveUnlockState )
+		void AchievementManager::Deinitialize()
 		{
-			if (Initialized == false || Achievement->GetUnlocked())
+			SME_ASSERT(Singleton);
+			delete Singleton;
+		}
+
+		void AchievementManager::Unlock(Achievement* Achievement, bool ForceUnlock, bool TriggerOnly, bool PreserveUnlockState)
+		{
+			if (Achievement->GetUnlocked())
 				return;
 
 			if (PreserveUnlockState == false)

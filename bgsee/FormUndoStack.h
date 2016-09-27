@@ -51,7 +51,8 @@ namespace bgsee
 		static FormUndoStack*				Singleton;
 		static const char*					kMessageLogContextName;
 
-		FormUndoStack();
+		FormUndoStack(FormUndoStackOperator* Operator);
+		~FormUndoStack();
 
 		typedef boost::shared_ptr<FormUndoProxy>		UndoProxyHandleT;
 		typedef std::stack<UndoProxyHandleT>			UndoProxyStackT;
@@ -73,11 +74,10 @@ namespace bgsee
 		void								ResetStack(UndoProxyStackT& Stack);
 		void								WalkUndoStack(UInt8 Operation, UndoProxyStackT& Stack, UndoProxyStackT& AlternateStack);
 	public:
-		~FormUndoStack();
 
-		static FormUndoStack*				GetSingleton(void);
-
-		bool								Initialize(FormUndoStackOperator* Operator);			// takes ownership of the pointer
+		static FormUndoStack*				Get(void);
+		static bool							Initialize(FormUndoStackOperator* Operator);			// takes ownership of the pointer
+		static void							Deinitialize();
 
 											// takes ownership of the pointer, automatically resets the redo stack
 											// returns true if the proxy was recorded successfully, false otherwise
@@ -90,5 +90,5 @@ namespace bgsee
 		void								Print(const char* Format, ...);
 	};
 
-#define BGSEEUNDOSTACK						bgsee::FormUndoStack::GetSingleton()
+#define BGSEEUNDOSTACK						bgsee::FormUndoStack::Get()
 }

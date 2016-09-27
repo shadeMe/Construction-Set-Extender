@@ -7,12 +7,19 @@ namespace bgsee
 	GlobalClipboard*			GlobalClipboard::Singleton = nullptr;
 	const char*					GlobalClipboard::kClipboardBufferPath = "bgseegc";
 
-	GlobalClipboard::GlobalClipboard() :
+	GlobalClipboard::GlobalClipboard(GlobalClipboardOperator* Operator, PluginFileWrapper* PluginWrapper) :
 		Operator(nullptr),
 		Buffer(nullptr),
 		Initialized(false)
 	{
-		;//
+		SME_ASSERT(Singleton == nullptr);
+		Singleton = this;
+
+		SME_ASSERT(Operator && PluginWrapper);
+
+		this->Operator = Operator;
+		this->Buffer = PluginWrapper;
+		Initialized = Buffer->Construct(kClipboardBufferPath, true);
 	}
 
 	GlobalClipboard::~GlobalClipboard()
@@ -25,33 +32,28 @@ namespace bgsee
 		Singleton = nullptr;
 	}
 
-	GlobalClipboard* GlobalClipboard::GetSingleton()
+	GlobalClipboard* GlobalClipboard::Get()
 	{
-		if (Singleton == nullptr)
-			Singleton = new GlobalClipboard();
-
 		return Singleton;
 	}
 
 	bool GlobalClipboard::Initialize( GlobalClipboardOperator* Operator, PluginFileWrapper* PluginWrapper )
 	{
-		if (Initialized)
+		if (Singleton)
 			return false;
 
-		SME_ASSERT(Operator && PluginWrapper);
-
-		this->Operator = Operator;
-		this->Buffer = PluginWrapper;
-
-		Initialized = Buffer->Construct(kClipboardBufferPath, true);
-
-		return Initialized;
+		GlobalClipboard* Buffer = new GlobalClipboard(Operator, PluginWrapper);
+		return Buffer->Initialized;
 	}
 
-	bool GlobalClipboard::Copy( FormListT& Forms )
+	void GlobalClipboard::Deinitialize()
 	{
-		SME_ASSERT(Initialized);
+		SME_ASSERT(Singleton);
+		delete Singleton;
+	}
 
+	bool GlobalClipboard::Copy(FormListT& Forms)
+	{
 		bool Result = false;
 
 		BGSEECONSOLE_MESSAGE("Copying forms to global clipboard...");
@@ -100,8 +102,6 @@ namespace bgsee
 
 	bool GlobalClipboard::Paste( bool ClearIfSuccessful /*= false*/ )
 	{
-		SME_ASSERT(Initialized);
-
 		bool Result = false;
 
 		BGSEECONSOLE_MESSAGE("Pasting forms from global clipboard...");
@@ -134,8 +134,6 @@ namespace bgsee
 
 	void GlobalClipboard::DisplayContents( void )
 	{
-		SME_ASSERT(Initialized);
-
 		Operator->DisplayClipboardContents(Buffer);
 	}
 }

@@ -313,7 +313,8 @@ namespace bgsee
 			kIATPatch__MAX
 		};
 
-		UIManager();
+		UIManager(const char* MainWindowClassName, HMENU MainMenuHandle);
+		~UIManager();
 
 		DWORD									OwnerThreadID;
 		IATPatchData							PatchDepot[kIATPatch__MAX];
@@ -332,10 +333,9 @@ namespace bgsee
 
 		void									PatchIAT(UInt8 PatchType, void* Callback);		// CALLBACK call convention
 	public:
-		~UIManager();
-
-		static UIManager*						GetSingleton();
-		bool									Initialize(const char* MainWindowClassName, HMENU MainMenuHandle = nullptr);
+		static UIManager*						Get();
+		static bool								Initialize(const char* MainWindowClassName, HMENU MainMenuHandle = nullptr);
+		static void								Deinitialize();
 
 		int										MsgBoxI(HWND Parent, UINT Flags, const char* Format, ...);
 		int										MsgBoxI(UINT Flags, const char* Format, ...);
@@ -370,7 +370,7 @@ namespace bgsee
 		WindowStyler*							GetWindowStyler(void);
 		WindowInvalidationManager*				GetInvalidationManager(void);
 	};
-#define BGSEEUI									bgsee::UIManager::GetSingleton()
+#define BGSEEUI									bgsee::UIManager::Get()
 
 	class GenericModelessDialog
 	{

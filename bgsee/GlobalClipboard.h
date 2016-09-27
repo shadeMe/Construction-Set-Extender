@@ -29,7 +29,8 @@ namespace bgsee
 	{
 		static GlobalClipboard*			Singleton;
 
-		GlobalClipboard();
+		GlobalClipboard(GlobalClipboardOperator* Operator, PluginFileWrapper* PluginWrapper);
+		~GlobalClipboard();
 
 		static const char*				kClipboardBufferPath;
 
@@ -38,17 +39,15 @@ namespace bgsee
 
 		bool							Initialized;
 	public:
-		~GlobalClipboard();
 
-		static GlobalClipboard*				GetSingleton();
-
-		bool								Initialize(GlobalClipboardOperator* Operator,
-													PluginFileWrapper* PluginWrapper);			// takes ownership of the pointers
+		static GlobalClipboard*				Get();
+		static bool							Initialize(GlobalClipboardOperator* Operator, PluginFileWrapper* PluginWrapper);			// takes ownership of the pointers
+		static void							Deinitialize();
 
 		bool								Copy(FormListT& Forms);							// takes ownership of the pointers
 		bool								Paste(bool ClearIfSuccessful = false);
 		void								DisplayContents(void);
 	};
 
-#define BGSEECLIPBOARD						bgsee::GlobalClipboard::GetSingleton()
+#define BGSEECLIPBOARD						bgsee::GlobalClipboard::Get()
 }

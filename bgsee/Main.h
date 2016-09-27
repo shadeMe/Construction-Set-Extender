@@ -34,7 +34,11 @@ namespace bgsee
 			kInitCallback__MAX
 		};
 	private:
+		static Daemon*				Singleton;
+
 		Daemon();
+		virtual ~Daemon();
+
 		typedef std::vector<DaemonCallback*>	DaemonCallbackArrayT;
 
 		DaemonCallbackArrayT		InitCallbacks[kInitCallback__MAX];
@@ -51,9 +55,6 @@ namespace bgsee
 
 		friend class				Main;
 	public:
-		virtual ~Daemon();
-
-
 
 		void						RegisterInitCallback(UInt8 CallbackType, DaemonCallback* Callback);		// takes ownership of pointer, no parameter
 		void						RegisterDeinitCallback(DaemonCallback* Callback);						// takes ownership of pointer, no parameter
@@ -64,6 +65,10 @@ namespace bgsee
 		bool						IsDeinitializing(void) const;
 
 		static void					WaitForDebugger(void);
+
+		static Daemon*				Get();
+		static bool					Initialize();
+		static void					Deinitialize();
 	};
 
 	// for direct writing
@@ -107,6 +112,30 @@ namespace bgsee
 
 	class Main
 	{
+	public:
+		struct InitializationParams
+		{
+			const char*				LongName;
+			const char*				DisplayName;
+			const char*				ShortName;
+			const char*				ReleaseName;
+			UInt32					Version;
+			UInt8					EditorID;
+			UInt32					EditorSupportedVersion;
+			UInt32					EditorCurrentVersion;
+			const char*				APPPath;
+			UInt32					SEPluginHandle;
+			UInt32					SEMinimumVersion;
+			UInt32					SECurrentVersion;
+			INISettingDepotT		INISettings;
+			const char*				DotNETFrameworkVersion;
+			bool					CLRMemoryProfiling;
+			bool					WaitForDebugger;
+			bool					CrashRptSupport;
+
+			InitializationParams();
+		};
+	private:
 		static Main*			Singleton;
 
 		class INIManager : public SME::INI::INIManager
@@ -169,7 +198,8 @@ namespace bgsee
 		friend class DefaultInitCallback;
 		friend class DefaultDeinitCallback;
 
-		Main();
+		Main(InitializationParams& Params);
+		~Main();
 
 		std::string					ExtenderLongName;
 		std::string					ExtenderDisplayName;
@@ -191,14 +221,10 @@ namespace bgsee
 		UInt32						ScriptExtenderCurrentVersion;
 
 		INIManager*					ExtenderINIManager;
-		Console*					ExtenderConsole;
-		Daemon*						ExtenderDaemon;
 		bool						CrashRptSupport;
 
 		bool						Initialized;
 	public:
-		~Main();
-
 		enum
 		{
 			kExtenderParentEditor_Unknown	=	0,
@@ -207,15 +233,9 @@ namespace bgsee
 			kExtenderParentEditor__MAX
 		};
 
-		static Main*							GetSingleton();
-
-		bool									Initialize(const char* LongName, const char* DisplayName, const char* ShortName, const char* ReleaseName,
-														UInt32 Version, UInt8 EditorID, UInt32 EditorSupportedVersion, UInt32 EditorCurrentVersion,
-														const char* APPPath,
-														UInt32 SEPluginHandle, UInt32 SEMinimumVersion, UInt32 SECurrentVersion,
-														INISettingDepotT& INISettings,
-														const char* DotNETFrameworkVersion, bool CLRMemoryProfiling, bool WaitForDebugger,
-														bool CrashRptSupport = true);
+		static Main*							Get();
+		static bool								Initialize(InitializationParams& Params);
+		static void								Deinitialize();
 
 		const char*								ExtenderGetLongName(void) const;
 		const char*								ExtenderGetDisplayName(void) const;
@@ -235,17 +255,15 @@ namespace bgsee
 		const char*								GetINIPath(void) const;
 		const char*								GetComponentDLLPath(void) const;
 
-		Console*								GetConsole(void) const;
-		Daemon*									GetDaemon(void) const;
-
 		INIManagerGetterFunctor					INIGetter(void);
 		INIManagerSetterFunctor					INISetter(void);
 
 		void									ShowPreferencesGUI(void);
 	};
 
-#define BGSEEMAIN					bgsee::Main::GetSingleton()
-#define BGSEECONSOLE				BGSEEMAIN->GetConsole()
+#define BGSEEMAIN					bgsee::Main::Get()
+#define BGSEECONSOLE				bgsee::Console::Get()
+#define BGSEEDAEMON					bgsee::Daemon::Get()
 #define BGSEECONSOLE_MESSAGE(...)	BGSEECONSOLE->LogMsg(BGSEEMAIN->ExtenderGetShortName(), __VA_ARGS__)
 #define BGSEECONSOLE_ERROR(...)		BGSEECONSOLE->LogWindowsError(BGSEEMAIN->ExtenderGetShortName(), __VA_ARGS__)
 

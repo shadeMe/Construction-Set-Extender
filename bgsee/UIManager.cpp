@@ -872,7 +872,7 @@ namespace bgsee
 			BGSEEUI->Subclasser->HandleMainWindowInit(Result);
 			BGSEEUI->PatchDepot[kIATPatch_CreateWindowEx].Reset();
 
-			BGSEEMAIN->GetDaemon()->ExecuteInitCallbacks(Daemon::kInitCallback_PostMainWindowInit);
+			BGSEEDAEMON->ExecuteInitCallbacks(Daemon::kInitCallback_PostMainWindowInit);
 
 			SendMessage(Result, WM_INITDIALOG, NULL, NULL);
 		}
@@ -1020,12 +1020,12 @@ namespace bgsee
 		Patch->Replace();
 	}
 
-	UIManager::UIManager() :
+	UIManager::UIManager(const char* MainWindowClassName, HMENU MainMenuHandle) :
 		OwnerThreadID(0),
-		EditorWindowClassName(""),
+		EditorWindowClassName(MainWindowClassName),
 		EditorWindowHandle(nullptr),
 		EditorResourceInstance(nullptr),
-		EditorMainMenuReplacement(nullptr),
+		EditorMainMenuReplacement(MainMenuHandle),
 		Subclasser(nullptr),
 		DialogHotSwapper(nullptr),
 		MenuHotSwapper(nullptr),
@@ -1033,7 +1033,24 @@ namespace bgsee
 		InvalidationManager(nullptr),
 		Initialized(false)
 	{
+		SME_ASSERT(Singleton == nullptr);
+		Singleton = this;
 		OwnerThreadID = GetCurrentThreadId();
+
+		EditorWindowClassName = MainWindowClassName;
+		EditorMainMenuReplacement = MainMenuHandle;
+		Subclasser = new WindowSubclasser();
+		DialogHotSwapper = new DialogTemplateHotSwapper();
+		MenuHotSwapper = new MenuTemplateHotSwapper();
+		Styler = new WindowStyler();
+		InvalidationManager = new WindowInvalidationManager();
+
+		PatchIAT(kIATPatch_CreateWindowEx, CallbackCreateWindowExA);
+		PatchIAT(kIATPatch_CreateDialogParam, CallbackCreateDialogParamA);
+		PatchIAT(kIATPatch_DialogBoxParam, CallbackDialogBoxParamA);
+		PatchIAT(kIATPatch_LoadMenu, CallbackLoadMenuA);
+
+		Initialized = true;
 	}
 
 	UIManager::~UIManager()
@@ -1057,38 +1074,27 @@ namespace bgsee
 		Singleton = nullptr;
 	}
 
-	UIManager* UIManager::GetSingleton()
+	UIManager* UIManager::Get()
 	{
-		if (Singleton == nullptr)
-			Singleton = new UIManager();
-
 		return Singleton;
 	}
 
 	bool UIManager::Initialize( const char* MainWindowClassName, HMENU MainMenuHandle )
 	{
-		if (Initialized)
+		if (Singleton)
 			return false;
 
-		Initialized = true;
-
-		EditorWindowClassName = MainWindowClassName;
-		EditorMainMenuReplacement = MainMenuHandle;
-		Subclasser = new WindowSubclasser();
-		DialogHotSwapper = new DialogTemplateHotSwapper();
-		MenuHotSwapper = new MenuTemplateHotSwapper();
-		Styler = new WindowStyler();
-		InvalidationManager = new WindowInvalidationManager();
-
-		PatchIAT(kIATPatch_CreateWindowEx, CallbackCreateWindowExA);
-		PatchIAT(kIATPatch_CreateDialogParam, CallbackCreateDialogParamA);
-		PatchIAT(kIATPatch_DialogBoxParam, CallbackDialogBoxParamA);
-		PatchIAT(kIATPatch_LoadMenu, CallbackLoadMenuA);
-
-		return Initialized;
+		UIManager* Buffer = new UIManager(MainWindowClassName, MainMenuHandle);
+		return Buffer->Initialized;
 	}
 
-	WindowHandleCollection* UIManager::GetWindowHandleCollection( UInt8 ID )
+	void UIManager::Deinitialize()
+	{
+		SME_ASSERT(Singleton);
+		delete Singleton;
+	}
+
+	WindowHandleCollection* UIManager::GetWindowHandleCollection(UInt8 ID)
 	{
 		SME_ASSERT(ID < kHandleCollection__MAX);
 		return &HandleCollections[ID];
@@ -1241,8 +1247,6 @@ namespace bgsee
 
 	INT_PTR UIManager::ModalDialog( HINSTANCE hInstance, LPSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam /*= NULL*/, bool Override )
 	{
-		SME_ASSERT(Initialized);
-
 		EnumThreadWindows(OwnerThreadID, EnumThreadWindowsCallback, 0);
 
 		INT_PTR Result = NULL;
@@ -1262,33 +1266,26 @@ namespace bgsee
 
 	WindowSubclasser* UIManager::GetSubclasser( void )
 	{
-		SME_ASSERT(Subclasser);
 		return Subclasser;
 	}
 
 	DialogTemplateHotSwapper* UIManager::GetDialogHotSwapper( void )
 	{
-		SME_ASSERT(DialogHotSwapper);
 		return DialogHotSwapper;
 	}
 
 	MenuTemplateHotSwapper* UIManager::GetMenuHotSwapper( void )
 	{
-		SME_ASSERT(MenuHotSwapper);
 		return MenuHotSwapper;
 	}
 
 	WindowStyler* UIManager::GetWindowStyler( void )
 	{
-		SME_ASSERT(Initialized);
-
 		return Styler;
 	}
 
 	WindowInvalidationManager* UIManager::GetInvalidationManager( void )
 	{
-		SME_ASSERT(Initialized);
-
 		return InvalidationManager;
 	}
 
@@ -1568,7 +1565,8 @@ namespace bgsee
 		if (DialogHandle == nullptr || ContextMenuParentHandle == nullptr)
 			return;
 
-		BGSEEUI->GetWindowHandleCollection(UIManager::kHandleCollection_MainWindowChildren)->Remove(DialogHandle);
+		if (BGSEEUI)
+			BGSEEUI->GetWindowHandleCollection(UIManager::kHandleCollection_MainWindowChildren)->Remove(DialogHandle);
 
 		DestroyMenu(ContextMenuParentHandle);
 		DestroyWindow(DialogHandle);

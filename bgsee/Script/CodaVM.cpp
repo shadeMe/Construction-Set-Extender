@@ -947,7 +947,11 @@ namespace bgsee
 			CODAVM->CommandRegistry->Dump("coda_command_doc.html");
 		}
 
-		CodaScriptVM::CodaScriptVM() :
+		CodaScriptVM::CodaScriptVM(ResourceLocation BasePath,
+								   const char* WikiURL,
+								   INIManagerGetterFunctor INIGetter,
+								   INIManagerSetterFunctor INISetter,
+								   CodaScriptRegistrarListT& ScriptCommands) :
 			BaseDirectory(),
 			CommandRegistry(nullptr),
 			MessageHandler(nullptr),
@@ -957,7 +961,31 @@ namespace bgsee
 			ExpressionParser(nullptr),
 			Initialized(false)
 		{
-			;//
+			SME_ASSERT(Singleton == nullptr);
+			Singleton = this;
+
+			Initialized = true;
+
+			BaseDirectory = BasePath;
+			CommandRegistry = new CodaScriptCommandRegistry(WikiURL);
+			MessageHandler = new CodaScriptMessageHandler();
+			Executive = new CodaScriptExecutive(MessageHandler);
+			Backgrounder = new CodaScriptBackgrounder(BaseDirectory.GetRelativePath() + "\\" + CodaScriptBackgrounder::kDepotName, INIGetter, INISetter);
+			GlobalStore = new CodaScriptGlobalDataStore(INIGetter, INISetter);
+			ExpressionParser = CodaScriptObjectFactory::BuildExpressionParser(CodaScriptObjectFactory::kFactoryType_MUP);
+
+			// register built-in commands first
+			ScriptCommands.push_front(commands::general::GetRegistrar());
+			ScriptCommands.push_front(commands::string::GetRegistrar());
+			ScriptCommands.push_front(commands::array::GetRegistrar());
+
+			CommandRegistry->RegisterCommands(ScriptCommands);
+			CommandRegistry->InitializeExpressionParser(ExpressionParser);
+
+			// register console command
+			BGSEECONSOLE->RegisterConsoleCommand(&kDumpCodaDocsConsoleCommandData);
+
+			Backgrounder->Rebuild();
 		}
 
 		CodaScriptExecutionContext* CodaScriptVM::CreateExecutionContext( std::fstream& Input, CodaScriptMutableDataArrayT* Parameters /*= NULL*/ )
@@ -1014,11 +1042,8 @@ namespace bgsee
 			Singleton = nullptr;
 		}
 
-		CodaScriptVM* CodaScriptVM::GetSingleton()
+		CodaScriptVM* CodaScriptVM::Get()
 		{
-			if (Singleton == nullptr)
-				Singleton = new CodaScriptVM();
-
 			return Singleton;
 		}
 
@@ -1028,43 +1053,25 @@ namespace bgsee
 										INIManagerSetterFunctor INISetter,
 										CodaScriptRegistrarListT& ScriptCommands )
 		{
-			if (Initialized)
+			if (Singleton)
 				return false;
 
-			Initialized = true;
-
-			BaseDirectory = BasePath;
-			CommandRegistry = new CodaScriptCommandRegistry(WikiURL);
-			MessageHandler = new CodaScriptMessageHandler();
-			Executive = new CodaScriptExecutive(MessageHandler);
-			Backgrounder = new CodaScriptBackgrounder(BaseDirectory.GetRelativePath() + "\\" + CodaScriptBackgrounder::kDepotName, INIGetter, INISetter);
-			GlobalStore = new CodaScriptGlobalDataStore(INIGetter, INISetter);
-			ExpressionParser = CodaScriptObjectFactory::BuildExpressionParser(CodaScriptObjectFactory::kFactoryType_MUP);
-
-			// register built-in commands first
-			ScriptCommands.push_front(commands::general::GetRegistrar());
-			ScriptCommands.push_front(commands::string::GetRegistrar());
-			ScriptCommands.push_front(commands::array::GetRegistrar());
-
-			CommandRegistry->RegisterCommands(ScriptCommands);
-			CommandRegistry->InitializeExpressionParser(ExpressionParser);
-
-			// register console command
-			BGSEECONSOLE->RegisterConsoleCommand(&kDumpCodaDocsConsoleCommandData);
-
-			Backgrounder->Rebuild();
-
-			return Initialized;
+			CodaScriptVM* Buffer = new CodaScriptVM(BasePath, WikiURL, INIGetter, INISetter, ScriptCommands);
+			return Buffer->Initialized;
 		}
 
-		bool CodaScriptVM::RunScript( std::string ScriptName,
+		void CodaScriptVM::Deinitialize()
+		{
+			SME_ASSERT(Singleton);
+			delete Singleton;
+		}
+
+		bool CodaScriptVM::RunScript(std::string ScriptName,
 									CodaScriptMutableDataArrayT* Parameters,
 									CodaScriptBackingStore* Result,
 									bool& ReturnedResult,
 									bool RunInBackground /*= false*/ )
 		{
-			SME_ASSERT(Initialized);
-
 			std::replace(ScriptName.begin(), ScriptName.end(), '\\', ' ');
 			std::replace(ScriptName.begin(), ScriptName.end(), '/', ' ');
 
@@ -1108,7 +1115,6 @@ namespace bgsee
 
 		void CodaScriptVM::ShowGlobalStoreEditDialog( HINSTANCE ResourceInstance, HWND Parent )
 		{
-			SME_ASSERT(Initialized);
 			SME_ASSERT(Backgrounder->Backgrounding == false);
 
 			bool BackgrounderState = GetBackgrounderState();
@@ -1126,36 +1132,26 @@ namespace bgsee
 
 		CodaScriptVariable* CodaScriptVM::GetGlobal( const char* Name )
 		{
-			SME_ASSERT(Initialized);
-
 			return GlobalStore->Lookup(Name);
 		}
 
 		CodaScriptVariableArrayT& CodaScriptVM::GetGlobals( void ) const
 		{
-			SME_ASSERT(Initialized);
-
 			return GlobalStore->GetCache();
 		}
 
 		CodaScriptMessageHandler* CodaScriptVM::GetMessageHandler( void )
 		{
-			SME_ASSERT(Initialized);
-
 			return MessageHandler;
 		}
 
 		bool CodaScriptVM::GetBackgrounderState( void ) const
 		{
-			SME_ASSERT(Backgrounder);
-
 			return Backgrounder->GetState();
 		}
 
 		bool CodaScriptVM::ToggleBackgrounderState( void )
 		{
-			SME_ASSERT(Backgrounder);
-
 			if (Backgrounder->GetState())
 			{
 				Backgrounder->Suspend();
@@ -1170,8 +1166,6 @@ namespace bgsee
 
 		void CodaScriptVM::OpenScriptRepository( void ) const
 		{
-			SME_ASSERT(Initialized);
-
 			ShellExecute(nullptr, "open", BaseDirectory.GetFullPath().c_str(), nullptr, nullptr, SW_SHOW);
 		}
 

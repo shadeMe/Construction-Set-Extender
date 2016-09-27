@@ -88,18 +88,15 @@ namespace bgsee
 			fclose(Log);
 		}
 	}
-	
+
 	void ChangeLog::View() const
 	{
 		ShellExecute(nullptr, "open", (LPSTR)FilePath.c_str(), nullptr, nullptr, SW_SHOW);
 	}
 
-	
-	ChangeLogManager* ChangeLogManager::GetSingleton(void)
-	{
-		if (Singleton == nullptr)
-			Singleton = new ChangeLogManager();
 
+	ChangeLogManager* ChangeLogManager::Get(void)
+	{
 		return Singleton;
 	}
 
@@ -109,8 +106,70 @@ namespace bgsee
 		ConsoleMessageContext(nullptr),
 		Initialized(false)
 	{
+		SME_ASSERT(Singleton == nullptr);
+		Singleton = this;
+
 		ZeroMemory(GUIDString, sizeof(GUIDString));
 		ZeroMemory(TempPath, sizeof(TempPath));
+
+		Initialized = true;
+
+		GUID LogManagerGUID = { 0 };
+		char* TempGUIDString = 0;
+
+		RPC_STATUS GUIDReturn = UuidCreate(&LogManagerGUID),
+			GUIDStrReturn = UuidToString(&LogManagerGUID, (RPC_CSTR*)&TempGUIDString);
+
+		if ((GUIDReturn == RPC_S_OK || GUIDReturn == RPC_S_UUID_LOCAL_ONLY) && GUIDStrReturn == RPC_S_OK)
+		{
+			//		BGSEECONSOLE_MESSAGE("LogManager GUID = %s", TempGUIDString);
+			sprintf_s(GUIDString, sizeof(GUIDString), "%s", TempGUIDString);
+			RpcStringFree((RPC_CSTR*)&TempGUIDString);
+		}
+		else
+		{
+			BGSEECONSOLE_MESSAGE("Couldn't create LogManager GUID");
+			Initialized = false;
+		}
+
+		if (Initialized)
+		{
+			if (!GetTempPath(sizeof(TempPath), TempPath))
+			{
+				BGSEECONSOLE_ERROR("Couldn't get temp path for current user session");
+				Initialized = false;
+			}
+			else
+			{
+				BGSEECONSOLE_MESSAGE("User Session Temp Path = %s", TempPath);
+				char Buffer[MAX_PATH] = { 0 };
+
+				if (!CreateDirectory(GetTempDirectory(Buffer, sizeof(Buffer)), nullptr) && GetLastError() != ERROR_ALREADY_EXISTS)
+				{
+					BGSEECONSOLE_ERROR("Couldn't create temp log directory");
+					Initialized = false;
+				}
+			}
+		}
+
+		if (Initialized)
+		{
+			char Buffer[MAX_PATH] = { 0 };
+
+			SME_ASSERT(SessionLog == nullptr);
+			SessionLog = new ChangeLog(GetTempDirectory(Buffer, sizeof(Buffer)), "CSE Change Log");
+			this->PushNewActiveLog();
+
+			WriteToLogs("CS Session Started", true);
+			Pad(2);
+		}
+
+		ConsoleMessageContext = BGSEECONSOLE->RegisterMessageLogContext("Change Log", SessionLog->FilePath.c_str());
+		if (ConsoleMessageContext == nullptr)
+		{
+			BGSEECONSOLE_ERROR("Couldn't register console message context");
+			Initialized = false;
+		}
 	}
 
 	ChangeLogManager::~ChangeLogManager()
@@ -129,9 +188,7 @@ namespace bgsee
 		char Buffer[MAX_PATH] = {0};
 
 		if (RemoveDirectory(GetTempDirectory(Buffer, sizeof(Buffer))) == 0)
-		{
 			BGSEECONSOLE_ERROR("Couldn't remove temp change log files");
-		}
 
 		if (ConsoleMessageContext)
 		{
@@ -152,8 +209,6 @@ namespace bgsee
 
 	void ChangeLogManager::WriteToLogs(const char* Message, bool StampTime)
 	{
-		SME_ASSERT(Initialized);
-
 		if (LogStack.size())
 			LogStack.top()->WriteChange(Message, StampTime, true);
 
@@ -162,76 +217,21 @@ namespace bgsee
 
 	bool ChangeLogManager::Initialize()
 	{
-		if (Initialized == true)
+		if (Singleton)
 			return false;
 
-		Initialized = true;
+		ChangeLogManager* Buffer = new ChangeLogManager();
+		return Buffer->Initialized;
+	}
 
-		GUID LogManagerGUID = {0};
-		char* TempGUIDString = 0;
-
-		RPC_STATUS GUIDReturn = UuidCreate(&LogManagerGUID),
-					GUIDStrReturn = UuidToString(&LogManagerGUID, (RPC_CSTR*)&TempGUIDString);
-
-		if ((GUIDReturn == RPC_S_OK || GUIDReturn == RPC_S_UUID_LOCAL_ONLY) && GUIDStrReturn == RPC_S_OK)
-		{
-	//		BGSEECONSOLE_MESSAGE("LogManager GUID = %s", TempGUIDString);
-			sprintf_s(GUIDString, sizeof(GUIDString), "%s", TempGUIDString);
-			RpcStringFree((RPC_CSTR*)&TempGUIDString);
-		}
-		else
-		{
-			BGSEECONSOLE_MESSAGE("Couldn't create LogManager GUID");
-			Initialized = false;
-		}
-
-		if (Initialized)
-		{
-			if (!GetTempPath(sizeof(TempPath), TempPath))
-			{
-				BGSEECONSOLE_ERROR("Couldn't get temp path for current user session");
-				Initialized = false;
-			}
-			else
-			{
-				BGSEECONSOLE_MESSAGE("User Session Temp Path = %s", TempPath);
-				char Buffer[MAX_PATH] = {0};
-
-				if (!CreateDirectory(GetTempDirectory(Buffer, sizeof(Buffer)), nullptr) && GetLastError() != ERROR_ALREADY_EXISTS)
-				{
-					BGSEECONSOLE_ERROR("Couldn't create temp log directory");
-					Initialized = false;
-				}
-			}
-		}
-
-		if (Initialized)
-		{
-			char Buffer[MAX_PATH] = {0};
-
-			SME_ASSERT(SessionLog == nullptr);
-			SessionLog = new ChangeLog(GetTempDirectory(Buffer, sizeof(Buffer)), "CSE Change Log");
-			this->PushNewActiveLog();
-
-			WriteToLogs("CS Session Started", true);
-			Pad(2);
-		}
-
-		ConsoleMessageContext = BGSEECONSOLE->RegisterMessageLogContext("Change Log", SessionLog->FilePath.c_str());
-		if (ConsoleMessageContext == nullptr)
-		{
-			BGSEECONSOLE_ERROR("Couldn't register console message context");
-			Initialized = false;
-		}
-
-		return Initialized;
+	void ChangeLogManager::Deinitialize()
+	{
+		SME_ASSERT(Singleton);
+		delete Singleton;
 	}
 
 	void ChangeLogManager::PushNewActiveLog()
 	{
-		if (Initialized == false)
-			return;
-
 		char Buffer[MAX_PATH] = {0}, TimeString[0x100] = {0};
 
 		if (LogStack.size())
@@ -243,9 +243,6 @@ namespace bgsee
 
 	void ChangeLogManager::RecordChange(const char* Format, ...)
 	{
-		if (Initialized == false)
-			return;
-
 		char Buffer[0x4000] = {0};
 
 		va_list Args;
@@ -264,18 +261,12 @@ namespace bgsee
 
 	void ChangeLogManager::Pad(UInt32 Size)
 	{
-		if (Initialized == false)
-			return;
-
 		for (int i = 0; i < Size; i++)
 			WriteToLogs("\n", false);
 	}
 
 	bool ChangeLogManager::CopyActiveLog( const char* DestinationPath )
 	{
-		if (Initialized == false)
-			return false;
-
 		return LogStack.top()->Copy(DestinationPath, false);
 	}
 

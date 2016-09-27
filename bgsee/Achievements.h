@@ -64,7 +64,8 @@ namespace bgsee
 			HINSTANCE									ResourceInstance;
 			bool										Initialized;
 
-			AchievementManager();
+			AchievementManager(const char* ExtenderLongName, HINSTANCE ResourceInstance, ExtenderAchievementArrayT& Achievements);
+			~AchievementManager();
 
 			void										SaveAchievementState(Achievement* Achievement, bool StateOnly = false);
 			void										LoadAchievementState(Achievement* Achievement, bool StateOnly = false);
@@ -74,18 +75,17 @@ namespace bgsee
 			template <typename T>
 			bool										SetRegValue(const char* Name, T Value, const char* Key);
 		public:
-			~AchievementManager();
 
-			static AchievementManager*					GetSingleton(void);
+			static AchievementManager*					Get(void);
 
-														// takes ownership of achievement instances
-			bool										Initialize(const char* ExtenderLongName, HINSTANCE ResourceInstance, ExtenderAchievementArrayT& Achievements);
+			static bool									Initialize(const char* ExtenderLongName, HINSTANCE ResourceInstance, ExtenderAchievementArrayT& Achievements);	// takes ownership of achievement instances
+			static void									Deinitialize();
 
 			void										Unlock(Achievement* Achievement, bool ForceUnlock = false, bool TriggerOnly = false, bool PreserveUnlockState = false);
 			UInt32										GetTotalAchievements(void) const;
 			UInt32										GetUnlockedAchievements(void) const;
 		};
 
-#define BGSEEACHIEVEMENTS								bgsee::extras::AchievementManager::GetSingleton()
+#define BGSEEACHIEVEMENTS								bgsee::extras::AchievementManager::Get()
 	}
 }

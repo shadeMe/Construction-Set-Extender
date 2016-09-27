@@ -27,7 +27,7 @@ namespace bgsee
 	}
 
 
-	FormUndoStack::FormUndoStack() :
+	FormUndoStack::FormUndoStack(FormUndoStackOperator* Operator) :
 		Operator(nullptr),
 		UndoStack(),
 		RedoStack(),
@@ -35,7 +35,21 @@ namespace bgsee
 		WalkingStacks(false),
 		Initialized(false)
 	{
-		;//
+		SME_ASSERT(Singleton == nullptr);
+		Singleton = this;
+
+		Initialized = true;
+
+		SME_ASSERT(Operator);
+
+		this->Operator = Operator;
+		ConsoleMessageContext = BGSEECONSOLE->RegisterMessageLogContext(kMessageLogContextName);
+
+		if (ConsoleMessageContext == nullptr)
+		{
+			Initialized = false;
+			BGSEECONSOLE_MESSAGE("Couldn't register console message log context");
+		}
 	}
 
 	void FormUndoStack::ResetStack( UndoProxyStackT& Stack )
@@ -64,41 +78,31 @@ namespace bgsee
 		Singleton = nullptr;
 	}
 
-	FormUndoStack* FormUndoStack::GetSingleton( void )
+	FormUndoStack* FormUndoStack::Get( void )
 	{
-		if (Singleton == nullptr)
-			Singleton = new FormUndoStack();
-
 		return Singleton;
 	}
 
 	bool FormUndoStack::Initialize( FormUndoStackOperator* Operator )
 	{
-		if (Initialized)
+		if (Singleton)
 			return false;
 
-		Initialized = true;
-
-		SME_ASSERT(Operator);
-
-		this->Operator = Operator;
-		ConsoleMessageContext = BGSEECONSOLE->RegisterMessageLogContext(kMessageLogContextName);
-
-		if (ConsoleMessageContext == nullptr)
-		{
-			Initialized = false;
-
-			BGSEECONSOLE_MESSAGE("Couldn't register console message log context");
-		}
-
-		return Initialized;
+		FormUndoStack* Buffer = new FormUndoStack(Operator);
+		return Buffer->Initialized;
 	}
 
-	bool FormUndoStack::Record( FormUndoProxy* Proxy )
+	void FormUndoStack::Deinitialize()
+	{
+		SME_ASSERT(Singleton);
+		delete Singleton;
+	}
+
+	bool FormUndoStack::Record(FormUndoProxy* Proxy)
 	{
 		bool Result = false;
 
-		SME_ASSERT(Initialized && Proxy && Operator && WalkingStacks == false);
+		SME_ASSERT(Proxy && Operator && WalkingStacks == false);
 
 		// reset any pending proxies on the redo stack
 		ResetStack(RedoStack);
@@ -172,22 +176,16 @@ namespace bgsee
 
 	void FormUndoStack::PerformUndo( void )
 	{
-		SME_ASSERT(Initialized);
-
 		WalkUndoStack(kOperation_Undo, UndoStack, RedoStack);
 	}
 
 	void FormUndoStack::PerformRedo( void )
 	{
-		SME_ASSERT(Initialized);
-
 		WalkUndoStack(kOperation_Redo, RedoStack, UndoStack);
 	}
 
 	void FormUndoStack::Reset( void )
 	{
-		SME_ASSERT(Initialized);
-
 		if (WalkingStacks)
 		{
 			BGSEECONSOLE->PrintToMessageLogContext(ConsoleMessageContext, false, "Couldn't reset stacks - Stack walk in progress");
@@ -200,8 +198,6 @@ namespace bgsee
 
 	void FormUndoStack::Print( const char* Format, ... )
 	{
-		SME_ASSERT(Initialized);
-
 		char Buffer[0x512] = {0};
 
 		va_list Args;
@@ -211,6 +207,4 @@ namespace bgsee
 
 		BGSEECONSOLE->PrintToMessageLogContext(ConsoleMessageContext, "%s", Buffer);
 	}
-
-
 }

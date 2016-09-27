@@ -246,13 +246,21 @@ namespace bgsee
 		return FALSE;
 	}
 
-	ToolBox::ToolBox() :
+	ToolBox::ToolBox(INIManagerGetterFunctor& Getter, INIManagerSetterFunctor& Setter, bool LoadFromINI) :
 		RegisteredTools(),
 		INIGetter(),
 		INISetter(),
 		Initialized(false)
 	{
-		;//
+		SME_ASSERT(Singleton == nullptr);
+		Singleton = this;
+
+		INIGetter = Getter;
+		INISetter = Setter;
+		Initialized = true;
+
+		if (LoadFromINI)
+			INILoadToolList();
 	}
 
 	ToolBox::Tool::Tool( const char* Title, const char* CommandLine, const char* InitialDir, const char* Parameters ) :
@@ -289,8 +297,6 @@ namespace bgsee
 
 	ToolBox::Tool* ToolBox::AddTool( const char* Title, const char* CmdLine, const char* InitDir, const char* Params )
 	{
-		SME_ASSERT(Initialized);
-
 		ToolArrayT::iterator Match;
 		if (LookupToolByTitle(Title, Match))
 			return nullptr;
@@ -302,8 +308,6 @@ namespace bgsee
 
 	void ToolBox::AddTool( ToolBox::Tool* Tool )
 	{
-		SME_ASSERT(Initialized);
-
 		ToolArrayT::iterator Match;
 		if (LookupToolByTitle(Tool->Title.c_str(), Match))
 			return;
@@ -313,8 +317,6 @@ namespace bgsee
 
 	void ToolBox::RemoveTool( const char* Title, bool ReleaseMemory /*= false*/ )
 	{
-		SME_ASSERT(Initialized);
-
 		ToolArrayT::iterator Match;
 		if (LookupToolByTitle(Title, Match) == false)
 			return;
@@ -327,8 +329,6 @@ namespace bgsee
 
 	void ToolBox::RemoveTool( ToolBox::Tool* Tool, bool ReleaseMemory /*= false*/ )
 	{
-		SME_ASSERT(Initialized);
-
 		ToolArrayT::iterator Match;
 		if (LookupToolByTitle(Tool->Title.c_str(), Match) == false)
 			return;
@@ -389,8 +389,6 @@ namespace bgsee
 
 	void ToolBox::EnumerateToolsInListBox( HWND ListBox )
 	{
-		SME_ASSERT(Initialized);
-
 		for (ToolArrayT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++)
 		{
 			int Index = SendMessage(ListBox, LB_INSERTSTRING, -1, (LPARAM)(*Itr)->Title.c_str());
@@ -400,8 +398,6 @@ namespace bgsee
 
 	bool ToolBox::LookupToolByTitle( const char* Title, ToolArrayT::iterator& Match )
 	{
-		SME_ASSERT(Initialized);
-
 		bool Result = false;
 
 		for (ToolArrayT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++)
@@ -427,30 +423,27 @@ namespace bgsee
 		Singleton = nullptr;
 	}
 
-	ToolBox* ToolBox::GetSingleton()
+	ToolBox* ToolBox::Get()
 	{
-		if (Singleton == nullptr)
-			Singleton = new ToolBox();
-
 		return Singleton;
 	}
 
 	bool ToolBox::Initialize( INIManagerGetterFunctor& Getter, INIManagerSetterFunctor& Setter, bool LoadFromINI /*= true*/ )
 	{
-		if (Initialized)
+		if (Singleton)
 			return false;
 
-		INIGetter = Getter;
-		INISetter = Setter;
-		Initialized = true;
-
-		if (LoadFromINI)
-			INILoadToolList();
-
-		return Initialized;
+		ToolBox* Buffer = new ToolBox(Getter, Setter, LoadFromINI);
+		return Buffer->Initialized;
 	}
 
-	void ToolBox::ShowGUI( HINSTANCE ResourceInstance, HWND Parent )
+	void ToolBox::Deinitialize()
+	{
+		SME_ASSERT(Singleton);
+		delete Singleton;
+	}
+
+	void ToolBox::ShowGUI(HINSTANCE ResourceInstance, HWND Parent)
 	{
 		DlgUserData* Param = new DlgUserData();
 		Param->Instance = this;
@@ -460,8 +453,6 @@ namespace bgsee
 
 	void ToolBox::ShowToolListMenu( HINSTANCE ResourceInstance, HWND Parent, POINT* Coords )
 	{
-		SME_ASSERT(Initialized);
-
 		POINT Point;
 
 		if (Coords)

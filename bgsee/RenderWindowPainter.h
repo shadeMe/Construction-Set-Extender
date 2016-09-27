@@ -160,7 +160,8 @@ namespace bgsee
 	{
 		static RenderWindowPainter*		Singleton;
 
-		RenderWindowPainter();
+		RenderWindowPainter(RenderWindowPainterOperator* Operator);
+		~RenderWindowPainter();
 
 		typedef std::vector<RenderChannelBase*>	RenderChannelArrayT;
 
@@ -173,11 +174,9 @@ namespace bgsee
 		bool									CreateD3D(void);
 		void									ReleaseD3D(void);
 	public:
-		~RenderWindowPainter();
-
-		static RenderWindowPainter*				GetSingleton(void);
-
-		bool									Initialize(RenderWindowPainterOperator* Operator);		// takes ownership of pointer
+		static RenderWindowPainter*				Get(void);
+		static bool								Initialize(RenderWindowPainterOperator* Operator);		// takes ownership of pointer
+		static void								Deinitialize();
 
 		bool									RegisterRenderChannel(RenderChannelBase* Channel);		// caller retains ownership of pointer; returns true if successful
 		void									UnregisterRenderChannel(RenderChannelBase* Channel);
@@ -190,5 +189,5 @@ namespace bgsee
 		bool									GetEnabled(void) const;
 	};
 
-#define BGSEERWPAINTER							bgsee::RenderWindowPainter::GetSingleton()
+#define BGSEERWPAINTER							bgsee::RenderWindowPainter::Get()
 }

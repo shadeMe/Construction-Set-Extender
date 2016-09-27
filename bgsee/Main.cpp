@@ -7,6 +7,8 @@
 
 namespace bgsee
 {
+	Daemon*		Daemon::Singleton = nullptr;
+
 	Daemon::Daemon() :
 		InitCallbacks(),
 		DeinitCallbacks(),
@@ -14,7 +16,8 @@ namespace bgsee
 		FullInitComplete(false),
 		Deinitializing(false)
 	{
-		;//
+		SME_ASSERT(Singleton == nullptr);
+		Singleton = this;
 	}
 
 	void Daemon::WaitForDebugger(void)
@@ -29,7 +32,27 @@ namespace bgsee
 		BGSEECONSOLE->Exdent();
 	}
 
-	void Daemon::RegisterInitCallback( UInt8 CallbackType, DaemonCallback* Callback )
+	Daemon* Daemon::Get()
+	{
+		return Singleton;
+	}
+
+	bool Daemon::Initialize()
+	{
+		if (Singleton)
+			return false;
+
+		Daemon* Buffer = new Daemon();
+		return true;
+	}
+
+	void Daemon::Deinitialize()
+	{
+		SME_ASSERT(Singleton);
+		delete Singleton;
+	}
+
+	void Daemon::RegisterInitCallback(UInt8 CallbackType, DaemonCallback* Callback)
 	{
 		SME_ASSERT(CallbackType < kInitCallback__MAX && Callback);
 		InitCallbacks[CallbackType].push_back(Callback);
@@ -101,6 +124,8 @@ namespace bgsee
 		ReleaseCallbacks(InitCallbacks[kInitCallback_Epilog]);
 		ReleaseCallbacks(DeinitCallbacks);
 		ReleaseCallbacks(CrashHandlerCallbacks);
+
+		Singleton = nullptr;
 	}
 
 	void Daemon::ReleaseCallbacks( DaemonCallbackArrayT& CallbackList )
@@ -272,9 +297,7 @@ namespace bgsee
 
 		UInt32 Version = (((Major & 0xFF) << 24) | ((Minor & 0xFF) << 16) | 0xFFFF);
 		if (Table.count(Version) == 0)
-		{
 			Table.insert(std::make_pair(Version, Name));
-		}
 	}
 
 	ReleaseNameTable::ReleaseNameTable() :
@@ -511,7 +534,7 @@ namespace bgsee
 	{
 		BGSEECONSOLE_MESSAGE("Deinitializing UI Manager");
 		BGSEECONSOLE->Indent();
-		delete BGSEEUI;
+		UIManager::Deinitialize();
 		BGSEECONSOLE->Exdent();
 
 		CoUninitialize();
@@ -543,110 +566,70 @@ namespace bgsee
 
 	Main::~Main()
 	{
-		ExtenderDaemon->RegisterDeinitCallback(new DefaultDeinitCallback(this));
+		BGSEEDAEMON->RegisterDeinitCallback(new DefaultDeinitCallback(this));
 
 		BGSEECONSOLE->Pad(2);
 		BGSEECONSOLE_MESSAGE("Deinitializing %s ...", ExtenderLongName.c_str());
 		BGSEECONSOLE->Indent();
-		ExtenderDaemon->ExecuteDeinitCallbacks();
+		BGSEEDAEMON->ExecuteDeinitCallbacks();
 		BGSEECONSOLE->Exdent();
 		BGSEECONSOLE_MESSAGE("%s Deinitialized!", ExtenderLongName.c_str());
 
-		SAFEDELETE(ExtenderConsole);
-		SAFEDELETE(ExtenderDaemon);
+		Console::Deinitialize();
+		Daemon::Deinitialize();
 		SAFEDELETE(ExtenderINIManager);
 
 		Singleton = nullptr;
 
 		if (CrashRptSupport)
-		{
 			crUninstall();
-		}
 
 		ExitProcess(0);
 	}
 
-	Main::Main()
+	Main::Main(InitializationParams& Params)
 	{
-		ExtenderLongName = "<shadeMe's Awesome Extender #26942385.98979>";
-		FORMAT_STR(ExtenderShortName, "SMAE");
-		ExtenderReleaseName = "Lemon Tea";
-		ExtenderVersion = 0x57ADE00E;
-		ExtenderModuleHandle = nullptr;
+		SME_ASSERT(Singleton == nullptr);
+		Singleton = this;
 
-		ParentEditorID = kExtenderParentEditor_Unknown;
-		ParentEditorName = "Editor";
-		ParentEditorSupportedVersion = 0x00000000;
-		GameDirectoryPath = "NiBollocksNode";
-		ExtenderDLLPath = "SMAE.dll";
-		ExtenderINIPath = "SMAE.ini";
-		ExtenderComponentDLLPath = "Meh";
+		SME_ASSERT(Params.LongName && Params.ShortName && Params.ReleaseName && Params.APPPath);
+		SME_ASSERT(Params.EditorID != kExtenderParentEditor_Unknown && Params.EditorID < kExtenderParentEditor__MAX);
+		SME_ASSERT(Params.SEPluginHandle != 0xFFFFFFFF && Params.DotNETFrameworkVersion);
 
-		ScriptExtenderPluginHandle = 0xFFFFFFFF;
-		ScriptExtenderCurrentVersion = 0x0;
-
-		ExtenderINIManager = nullptr;
-		ExtenderConsole = nullptr;
-		ExtenderDaemon = nullptr;
-		CrashRptSupport = false;
-
-		Initialized = false;
-	}
-
-	Main* Main::GetSingleton()
-	{
-		if (Singleton == nullptr)
-			Singleton = new Main();
-
-		return Singleton;
-	}
-
-	bool Main::Initialize( const char* LongName, const char* DisplayName, const char* ShortName, const char* ReleaseName, UInt32 Version,
-								UInt8 EditorID, UInt32 EditorSupportedVersion, UInt32 EditorCurrentVersion, const char* APPPath,
-								UInt32 SEPluginHandle, UInt32 SEMinimumVersion,
-								UInt32 SECurrentVersion, INISettingDepotT& INISettings,
-								const char* DotNETFrameworkVersion,	bool CLRMemoryProfiling, bool WaitForDebugger,
-								bool CrashRptSupport)
-	{
-		if (Initialized)
-			return false;
-
-		SME_ASSERT(LongName && ShortName &&	ReleaseName && APPPath);
-		SME_ASSERT(EditorID != kExtenderParentEditor_Unknown && EditorID < kExtenderParentEditor__MAX);
-		SME_ASSERT(SEPluginHandle != 0xFFFFFFFF && DotNETFrameworkVersion);
-
-		ExtenderLongName = LongName;
-		FORMAT_STR(ExtenderShortName, "%s", ShortName);
-		ExtenderReleaseName = ReleaseName;
-		ExtenderVersion = Version;
-		if (DisplayName == nullptr)
+		ExtenderLongName = Params.LongName;
+		FORMAT_STR(ExtenderShortName, "%s", Params.ShortName);
+		ExtenderReleaseName = Params.ReleaseName;
+		ExtenderVersion = Params.Version;
+		if (Params.DisplayName == nullptr)
 			ExtenderDisplayName = ExtenderLongName;
 		else
-			ExtenderDisplayName = DisplayName;
+			ExtenderDisplayName = Params.DisplayName;
 
-		ParentEditorID = EditorID;
-		ParentEditorName = kParentEditorLongName[(int)EditorID];
-		ParentEditorSupportedVersion = EditorSupportedVersion;
+		ParentEditorID = Params.EditorID;
+		ParentEditorName = kParentEditorLongName[(int)Params.EditorID];
+		ParentEditorSupportedVersion = Params.EditorSupportedVersion;
 
-		GameDirectoryPath = APPPath;
-		ExtenderDLLPath = std::string(APPPath) + "Data\\" + std::string(kXSEShortName[(int)EditorID]) + "\\Plugins\\" + ExtenderLongName + ".dll";
-		ExtenderINIPath = std::string(APPPath) + "Data\\" + std::string(kXSEShortName[(int)EditorID]) + "\\Plugins\\" + ExtenderLongName + ".ini";
-		ExtenderComponentDLLPath = std::string(APPPath) + "Data\\" + std::string(kXSEShortName[(int)EditorID]) + "\\Plugins\\" + ExtenderShortName + "\\";
+		GameDirectoryPath = Params.APPPath;
+		ExtenderDLLPath = std::string(Params.APPPath) + "Data\\" + std::string(kXSEShortName[(int)Params.EditorID]) + "\\Plugins\\" + ExtenderLongName + ".dll";
+		ExtenderINIPath = std::string(Params.APPPath) + "Data\\" + std::string(kXSEShortName[(int)Params.EditorID]) + "\\Plugins\\" + ExtenderLongName + ".ini";
+		ExtenderComponentDLLPath = std::string(Params.APPPath) + "Data\\" + std::string(kXSEShortName[(int)Params.EditorID]) + "\\Plugins\\" + ExtenderShortName + "\\";
 
-		ScriptExtenderPluginHandle = SEPluginHandle;
-		ScriptExtenderCurrentVersion = SECurrentVersion;
+		ScriptExtenderPluginHandle = Params.SEPluginHandle;
+		ScriptExtenderCurrentVersion = Params.SECurrentVersion;
 
 		ExtenderModuleHandle = (HINSTANCE)GetModuleHandle(ExtenderDLLPath.c_str());
 
-		script::CodaScriptBackgrounder::RegisterINISettings(INISettings);
-		script::CodaScriptExecutive::RegisterINISettings(INISettings);
-		Console::RegisterINISettings(INISettings);
+		script::CodaScriptBackgrounder::RegisterINISettings(Params.INISettings);
+		script::CodaScriptExecutive::RegisterINISettings(Params.INISettings);
+		Console::RegisterINISettings(Params.INISettings);
 
 		ExtenderINIManager = new INIManager();
-		ExtenderINIManager->Initialize(ExtenderINIPath.c_str(), (void*)&INISettings);
+		ExtenderINIManager->Initialize(ExtenderINIPath.c_str(), (void*)&Params.INISettings);
 
-		ExtenderConsole = new Console((std::string(APPPath + std::string(LongName) + ".log")).c_str());
-		ExtenderDaemon = new Daemon();
+		bool ExtenderConsole = Console::Initialize((std::string(Params.APPPath + std::string(Params.LongName) + ".log")).c_str());
+		bool ExtenderDaemon = Daemon::Initialize();
+
+		SME_ASSERT(ExtenderConsole && ExtenderDaemon);
 
 		DefaultInitCallback* InitCallback = new DefaultInitCallback();
 		InitCallback->DisplayName = ExtenderDisplayName.c_str();
@@ -654,21 +637,22 @@ namespace bgsee
 		InitCallback->APPPath = GameDirectoryPath.c_str();
 		InitCallback->ExtenderVersion = ExtenderVersion;
 		InitCallback->ModuleHandle = ExtenderModuleHandle;
-		InitCallback->EditorSupportedVersion = EditorSupportedVersion;
-		InitCallback->EditorCurrentVersion = EditorCurrentVersion;
-		InitCallback->SEMinVersion = SEMinimumVersion;
-		InitCallback->SECurrentVersion = SECurrentVersion;
-		InitCallback->DotNETFrameworkVersionString = DotNETFrameworkVersion;
-		InitCallback->EnableCLRMemoryProfiling = CLRMemoryProfiling;
-		InitCallback->WaitForDebuggerOnStartup = WaitForDebugger;
-		ExtenderDaemon->RegisterInitCallback(Daemon::kInitCallback_Query, InitCallback);
+		InitCallback->EditorSupportedVersion = Params.EditorSupportedVersion;
+		InitCallback->EditorCurrentVersion = Params.EditorCurrentVersion;
+		InitCallback->SEMinVersion = Params.SEMinimumVersion;
+		InitCallback->SECurrentVersion = Params.SECurrentVersion;
+		InitCallback->DotNETFrameworkVersionString = Params.DotNETFrameworkVersion;
+		InitCallback->EnableCLRMemoryProfiling = Params.CLRMemoryProfiling;
+		InitCallback->WaitForDebuggerOnStartup = Params.WaitForDebugger;
 
-		this->CrashRptSupport = CrashRptSupport;
+		BGSEEDAEMON->RegisterInitCallback(Daemon::kInitCallback_Query, InitCallback);
+
+		CrashRptSupport = Params.CrashRptSupport;
 		Initialized = true;
 
 		if (CrashRptSupport)
 		{
-			CR_INSTALL_INFO CrashRptData = {0};
+			CR_INSTALL_INFO CrashRptData = { 0 };
 			CrashRptData.cb = sizeof(CR_INSTALL_INFO);
 			CrashRptData.pszAppName = nullptr;
 			CrashRptData.pszAppVersion = nullptr;
@@ -681,146 +665,157 @@ namespace bgsee
 			CrashRptData.uPriorities[CR_SMAPI] = 1;
 			CrashRptData.uPriorities[CR_HTTP] = CR_NEGATIVE_PRIORITY;
 			CrashRptData.uPriorities[CR_SMTP] = CR_NEGATIVE_PRIORITY;
-			CrashRptData.dwFlags |= CR_INST_HTTP_BINARY_ENCODING|CR_INST_SHOW_ADDITIONAL_INFO_FIELDS|CR_INST_ALLOW_ATTACH_MORE_FILES;
-//			CrashRptData.dwFlags |= CR_INST_DONT_SEND_REPORT|CR_INST_STORE_ZIP_ARCHIVES;
-			CrashRptData.uMiniDumpType = (MINIDUMP_TYPE)(MiniDumpNormal|
-														MiniDumpWithIndirectlyReferencedMemory|
-														MiniDumpScanMemory|
-														MiniDumpWithThreadInfo|
-														MiniDumpWithProcessThreadData|
-														MiniDumpWithUnloadedModules|
-														MiniDumpWithHandleData|
-// 														MiniDumpWithDataSegs|
-														MiniDumpWithFullMemoryInfo);
+			CrashRptData.dwFlags |= CR_INST_HTTP_BINARY_ENCODING | CR_INST_SHOW_ADDITIONAL_INFO_FIELDS | CR_INST_ALLOW_ATTACH_MORE_FILES;
+			//			CrashRptData.dwFlags |= CR_INST_DONT_SEND_REPORT|CR_INST_STORE_ZIP_ARCHIVES;
+			CrashRptData.uMiniDumpType = (MINIDUMP_TYPE)(MiniDumpNormal |
+														 MiniDumpWithIndirectlyReferencedMemory |
+														 MiniDumpScanMemory |
+														 MiniDumpWithThreadInfo |
+														 MiniDumpWithProcessThreadData |
+														 MiniDumpWithUnloadedModules |
+														 MiniDumpWithHandleData |
+														 // 														MiniDumpWithDataSegs|
+														 MiniDumpWithFullMemoryInfo);
 			CrashRptData.pszErrorReportSaveDir = GameDirectoryPath.c_str();
 
 			if (crInstall(&CrashRptData) || crSetCrashCallback(Main::CrashCallback, this))
 			{
-				TCHAR Buffer[0x200] = {0};
+				TCHAR Buffer[0x200] = { 0 };
 				crGetLastErrorMsg(Buffer, sizeof(Buffer));
 
 				MessageBox(nullptr,
-					"Failed to initialize CrashRpt!\n\nCheck the logs for more information.",
-					"Bethesda Game Studios Editor Extender",
-					MB_TASKMODAL|MB_SETFOREGROUND|MB_ICONERROR|MB_OK);
+						   "Failed to initialize CrashRpt!\n\nCheck the logs for more information.",
+						   "Bethesda Game Studios Editor Extender",
+						   MB_TASKMODAL | MB_SETFOREGROUND | MB_ICONERROR | MB_OK);
 
 				BGSEECONSOLE_MESSAGE("CrashRpt failed to initialize; Error Message: %s", Buffer);
 				Initialized = false;
 			}
 			else
 			{
-				crAddFile2(GetConsole()->GetLogPath(),
-					nullptr, "BGSEE Debug Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
+				crAddFile2(BGSEECONSOLE->GetLogPath(),
+						   nullptr, "BGSEE Debug Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
 				crAddFile2(GetINIPath(),
-					nullptr, "BGSEE INI File", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
+						   nullptr, "BGSEE INI File", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
-				crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)EditorID]) + ".log")).c_str(),
-					nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
+				crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)Params.EditorID]) + ".log")).c_str(),
+						   nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
-				crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)EditorID]) + "_editor.log")).c_str(),
-					nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
+				crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)Params.EditorID]) + "_editor.log")).c_str(),
+						   nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
-				crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)EditorID]) + "_loader.log")).c_str(),
-					nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
+				crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)Params.EditorID]) + "_loader.log")).c_str(),
+						   nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
-				crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)EditorID]) + "_steam_loader.log")).c_str(),
-					nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
+				crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)Params.EditorID]) + "_steam_loader.log")).c_str(),
+						   nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
 				crAddScreenshot2(CR_AS_PROCESS_WINDOWS, 0);
 			}
 		}
-
-		return Initialized;
 	}
 
-	const char* Main::ExtenderGetLongName( void ) const
+
+	Main::InitializationParams::InitializationParams() :
+		INISettings()
 	{
-		SME_ASSERT(Initialized);
+		LongName = "<shadeMe's Awesome Extender #26942385.98979>";
+		DisplayName = LongName;
+		ShortName = "SMAE";
+		ReleaseName = "Sloblock";
+		Version = 0x57ADE00E;
+		EditorID = kExtenderParentEditor_Unknown;
+		EditorSupportedVersion = EditorCurrentVersion = 0;
+		APPPath = nullptr;
+		SEPluginHandle = SEMinimumVersion = SECurrentVersion = 0;
+		DotNETFrameworkVersion = nullptr;
+		CLRMemoryProfiling = WaitForDebugger = CrashRptSupport = false;
+	}
+
+
+	Main* Main::Get()
+	{
+		return Singleton;
+	}
+
+	bool Main::Initialize( InitializationParams& Params)
+	{
+		if (Singleton)
+			return false;
+
+		Main* Buffer = new Main(Params);
+		return Buffer->Initialized;
+	}
+
+	void Main::Deinitialize()
+	{
+		SME_ASSERT(Singleton);
+		delete Singleton;
+	}
+
+	const char* Main::ExtenderGetLongName(void) const
+	{
 		return ExtenderLongName.c_str();
 	}
 
 	const char* Main::ExtenderGetShortName( void ) const
 	{
-		SME_ASSERT(Initialized);
 		return ExtenderShortName;
 	}
 
 	const char* Main::ExtenderGetReleaseName( void ) const
 	{
-		SME_ASSERT(Initialized);
 		return ExtenderReleaseName.c_str();
 	}
 
 	UInt32 Main::ExtenderGetVersion( void ) const
 	{
-		SME_ASSERT(Initialized);
 		return ExtenderVersion;
 	}
 
 	const char* Main::ExtenderGetSEName( void ) const
 	{
-		SME_ASSERT(Initialized);
 		return kXSEShortName[(int)ParentEditorID];
 	}
 
 	HINSTANCE Main::GetExtenderHandle( void ) const
 	{
-		SME_ASSERT(Initialized);
 		return ExtenderModuleHandle;
 	}
 
 	const char* Main::GetAPPPath( void ) const
 	{
-		SME_ASSERT(Initialized);
 		return GameDirectoryPath.c_str();
 	}
 
 	const char* Main::GetDLLPath( void ) const
 	{
-		SME_ASSERT(Initialized);
 		return ExtenderDLLPath.c_str();
 	}
 
 	const char* Main::GetINIPath( void ) const
 	{
-		SME_ASSERT(Initialized);
 		return ExtenderINIPath.c_str();
 	}
 
 	const char* Main::GetComponentDLLPath( void ) const
 	{
-		SME_ASSERT(Initialized);
 		return ExtenderComponentDLLPath.c_str();
-	}
-
-	Console* Main::GetConsole( void ) const
-	{
-		SME_ASSERT(Initialized && ExtenderConsole);
-		return ExtenderConsole;
-	}
-
-	Daemon* Main::GetDaemon( void ) const
-	{
-		SME_ASSERT(Initialized && ExtenderDaemon);
-		return ExtenderDaemon;
 	}
 
 	const char* Main::ParentEditorGetLongName( void ) const
 	{
-		SME_ASSERT(Initialized && ParentEditorID);
 		return kParentEditorLongName[ParentEditorID];
 	}
 
 	const char* Main::ParentEditorGetShortName( void ) const
 	{
-		SME_ASSERT(Initialized && ParentEditorID);
 		return kParentEditorShortName[ParentEditorID];
 	}
 
 	UInt32 Main::ParentEditorGetVersion( void ) const
 	{
-		SME_ASSERT(Initialized);
 		return ParentEditorSupportedVersion;
 	}
 
@@ -829,16 +824,15 @@ namespace bgsee
 		// panic and toss grenades around
 		Main* Instance = (Main*)pInfo->pUserParam;
 
-		bool ResumeExecution = Instance->GetDaemon()->ExecuteCrashCallbacks(pInfo);
-
+		bool ResumeExecution = BGSEEDAEMON->ExecuteCrashCallbacks(pInfo);
 		if (ResumeExecution)
 		{
 			pInfo->bContinueExecution = TRUE;
-			Instance->GetConsole()->LogMsg(Instance->ExtenderGetShortName(), "Sweeping a fatal crash under the ru... Shoo! Nothing to see here!");
-			Instance->GetConsole()->Pad(2);
+			BGSEECONSOLE->LogMsg(Instance->ExtenderGetShortName(), "Sweeping a fatal crash under the ru... Shoo! Nothing to see here!");
+			BGSEECONSOLE->Pad(2);
 		}
 
-		Instance->GetConsole()->FlushDebugLog();
+		BGSEECONSOLE->FlushDebugLog();
 
 		return CR_CB_DODEFAULT;
 	}
@@ -850,21 +844,16 @@ namespace bgsee
 
 	bgsee::INIManagerSetterFunctor Main::INISetter( void )
 	{
-		SME_ASSERT(Initialized);
-
 		return ExtenderINIManager;
 	}
 
 	bgsee::INIManagerGetterFunctor Main::INIGetter( void )
 	{
-		SME_ASSERT(Initialized);
-
 		return ExtenderINIManager;
 	}
 
 	const char* Main::ExtenderGetDisplayName( void ) const
 	{
-		SME_ASSERT(Initialized);
 		return ExtenderDisplayName.c_str();
 	}
 

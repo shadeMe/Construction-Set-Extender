@@ -25,25 +25,24 @@ namespace bgsee
 
 		class HallOfFameManager
 		{
-			static HallOfFameManager*				Singleton;
+			static HallOfFameManager*			Singleton;
 
-			ExtenderHOFEntryArrayT						Inductees;
-			UInt32										BaseFormID;
-			bool										Initialized;
+			ExtenderHOFEntryArrayT				Inductees;
+			UInt32								BaseFormID;
+			bool								Initialized;
 
-			HallOfFameManager();
-		public:
+			HallOfFameManager(const ExtenderHOFEntryArrayT& Entries, const UInt32 StartingFormID);
 			~HallOfFameManager();
+		public:
 
-			static HallOfFameManager*					GetSingleton(void);
+			static HallOfFameManager*			Get(void);
+			static bool							Initialize(const ExtenderHOFEntryArrayT& Entries, const UInt32 StartingFormID = 0x450); // takes ownership of the entries
+			static void							Deinitialize();
 
-			bool										Initialize(const ExtenderHOFEntryArrayT& Entries, const UInt32 StartingFormID = 0x450);
-														// takes ownership of the entries
-
-			UInt32										GetBaseFormID(void) const;
-			bool										GetIsInductee(UInt32 FormID) const;
+			UInt32								GetBaseFormID(void) const;
+			bool								GetIsInductee(UInt32 FormID) const;
 		};
 
-#define BGSEEHALLOFFAME									bgsee::extras::HallOfFameManager::GetSingleton()
+#define BGSEEHALLOFFAME							bgsee::extras::HallOfFameManager::Get()
 	}
 }

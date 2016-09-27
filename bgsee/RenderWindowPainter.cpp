@@ -251,14 +251,21 @@ namespace bgsee
 
 	RenderWindowPainter* RenderWindowPainter::Singleton = nullptr;
 
-	RenderWindowPainter::RenderWindowPainter() :
+	RenderWindowPainter::RenderWindowPainter(RenderWindowPainterOperator* Operator) :
 		RegisteredChannels(),
 		Operator(nullptr),
 		OutputSprite(nullptr),
 		Enabled(true),
 		Initialized(false)
 	{
-		;//
+		SME_ASSERT(Singleton == nullptr);
+		Singleton = this;
+
+		SME_ASSERT(Operator);
+
+		Initialized = true;
+		this->Operator = Operator;
+		Initialized = CreateD3D();
 	}
 
 	RenderWindowPainter::~RenderWindowPainter()
@@ -274,18 +281,20 @@ namespace bgsee
 
 	bool RenderWindowPainter::Initialize(RenderWindowPainterOperator* Operator)
 	{
-		if (Initialized)
+		if (Singleton)
 			return false;
 
-		SME_ASSERT(Operator);
-
-		Initialized = true;
-		this->Operator = Operator;
-		Initialized = CreateD3D();
-		return Initialized;
+		RenderWindowPainter* Buffer = new RenderWindowPainter(Operator);
+		return Buffer->Initialized;
 	}
 
-	bool RenderWindowPainter::CreateD3D( void )
+	void RenderWindowPainter::Deinitialize()
+	{
+		SME_ASSERT(Singleton);
+		delete Singleton;
+	}
+
+	bool RenderWindowPainter::CreateD3D(void)
 	{
 		SME_ASSERT(OutputSprite == nullptr);
 
@@ -306,19 +315,14 @@ namespace bgsee
 		SAFERELEASE_D3D(OutputSprite);
 	}
 
-	RenderWindowPainter* RenderWindowPainter::GetSingleton(void)
+	RenderWindowPainter* RenderWindowPainter::Get(void)
 	{
-		if (Singleton == nullptr)
-			Singleton = new RenderWindowPainter();
-
 		return Singleton;
 	}
 
 	void RenderWindowPainter::Render()
 	{
-		if (Initialized == false)
-			return;
-		else if (Enabled == false || OutputSprite == nullptr)
+		if (Enabled == false || OutputSprite == nullptr)
 			return;
 
 		OutputSprite->Begin(D3DXSPRITE_ALPHABLEND|D3DXSPRITE_SORT_TEXTURE);
@@ -331,9 +335,6 @@ namespace bgsee
 
 	bool RenderWindowPainter::HandleReset(bool Release, bool Renew)
 	{
-		if (Initialized == false)
-			return false;
-
 		SME_ASSERT(Release != Renew);
 
 		bool Result = true;
@@ -356,7 +357,7 @@ namespace bgsee
 
 	bool RenderWindowPainter::RegisterRenderChannel( RenderChannelBase* Channel )
 	{
-		SME_ASSERT(Initialized && Channel);
+		SME_ASSERT(Channel);
 		for (auto Itr : RegisteredChannels)
 		{
 			if (Itr == Channel)
@@ -370,7 +371,7 @@ namespace bgsee
 
 	void RenderWindowPainter::UnregisterRenderChannel( RenderChannelBase* Channel )
 	{
-		SME_ASSERT(Initialized && Channel);
+		SME_ASSERT(Channel);
 
 		for (RenderChannelArrayT::const_iterator Itr = RegisteredChannels.begin(); Itr != RegisteredChannels.end(); Itr++)
 		{
@@ -385,17 +386,11 @@ namespace bgsee
 
 	void RenderWindowPainter::SetEnabled( bool State )
 	{
-		if (Initialized == false)
-			return;
-
 		Enabled = State;
 	}
 
 	bool RenderWindowPainter::GetEnabled( void ) const
 	{
-		if (Initialized == false)
-			return false;
-
 		return Enabled;
 	}
 

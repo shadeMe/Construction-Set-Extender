@@ -24,7 +24,8 @@ namespace bgsee
 	private:
 		static WorkspaceManager*		Singleton;
 
-		WorkspaceManager();
+		WorkspaceManager(const char* DefaultDirectory, WorkspaceManagerOperator* Operator, DefaultDirectoryArrayT& DefaultDirectoryData);
+		~WorkspaceManager();
 
 		typedef std::vector<std::string>	DirectoryArrayT;
 
@@ -38,20 +39,18 @@ namespace bgsee
 		void								SetWorkingDirectory(const char* WorkspacePath);
 		void								CreateDefaultDirectories(const char* WorkspacePath);
 	public:
-		~WorkspaceManager();
-
-		static WorkspaceManager*			GetSingleton();
-
-		bool								Initialize(const char* DefaultDirectory,
+		static WorkspaceManager*			Get();
+		static bool							Initialize(const char* DefaultDirectory,
 													WorkspaceManagerOperator* Operator,
 													DefaultDirectoryArrayT& DefaultDirectoryData);	// manager takes ownership of the operator
+		static void							Deinitialize();
 
 		bool								SelectCurrentWorkspace(const char* DefaultWorkspacePath = nullptr);
 		const char*							GetCurrentWorkspace(void) const;
 		const char*							GetDefaultWorkspace(void) const;
 	};
 
-#define BGSEEWORKSPACE						bgsee::WorkspaceManager::GetSingleton()
+#define BGSEEWORKSPACE						bgsee::WorkspaceManager::Get()
 
 	// Always relative to BasePath, which is Data\BGSEE
 	class ResourceLocation
