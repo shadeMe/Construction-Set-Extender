@@ -78,7 +78,6 @@ namespace cse
 			virtual void		Initialize() override;
 			virtual void		Deinitialize() override;
 
-			const char*			GetActiveLayerName() const;
 			bool				IsParentLayerVisible(TESObjectREFR* Ref) const;		// if the ref has no parent layer, returns the state of the Default layer
 			bool				IsParentLayerFrozen(TESObjectREFR* Ref) const;		// ditto
 		};

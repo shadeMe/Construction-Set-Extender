@@ -183,6 +183,23 @@ namespace cse
 			const Vector3&				UpdateStaticCameraPivot();
 		};
 
+		// executes (and consumes) tasks that are unsafe to be performed elsewhere
+		class RenderWindowDeferredExecutor
+		{
+		public:
+			typedef std::function<void()>		DelegateT;
+		private:
+			friend class RenderWindowManager;
+
+			typedef std::vector<DelegateT>		DelegateArrayT;
+
+			DelegateArrayT			Handlers;
+
+			void					HandlePostRenderWindowUpdate();
+		public:
+			void					QueueTask(DelegateT& Delegate);		// consumes the task after execution
+		};
+
 		class RenderWindowManager
 		{
 			class GlobalEventSink : public SME::MiscGunk::IEventSink
@@ -208,6 +225,7 @@ namespace cse
 			RenderWindowLayerManager*					LayerManager;
 			input::RenderWindowKeyboardManager*			KeyboardInputManager;
 			input::RenderWindowMouseManager*			MouseInputManager;
+			RenderWindowDeferredExecutor*				DeferredExecutor;
 			GlobalEventSink*							EventSink;
 			TESObjectREFRArrayT							ActiveRefCache;
 			bool										RenderingScene;
@@ -221,6 +239,7 @@ namespace cse
 																				  NiCullingProcess* CullingProc,
 																				  BSRenderedTexture* RenderTarget);
 			void										HandlePostSceneGraphRender();
+			void										HandlePostRenderWindowUpdate();
 			void										CacheActiveRefs();
 
 			enum
@@ -257,6 +276,8 @@ namespace cse
 			input::RenderWindowMouseManager*			GetMouseInputManager() const;
 			RenderWindowOSD*							GetOSD() const;
 			RenderWindowLayerManager*					GetLayerManager() const;
+			RenderWindowDeferredExecutor*				GetDeferredExecutor() const;
+
 			const TESObjectREFRArrayT&					GetActiveRefs() const;
 
 			void										RefreshFOV();

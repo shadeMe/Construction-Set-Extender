@@ -37,8 +37,9 @@ namespace cse
 
 				kType_Renderer_Release,								// before the renderer is released
 				kType_Renderer_Renew,								// after the renderer is recreated/renewed
-				kType_Renderer_PreMainSceneGraphRender,				// before the render window's viewport is rendered
-				kType_Renderer_PostMainSceneGraphRender,			// after the render window's viewport is rendered
+				kType_Renderer_PreMainSceneGraphRender,				// before the main scenegraph is rendered
+				kType_Renderer_PostMainSceneGraphRender,			// after the main scenegraph is rendered
+				kType_Renderer_PostRenderWindowUpdate,				// after the render window viewport is refreshed (post-scene rendering)
 
 				kType_Form_Instantiation,							// when a TESForm object is instantiated
 				kType_Form_SetActive,
@@ -168,6 +169,7 @@ namespace cse
 			extern BasicEventSource						kRenew;
 			extern PreSceneGraphRenderEventSource		kPreSceneGraphRender;
 			extern BasicEventSource						kPostSceneGraphRender;
+			extern BasicEventSource						kPostRenderWindowUpdate;
 		}
 
 		namespace dialog

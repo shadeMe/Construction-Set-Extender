@@ -602,6 +602,19 @@ namespace cse
 			return StaticCameraPivot;
 		}
 
+		void RenderWindowDeferredExecutor::HandlePostRenderWindowUpdate()
+		{
+			for (auto& Itr : Handlers)
+				Itr();
+
+			Handlers.clear();
+		}
+
+		void RenderWindowDeferredExecutor::QueueTask(DelegateT& Delegate)
+		{
+			Handlers.push_back(Delegate);
+		}
+
 		RenderWindowManager::GlobalEventSink::GlobalEventSink(RenderWindowManager* Parent) :
 			Parent(Parent)
 		{
@@ -634,6 +647,9 @@ namespace cse
 				}
 			case events::TypedEventSource::kType_Renderer_PostMainSceneGraphRender:
 				Parent->HandlePostSceneGraphRender();
+				break;
+			case events::TypedEventSource::kType_Renderer_PostRenderWindowUpdate:
+				Parent->HandlePostRenderWindowUpdate();
 				break;
 			}
 		}
@@ -1033,6 +1049,11 @@ namespace cse
 						AUXVIEWPORT->Draw(nullptr, nullptr);
 					}
 
+					if (_RENDERWIN_MGR.IsRenderingScene())
+					{
+						// recursive call to the
+					}
+
 					break;
 				}
 
@@ -1095,6 +1116,7 @@ namespace cse
 			EventSink = new GlobalEventSink(this);
 			KeyboardInputManager = new input::RenderWindowKeyboardManager();
 			MouseInputManager = new input::RenderWindowMouseManager();
+			DeferredExecutor = new RenderWindowDeferredExecutor();
 			ActiveRefCache.reserve(500);
 			RenderingScene = false;
 
@@ -1114,6 +1136,7 @@ namespace cse
 			SAFEDELETE(LayerManager);
 			SAFEDELETE(KeyboardInputManager);
 			SAFEDELETE(MouseInputManager);
+			SAFEDELETE(DeferredExecutor);
 
 			Initialized = false;
 		}
@@ -1138,6 +1161,7 @@ namespace cse
 			events::renderer::kRenew.AddSink(EventSink);
 			events::renderer::kPreSceneGraphRender.AddSink(EventSink);
 			events::renderer::kPostSceneGraphRender.AddSink(EventSink);
+			events::renderer::kPostRenderWindowUpdate.AddSink(EventSink);
 
 			ExtendedState->Initialize();
 			SceneGraphManager->AddModifier(&ReferenceParentChildIndicator::Instance);
@@ -1194,6 +1218,7 @@ namespace cse
 			events::renderer::kRenew.RemoveSink(EventSink);
 			events::renderer::kPreSceneGraphRender.RemoveSink(EventSink);
 			events::renderer::kPostSceneGraphRender.RemoveSink(EventSink);
+			events::renderer::kPostRenderWindowUpdate.RemoveSink(EventSink);
 
 			MouseInputManager->Deinitialize();
 			KeyboardInputManager->Deinitialize();
@@ -1250,6 +1275,12 @@ namespace cse
 		{
 			SME_ASSERT(Initialized);
 			return LayerManager;
+		}
+
+		RenderWindowDeferredExecutor* RenderWindowManager::GetDeferredExecutor() const
+		{
+			SME_ASSERT(Initialized);
+			return DeferredExecutor;
 		}
 
 		void RenderWindowManager::RefreshFOV()
@@ -1374,9 +1405,6 @@ namespace cse
 
 								if ((InvisibleReasons & ReferenceVisibilityManager::kReason_InitiallyDisabledChild))
 									FlagsBuffer.append(" DC");
-
-								if ((InvisibleReasons & ReferenceVisibilityManager::kReason_ParentLayerInvisible))
-									FlagsBuffer.append(" IL");
 
 								boost::trim(FlagsBuffer);
 								ImGui::Selectable(FlagsBuffer.c_str());
@@ -1683,10 +1711,18 @@ namespace cse
 							}
 
 							ImGui::Separator();
-							RenderActiveRefCollectionRefTable(Type, CurrentFilter);
 						}
 						ImGui::Columns();
-						ImGui::Separator();
+
+						ImGui::BeginChild("ref_list_child_frame", ImVec2(0, 165));
+						{
+							ImGui::Columns(InvisibleRefs ? 4 : 3, "ref_table_invisible/frozen", false);
+							{
+								RenderActiveRefCollectionRefTable(Type, CurrentFilter);
+							}
+							ImGui::Columns();
+						}
+						ImGui::EndChild();
 					}
 
 					break;
@@ -1716,10 +1752,18 @@ namespace cse
 							ImGui::Text("Count"); ImGui::NextColumn();
 
 							ImGui::Separator();
-							RenderActiveRefCollectionRefTable(Type, CurrentFilter);
 						}
 						ImGui::Columns();
-						ImGui::Separator();
+
+						ImGui::BeginChild("ref_list_child_frame", ImVec2(0, 165));
+						{
+							ImGui::Columns(2, "ref_table_groups", false);
+							{
+								RenderActiveRefCollectionRefTable(Type, CurrentFilter);
+							}
+							ImGui::Columns();
+						}
+						ImGui::EndChild();
 					}
 
 					break;
@@ -1763,7 +1807,6 @@ namespace cse
 				ImGui::BeginChild("subwindow", ImVec2(0, 300), false);
 				ImGui::Columns(3, "ref_table");
 				{
-					ImGui::Separator();
 					ImGui::Text("EditorID"); ImGui::NextColumn();
 					ImGui::Text("FormID"); ImGui::NextColumn();
 					ImGui::Text("Type"); ImGui::NextColumn();
@@ -1886,6 +1929,12 @@ namespace cse
 			RenderingScene = false;
 		}
 
+		void RenderWindowManager::HandlePostRenderWindowUpdate()
+		{
+			SME_ASSERT(RenderingScene == false);
+
+			DeferredExecutor->HandlePostRenderWindowUpdate();
+		}
 
 		void Initialize()
 		{
@@ -1899,5 +1948,8 @@ namespace cse
 		{
 			_RENDERWIN_MGR.Deinitialize();
 		}
+
+
+
 	}
 }

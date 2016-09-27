@@ -36,6 +36,7 @@ namespace cse
 			events::renderer::_MemHdlr(NiDX9RendererRecreateC).WriteJump();
 			events::renderer::_MemHdlr(PreSceneGraphRender).WriteCall();
 			events::renderer::_MemHdlr(PostSceneGraphRender).WriteJump();
+			events::renderer::_MemHdlr(PostRenderWindowUpdate).WriteJump();
 
 			events::dialog::_MemHdlr(CloseAll).WriteJump();
 			events::dialog::cellView::_MemHdlr(SelectCell).WriteJump();
@@ -449,6 +450,7 @@ namespace cse
 				_DefineHookHdlr(NiDX9RendererRecreateA, 0x006D79E8);
 				_DefineHookHdlr(NiDX9RendererRecreateB, 0x006D7A0D);
 				_DefineHookHdlr(NiDX9RendererRecreateC, 0x006D7CFA);
+				_DefineHookHdlr(PostRenderWindowUpdate, 0x0042D42A);
 
 				void __stdcall DoPostSceneGraphRender(void)
 				{
@@ -542,6 +544,21 @@ namespace cse
 						push	1
 						call	DoNiDX9RendererRecreateHook
 						popad
+						jmp		_hhGetVar(Retn)
+					}
+				}
+
+				#define _hhName		PostRenderWindowUpdate
+				_hhBegin()
+				{
+					_hhSetVar(Retn, 0x0042EF86);
+					__asm
+					{
+						pushad
+						lea		ecx, cse::events::renderer::kPostRenderWindowUpdate
+						call	cse::events::BasicEventSource::RaiseEvent
+						popad
+
 						jmp		_hhGetVar(Retn)
 					}
 				}

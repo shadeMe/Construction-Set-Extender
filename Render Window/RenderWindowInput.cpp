@@ -687,9 +687,19 @@ namespace cse
 				Filter.Draw("Filter", 350); ImGui::SameLine(0, 20);
 				ImGui::Text("Double click on a hotkey to remap it.");
 
-				ImGui::BeginChild("hotkey_child_frame", ImVec2(0, 500));
+				ImGui::Separator();
+				ImGui::Columns(3, "hotkey_list", false);
 				{
-					ImGui::Columns(3, "hotkey_list");
+					ImGui::Text("Action"); ImGui::NextColumn();
+					ImGui::Text("Binding"); ImGui::NextColumn();
+					ImGui::Text("Description"); ImGui::NextColumn();
+					ImGui::Separator();
+				}
+				ImGui::Columns();
+
+				ImGui::BeginChild("hotkey_child_frame", ImVec2(0, 455));
+				{
+					ImGui::Columns(3, "hotkey_list", false);
 					{
 						int i = 0;
 						IHotKey* Selection = nullptr;
@@ -1604,7 +1614,8 @@ namespace cse
 						}
 					}
 
-					ToggleCellViewUpdate(false);
+					if (*TESRenderWindow::LandscapeEditFlag)
+						ToggleCellViewUpdate(false);
 
 					break;
 				case WM_LBUTTONUP:
@@ -1638,7 +1649,8 @@ namespace cse
 
 					// end free movement handling
 					ToggleFreeMouseMovement(hWnd, false);
-					ToggleCellViewUpdate(true);
+					if (*TESRenderWindow::LandscapeEditFlag)
+						ToggleCellViewUpdate(true);
 
 					break;
 				}

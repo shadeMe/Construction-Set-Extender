@@ -613,7 +613,7 @@ namespace cse
 				{
 					std::string Temp;
 					int Count = Itr->Serialize(Temp);
-					if (Count)
+					if (Count || ValidationPolicy == kValidationPolicy_Default)
 						Stream << kSigilBeginCollection << "\n" << Temp << kSigilEndCollection << "\n\n";
 				}
 				Stream.close();

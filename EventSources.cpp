@@ -190,6 +190,7 @@ namespace cse
 			BasicEventSource						kRenew(TypedEventSource::kType_Renderer_Renew);
 			PreSceneGraphRenderEventSource			kPreSceneGraphRender;
 			BasicEventSource						kPostSceneGraphRender(TypedEventSource::kType_Renderer_PostMainSceneGraphRender);
+			BasicEventSource						kPostRenderWindowUpdate(TypedEventSource::kType_Renderer_PostRenderWindowUpdate);
 		}
 
 		namespace dialog

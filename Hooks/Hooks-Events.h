@@ -44,6 +44,7 @@ namespace cse
 				_DeclareMemHdlr(NiDX9RendererRecreateC, "");
 				_DeclareMemHdlr(PreSceneGraphRender, "");
 				_DeclareMemHdlr(PostSceneGraphRender, "");
+				_DeclareMemHdlr(PostRenderWindowUpdate, "");
 			}
 
 			namespace dialog

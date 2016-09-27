@@ -17,7 +17,6 @@ CSE		---->
 
 
 	ENHANCEMENT		=
-		> Render window layers
 		> Wildcard find/replace
 		> Add an option to restore a saved backup for some esp/esm, instead of manually recover it from Data/Backup folder and moving it back to Data folder.
 		> Render window gizmos

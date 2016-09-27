@@ -162,7 +162,7 @@ namespace cse
 			if (ImGui::InputText("Name", NewNameBuffer, sizeof(NewNameBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
 				EnterKey = true;
 
-			bool InvalidName = LookupCollection(NewNameBuffer);
+			bool InvalidName = LookupCollection(NewNameBuffer) || !_stricmp(NewNameBuffer, DefaultLayer->GetName());
 			if (InvalidName)
 				ImGui::Text("Layer already exists!");
 			else if (strlen(NewNameBuffer) == 0)
@@ -225,7 +225,7 @@ namespace cse
 			FilterHelper.Draw();
 			const TESObjectREFRArrayT& ActiveRefs = _RENDERWIN_MGR.GetActiveRefs();
 
-			ImGui::BeginChild("contents_child_frame", ImVec2(0, 250));
+			ImGui::BeginChild("contents_child_frame", ImVec2(0, 500));
 			{
 				ImGui::Columns(2, "ref_table_header", false);
 				{
@@ -259,62 +259,84 @@ namespace cse
 				LayerListResult CurrentLayersResult;
 				if (ImGui::CollapsingHeader("Current Layers", ImGuiTreeNodeFlags_DefaultOpen))
 				{
+					ImGui::Separator();
 					ImGui::Columns(4, "current_layers_list", false);
 					{
-						ImGui::Separator();
-						ImGui::SetColumnOffset(1, 190);
-						ImGui::SetColumnOffset(2, 240);
-						ImGui::SetColumnOffset(3, 290);
+						ImGui::SetColumnOffset(1, 180);
+						ImGui::SetColumnOffset(2, 230);
+						ImGui::SetColumnOffset(3, 280);
 
 						ImGui::Text("Name"); ImGui::NextColumn();
 						ImGui::Text("Count"); ImGui::NextColumn();
 						ImGui::Text(" " ICON_MD_VISIBILITY); ImGui::NextColumn();
 						ImGui::Text(" " ICON_MD_LOCK_OUTLINE); ImGui::NextColumn();
 						ImGui::Separator();
-
-						if (AddLayerToOSDList(DefaultLayer, CurrentLayersResult) == false)
-						{
-							for (auto Itr : ActiveLayers)
-							{
-								if (AddLayerToOSDList(Itr, CurrentLayersResult))
-									break;
-							}
-						}
 					}
 					ImGui::Columns();
-					ImGui::Separator();
+
+					ImGui::BeginChild("current_layers_list_child_frame", ImVec2(0, 170));
+					{
+						ImGui::Columns(4, "current_layers_list", false);
+						{
+							ImGui::SetColumnOffset(1, 180);
+							ImGui::SetColumnOffset(2, 230);
+							ImGui::SetColumnOffset(3, 280);
+
+							if (AddLayerToOSDList(DefaultLayer, CurrentLayersResult) == false)
+							{
+								for (auto Itr : ActiveLayers)
+								{
+									if (AddLayerToOSDList(Itr, CurrentLayersResult))
+										break;
+								}
+							}
+						}
+						ImGui::Columns();
+					}
+					ImGui::EndChild();
 				}
 
 				if (HandleLayerListResult(CurrentLayersResult) == false)
 				{
 					LayerListResult OtherLayersResult;
-					if (ImGui::CollapsingHeader("Other Layers"))
+					if (ImGui::CollapsingHeader("Other Layers", ImGuiTreeNodeFlags_DefaultOpen))
 					{
+						ImGui::Separator();
 						ImGui::Columns(4, "other_layers_list", false);
 						{
-							ImGui::Separator();
-							ImGui::SetColumnOffset(1, 190);
-							ImGui::SetColumnOffset(2, 240);
-							ImGui::SetColumnOffset(3, 290);
+							ImGui::SetColumnOffset(1, 180);
+							ImGui::SetColumnOffset(2, 230);
+							ImGui::SetColumnOffset(3, 280);
 
 							ImGui::Text("Name"); ImGui::NextColumn();
 							ImGui::Text("Count"); ImGui::NextColumn();
 							ImGui::Text(" " ICON_MD_VISIBILITY); ImGui::NextColumn();
 							ImGui::Text(" " ICON_MD_LOCK_OUTLINE); ImGui::NextColumn();
 							ImGui::Separator();
-
-							for (auto& Itr : RegisteredCollections)
-							{
-								Layer* ThisLayer = static_cast<Layer*>(Itr.get());
-								if (ActiveLayers.count(ThisLayer) == 0)
-								{
-									if (AddLayerToOSDList(ThisLayer, OtherLayersResult))
-										break;
-								}
-							}
 						}
 						ImGui::Columns();
-						ImGui::Separator();
+
+						ImGui::BeginChild("other_layers_list_child_frame", ImVec2(0, 150));
+						{
+							ImGui::Columns(4, "other_layers_list", false);
+							{
+								ImGui::SetColumnOffset(1, 180);
+								ImGui::SetColumnOffset(2, 230);
+								ImGui::SetColumnOffset(3, 280);
+
+								for (auto& Itr : RegisteredCollections)
+								{
+									Layer* ThisLayer = static_cast<Layer*>(Itr.get());
+									if (ActiveLayers.count(ThisLayer) == 0)
+									{
+										if (AddLayerToOSDList(ThisLayer, OtherLayersResult))
+											break;
+									}
+								}
+							}
+							ImGui::Columns();
+						}
+						ImGui::EndChild();
 					}
 
 					HandleLayerListResult(OtherLayersResult);
@@ -443,14 +465,6 @@ namespace cse
 			events::dialog::renderWindow::kPlaceRef.RemoveSink(EventSink);
 
 			NamedReferenceCollectionManager::Deinitialize();
-		}
-
-		const char* RenderWindowLayerManager::GetActiveLayerName() const
-		{
-			if (ActiveLayer)
-				return ActiveLayer->GetName();
-			else
-				return nullptr;
 		}
 
 		bool RenderWindowLayerManager::IsParentLayerVisible(TESObjectREFR* Ref) const

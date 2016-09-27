@@ -297,7 +297,7 @@ namespace cse
 			style.ItemSpacing = ImVec2(12, 8);
 			style.ItemInnerSpacing = ImVec2(8, 6);
 			style.IndentSpacing = 25.0f;
-			style.ScrollbarSize = 15.0f;
+			style.ScrollbarSize = 12.0f;
 			style.ScrollbarRounding = 9.0f;
 			style.GrabRounding = 3.0f;
 
@@ -1226,6 +1226,16 @@ namespace cse
 					}
 
 					ImGui::EndPopup();
+				}
+				else
+				{
+					// popup was closed through some other event, cleanup
+					CloseActivePopup = false;
+					ActivePopupTimeout = 0.f;
+					ActivePopup = kInvalidID;
+
+					if (PopupData.PositionType != kPosition_Default)
+						io.MousePos = MousPosBuffer;
 				}
 				ImGui::PopStyleVar();
 			}
