@@ -648,150 +648,12 @@ namespace cse
 			return g.OpenPopupStack.back().Window;
 		}
 
-		RenderWindowOSD::DialogExtraData::DialogExtraData(RenderWindowOSD* OSD) :
-			bgsee::WindowExtraData(kTypeID),
-			Parent(OSD)
-		{
-			SME_ASSERT(OSD);
-		}
-
-		RenderWindowOSD::DialogExtraData::~DialogExtraData()
-		{
-			Parent = nullptr;
-		}
-
 		RenderWindowOSD::GUIState::GUIState()
 		{
 			RedrawSingleFrame = false;
 			MouseInClientArea = false;
 			ConsumeMouseInputEvents = ConsumeKeyboardInputEvents = false;
 			MouseHoveringOSD = false;
-		}
-
-		// lParam = DialogExtraData*
-#define WM_RENDERWINDOWOSD_INITXDATA			(WM_USER + 2015)
-
-		LRESULT CALLBACK RenderWindowOSD::OSDSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
-		{
-			LRESULT DlgProcResult = TRUE;
-			Return = false;
-
-			if (uMsg == WM_RENDERWINDOWOSD_INITXDATA)
-			{
-				bool Added = ExtraData->Add((DialogExtraData*)lParam);
-				SME_ASSERT(Added);
-			}
-
-			DialogExtraData* xData = BGSEE_GETWINDOWXDATA_QUICK(DialogExtraData, ExtraData);
-			if (xData == nullptr)
-				return DlgProcResult;
-
-			RenderWindowOSD* Parent = xData->Parent;
-			ImGuiDX9* Pipeline = Parent->Pipeline;
-
-			if (bgsee::RenderWindowFlyCamera::IsActive() && uMsg != WM_DESTROY)
-			{
-				// do nothing if the fly camera is active
-				return DlgProcResult;
-			}
-			else if (Parent->RenderingLayers)
-			{
-				// do nothing if we're still rendering the previous frame
-				return DlgProcResult;
-			}
-
-			// get input data and flag the viewport for update
-			if (Pipeline->UpdateInputState(hWnd, uMsg, wParam, lParam))
-			{
-				Parent->State.MouseHoveringOSD = Pipeline->IsHoveringWindow();
-				if (GetCapture() != hWnd && GetActiveWindow() == hWnd)
-				{
-					TESRenderWindow::Redraw();
-
-					// consume all input if we have modal windows open
-					if (ModalWindowProviderOSDLayer::Instance.HasOpenModals())
-					{
-						Parent->State.ConsumeMouseInputEvents = Parent->State.ConsumeKeyboardInputEvents = true;
-						Return = true;
-					}
-					else if (Pipeline->CanAllowInputEventPassthrough(uMsg, wParam, lParam,
-																	 Parent->State.ConsumeMouseInputEvents,
-																	 Parent->State.ConsumeKeyboardInputEvents) == false)
-					{
-						Return = true;
-					}
-				}
-			}
-
-
-			switch (uMsg)
-			{
-			case WM_DESTROY:
-				ExtraData->Remove(DialogExtraData::kTypeID);
-				delete xData;
-
-				break;
-			case WM_LBUTTONDBLCLK:
-				if (Parent->NeedsInput(uMsg))
-				{
-					// preempt the vanilla handler
-					Return = true;
-				}
-
-				break;
-			case WM_MOUSEMOVE:
-			case WM_NCMOUSEMOVE:
-				if (GetActiveWindow() == hWnd)
-					Parent->State.MouseInClientArea = true;
-
-				break;
-			case WM_MOUSELEAVE:
-			case WM_NCMOUSELEAVE:
-				Parent->State.MouseInClientArea = false;
-
-				break;
-			case WM_UNINITMENUPOPUP:
-				Pipeline->ResetInputState(true);
-
-				break;
-			case WM_KILLFOCUS:
-				Pipeline->ResetInputState(false);
-
-				break;
-			case WM_NCACTIVATE:
-				if (wParam == FALSE)
-					Pipeline->ResetInputState(false);
-
-				break;
-			case WM_ACTIVATE:
-				if (LOWORD(wParam) == WA_INACTIVE)
-				{
-					Pipeline->ResetInputState(false);
-					Parent->State.MouseInClientArea = false;
-				}
-
-				break;
-			case WM_TIMER:
-				// main render loop
-				if (wParam == TESRenderWindow::kTimer_ViewportUpdate && *TESRenderWindow::ActiveCell)
-				{
-					// refresh the viewport if the mouse is in the client area or if any of the layers need a background update
-					if (Parent->State.MouseInClientArea || Parent->NeedsBackgroundUpdate())
-					{
-						TESRenderWindow::Redraw();
-						Parent->State.RedrawSingleFrame = true;
-					}
-					else if (Parent->State.RedrawSingleFrame)
-					{
-						TESRenderWindow::Redraw();
-						Parent->State.RedrawSingleFrame = false;
-					}
-				}
-
-				break;
-			}
-
-			return DlgProcResult;
 		}
 
 		void RenderWindowOSD::RenderLayers()
@@ -840,8 +702,6 @@ namespace cse
 			SME_ASSERT(_NIRENDERER);
 
 			Pipeline->Initialize(*TESRenderWindow::WindowHandle, _NIRENDERER->device);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, OSDSubclassProc);
-			SendMessage(*TESRenderWindow::WindowHandle, WM_RENDERWINDOWOSD_INITXDATA, NULL, (LPARAM)new DialogExtraData(this));
 
 			AttachLayer(&ModalWindowProviderOSDLayer::Instance);
 			AttachLayer(&DefaultOverlayOSDLayer::Instance);
@@ -871,6 +731,105 @@ namespace cse
 			DetachLayer(&DebugOSDLayer::Instance);
 #endif
 			Initialized = false;
+		}
+
+		bool RenderWindowOSD::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+		{
+			bool Handled = false;
+
+			// do nothing if we're still rendering the previous frame
+			if (RenderingLayers)
+				return Handled;
+
+			// get input data and flag the viewport for update
+			if (Pipeline->UpdateInputState(hWnd, uMsg, wParam, lParam))
+			{
+				State.MouseHoveringOSD = Pipeline->IsHoveringWindow();
+				if (GetCapture() != hWnd && GetActiveWindow() == hWnd)
+				{
+					TESRenderWindow::Redraw();
+
+					// consume all input if we have modal windows open
+					if (ModalWindowProviderOSDLayer::Instance.HasOpenModals())
+					{
+						State.ConsumeMouseInputEvents = State.ConsumeKeyboardInputEvents = true;
+						Handled = true;
+					}
+					else if (Pipeline->CanAllowInputEventPassthrough(uMsg, wParam, lParam,
+																	 State.ConsumeMouseInputEvents,
+																	 State.ConsumeKeyboardInputEvents) == false)
+					{
+						Handled = true;
+					}
+				}
+			}
+
+			switch (uMsg)
+			{
+			case WM_LBUTTONDBLCLK:
+				if (NeedsInput(uMsg))
+				{
+					// preempt the vanilla handler
+					Handled = true;
+				}
+
+				break;
+			case WM_MOUSEMOVE:
+			case WM_NCMOUSEMOVE:
+				if (GetActiveWindow() == hWnd)
+					State.MouseInClientArea = true;
+
+				break;
+			case WM_MOUSELEAVE:
+			case WM_NCMOUSELEAVE:
+				State.MouseInClientArea = false;
+
+				break;
+			case WM_UNINITMENUPOPUP:
+				Pipeline->ResetInputState(true);
+
+				break;
+			case WM_KILLFOCUS:
+				Pipeline->ResetInputState(false);
+
+				break;
+			case WM_NCACTIVATE:
+				if (wParam == FALSE)
+					Pipeline->ResetInputState(false);
+
+				break;
+			case WM_ACTIVATE:
+				if (LOWORD(wParam) == WA_INACTIVE)
+				{
+					Pipeline->ResetInputState(false);
+					State.MouseInClientArea = false;
+				}
+
+				break;
+			case WM_TIMER:
+				// main render loop
+				if (wParam == TESRenderWindow::kTimer_ViewportUpdate && *TESRenderWindow::ActiveCell)
+				{
+					// refresh the viewport if the mouse is in the client area or if any of the layers need a background update
+					if (State.MouseInClientArea || NeedsBackgroundUpdate())
+					{
+						TESRenderWindow::Redraw();
+						State.RedrawSingleFrame = true;
+					}
+					else if (State.RedrawSingleFrame)
+					{
+						TESRenderWindow::Redraw();
+						State.RedrawSingleFrame = false;
+					}
+				}
+
+				break;
+			}
+
+			if (Handled == false)
+				Handled = NeedsInput(uMsg);
+
+			return Handled;
 		}
 
 		void RenderWindowOSD::Draw()

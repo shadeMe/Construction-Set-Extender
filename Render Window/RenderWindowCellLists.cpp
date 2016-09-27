@@ -246,7 +246,7 @@ namespace cse
 					}
 				}
 
-				if (ImGui::CollapsingHeader("Recently Visited"))
+				if (ImGui::CollapsingHeader("Recently Visited", ImGuiTreeNodeFlags_DefaultOpen))
 				{
 					if (RecentlyVisited.size())
 					{

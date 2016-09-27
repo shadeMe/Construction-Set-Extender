@@ -975,6 +975,7 @@ namespace cse
 		{
 			LRESULT DlgProcResult = TRUE;
 			Return = false;
+
 			if (Instance.Initialized == false)
 			{
 				// bugger off
@@ -985,9 +986,10 @@ namespace cse
 				// do nothing if the fly camera is active
 				return DlgProcResult;
 			}
-			else if (Instance.OSD->NeedsInput(uMsg) && uMsg != WM_DESTROY)
+			else if (Instance.OSD->HandleMessage(hWnd, uMsg, wParam, lParam))
 			{
-				// defer to the OSD window proc
+				// OSD handled the message, consume
+				Return = true;
 				return DlgProcResult;
 			}
 			else if (Instance.KeyboardInputManager->HandleInput(hWnd, uMsg, wParam, lParam, &Instance))
@@ -1047,11 +1049,6 @@ namespace cse
 						TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kState_NotInUse)
 					{
 						AUXVIEWPORT->Draw(nullptr, nullptr);
-					}
-
-					if (_RENDERWIN_MGR.IsRenderingScene())
-					{
-						// recursive call to the
 					}
 
 					break;
