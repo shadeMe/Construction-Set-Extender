@@ -239,7 +239,7 @@ namespace cse
 
 			_MemHdlr(CSInit).WriteBuffer();
 
-			BGSEEMAIN->GetDaemon()->ExecuteInitCallbacks(bgsee::Daemon::kInitCallback_Epilog);
+			BGSEEDAEMON->ExecuteInitCallbacks(bgsee::Daemon::kInitCallback_Epilog);
 		}
 
 		#define _hhName	CSInit
@@ -257,7 +257,7 @@ namespace cse
 
 		void __stdcall DoCSExitHook(HWND MainWindow)
 		{
-			delete BGSEEMAIN;
+			bgsee::Main::Deinitialize();
 		}
 
 		#define _hhName	CSExit
@@ -325,7 +325,7 @@ namespace cse
 
 			if (TESDataHandler::PluginLoadSaveInProgress == false &&
 				ShowWarning &&
-				BGSEEMAIN->GetDaemon()->GetFullInitComplete() &&
+				BGSEEDAEMON->GetFullInitComplete() &&
 				EditorID &&
 				strlen(EditorID) > 0 &&
 				isdigit((int)*EditorID) &&

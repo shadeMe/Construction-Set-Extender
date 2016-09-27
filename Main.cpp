@@ -141,7 +141,7 @@ namespace cse
 
 		BGSEECONSOLE_MESSAGE("Initializing UI Manager");
 		BGSEECONSOLE->Indent();
-		bool ComponentInitialized = BGSEEUI->Initialize("TES Construction Set", LoadMenu(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDR_MAINMENU)));
+		bool ComponentInitialized = bgsee::UIManager::Initialize("TES Construction Set", LoadMenu(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDR_MAINMENU)));
 		BGSEECONSOLE->Exdent();
 
 		if (ComponentInitialized == false)
@@ -245,7 +245,7 @@ namespace cse
 
 		BGSEECONSOLE_MESSAGE("Initializing Toolbox");
 		BGSEECONSOLE->Indent();
-		BGSEETOOLBOX->Initialize(BGSEEMAIN->INIGetter(), BGSEEMAIN->INISetter());
+		bgsee::ToolBox::Initialize(BGSEEMAIN->INIGetter(), BGSEEMAIN->INISetter());
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Workspace Manager");
@@ -386,37 +386,37 @@ namespace cse
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Achievements Manager");
 		BGSEECONSOLE->Indent();
-		delete BGSEEACHIEVEMENTS;
+		achievements::Deinitialize();
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Hall Of Fame");
 		BGSEECONSOLE->Indent();
-		delete BGSEEHALLOFFAME;
+		hallOfFame::Deinitialize();
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Tool Manager");
 		BGSEECONSOLE->Indent();
-		delete BGSEETOOLBOX;
+		bgsee::ToolBox::Deinitialize();
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Workspace Manager");
 		BGSEECONSOLE->Indent();
-		delete BGSEEWORKSPACE;
+		workspaceManager::Deinitialize();
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Coda \"Virtual Machine\"");
 		BGSEECONSOLE->Indent();
-		delete CODAVM;
+		script::Deinitialize();
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Global Clipboard");
 		BGSEECONSOLE->Indent();
-		delete BGSEECLIPBOARD;
+		globalClipboard::Deinitialize();
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Form Undo Stack");
 		BGSEECONSOLE->Indent();
-		delete BGSEEUNDOSTACK;
+		formUndoStack::Deinitialize();
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Auxiliary Viewport");
@@ -490,7 +490,7 @@ namespace cse
 		else
 			BGSEECONSOLE_MESSAGE("Bollocks-bollocks-bollocks! No can do...");
 
-		if (BGSEEMAIN->GetDaemon()->GetFullInitComplete())
+		if (BGSEEDAEMON->GetFullInitComplete())
 			BGSEEACHIEVEMENTS->Unlock(achievements::kSaboteur, false, true);
 
 		BGSEECONSOLE->Exdent();
@@ -510,7 +510,7 @@ namespace cse
 			ResumeExecution = true;
 		else if (CrashHandlerMode == kCrashHandlerMode_Ask)
 		{
-			bool FunnyGuyUnlocked = BGSEEMAIN->GetDaemon()->GetFullInitComplete() &&
+			bool FunnyGuyUnlocked = BGSEEDAEMON->GetFullInitComplete() &&
 				(achievements::kFunnyGuy->GetUnlocked() || achievements::kFunnyGuy->GetTriggered());
 			int MBFlags = MB_TASKMODAL | MB_TOPMOST | MB_SETFOREGROUND | MB_ICONERROR;
 
@@ -539,7 +539,7 @@ namespace cse
 				ResumeExecution = false;
 				break;
 			case IDCANCEL:
-				if (BGSEEMAIN->GetDaemon()->GetFullInitComplete())
+				if (BGSEEDAEMON->GetFullInitComplete())
 					BGSEEACHIEVEMENTS->Unlock(achievements::kFunnyGuy, false, true);
 
 				MessageBox(nullptr, "Hah! Nice try, Bob.", BGSEEMAIN->ExtenderGetDisplayName(), MB_TASKMODAL | MB_TOPMOST | MB_SETFOREGROUND);
@@ -654,58 +654,53 @@ extern "C"
 		if (SME::MersenneTwister::genrand_real1() < 0.05)
 			IsWarholAGenius = true;
 
-		bgsee::INISettingDepotT CSEINISettings;
+		bgsee::Main::InitializationParams InitParams;
+		InitParams.LongName = BGSEEMAIN_EXTENDERLONGNAME;
+		InitParams.DisplayName = IsWarholAGenius ? "ConstruKction Set Extender" : nullptr;
+		InitParams.ShortName = BGSEEMAIN_EXTENDERSHORTNAME;
+		InitParams.ReleaseName = ReleaseNameTable::Instance.LookupRelease(VERSION_MAJOR, VERSION_MINOR);
+		InitParams.Version = PACKED_SME_VERSION;
+		InitParams.EditorID = bgsee::Main::kExtenderParentEditor_TES4CS;
+		InitParams.EditorSupportedVersion = CS_VERSION_1_2;
+		InitParams.EditorCurrentVersion = obse->editorVersion;
+		InitParams.APPPath = obse->GetOblivionDirectory();
+		InitParams.SEPluginHandle = XSEPluginHandle;
+		InitParams.SEMinimumVersion = 21;
+		InitParams.SECurrentVersion = obse->obseVersion;
+		InitParams.DotNETFrameworkVersion = "v4.0.30319";
+		InitParams.CLRMemoryProfiling = false;
 
-		settings::Register(CSEINISettings);
-		AuxiliaryViewport::RegisterINISettings(CSEINISettings);
-
-		bool ComponentInitialized = BGSEEMAIN->Initialize(BGSEEMAIN_EXTENDERLONGNAME,
-														  (IsWarholAGenius ? "ConstruKction Set Extender" : nullptr),
-														  BGSEEMAIN_EXTENDERSHORTNAME,
-														  ReleaseNameTable::Instance.LookupRelease(VERSION_MAJOR, VERSION_MINOR),
-														  PACKED_SME_VERSION,
-														  bgsee::Main::kExtenderParentEditor_TES4CS,
-														  CS_VERSION_1_2,
-														  obse->editorVersion,
-														  obse->GetOblivionDirectory(),
-														  XSEPluginHandle,
-														  21,
-														  obse->obseVersion,
-														  CSEINISettings,
-														  "v4.0.30319",
-#ifdef NDEBUG
-														  false,
-#else
-														  false,		// CLR memory profiling
-#endif
+		settings::Register(InitParams.INISettings);
+		AuxiliaryViewport::RegisterINISettings(InitParams.INISettings);
 
 #ifdef WAIT_FOR_DEBUGGER
-														  true,
+		InitParams.WaitForDebugger = true;
 #else
-														  false,		// wait for debugger
+		InitParams.WaitForDebugger = false;
 #endif
 
 #ifdef NDEBUG
-#ifndef WAIT_FOR_DEBUGGER
-														  true);		// CrashRpt support
+	#ifndef WAIT_FOR_DEBUGGER
+		InitParams.CrashRptSupport = true;
 		TODO("Save debug symbols, dammit!")
+	#else
+		InitParams.CrashRptSupport = false;
+	#endif
 #else
-														  false);
-#endif
-#else
-														  false);
+		InitParams.CrashRptSupport = false;
 #endif
 
+		bool ComponentInitialized = bgsee::Main::Initialize(InitParams);
 		SME_ASSERT(ComponentInitialized);
 
-		BGSEEMAIN->GetDaemon()->RegisterInitCallback(bgsee::Daemon::kInitCallback_Query, new InitCallbackQuery(obse));
-		BGSEEMAIN->GetDaemon()->RegisterInitCallback(bgsee::Daemon::kInitCallback_Load, new InitCallbackLoad(obse));
-		BGSEEMAIN->GetDaemon()->RegisterInitCallback(bgsee::Daemon::kInitCallback_PostMainWindowInit, new InitCallbackPostMainWindowInit());
-		BGSEEMAIN->GetDaemon()->RegisterInitCallback(bgsee::Daemon::kInitCallback_Epilog, new InitCallbackEpilog());
-		BGSEEMAIN->GetDaemon()->RegisterDeinitCallback(new DeinitCallback());
-		BGSEEMAIN->GetDaemon()->RegisterCrashCallback(new CrashCallback());
+		BGSEEDAEMON->RegisterInitCallback(bgsee::Daemon::kInitCallback_Query, new InitCallbackQuery(obse));
+		BGSEEDAEMON->RegisterInitCallback(bgsee::Daemon::kInitCallback_Load, new InitCallbackLoad(obse));
+		BGSEEDAEMON->RegisterInitCallback(bgsee::Daemon::kInitCallback_PostMainWindowInit, new InitCallbackPostMainWindowInit());
+		BGSEEDAEMON->RegisterInitCallback(bgsee::Daemon::kInitCallback_Epilog, new InitCallbackEpilog());
+		BGSEEDAEMON->RegisterDeinitCallback(new DeinitCallback());
+		BGSEEDAEMON->RegisterCrashCallback(new CrashCallback());
 
-		if (BGSEEMAIN->GetDaemon()->ExecuteInitCallbacks(bgsee::Daemon::kInitCallback_Query) == false)
+		if (BGSEEDAEMON->ExecuteInitCallbacks(bgsee::Daemon::kInitCallback_Query) == false)
 		{
 			MessageBox(nullptr,
 					   "The Construction Set Extender failed to initialize correctly!\n\nIt's highly advised that you close the CS right away. More information can be found in the log file (Construction Set Extender.log in the root game directory).",
@@ -721,7 +716,7 @@ extern "C"
 
 	__declspec(dllexport) bool OBSEPlugin_Load(const OBSEInterface * obse)
 	{
-		if (BGSEEMAIN->GetDaemon()->ExecuteInitCallbacks(bgsee::Daemon::kInitCallback_Load) == false)
+		if (BGSEEDAEMON->ExecuteInitCallbacks(bgsee::Daemon::kInitCallback_Load) == false)
 		{
 			MessageBox(nullptr,
 					   "The Construction Set Extender failed to load correctly!\n\nIt's highly advised that you close the CS right away. More information can be found in the log file (Construction Set Extender.log in the root game directory).",

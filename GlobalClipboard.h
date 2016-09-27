@@ -39,6 +39,7 @@ namespace cse
 			virtual void								PostPasteCallback(bool Successful, bgsee::FormCollectionSerializer* Deserializer);
 		};
 
-		void Initialize(void);
+		void Initialize();
+		void Deinitialize();
 	}
 }

@@ -71,12 +71,16 @@ namespace cse
 				kDefaultDirectories.push_back((bgsee::ResourceLocation(CSE_COSAVEDEPOT)()));
 			}
 
-			bool ComponentInitialized = BGSEEWORKSPACE->Initialize(BGSEEMAIN->GetAPPPath(), new WorkspaceManagerOperator(), kDefaultDirectories);
+			bool ComponentInitialized = bgsee::WorkspaceManager::Initialize(BGSEEMAIN->GetAPPPath(), new WorkspaceManagerOperator(), kDefaultDirectories);
 			SME_ASSERT(ComponentInitialized);
 
 			_FILEFINDER->AddSearchPath((std::string(std::string(BGSEEWORKSPACE->GetCurrentWorkspace()) + "Data")).c_str());
 
 		}
 
+		void Deinitialize()
+		{
+			bgsee::WorkspaceManager::Deinitialize();
+		}
 	}
 }

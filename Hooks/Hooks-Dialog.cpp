@@ -1865,7 +1865,7 @@ namespace cse
 
 		bool __stdcall DoObjectWindowSplitterWndProcDisableHook(void)
 		{
-			if (BGSEEMAIN->GetDaemon()->GetFullInitComplete())
+			if (BGSEEDAEMON->GetFullInitComplete())
 			{
 				if (*TESDialog::ObjectWindowDragDropInProgress ||
 					*TESDialog::TESFormIDListViewDragDropInProgress ||

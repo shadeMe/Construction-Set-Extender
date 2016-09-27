@@ -223,9 +223,13 @@ namespace cse
 
 		void Initialize( void )
 		{
-			bool ComponentInitialized = BGSEECLIPBOARD->Initialize(new GlobalClipboardOperator(), new TESFileWrapper());
-
+			bool ComponentInitialized = bgsee::GlobalClipboard::Initialize(new GlobalClipboardOperator(), new TESFileWrapper());
 			SME_ASSERT(ComponentInitialized);
+		}
+
+		void Deinitialize()
+		{
+			bgsee::GlobalClipboard::Deinitialize();
 		}
 	}
 }

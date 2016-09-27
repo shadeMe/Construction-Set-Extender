@@ -36,6 +36,7 @@ namespace cse
 			virtual void							PostUndoRedoCallback(void);
 		};
 
-		void Initialize(void);
+		void Initialize();
+		void Deinitialize();
 	}
 }

@@ -69,15 +69,20 @@ namespace cse
 			ScriptCommands.push_back(commands::reference::GetRegistrar());
 			ScriptCommands.push_back(commands::baseFormComponent::GetRegistrar());
 
-			bool ComponentInitialized = CODAVM->Initialize(bgsee::ResourceLocation("Coda"),
+			bool ComponentInitialized = bgsee::script::CodaScriptVM::Initialize(bgsee::ResourceLocation("Coda"),
 														"http://cs.elderscrolls.com/index.php/",
 														BGSEEMAIN->INIGetter(),
 														BGSEEMAIN->INISetter(),
 														ScriptCommands);
-
 			SME_ASSERT(ComponentInitialized);
 
 			BGSEECONSOLE->RegisterConsoleCommand(&kBGSEEConsoleCmd_RunCodaScript);
 		}
+
+		void Deinitialize()
+		{
+			bgsee::script::CodaScriptVM::Deinitialize();
+		}
+
 	}
 }

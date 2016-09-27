@@ -22,7 +22,7 @@ namespace cse
 		DEFINE_BASIC_EVENT_SINK(DataHandlerClearData);
 		DEFINE_BASIC_EVENT_SINK_HANDLER(DataHandlerClearData)
 		{
-			delete BGSEEHALLOFFAME;
+			hallOfFame::Deinitialize();
 			_RENDERWIN_MGR.GetGroupManager()->Clear();
 			GameSettingCollection::Instance->ResetCollection();
 			BGSEEUNDOSTACK->Reset();

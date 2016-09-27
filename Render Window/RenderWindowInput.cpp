@@ -989,9 +989,9 @@ namespace cse
 			void RenderWindowKeyboardManager::Initialize()
 			{
 				SME_ASSERT(Initialized == false);
-
+#ifndef NDEBUG
 				MessageLogContext = BGSEECONSOLE->RegisterMessageLogContext("Render Window Keyboard Input");
-
+#endif
 				DeletedBindings.push_back(BuiltIn::KeyBinding('O'));
 				DeletedBindings.push_back(BuiltIn::KeyBinding('I', BuiltIn::kModifier_Space));
 
@@ -1095,9 +1095,10 @@ namespace cse
 				SME_ASSERT(Initialized);
 
 				SaveToINI();
+#ifndef NDEBUG
 				BGSEECONSOLE->UnregisterMessageLogContext(MessageLogContext);
 				MessageLogContext = nullptr;
-
+#endif
 				Initialized = false;
 			}
 
@@ -1662,10 +1663,6 @@ namespace cse
 			{
 				return PaintingSelection;
 			}
-
-
-
 		}
-
 	}
 }

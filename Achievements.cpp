@@ -458,12 +458,17 @@ namespace cse
 			AchievementDepot.push_back(kHappyBDayMoi);
 			AchievementDepot.push_back(kChicken);
 
-			bool ComponentInitialized = BGSEEACHIEVEMENTS->Initialize(BGSEEMAIN->ExtenderGetLongName(), BGSEEMAIN->GetExtenderHandle(), AchievementDepot);
-
+			bool ComponentInitialized = bgsee::extras::AchievementManager::Initialize(BGSEEMAIN->ExtenderGetLongName(), BGSEEMAIN->GetExtenderHandle(), AchievementDepot);
 			SME_ASSERT(ComponentInitialized);
 
 			BGSEECONSOLE->Pad(1);
 			BGSEECONSOLE_MESSAGE("Precious time wasted on the CS: %0.1f hours", AchievementLost::GetSingleton()->GetLoggedHours());
 		}
+
+		void Deinitialize()
+		{
+			bgsee::extras::AchievementManager::Deinitialize();
+		}
+
 	}
 }

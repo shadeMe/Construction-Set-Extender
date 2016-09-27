@@ -11,5 +11,6 @@ namespace cse
 		void ExtractFormArguments(UInt32 Count, ...);
 
 		void Initialize();
+		void Deinitialize();
 	}
 }

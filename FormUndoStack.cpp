@@ -182,11 +182,15 @@ namespace cse
 			TESObjectWindow::RefreshFormList();
 		}
 
-		void Initialize( void )
+		void Initialize()
 		{
-			bool ComponentInitialized = BGSEEUNDOSTACK->Initialize(new FormUndoStackOperator());
-
+			bool ComponentInitialized = bgsee::FormUndoStack::Initialize(new FormUndoStackOperator());
 			SME_ASSERT(ComponentInitialized);
+		}
+
+		void Deinitialize()
+		{
+			bgsee::FormUndoStack::Deinitialize();
 		}
 	}
 }

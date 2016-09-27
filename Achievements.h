@@ -182,5 +182,6 @@ namespace cse
 		extern AchievementBase*  		kChicken;
 
 		void								Initialize(void);
+		void								Deinitialize();
 	}
 }

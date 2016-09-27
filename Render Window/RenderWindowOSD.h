@@ -10,7 +10,7 @@ namespace cse
 
 		class ImGuiDX9
 		{
-			typedef std::vector<ImGuiID>		ImGuiWidgetIDArrayT;
+			typedef std::vector<ImGuiID>	ImGuiWidgetIDArrayT;
 
 			LPDIRECT3DVERTEXBUFFER9			VertexBuffer;
 			LPDIRECT3DINDEXBUFFER9			IndexBuffer;
@@ -191,7 +191,7 @@ namespace cse
 				OSDLayerStateData	PopupState;
 				RenderDelegateT		DrawPopup;			// draws the popup contents
 				RenderDelegateT		DrawButton;			// draws (just) the button
-				ImVec2				Position;			// position of the popup on appearance
+				ImVec2				Position;			// position of the popup on appearing
 				UInt8				PositionType;
 
 				PopupData(const char* Name,

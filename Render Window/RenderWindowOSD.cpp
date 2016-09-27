@@ -1083,6 +1083,8 @@ namespace cse
 																			   RenderDelegateT DrawButton, RenderDelegateT DrawPopup,
 																			   UInt8 PositionType, ImVec2& Pos)
 		{
+			// ### this will break if the position of the data inside the vector changes
+			// ### hash the name (it's supposed to be unique) and use it as the ID instead
 			RegisteredPopups.push_back(PopupData(Name, DrawButton, DrawPopup, PositionType, Pos));
 			return RegisteredPopups.size() - 1;
 		}

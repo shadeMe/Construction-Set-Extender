@@ -224,9 +224,13 @@ namespace cse
 
 			Inductees.push_back(new HallOfFameShadeMe());		// oh yeah!
 
-			bool ComponentInitialized = BGSEEHALLOFFAME->Initialize(Inductees, 0x450);
-
+			bool ComponentInitialized = bgsee::extras::HallOfFameManager::Initialize(Inductees, 0x450);
 			SME_ASSERT(ComponentInitialized);
+		}
+
+		void Deinitialize()
+		{
+			bgsee::extras::HallOfFameManager::Deinitialize();
 		}
 
 		void GetRandomESMember(std::string& OutName, bool Possessive)

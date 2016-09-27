@@ -14,6 +14,7 @@ namespace cse
 			virtual void						ReloadPlugins(const char* WorkspacePath, bool ResetPluginList, bool LoadESPs);
 		};
 
-		void								Initialize(void);
+		void Initialize();
+		void Deinitialize();
 	}
 }

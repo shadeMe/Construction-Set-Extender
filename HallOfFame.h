@@ -77,6 +77,8 @@ namespace cse
 		};
 
 		void						Initialize(void);
+		void						Deinitialize();
+
 		void						GetRandomESMember(std::string& OutName, bool Possessive = true);
 		enum
 		{

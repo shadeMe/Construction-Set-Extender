@@ -176,7 +176,7 @@ namespace cse
 
 		void Initialize( void )
 		{
-			bool ComponentInitialized = BGSEECHANGELOG->Initialize();
+			bool ComponentInitialized = bgsee::ChangeLogManager::Initialize();
 			SME_ASSERT(ComponentInitialized);
 
 			ADD_BASIC_SINK_TO_SOURCE(ChangeLogTESForm, events::form::kInstantiation);
@@ -203,7 +203,7 @@ namespace cse
 			REMOVE_BASIC_SINK_FROM_SOURCE(ChangeLogPreLoad, events::plugin::kPreLoad);
 			REMOVE_BASIC_SINK_FROM_SOURCE(ChangeLogPostLoad, events::plugin::kPostLoad);
 
-			delete BGSEECHANGELOG;
+			bgsee::ChangeLogManager::Deinitialize();
 		}
 	}
 }
