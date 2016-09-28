@@ -144,7 +144,7 @@ namespace cse
 			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, (_RENDERSEL->selectionCount == 0 ? 0.1f : 1.0f));
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 5));
 			ImGui::SetNextWindowPosCenter(ImGuiSetCond_FirstUseEver);
-			if (!ImGui::Begin("Quick Controls", nullptr, ImGuiWindowFlags_NoFocusOnAppearing))
+			if (!ImGui::Begin("Quick Controls", nullptr, ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoTitleBar))
 			{
 				ImGui::End();
 				ImGui::PopStyleVar(2);

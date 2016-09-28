@@ -233,6 +233,9 @@ namespace cse
 				PUSH_TRANSPARENT_BUTTON_COLORS;
 				ImGui::Button(ICON_MD_GRID_ON "##popupbtn_snap_controls", TOOLBAR_BUTTON_SIZE);
 				POP_TRANSPARENT_BUTTON_COLORS;
+
+				if (ImGui::IsItemHoveredRect())
+					ImGui::SetTooltip("Snap Controls");
 			},
 															[]() {
 				UInt32 Flags = *TESRenderWindow::StateFlags;
@@ -304,59 +307,131 @@ namespace cse
 				PUSH_TRANSPARENT_BUTTON_COLORS;
 				ImGui::Button(ICON_MD_ZOOM_OUT_MAP "##popupbtn_movement_controls", TOOLBAR_BUTTON_SIZE);
 				POP_TRANSPARENT_BUTTON_COLORS;
+
+				if (ImGui::IsItemHoveredRect())
+					ImGui::SetTooltip("Movement Controls");
 			},
 															   []() {
+				bool Alternate = _RENDERWIN_XSTATE.UseAlternateMovementSettings;
+
 				float CamPan = *TESRenderWindow::CameraPanSpeed;
 				float CamZoom = *TESRenderWindow::CameraZoomSpeed;
 				float CamRot = *TESRenderWindow::CameraRotationSpeed;
 				float RefMov = *TESRenderWindow::RefMovementSpeed;
 				float RefRot = *TESRenderWindow::RefRotationSpeed;
 
-				float AltCamPan = settings::renderer::kAltCamPanSpeed().f;
-				float AltCamZoom = settings::renderer::kAltCamZoomSpeed().f;
-				float AltCamRot = settings::renderer::kAltCamRotationSpeed().f;
-				float AltRefMov = settings::renderer::kAltRefMovementSpeed().f;
-				float AltRefRot = settings::renderer::kAltRefRotationSpeed().f;
+				if (Alternate)
+				{
+					CamPan = settings::renderer::kAltCamPanSpeed().f;
+					CamZoom = settings::renderer::kAltCamZoomSpeed().f;
+					CamRot = settings::renderer::kAltCamRotationSpeed().f;
+					RefMov = settings::renderer::kAltRefMovementSpeed().f;
+					RefRot = settings::renderer::kAltRefRotationSpeed().f;
+				}
 
-				ImGui::PushItemWidth(125);
-				ImGui::Text("Default"); ImGui::SameLine(160); ImGui::Text("Alternate");
-				ImGui::Separator();
+				ImGui::NewLine();
 
-				ImGui::Text("Camera:");
-				ImGui::DragFloat("##DefCam. Pan", &CamPan, 0.05f, 0.01, 10, "Pan: %.3f"); ImGui::SameLine(0, 20);
-				ImGui::DragFloat("##AltCam. Pan", &AltCamPan, 0.05f, 0.01, 10, "Pan: %.3f");
-				ImGui::DragFloat("##DefCam. Rotation", &CamRot, 0.05f, 0.01, 10, "Rotation: %.3f"); ImGui::SameLine(0, 20);
-				ImGui::DragFloat("##AltCam. Rotation", &AltCamRot, 0.05f, 0.01, 10, "Rotation: %.3f");
-				ImGui::DragFloat("##DefCam. Zoom", &CamZoom, 0.05f, 0.01, 10, "Zoom: %.3f"); ImGui::SameLine(0, 20);
-				ImGui::DragFloat("##AltCam. Zoom", &AltCamZoom, 0.05f, 0.01, 10, "Zoom: %.3f");
+				ImGui::SameLine(0, 30);
+				ImGui::Text(ICON_MD_PHOTO_CAMERA);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Camera");
 
-				ImGui::Text("Reference:");
-				ImGui::DragFloat("##DefRef. Move", &RefMov, 0.05f, 0.01, 10, "Movement: %.3f"); ImGui::SameLine(0, 20);
-				ImGui::DragFloat("##AltRef. Move", &AltRefMov, 0.05f, 0.01, 10, "Movement: %.3f");
-				ImGui::DragFloat("##DefRef. Rotation", &RefRot, 0.05f, 0.01, 10, "Rotation: %.3f"); ImGui::SameLine(0, 20);
-				ImGui::DragFloat("##AltRef. Rotation", &AltRefRot, 0.05f, 0.01, 10, "Rotation: %.3f");
-				ImGui::PopItemWidth();
+				ImGui::SameLine(0, 80);
 
-				*TESRenderWindow::CameraPanSpeed = CamPan;
-				*TESRenderWindow::CameraZoomSpeed = CamZoom;
-				*TESRenderWindow::CameraRotationSpeed = CamRot;
-				*TESRenderWindow::RefMovementSpeed = RefMov;
-				*TESRenderWindow::RefRotationSpeed = RefRot;
+				ImGui::Text(ICON_MD_PERSON);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Reference");
 
-				settings::renderer::kAltCamPanSpeed.SetFloat(AltCamPan);
-				settings::renderer::kAltCamZoomSpeed.SetFloat(AltCamZoom);
-				settings::renderer::kAltCamRotationSpeed.SetFloat(AltCamRot);
-				settings::renderer::kAltRefMovementSpeed.SetFloat(AltRefMov);
-				settings::renderer::kAltRefRotationSpeed.SetFloat(AltRefRot);
+				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImColor::HSV(4 / 7.0f, 0.5f, 0.5f));
+				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImColor::HSV(4 / 7.0f, 0.6f, 0.5f));
+				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImColor::HSV(4 / 7.0f, 0.7f, 0.5f));
+				ImGui::PushStyleColor(ImGuiCol_SliderGrab, ImColor::HSV(4 / 7.0f, 0.9f, 0.9f));
+				{
+					ImGui::VSliderFloat("##cam_pan", ImVec2(18, 160), &CamPan, 0.01f, 5.0f, "");
+					if (ImGui::IsItemActive() || ImGui::IsItemHovered())
+						ImGui::SetTooltip("%.3f", CamPan);
+
+					ImGui::SameLine(0, 10);
+
+					ImGui::VSliderFloat("##cam_zoom", ImVec2(18, 160), &CamZoom, 0.01f, 5.0f, "");
+					if (ImGui::IsItemActive() || ImGui::IsItemHovered())
+						ImGui::SetTooltip("%.3f", CamZoom);
+
+					ImGui::SameLine(0, 10);
+
+					ImGui::VSliderFloat("##cam_rot", ImVec2(18, 160), &CamRot, 0.01f, 5.0f, "");
+					if (ImGui::IsItemActive() || ImGui::IsItemHovered())
+						ImGui::SetTooltip("%.3f", CamRot);
+
+					ImGui::SameLine(0, 40);
+
+					ImGui::VSliderFloat("##ref_mov", ImVec2(18, 160), &RefMov, 0.01f, 5.0f, "");
+					if (ImGui::IsItemActive() || ImGui::IsItemHovered())
+						ImGui::SetTooltip("%.3f", RefMov);
+
+					ImGui::SameLine(0, 10);
+
+					ImGui::VSliderFloat("##ref_rot", ImVec2(18, 160), &RefRot, 0.01f, 5.0f, "");
+					if (ImGui::IsItemActive() || ImGui::IsItemHovered())
+						ImGui::SetTooltip("%.3f", RefRot);
+				}
+				ImGui::PopStyleColor(4);
+				ImGui::Dummy(ImVec2(10, 5));
+
+				ImGui::Text(ICON_MD_PAN_TOOL); ImGui::SameLine(0, 15);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Pan");
+
+				ImGui::Text(ICON_MD_ZOOM_IN); ImGui::SameLine(0, 15);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Zoom");
+
+				ImGui::Text(ICON_MD_3D_ROTATION); ImGui::SameLine(0, 1);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Rotation");
+
+				ImGui::SameLine(0, 30);
+
+				ImGui::Text(ICON_MD_ZOOM_OUT_MAP); ImGui::SameLine(0, 15);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Movement");
+
+				ImGui::Text(ICON_MD_3D_ROTATION);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Rotation");
+
+				if (Alternate)
+				{
+					settings::renderer::kAltCamPanSpeed.SetFloat(CamPan);
+					settings::renderer::kAltCamZoomSpeed.SetFloat(CamZoom);
+					settings::renderer::kAltCamRotationSpeed.SetFloat(CamRot);
+					settings::renderer::kAltRefMovementSpeed.SetFloat(RefMov);
+					settings::renderer::kAltRefRotationSpeed.SetFloat(RefRot);
+				}
+				else
+				{
+					*TESRenderWindow::CameraPanSpeed = CamPan;
+					*TESRenderWindow::CameraZoomSpeed = CamZoom;
+					*TESRenderWindow::CameraRotationSpeed = CamRot;
+					*TESRenderWindow::RefMovementSpeed = RefMov;
+					*TESRenderWindow::RefRotationSpeed = RefRot;
+				}
+
+				ImGui::Dummy(ImVec2(10, 5));
+				if (ImGui::Checkbox("Alternate Settings", &Alternate))
+					actions::ToggleAlternateMovementSettings();
 			},
 				MouseOverPopupProvider::kPosition_Relative,
-				ImVec2(-145, -245));
+				ImVec2(-75, -280));
 
 			PopupVisibilityToggles = BottomToolbarPopupProvider.RegisterPopup("popup_visibility_toggles",
 																 []() {
 				PUSH_TRANSPARENT_BUTTON_COLORS;
 				ImGui::Button(ICON_MD_REMOVE_RED_EYE "##popupbtn_visibility_toggles", TOOLBAR_BUTTON_SIZE);
 				POP_TRANSPARENT_BUTTON_COLORS;
+
+				if (ImGui::IsItemHoveredRect())
+					ImGui::SetTooltip("Visibility Toggles");
 			},
 																 []() {
 				ImGui::PushID("visibility_toggle_menu_item");
