@@ -2,6 +2,7 @@
 #include "Render Window\RenderWindowManager.h"
 #include "Achievements.h"
 #include "RenderWindowActions.h"
+#include "IconFontCppHeaders\IconsMaterialDesign.h"
 
 namespace cse
 {
@@ -136,18 +137,19 @@ namespace cse
 
 		void SelectionControlsOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
-			if (_RENDERSEL->selectionCount == 0 || _RENDERSEL->selectionList == nullptr || _RENDERSEL->selectionList->Data == nullptr)
-				return;
-			else if (TESDialog::GetActiveFormEditDialog(_RENDERSEL->selectionList->Data))
+			bool NothingToSee = _RENDERSEL->selectionCount == 0 ||
+								_RENDERSEL->selectionList == nullptr || _RENDERSEL->selectionList->Data == nullptr ||
+								TESDialog::GetActiveFormEditDialog(_RENDERSEL->selectionList->Data);
+
+			if (NothingToSee)
 				return;
 
-			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, (_RENDERSEL->selectionCount == 0 ? 0.1f : 1.0f));
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 5));
 			ImGui::SetNextWindowPosCenter(ImGuiSetCond_FirstUseEver);
-			if (!ImGui::Begin("Quick Controls", nullptr, ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoTitleBar))
+			if (!ImGui::Begin("Selection Controls", nullptr, ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize))
 			{
 				ImGui::End();
-				ImGui::PopStyleVar(2);
+				ImGui::PopStyleVar();
 				return;
 			}
 
@@ -526,7 +528,7 @@ namespace cse
 
 
 			ImGui::End();
-			ImGui::PopStyleVar(2);
+			ImGui::PopStyleVar();
 		}
 
 		bool SelectionControlsOSDLayer::NeedsBackgroundUpdate()

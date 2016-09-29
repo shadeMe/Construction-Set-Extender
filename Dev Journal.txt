@@ -41,7 +41,6 @@ SE		---->
 
 
 	BUGFIX			=
-		> Horizontal scroll bar doesn't work until cursor moves off-screen (make sure the value is bween the min and max vals)
 		> Background task threading issues in the editor
 		> DPI scaling issues with WPF code (WPF doesn't seem to respect the application's request to disable DPI scaling)
 		> Editor doesn't acquire focus after switching scripts/on opening and general focus related wonkiness
@@ -49,7 +48,6 @@ SE		---->
 
 
 	ENHANCEMENT		=
-		> Hide intellisense infterface when Ctrl key is held down
 		> Change margin
 
 

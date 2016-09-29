@@ -28,7 +28,8 @@ namespace cse
 			property bool										Enabled;
 
 			void												ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
-			void												ParentEditor_KeyDown(Object^ Sender, textEditors::IntelliSenseKeyEventArgs^ E);
+			void												ParentEditor_KeyDown(Object^ Sender, textEditors::IntelliSenseKeyDownEventArgs^ E);
+			void												ParentEditor_KeyUp(Object^ Sender, KeyEventArgs^ E);
 			void												ParentEditor_ShowInterface(Object^ Sender, textEditors::IntelliSenseShowEventArgs^ E);
 			void												ParentEditor_HideInterface(Object^ Sender, textEditors::IntelliSenseHideEventArgs^ E);
 			void												ParentEditor_RelocateInterface(Object^ Sender, textEditors::IntelliSensePositionEventArgs^ E);
@@ -36,7 +37,8 @@ namespace cse
 			void												BoundParent_ItemSelected(Object^ Sender, EventArgs^ E);
 
 			EventHandler^										ScriptEditorPreferencesSavedHandler;
-			textEditors::IntelliSenseKeyEventHandler^			ParentEditorKeyDown;
+			textEditors::IntelliSenseKeyDownEventHandler^		ParentEditorKeyDown;
+			textEditors::IntelliSenseKeyUpEventHandler^			ParentEditorKeyUp;
 			textEditors::IntelliSenseShowEventHandler^			ParentEditorShowInterface;
 			textEditors::IntelliSenseHideEventHandler^			ParentEditorHideInterface;
 			textEditors::IntelliSensePositionEventHandler^		ParentEditorRelocateInterface;
@@ -96,6 +98,7 @@ namespace cse
 			void											ListView_SelectionChanged(Object^ Sender, EventArgs^ E);
 			void											ListView_ItemActivate(Object^ Sender, EventArgs^ E);
 			void											ListView_KeyDown(Object^ Sender, KeyEventArgs^ E);
+			void											ListView_KeyUp(Object^ Sender, KeyEventArgs^ E);
 
 			static Object^									ListViewAspectGetter(Object^ RowObject);
 			static Object^									ListViewImageGetter(Object^ RowObject);
@@ -104,6 +107,7 @@ namespace cse
 			EventHandler^									ListViewSelectionChangedHandler;
 			EventHandler^									ListViewItemActivateHandler;
 			KeyEventHandler^								ListViewKeyDownHandler;
+			KeyEventHandler^								ListViewKeyUpHandler;
 
 			void											DisplayToolTip(String^ Title,
 																		   String^ Message,
@@ -119,6 +123,8 @@ namespace cse
 			static void										UIInvoke_FormShow(NonActivatingImmovableAnimatedForm^ ToInvoke, Point Location, IntPtr Parent);
 			static void										UIInvoke_FormSetSize(NonActivatingImmovableAnimatedForm^ ToInvoke, Size ToSet);
 			static void										UIInvoke_FormHide(NonActivatingImmovableAnimatedForm^ ToInvoke);
+
+			static const float								DimmedOpacity = 0.1f;
 		public:
 			IntelliSenseInterfaceView();
 			~IntelliSenseInterfaceView();
@@ -141,6 +147,8 @@ namespace cse
 			virtual void				Unbind();
 
 			virtual void				ChangeSelection(IIntelliSenseInterfaceView::MoveDirection Direction);
+			virtual void				DimOpacity();
+			virtual void				ResetOpacity();
 
 			virtual void				Update();
 			virtual void				Show(Point Location, IntPtr Parent);

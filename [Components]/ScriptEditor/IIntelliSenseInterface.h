@@ -46,6 +46,8 @@ namespace cse
 			void				Unbind();
 
 			void				ChangeSelection(MoveDirection Direction);
+			void				DimOpacity();
+			void				ResetOpacity();
 
 			void				Update();			// refreshes the item list
 			void				Show(Point Location, IntPtr Parent);

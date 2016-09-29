@@ -328,30 +328,53 @@ namespace cse
 				int VerticalOffset = TextField->VerticalOffset;
 				int HorizontalOffset = TextField->HorizontalOffset;
 
-				if (ScrollBarHeight <= 0 || VerticalOffset <= 0 || VerticalOffset >= ScrollBarHeight)
+				if (ScrollBarHeight <= 0 || VerticalOffset < 0 || VerticalOffset >= ScrollBarHeight)
 					ExternalVerticalScrollBar->Enabled = false;
 				else if (!ExternalVerticalScrollBar->Enabled)
 					ExternalVerticalScrollBar->Enabled = true;
 
-				if (ScrollBarWidth <= 0 || HorizontalOffset <= 0 || HorizontalOffset >= ScrollBarWidth)
+				ExternalVerticalScrollBar->Maximum = ScrollBarHeight;
+				ExternalVerticalScrollBar->Minimum = 0;
+				ExternalVerticalScrollBar->Value = 0;
+
+				if (VerticalOffset < ExternalVerticalScrollBar->Minimum)
+					VerticalOffset = ExternalVerticalScrollBar->Minimum;
+				else if (VerticalOffset > ExternalVerticalScrollBar->Maximum)
+					VerticalOffset = ExternalVerticalScrollBar->Maximum;
+
+				ExternalVerticalScrollBar->Value = VerticalOffset;
+
+				if (ScrollBarWidth <= 0 || HorizontalOffset < 0 || HorizontalOffset >= ScrollBarWidth)
 					ExternalHorizontalScrollBar->Enabled = false;
 				else if (!ExternalHorizontalScrollBar->Enabled)
 					ExternalHorizontalScrollBar->Enabled = true;
 
-				ExternalVerticalScrollBar->Maximum = ScrollBarHeight;
-				ExternalVerticalScrollBar->Minimum = 0;
-				if (VerticalOffset >= 0 && VerticalOffset <= ScrollBarHeight)
-					ExternalVerticalScrollBar->Value = VerticalOffset;
-
 				ExternalHorizontalScrollBar->Maximum = ScrollBarWidth;
 				ExternalHorizontalScrollBar->Minimum = 0;
-				if (HorizontalOffset >= 0 && HorizontalOffset <= ScrollBarHeight)
-					ExternalHorizontalScrollBar->Value = HorizontalOffset;
+				ExternalHorizontalScrollBar->Value = 0;
+
+				if (HorizontalOffset < ExternalHorizontalScrollBar->Minimum)
+					HorizontalOffset = ExternalHorizontalScrollBar->Minimum;
+				else if (HorizontalOffset > ExternalHorizontalScrollBar->Maximum)
+					HorizontalOffset = ExternalHorizontalScrollBar->Maximum;
+
+				ExternalHorizontalScrollBar->Value = HorizontalOffset;
 
 				SynchronizingExternalScrollBars = false;
 			}
 
-			RTBitmap^ AvalonEditTextEditor::RenderFrameworkElement( System::Windows::FrameworkElement^ Element )
+			void AvalonEditTextEditor::ResetExternalScrollBars()
+			{
+				ExternalVerticalScrollBar->Maximum = 1;
+				ExternalVerticalScrollBar->Minimum = 0;
+				ExternalVerticalScrollBar->Value = 0;
+
+				ExternalHorizontalScrollBar->Maximum = 1;
+				ExternalHorizontalScrollBar->Minimum = 0;
+				ExternalHorizontalScrollBar->Value = 0;
+			}
+
+			RTBitmap^ AvalonEditTextEditor::RenderFrameworkElement(System::Windows::FrameworkElement^ Element)
 			{
 				double TopLeft = 0;
 				double TopRight = 0;
@@ -1018,7 +1041,7 @@ namespace cse
 				if ((E->KeyboardDevice->Modifiers & System::Windows::Input::ModifierKeys::Shift) == System::Windows::Input::ModifierKeys::Shift)
 					KeyState |= (int)Keys::Shift;
 
-				IntelliSenseKeyEventArgs^ TunneledArgs = gcnew IntelliSenseKeyEventArgs((Keys)KeyState);
+				IntelliSenseKeyDownEventArgs^ TunneledArgs = gcnew IntelliSenseKeyDownEventArgs((Keys)KeyState);
 				if (TextField->SelectionStart - 1 < 0 ||
 					GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1) ||
 					GetCharIndexInsideStringSegment(TextField->SelectionStart - 1))
@@ -1041,6 +1064,30 @@ namespace cse
 				{
 					// new operation, show all valid items
 					RaiseIntelliSenseShow(false, TunneledArgs->DisplayOperation);
+				}
+
+				return TunneledArgs->Handled;
+			}
+
+			bool AvalonEditTextEditor::RaiseIntelliSenseKeyUp(System::Windows::Input::KeyEventArgs^ E)
+			{
+				Debug::Assert(IsFocused == true);
+				Int32 KeyState = System::Windows::Input::KeyInterop::VirtualKeyFromKey(E->Key);
+
+				if ((E->KeyboardDevice->Modifiers & System::Windows::Input::ModifierKeys::Control) == System::Windows::Input::ModifierKeys::Control)
+					KeyState |= (int)Keys::Control;
+				if ((E->KeyboardDevice->Modifiers & System::Windows::Input::ModifierKeys::Alt) == System::Windows::Input::ModifierKeys::Alt)
+					KeyState |= (int)Keys::Alt;
+				if ((E->KeyboardDevice->Modifiers & System::Windows::Input::ModifierKeys::Shift) == System::Windows::Input::ModifierKeys::Shift)
+					KeyState |= (int)Keys::Shift;
+
+				KeyEventArgs^ TunneledArgs = gcnew KeyEventArgs((Keys)KeyState);
+				IntelliSenseKeyUp(this, TunneledArgs);
+
+				if (TunneledArgs->Handled)
+				{
+					HandleKeyEventForKey(E->Key);
+					E->Handled = true;
 				}
 
 				return TunneledArgs->Handled;
@@ -1357,8 +1404,9 @@ namespace cse
 				{
 					E->Handled = true;
 					KeyToPreventHandling = System::Windows::Input::Key::None;
-					return;
 				}
+				else if (RaiseIntelliSenseKeyUp(E))
+					E->Handled = true;
 			}
 
 			void AvalonEditTextEditor::TextField_MouseDown(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E)
@@ -3005,6 +3053,8 @@ namespace cse
 				LineTracker->ClearMessages(textEditors::IScriptTextEditor::ScriptMessageSource::None, textEditors::IScriptTextEditor::ScriptMessageType::None);
 				LineTracker->ClearBookmarks();
 				LineTracker->ClearFindResults(false);
+
+				ResetExternalScrollBars();
 
 				String^ Extracted = "";
 				String^ Metadata = "";

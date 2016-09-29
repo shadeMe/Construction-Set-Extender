@@ -78,6 +78,7 @@ namespace cse
 		_DefineJumpHdlr(PatchGetAsyncKeyStateB, 0x00427541, 0x00427593);
 		_DefineHookHdlr(UndoStackUndoOp3, 0x00431D98);
 		_DefineHookHdlr(UndoStackRedoOp3, 0x004328FA);
+		_DefineHookHdlr(MoveSelectionClampMul, 0x0042572C);
 
 #ifndef NDEBUG
 		void __stdcall DoTestHook1(int x, int y)
@@ -174,6 +175,7 @@ namespace cse
 			_MemHdlr(PatchGetAsyncKeyStateB).WriteJump();
 			_MemHdlr(UndoStackUndoOp3).WriteJump();
 			_MemHdlr(UndoStackRedoOp3).WriteJump();
+			_MemHdlr(MoveSelectionClampMul).WriteJump();
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -1505,6 +1507,29 @@ namespace cse
 				jmp		_hhGetVar(Retn)
 			BOOKEND:
 				jmp		_hhGetVar(Jump)
+			}
+		}
+
+		void __stdcall ClampMovementMulti(float* CameraDist)
+		{
+			if (*CameraDist > 5000.f)
+				*CameraDist = 5000.f;
+		}
+
+		#define _hhName		MoveSelectionClampMul
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00425734);
+			__asm
+			{
+				fstp    dword ptr[esp + 0x24]
+
+				lea		eax, [esp + 0x24]
+				push	eax
+				call	ClampMovementMulti
+
+				fld		dword ptr[esp + 0x24]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 	}

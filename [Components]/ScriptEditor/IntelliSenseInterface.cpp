@@ -29,7 +29,8 @@ namespace cse
 			Enabled = true;
 
 			ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceModel::ScriptEditorPreferences_Saved);
-			ParentEditorKeyDown = gcnew textEditors::IntelliSenseKeyEventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_KeyDown);
+			ParentEditorKeyDown = gcnew textEditors::IntelliSenseKeyDownEventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_KeyDown);
+			ParentEditorKeyUp = gcnew textEditors::IntelliSenseKeyUpEventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_KeyUp);
 			ParentEditorShowInterface = gcnew textEditors::IntelliSenseShowEventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_ShowInterface);
 			ParentEditorHideInterface = gcnew textEditors::IntelliSenseHideEventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_HideInterface);
 			ParentEditorRelocateInterface = gcnew textEditors::IntelliSensePositionEventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_RelocateInterface);
@@ -38,6 +39,7 @@ namespace cse
 
 			PREFERENCES->PreferencesSaved += ScriptEditorPreferencesSavedHandler;
 			ParentEditor->IntelliSenseKeyDown += ParentEditorKeyDown;
+			ParentEditor->IntelliSenseKeyUp += ParentEditorKeyUp;
 			ParentEditor->IntelliSenseShow += ParentEditorShowInterface;
 			ParentEditor->IntelliSenseHide += ParentEditorHideInterface;
 			ParentEditor->IntelliSenseRelocate += ParentEditorRelocateInterface;
@@ -51,6 +53,7 @@ namespace cse
 
 			PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
 			ParentEditor->IntelliSenseKeyDown -= ParentEditorKeyDown;
+			ParentEditor->IntelliSenseKeyUp -= ParentEditorKeyUp;
 			ParentEditor->IntelliSenseShow -= ParentEditorShowInterface;
 			ParentEditor->IntelliSenseHide -= ParentEditorHideInterface;
 			ParentEditor->IntelliSenseRelocate -= ParentEditorRelocateInterface;
@@ -58,6 +61,7 @@ namespace cse
 
 			SAFEDELETE_CLR(ScriptEditorPreferencesSavedHandler);
 			SAFEDELETE_CLR(ParentEditorKeyDown);
+			SAFEDELETE_CLR(ParentEditorKeyUp);
 			SAFEDELETE_CLR(ParentEditorShowInterface);
 			SAFEDELETE_CLR(ParentEditorHideInterface);
 			SAFEDELETE_CLR(ParentEditorRelocateInterface);
@@ -85,7 +89,7 @@ namespace cse
 			UseSubstringFiltering = PREFERENCES->FetchSettingAsInt("SubstringSearch", "IntelliSense") != 0;
 		}
 
-		void IntelliSenseInterfaceModel::ParentEditor_KeyDown(Object^ Sender, textEditors::IntelliSenseKeyEventArgs^ E)
+		void IntelliSenseInterfaceModel::ParentEditor_KeyDown(Object^ Sender, textEditors::IntelliSenseKeyDownEventArgs^ E)
 		{
 			Debug::Assert(Bound == true);
 			Enabled = true;
@@ -220,6 +224,25 @@ namespace cse
 			case Keys::PageDown:
 				if (BoundParent->Visible)
 					E->Handled = true;
+
+				break;
+			case Keys::LControlKey:
+			case Keys::RControlKey:
+				if (BoundParent->Visible)
+					BoundParent->DimOpacity();
+
+				break;
+			}
+		}
+
+		void IntelliSenseInterfaceModel::ParentEditor_KeyUp(Object^ Sender, KeyEventArgs^ E)
+		{
+			switch (E->KeyCode)
+			{
+			case Keys::LControlKey:
+			case Keys::RControlKey:
+				if (BoundParent->Visible)
+					BoundParent->ResetOpacity();
 
 				break;
 			}
@@ -533,10 +556,12 @@ namespace cse
 
 			ListViewSelectionChangedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceView::ListView_SelectionChanged);
 			ListViewKeyDownHandler = gcnew KeyEventHandler(this, &IntelliSenseInterfaceView::ListView_KeyDown);
+			ListViewKeyUpHandler = gcnew KeyEventHandler(this, &IntelliSenseInterfaceView::ListView_KeyUp);
 			ListViewItemActivateHandler = gcnew EventHandler(this, &IntelliSenseInterfaceView::ListView_ItemActivate);
 			ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceView::ScriptEditorPreferences_Saved);
 
 			ListView->KeyDown += ListViewKeyDownHandler;
+			ListView->KeyUp += ListViewKeyUpHandler;
 			ListView->ItemActivate += ListViewItemActivateHandler;
 			ListView->SelectedIndexChanged += ListViewSelectionChangedHandler;
 			PREFERENCES->PreferencesSaved += ScriptEditorPreferencesSavedHandler;
@@ -599,11 +624,13 @@ namespace cse
 			Debug::Assert(Bound == false);
 
 			ListView->KeyDown -= ListViewKeyDownHandler;
+			ListView->KeyUp -= ListViewKeyUpHandler;
 			ListView->ItemActivate -= ListViewItemActivateHandler;
 			ListView->SelectedIndexChanged -= ListViewSelectionChangedHandler;
 			PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
 
 			SAFEDELETE_CLR(ListViewKeyDownHandler);
+			SAFEDELETE_CLR(ListViewKeyUpHandler);
 			SAFEDELETE_CLR(ListViewItemActivateHandler);
 			SAFEDELETE_CLR(ListViewSelectionChangedHandler);
 			SAFEDELETE_CLR(ScriptEditorPreferencesSavedHandler);
@@ -662,6 +689,21 @@ namespace cse
 			case Keys::Enter:
 				ItemSelected(this, E);
 				Hide();
+				break;
+			case Keys::ControlKey:
+				DimOpacity();
+				break;
+			}
+		}
+
+		void IntelliSenseInterfaceView::ListView_KeyUp(Object^ Sender, KeyEventArgs^ E)
+		{
+			Debug::Assert(Bound == true);
+
+			switch (E->KeyCode)
+			{
+			case Keys::ControlKey:
+				ResetOpacity();
 				break;
 			}
 		}
@@ -748,6 +790,16 @@ namespace cse
 
 				break;
 			}
+		}
+
+		void IntelliSenseInterfaceView::DimOpacity()
+		{
+			Form->Opacity = DimmedOpacity;
+		}
+
+		void IntelliSenseInterfaceView::ResetOpacity()
+		{
+			Form->Opacity = 1.f;
 		}
 
 		void IntelliSenseInterfaceView::Update()

@@ -29,7 +29,7 @@ namespace cse
 			}
 		};
 
-		ref class IntelliSenseKeyEventArgs : public KeyEventArgs
+		ref class IntelliSenseKeyDownEventArgs : public KeyEventArgs
 		{
 		public:
 			property bool AllowForDisplay;
@@ -39,7 +39,7 @@ namespace cse
 			property bool Display;
 			property intellisense::IIntelliSenseInterfaceModel::Operation DisplayOperation;
 
-			IntelliSenseKeyEventArgs(Keys Data) : KeyEventArgs(Data)
+			IntelliSenseKeyDownEventArgs(Keys Data) : KeyEventArgs(Data)
 			{
 				Handled = false;
 				AllowForDisplay = true;
@@ -88,7 +88,8 @@ namespace cse
 
 		delegate void TextEditorScriptModifiedEventHandler(Object^ Sender, TextEditorScriptModifiedEventArgs^ E);
 		delegate void TextEditorMouseClickEventHandler(Object^ Sender, TextEditorMouseClickEventArgs^ E);
-		delegate void IntelliSenseKeyEventHandler(Object^ Sender, IntelliSenseKeyEventArgs^ E);
+		delegate void IntelliSenseKeyDownEventHandler(Object^ Sender, IntelliSenseKeyDownEventArgs^ E);
+		delegate void IntelliSenseKeyUpEventHandler(Object^ Sender, KeyEventArgs^ E);
 		delegate void IntelliSensePositionEventHandler(Object^ Sender, IntelliSensePositionEventArgs^ E);
 		delegate void IntelliSenseShowEventHandler(Object^ Sender, IntelliSenseShowEventArgs^ E);
 		delegate void IntelliSenseHideEventHandler(Object^ Sender, IntelliSenseHideEventArgs^ E);
@@ -179,7 +180,8 @@ namespace cse
 				}
 			};
 
-			event IntelliSenseKeyEventHandler^						IntelliSenseKeyDown;		// this has to be a separate event as we need to reliably return values from the handler
+			event IntelliSenseKeyDownEventHandler^						IntelliSenseKeyDown;		// this has to be a separate event as we need to reliably return values from the handler
+			event IntelliSenseKeyUpEventHandler^						IntelliSenseKeyUp;
 
 			// these events are raised as requests
 			event IntelliSenseShowEventHandler^						IntelliSenseShow;

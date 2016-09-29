@@ -140,6 +140,14 @@ public:
 	};
 	STATIC_ASSERT(sizeof(Scenegraph) == 0x20);
 
+	// not combined bitwise but stored mutually exclusively
+	enum
+	{
+		kDebugRenderPass_NoOfLights		= 1 << 0,
+		kDebugRenderPass_NoOfPasses		= 1 << 1,
+		kDebugRenderPass_Overdraw		= 1 << 2,
+	};
+
 	// methods
 	static bool								UpdateNode(NiAVObject* Node, UInt32 UpdateType, float Multiplier, bool UpdateOnSuccess = true);
 	static void								RotateNode(NiAVObject* Node, Vector3* Pivot, int XOffset, int YOffset, float SpeedMultiplier);

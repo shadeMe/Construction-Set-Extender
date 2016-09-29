@@ -179,6 +179,7 @@ namespace cse
 				void                                        TextEditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E);
 
 				bool										RaiseIntelliSenseKeyDown(System::Windows::Input::KeyEventArgs^ E);
+				bool										RaiseIntelliSenseKeyUp(System::Windows::Input::KeyEventArgs^ E);
 				void										RaiseIntelliSenseShow(bool DefaultOperation, intellisense::IIntelliSenseInterfaceModel::Operation NewOperation);
 				void										RaiseIntelliSenseHide(bool Reset);
 				void										RaiseIntelliSenseRelocate();
@@ -257,6 +258,7 @@ namespace cse
 				void										UpdateCodeFoldings();
 				void										UpdateSyntaxHighlighting(bool Regenerate);
 				void										SynchronizeExternalScrollBars();
+				void										ResetExternalScrollBars();
 
 				void										MoveTextSegment(AvalonEdit::Document::ISegment^ Segment, MoveSegmentDirection Direction);
 
@@ -319,7 +321,8 @@ namespace cse
 				}
 
 #pragma region Interfaces
-				virtual event IntelliSenseKeyEventHandler^					IntelliSenseKeyDown;
+				virtual event IntelliSenseKeyDownEventHandler^				IntelliSenseKeyDown;
+				virtual event IntelliSenseKeyUpEventHandler^				IntelliSenseKeyUp;
 				virtual event IntelliSenseShowEventHandler^					IntelliSenseShow;
 				virtual event IntelliSenseHideEventHandler^					IntelliSenseHide;
 				virtual event IntelliSensePositionEventHandler^				IntelliSenseRelocate;
