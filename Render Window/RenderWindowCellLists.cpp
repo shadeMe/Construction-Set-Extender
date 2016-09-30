@@ -201,96 +201,90 @@ namespace cse
 					if (ImGui::IsItemHovered())
 						ImGui::SetTooltip("Bookmark Current Cell");
 
-					if (Bookmarks.size())
+					ImGui::Columns(3, "BookmarkList", false);
+					{
+						ImGui::Separator();
+						ImGui::Text("EditorID"); ImGui::NextColumn();
+						ImGui::Text("Name"); ImGui::NextColumn();
+						ImGui::Text("Location"); ImGui::NextColumn();
+						ImGui::Separator();
+					}
+					ImGui::Columns();
+
+					ImGui::BeginChild("BookmarkList_child_frame", ImVec2(0, 165));
 					{
 						ImGui::Columns(3, "BookmarkList", false);
 						{
-							ImGui::Separator();
-							ImGui::Text("EditorID"); ImGui::NextColumn();
-							ImGui::Text("Name"); ImGui::NextColumn();
-							ImGui::Text("Location"); ImGui::NextColumn();
-							ImGui::Separator();
+							TESObjectCELL* ToRemove = nullptr;
+							for (auto Itr : Bookmarks)
+							{
+								CellListDialogResult Out;
+								AddCellToList(Itr, kList_Bookmark, Out);
+								if (Out.RemoveBookmark)
+								{
+									ToRemove = Out.Selection;
+									break;
+								}
+								else if (Out.SelectCell)
+								{
+									ToSelect = Out.Selection;
+									break;
+								}
+							}
+
+							if (ToRemove)
+								RemoveBookmark(ToRemove);
+
+							if (ToSelect)
+								OnSelectCell(ToSelect);
 						}
 						ImGui::Columns();
-
-						ImGui::BeginChild("BookmarkList_child_frame", ImVec2(0, 165));
-						{
-							ImGui::Columns(3, "BookmarkList", false);
-							{
-								TESObjectCELL* ToRemove = nullptr;
-								for (auto Itr : Bookmarks)
-								{
-									CellListDialogResult Out;
-									AddCellToList(Itr, kList_Bookmark, Out);
-									if (Out.RemoveBookmark)
-									{
-										ToRemove = Out.Selection;
-										break;
-									}
-									else if (Out.SelectCell)
-									{
-										ToSelect = Out.Selection;
-										break;
-									}
-								}
-
-								if (ToRemove)
-									RemoveBookmark(ToRemove);
-
-								if (ToSelect)
-									OnSelectCell(ToSelect);
-							}
-							ImGui::Columns();
-						}
-						ImGui::EndChild();
 					}
+					ImGui::EndChild();
 				}
 
 				if (ImGui::CollapsingHeader("Recently Visited", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					if (RecentlyVisited.size())
+					ImGui::Columns(3, "RecentsList", false);
+					{
+						ImGui::Separator();
+						ImGui::Text("EditorID"); ImGui::NextColumn();
+						ImGui::Text("Name"); ImGui::NextColumn();
+						ImGui::Text("Location"); ImGui::NextColumn();
+						ImGui::Separator();
+					}
+					ImGui::Columns();
+
+					ImGui::BeginChild("RecentsList_child_frame", ImVec2(0, 175));
 					{
 						ImGui::Columns(3, "RecentsList", false);
 						{
-							ImGui::Separator();
-							ImGui::Text("EditorID"); ImGui::NextColumn();
-							ImGui::Text("Name"); ImGui::NextColumn();
-							ImGui::Text("Location"); ImGui::NextColumn();
-							ImGui::Separator();
+							TESObjectCELL* ToAdd = nullptr;
+							for (auto Itr : RecentlyVisited)
+							{
+								CellListDialogResult Out;
+								AddCellToList(Itr, kList_Recents, Out);
+								if (Out.AddBookmark)
+								{
+									ToAdd = Out.Selection;
+									break;
+								}
+								else if (Out.SelectCell)
+								{
+									ToSelect = Out.Selection;
+									break;
+								}
+							}
+
+							if (ToAdd)
+								AddBookmark(ToAdd);
+
+							if (ToSelect)
+								OnSelectCell(ToSelect);
 						}
 						ImGui::Columns();
-
-						ImGui::BeginChild("RecentsList_child_frame", ImVec2(0, 175));
-						{
-							ImGui::Columns(3, "RecentsList", false);
-							{
-								TESObjectCELL* ToAdd = nullptr;
-								for (auto Itr : RecentlyVisited)
-								{
-									CellListDialogResult Out;
-									AddCellToList(Itr, kList_Recents, Out);
-									if (Out.AddBookmark)
-									{
-										ToAdd = Out.Selection;
-										break;
-									}
-									else if (Out.SelectCell)
-									{
-										ToSelect = Out.Selection;
-										break;
-									}
-								}
-
-								if (ToAdd)
-									AddBookmark(ToAdd);
-
-								if (ToSelect)
-									OnSelectCell(ToSelect);
-							}
-							ImGui::Columns();
-						}
-						ImGui::EndChild();
 					}
+					ImGui::EndChild();
 				}
 			}
 			ImGui::EndChild();

@@ -81,6 +81,7 @@ namespace cse
 			Buffer[Size - 1] = '\0';
 	}
 
+
 	namespace log
 	{
 		namespace scriptEditor

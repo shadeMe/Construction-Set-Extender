@@ -51,6 +51,24 @@ namespace cse
 	{
 		namespace avalonEditor
 		{
+
+			System::Windows::Point TransformToPixels(double X, double Y)
+			{
+				// get DPI independent coords
+				Windows::Point Result(X, Y);
+				System::Drawing::Graphics^ g = System::Drawing::Graphics::FromHwnd(IntPtr::Zero);
+				Result.X = (g->DpiX / 96) * Result.X;
+				Result.Y = (g->DpiY / 96) * Result.Y;
+				delete g;
+
+				return Result;
+			}
+
+			System::Windows::Point TransformToPixels(System::Windows::Point In)
+			{
+				return TransformToPixels(In.X, In.Y);
+			}
+
 			void ILineBackgroundColorizer::RenderBackground(TextView^ Destination,
 															System::Windows::Media::DrawingContext^ DrawingContext,
 															int StartOffset,
@@ -1702,7 +1720,7 @@ namespace cse
 				ToolTipIcon PopupIcon = ToolTipIcon::None;
 				String^ PopupTitle = "";
 				String^ PopupText = "";
-				Windows::Point DisplayLocation = E->GetPosition(Parent);
+				Windows::Point DisplayLocation = TransformToPixels(E->GetPosition(Parent));
 				DisplayLocation.Y += GetVisualLineFromMousePosition(E)->Height;
 
 				List<ScriptMessage^>^ Warnings = gcnew List < ScriptMessage^ >;

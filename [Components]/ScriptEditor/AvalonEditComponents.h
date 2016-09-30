@@ -35,6 +35,10 @@ namespace cse
 	{
 		namespace avalonEditor
 		{
+
+			System::Windows::Point TransformToPixels(double X, double Y);		// device-independent to pixels
+			System::Windows::Point TransformToPixels(System::Windows::Point In);
+
 			ref class AvalonEditTextEditor;
 			ref class LineTrackingManager;
 

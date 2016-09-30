@@ -1446,7 +1446,7 @@ namespace cse
 				if (ViewLocation.HasValue)
 				{
 					int Offset = TextField->Document->GetOffset(ViewLocation.Value.Line, ViewLocation.Value.Column);
-					ShowInsightPopup(Offset, E->GetPosition(TextField));
+					ShowInsightPopup(Offset, TransformToPixels(E->GetPosition(TextField)));
 				}
 			}
 
@@ -2715,6 +2715,8 @@ namespace cse
 				{
 					AvalonEdit::Document::TextLocation Location = TextField->Document->GetLocation(Index);
 					Windows::Point Result = TextField->TextArea->TextView->GetVisualPosition(AvalonEdit::TextViewPosition(Location), AvalonEdit::Rendering::VisualYPosition::TextTop) - TextField->TextArea->TextView->ScrollOffset;
+
+					Result = TransformToPixels(Result.X, Result.Y);
 					return Point(Result.X, Result.Y);
 				}
 			}

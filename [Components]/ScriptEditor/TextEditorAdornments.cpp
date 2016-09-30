@@ -100,7 +100,12 @@ namespace cse
 		void ScopeBreadcrumbManager::CreateNewCrumb(obScriptParsing::Structurizer::Node^ Source, DevComponents::DotNetBar::CrumbBarItem^ Parent, bool EnumerateChildren)
 		{
 			DotNetBar::CrumbBarItem^ NewItem = gcnew DotNetBar::CrumbBarItem();
-			NewItem->Text = Source->Description;
+			String^ LineText = Source->Description;
+			if (LineText->Length > 35)
+				LineText = LineText->Substring(0, 35) + "...";
+
+			NewItem->Text = LineText;
+			NewItem->Tooltip = Source->Description;
 			NewItem->Tag = gcnew CrumbData(BoundParent, Source);
 			NewItem->Image = GetScopeIcon(Source->Type);
 
