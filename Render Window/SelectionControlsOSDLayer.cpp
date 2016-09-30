@@ -161,7 +161,7 @@ namespace cse
 			{
 				if (_RENDERSEL->selectionCount)
 				{
-					// recording just once crashes the editor. also, this code only seems to support undos
+					// also, this code only seems to support undos
 					// ### investigate
 					_RENDERUNDO->RecordReference(TESRenderWindow::UndoStack::kUndoOperation_RefChange3D, _RENDERSEL->selectionList);
 					_RENDERUNDO->RecordReference(TESRenderWindow::UndoStack::kUndoOperation_RefChange3D, _RENDERSEL->selectionList);

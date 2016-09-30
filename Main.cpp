@@ -54,6 +54,7 @@ namespace cse
 		RegisterRelease(7, 0, "Patagonian Petticoat");
 		RegisterRelease(7, 1, "Bull-buggering Bollocks");
 		RegisterRelease(8, 0, "Dead Dove");
+		RegisterRelease(8, 1, "Logical Half Nelson");
 	}
 
 	ReleaseNameTable::~ReleaseNameTable()
@@ -141,7 +142,8 @@ namespace cse
 
 		BGSEECONSOLE_MESSAGE("Initializing UI Manager");
 		BGSEECONSOLE->Indent();
-		bool ComponentInitialized = bgsee::UIManager::Initialize("TES Construction Set", LoadMenu(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDR_MAINMENU)));
+		bool ComponentInitialized = bgsee::UIManager::Initialize("TES Construction Set",
+																 LoadMenu(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDR_MAINMENU)));
 		BGSEECONSOLE->Exdent();
 
 		if (ComponentInitialized == false)
@@ -323,13 +325,6 @@ namespace cse
 		}
 
 		BGSEEACHIEVEMENTS->Unlock(achievements::kHappyBDayMoi, false, false, true);
-
-		char UsernameBuffer[0x200] = { 0 };
-		DWORD UsernameSize = sizeof(UsernameBuffer);
-		GetUserName(UsernameBuffer, &UsernameSize);
-
-		if (!_stricmp(UsernameBuffer, "shadeMe"))
-			shadeMeMode = true;
 
 #ifndef NDEBUG
 		if (shadeMeMode == false)
@@ -650,6 +645,13 @@ extern "C"
 		if (obse->isEditor == false)
 			return false;
 
+		char UsernameBuffer[0x200] = { 0 };
+		DWORD UsernameSize = sizeof(UsernameBuffer);
+		GetUserName(UsernameBuffer, &UsernameSize);
+
+		if (!_stricmp(UsernameBuffer, "shadeMe"))
+			shadeMeMode = true;
+
 		SME::MersenneTwister::init_genrand(GetTickCount());
 		if (SME::MersenneTwister::genrand_real1() < 0.05)
 			IsWarholAGenius = true;
@@ -691,7 +693,15 @@ extern "C"
 #endif
 
 		bool ComponentInitialized = bgsee::Main::Initialize(InitParams);
-		SME_ASSERT(ComponentInitialized);
+		if (ComponentInitialized == false)
+		{
+			MessageBox(nullptr,
+					   "The Construction Set Extender failed to initialize correctly!\n\nCouldn't initialize main module.",
+					   "Fatal Error",
+					   MB_TASKMODAL | MB_SETFOREGROUND | MB_ICONERROR | MB_OK);
+
+			return false;
+		}
 
 		BGSEEDAEMON->RegisterInitCallback(bgsee::Daemon::kInitCallback_Query, new InitCallbackQuery(obse));
 		BGSEEDAEMON->RegisterInitCallback(bgsee::Daemon::kInitCallback_Load, new InitCallbackLoad(obse));
