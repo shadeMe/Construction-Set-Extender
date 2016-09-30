@@ -229,7 +229,10 @@ namespace cse
 			{
 				ImGui::Columns(2, "ref_table_header", false);
 				{
-					ImGui::TextWrapped("Active Layer: %s", ActiveLayer->GetName());
+					ImGui::TextWrapped("Active Layer: %s (?)", ActiveLayer->GetName());
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip("Newly created references are added to this layer.\n\nRight click on a layer to show the context menu.\nTo remove references from a layer, add them to the Default layer.");
+
 					ImGui::NextColumn();
 
 					if (ImGui::Button(ICON_MD_ADD_TO_PHOTOS "##newlayer_btn"))
@@ -269,7 +272,11 @@ namespace cse
 						ImGui::Text("Name"); ImGui::NextColumn();
 						ImGui::Text("Count"); ImGui::NextColumn();
 						ImGui::Text(" " ICON_MD_VISIBILITY); ImGui::NextColumn();
+						if (ImGui::IsItemHovered())
+							ImGui::SetTooltip("Visible");
 						ImGui::Text(" " ICON_MD_LOCK_OUTLINE); ImGui::NextColumn();
+						if (ImGui::IsItemHovered())
+							ImGui::SetTooltip("Frozen");
 						ImGui::Separator();
 					}
 					ImGui::Columns();
@@ -311,7 +318,11 @@ namespace cse
 							ImGui::Text("Name"); ImGui::NextColumn();
 							ImGui::Text("Count"); ImGui::NextColumn();
 							ImGui::Text(" " ICON_MD_VISIBILITY); ImGui::NextColumn();
+							if (ImGui::IsItemHovered())
+								ImGui::SetTooltip("Visible");
 							ImGui::Text(" " ICON_MD_LOCK_OUTLINE); ImGui::NextColumn();
+							if (ImGui::IsItemHovered())
+								ImGui::SetTooltip("Frozen");
 							ImGui::Separator();
 						}
 						ImGui::Columns();
@@ -485,5 +496,13 @@ namespace cse
 				return DefaultLayer->IsFrozen();
 		}
 
+		const char* RenderWindowLayerManager::GetParentLayerName(TESObjectREFR* Ref) const
+		{
+			Layer* Parent = static_cast<Layer*>(GetParentCollection(Ref));
+			if (Parent)
+				return Parent->GetName();
+			else
+				return nullptr;
+		}
 	}
 }

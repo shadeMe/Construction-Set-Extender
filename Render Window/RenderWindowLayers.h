@@ -80,6 +80,7 @@ namespace cse
 
 			bool				IsParentLayerVisible(TESObjectREFR* Ref) const;		// if the ref has no parent layer, returns the state of the Default layer
 			bool				IsParentLayerFrozen(TESObjectREFR* Ref) const;		// ditto
+			const char*			GetParentLayerName(TESObjectREFR* Ref) const;		// returns nullptr if the ref has no parent layer
 		};
 	}
 }

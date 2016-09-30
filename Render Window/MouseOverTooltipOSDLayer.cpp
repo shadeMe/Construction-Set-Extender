@@ -61,7 +61,12 @@ namespace cse
 				if (ParentGroup)
 					FORMAT_STR(RefGroupBuffer, "\nGroup: %s", ParentGroup);
 
-				FORMAT_STR(Buffer, "%s%s%08X%s%s %s%s%s",
+				char RefLayerBuffer[0x50] = { 0 };
+				const char* ParentLayer = _RENDERWIN_MGR.GetLayerManager()->GetParentLayerName(Ref);
+				if (ParentLayer)
+					FORMAT_STR(RefLayerBuffer, "\nLayer: %s", ParentLayer);
+
+				FORMAT_STR(Buffer, "%s%s%08X%s%s %s%s%s%s",
 						(Ref->GetEditorID() ? Ref->GetEditorID() : ""),
 						   (Ref->GetEditorID() ? "(" : ""),
 						   Ref->formID,
@@ -69,7 +74,8 @@ namespace cse
 						   Ref->IsActive() ? "*" : "",
 						   BaseBuffer,
 						   xBuffer,
-						   RefGroupBuffer);
+						   RefGroupBuffer,
+						   RefLayerBuffer);
 			}
 			else
 			{
