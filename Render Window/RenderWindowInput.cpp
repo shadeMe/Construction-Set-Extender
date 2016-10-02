@@ -1330,6 +1330,9 @@ namespace cse
 
 			void RenderWindowMouseManager::ToggleFreeMouseMovement(HWND hWnd, bool State)
 			{
+				if (settings::renderer::kUnrestrictedMouseMovement().i == 0)
+					return;
+
 				if (State)
 				{
 					if (FreeMouseMovement == false)
@@ -1340,8 +1343,6 @@ namespace cse
 						CenterCursor(hWnd, true);
 						while (ShowCursor(FALSE) > 0)
 							;//
-
-						ToggleCellViewUpdate(false);
 					}
 				}
 				else
@@ -1353,8 +1354,6 @@ namespace cse
 						SetCursorPos(MouseDownCursorPos.x, MouseDownCursorPos.y);
 						while (ShowCursor(TRUE) < 0)
 							;//
-
-						ToggleCellViewUpdate(true);
 					}
 				}
 			}
@@ -1362,6 +1361,7 @@ namespace cse
 			void RenderWindowMouseManager::HandleFreeMouseMovementKeyEvent(UInt8 Type)
 			{
 				ToggleFreeMouseMovement(*TESRenderWindow::WindowHandle, Type == HoldableKeyHandler::kEvent_KeyDown);
+				ToggleCellViewUpdate(Type != HoldableKeyHandler::kEvent_KeyDown);
 			}
 
 			RenderWindowMouseManager::RenderWindowMouseManager() :
@@ -1612,10 +1612,10 @@ namespace cse
 						{
 							// begin free movement handling
 							ToggleFreeMouseMovement(hWnd, true);
+							ToggleCellViewUpdate(false);
 						}
 					}
-
-					if (*TESRenderWindow::LandscapeEditFlag)
+					else if (*TESRenderWindow::LandscapeEditFlag)
 						ToggleCellViewUpdate(false);
 
 					break;
@@ -1650,8 +1650,7 @@ namespace cse
 
 					// end free movement handling
 					ToggleFreeMouseMovement(hWnd, false);
-					if (*TESRenderWindow::LandscapeEditFlag)
-						ToggleCellViewUpdate(true);
+					ToggleCellViewUpdate(true);
 
 					break;
 				}

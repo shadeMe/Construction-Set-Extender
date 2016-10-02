@@ -78,6 +78,7 @@ namespace cse
 			extern INISetting					kPathGridLinkedRefIndicatorFlags;
 			extern INISetting					kGrassOverlayTexturePath;
 			extern INISetting					kNotifyOnInvalidExecutionContext;
+			extern INISetting					kUnrestrictedMouseMovement;
 
 			enum
 			{
