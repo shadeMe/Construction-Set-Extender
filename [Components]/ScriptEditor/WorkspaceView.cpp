@@ -439,6 +439,7 @@ namespace cse
 			ListView->BorderStyle = BorderStyle::None;
 			ListView->Size = Size(285, 89);
 			ListView->SmallImageList = gcnew ImageList();
+			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("MessageListError"));
 			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("OutlineViewVariables"));
 			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("OutlineViewScriptBlock"));
 			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("OutlineViewConditionalBlock"));
