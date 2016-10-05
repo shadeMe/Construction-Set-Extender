@@ -1051,6 +1051,12 @@ namespace cse
 						AUXVIEWPORT->Draw(nullptr, nullptr);
 					}
 
+					if (Instance.IsRenderingScene())
+					{
+						// consume the message as the previous render call isn't done yet
+						Return = true;
+					}
+
 					break;
 				}
 

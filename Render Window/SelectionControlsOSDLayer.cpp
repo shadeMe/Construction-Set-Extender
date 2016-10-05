@@ -198,7 +198,7 @@ namespace cse
 
 							ImGui::PopStyleColor(3);
 							ImGui::End();
-							ImGui::PopStyleVar(2);
+							ImGui::PopStyleVar();
 							return;
 						}
 						ImGui::SameLine();
