@@ -1,5 +1,6 @@
 #include "DefaultOverlayOSDLayer.h"
 #include "Render Window\RenderWindowManager.h"
+#include "IconFontCppHeaders\IconsMaterialDesign.h"
 
 namespace cse
 {
@@ -73,7 +74,31 @@ namespace cse
 						}
 						ImGui::SetTooltip("Geometry:\n%s", Extract.c_str());
 					}
-					ImGui::Text("%s  ", Buffer); ImGui::NextColumn();
+					ImGui::Text("%s  ", Buffer);
+// 					const char* EditModeIcon = nullptr;
+// 					const char* EditModeLabel = nullptr;
+//
+// 					if (*TESRenderWindow::PathGridEditFlag)
+// 					{
+// 						EditModeIcon = " " ICON_MD_LINEAR_SCALE;
+// 						EditModeLabel = "Path Grid";
+// 					}
+// 					else if (*TESRenderWindow::LandscapeEditFlag)
+// 					{
+// 						EditModeIcon = " " ICON_MD_LANDSCAPE;
+// 						EditModeLabel = "Landscape";
+// 					}
+// 					else
+// 					{
+// 						EditModeIcon = " " ICON_MD_PERSON;
+// 						EditModeLabel = "Reference";
+// 					}
+//
+// 					ImGui::SameLine(0, 5);
+// 					ImGui::Text("%s  ", EditModeIcon);
+// 					if (ImGui::IsItemHovered())
+// 						ImGui::SetTooltip("%s Edit Mode", EditModeLabel);
+					ImGui::NextColumn();
 
 					ImGui::Text("Camera:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
 					ImGui::Text("%.0f, %0.f, %0.f  ", CameraCoords->x, CameraCoords->y, CameraCoords->z); ImGui::NextColumn();

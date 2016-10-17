@@ -1951,8 +1951,5 @@ namespace cse
 		{
 			_RENDERWIN_MGR.Deinitialize();
 		}
-
-
-
 	}
 }

@@ -347,31 +347,31 @@ namespace cse
 				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImColor::HSV(4 / 7.0f, 0.7f, 0.5f));
 				ImGui::PushStyleColor(ImGuiCol_SliderGrab, ImColor::HSV(4 / 7.0f, 0.9f, 0.9f));
 				{
-					ImGui::VSliderFloat("##cam_pan", ImVec2(18, 160), &CamPan, 0.01f, 5.0f, "");
+					ImGui::VSliderFloat("##cam_pan", ImVec2(18, 160), &CamPan, 0.01f, 10.0f, "");
 					if (ImGui::IsItemActive() || ImGui::IsItemHovered())
 						ImGui::SetTooltip("%.3f", CamPan);
 
 					ImGui::SameLine(0, 10);
 
-					ImGui::VSliderFloat("##cam_zoom", ImVec2(18, 160), &CamZoom, 0.01f, 5.0f, "");
+					ImGui::VSliderFloat("##cam_zoom", ImVec2(18, 160), &CamZoom, 0.01f, 10.0f, "");
 					if (ImGui::IsItemActive() || ImGui::IsItemHovered())
 						ImGui::SetTooltip("%.3f", CamZoom);
 
 					ImGui::SameLine(0, 10);
 
-					ImGui::VSliderFloat("##cam_rot", ImVec2(18, 160), &CamRot, 0.01f, 5.0f, "");
+					ImGui::VSliderFloat("##cam_rot", ImVec2(18, 160), &CamRot, 0.01f, 10.0f, "");
 					if (ImGui::IsItemActive() || ImGui::IsItemHovered())
 						ImGui::SetTooltip("%.3f", CamRot);
 
 					ImGui::SameLine(0, 40);
 
-					ImGui::VSliderFloat("##ref_mov", ImVec2(18, 160), &RefMov, 0.01f, 5.0f, "");
+					ImGui::VSliderFloat("##ref_mov", ImVec2(18, 160), &RefMov, 0.01f, 10.0f, "");
 					if (ImGui::IsItemActive() || ImGui::IsItemHovered())
 						ImGui::SetTooltip("%.3f", RefMov);
 
 					ImGui::SameLine(0, 10);
 
-					ImGui::VSliderFloat("##ref_rot", ImVec2(18, 160), &RefRot, 0.01f, 5.0f, "");
+					ImGui::VSliderFloat("##ref_rot", ImVec2(18, 160), &RefRot, 0.01f, 10.0f, "");
 					if (ImGui::IsItemActive() || ImGui::IsItemHovered())
 						ImGui::SetTooltip("%.3f", RefRot);
 				}

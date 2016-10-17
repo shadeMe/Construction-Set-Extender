@@ -1083,7 +1083,7 @@ namespace cse
 
 				Shared.MoveCameraWithSelection = RegisterHoldableHandler("5AE9F3BA-A336-450C-89B5-C278294A97C1",
 																		 "Move Camera With References",
-																		 "",
+																		 "Fixes the camera position to the selection when moving references.",
 																		 BasicKeyBinding('N'));
 
 				LoadFromINI();

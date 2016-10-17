@@ -40,3 +40,4 @@ BuildInfo.h
 
 .gitattributes
 *.tmp
+*.psess
