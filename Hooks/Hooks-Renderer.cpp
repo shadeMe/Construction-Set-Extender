@@ -69,7 +69,6 @@ namespace cse
 		_DefineHookHdlr(TESPathGridGenerateNiNode, 0x0054EE0D);
 		_DefineHookHdlr(CenterCameraOnRefSelection, 0x00428E35);
 		_DefineHookHdlr(TopCameraOnRefSelection, 0x00428FB8);
-		_DefineJumpHdlr(RenderWindowMouseMoveHandler, 0x0042BD88, 0x0042BD8E);
 		_DefineHookHdlr(TESRenderRotateSelectionWorldA, 0x00425F16);
 		_DefineHookHdlr(TESRenderRotateSelectionWorldB, 0x00426043);
 		_DefineHookHdlr(RotateCameraDrag, 0x0042CBFD);
@@ -81,33 +80,27 @@ namespace cse
 		_DefineHookHdlr(MoveSelectionClampMul, 0x0042572C);
 
 #ifndef NDEBUG
-		void __stdcall DoTestHook1(int x, int y)
+		void __stdcall DoTestHook1()
 		{
-			BGSEECONSOLE_MESSAGE("Offset x,y: %d,%d", x, y);
+			BGSEECONSOLE_MESSAGE("MOVE CALL!");
 		}
 
 		#define _hhName		TestHook1
 		_hhBegin()
 		{
-			_hhSetVar(Retn, 0x0042CB63);
-			_hhSetVar(Call, 0x00425670);
+			_hhSetVar(Retn, 0x00425676);
 			__asm
 			{
 				pushad
-				push edi
-				push ebx
-				call DoTestHook1
+				call	DoTestHook1
 				popad
 
-				push edi
-				push ebx
-				push eax
-				call _hhGetVar(Call)
-
+				sub     esp, 114h
 				jmp		_hhGetVar(Retn)
 			}
 		}
-		_DefineHookHdlr(TestHook1, 0x0042CB5B);
+	//	_DefineJumpHdlr(TestHook1, 0x004262BF, 0x004262D3);
+		_DefineHookHdlr(TestHook1, 0x00425670);
 #endif
 
 		void PatchRendererHooks(void)
@@ -166,7 +159,6 @@ namespace cse
 			_MemHdlr(TESPathGridGenerateNiNode).WriteJump();
 			_MemHdlr(CenterCameraOnRefSelection).WriteJump();
 			_MemHdlr(TopCameraOnRefSelection).WriteJump();
-			_MemHdlr(RenderWindowMouseMoveHandler).WriteJump();
 			_MemHdlr(TESRenderRotateSelectionWorldA).WriteJump();
 			_MemHdlr(TESRenderRotateSelectionWorldB).WriteJump();
 			_MemHdlr(RotateCameraDrag).WriteJump();

@@ -7,6 +7,7 @@ namespace cse
 	{
 		class RenderWindowOSD;
 		class IRenderWindowOSDLayer;
+		class RenderWindowManager;
 
 		class ImGuiDX9
 		{
@@ -103,7 +104,7 @@ namespace cse
 			bool			Initialize();
 			void			Deinitialize();
 
-			bool			HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true if the message was consumed
+			bool			HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, RenderWindowManager* Manager);		// returns true if the message was consumed
 			void			Draw();			// draws the attached layers
 			void			Render();		// rendered the queued draw calls from the last Draw() call
 

@@ -62,7 +62,6 @@ namespace cse
 		_DeclareMemHdlr(TESPathGridGenerateNiNode, "");
 		_DeclareMemHdlr(CenterCameraOnRefSelection, "adds a sanity check for non-reference forms in the selection when centering or 'topping' the camera");
 		_DeclareMemHdlr(TopCameraOnRefSelection, "");
-		_DeclareMemHdlr(RenderWindowMouseMoveHandler, "allows the handler to be triggered even when the viewport is 'dirty'");
 		_DeclareMemHdlr(TESRenderRotateSelectionWorldA, "fixes a bug that prevented the rotation of multiple refs in their local axes");
 		_DeclareMemHdlr(TESRenderRotateSelectionWorldB, "");
 		_DeclareMemHdlr(RotateCameraDrag, "prevent the shift key from rotating the camera when lasso'ing, and add support for a custom camera pivot");

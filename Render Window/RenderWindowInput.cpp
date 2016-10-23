@@ -1360,6 +1360,9 @@ namespace cse
 
 			void RenderWindowMouseManager::HandleFreeMouseMovementKeyEvent(UInt8 Type)
 			{
+				if (GetAsyncKeyState(VK_MBUTTON) || GetAsyncKeyState(VK_LBUTTON) || GetAsyncKeyState(VK_RBUTTON))
+					return;
+
 				ToggleFreeMouseMovement(*TESRenderWindow::WindowHandle, Type == HoldableKeyHandler::kEvent_KeyDown);
 				ToggleCellViewUpdate(Type != HoldableKeyHandler::kEvent_KeyDown);
 			}
@@ -1370,7 +1373,8 @@ namespace cse
 				SelectionPaintingMode(kSelectionPainting_NotSet),
 				MouseDownCursorPos{ 0 },
 				FreeMouseMovement(false),
-				CellViewUpdatesDeferred(false)
+				CellViewUpdatesDeferred(false),
+				TransformingSelection(false)
 			{
 				;//
 			}
@@ -1473,6 +1477,12 @@ namespace cse
 
 						if (FreeMouseMovement && IsCenteringCursor(hWnd, lParam))
 							break;
+						else if (MouseDelta.x == 0 && MouseDelta.y == 0)
+						{
+							// windows sends suprious WM_MOUSEMOVE messages even if the mouse didn't actually (because Windows)
+							// we need to consume it and break early or we'll be calling the original handler unnecessarily
+							break;
+						}
 
 						_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
 						_RENDERWIN_XSTATE.CurrentMousePathGridPoint = nullptr;
@@ -1550,7 +1560,20 @@ namespace cse
 						}
 
 						// tunnel the message
+						// ### HACK! workaround for the as-yet unexplainable performance penalty incurred when the viewport is flagged for update and then the vanilla handler is called
+						UInt8 UpdateFlagBuffer = *TESRenderWindow::RefreshFlag;
+						bool OverrideHandler = false;
+						if (TransformingSelection == false)
+							OverrideHandler = true;
+
+						// reset the update flag so to workaround the vanilla handler's short-circuited exit
+						if (OverrideHandler)
+							*TESRenderWindow::RefreshFlag = 0;
+
 						BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, wParam, lParam);
+
+						if (OverrideHandler)
+							*TESRenderWindow::RefreshFlag = UpdateFlagBuffer;
 
 						if (MoveCameraWithSel)
 						{
@@ -1604,7 +1627,9 @@ namespace cse
 																_RENDERWIN_XSTATE.CurrentMousePathGridPoint &&
 																GetCapture() == hWnd &&
 																uMsg == WM_LBUTTONDOWN;
-					if (*TESRenderWindow::DraggingSelection || *TESRenderWindow::RotatingSelection || _RENDERWIN_XSTATE.DraggingPathGridPoints)
+					TransformingSelection = *TESRenderWindow::DraggingSelection || *TESRenderWindow::RotatingSelection || _RENDERWIN_XSTATE.DraggingPathGridPoints;
+
+					if (TransformingSelection)
 					{
 						// landscape edit mode isn't supported as the land coords are calculated from the mouse coords, not their offset
 						SME_ASSERT(*TESRenderWindow::LandscapeEditFlag == 0);
@@ -1646,6 +1671,8 @@ namespace cse
 					}
 
 					_RENDERWIN_XSTATE.DraggingPathGridPoints = false;
+					TransformingSelection = false;
+
 					BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, wParam, lParam);
 
 					// end free movement handling
@@ -1661,6 +1688,11 @@ namespace cse
 			bool RenderWindowMouseManager::IsPaintingSelection() const
 			{
 				return PaintingSelection;
+			}
+
+			bool RenderWindowMouseManager::IsTransformingSelection() const
+			{
+				return TransformingSelection;
 			}
 		}
 	}

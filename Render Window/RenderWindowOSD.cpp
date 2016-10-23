@@ -733,9 +733,10 @@ namespace cse
 			Initialized = false;
 		}
 
-		bool RenderWindowOSD::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+		bool RenderWindowOSD::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, RenderWindowManager* Manager)
 		{
 			bool Handled = false;
+			bool Update = false;
 
 			// do nothing if we're still rendering the previous frame
 			if (RenderingLayers)
@@ -747,8 +748,6 @@ namespace cse
 				State.MouseHoveringOSD = Pipeline->IsHoveringWindow();
 				if (GetCapture() != hWnd && GetActiveWindow() == hWnd)
 				{
-					TESRenderWindow::Redraw();
-
 					// consume all input if we have modal windows open
 					if (ModalWindowProviderOSDLayer::Instance.HasOpenModals())
 					{
@@ -810,15 +809,15 @@ namespace cse
 				// main render loop
 				if (wParam == TESRenderWindow::kTimer_ViewportUpdate && *TESRenderWindow::ActiveCell)
 				{
-					// refresh the viewport if the mouse is in the client area or if any of the layers need a background update
+					// refresh the viewport if any of the layers need a background update
 					if (State.MouseInClientArea || NeedsBackgroundUpdate())
 					{
-						TESRenderWindow::Redraw();
+						Update = true;
 						State.RedrawSingleFrame = true;
 					}
 					else if (State.RedrawSingleFrame)
 					{
-						TESRenderWindow::Redraw();
+						Update = true;
 						State.RedrawSingleFrame = false;
 					}
 				}
@@ -828,6 +827,15 @@ namespace cse
 
 			if (Handled == false)
 				Handled = NeedsInput(uMsg);
+
+			if (Handled)
+				Update = true;
+
+			if (Update)
+			{
+				if (Manager->GetMouseInputManager()->IsTransformingSelection() == false)
+					TESRenderWindow::Redraw();
+			}
 
 			return Handled;
 		}

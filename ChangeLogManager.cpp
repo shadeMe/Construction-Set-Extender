@@ -69,12 +69,24 @@ namespace cse
 			switch (Args->EventType)
 			{
 			case events::TESFormEventData::kType_Instantiation:
+				if (settings::versionControl::kLogInstantiation().i == 0)
+					break;
+
 				BGSEECHANGELOG->RecordChange("%s\t[%08X]\t%s\tInstantiated", Form->GetTypeIDString(), Form->formID, Form->editorID.c_str());
 				break;
 			case events::TESFormEventData::kType_SetActive:
+				if (settings::versionControl::kLogChangeSetActive().i == 0)
+					break;
 			case events::TESFormEventData::kType_SetDeleted:
+				if (settings::versionControl::kLogChangeSetDeleted().i == 0)
+					break;
 			case events::TESFormEventData::kType_SetFormID:
+				if (settings::versionControl::kLogChangeSetFormID().i == 0)
+					break;
 			case events::TESFormEventData::kType_SetEditorID:
+				if (settings::versionControl::kLogChangeSetEditorID().i == 0)
+					break;
+
 				if (Form->IsTemporary() == false && TESDataHandler::PluginLoadSaveInProgress == false)
 				{
 					switch (Args->EventType)

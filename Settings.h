@@ -126,6 +126,11 @@ namespace cse
 		namespace versionControl
 		{
 			extern INISetting					kBackupOnSave;
+			extern INISetting					kLogInstantiation;
+			extern INISetting					kLogChangeSetActive;
+			extern INISetting					kLogChangeSetDeleted;
+			extern INISetting					kLogChangeSetFormID;
+			extern INISetting					kLogChangeSetEditorID;
 		}
 	}
 }

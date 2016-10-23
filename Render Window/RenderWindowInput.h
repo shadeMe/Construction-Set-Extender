@@ -340,6 +340,7 @@ namespace cse
 				POINT				MouseDownCursorPos;
 				bool				FreeMouseMovement;
 				bool				CellViewUpdatesDeferred;
+				bool				TransformingSelection;
 
 				POINT				CenterCursor(HWND hWnd, bool UpdateBaseCoords);			// returns the center coords (in screen area)
 				bool				IsCenteringCursor(HWND hWnd, LPARAM lParam) const;
@@ -354,7 +355,9 @@ namespace cse
 				void				Deinitialize();
 
 				bool				HandleInput(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, RenderWindowManager* Manager);		// returns true if input was handled/consumed
+
 				bool				IsPaintingSelection() const;
+				bool				IsTransformingSelection() const;
 			};
 		}
 	}

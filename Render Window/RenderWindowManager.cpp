@@ -986,7 +986,7 @@ namespace cse
 				// do nothing if the fly camera is active
 				return DlgProcResult;
 			}
-			else if (Instance.OSD->HandleMessage(hWnd, uMsg, wParam, lParam))
+			else if (Instance.OSD->HandleMessage(hWnd, uMsg, wParam, lParam, &Instance))
 			{
 				// OSD handled the message, consume
 				Return = true;

@@ -89,6 +89,11 @@ namespace cse
 			Depot.push_back(&startup::kWorkspacePath);
 
 			Depot.push_back(&versionControl::kBackupOnSave);
+			Depot.push_back(&versionControl::kLogInstantiation);
+			Depot.push_back(&versionControl::kLogChangeSetActive);
+			Depot.push_back(&versionControl::kLogChangeSetDeleted);
+			Depot.push_back(&versionControl::kLogChangeSetFormID);
+			Depot.push_back(&versionControl::kLogChangeSetEditorID);
 		}
 
 		namespace dialogs
@@ -225,6 +230,12 @@ namespace cse
 #define VERSIONCTRL_INISECTION				"VersionControl"
 
 			INISetting		kBackupOnSave("BackupOnSave", VERSIONCTRL_INISECTION, "Creates a backup copy of the active plugin in the active workspace's 'Backup' directory before commencing a save operation", (SInt32)0);
+
+			INISetting		kLogInstantiation("LogInstantiation", VERSIONCTRL_INISECTION, "Log when a form is created", (SInt32)0);
+			INISetting		kLogChangeSetActive("LogChangeSetActive", VERSIONCTRL_INISECTION, "Log when a form's modified state is changed", (SInt32)0);
+			INISetting		kLogChangeSetDeleted("LogChangeSetDeleted", VERSIONCTRL_INISECTION, "Log when a form's deleted state is changed", (SInt32)0);
+			INISetting		kLogChangeSetFormID("LogChangeSetFormID", VERSIONCTRL_INISECTION, "Log when a form's formID is changed", (SInt32)0);
+			INISetting		kLogChangeSetEditorID("LogChangeSetEditorID", VERSIONCTRL_INISECTION, "Log when a form's editorID is changed", (SInt32)0);
 		}
 	}
 }
