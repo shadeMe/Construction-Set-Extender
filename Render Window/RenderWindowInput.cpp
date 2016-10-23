@@ -1594,6 +1594,7 @@ namespace cse
 					break;
 				case WM_LBUTTONDOWN:
 				case WM_RBUTTONDOWN:
+				case WM_MBUTTONDOWN:
 					Handled = true;
 
 					if (uMsg == WM_RBUTTONDOWN)
@@ -1629,13 +1630,18 @@ namespace cse
 																uMsg == WM_LBUTTONDOWN;
 					TransformingSelection = *TESRenderWindow::DraggingSelection || *TESRenderWindow::RotatingSelection || _RENDERWIN_XSTATE.DraggingPathGridPoints;
 
+					// begin free movement handling
+					if (uMsg == WM_MBUTTONDOWN)
+					{
+						if (GetCapture() == hWnd)
+							ToggleFreeMouseMovement(hWnd, true);
+					}
 					if (TransformingSelection)
 					{
 						// landscape edit mode isn't supported as the land coords are calculated from the mouse coords, not their offset
 						SME_ASSERT(*TESRenderWindow::LandscapeEditFlag == 0);
 						if (GetCapture() == hWnd)
 						{
-							// begin free movement handling
 							ToggleFreeMouseMovement(hWnd, true);
 							ToggleCellViewUpdate(false);
 						}
@@ -1646,6 +1652,7 @@ namespace cse
 					break;
 				case WM_LBUTTONUP:
 				case WM_RBUTTONUP:
+				case WM_MBUTTONUP:
 					Handled = true;
 
 					if (uMsg == WM_RBUTTONUP)
