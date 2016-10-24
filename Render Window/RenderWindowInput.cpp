@@ -902,9 +902,7 @@ namespace cse
 					if (KeyConflict == false)
 					{
 						if (NewBinding != CurrentHotKey->GetActiveBinding())
-						{
 							CurrentHotKey->SetActiveBinding(NewBinding);
-						}
 
 						Close = true;
 					}
@@ -1320,6 +1318,8 @@ namespace cse
 						CellViewUpdatesDeferred = false;
 
 						// update the cell view to the current renderwindow cell
+						SME_ASSERT((*TESRenderWindow::ActiveCell)->IsInterior() == false);
+
 						Vector3 PosCoord;
 						PosCoord.x = ((*TESRenderWindow::ActiveCell)->cellData.coords->x << 12) + 2048;
 						PosCoord.y = ((*TESRenderWindow::ActiveCell)->cellData.coords->y << 12) + 2048;

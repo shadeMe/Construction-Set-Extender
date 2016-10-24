@@ -809,7 +809,7 @@ namespace cse
 				// main render loop
 				if (wParam == TESRenderWindow::kTimer_ViewportUpdate && *TESRenderWindow::ActiveCell)
 				{
-					// refresh the viewport if any of the layers need a background update
+					// refresh the viewport if any of the layers need a background update or if the mouse is in the client area
 					if (State.MouseInClientArea || NeedsBackgroundUpdate())
 					{
 						Update = true;

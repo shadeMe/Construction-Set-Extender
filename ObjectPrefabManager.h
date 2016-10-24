@@ -62,7 +62,7 @@ namespace cse
 			static INT_PTR CALLBACK				DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 			static int CALLBACK					SortComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 
-			typedef std::vector<PrefabObjectHandleT>			PrefabObjectArrayT;
+			typedef std::vector<PrefabObjectHandleT>	PrefabObjectArrayT;
 
 			static const bgsee::ResourceLocation		kRepositoryPath;
 			static const char*							kPrefabFileExtension;
@@ -96,10 +96,10 @@ namespace cse
 			ObjectPrefabManager();
 			~ObjectPrefabManager();
 
-			void					Show();
-			void					Close();
+			void							Show();
+			void							Close();
 
-			static ObjectPrefabManager			Instance;
+			static ObjectPrefabManager		Instance;
 		};
 	}
 }

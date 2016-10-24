@@ -47,7 +47,7 @@ namespace cse
 			static INT_PTR CALLBACK				DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 			static int CALLBACK					SortComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 
-			typedef std::vector<PaletteObjectHandleT>			PaletteObjectArrayT;
+			typedef std::vector<PaletteObjectHandleT>	PaletteObjectArrayT;
 
 			static const bgsee::ResourceLocation		kRepositoryPath;
 			static const char*							kPaletteFileExtension;
