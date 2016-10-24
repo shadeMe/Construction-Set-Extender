@@ -19,6 +19,7 @@ namespace cse
 				CodaScriptCommandPrototypeDef(MarkAsModified);
 				CodaScriptCommandPrototypeDef(GetDataHandlerFormList);
 				CodaScriptCommandPrototypeDef(GetCellUseList);
+				CodaScriptCommandPrototypeDef(IsModified);
 
 				CodaScriptCommandParamData(SetEditorID, 2)
 				{
@@ -211,6 +212,20 @@ namespace cse
 
 					Result->SetArray(Array);
 
+					return true;
+				}
+
+				CodaScriptCommandHandler(IsModified)
+				{
+					TESForm* Form = nullptr;
+
+					CodaScriptCommandExtractArgs(&Form);
+					ExtractFormArguments(1, &Form);
+
+					if (Form == nullptr)
+						return false;
+
+					Result->SetNumber(Form->IsActive());
 					return true;
 				}
 			}

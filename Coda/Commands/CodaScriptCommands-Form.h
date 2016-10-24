@@ -82,6 +82,14 @@ namespace cse
 					1,
 					OneForm,
 					ICodaScriptDataStore::kDataType_Array);
+
+				CodaScriptParametricCommandPrototype(IsModified,
+													 0,
+													 "Returns true if the form has been modified, i.e., saved to the active file.",
+													 0,
+													 1,
+													 OneForm,
+													 ICodaScriptDataStore::kDataType_Numeric);
 			}
 		}
 	}
