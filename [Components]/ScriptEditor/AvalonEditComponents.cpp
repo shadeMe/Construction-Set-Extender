@@ -1169,7 +1169,7 @@ namespace cse
 #else
 					String^ SelectionText = CurrentSelection->GetText()->Replace("\t", "")->Replace(" ", "")->Replace("\n", "")->Replace("\r\n", "");
 #endif
-					if (SelectionText->Length > 4)
+					if (SelectionText->Length > 1)
 					{
 						Color Buffer = PREFERENCES->LookupColorByKey("SelectionHighlightColor");
 

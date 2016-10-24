@@ -154,8 +154,8 @@ namespace cse
 
 				virtual const ExecutionContext&		GetExecutionContext() const = 0;
 				virtual const UInt8					GetHandlerType() const = 0;
-				virtual EventResult					HandleActive(UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;		// handle as a regular event
-				virtual EventResult					HandleBuiltIn(UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;		// handle as a built-in event
+				virtual EventResult					HandleActive(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;		// handle as a regular event
+				virtual EventResult					HandleBuiltIn(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;		// handle as a built-in event
 			};
 
 			// a serializable/editable keybinding
@@ -220,8 +220,8 @@ namespace cse
 				virtual void			SetActiveBinding(const BasicKeyBinding& NewBinding) override;
 
 				virtual const UInt8		GetHandlerType() const override;
-				virtual EventResult		HandleActive(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
-				virtual EventResult		HandleBuiltIn(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+				virtual EventResult		HandleActive(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+				virtual EventResult		HandleBuiltIn(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 			};
 
 			// overrides a built-in holdable key
@@ -236,8 +236,8 @@ namespace cse
 				UInt8*					GetBaseState() const;
 				SHORT					GetBuiltInKey() const;
 
-				virtual EventResult		HandleActive(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
-				virtual EventResult		HandleBuiltIn(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+				virtual EventResult		HandleActive(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+				virtual EventResult		HandleBuiltIn(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 			};
 
 			// overrides a built-in key combo
@@ -255,8 +255,8 @@ namespace cse
 				virtual const char*		GetDescription() const override;
 
 				virtual const UInt8		GetHandlerType() const override;
-				virtual EventResult		HandleActive(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
-				virtual EventResult		HandleBuiltIn(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+				virtual EventResult		HandleActive(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+				virtual EventResult		HandleBuiltIn(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 			};
 
 			class ActionableKeyHandler : public IHotKey
@@ -271,16 +271,16 @@ namespace cse
 				virtual const char*		GetDescription() const override;
 
 				virtual const UInt8		GetHandlerType() const override;
-				virtual EventResult		HandleActive(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
-				virtual EventResult		HandleBuiltIn(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+				virtual EventResult		HandleActive(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+				virtual EventResult		HandleBuiltIn(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 			};
 
 			struct SharedBindings
 			{
-				HoldableKeyHandler*			MoveCameraWithSelection;
-				HoldableKeyOverride*		RotateCamera;
-				HoldableKeyOverride*		PanCamera;
-				HoldableKeyOverride*		ZoomCamera;
+				HoldableKeyHandler*		MoveCameraWithSelection;
+				HoldableKeyOverride*	RotateCamera;
+				HoldableKeyOverride*	PanCamera;
+				HoldableKeyOverride*	ZoomCamera;
 			};
 
 			class RenderWindowKeyboardManager

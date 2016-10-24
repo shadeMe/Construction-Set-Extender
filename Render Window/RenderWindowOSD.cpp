@@ -491,7 +491,7 @@ namespace cse
 				io.MouseDown[0] = false;
 				return true;
 			case WM_RBUTTONDOWN:
-				// ### kludge to workaround the out-of-order dispatching of the button down message when opening the context menu in the render window
+				// ### HACK kludge to workaround the out-of-order dispatching of the button down message when opening the context menu in the render window
 				if (ConsumeNextMouseRButtonDown == false)
 					io.MouseDown[1] = true;
 				else

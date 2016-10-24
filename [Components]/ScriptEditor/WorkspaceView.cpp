@@ -1157,7 +1157,7 @@ namespace cse
 
 			BrightIdeasSoftware::OLVColumn^ Column = gcnew BrightIdeasSoftware::OLVColumn;
 			Column->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&FindReplaceAllResults::GenericAspectGetter);
-			Column->Text = "Find/Replace Results";
+			Column->Text = "Global Find/Replace Results";
 			Column->Width = Bounds.Width;
 			GlobalFindList->AllColumns->Add(Column);
 			GlobalFindList->Columns->Add(Column);

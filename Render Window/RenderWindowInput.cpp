@@ -338,7 +338,7 @@ namespace cse
 				return kType_Stateful;
 			}
 
-			IKeyboardEventHandler::EventResult HoldableKeyHandler::HandleActive(UINT uMsg, WPARAM wParam, LPARAM lParam)
+			IKeyboardEventHandler::EventResult HoldableKeyHandler::HandleActive(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				EventResult Result;
 				switch (uMsg)
@@ -366,7 +366,7 @@ namespace cse
 				return Result;
 			}
 
-			IKeyboardEventHandler::EventResult HoldableKeyHandler::HandleBuiltIn(UINT uMsg, WPARAM wParam, LPARAM lParam)
+			IKeyboardEventHandler::EventResult HoldableKeyHandler::HandleBuiltIn(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				return EventResult();
 			}
@@ -448,9 +448,9 @@ namespace cse
 				return BuiltInKey;
 			}
 
-			IKeyboardEventHandler::EventResult HoldableKeyOverride::HandleActive(UINT uMsg, WPARAM wParam, LPARAM lParam)
+			IKeyboardEventHandler::EventResult HoldableKeyOverride::HandleActive(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
-				EventResult Result = HoldableKeyHandler::HandleActive(uMsg, wParam, lParam);
+				EventResult Result = HoldableKeyHandler::HandleActive(hWnd, uMsg, wParam, lParam);
 
 				if (Result.Success)
 				{
@@ -459,12 +459,19 @@ namespace cse
 																  uMsg,
 																  BuiltInKey,
 																  NULL);
+
+					// the SPACE key's vanilla KEYUP handler doesn't release the mouse capture, so fix it here
+					if (uMsg == WM_KEYUP && BuiltInKey == BuiltIn::kHoldable_Space)
+					{
+						if (GetCapture() == hWnd)
+							ReleaseCapture();
+					}
 				}
 
 				return Result;
 			}
 
-			IKeyboardEventHandler::EventResult HoldableKeyOverride::HandleBuiltIn(UINT uMsg, WPARAM wParam, LPARAM lParam)
+			IKeyboardEventHandler::EventResult HoldableKeyOverride::HandleBuiltIn(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				EventResult Result;
 				switch (uMsg)
@@ -514,7 +521,7 @@ namespace cse
 				return kType_Stateless;
 			}
 
-			IKeyboardEventHandler::EventResult ComboKeyOverride::HandleActive(UINT uMsg, WPARAM wParam, LPARAM lParam)
+			IKeyboardEventHandler::EventResult ComboKeyOverride::HandleActive(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				EventResult Result;
 
@@ -533,7 +540,7 @@ namespace cse
 				return Result;
 			}
 
-			IKeyboardEventHandler::EventResult ComboKeyOverride::HandleBuiltIn(UINT uMsg, WPARAM wParam, LPARAM lParam)
+			IKeyboardEventHandler::EventResult ComboKeyOverride::HandleBuiltIn(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				EventResult Result;
 
@@ -569,7 +576,7 @@ namespace cse
 				return kType_Stateless;
 			}
 
-			IKeyboardEventHandler::EventResult ActionableKeyHandler::HandleActive(UINT uMsg, WPARAM wParam, LPARAM lParam)
+			IKeyboardEventHandler::EventResult ActionableKeyHandler::HandleActive(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				EventResult Result;
 
@@ -588,7 +595,7 @@ namespace cse
 				return Result;
 			}
 
-			IKeyboardEventHandler::EventResult ActionableKeyHandler::HandleBuiltIn(UINT uMsg, WPARAM wParam, LPARAM lParam)
+			IKeyboardEventHandler::EventResult ActionableKeyHandler::HandleBuiltIn(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				return EventResult();
 			}
@@ -948,22 +955,28 @@ namespace cse
 							if (*BaseState == 1)
 							{
 								// special case for Space as the base state is set when holding down the middle mouse button too
+								bool Reset = false;
 								if (BuiltInKey != BuiltIn::kHoldable_Space)
 								{
-#ifndef NDEBUG
-									BGSEECONSOLE->PrintToMessageLogContext(MessageLogContext, false, "Reset Holdable Key: Name: '%s' | %s",
-																		   Itr->GetName(),
-																		   Itr->GetActiveBinding().GetDescription().c_str());
-#endif
 									// reset the base state
 									*BaseState = 0;
+									Reset = true;
 								}
 								else if (GetAsyncKeyState(VK_MBUTTON) == NULL)
 								{
 									// MMB isn't down either, reset
 									*BaseState = 0;
+									Reset = true;
 								}
 
+#ifndef NDEBUG
+								if (Reset)
+								{
+									BGSEECONSOLE->PrintToMessageLogContext(MessageLogContext, false, "Reset Holdable Key: Name: '%s' | %s",
+																		   Itr->GetName(),
+																		   Itr->GetActiveBinding().GetDescription().c_str());
+								}
+#endif
 							}
 						}
 					}
@@ -1100,7 +1113,7 @@ namespace cse
 				Initialized = false;
 			}
 
-			bool RenderWindowKeyboardManager::HandleInput(HWND, UINT uMsg, WPARAM wParam, LPARAM lParam, RenderWindowManager*)
+			bool RenderWindowKeyboardManager::HandleInput(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, RenderWindowManager*)
 			{
 				bool ConsumeMessage = false;
 				const char* MessageName = nullptr;
@@ -1133,7 +1146,7 @@ namespace cse
 						{
 							if (Itr->GetHandlerType() == IKeyboardEventHandler::kType_Stateful)
 							{
-								IKeyboardEventHandler::EventResult Output = Itr->HandleActive(uMsg, wParam, lParam);
+								IKeyboardEventHandler::EventResult Output = Itr->HandleActive(hWnd, uMsg, wParam, lParam);
 								// holdable key events aren't restricted by context
 								SME_ASSERT(Output.InvalidContext == false);
 								if (Output.Triggered)
@@ -1159,7 +1172,7 @@ namespace cse
 						{
 							if (Itr->GetHandlerType() == IKeyboardEventHandler::kType_Stateless)
 							{
-								IKeyboardEventHandler::EventResult Output = Itr->HandleActive(uMsg, wParam, lParam);
+								IKeyboardEventHandler::EventResult Output = Itr->HandleActive(hWnd, uMsg, wParam, lParam);
 								if (Output.Triggered)
 								{
 									StatelessResult.Triggered = true;
@@ -1202,7 +1215,7 @@ namespace cse
 						// consume built-in events
 						for (auto& Itr : HotKeys)
 						{
-							IKeyboardEventHandler::EventResult Output = Itr->HandleBuiltIn(uMsg, wParam, lParam);
+							IKeyboardEventHandler::EventResult Output = Itr->HandleBuiltIn(hWnd, uMsg, wParam, lParam);
 							if (Output.Triggered)
 							{
 #ifndef NDEBUG
