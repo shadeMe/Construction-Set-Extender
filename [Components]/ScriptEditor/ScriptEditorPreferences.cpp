@@ -779,7 +779,7 @@ namespace cse
 			GroupBoxSyntaxHighlighting->Controls->Add(CmDlgSyntaxDigitsColor);
 			GroupBoxSyntaxHighlighting->Controls->Add(CmDlgSyntaxPreprocessorColor);
 			GroupBoxSyntaxHighlighting->Controls->Add(CmDlgSyntaxScriptBlocksColor);
-			GroupBoxSyntaxHighlighting->Controls->Add(CmDlgSyntaxDelimitersColor);
+	//		GroupBoxSyntaxHighlighting->Controls->Add(CmDlgSyntaxDelimitersColor);
 			GroupBoxSyntaxHighlighting->Controls->Add(CmDlgSyntaxStringsColor);
 			GroupBoxSyntaxHighlighting->Controls->Add(CmDlgSyntaxKeywordsColor);
 			GroupBoxSyntaxHighlighting->Controls->Add(LabelPreprocessor);
@@ -787,7 +787,7 @@ namespace cse
 			GroupBoxSyntaxHighlighting->Controls->Add(LabelStrings);
 			GroupBoxSyntaxHighlighting->Controls->Add(LabelComments);
 			GroupBoxSyntaxHighlighting->Controls->Add(LabelDigits);
-			GroupBoxSyntaxHighlighting->Controls->Add(LabelDelimiters);
+	//		GroupBoxSyntaxHighlighting->Controls->Add(LabelDelimiters);
 			GroupBoxSyntaxHighlighting->Controls->Add(LabelKeywords);
 			GroupBoxSyntaxHighlighting->Location = System::Drawing::Point(6, 3);
 			GroupBoxSyntaxHighlighting->Name = L"GroupBoxSyntaxHighlighting";

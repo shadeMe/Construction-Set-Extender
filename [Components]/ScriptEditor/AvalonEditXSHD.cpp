@@ -300,7 +300,6 @@ namespace cse
 				Color Preprocessor = PREFERENCES->LookupColorByKey("SyntaxPreprocessorColor");
 				Color Keywords = PREFERENCES->LookupColorByKey("SyntaxKeywordsColor");
 				Color Blocks = PREFERENCES->LookupColorByKey("SyntaxScriptBlocksColor");
-				Color Delimiters = PREFERENCES->LookupColorByKey("SyntaxDelimitersColor");
 				Color Digits = PREFERENCES->LookupColorByKey("SyntaxDigitsColor");
 				Color Strings = PREFERENCES->LookupColorByKey("SyntaxStringsColor");
 				Color Vars = PREFERENCES->LookupColorByKey("SyntaxLocalVarsColor");
@@ -319,13 +318,6 @@ namespace cse
 
 				SerializedColors->AddLast(DigitColor);
 				Contents->AddLast(DigitRule);
-
-				// delimiters
-				XSHDColor^ DelimiterColor = gcnew XSHDColor("DelimiterColor", Delimiters, Color::GhostWhite, Bold);
-				XSHDRule^ DelimiterRule = gcnew XSHDRule(DelimiterColor, "[?,.;:>#$=()\\[\\]{}+\\-/%*&lt;&gt;^+~!|&amp;]+");
-
-				SerializedColors->AddLast(DelimiterColor);
-				Contents->AddLast(DelimiterRule);
 
 				// strings
 				XSHDColor^ StringColor = gcnew XSHDColor("StringColor", Strings, Color::GhostWhite, Bold);
