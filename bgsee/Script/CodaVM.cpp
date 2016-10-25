@@ -396,6 +396,9 @@ namespace bgsee
 		SME::INI::INISetting									CodaScriptBackgrounder::kINI_UpdatePeriod("UpdatePeriod", CODASCRIPTBACKGROUNDER_INISECTION,
 																									"Duration, in milliseconds, between consecutive executions",
 																									(SInt32)10);
+		SME::INI::INISetting									CodaScriptBackgrounder::kINI_LogToDefaultConsoleContext("LogToDefaultConsoleContext", CODASCRIPTBACKGROUNDER_INISECTION,
+																									 "Print console output to the default context (in addition to the Coda Script context)",
+																									 (SInt32)1);
 
 		VOID CALLBACK CodaScriptBackgrounder::CallbackProc( HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime )
 		{
@@ -471,11 +474,17 @@ namespace bgsee
 					{
 						bool Throwaway = false;
 
-						BGSEECONSOLE->Indent();
-						CODAVM->GetMessageHandler()->SuspendDefaultContextLogging();
+						if (kINI_LogToDefaultConsoleContext().i == 0)
+							CODAVM->GetMessageHandler()->SuspendDefaultContextLogging();
+						else
+							BGSEECONSOLE->Indent();
+
 						bool ExecuteResult = Executive->Execute(BackgroundScript, nullptr, Throwaway);
-						CODAVM->GetMessageHandler()->ResumeDefaultContextLogging();
-						BGSEECONSOLE->Exdent();
+
+						if (kINI_LogToDefaultConsoleContext().i == 0)
+							CODAVM->GetMessageHandler()->ResumeDefaultContextLogging();
+						else
+							BGSEECONSOLE->Exdent();
 
 						if (BackgroundScript->GetIsValid() == false)
 						{
@@ -573,6 +582,7 @@ namespace bgsee
 		{
 			Depot.push_back(&kINI_Enabled);
 			Depot.push_back(&kINI_UpdatePeriod);
+			Depot.push_back(&kINI_LogToDefaultConsoleContext);
 		}
 
 		void CodaScriptBackgrounder::Queue( CodaScriptExecutionContext* Context )

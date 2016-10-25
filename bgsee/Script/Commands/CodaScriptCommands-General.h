@@ -50,7 +50,7 @@ namespace bgsee
 
 				CodaScriptParametricCommandPrototype(PrintToConsole,
 					"PrintC",
-					"Prints a message to the BGSEE Console window.",
+					"Prints a message to the BGSEE Console window. The message is logged to both the default console context and the 'Coda Script' context. Logging to the default context can be disabled in the INI for background scripts.",
 					0,
 					1,
 					OneString,

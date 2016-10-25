@@ -101,6 +101,7 @@ namespace bgsee
 			static const std::string					kDepotName;
 			static INISetting							kINI_Enabled;
 			static INISetting							kINI_UpdatePeriod;
+			static INISetting							kINI_LogToDefaultConsoleContext;
 
 			static VOID CALLBACK						CallbackProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
