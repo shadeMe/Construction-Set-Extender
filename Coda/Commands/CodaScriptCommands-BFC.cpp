@@ -24,6 +24,7 @@ namespace cse
 				CodaScriptCommandPrototypeDef(GetBFCAttackDamage);
 				CodaScriptCommandPrototypeDef(GetBFCAttributes);
 				CodaScriptCommandPrototypeDef(GetBFCSpellListEntries);
+				CodaScriptCommandPrototypeDef(GetBFCSpellListLeveledEntries);
 				CodaScriptCommandPrototypeDef(GetBFCLeveledListEntries);
 				CodaScriptCommandPrototypeDef(GetBFCLeveledListChanceNone);
 				CodaScriptCommandPrototypeDef(GetBFCContainerEntries);
@@ -394,6 +395,33 @@ namespace cse
 
 						for (int i = 0; i < Component->spells.Count(); i++)
 							Utilities->ArrayPushback(Array, (CodaScriptReferenceDataTypeT)Component->spells.GetNthItem(i)->formID);
+
+						Result->SetArray(Array);
+					}
+					else
+						return false;
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(GetBFCSpellListLeveledEntries)
+				{
+					TESForm* Form = nullptr;
+
+					CodaScriptCommandExtractArgs(&Form);
+					ExtractFormArguments(1, &Form);
+
+					if (Form == nullptr)
+						return false;
+
+					TESSpellList* Component = CS_CAST(Form, TESForm, TESSpellList);
+					if (Component)
+					{
+						ICodaScriptDataStore* Array = Utilities->ArrayAllocate(Component->leveledSpells.Count());
+						SME_ASSERT(Array);
+
+						for (int i = 0; i < Component->leveledSpells.Count(); i++)
+							Utilities->ArrayPushback(Array, (CodaScriptReferenceDataTypeT)Component->leveledSpells.GetNthItem(i)->formID);
 
 						Result->SetArray(Array);
 					}

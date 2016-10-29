@@ -127,6 +127,14 @@ namespace cse
 					OneForm,
 					ICodaScriptDataStore::kDataType_Array);
 
+				CodaScriptParametricCommandPrototype(GetBFCSpellListLeveledEntries,
+					0,
+					"Returns the leveled spell list component of the passed form",
+					0,
+					1,
+					OneForm,
+					ICodaScriptDataStore::kDataType_Array);
+
 				CodaScriptParametricCommandPrototype(GetBFCLeveledListEntries,
 					0,
 					"Returns the leveled list component of the passed form as an array of arrays. Subitems are of the following structure: Leveled List Item, Level, Count",

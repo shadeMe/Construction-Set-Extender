@@ -5,7 +5,7 @@ IMMEDIATE  >>
 
 
 NOTE	---->
-		> http://www.creationkit.com/fallout4/index.php?title=New_Editor_Features
+
 
 
 CSE		---->

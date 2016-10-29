@@ -84,7 +84,7 @@
 #include "TESPathGrid.h"
 #include "TESObjectLAND.h"
 #include "SettingCollection.h"
-//#include "TESLevSpell.h"
+#include "TESLevSpell.h"
 
 
 // NiAPI

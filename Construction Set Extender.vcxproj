@@ -484,6 +484,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClInclude Include="Achievements.h" />
     <ClInclude Include="Console.h" />
     <ClInclude Include="CustomDialogProcs.h" />
+    <ClInclude Include="EditorAPI\TESLevSpell.h" />
     <ClInclude Include="EventSinks.h" />
     <ClInclude Include="EventSources.h" />
     <ClInclude Include="FormUndoStack.h" />
