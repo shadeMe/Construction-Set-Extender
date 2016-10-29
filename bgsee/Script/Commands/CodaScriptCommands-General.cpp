@@ -141,12 +141,23 @@ namespace bgsee
 
 					CodaScriptCommandExtractArgs(&FormatString, &Number, &InterpretAsUInt32);
 
+					if (strlen(FormatString) == 0)
+						throw CodaScriptException(ByteCode->GetSource(), "Format string was empty");
+
 					char OutBuffer[0x50] = {0};
 
-					if (InterpretAsUInt32)
-						sprintf_s(OutBuffer, sizeof(OutBuffer), FormatString, (UInt32)Number);
-					else
-						sprintf_s(OutBuffer, sizeof(OutBuffer), FormatString, Number);
+					// ### HACK! not very elegant but there's no way to validate the format string passed to the command
+					__try
+					{
+						if (InterpretAsUInt32)
+							sprintf_s(OutBuffer, sizeof(OutBuffer), FormatString, (UInt32)Number);
+						else
+							sprintf_s(OutBuffer, sizeof(OutBuffer), FormatString, Number);
+					}
+					__except (EXCEPTION_EXECUTE_HANDLER)
+					{
+						throw CodaScriptException(ByteCode->GetSource(), "Invalid format string");
+					}
 
 					*Result = OutBuffer;
 					return true;
