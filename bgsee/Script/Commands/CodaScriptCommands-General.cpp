@@ -146,18 +146,10 @@ namespace bgsee
 
 					char OutBuffer[0x50] = {0};
 
-					// ### HACK! not very elegant but there's no way to validate the format string passed to the command
-					__try
-					{
-						if (InterpretAsUInt32)
-							sprintf_s(OutBuffer, sizeof(OutBuffer), FormatString, (UInt32)Number);
-						else
-							sprintf_s(OutBuffer, sizeof(OutBuffer), FormatString, Number);
-					}
-					__except (EXCEPTION_EXECUTE_HANDLER)
-					{
-						throw CodaScriptException(ByteCode->GetSource(), "Invalid format string");
-					}
+					if (InterpretAsUInt32)
+						sprintf_s(OutBuffer, sizeof(OutBuffer), FormatString, (UInt32)Number);
+					else
+						sprintf_s(OutBuffer, sizeof(OutBuffer), FormatString, Number);
 
 					*Result = OutBuffer;
 					return true;
