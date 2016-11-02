@@ -216,7 +216,7 @@ namespace cse
 					if (!Reference)
 						return false;
 
-					Result->SetNumber((Reference->formFlags & TESForm::kFormFlags_QuestItem));
+					Result->SetNumber((Reference->formFlags & TESForm::kFormFlags_QuestItem) ? 1 : 0);
 					return true;
 				}
 
@@ -234,7 +234,7 @@ namespace cse
 					if (!Reference)
 						return false;
 
-					Result->SetNumber((Reference->formFlags & TESForm::kFormFlags_Disabled));
+					Result->SetNumber((Reference->formFlags & TESForm::kFormFlags_Disabled) ? 1 : 0);
 					return true;
 				}
 
@@ -252,7 +252,7 @@ namespace cse
 					if (!Reference)
 						return false;
 
-					Result->SetNumber((Reference->formFlags & TESForm::kFormFlags_VisibleWhenDistant));
+					Result->SetNumber((Reference->formFlags & TESForm::kFormFlags_VisibleWhenDistant) ? 1 : 0);
 					return true;
 				}
 

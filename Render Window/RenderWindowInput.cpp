@@ -1472,6 +1472,14 @@ namespace cse
 					}
 
 					break;
+				case WM_UNINITMENUPOPUP:
+				case WM_KILLFOCUS:
+				case WM_NCACTIVATE:
+					if (wParam == TRUE)
+						break;
+				case WM_ACTIVATE:
+					if (LOWORD(wParam) != WA_INACTIVE)
+						break;
 				case WM_MOUSELEAVE:
 				case WM_NCMOUSELEAVE:
 					_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;

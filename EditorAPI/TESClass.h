@@ -6,7 +6,7 @@
 //	EditorAPI: TESClass class.
 
 /*
-    ...
+	...
 */
 
 // 8C
