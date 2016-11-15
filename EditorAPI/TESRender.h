@@ -140,12 +140,13 @@ public:
 	};
 	STATIC_ASSERT(sizeof(Scenegraph) == 0x20);
 
-	// not combined bitwise but stored mutually exclusively
 	enum
 	{
-		kDebugRenderPass_NoOfLights		= 1 << 0,
-		kDebugRenderPass_NoOfPasses		= 1 << 1,
-		kDebugRenderPass_Overdraw		= 1 << 2,
+		kDebugRenderPass_NoOfLights		= 1,
+		kDebugRenderPass_NoOfPasses		= 2,
+		kDebugRenderPass_Overdraw		= 4,
+		kDebugRenderPass_Unk05			= 5,				// set when rendering shadows
+		kDebugRenderPass_Unk06			= 6,				// set when rendering local maps
 	};
 
 	// methods

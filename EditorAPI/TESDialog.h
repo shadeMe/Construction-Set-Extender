@@ -928,3 +928,35 @@ class TESFileFormListWindow
 public:
 	static void					Show(HWND Parent, TESFile* File);
 };
+
+// 4024
+class TESSliderControl
+{
+	// 40
+	struct CustomLabel
+	{
+		/*00*/ char				value[0x40];
+	};
+
+	enum
+	{
+		kLabelType_Integer	= 0,
+		kLabelType_Float	= 1,
+		kLabelType_Custom	= 2,
+	};
+
+	// members
+	/*0000*/ HWND				dialog;
+	/*0004*/ HWND				slider;
+	/*0008*/ int				sliderID;
+	/*000C*/ int				labelID;
+	/*0010*/ UInt32				labelType;
+	/*0014*/ UInt8				numericalValue;		// set to 1 when the value is calculated from the min/max values
+	/*0015*/ CustomLabel		labelValues[0x100];	// for each slider position/value
+	/*4015*/ UInt8				pad4015[3];
+	/*4018*/ float				minValue;
+	/*401C*/ float				maxValue;
+	/*4020*/ UInt8				decimalPlaces;		// when calculating the label text from the mix/max values
+	/*4021*/ UInt8				pad4021[3];
+};
+STATIC_ASSERT(sizeof(TESSliderControl) == 0x4024);

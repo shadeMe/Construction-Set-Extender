@@ -62,7 +62,7 @@ class TESDescription : public BaseFormComponent
 public:
 	// members
 	//     /*00*/ void**			vtbl;
-	/*04*/ BSString				description;
+	/*04*/ BSString					description;
 	/*0C*/ UInt32					descDialogItem;		// Dialog Control ID for description control
 };
 STATIC_ASSERT(sizeof(TESDescription) == 0x10);
@@ -73,7 +73,7 @@ class TESTexture : public BaseFormComponent
 public:
 	// members
 	//     /*00*/ void**         vtbl;
-	/*04*/ BSString			texturePath;
+	/*04*/ BSString				texturePath;
 	/*0C*/ UInt32				unkTexture0C;			// cached image? struct {UInt32 unkA; UInt32 unkB; void* privateObj;}
 	/*10*/ UInt32				texturePathDlgItem;		// Dialog Control ID for texture path control
 	/*14*/ UInt32				textureImageDlgItem;	// Dialog Control ID for texture image control
