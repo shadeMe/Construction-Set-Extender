@@ -144,6 +144,8 @@ namespace cse
 			Label^										LabelLocalVars;
 			CheckBox^									DefaultInlineSearch;
 			CheckBox^									AutoSuggest;
+			CheckBox^									ShowBreadcrumbBar;
+
 			// hidden controls, for settings that aren't displayed in the preferences window
 
 			// Find/Replace

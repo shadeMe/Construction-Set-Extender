@@ -49,6 +49,10 @@ namespace cse
 		void ScopeBreadcrumbManager::GenerateCrumbs(obScriptParsing::AnalysisData^ Data)
 		{
 			ResetCrumbs();
+
+			if (Visible == false)
+				return;
+
 			DataStore = gcnew obScriptParsing::Structurizer(Data, gcnew obScriptParsing::Structurizer::GetLineText(BoundParent, &IScriptTextEditor::GetText), BoundParent->CurrentLine);
 			if (DataStore->Valid)
 			{
@@ -208,6 +212,9 @@ namespace cse
 		void ScopeBreadcrumbManager::RefreshCrumbs()
 		{
 			Debug::Assert(Bound == true);
+
+			if (Visible == false)
+				return;
 
 			obScriptParsing::AnalysisData^ ParsedData = BoundParent->GetSemanticAnalysisCache(true, true);
 			GenerateCrumbs(ParsedData);

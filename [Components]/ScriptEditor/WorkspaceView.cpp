@@ -1239,6 +1239,10 @@ namespace cse
 			AssociatedModels = gcnew ModelTabTableT;
 
 			EditorForm->Tag = int(1);			// safe to handle events
+
+			// needs to be defered until the form has been init'ed/layout is complete
+			// otherwise the breadcrum bar turns up above the tab control
+			ScopeCrumbManager->Visible = PREFERENCES->FetchSettingAsInt("ShowBreadcrumbBar", "Appearance");
 		}
 
 		ConcreteWorkspaceView::~ConcreteWorkspaceView()
@@ -1705,6 +1709,8 @@ namespace cse
 		//	ScopeCrumbBar->BackgroundStyle->BorderColor = System::Drawing::Color::FromArgb(200, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B);
 		//	ScopeCrumbBar->BackgroundStyle->BorderColor2 = System::Drawing::Color::FromArgb(200, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B);
 		//	ScopeCrumbBar->Font = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"), 9);
+			ScopeCrumbManager->Visible = PREFERENCES->FetchSettingAsInt("ShowBreadcrumbBar", "Appearance");
+			ScopeCrumbManager->RefreshCrumbs();
 
 			Redraw();
 		}

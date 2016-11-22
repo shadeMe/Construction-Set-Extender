@@ -58,6 +58,12 @@ namespace cse
 				virtual void set(bool e) {}
 			}
 
+			property bool								Visible
+			{
+				virtual bool get() { return Bar->Visible; }
+				virtual void set(bool e) { Bar->Visible = e; }
+			}
+
 			void										Bind(IScriptTextEditor^ Parent);
 			void										Unbind();
 

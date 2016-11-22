@@ -166,6 +166,7 @@ namespace cse
 			SettingCollection->Add(gcnew INISetting("CodeFolding", "Appearance", "1"), gcnew BoundControl(CodeFolding, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 			SettingCollection->Add(gcnew INISetting("EnableStructuralAnalysis", "Appearance", "1"), gcnew BoundControl(EnableStructuralAnalysis, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 			SettingCollection->Add(gcnew INISetting("BoldFacedHighlighting", "Appearance", "0"), gcnew BoundControl(BoldFacedHighlighting, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("ShowBreadcrumbBar", "Appearance", "1"), gcnew BoundControl(ShowBreadcrumbBar, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 
 			RegisterColorSetting("SyntaxCommentsColor", Color::Green, CmDlgSyntaxCommentsColor);
 			RegisterColorSetting("SyntaxDigitsColor", Color::DarkGoldenrod, CmDlgSyntaxDigitsColor);
@@ -411,6 +412,8 @@ namespace cse
 			this->CmDlgSyntaxLocalVarsColor = (gcnew System::Windows::Forms::Button());
 			DefaultInlineSearch = gcnew CheckBox;
 			AutoSuggest = gcnew CheckBox;
+			ShowBreadcrumbBar = gcnew CheckBox;
+
 			//
 			// Hidden Controls
 			//
@@ -709,6 +712,7 @@ namespace cse
 			TabAppearance->Controls->Add(CodeFolding);
 			TabAppearance->Controls->Add(EnableStructuralAnalysis);
 			TabAppearance->Controls->Add(BoldFacedHighlighting);
+			TabAppearance->Controls->Add(ShowBreadcrumbBar);
 			TabAppearance->Location = System::Drawing::Point(4, 22);
 			TabAppearance->Name = L"TabAppearance";
 			TabAppearance->Padding = Padding(3);
@@ -1137,6 +1141,13 @@ namespace cse
 			this->BoldFacedHighlighting->TabIndex = 32;
 			this->BoldFacedHighlighting->Text = L"Bold-faced highlighting";
 			this->BoldFacedHighlighting->UseVisualStyleBackColor = true;
+
+			this->ShowBreadcrumbBar->Location = System::Drawing::Point(328, 105);
+			this->ShowBreadcrumbBar->Name = L"ShowBreadcrumbBar";
+			this->ShowBreadcrumbBar->Size = System::Drawing::Size(89, 34);
+			this->ShowBreadcrumbBar->TabIndex = 32;
+			this->ShowBreadcrumbBar->Text = L"Scope Breadcrumb";
+			this->ShowBreadcrumbBar->UseVisualStyleBackColor = true;
 			//
 			// TabBackup
 			//
@@ -1267,9 +1278,9 @@ namespace cse
 			DefaultInlineSearch->Text = L"'Ctrl + F' displays inline search panel";
 			DefaultInlineSearch->UseVisualStyleBackColor = true;
 
-			// 
+			//
 			// AutoSuggest
-			// 
+			//
 			this->AutoSuggest->AutoSize = true;
 			this->AutoSuggest->Location = System::Drawing::Point(30, 37);
 			this->AutoSuggest->Name = L"AutoSuggest";
