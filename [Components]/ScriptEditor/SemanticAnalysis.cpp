@@ -1230,7 +1230,10 @@ namespace cse
 		if (Parser->Tokenize(Expression, false))
 		{
 			int InvalidOperator = Expression->IndexOf("<>");
-			if (InvalidOperator != -1 && Parser->GetIndexInsideString(Expression, InvalidOperator) == false)
+			int CommentToken = Expression->IndexOf(";");
+			if (InvalidOperator != -1 &&
+				(CommentToken == -1 || Parser->GetIndexInsideString(Expression, CommentToken)) &&
+				Parser->GetIndexInsideString(Expression, InvalidOperator) == false)
 			{
 				Result = false;
 				LogCriticalAnalysisMessage(Line, "Invalid operator '<>'");
