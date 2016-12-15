@@ -243,6 +243,9 @@ namespace cse
 			PassthroughWhitelistMouseEvents.reserve(20);
 			MouseDoubleClicked[0] = MouseDoubleClicked[1] = false;
 			ConsumeNextMouseRButtonDown = false;
+			CurrentMouseCoord.x = CurrentMouseCoord.y = 0;
+			MouseDownCursorPos.x = MouseDownCursorPos.y = 0;
+			FreeMouseMovement = false;
 			Initialized = false;
 		}
 
@@ -389,6 +392,77 @@ namespace cse
 			return Active != NULL;
 		}
 
+
+		POINT ImGuiDX9::CenterCursor(HWND hWnd)
+		{
+			int X, Y, W, H;
+			GetWindowMetrics(hWnd, X, Y, W, H);
+
+			POINT Center = { X + W / 2, Y + H / 2 };
+			POINT Out(Center);
+			SetCursorPos(Center.x, Center.y);
+			return Out;
+		}
+
+		bool ImGuiDX9::IsCenteringCursor(HWND hWnd, LPARAM lParam) const
+		{
+			// ### HACK, kludge to workaround the WM_MOUSEMOVE feedback loop we get when allowing free movement
+			int X, Y, W, H;
+			GetWindowMetrics(hWnd, X, Y, W, H);
+
+			POINT Center = { X + W / 2, Y + H / 2 };
+			ScreenToClient(hWnd, &Center);
+
+			int PosX = GET_X_LPARAM(lParam);
+			int PosY = GET_Y_LPARAM(lParam);
+
+			if (PosX == Center.x && PosY == Center.y)
+				return true;
+			else
+				return false;
+		}
+
+		void ImGuiDX9::GetWindowMetrics(HWND hWnd, int& X, int& Y, int& Width, int& Height) const
+		{
+			RECT WindowRect = { 0 };
+			GetWindowRect(hWnd, &WindowRect);
+
+			Width = WindowRect.right - WindowRect.left;
+			Height = WindowRect.bottom - WindowRect.top;
+
+			X = WindowRect.left;
+			Y = WindowRect.top;
+		}
+
+		void ImGuiDX9::ToggleFreeMouseMovement(HWND hWnd, bool State)
+		{
+			if (State)
+			{
+				if (FreeMouseMovement == false)
+				{
+					GetCursorPos(&MouseDownCursorPos);
+					// hide the cursor and reset it to the center
+					FreeMouseMovement = true;
+					CenterCursor(hWnd);
+					SetCapture(hWnd);
+					while (ShowCursor(FALSE) > 0)
+						;//
+				}
+			}
+			else
+			{
+				if (FreeMouseMovement)
+				{
+					// restore the cursor
+					FreeMouseMovement = false;
+					SetCursorPos(MouseDownCursorPos.x, MouseDownCursorPos.y);
+					ReleaseCapture();
+					while (ShowCursor(TRUE) < 0)
+						;//
+				}
+			}
+		}
+
 		void ImGuiDX9::NewFrame()
 		{
 			SME_ASSERT(Initialized);
@@ -478,7 +552,7 @@ namespace cse
 				ConsumeNextMouseRButtonDown = true;
 		}
 
-		bool ImGuiDX9::UpdateInputState(HWND, UINT msg, WPARAM wParam, LPARAM lParam)
+		bool ImGuiDX9::UpdateInputState(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			ImGuiIO& io = ImGui::GetIO();
 
@@ -486,9 +560,12 @@ namespace cse
 			{
 			case WM_LBUTTONDOWN:
 				io.MouseDown[0] = true;
+
 				return true;
 			case WM_LBUTTONUP:
 				io.MouseDown[0] = false;
+				ToggleFreeMouseMovement(hWnd, false);
+
 				return true;
 			case WM_RBUTTONDOWN:
 				// ### HACK kludge to workaround the out-of-order dispatching of the button down message when opening the context menu in the render window
@@ -511,8 +588,36 @@ namespace cse
 				io.MouseWheel += GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? +1.0f : -1.0f;
 				return true;
 			case WM_MOUSEMOVE:
-				io.MousePos.x = (signed short)(lParam);
-				io.MousePos.y = (signed short)(lParam >> 16);
+				{
+					POINT MousePos = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+					POINT MouseDelta = { CurrentMouseCoord.x - MousePos.x, CurrentMouseCoord.y - MousePos.y };
+					POINT LastMouseCoord(CurrentMouseCoord);
+					CurrentMouseCoord.x = MousePos.x;
+					CurrentMouseCoord.y = MousePos.y;
+
+					if (FreeMouseMovement && IsCenteringCursor(hWnd, lParam))
+						return true;
+					else if (MouseDelta.x == 0 && MouseDelta.y == 0)
+						return true;
+
+					// free mouse movement needs to be turned on here as we don't want to hide the cursor until we're sure we're dragging the mouse
+					// only when hovering over a widget
+					if (ImGui::IsAnyItemHovered() && ImGui::IsMouseDragging())
+						ToggleFreeMouseMovement(hWnd, true);
+
+					if (FreeMouseMovement)
+					{
+						CenterCursor(hWnd);
+						io.MousePos.x += -MouseDelta.x;
+						io.MousePos.y += -MouseDelta.y;
+					}
+					else
+					{
+						io.MousePos.x = (signed short)(lParam);
+						io.MousePos.y = (signed short)(lParam >> 16);
+					}
+				}
+
 				return true;
 			case WM_SYSKEYDOWN:
 			case WM_KEYDOWN:

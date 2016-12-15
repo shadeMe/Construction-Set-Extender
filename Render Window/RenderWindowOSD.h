@@ -28,6 +28,9 @@ namespace cse
 			IDirect3DDevice9*				D3DDevice;
 			bool							MouseDoubleClicked[2];			// for the left and right mouse buttons
 			bool							ConsumeNextMouseRButtonDown;
+			POINT							CurrentMouseCoord;
+			POINT							MouseDownCursorPos;
+			bool							FreeMouseMovement;
 
 			// when the active widget is whitelisted, input events are allowed to be handled by the org wnd proc
 			ImGuiWidgetIDArrayT				PassthroughWhitelistMouseEvents;
@@ -42,6 +45,11 @@ namespace cse
 
 			bool							IsActiveItemInWhitelist(const ImGuiWidgetIDArrayT& Whitelist) const;
 			bool							HasActiveItem() const;
+
+			POINT							CenterCursor(HWND hWnd);			// returns the center coords (in screen area)
+			bool							IsCenteringCursor(HWND hWnd, LPARAM lParam) const;
+			void							GetWindowMetrics(HWND hWnd, int& X, int& Y, int& Width, int& Height) const;
+			void							ToggleFreeMouseMovement(HWND hWnd, bool State);
 		public:
 			ImGuiDX9();
 			~ImGuiDX9();
