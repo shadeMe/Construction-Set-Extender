@@ -95,7 +95,7 @@ namespace bgsee
 					for (int i = 0; i < DroppedScripts.size(); i++)
 						CODAVM->RunScript(DroppedScripts[i], nullptr, nullptr, Throwaway);
 
-					BGSEECONSOLE->Exdent();
+					BGSEECONSOLE->Outdent();
 				}
 			}
 
@@ -571,7 +571,7 @@ namespace bgsee
 		return IndentLevel;
 	}
 
-	UInt32 Console::DefaultDebugLogContext::Exdent()
+	UInt32 Console::DefaultDebugLogContext::Outdent()
 	{
 		if (IndentLevel > 0)
 			--IndentLevel;
@@ -579,7 +579,7 @@ namespace bgsee
 		return IndentLevel;
 	}
 
-	void Console::DefaultDebugLogContext::ExdentAll()
+	void Console::DefaultDebugLogContext::OutdentAll()
 	{
 		IndentLevel = 0;
 	}
@@ -884,7 +884,7 @@ namespace bgsee
 				LogMsg(BGSEEMAIN->ExtenderGetShortName(), "Unknown command '%s'", CurrentToken.c_str());
 		}
 
-		Exdent();
+		Outdent();
 	}
 
 	bool Console::LookupSecondaryContextByName( const char* Name, ContextArrayT::iterator& Match )
@@ -1043,7 +1043,7 @@ namespace bgsee
 
 		Indent();
 		PrimaryContext->Print("", Buffer);
-		Exdent();
+		Outdent();
 
 		MessageBeep(MB_ICONWARNING);
 	}
@@ -1083,14 +1083,14 @@ namespace bgsee
 		return PrimaryContext->Indent();
 	}
 
-	UInt32 Console::Exdent()
+	UInt32 Console::Outdent()
 	{
-		return PrimaryContext->Exdent();
+		return PrimaryContext->Outdent();
 	}
 
-	void Console::ExdentAll()
+	void Console::OutdentAll()
 	{
-		PrimaryContext->ExdentAll();
+		PrimaryContext->OutdentAll();
 	}
 
 	void Console::Pad( UInt32 Count )

@@ -95,7 +95,7 @@ namespace bgsee
 			Forms.clear();
 		}
 
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		return Result;
 	}
@@ -127,7 +127,7 @@ namespace bgsee
 		if (Result == false)
 			BGSEEUI->MsgBoxE(nullptr, MB_TASKMODAL|MB_SETFOREGROUND, "Global paste operation failed! Check the console for more information.");
 
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		return Result;
 	}

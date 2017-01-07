@@ -29,7 +29,7 @@ namespace bgsee
 			Sleep(100);
 
 		BGSEECONSOLE_MESSAGE("Debugger Attached!");
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 	}
 
 	Daemon* Daemon::Get()
@@ -509,7 +509,7 @@ namespace bgsee
 
 		SME::MersenneTwister::init_genrand(GetTickCount());
 
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		return true;
 	}
@@ -535,7 +535,7 @@ namespace bgsee
 		BGSEECONSOLE_MESSAGE("Deinitializing UI Manager");
 		BGSEECONSOLE->Indent();
 		UIManager::Deinitialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		CoUninitialize();
 		return true;
@@ -572,7 +572,7 @@ namespace bgsee
 		BGSEECONSOLE_MESSAGE("Deinitializing %s ...", ExtenderLongName.c_str());
 		BGSEECONSOLE->Indent();
 		BGSEEDAEMON->ExecuteDeinitCallbacks();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 		BGSEECONSOLE_MESSAGE("%s Deinitialized!", ExtenderLongName.c_str());
 
 		Console::Deinitialize();

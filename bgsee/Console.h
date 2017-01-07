@@ -185,8 +185,8 @@ namespace bgsee
 			virtual void			Reset();
 
 			UInt32					Indent();
-			UInt32					Exdent();
-			void					ExdentAll();
+			UInt32					Outdent();
+			void					OutdentAll();
 			void					Pad(UInt32 Count);
 
 			bool					RegisterPrintCallback(ConsolePrintCallback Callback);
@@ -271,8 +271,8 @@ namespace bgsee
 		virtual void				LogAssertion(std::string Prefix, const char* Format, ...);
 
 		UInt32						Indent();
-		UInt32						Exdent();
-		void						ExdentAll();
+		UInt32						Outdent();
+		void						OutdentAll();
 		void						Pad(UInt32 Count);
 
 		void*						RegisterMessageLogContext(const char* Name, const char* LogPath = nullptr);	// returns the context object

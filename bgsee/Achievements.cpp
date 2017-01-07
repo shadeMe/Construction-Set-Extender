@@ -134,7 +134,7 @@ namespace bgsee
 				if ((*Itr)->GetUnlocked())
 					BGSEECONSOLE_MESSAGE((*Itr)->Name.c_str());
 			}
-			BGSEECONSOLE->Exdent();
+			BGSEECONSOLE->Outdent();
 		}
 
 		void AchievementManager::SaveAchievementState( Achievement* Achievement, bool StateOnly )
