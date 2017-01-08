@@ -4,16 +4,16 @@ namespace bgsee
 {
 	namespace script
 	{
+		class ICodaScriptCommandHandlerHelper;
+		class ICodaScriptSyntaxTreeEvaluator;
+		class ICodaScriptExpressionByteCode;
+
 		// these typedefs could, of course, be wrapped but what would be the point? I say "meh"
 		typedef double													CodaScriptNumericDataTypeT;
 		typedef char													CodaScriptCharDataTypeT;
 		typedef CodaScriptCharDataTypeT*								CodaScriptStringDataTypeT;
 		typedef const CodaScriptCharDataTypeT*							CodaScriptStringParameterTypeT;
 		typedef UInt32													CodaScriptReferenceDataTypeT;
-
-		class ICodaScriptCommandHandlerHelper;
-		class ICodaScriptSyntaxTreeEvaluator;
-		class ICodaScriptExpressionByteCode;
 
 		class ICodaScriptDataStore
 		{
@@ -29,41 +29,16 @@ namespace bgsee
 		protected:
 			DataType														Type;
 		public:
-			ICodaScriptDataStore() :
-				Type(kDataType_Invalid)
-			{
-				;//
-			}
+			ICodaScriptDataStore() : Type(kDataType_Invalid) {}
+			virtual ~ICodaScriptDataStore() = 0 {}
 
-			virtual ~ICodaScriptDataStore() = 0
-			{
-				;//
-			}
+			DataType	GetType() const { return Type; }
+			bool		IsValid() const { return Type != kDataType_Invalid; }
 
-			DataType														GetType() const
-			{
-				return Type;
-			}
-
-			bool															GetIsNumber() const
-			{
-				return (Type == kDataType_Numeric || GetHasImplicitCast(kDataType_Numeric));
-			}
-
-			bool															GetIsReference() const
-			{
-				return (Type == kDataType_Reference);
-			}
-
-			bool															GetIsString() const
-			{
-				return (Type == kDataType_String);
-			}
-
-			bool															GetIsArray() const
-			{
-				return (Type == kDataType_Array);
-			}
+			bool		GetIsNumber() const { return (Type == kDataType_Numeric || GetHasImplicitCast(kDataType_Numeric)); }
+			bool		GetIsReference() const { return (Type == kDataType_Reference); }
+			bool		GetIsString() const { return (Type == kDataType_String); }
+			bool		GetIsArray() const { return (Type == kDataType_Array); }
 
 			virtual bool													GetHasImplicitCast(DataType NewType) const = 0;
 																			// the GetXXX accessory functions should perform the necessary casting internally
@@ -80,27 +55,25 @@ namespace bgsee
 			virtual ICodaScriptDataStore&									operator=(CodaScriptNumericDataTypeT Num) = 0;
 			virtual ICodaScriptDataStore&									operator=(CodaScriptStringParameterTypeT Str) = 0;
 			virtual ICodaScriptDataStore&									operator=(CodaScriptReferenceDataTypeT Form) = 0;
+
+			typedef std::unique_ptr<ICodaScriptDataStore>					PtrT;
 		};
 
 		class ICodaScriptDataStoreOwner
 		{
 		public:
-			virtual ~ICodaScriptDataStoreOwner() = 0
-			{
-				;//
-			}
+			virtual ~ICodaScriptDataStoreOwner() = 0 {};
 
 			virtual ICodaScriptDataStore*									GetDataStore() = 0;
 			virtual ICodaScriptDataStoreOwner&								operator=(const ICodaScriptDataStore& rhs) = 0;
+
+			typedef std::unique_ptr<ICodaScriptDataStoreOwner>				PtrT;
 		};
 
 		class ICodaScriptCommand
 		{
 		public:
-			virtual ~ICodaScriptCommand() = 0
-			{
-				;//
-			}
+			virtual ~ICodaScriptCommand() = 0 {};
 
 			struct ParameterInfo
 			{
@@ -132,15 +105,14 @@ namespace bgsee
 														ICodaScriptSyntaxTreeEvaluator* ExecutionAgent,
 														ICodaScriptExpressionByteCode* ByteCode) = 0;
 																				// return false to skip result validation
+
+			typedef std::list<ICodaScriptCommand*>		ListT;
 		};
 
 		class ICodaScriptCommandHandlerHelper
 		{
 		public:
-			virtual ~ICodaScriptCommandHandlerHelper() = 0
-			{
-				;//
-			}
+			virtual ~ICodaScriptCommandHandlerHelper() = 0 {}
 
 			virtual ICodaScriptDataStore*		ArrayAllocate(UInt32 InitialSize = 0) = 0;
 			virtual bool						ArrayPushback(ICodaScriptDataStore* AllocatedArray, CodaScriptNumericDataTypeT Data) = 0;

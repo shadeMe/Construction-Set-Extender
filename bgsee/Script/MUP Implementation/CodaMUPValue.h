@@ -13,8 +13,6 @@ namespace bgsee
 			// a wrapper for CodaScriptBackingStore
 			class CodaScriptMUPValue : public ICodaScriptDataStoreOwner, public IValue
 			{
-				friend class CodaScriptVM;
-
 				static int									GIC;
 			protected:
 				char_type									m_cType;				///< A byte indicating the type of the represented value
@@ -36,7 +34,7 @@ namespace bgsee
 				CodaScriptMUPValue(const char_type *val);
 				CodaScriptMUPValue(CodaScriptBackingStore* val);
 				CodaScriptMUPValue(CodaScriptReferenceDataTypeT val);
-				CodaScriptMUPValue(CodaScriptSharedHandleArrayT val);
+				CodaScriptMUPValue(ICodaScriptArrayDataType::SharedPtrT val);
 				CodaScriptMUPValue(const CodaScriptBackingStore& val);
 				CodaScriptMUPValue(const CodaScriptMUPValue& a_Val );
 				CodaScriptMUPValue(const IValue &a_Val);
@@ -77,6 +75,8 @@ namespace bgsee
 
 				virtual ICodaScriptDataStore*				GetDataStore();
 				virtual ICodaScriptDataStoreOwner&			operator=(const ICodaScriptDataStore& rhs);
+
+				static const int&							GetGIC() { return GIC; }
 
 				// Conversion operators
 				operator int ();

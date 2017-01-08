@@ -2,7 +2,8 @@
 #include "..\Main.h"
 #include "..\Console.h"
 #include "..\WorkspaceManager.h"
-#include "CodaDataTypes.h"
+#include "CodaCompiler.h"
+#include "CodaInterpreter.h"
 
 namespace bgsee
 {
@@ -10,8 +11,6 @@ namespace bgsee
 	{
 		class CodaScriptCommandRegistry
 		{
-			friend class CodaScriptVM;
-
 			typedef std::multimap<std::string, ICodaScriptCommand*>		CommandTableMapT;
 
 			CommandTableMapT							Registry;
@@ -20,133 +19,120 @@ namespace bgsee
 			void										AppendToStream(std::fstream& Out, const char* Fmt, ...);
 			std::string									SanitizeLinkableString(const char* String);
 			const char*									StringifyParameterType(UInt8 ParamType);
-
-			void										InitializeExpressionParser(ICodaScriptExpressionParser* Parser);
 		public:
 			CodaScriptCommandRegistry(const char* WikiURL);
 			~CodaScriptCommandRegistry();
 
 			ICodaScriptCommand*							LookupCommand(const char* Name, bool UseAlias = false);
 			bool										RegisterCommand(const char* Category, ICodaScriptCommand* Command);		// caller retains ownership of the function prototype
-			void										RegisterCommands(const CodaScriptRegistrarListT& Registrars);
+			void										RegisterCommands(const CodaScriptCommandRegistrar::ListT& Registrars);
+			void										InitializeExpressionParser(ICodaScriptExpressionParser* Parser);
 
 			void										Dump(std::string OutPath);
+
+			typedef std::unique_ptr<CodaScriptCommandRegistry>		PtrT;
 		};
 
-		class CodaScriptCommandRegistrar
+		class CodaScriptProgramCache : public ICodaScriptProgramCache
 		{
-			friend class CodaScriptCommandRegistry;
-			typedef std::list<ICodaScriptCommand*>		CommandListT;
+			typedef std::unordered_map<std::string, ICodaScriptProgram::PtrT>		ProgramMapT;		// key = file path
 
-			CommandListT								Commands;
-			std::string									Category;
+			ICodaScriptVirtualMachine*		VM;
+			ProgramMapT						Store;
+
+			ICodaScriptProgram*				Lookup(std::string Filepath) const;
+			void							Remove(std::string Filepath);
+			void							Add(std::string Filepath, ICodaScriptProgram::PtrT& Program);
 		public:
-			CodaScriptCommandRegistrar(const char* Category);
-			~CodaScriptCommandRegistrar();
+			CodaScriptProgramCache(ICodaScriptVirtualMachine* VM);
+			virtual ~CodaScriptProgramCache();
 
-			void										Add(ICodaScriptCommand* Command);
+			virtual ICodaScriptProgram*			Get(std::string Filepath, bool Recompile = false) override;
+			virtual void						Invalidate() override;
 		};
 
-		class CodaScriptProfiler
+		class CodaScriptExecutive : public ICodaScriptExecutor
 		{
-			typedef std::stack<CodaScriptElapsedTimeCounterT>		TimeCounterStackT;
-
-			TimeCounterStackT							Counters;
-		public:
-			CodaScriptProfiler();
-			~CodaScriptProfiler();
-
-			void										BeginProfiling(void);
-			long double									EndProfiling(void);
-		};
-
-		class CodaScriptMessageHandler
-		{
-			bool										DefaultContextLoggingState;
-			void*										ConsoleContext;
-		public:
-			CodaScriptMessageHandler();
-			~CodaScriptMessageHandler();
-
-			void										SuspendDefaultContextLogging(void);
-			void										ResumeDefaultContextLogging(void);
-
-			void										Log(const char* Format, ...);
-		};
-
-		class CodaScriptExecutive
-		{
-			static const UInt32							kMaxRecursionLimit;
 			static INISetting							kINI_Profiling;
+			static INISetting							kINI_RecursionLimit;
 
-			CodaScriptExecutionContextStackT			ExecutionStack;
+			typedef std::unordered_map<ICodaScriptProgram*, int>	ProgramCounterMapT;		// value = executing instance counter
+
+			ProgramCounterMapT							ExecutionCounter;
+			ICodaScriptExecutionContext::StackT			ExecutingContexts;
 			CodaScriptProfiler							Profiler;
 			DWORD										OwnerThreadID;
-			CodaScriptMessageHandler*					MessageHandler;
-		public:
-			CodaScriptExecutive(CodaScriptMessageHandler* MsgHdlr);
-			~CodaScriptExecutive();
+			ICodaScriptVirtualMachine*					VM;
 
-			bool										Execute(CodaScriptExecutionContext* Context, CodaScriptBackingStore* Result, bool& ReturnedResult);
-			CodaScriptExecutionContext*					GetExecutingContext(void);
+			void										Push(ICodaScriptExecutionContext* Context);
+			void										Pop(ICodaScriptExecutionContext* Context);
+		public:
+			CodaScriptExecutive(ICodaScriptVirtualMachine* VM);
+			virtual ~CodaScriptExecutive();
+
+			virtual void								Execute(ICodaScriptExecutionContext* Context,
+																ICodaScriptVirtualMachine::ExecuteResult& Out) override;
+			virtual bool								IsBusy() const override;
+			virtual bool								IsProgramExecuting(ICodaScriptProgram* Program) const override;
 
 			static void									RegisterINISettings(INISettingDepotT& Depot);
 		};
 
-		class CodaScriptBackgrounder
+		class CodaScriptBackgrounder : public ICodaScriptBackgroundDaemon
 		{
-			friend class CodaScriptGlobalDataStore;
-			friend class CodaScriptVM;
+			static INISetting					kINI_Enabled;
+			static INISetting					kINI_UpdatePeriod;
+			static INISetting					kINI_LogToDefaultConsoleContext;
 
-			static const std::string					kDepotName;
-			static INISetting							kINI_Enabled;
-			static INISetting							kINI_UpdatePeriod;
-			static INISetting							kINI_LogToDefaultConsoleContext;
+			static VOID CALLBACK				CallbackProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
-			static VOID CALLBACK						CallbackProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
+			typedef std::vector<ICodaScriptExecutionContext::PtrT>	ContextArrayT;
 
-			typedef std::vector<CodaScriptExecutionContext*>	CodaScriptBackgroundExecutionCacheT;
+			ResourceLocation					SourceDepot;
+			ContextArrayT						DepotCache;		// stores the contexts for scripts in the depot
+			ContextArrayT						RuntimeCache;	// stores the contexts for regular scripts executing in the background
+			bool								State;
+			bool								Backgrounding;
+			HWND								TimerDummyWindow;
+			CodaScriptElapsedTimeCounterT		PollingTimeCounter;
+			ICodaScriptVirtualMachine*			VM;
 
-			ResourceLocation							SourceDepot;
-			CodaScriptBackgroundExecutionCacheT			DepotCache;		// stores the contexts for scripts in the depot
-			CodaScriptBackgroundExecutionCacheT			RuntimeCache;	// stores the contexts for regular scripts executing in the background
-			bool										State;
-			bool										Backgrounding;
-			UINT_PTR									TimerID;
-			CodaScriptElapsedTimeCounterT				PollingTimeCounter;
+			INIManagerGetterFunctor				INISettingGetter;
+			INIManagerSetterFunctor				INISettingSetter;
 
-			INIManagerGetterFunctor						INISettingGetter;
-			INIManagerSetterFunctor						INISettingSetter;
+			void								ResetDepotCache(bool Renew = false);
+			void								ResetTimer(bool Renew = false);
 
-			void										ResetCache(CodaScriptBackgroundExecutionCacheT& Cache, bool Renew = false);
-			void										ResetTimer(bool Renew = false);
-
-			void										Execute(CodaScriptBackgroundExecutionCacheT& Cache, CodaScriptExecutive* Executive, double TimePassed);
-			void										Tick(CodaScriptExecutive* Executive);
+			void								Execute(ContextArrayT& Cache, double TimePassed);
+			void								Tick();
 		public:
-			CodaScriptBackgrounder(ResourceLocation Source, INIManagerGetterFunctor Getter, INIManagerSetterFunctor Setter);
-			~CodaScriptBackgrounder();
+			CodaScriptBackgrounder(ICodaScriptVirtualMachine* VM,
+								   ResourceLocation Source,
+								   INIManagerGetterFunctor Getter,
+								   INIManagerSetterFunctor Setter);
+			virtual ~CodaScriptBackgrounder();
 
-			void										Suspend(void);
-			void										Resume(void);
-			bool										GetState(void) const;		// returns true if enabled, false otherwise
+			static void							RegisterINISettings(INISettingDepotT& Depot);
 
-			void										Rebuild(void);				// renews the depot cache
+			virtual const ResourceLocation&		GetBackgroundScriptRepository() const override;
 
-			void										Queue(CodaScriptExecutionContext* Context);
+			virtual void						Suspend() override;
+			virtual void						Resume() override;
+			virtual bool						IsEnabled() const override;
+			virtual bool						IsBackgrounding() const override;
 
-			static void									RegisterINISettings(INISettingDepotT& Depot);
+			virtual void						Rebuild() override;
+			virtual void						Queue(ICodaScriptExecutionContext* Context) override;
 		};
 
 		class CodaScriptGlobalDataStore
 		{
-			friend class CodaScriptVM;
-
 			static BOOL CALLBACK						EditDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-			CodaScriptVariableArrayT						Cache;
+			CodaScriptVariable::ArrayT					Cache;
 			INIManagerGetterFunctor						INISettingGetter;
 			INIManagerSetterFunctor						INISettingSetter;
+			ICodaScriptVirtualMachine*					VM;
 
 			bool										Add(CodaScriptVariable* Variable);
 			template<typename T>
@@ -156,25 +142,28 @@ namespace bgsee
 			CodaScriptVariable*							Add(const char* Name, CodaScriptReferenceDataTypeT Value, bool& ExistingVar);
 
 			void										Remove(CodaScriptVariable* Variable);
-			CodaScriptVariable*							Lookup(const char* Name);
-			bool										Lookup(CodaScriptVariable* Variable, CodaScriptVariableArrayT::iterator& Match);
+			bool										Lookup(CodaScriptVariable* Variable, CodaScriptVariable::ArrayT::iterator& Match);
 			void										Clear(void);
 
 			void										INILoadState(void);
 			void										INISaveState(void);
 		public:
-			CodaScriptGlobalDataStore(INIManagerGetterFunctor Getter, INIManagerSetterFunctor Setter);
+			CodaScriptGlobalDataStore(ICodaScriptVirtualMachine* VM,
+									  INIManagerGetterFunctor Getter,
+									  INIManagerSetterFunctor Setter);
 			~CodaScriptGlobalDataStore();
 
 			void										ShowEditDialog(HINSTANCE ResourceInstance, HWND Parent);
-			CodaScriptVariableArrayT&					GetCache(void);
+			CodaScriptVariable::ArrayT&					GetCache(void);
+			CodaScriptVariable*							Lookup(const char* Name);
+
+			typedef std::unique_ptr<CodaScriptGlobalDataStore>		PtrT;
 		};
 
-		// A virtual machine? Hah! Fat chance!
-		class CodaScriptVM
+		class CodaScriptVM : public ICodaScriptVirtualMachine
 		{
-			friend class								CodaScriptBackgrounder;
-			friend class								CodaScriptGlobalDataStore;
+			static const std::string					kBackgroundDepotName;
+			static const std::string					kSourceExtension;
 
 			static ConsoleCommandInfo					kDumpCodaDocsConsoleCommandData;
 			static void									DumpCodaDocsConsoleCommandHandler(UInt32 ParamCount, const char* Args);
@@ -182,12 +171,13 @@ namespace bgsee
 			static CodaScriptVM*						Singleton;
 
 			ResourceLocation							BaseDirectory;
-			CodaScriptCommandRegistry*					CommandRegistry;
-			CodaScriptMessageHandler*					MessageHandler;
-			CodaScriptExecutive*						Executive;
-			CodaScriptBackgrounder*						Backgrounder;
-			CodaScriptGlobalDataStore*					GlobalStore;
-			ICodaScriptExpressionParser*				ExpressionParser;
+			CodaScriptCommandRegistry::PtrT				CommandRegistry;
+			CodaScriptMessageHandler::PtrT				MessageHandler;
+			CodaScriptProgramCache::PtrT				ProgramCache;
+			CodaScriptExecutive::PtrT					Executive;
+			CodaScriptBackgrounder::PtrT				Backgrounder;
+			CodaScriptGlobalDataStore::PtrT				GlobalStore;
+			ICodaScriptExpressionParser::PtrT			ExpressionParser;
 
 			bool										Initialized;
 
@@ -195,56 +185,41 @@ namespace bgsee
 						 const char* WikiURL,
 						 INIManagerGetterFunctor INIGetter,
 						 INIManagerSetterFunctor INISetter,
-						 CodaScriptRegistrarListT& ScriptCommands);
-			~CodaScriptVM();
-
-			CodaScriptExecutionContext*					CreateExecutionContext(std::fstream& Input, CodaScriptMutableDataArrayT* Parameters = nullptr);
+						 CodaScriptCommandRegistrar::ListT& ScriptCommands);
+			virtual ~CodaScriptVM();
 		public:
-
-			static const std::string					kSourceExtension;
 			static CodaScriptVM*						Get();
-
 			static bool									Initialize(ResourceLocation BasePath,
 																const char* WikiURL,
 																INIManagerGetterFunctor INIGetter,
 																INIManagerSetterFunctor INISetter,
-																CodaScriptRegistrarListT& ScriptCommands);
+																CodaScriptCommandRegistrar::ListT& ScriptCommands);
 			static void									Deinitialize();
 
-			bool										RunScript(std::string ScriptName,					// script name's the same as filename
-																CodaScriptMutableDataArrayT* Parameters,
-																CodaScriptBackingStore* Result,
-																bool& ReturnedResult,
-																bool RunInBackground = false);
 
-			void										ShowGlobalStoreEditDialog(HINSTANCE ResourceInstance, HWND Parent);
-			CodaScriptVariable*							GetGlobal(const char* Name);
-			CodaScriptVariableArrayT&					GetGlobals(void) const;
+			void												ShowGlobalStoreEditDialog(HINSTANCE ResourceInstance, HWND Parent);
+			void												OpenScriptRepository(void) const;
 
-			bool										GetBackgrounderState(void) const;
-			bool										ToggleBackgrounderState(void);
+			virtual ICodaScriptExpressionParser*				BuildExpressionParser() override;
+			virtual ICodaScriptDataStoreOwner*					BuildDataStoreOwner() override;
+			virtual ICodaScriptArrayDataType::SharedPtrT		BuildArray(UInt32 InitialSize = 0) override;
 
-			CodaScriptMessageHandler*					GetMessageHandler(void);
+			virtual const ResourceLocation&						GetScriptRepository() const override;
+			virtual const std::string&							GetScriptFileExtension() const override;
 
-			void										OpenScriptRepository(void) const;
+			virtual CodaScriptVariable*							GetGlobal(const char* Name) const override;
+			virtual const CodaScriptVariable::ArrayT&			GetGlobals() const override;
+
+			virtual CodaScriptMessageHandler*					GetMessageHandler() const override;
+			virtual ICodaScriptExpressionParser*				GetParser() const override;
+			virtual ICodaScriptExecutor*						GetExecutor() const override;
+			virtual ICodaScriptBackgroundDaemon*				GetBackgroundDaemon() const override;
+			virtual ICodaScriptProgramCache*					GetProgramCache() const override;
+
+			virtual bool										IsProgramExecuting(ICodaScriptProgram* Program) const override;
+			virtual void										RunScript(ExecuteParams& Input, ExecuteResult& Output) override;
 		};
+
 #define CODAVM											bgsee::script::CodaScriptVM::Get()
-
-		class CodaScriptObjectFactory
-		{
-		public:
-			enum
-			{
-				kFactoryType_Invalid	= 0,
-
-				kFactoryType_MUP,
-
-				kFactoryType__MAX
-			};
-
-			static ICodaScriptExpressionParser*			BuildExpressionParser(UInt8 Type);
-			static ICodaScriptDataStoreOwner*			BuildDataStoreOwner(UInt8 Type);
-			static CodaScriptSharedHandleArrayT			BuildArray(UInt8 Type, UInt32 InitialSize = 0);
-		};
 	}
 }

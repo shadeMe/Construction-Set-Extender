@@ -71,5 +71,6 @@ namespace bgsee
 		std::string							GetRelativePath() const;		// return RelativePath
 
 		static const std::string&			GetBasePath(void);
+		static bool							IsRelativeTo(const ResourceLocation& Path, const ResourceLocation& RelativeTo);
 	};
 }

@@ -213,4 +213,13 @@ namespace bgsee
 		static const std::string kBasePath = "Data\\BGSEE\\";
 		return kBasePath;
 	}
+
+	bool ResourceLocation::IsRelativeTo(const ResourceLocation& Path, const ResourceLocation& RelativeTo)
+	{
+		if (Path.GetRelativePath().find(RelativeTo.GetBasePath()) == 0)
+			return true;
+		else
+			return false;
+	}
+
 }

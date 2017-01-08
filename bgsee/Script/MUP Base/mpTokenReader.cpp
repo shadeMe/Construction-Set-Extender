@@ -95,7 +95,6 @@ namespace bgsee { namespace script { namespace mup {
 		m_pOprtDef            = obj.m_pOprtDef;
 		m_pFunDef             = obj.m_pFunDef;
 		m_pConstDef           = obj.m_pConstDef;
-		m_pDynVarShadowValues = obj.m_pDynVarShadowValues;
 		m_vTokens             = obj.m_vTokens;
 
 		// Reader klassen klonen
@@ -131,7 +130,6 @@ namespace bgsee { namespace script { namespace mup {
 		,m_pInfixOprtDef(nullptr)
 		,m_pPostOprtDef(nullptr)
 		,m_pConstDef(nullptr)
-		,m_pDynVarShadowValues(nullptr)
 		,m_pVarDef(nullptr)
 		,m_vValueReader()
 		,m_UsedVar()
@@ -256,6 +254,7 @@ namespace bgsee { namespace script { namespace mup {
 		m_UsedVar.clear();
 		m_eLastTokCode = cmUNKNOWN;
 		m_vTokens.clear();
+		m_pVarDef = &const_cast<var_maptype&>(m_pParser->GetVar());
 	}
 
 	//---------------------------------------------------------------------------
@@ -290,7 +289,7 @@ namespace bgsee { namespace script { namespace mup {
 
 			default:
 				bSkip = false;
-			} // switch 
+			} // switch
 		} // while comment or whitespace
 	}
 
@@ -378,9 +377,8 @@ namespace bgsee { namespace script { namespace mup {
 		m_pOprtDef            = &a_pParent->m_OprtDef;
 		m_pInfixOprtDef       = &a_pParent->m_InfixOprtDef;
 		m_pPostOprtDef        = &a_pParent->m_PostOprtDef;
-		m_pVarDef             = const_cast<var_maptype*>(&a_pParent->GetVar());
 		m_pConstDef           = &a_pParent->m_valDef;
-		m_pDynVarShadowValues = &a_pParent->m_valDynVarShadow;
+		m_pVarDef             = nullptr;						// initialized elsewhere
 	}
 
 	//---------------------------------------------------------------------------

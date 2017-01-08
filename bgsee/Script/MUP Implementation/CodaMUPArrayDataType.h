@@ -10,8 +10,6 @@ namespace bgsee
 		{
 			class CodaScriptMUPArrayDataType : public ICodaScriptArrayDataType
 			{
-				friend class CodaScriptVM;
-
 				static int												GIC;
 			protected:
 				typedef std::vector<CodaScriptMUPValue>					MutableElementArrayT;
@@ -34,7 +32,7 @@ namespace bgsee
 				virtual bool											Insert(CodaScriptNumericDataTypeT Data, int Index = -1);
 				virtual bool											Insert(CodaScriptStringParameterTypeT Data, int Index = -1);
 				virtual bool											Insert(CodaScriptReferenceDataTypeT Data, int Index = -1);
-				virtual bool											Insert(CodaScriptSharedHandleArrayT Data, int Index = -1);
+				virtual bool											Insert(ICodaScriptArrayDataType::SharedPtrT Data, int Index = -1);
 
 				virtual bool											Erase(UInt32 Index);
 				virtual void											Clear(void);
@@ -42,6 +40,8 @@ namespace bgsee
 				virtual bool											At(UInt32 Index, CodaScriptBackingStore& OutBuffer) const;
 				virtual bool											At(UInt32 Index, CodaScriptMUPValue** OutBuffer) const;
 				virtual UInt32											Size(void) const;
+
+				static const int&										GetGIC() { return GIC; }
 			};
 		}
 	}

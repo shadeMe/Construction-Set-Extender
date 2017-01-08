@@ -2,6 +2,7 @@
 #include "CodaMUPExpressionParser.h"
 #include "CodaInterpreter.h"
 #include "CodaVM.h"
+#include "CodaUtilities.h"
 
 namespace bgsee
 {
@@ -30,7 +31,7 @@ namespace bgsee
 
 				SME_ASSERT(ExecutionAgent && ByteCode);
 
-				CodaScriptMutableDataArrayT WrappedArgs;
+				CodaScriptBackingStore::ArrayT WrappedArgs;
 				ICodaScriptCommand::ParameterInfo* ParamArray = nullptr;
 				UInt8 ReturnType = ICodaScriptDataStore::kDataType_Invalid;
 				int ParamCount = Parent->GetParameterData(&ParamCount, &ParamArray, &ReturnType);
@@ -74,7 +75,7 @@ namespace bgsee
 					WrappedArgs.push_back(CodaScriptBackingStore(0.0));		// push a dummy value to make sure we have a valid pointer to pass to the command handler
 
 				CodaScriptBackingStore ResultStore;
-				CodaScriptCommandHandlerUtilities HandlerHelper;
+				CodaScriptCommandHandlerUtilities HandlerHelper(ExecutionAgent->GetVM());
 
 				*ret = 0.0;
 				bool ExecuteResult = Parent->Execute(&WrappedArgs[0],

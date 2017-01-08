@@ -196,21 +196,6 @@
     <ClInclude Include="Script\Commands\CodaScriptCommands-String.h">
       <Filter>Modules\Coda\Commands</Filter>
     </ClInclude>
-    <ClInclude Include="Script\CodaDataTypes.h">
-      <Filter>Modules\Coda</Filter>
-    </ClInclude>
-    <ClInclude Include="Script\CodaInterpreter.h">
-      <Filter>Modules\Coda</Filter>
-    </ClInclude>
-    <ClInclude Include="Script\CodaIntrinsics.h">
-      <Filter>Modules\Coda</Filter>
-    </ClInclude>
-    <ClInclude Include="Script\CodaPublicAPI.h">
-      <Filter>Modules\Coda</Filter>
-    </ClInclude>
-    <ClInclude Include="Script\CodaVM.h">
-      <Filter>Modules\Coda</Filter>
-    </ClInclude>
     <ClInclude Include="Script\MUP Base\mpPackageCommon.h">
       <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
     </ClInclude>
@@ -228,6 +213,30 @@
     </ClInclude>
     <ClInclude Include="..\..\SME Sundries\INIEditGUI_Res.h">
       <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Implementation\CodaMUPVariable.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\CodaAST.h">
+      <Filter>Modules\Coda</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\CodaCompiler.h">
+      <Filter>Modules\Coda</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\CodaDataTypes.h">
+      <Filter>Modules\Coda</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\CodaInterpreter.h">
+      <Filter>Modules\Coda</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\CodaPublicAPI.h">
+      <Filter>Modules\Coda</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\CodaUtilities.h">
+      <Filter>Modules\Coda</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\CodaVM.h">
+      <Filter>Modules\Coda</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -364,15 +373,6 @@
     <ClCompile Include="Script\Commands\CodaScriptCommands-String.cpp">
       <Filter>Modules\Coda\Commands</Filter>
     </ClCompile>
-    <ClCompile Include="Script\CodaDataTypes.cpp">
-      <Filter>Modules\Coda</Filter>
-    </ClCompile>
-    <ClCompile Include="Script\CodaInterpreter.cpp">
-      <Filter>Modules\Coda</Filter>
-    </ClCompile>
-    <ClCompile Include="Script\CodaVM.cpp">
-      <Filter>Modules\Coda</Filter>
-    </ClCompile>
     <ClCompile Include="Script\MUP Base\mpPackageCommon.cpp">
       <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
     </ClCompile>
@@ -387,6 +387,28 @@
     </ClCompile>
     <ClCompile Include="Script\MUP Base\mpPackageUnit.cpp">
       <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Implementation\CodaMUPVariable.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\CodaIntrinsics.cpp" />
+    <ClCompile Include="Script\CodaAST.cpp">
+      <Filter>Modules\Coda</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\CodaCompiler.cpp">
+      <Filter>Modules\Coda</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\CodaDataTypes.cpp">
+      <Filter>Modules\Coda</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\CodaInterpreter.cpp">
+      <Filter>Modules\Coda</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\CodaUtilities.cpp">
+      <Filter>Modules\Coda</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\CodaVM.cpp">
+      <Filter>Modules\Coda</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

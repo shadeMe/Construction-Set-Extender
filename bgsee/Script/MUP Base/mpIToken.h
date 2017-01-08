@@ -1,13 +1,13 @@
 /*
 <pre>         ========= Modified by shadeMe for the BGSEditorExtenderBase project =========
-               __________                                 ____  ___
-    _____  __ _\______   \_____ _______  ______ __________\   \/  /
+			   __________                                 ____  ___
+	_____  __ _\______   \_____ _______  ______ __________\   \/  /
    /     \|  |  \     ___/\__  \\_  __ \/  ___// __ \_  __ \     /
   |  Y Y  \  |  /    |     / __ \|  | \/\___ \\  ___/|  | \/     \
   |__|_|  /____/|____|    (____  /__|  /____  >\___  >__| /___/\  \
-        \/                     \/           \/     \/           \_/
-                                       Copyright (C) 2012 Ingo Berg
-                                       All rights reserved.
+		\/                     \/           \/     \/           \_/
+									   Copyright (C) 2012 Ingo Berg
+									   All rights reserved.
 
   muParserX - A C++ math parser library with array and string support
   Copyright (c) 2012, Ingo Berg
@@ -17,10 +17,10 @@
   modification, are permitted provided that the following conditions are met:
 
    * Redistributions of source code must retain the above copyright notice,
-     this list of conditions and the following disclaimer.
+	 this list of conditions and the following disclaimer.
    * Redistributions in binary form must reproduce the above copyright notice,
-     this list of conditions and the following disclaimer in the documentation
-     and/or other materials provided with the distribution.
+	 this list of conditions and the following disclaimer in the documentation
+	 and/or other materials provided with the distribution.
 
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
   ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -47,11 +47,11 @@ namespace bgsee { namespace script { namespace mup {
 	class IOprtPostfix;
   //------------------------------------------------------------------------------
   /** \brief Generic token interface for expression tokens.
-      \author (C) 2010 Ingo Berg
+	  \author (C) 2010 Ingo Berg
 
-      Tokens can either be Functions, operators, values, variables or necessary
-      base tokens like brackets. ´The IToken baseclass implements reference
-      counting. Only TokenPtr<...> templates may be used as pointers to tokens.
+	  Tokens can either be Functions, operators, values, variables or necessary
+	  base tokens like brackets. ´The IToken baseclass implements reference
+	  counting. Only TokenPtr<...> templates may be used as pointers to tokens.
   */
   class IToken
   {
@@ -70,66 +70,66 @@ namespace bgsee { namespace script { namespace mup {
 
   public:
 
-    enum EFlags
-    {
-      flNONE = 0,
-      flVOLATILE = 1
-    };
+	enum EFlags
+	{
+	  flNONE = 0,
+	  flVOLATILE = 1
+	};
 
-    virtual IToken* Clone() const = 0;
-    virtual string_type ToString() const;
-    virtual string_type AsciiDump() const;
+	virtual IToken* Clone() const = 0;
+	virtual string_type ToString() const;
+	virtual string_type AsciiDump() const;
 
-    virtual ICallback* AsICallback();
-    virtual IValue* AsIValue();
-    virtual IPrecedence* AsIPrecedence();
-    virtual IOprtIndex* AsIOprtIndex();
+	virtual ICallback* AsICallback();
+	virtual IValue* AsIValue();
+	virtual IPrecedence* AsIPrecedence();
+	virtual IOprtIndex* AsIOprtIndex();
 
-    virtual void Compile(const string_type &sArg);
+	virtual void Compile(const string_type &sArg);
 
-    ECmdCode GetCode() const;
-    int GetExprPos() const;
+	ECmdCode GetCode() const;
+	int GetExprPos() const;
 
-    const string_type& GetIdent() const;
-    long GetRef() const;
-    void SetIdent(const string_type &a_sIdent);
-    void SetExprPos(int nPos);
+	const string_type& GetIdent() const;
+	long GetRef() const;
+	void SetIdent(const string_type &a_sIdent);
+	void SetExprPos(int nPos);
 
-    void AddFlags(int flags);
-    bool IsFlagSet(int flags) const;
+	void AddFlags(int flags);
+	bool IsFlagSet(int flags) const;
 
   protected:
 
-    explicit IToken(ECmdCode a_iCode);
-    virtual ~IToken();
-    IToken(ECmdCode a_iCode, string_type a_sIdent);
-    IToken(const IToken &ref);
+	explicit IToken(ECmdCode a_iCode);
+	virtual ~IToken();
+	IToken(ECmdCode a_iCode, string_type a_sIdent);
+	IToken(const IToken &ref);
 
-    void ResetRef();
+	void ResetRef();
 
   private:
 
-    /** \brief Release the token.
+	/** \brief Release the token.
 
-      This Function either deletes the token or releases it to
-      the value cache for reuse without deletion.
-    */
-    virtual void Release();
+	  This Function either deletes the token or releases it to
+	  the value cache for reuse without deletion.
+	*/
+	virtual void Release();
 
-    void IncRef() const;
-    long DecRef() const;
+	void IncRef() const;
+	long DecRef() const;
 
-    ECmdCode m_eCode;
-    string_type m_sIdent;
-    int m_nPosExpr;           ///< Original position of the token in the expression
-    mutable long m_nRefCount; ///< Reference counter.
-    int m_flags;
+	ECmdCode m_eCode;
+	string_type m_sIdent;
+	int m_nPosExpr;           ///< Original position of the token in the expression
+	mutable long m_nRefCount; ///< Reference counter.
+	int m_flags;
 
 #ifdef MUP_LEAKAGE_REPORT
-    static std::list<IToken*> s_Tokens;
+	static std::list<IToken*> s_Tokens;
 
   public:
-    static void LeakageReport();
+	static bool LeakageReport(std::string& Out);
 #endif
   };
 
@@ -139,12 +139,12 @@ namespace bgsee { namespace script { namespace mup {
   class GenericToken : public IToken
   {
   public:
-      GenericToken(ECmdCode a_iCode, string_type a_sIdent);
-      explicit GenericToken(ECmdCode a_iCode);
-      GenericToken(const GenericToken &a_Tok);
-      virtual ~GenericToken();
-      virtual IToken* Clone() const;
-      virtual string_type AsciiDump() const;
+	  GenericToken(ECmdCode a_iCode, string_type a_sIdent);
+	  explicit GenericToken(ECmdCode a_iCode);
+	  GenericToken(const GenericToken &a_Tok);
+	  virtual ~GenericToken();
+	  virtual IToken* Clone() const;
+	  virtual string_type AsciiDump() const;
   };
 
   //------------------------------------------------------------------------------
@@ -153,83 +153,83 @@ namespace bgsee { namespace script { namespace mup {
   {
   public:
 
-      typedef T* token_type;
+	  typedef T* token_type;
 
-      //---------------------------------------------------------------------------
-      TokenPtr(token_type p = 0)
-        :m_pTok(p)
-      {
-        if (m_pTok)
-          m_pTok->IncRef();
-      }
+	  //---------------------------------------------------------------------------
+	  TokenPtr(token_type p = 0)
+		:m_pTok(p)
+	  {
+		if (m_pTok)
+		  m_pTok->IncRef();
+	  }
 
-      //---------------------------------------------------------------------------
-      TokenPtr(const TokenPtr &p)
-        :m_pTok(p.m_pTok)
-      {
-        if (m_pTok)
-          m_pTok->IncRef();
-      }
+	  //---------------------------------------------------------------------------
+	  TokenPtr(const TokenPtr &p)
+		:m_pTok(p.m_pTok)
+	  {
+		if (m_pTok)
+		  m_pTok->IncRef();
+	  }
 
-      //---------------------------------------------------------------------------
-     ~TokenPtr()
-      {
-        if (m_pTok && m_pTok->DecRef()==0)
-          m_pTok->Release();
-      }
+	  //---------------------------------------------------------------------------
+	 ~TokenPtr()
+	  {
+		if (m_pTok && m_pTok->DecRef()==0)
+		  m_pTok->Release();
+	  }
 
-      //---------------------------------------------------------------------------
-      token_type operator->() const
-      {
-        return static_cast<token_type>(m_pTok);
-      }
+	  //---------------------------------------------------------------------------
+	  token_type operator->() const
+	  {
+		return static_cast<token_type>(m_pTok);
+	  }
 
-      //---------------------------------------------------------------------------
-      T& operator*() const
-      {
-        assert(m_pTok);
-        return *(static_cast<token_type>(m_pTok));
-      }
+	  //---------------------------------------------------------------------------
+	  T& operator*() const
+	  {
+		assert(m_pTok);
+		return *(static_cast<token_type>(m_pTok));
+	  }
 
-      //---------------------------------------------------------------------------
-      token_type Get() const
-      {
-        return static_cast<token_type>(m_pTok);
-      }
+	  //---------------------------------------------------------------------------
+	  token_type Get() const
+	  {
+		return static_cast<token_type>(m_pTok);
+	  }
 
-      //---------------------------------------------------------------------------
-      /** \brief Release the managed pointer and assign a new pointer. */
-      void Reset(token_type tok)
-      {
-        if (m_pTok && m_pTok->DecRef()==0)
-        {
-          m_pTok->Release();
-          //delete m_pTok;
-        }
+	  //---------------------------------------------------------------------------
+	  /** \brief Release the managed pointer and assign a new pointer. */
+	  void Reset(token_type tok)
+	  {
+		if (m_pTok && m_pTok->DecRef()==0)
+		{
+		  m_pTok->Release();
+		  //delete m_pTok;
+		}
 
-        tok->IncRef();
-        m_pTok = tok;
-      }
+		tok->IncRef();
+		m_pTok = tok;
+	  }
 
-      //---------------------------------------------------------------------------
-      TokenPtr& operator=(const TokenPtr &p)
-      {
-        if (p.m_pTok)
-          p.m_pTok->IncRef();
+	  //---------------------------------------------------------------------------
+	  TokenPtr& operator=(const TokenPtr &p)
+	  {
+		if (p.m_pTok)
+		  p.m_pTok->IncRef();
 
-        if (m_pTok && m_pTok->DecRef()==0)
-        {
-          m_pTok->Release();
-          //delete m_pTok;
-        }
+		if (m_pTok && m_pTok->DecRef()==0)
+		{
+		  m_pTok->Release();
+		  //delete m_pTok;
+		}
 
-        m_pTok = p.m_pTok;
+		m_pTok = p.m_pTok;
 
-        return *this;
-      }
+		return *this;
+	  }
 
   private:
-      IToken *m_pTok;
+	  IToken *m_pTok;
   };
 } } }
 

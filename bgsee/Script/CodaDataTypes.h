@@ -1,20 +1,34 @@
 #pragma once
-#include "CodaIntrinsics.h"
+#include "CodaForwardDecls.inl"
+#include "CodaBaseInterfaces.inl"
+#include "CodaUtilities.h"
 
 namespace bgsee
 {
 	namespace script
 	{
-		// boost declarations are here to prevent adding unnecessary global dependencies
-		typedef boost::shared_ptr<ICodaScriptArrayDataType>				CodaScriptSharedHandleArrayT;
-		typedef boost::shared_ptr<ICodaScriptDataStoreOwner>			CodaScriptScopedHandleDataStoreOwnerT;
-		typedef boost::shared_ptr<ICodaScriptDataStore>					CodaScriptScopedHandleDataStoreT;
-		typedef boost::shared_array<ICodaScriptDataStore>				CodaScriptScopedHandleDataStoreArrayT;
+		class ICodaScriptArrayDataType
+		{
+		public:
+			virtual ~ICodaScriptArrayDataType() = 0;
+
+			typedef std::shared_ptr<ICodaScriptArrayDataType>		SharedPtrT;
+
+			virtual bool											Insert(CodaScriptBackingStore* Data, int Index = -1) = 0;
+			virtual bool											Insert(CodaScriptNumericDataTypeT Data, int Index = -1) = 0;
+			virtual bool											Insert(CodaScriptStringParameterTypeT Data, int Index = -1) = 0;
+			virtual bool											Insert(CodaScriptReferenceDataTypeT Data, int Index = -1) = 0;
+			virtual bool											Insert(SharedPtrT Data, int Index = -1) = 0;
+
+			virtual bool											Erase(UInt32 Index) = 0;
+			virtual void											Clear(void) = 0;
+
+			virtual bool											At(UInt32 Index, CodaScriptBackingStore& OutBuffer) const = 0;
+			virtual UInt32											Size(void) const = 0;
+		};
 
 		class CodaScriptBackingStore : public ICodaScriptDataStore
 		{
-			friend class CodaScriptVM;
-
 			static int												GIC;
 		protected:
 			union
@@ -23,7 +37,7 @@ namespace bgsee
 				CodaScriptReferenceDataTypeT						RefData;
 				CodaScriptStringDataTypeT							StringData;
 			};
-			CodaScriptSharedHandleArrayT							ArrayData;				// not a trivial data type, so can't be a part of the union
+			ICodaScriptArrayDataType::SharedPtrT					ArrayData;				// not a trivial data type, so can't be a part of the union
 
 			void													Reset(void);
 			void													Copy(const CodaScriptBackingStore& Source);
@@ -33,7 +47,7 @@ namespace bgsee
 			explicit CodaScriptBackingStore(CodaScriptNumericDataTypeT Num);
 			explicit CodaScriptBackingStore(CodaScriptStringParameterTypeT Str);
 			explicit CodaScriptBackingStore(CodaScriptReferenceDataTypeT Form);
-			explicit CodaScriptBackingStore(CodaScriptSharedHandleArrayT Array);
+			explicit CodaScriptBackingStore(ICodaScriptArrayDataType::SharedPtrT Array);
 			virtual ~CodaScriptBackingStore();
 
 			explicit CodaScriptBackingStore(const CodaScriptBackingStore& rhs);
@@ -48,49 +62,33 @@ namespace bgsee
 			virtual CodaScriptReferenceDataTypeT					GetFormID() const;
 			virtual CodaScriptNumericDataTypeT						GetNumber() const;
 			virtual CodaScriptStringParameterTypeT					GetString() const;
-			CodaScriptSharedHandleArrayT							GetArray() const;
+			ICodaScriptArrayDataType::SharedPtrT					GetArray() const;
 
 			virtual void											SetFormID(CodaScriptReferenceDataTypeT Data);
 			virtual void											SetNumber(CodaScriptNumericDataTypeT Data);
 			virtual void											SetString(CodaScriptStringParameterTypeT Data);
 			virtual void											SetArray(ICodaScriptDataStore* Data);					// ugly workaround for CRT state inconsistencies during runtime
-			void													SetArray(CodaScriptSharedHandleArrayT Data);
+			void													SetArray(ICodaScriptArrayDataType::SharedPtrT Data);
 
 			virtual ICodaScriptDataStore&							operator=(const ICodaScriptDataStore& rhs);
 			virtual ICodaScriptDataStore&							operator=(CodaScriptNumericDataTypeT Num);
 			virtual ICodaScriptDataStore&							operator=(CodaScriptStringParameterTypeT Str);
 			virtual ICodaScriptDataStore&							operator=(CodaScriptReferenceDataTypeT Form);
-		};
 
-		class ICodaScriptArrayDataType
-		{
-		public:
-			virtual ~ICodaScriptArrayDataType() = 0;
+			static const int&										GetGIC() { return GIC; }
 
-			virtual bool											Insert(CodaScriptBackingStore* Data, int Index = -1) = 0;
-			virtual bool											Insert(CodaScriptNumericDataTypeT Data, int Index = -1) = 0;
-			virtual bool											Insert(CodaScriptStringParameterTypeT Data, int Index = -1) = 0;
-			virtual bool											Insert(CodaScriptReferenceDataTypeT Data, int Index = -1) = 0;
-			virtual bool											Insert(CodaScriptSharedHandleArrayT Data, int Index = -1) = 0;
-
-			virtual bool											Erase(UInt32 Index) = 0;
-			virtual void											Clear(void) = 0;
-
-			virtual bool											At(UInt32 Index, CodaScriptBackingStore& OutBuffer) const = 0;
-			virtual UInt32											Size(void) const = 0;
+			typedef std::vector<CodaScriptBackingStore>				ArrayT;
 		};
 
 		class CodaScriptVariable
 		{
-			friend class CodaScriptVM;
-
 			static int												GIC;
 
 			CodaScriptVariable(const CodaScriptVariable& rhs);
 			CodaScriptVariable& operator=(const CodaScriptVariable& rhs);
 		protected:
 			CodaScriptSourceCodeT									Name;
-			CodaScriptScopedHandleDataStoreOwnerT					BoundOwner;
+			ICodaScriptDataStoreOwner::PtrT							BoundOwner;
 		public:
 			CodaScriptVariable(CodaScriptSourceCodeT& Name, ICodaScriptDataStoreOwner* Storage);		// claims ownership of the owner
 			virtual ~CodaScriptVariable();
@@ -98,6 +96,29 @@ namespace bgsee
 			const char*												GetName() const;
 			void													SetName(CodaScriptSourceCodeT& Name);
 			ICodaScriptDataStoreOwner*								GetStoreOwner() const;
+
+			static const int&										GetGIC() { return GIC; }
+
+			typedef std::vector<CodaScriptVariable*>				ArrayT;
+			typedef std::unique_ptr<CodaScriptVariable>				PtrT;
+		};
+
+		enum class ObjectFactoryType
+		{
+			MUP
+		};
+
+		class IObjectFactory
+		{
+		protected:
+			ObjectFactoryType	FactoryType;
+		public:
+			IObjectFactory(ObjectFactoryType Type) : FactoryType(Type) {}
+			virtual ~IObjectFactory() = 0 {}
+
+			virtual ICodaScriptExpressionParser*			BuildExpressionParser() = 0;
+			virtual ICodaScriptDataStoreOwner*				BuildDataStoreOwner() = 0;
+			virtual ICodaScriptArrayDataType::SharedPtrT	BuildArray(UInt32 InitialSize = 0) = 0;
 		};
 	}
 }

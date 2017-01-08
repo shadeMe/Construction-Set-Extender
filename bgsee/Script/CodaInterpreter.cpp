@@ -3,1548 +3,298 @@
 #include "CodaDataTypes.h"
 #include "CodaVM.h"
 #include "CodaInterpreter.h"
+#include "CodaUtilities.h"
 
 namespace bgsee
 {
 	namespace script
 	{
-		bool CodaScriptTokenizer::IsIndexStringLiteral(const CodaScriptSourceCodeT& Source, int Index)
-		{
-			if (Index >= Source.length())
-				return false;
-
-			int QuoteStack = 0;
-			int Idx = 0;
-			for (char Itr : Source)
-			{
-				if (Itr == '"')
-				{
-					if (QuoteStack == 0)
-						QuoteStack++;
-					else if (QuoteStack == 1)
-						QuoteStack--;
-					else
-						break;				// wtf
-				}
-
-				if (Index == Idx && QuoteStack)
-					return true;
-
-				Idx++;
-			}
-
-			return false;
-		}
-
-		const CodaScriptSourceCodeT				CodaScriptTokenizer::kWhitespace = " \t";
-		const CodaScriptSourceCodeT				CodaScriptTokenizer::kCommentDelimiter = ";";
-		const CodaScriptSourceCodeT				CodaScriptTokenizer::kValidDelimiters = kCommentDelimiter + kWhitespace + ".,(){}[]\n";
-		const UInt32							CodaScriptTokenizer::kCodaKeywordCount = 15 + 1;
-		const CodaScriptSourceCodeT				CodaScriptTokenizer::kCodaKeywordArray[kCodaKeywordCount] =
-		{
-			"<UNKNOWN>",
-			"VAR",
-			"BEGIN",
-			"END",
-			"WHILE",
-			"FOREACH",
-			"LOOP",
-			"IF",
-			"ELSEIF",
-			"ELSE",
-			"ENDIF",
-			"RETURN",
-			"CALL",
-			"CODA",								// syntax: CODA(<ScriptName> [, "PollingInterval"])
-			"CONTINUE",
-			"BREAK"
-		};
-
-		CodaScriptTokenizer::CodaScriptTokenizer()
+		ICodaScriptVirtualMachine::ICodaScriptVirtualMachine(ObjectFactoryType Type) :
+			IObjectFactory(Type)
 		{
 			;//
 		}
 
-		CodaScriptTokenizer::~CodaScriptTokenizer()
-		{
-			ResetState();
-		}
-
-		bool CodaScriptTokenizer::Tokenize(CodaScriptSourceCodeT Source, bool CollectEmptyTokens)
-		{
-			bool Result = false;
-			int StartPos = -1, LastPos = -1;
-
-			ResetState();
-			SourceString = Source;
-			Source += "\n";
-
-			for (int i = 0; i < Source.length(); i++)
-			{
-				char Itr = Source[i];
-				if (kWhitespace.find(Itr) == std::string::npos)
-				{
-					StartPos =i;
-					break;
-				}
-			}
-
-			if (StartPos != -1)
-			{
-				LastPos = StartPos;
-
-				std::string TokenString = Source.substr(StartPos);
-				std::string Token, Delimiter;
-
-				for (int Index = TokenString.find_first_of(kValidDelimiters); Index != std::string::npos; Index = TokenString.find_first_of(kValidDelimiters))
-				{
-					if (TokenString[0] == '\"')
-					{
-						if (TokenString.find('\"', 1) != std::string::npos)
-							Index = TokenString.find('\"', 1) + 1;
-						else
-							Index = TokenString.length() - 1;
-					}
-
-					Token = TokenString.substr(0, Index);
-					Delimiter = TokenString.substr(Index, 1);
-
-					if (Delimiter != kCommentDelimiter)
-					{
-						TokenString = TokenString.erase(0, Index + 1);
-
-						if (Token == "" && !CollectEmptyTokens)
-						{
-							LastPos++;
-							continue;
-						}
-
-						Tokens.push_back(Token);
-						Indices.push_back(LastPos);
-						Delimiters.push_back(Delimiter[0]);
-						LastPos += Token.length() + 1;
-					}
-					else
-					{
-						if (Token != "")
-						{
-							Tokens.push_back(Token);
-							Indices.push_back(LastPos);
-							Delimiters.push_back(Delimiter[0]);
-						}
-						break;
-					}
-				}
-
-				if (Tokens.size() > 0)
-					Result = true;
-			}
-
-			return Result;
-		}
-
-		void CodaScriptTokenizer::ResetState()
-		{
-			Tokens.clear();
-			Delimiters.clear();
-			Indices.clear();
-			SourceString.clear();
-		}
-
-		CodaScriptKeywordT CodaScriptTokenizer::GetKeywordType(CodaScriptSourceCodeT& Token)
-		{
-			CodaScriptKeywordT Result = kTokenType_Invalid;
-
-			for (int i = 1; i < kCodaKeywordCount; i++)
-			{
-				if (!_stricmp(Token.c_str(), kCodaKeywordArray[i].c_str()))
-				{
-					Result = 1 << i;
-					break;
-				}
-			}
-
-			return Result;
-		}
-
-		void CodaScriptTokenizer::Sanitize(const CodaScriptSourceCodeT& In, CodaScriptSourceCodeT& Out, UInt32 OperationMask)
-		{
-			Out.clear();
-
-			if (Tokenize(In, false))
-			{
-				if ((OperationMask & kSanitizeOps_StripLeadingWhitespace))
-					Out = In.substr(Indices[0]);
-				else
-					Out = In;
-
-				if ((OperationMask & kSanitizeOps_StripTabCharacters))
-					std::replace(Out.begin(), Out.end(), '\t', ' ');
-
-				if ((OperationMask & kSanitizeOps_StripComments))
-				{
-					int CommentDelimiter = Out.rfind(kCommentDelimiter);
-					if (CommentDelimiter != std::string::npos && IsIndexStringLiteral(SourceString, CommentDelimiter) == false)
-						Out.erase(CommentDelimiter, Out.length() - CommentDelimiter);
-				}
-			}
-		}
-
-		UInt32 CodaScriptTokenizer::GetParsedTokenCount() const
-		{
-			return Tokens.size();
-		}
-
-		CodaScriptKeywordT CodaScriptTokenizer::GetFirstTokenKeywordType()
-		{
-			if (GetParsedTokenCount())
-				return GetKeywordType(Tokens[0]);
-			else
-				return kTokenType_Invalid;
-		}
-
-		const CodaScriptSourceCodeT& CodaScriptTokenizer::GetKeywordName( CodaScriptKeywordT Keyword )
-		{
-			for (int i = 1; i < kCodaKeywordCount; i++)
-			{
-				if (1 << i == Keyword)
-					return kCodaKeywordArray[i];
-			}
-
-			return kCodaKeywordArray[0];
-		}
-
-		ICodaScriptExpressionByteCode::ICodaScriptExpressionByteCode( ICodaScriptExecutableCode* SourceCode ) :
-			Source(SourceCode)
-		{
-			SME_ASSERT(SourceCode);
-		}
-
-		ICodaScriptExecutableCode* ICodaScriptExpressionByteCode::GetSource( void ) const
-		{
-			return Source;
-		}
-
-		ICodaScriptExpressionByteCode::~ICodaScriptExpressionByteCode()
-		{
-			;//
-		}
-
-		ICodaScriptExpressionParser::~ICodaScriptExpressionParser()
-		{
-			;//
-		}
-
-		ICodaScriptSyntaxTreeVisitor::~ICodaScriptSyntaxTreeVisitor()
-		{
-			;//
-		}
-
-		bool ICodaScriptSyntaxTreeNode::LookupChild( ICodaScriptSyntaxTreeNode* Child, CodaScriptSyntaxTreeNodeArrayT::iterator& Match )
-		{
-			bool Result = false;
-
-			SME_ASSERT(Child && Child != this && Child != Parent);
-
-			for (CodaScriptSyntaxTreeNodeArrayT::iterator Itr = Children.begin(); Itr != Children.end(); Itr++)
-			{
-				if ((*Itr) == Child)
-				{
-					Result = true;
-					Match = Itr;
-					break;
-				}
-			}
-
-			return Result;
-		}
-
-		bool ICodaScriptSyntaxTreeNode::Attach( ICodaScriptSyntaxTreeNode* NewParent )
-		{
-			bool Result = false;
-
-			SME_ASSERT(NewParent && NewParent != this);
-
-			if (Parent != NewParent)
-			{
-				Detach();
-
-				Parent = NewParent;
-				Parent->Children.push_back(this);
-
-				Result = true;
-			}
-
-			return Result;
-		}
-
-		void ICodaScriptSyntaxTreeNode::Detach( bool UpdateParent )
-		{
-			if (Parent)
-			{
-				CodaScriptSyntaxTreeNodeArrayT::iterator Match;
-				bool Result = Parent->LookupChild(this, Match);
-				SME_ASSERT(Result);
-
-				if (UpdateParent)
-					Parent->Children.erase(Match);
-
-				Parent = nullptr;
-			}
-		}
-
-		void ICodaScriptSyntaxTreeNode::Purge( void )
-		{
-			for (CodaScriptSyntaxTreeNodeArrayT::iterator Itr = Children.begin(); Itr != Children.end(); Itr++)
-				delete (*Itr);
-
-			Children.clear();
-		}
-
-		ICodaScriptSyntaxTreeNode::ICodaScriptSyntaxTreeNode( ICodaScriptSyntaxTreeNode* BiologicalParent /*= NULL*/ ) :
-			Parent(nullptr), Children()
-		{
-			if (BiologicalParent)
-				Attach(BiologicalParent);
-		}
-
-		ICodaScriptSyntaxTreeNode::~ICodaScriptSyntaxTreeNode()
-		{
-			Purge();
-			Detach(false);
-		}
-
-		bool ICodaScriptSyntaxTreeNode::GetIsRoot( void ) const
-		{
-			return (Parent == nullptr);
-		}
-
-		bool ICodaScriptSyntaxTreeNode::GetIsLeaf( void ) const
-		{
-			return (Children.size() == 0);
-		}
-
-		void ICodaScriptSyntaxTreeNode::Traverse( ICodaScriptSyntaxTreeVisitor* Visitor )
-		{
-			for (CodaScriptSyntaxTreeNodeArrayT::iterator Itr = Children.begin(); Itr != Children.end(); Itr++)
-				(*Itr)->Accept(Visitor);
-		}
-
-		ICodaScriptSyntaxTreeEvaluator::ICodaScriptSyntaxTreeEvaluator(CodaScriptVM* VM,
-																	CodaScriptExecutionContext* Context,
-																	ICodaScriptExpressionParser* Parser) :
-			VirtualMachine(VM),
-			ScriptContext(Context),
-			ParserAgent(Parser)
-		{
-			SME_ASSERT(VM && Context && Parser);
-		}
-
-		ICodaScriptSyntaxTreeEvaluator::~ICodaScriptSyntaxTreeEvaluator()
-		{
-			VirtualMachine = nullptr;
-			ScriptContext = nullptr;
-			ParserAgent = nullptr;
-		}
-
-		CodaScriptVariable* ICodaScriptSyntaxTreeEvaluator::LookupVariable( const char* Name )
-		{
-			return ScriptContext->GetVariable(Name);
-		}
-
-		CodaScriptVM* ICodaScriptSyntaxTreeEvaluator::GetVM( void ) const
-		{
-			return VirtualMachine;
-		}
-
-		CodaScriptExecutionContext* ICodaScriptSyntaxTreeEvaluator::GetContext( void ) const
-		{
-			return ScriptContext;
-		}
-
-		ICodaScriptExpressionParser* ICodaScriptSyntaxTreeEvaluator::GetParser( void ) const
-		{
-			return ParserAgent;
-		}
-
-		bool ICodaScriptParseTree::GetKeywordInStack( CodaScriptKeywordStackT& Stack, CodaScriptKeywordT Keyword )
-		{
-			CodaScriptKeywordStackT StackBuffer(Stack);
-
-			while (StackBuffer.size())
-			{
-				if (StackBuffer.top() == Keyword)
-					return true;
-				else
-					StackBuffer.pop();
-			}
-
-			return false;
-		}
-
-		bool ICodaScriptParseTree::GetKeywordOnStackTop( CodaScriptKeywordStackT& Stack, CodaScriptKeywordT Keyword )
-		{
-			if (Stack.size() && Stack.top() == Keyword)
-				return true;
-			else
-				return false;
-		}
-
-		ICodaScriptParseTree::ICodaScriptParseTree(CodaScriptVM* VM) :
-			ICodaScriptSyntaxTreeNode(nullptr),
-			VirtualMachine(VM)
-		{
-			SME_ASSERT(VirtualMachine);
-		}
-
-		ICodaScriptParseTree::~ICodaScriptParseTree()
-		{
-			;//
-		}
-
-		void ICodaScriptParseTree::Accept( ICodaScriptSyntaxTreeVisitor* Visitor )
-		{
-			SME_ASSERT(Visitor);
-			this->Traverse(Visitor);
-		}
-
-		int						ICodaScriptExecutableCode::GIC = 0;
-
-		const char*				ICodaScriptExecutableCode::kTypeIDs[] =
-		{
-			"INVALID",
-			"EXPR",
-			"BEGIN",
-			"IF",
-			"ELSEIF",
-			"ELSE",
-			"WHILE",
-			"FOREACH"
-		};
-
-		ICodaScriptExecutableCode::ICodaScriptExecutableCode() :
-			Type(kCodeType_Default_INVALID), Line(0), Source(""), ByteCode(nullptr)
-		{
-			GIC++;
-		}
-
-		ICodaScriptExecutableCode::~ICodaScriptExecutableCode()
-		{
-			GIC--;
-			SME_ASSERT(GIC >= 0);
-
-			SAFEDELETE(ByteCode);
-		}
-
-		UInt8 ICodaScriptExecutableCode::GetType() const
-		{
-			return Type;
-		}
-
-		const CodaScriptSourceCodeT& ICodaScriptExecutableCode::GetCode() const
-		{
-			return Source;
-		}
-
-		const char* ICodaScriptExecutableCode::GetTypeString() const
-		{
-			SME_ASSERT(Type < kCodeType__MAX);
-			return kTypeIDs[Type];
-		}
-
-		UInt32 ICodaScriptExecutableCode::GetLine() const
-		{
-			return Line;
-		}
-
-		ICodaScriptCodeBlock::~ICodaScriptCodeBlock()
-		{
-			;//
-		}
-
-		bool ICodaScriptConditionalCodeBlock::EvaluateCondition( ICodaScriptSyntaxTreeEvaluator* Context )
-		{
-			SME_ASSERT(ByteCode && Context);
-
-			CodaScriptBackingStore Result;
-			Context->GetParser()->Evaluate(Context, ByteCode, &Result);
-
-			if (Result.GetIsNumber() == false)
-				throw CodaScriptException(this, "Condition expression didn't evaluate to a boolean value");
-
-			return Result.GetNumber();
-		}
-
-		ICodaScriptConditionalCodeBlock::ICodaScriptConditionalCodeBlock() :
-			ICodaScriptCodeBlock(), Condition("")
-		{
-			;//
-		}
-
-		ICodaScriptConditionalCodeBlock::~ICodaScriptConditionalCodeBlock()
-		{
-			;//
-		}
-
-		const CodaScriptSourceCodeT& ICodaScriptConditionalCodeBlock::GetCode() const
-		{
-			return Condition;
-		}
-
-		const UInt32			ICodaScriptLoopBlock::kOverrunLimit = 0xFFFFF;
-
-		void ICodaScriptLoopBlock::BeginLooping( CodaScriptSyntaxTreeExecuteVisitor* Context )
-		{
-			SME_ASSERT(Context);
-			Context->ExecutingLoops.push(this);
-			State = kLoopState_Default;
-		}
-
-		void ICodaScriptLoopBlock::EndLooping( CodaScriptSyntaxTreeExecuteVisitor* Context )
-		{
-			SME_ASSERT(Context && Context->GetCurrentLoop() == this);
-			Context->ExecutingLoops.pop();
-			State = kLoopState_Default;
-		}
-
-		ICodaScriptLoopBlock::ICodaScriptLoopBlock() :
-			ICodaScriptConditionalCodeBlock(), State(kLoopState_Default)
-		{
-			;//
-		}
-
-		ICodaScriptLoopBlock::~ICodaScriptLoopBlock()
-		{
-			State = kLoopState_Default;
-		}
-
-		void ICodaScriptLoopBlock::Break()
-		{
-			State = kLoopState_Break;
-		}
-
-		ICodaScriptLoopBlock::LoopStackOperator::LoopStackOperator( ICodaScriptLoopBlock* Source, CodaScriptSyntaxTreeExecuteVisitor* Visitor ) :
-			LoopBlock(Source),
-			Context(Visitor)
-		{
-			SME_ASSERT(Source && Visitor);
-			LoopBlock->BeginLooping(Context);
-			LoopBlock->State = ICodaScriptLoopBlock::kLoopState_Default;
-		}
-
-		ICodaScriptLoopBlock::LoopStackOperator::~LoopStackOperator()
-		{
-			Reset();
-		}
-
-		void ICodaScriptLoopBlock::LoopStackOperator::Reset( void )
-		{
-			LoopBlock->EndLooping(Context);
-		}
-
-		CodaScriptExpression::CodaScriptExpression( CodaScriptSourceCodeT& Source, UInt32 Line ) :
-			ICodaScriptExecutableCode()
-		{
-			this->Type = kCodeType_Line_EXPRESSION;
-			this->Line = Line;
-
-			CodaScriptTokenizer Tokenizer;
-			Tokenizer.Sanitize(Source, this->Source,
-				CodaScriptTokenizer::kSanitizeOps_StripComments |
-				CodaScriptTokenizer::kSanitizeOps_StripLeadingWhitespace |
-				CodaScriptTokenizer::kSanitizeOps_StripTabCharacters);
-		}
-
-		CodaScriptExpression::~CodaScriptExpression()
-		{
-			SME_ASSERT(GetIsLeaf() == true);
-		}
-
-		void CodaScriptExpression::Accept( ICodaScriptSyntaxTreeVisitor* Visitor )
-		{
-			Visitor->Visit(this);
-		}
-
-		CodaScriptBEGINBlock::CodaScriptBEGINBlock( CodaScriptSourceCodeT& Source, UInt32 Line ) :
-			ICodaScriptUnconditionalCodeBlockT()
-		{
-			this->Type = kCodeType_Block_BEGIN;
-			this->Line = Line;
-
-			CodaScriptTokenizer Tokenizer;
-			Tokenizer.Sanitize(Source, this->Source,
-				CodaScriptTokenizer::kSanitizeOps_StripComments |
-				CodaScriptTokenizer::kSanitizeOps_StripLeadingWhitespace |
-				CodaScriptTokenizer::kSanitizeOps_StripTabCharacters);
-		}
-
-		CodaScriptBEGINBlock::~CodaScriptBEGINBlock()
-		{
-			;//
-		}
-
-		void CodaScriptBEGINBlock::Accept( ICodaScriptSyntaxTreeVisitor* Visitor )
-		{
-			this->Traverse(Visitor);
-		}
-
-		CodaScriptIFBlock::CodaScriptIFBlock( CodaScriptSourceCodeT& Source, UInt32 Line ) :
-			ICodaScriptConditionalCodeBlock(), BranchELSE(nullptr), BranchELSEIF()
-		{
-			this->Type = kCodeType_Block_IF;
-			this->Line = Line;
-
-			CodaScriptTokenizer Tokenizer;
-			Tokenizer.Sanitize(Source, this->Source,
-				CodaScriptTokenizer::kSanitizeOps_StripComments |
-				CodaScriptTokenizer::kSanitizeOps_StripLeadingWhitespace |
-				CodaScriptTokenizer::kSanitizeOps_StripTabCharacters);
-
-			CodaScriptSourceCodeT ConditionExpression;
-			if (Tokenizer.Tokenize(this->Source, false))
-			{
-				ConditionExpression = this->Source.substr(Tokenizer.Indices[0] + Tokenizer.Tokens[0].length());		// everything following the first token
-				Tokenizer.Sanitize(ConditionExpression, this->Condition,
-					CodaScriptTokenizer::kSanitizeOps_StripComments |
-					CodaScriptTokenizer::kSanitizeOps_StripTabCharacters);
-			}
-		}
-
-		CodaScriptIFBlock::~CodaScriptIFBlock()
-		{
-			SAFEDELETE(BranchELSE);
-
-			for (ElseIfBlockArrayT::iterator Itr = BranchELSEIF.begin(); Itr != BranchELSEIF.end(); Itr++)
-				delete (*Itr);
-		}
-
-		void CodaScriptIFBlock::Accept( ICodaScriptSyntaxTreeVisitor* Visitor )
-		{
-			Visitor->Visit(this);
-		}
-
-		CodaScriptELSEIFBlock::CodaScriptELSEIFBlock( CodaScriptSourceCodeT& Source, UInt32 Line ) :
-			ICodaScriptConditionalCodeBlock()
-		{
-			this->Type = kCodeType_Block_ELSEIF;
-			this->Line = Line;
-
-			CodaScriptTokenizer Tokenizer;
-			Tokenizer.Sanitize(Source, this->Source,
-				CodaScriptTokenizer::kSanitizeOps_StripComments |
-				CodaScriptTokenizer::kSanitizeOps_StripLeadingWhitespace |
-				CodaScriptTokenizer::kSanitizeOps_StripTabCharacters);
-
-			CodaScriptSourceCodeT ConditionExpression;
-			if (Tokenizer.Tokenize(this->Source, false))
-			{
-				ConditionExpression = this->Source.substr(Tokenizer.Indices[0] + Tokenizer.Tokens[0].length());		// everything following the first token
-				Tokenizer.Sanitize(ConditionExpression, this->Condition,
-					CodaScriptTokenizer::kSanitizeOps_StripComments |
-					CodaScriptTokenizer::kSanitizeOps_StripTabCharacters);
-			}
-		}
-
-		CodaScriptELSEIFBlock::~CodaScriptELSEIFBlock()
-		{
-			;//
-		}
-
-		void CodaScriptELSEIFBlock::Accept( ICodaScriptSyntaxTreeVisitor* Visitor )
-		{
-			Visitor->Visit(this);
-		}
-
-		CodaScriptELSEBlock::CodaScriptELSEBlock( CodaScriptSourceCodeT& Source, UInt32 Line ) :
-			ICodaScriptUnconditionalCodeBlockT()
-		{
-			this->Type = kCodeType_Block_ELSE;
-			this->Line = Line;
-
-			CodaScriptTokenizer Tokenizer;
-			Tokenizer.Sanitize(Source, this->Source,
-				CodaScriptTokenizer::kSanitizeOps_StripComments |
-				CodaScriptTokenizer::kSanitizeOps_StripLeadingWhitespace |
-				CodaScriptTokenizer::kSanitizeOps_StripTabCharacters);
-		}
-
-		CodaScriptELSEBlock::~CodaScriptELSEBlock()
-		{
-			;//
-		}
-
-		void CodaScriptELSEBlock::Accept( ICodaScriptSyntaxTreeVisitor* Visitor )
-		{
-			this->Traverse(Visitor);
-		}
-
-		CodaScriptWHILEBlock::CodaScriptWHILEBlock( CodaScriptSourceCodeT& Source, UInt32 Line ) :
-			ICodaScriptLoopBlock()
-		{
-			this->Type = kCodeType_Loop_WHILE;
-			this->Line = Line;
-
-			CodaScriptTokenizer Tokenizer;
-			Tokenizer.Sanitize(Source, this->Source,
-				CodaScriptTokenizer::kSanitizeOps_StripComments |
-				CodaScriptTokenizer::kSanitizeOps_StripLeadingWhitespace |
-				CodaScriptTokenizer::kSanitizeOps_StripTabCharacters);
-
-			CodaScriptSourceCodeT ConditionExpression;
-			if (Tokenizer.Tokenize(this->Source, false))
-			{
-				ConditionExpression = this->Source.substr(Tokenizer.Indices[0] + Tokenizer.Tokens[0].length());		// everything following the first token
-				Tokenizer.Sanitize(ConditionExpression, this->Condition,
-					CodaScriptTokenizer::kSanitizeOps_StripComments |
-					CodaScriptTokenizer::kSanitizeOps_StripTabCharacters);
-			}
-		}
-
-		CodaScriptWHILEBlock::~CodaScriptWHILEBlock()
-		{
-			;//
-		}
-
-		void CodaScriptWHILEBlock::Accept( ICodaScriptSyntaxTreeVisitor* Visitor )
-		{
-			Visitor->Visit(this);
-		}
-
-		CodaScriptFOREACHBlock::CodaScriptFOREACHBlock( CodaScriptSourceCodeT& Source, UInt32 Line ) :
-			ICodaScriptLoopBlock(), IteratorName("")
-		{
-			this->Type = kCodeType_Loop_FOREACH;
-			this->Line = Line;
-
-			CodaScriptTokenizer Tokenizer;
-			Tokenizer.Sanitize(Source, this->Source,
-				CodaScriptTokenizer::kSanitizeOps_StripComments |
-				CodaScriptTokenizer::kSanitizeOps_StripLeadingWhitespace |
-				CodaScriptTokenizer::kSanitizeOps_StripTabCharacters);
-
-			CodaScriptSourceCodeT ConditionExpression;
-			if (Tokenizer.Tokenize(this->Source, false))
-			{
-				this->IteratorName = Tokenizer.Tokens[1];		// second token
-
-				ConditionExpression = this->Source.substr(Tokenizer.Indices[2] + Tokenizer.Tokens[2].length());		// everything past the third token (<-)
-				Tokenizer.Sanitize(ConditionExpression, this->Condition,
-					CodaScriptTokenizer::kSanitizeOps_StripComments |
-					CodaScriptTokenizer::kSanitizeOps_StripTabCharacters);
-			}
-		}
-
-		CodaScriptFOREACHBlock::~CodaScriptFOREACHBlock()
-		{
-			;//
-		}
-
-		void CodaScriptFOREACHBlock::Accept( ICodaScriptSyntaxTreeVisitor* Visitor )
-		{
-			Visitor->Visit(this);
-		}
-
-		const UInt32		CodaScriptExecutionContext::kMaxParameters = 10;
-
-		CodaScriptVariable* CodaScriptExecutionContext::AddVariable( CodaScriptSourceCodeT& Name )
-		{
-			if (GetVariable(Name) == nullptr)
-			{
-				CodaScriptVariable* Addend = new CodaScriptVariable(Name,
-																	CodaScriptObjectFactory::BuildDataStoreOwner(
-																	CodaScriptObjectFactory::kFactoryType_MUP));
-				Variables.push_back(Addend);
-				return Addend;
-			}
-
-			return nullptr;
-		}
-
-		void CodaScriptExecutionContext::SetVariable( CodaScriptSourceCodeT& Name, CodaScriptBackingStore& Value )
-		{
-			CodaScriptVariable* Var = GetVariable(Name);
-			if (Var)
-			{
-				ICodaScriptDataStore* DataStore = Var->GetStoreOwner()->GetDataStore();
-				SME_ASSERT(DataStore);
-
-				*DataStore = Value;
-			}
-		}
-
-		CodaScriptVariable* CodaScriptExecutionContext::GetVariable( CodaScriptSourceCodeT& Name )
+		CodaScriptVariable* CodaScriptExecutionContext::GetVariable(const CodaScriptSourceCodeT& Name) const
 		{
 			return GetVariable(Name.c_str());
 		}
 
-		CodaScriptVariable* CodaScriptExecutionContext::GetVariable( const char* Name )
+		CodaScriptVariable* CodaScriptExecutionContext::GetVariable(const char* Name) const
 		{
-			for (CodaScriptVariableArrayT::iterator Itr = Variables.begin(); Itr != Variables.end(); Itr++)
-			{
-				if (!_stricmp(Name, (*Itr)->GetName()))
-					return *Itr;
-			}
-
-			return nullptr;
-		}
-
-		void CodaScriptExecutionContext::ReleaseVariables( void )
-		{
-			for (CodaScriptVariableArrayT::iterator Itr = Variables.begin(); Itr != Variables.end(); Itr++)
-				delete *Itr;
-
-			Variables.clear();
-		}
-
-		CodaScriptExecutionContext::CodaScriptExecutionContext( CodaScriptVM* VirtualMachine,
-																std::fstream& SourceCode,
-																ICodaScriptExpressionParser* ExpressionParser,
-																CodaScriptMutableDataArrayT* Parameters ) :
-			ICodaScriptParseTree(VirtualMachine),
-			ScriptName("<unknown>"),
-			Variables(),
-			Validity(kValidity_Unknown),
-			BoundParser(ExpressionParser),
-			PollingInterval(0.0),
-			PollingIntervalReminder(0.0),
-			ElapsedTimeCounter()
-		{
-			SME_ASSERT(VirtualMachine && ExpressionParser);
-
-			char Buffer[0x512] = {0};
-			UInt32 CurrentLine = 1;
-			bool Result = true;
-			CodaScriptSimpleInstanceCounter<ICodaScriptExecutableCode> CodeInstanceCounter;
-
-			CodaScriptTokenizer Tokenizer;
-			CodaScriptKeywordStackT	BlockStack;
-			CodaScriptExecutableCodeStackT CodeStack;
-
-			BlockStack.push(CodaScriptTokenizer::kTokenType_Invalid);
-			CodeStack.push(nullptr);
-
-			while (SourceCode.eof() == false)
-			{
-				ZeroMemory(Buffer, sizeof(Buffer));
-				SourceCode.getline(Buffer, sizeof(Buffer));
-				CodaScriptSourceCodeT SourceLine(Buffer);
-
-				if (Tokenizer.Tokenize(Buffer, false))
-				{
-					CodaScriptSourceCodeT FirstToken(Tokenizer.Tokens[0]);
-					CodaScriptSourceCodeT SecondToken((Tokenizer.GetParsedTokenCount() > 1) ? Tokenizer.Tokens[1] : "");
-
-					if (CurrentLine == 1)
-					{
-						if (Tokenizer.GetFirstTokenKeywordType() == CodaScriptTokenizer::kTokenType_ScriptName)
-						{
-							if (SecondToken != "")
-							{
-								this->ScriptName = SecondToken;
-
-								if (Tokenizer.GetParsedTokenCount() >= 3)
-								{
-									CodaScriptSourceCodeT ThirdToken(Tokenizer.Tokens[2]);
-									if (ThirdToken.length() >= 3)
-									{
-										ThirdToken.erase(0, 1);
-										ThirdToken.erase(ThirdToken.end() - 1);
-
-										double DeclaredInteraval = atof(ThirdToken.c_str());
-										if (DeclaredInteraval > 0)
-											this->PollingInterval = DeclaredInteraval;
-									}
-								}
-							}
-							else
-							{
-								VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid script name", CurrentLine);
-								Result = false;
-							}
-						}
-						else
-						{
-							VirtualMachine->GetMessageHandler()->Log("Line %d: Scripts should start with a script name declaration", CurrentLine);
-							Result = false;
-						}
-
-						CurrentLine++;
-						continue;
-					}
-
-					CodaScriptKeywordT FirstKeyword = Tokenizer.GetFirstTokenKeywordType();
-					switch (FirstKeyword)
-					{
-					case CodaScriptTokenizer::kTokenType_Variable:
-						if (BlockStack.top() != CodaScriptTokenizer::kTokenType_Invalid)
-						{
-							VirtualMachine->GetMessageHandler()->Log("Line %d: Variable '%s' declared inside a script block", CurrentLine, SecondToken.c_str());
-							Result = false;
-						}
-						else if (GetVariable(SecondToken))
-						{
-							VirtualMachine->GetMessageHandler()->Log("Line %d: Variable '%s' redeclaration", CurrentLine, SecondToken.c_str());
-							Result = false;
-						}
-						else if (SecondToken == "" || SME::StringHelpers::GetHasNonAlnumCharacter(SecondToken))
-						{
-							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid variable name - Only alphabets and digits allowed", CurrentLine);
-							Result = false;
-						}
-						else if (VirtualMachine->GetGlobal(SecondToken.c_str()))
-						{
-							VirtualMachine->GetMessageHandler()->Log("Line %d: Scope conflict - Global variable '%s' exists", CurrentLine, SecondToken.c_str());
-							Result = false;
-						}
-						else
-						{
-							CodaScriptVariable* NewVar = AddVariable(SecondToken);
-
-							if (Tokenizer.GetParsedTokenCount() > 3 && !strcmp(Tokenizer.Tokens[2].c_str(), "="))
-							{
-								CodaScriptSourceCodeT LineBuffer;
-								Tokenizer.Sanitize(CodaScriptSourceCodeT(Buffer), LineBuffer,
-												   CodaScriptTokenizer::kSanitizeOps_StripComments |
-												   CodaScriptTokenizer::kSanitizeOps_StripLeadingWhitespace |
-												   CodaScriptTokenizer::kSanitizeOps_StripTabCharacters);
-
-								CodaScriptSourceCodeT InitializationValue = LineBuffer.substr(Tokenizer.Indices[3]);
-								if (InitializationValue.find("\"") == 0 && InitializationValue.length() > 1)
-								{
-									InitializationValue = Tokenizer.Tokens[3];
-									*NewVar->GetStoreOwner() = CodaScriptBackingStore(InitializationValue.c_str());
-								}
-								else
-									*NewVar->GetStoreOwner() = CodaScriptBackingStore(atof(InitializationValue.c_str()));
-							}
-						}
-
-						break;
-					case CodaScriptTokenizer::kTokenType_Begin:
-						if (BlockStack.top() != CodaScriptTokenizer::kTokenType_Invalid)
-						{
-							VirtualMachine->GetMessageHandler()->Log("Line %d: Nested Begin block", CurrentLine);
-							Result = false;
-						}
-						else if (GetIsLeaf() == false)
-						{
-							VirtualMachine->GetMessageHandler()->Log("Line %d: Multiple Begin blocks", CurrentLine);
-							Result = false;
-						}
-						else
-						{
-							std::vector<CodaScriptSourceCodeT> ParameterIDs;
-
-							for (CodaScriptTokenizer::ParsedTokenListT::iterator Itr = ++(Tokenizer.Tokens.begin()); Itr != Tokenizer.Tokens.end(); Itr++)
-								ParameterIDs.push_back(*Itr);
-
-							if (Parameters)
-							{
-								if (ParameterIDs.size() > kMaxParameters)
-								{
-									VirtualMachine->GetMessageHandler()->Log("Line %d: Too many parameters passed", CurrentLine);
-									Result = false;
-								}
-								else if (Parameters->size() != ParameterIDs.size())
-								{
-									VirtualMachine->GetMessageHandler()->Log("Line %d: Incorrect number of parameters passed - Received %d, expected %d", CurrentLine, Parameters->size(), ParameterIDs.size());
-									Result = false;
-								}
-								else
-								{
-									for (int i = 0; i < Parameters->size(); i++)
-									{
-										CodaScriptVariable* ParamVar = GetVariable(ParameterIDs[i]);
-										if (ParamVar)
-										{
-											*ParamVar->GetStoreOwner() = Parameters->at(i);
-										}
-										else
-										{
-											VirtualMachine->GetMessageHandler()->Log("Line %d: Couldn't initialize parameter '%s' - Non-existent variable", CurrentLine, ParameterIDs[i]);
-											Result = false;
-										}
-									}
-								}
-							}
-							else if (ParameterIDs.size())
-							{
-								VirtualMachine->GetMessageHandler()->Log("Line %d: Incorrect number of parameters passed - Received %d, expected %d", CurrentLine, 0, ParameterIDs.size());
-								Result = false;
-							}
-
-							BlockStack.push(CodaScriptTokenizer::kTokenType_Begin);
-							if (Result == false)
-								break;
-
-							ICodaScriptExecutableCode* NewNode = new CodaScriptBEGINBlock(SourceLine, CurrentLine);
-							NewNode->Attach(this);
-							CodeStack.push(NewNode);
-						}
-
-						break;
-					case CodaScriptTokenizer::kTokenType_End:
-						if (BlockStack.top() != CodaScriptTokenizer::kTokenType_Begin)
-						{
-							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid block structure. Command 'End' has no matching 'Begin'", CurrentLine);
-							Result = false;
-						}
-						else
-						{
-							if (CodeStack.size())
-								CodeStack.pop();
-
-							if (BlockStack.size())
-								BlockStack.pop();
-						}
-
-						break;
-					case CodaScriptTokenizer::kTokenType_While:
-						if (BlockStack.top() == CodaScriptTokenizer::kTokenType_Invalid)
-						{
-							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid block structure. Script commands must be inside a 'Begin' block", CurrentLine);
-							Result = false;
-						}
-						else if (Tokenizer.GetParsedTokenCount() < 2)
-						{
-							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid condition expression", CurrentLine);
-							Result = false;
-						}
-						else
-						{
-							BlockStack.push(CodaScriptTokenizer::kTokenType_Loop);
-							if (Result == false)
-								break;
-
-							ICodaScriptExecutableCode* NewNode = new CodaScriptWHILEBlock(SourceLine, CurrentLine);
-							ICodaScriptExecutableCode* TopNode = CodeStack.top();
-							SME_ASSERT(TopNode && TopNode->GetType() != ICodaScriptExecutableCode::kCodeType_Line_EXPRESSION);
-							NewNode->Attach(TopNode);
-							CodeStack.push(NewNode);
-						}
-
-						break;
-					case CodaScriptTokenizer::kTokenType_ForEach:
-						if (BlockStack.top() == CodaScriptTokenizer::kTokenType_Invalid)
-						{
-							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid block structure. Script commands must be inside a 'Begin' block", CurrentLine);
-							Result = false;
-						}
-						else if (Tokenizer.GetParsedTokenCount() < 4)
-						{
-							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid ForEach expression", CurrentLine);
-							Result = false;
-						}
-						else
-						{
-							BlockStack.push(CodaScriptTokenizer::kTokenType_Loop);
-							if (Result == false)
-								break;
-
-							ICodaScriptExecutableCode* NewNode = new CodaScriptFOREACHBlock(SourceLine, CurrentLine);
-							ICodaScriptExecutableCode* TopNode = CodeStack.top();
-							SME_ASSERT(TopNode && TopNode->GetType() != ICodaScriptExecutableCode::kCodeType_Line_EXPRESSION);
-							NewNode->Attach(TopNode);
-							CodeStack.push(NewNode);
-						}
-
-						break;
-					case CodaScriptTokenizer::kTokenType_Loop:
-						if (BlockStack.top() != CodaScriptTokenizer::kTokenType_Loop)
-						{
-							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid block structure. Command 'Loop' has no matching 'While' or 'ForEach'", CurrentLine);
-							Result = false;
-						}
-						else
-						{
-							if (CodeStack.size())
-								CodeStack.pop();
-
-							if (BlockStack.size())
-								BlockStack.pop();
-						}
-
-						break;
-					case CodaScriptTokenizer::kTokenType_If:
-						if (BlockStack.top() == CodaScriptTokenizer::kTokenType_Invalid)
-						{
-							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid block structure. Script commands must be inside a 'Begin' block", CurrentLine);
-							Result = false;
-						}
-						else if (Tokenizer.GetParsedTokenCount() < 2)
-						{
-							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid condition expression", CurrentLine);
-							Result = false;
-						}
-						else
-						{
-							BlockStack.push(CodaScriptTokenizer::kTokenType_If);
-							if (Result == false)
-								break;
-
-							ICodaScriptExecutableCode* NewNode = new CodaScriptIFBlock(SourceLine, CurrentLine);
-							ICodaScriptExecutableCode* TopNode = CodeStack.top();
-							SME_ASSERT(TopNode && TopNode->GetType() != ICodaScriptExecutableCode::kCodeType_Line_EXPRESSION);
-							NewNode->Attach(TopNode);
-							CodeStack.push(NewNode);
-						}
-
-						break;
-					case CodaScriptTokenizer::kTokenType_ElseIf:
-					case CodaScriptTokenizer::kTokenType_Else:
-						if (BlockStack.top() != CodaScriptTokenizer::kTokenType_If &&
-							BlockStack.top() != (CodaScriptTokenizer::kTokenType_If|CodaScriptTokenizer::kTokenType_ElseIf))
-						{
-							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid block structure. Command 'Else(If)' has no/incorrectly matching/matched 'If'/'Else(If)'", CurrentLine);
-							Result = false;
-						}
-						else if (FirstKeyword == CodaScriptTokenizer::kTokenType_ElseIf && Tokenizer.GetParsedTokenCount() < 2)
-						{
-							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid condition expression", CurrentLine);
-							Result = false;
-						}
-						else
-						{
-							if (BlockStack.top() == CodaScriptTokenizer::kTokenType_If)
-							{
-								BlockStack.pop();		// pop IF
-								BlockStack.push(CodaScriptTokenizer::kTokenType_If|CodaScriptTokenizer::kTokenType_ElseIf);
-
-								if (Result == false)
-									break;
-							}
-							else
-							{
-								if (Result == false)
-									break;
-
-								CodeStack.pop();		// pop previous ELSE(IF)
-							}
-
-							ICodaScriptExecutableCode* NewNode = nullptr;
-							ICodaScriptExecutableCode* TopNode = CodeStack.top();
-							SME_ASSERT(TopNode && TopNode->GetType() == ICodaScriptExecutableCode::kCodeType_Block_IF);
-							CodaScriptIFBlock* IFBlock = dynamic_cast<CodaScriptIFBlock*>(TopNode);
-
-							if (FirstKeyword == CodaScriptTokenizer::kTokenType_ElseIf)
-							{
-								CodaScriptELSEIFBlock* ElseIfBlock = new CodaScriptELSEIFBlock(SourceLine, CurrentLine);
-								NewNode = ElseIfBlock;
-								IFBlock->BranchELSEIF.push_back(ElseIfBlock);
-							}
-							else if (IFBlock->BranchELSE == nullptr)
-							{
-								NewNode = IFBlock->BranchELSE = new CodaScriptELSEBlock(SourceLine, CurrentLine);
-							}
-							else
-							{
-								VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid block structure. Multiple 'Else' blocks", CurrentLine);
-								Result = false;
-							}
-
-							if (Result)
-								CodeStack.push(NewNode);
-						}
-
-						break;
-					case CodaScriptTokenizer::kTokenType_EndIf:
-						if (BlockStack.top() != CodaScriptTokenizer::kTokenType_If &&
-							BlockStack.top() != (CodaScriptTokenizer::kTokenType_If|CodaScriptTokenizer::kTokenType_ElseIf))
-						{
-							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid block structure. Command 'EndIf' has no/incorrectly matching/matched 'If'/'Else(If)'", CurrentLine);
-							Result = false;
-						}
-						else
-						{
-							UInt32 StackTop = BlockStack.top();
-
-							if (CodeStack.size())
-							{
-								CodeStack.pop();
-								if (CodeStack.size() && StackTop != CodaScriptTokenizer::kTokenType_If)		// pop once again to remove the underlying IF block
-									CodeStack.pop();
-							}
-
-							if (BlockStack.size())
-							{
-								BlockStack.pop();
-							}
-						}
-
-						break;
-					default:
-						{
-							switch (FirstKeyword)
-							{
-							case CodaScriptTokenizer::kTokenType_Return:
-								break;
-							case CodaScriptTokenizer::kTokenType_Break:
-							case CodaScriptTokenizer::kTokenType_Continue:
-								if (!GetKeywordInStack(BlockStack, CodaScriptTokenizer::kTokenType_Loop))
-								{
-									VirtualMachine->GetMessageHandler()->Log("Line %d: Command 'Break'/'Loop' called outside a loop context", CurrentLine);
-									Result = false;
-								}
-
-								break;
-							}
-
-							if (BlockStack.top() == CodaScriptTokenizer::kTokenType_Invalid)
-							{
-								VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid block structure. Script commands must be inside a 'Begin' block", CurrentLine);
-								Result = false;
-							}
-
-							if (Result == false)
-								break;
-
-							ICodaScriptExecutableCode* NewNode = new CodaScriptExpression(SourceLine, CurrentLine);
-							ICodaScriptExecutableCode* TopNode = CodeStack.top();
-							SME_ASSERT(TopNode && TopNode->GetType() != ICodaScriptExecutableCode::kCodeType_Line_EXPRESSION);
-
-							NewNode->Attach(TopNode);
-						}
-
-						break;
-					}
-				}
-
-				CurrentLine++;
-			}
-
-			if (Result == false)
-			{
-				this->Purge();
-				this->ReleaseVariables();
-				this->Validity = kValidity_Egregious;
-
-				if (CodeInstanceCounter.GetCount())
-				{
-					BGSEECONSOLE_MESSAGE("CodaScriptExecutionContext::CodaScriptExecutionContext - By the Power of Grey-Skull! We are leaking executable code!");
-					MessageBeep(MB_ICONERROR);
-				}
-			}
+			if (Variables.count(Name) == 0)
+				return nullptr;
 			else
-			{
-				SME_ASSERT(this->Children.size() == 1);
-				SME_ASSERT(BlockStack.size() == 1 && BlockStack.top() == CodaScriptTokenizer::kTokenType_Invalid);
-				SME_ASSERT(CodeStack.size() == 1 && CodeStack.top() == nullptr);
+				return Variables.at(Name).get();
+		}
 
-				// generate bytecode
-				Compile(VirtualMachine);
+		CodaScriptExecutionContext::CodaScriptExecutionContext(ICodaScriptVirtualMachine* VM, ICodaScriptProgram* Parent) :
+			Parent(Parent),
+			Variables(),
+			ExecutionState(kExecutionState_Default),
+			PollingIntervalReminder(0.0),
+			ElapsedTimeCounter(),
+			Result(),
+			HasReturned(false),
+			ExecutingLoops()
+		{
+			SME_ASSERT(VM && Parent && Parent->IsValid());
+
+			PollingIntervalReminder = Parent->GetPollingInteval();
+
+			// initalize the variables from the parent program
+			CodaScriptVariableNameArrayT VarNames;
+			Parent->GetVariables(VarNames);
+
+			for (auto& Itr : VarNames)
+			{
+				CodaScriptVariable::PtrT Addend(new CodaScriptVariable(Itr, VM->BuildDataStoreOwner()));
+				Variables.insert(std::make_pair(Itr, std::move(Addend)));
 			}
 		}
 
 		CodaScriptExecutionContext::~CodaScriptExecutionContext()
 		{
-			if (BoundParser)
-				BoundParser->UnregisterVariables(this);
-
-			ReleaseVariables();
-			Validity = kValidity_Unknown;
+			Variables.clear();
 		}
 
-		bool CodaScriptExecutionContext::GetIsValid( void ) const
-		{
-			return (Validity == kValidity_Good);
-		}
-
-		bool CodaScriptExecutionContext::GetIsEnded( void ) const
-		{
-			return (Validity == kValidity_Ended);
-		}
-
-		bool CodaScriptExecutionContext::Execute( CodaScriptSyntaxTreeExecuteVisitor* Agent,
-												CodaScriptBackingStore* Result,
-												bool& ReturnedResult )
-		{
-			SME_ASSERT(Agent && GetIsValid() == true);
-
-			bool ExecuteResult = true;
-			ReturnedResult = false;
-
-			this->Accept(Agent);
-
-			if (Agent->GetState() == CodaScriptSyntaxTreeExecuteVisitor::kExecutionState_Terminate)
-			{
-				ExecuteResult = false;
-				Validity = kValidity_Bad;
-			}
-
-			if (Agent->GetState() == CodaScriptSyntaxTreeExecuteVisitor::kExecutionState_End)
-			{
-				Validity = kValidity_Ended;
-			}
-
-			if (Agent->GetResult() && Result)
-			{
-				ReturnedResult = true;
-				*Result = *Agent->GetResult();
-			}
-
-			return ExecuteResult;
-		}
-
-		double CodaScriptExecutionContext::GetSecondsPassed( void )
+		double CodaScriptExecutionContext::GetSecondsPassed()
 		{
 			ElapsedTimeCounter.Update();
 			return ElapsedTimeCounter.GetTimePassed() / 1000.0f;
 		}
 
-		bool CodaScriptExecutionContext::Compile( CodaScriptVM* VirtualMachine )
+		bool CodaScriptExecutionContext::HasError() const
 		{
-			bool Result = false;
+			return ExecutionState == kExecutionState_Terminate;
+		}
 
-			BGSEECONSOLE->Indent();
-			try
-			{
-				BoundParser->RegisterVariables(this, VirtualMachine->GetGlobals());		// registers global variables first
-				BoundParser->RegisterVariables(this, this->Variables);					// then the local vars
+		bool CodaScriptExecutionContext::HasEnded() const
+		{
+			return ExecutionState == kExecutionState_End;
+		}
 
-				// compile source to bytecode
-				CodaScriptSyntaxTreeCompileVisitor Visitor(VirtualMachine, this, BoundParser);
-				this->Accept(&Visitor);
+		bool CodaScriptExecutionContext::CanExecute() const
+		{
+			return ExecutionState == kExecutionState_Default;
+		}
 
-				Result = Visitor.GetCompilationFailed() == false;
-			}
-			catch (CodaScriptException& E)
+		void CodaScriptExecutionContext::FlagError()
+{
+			ExecutionState = kExecutionState_Terminate;
+		}
+
+		ICodaScriptProgram* CodaScriptExecutionContext::GetProgram() const
+		{
+			return Parent;
+		}
+
+		bool CodaScriptExecutionContext::TickPollingInterval(double TimePassed)
+		{
+			PollingIntervalReminder -= TimePassed;
+			if (PollingIntervalReminder < 0)
 			{
-				VirtualMachine->GetMessageHandler()->Log("Compiler Error - %s", E.Get());
+				PollingIntervalReminder = Parent->GetPollingInteval();
+				return true;
 			}
-			catch (...)
-			{
-				VirtualMachine->GetMessageHandler()->Log("Unknown Compiler Error!");
-			}
-			BGSEECONSOLE->Exdent();
+			else
+				return false;
+		}
+
+		const CodaScriptBackingStore& CodaScriptExecutionContext::GetResult() const
+		{
+			if (HasResult() == false)
+				throw CodaScriptException("Context has no result");
+			else
+				return Result;
+		}
+
+		bool CodaScriptExecutionContext::HasResult() const
+		{
+			return Result.IsValid();
+		}
+
+		void CodaScriptExecutionContext::Return(CodaScriptBackingStore* Result /*= nullptr*/, bool EOL /*= false*/)
+		{
+			if (HasResult())
+				throw CodaScriptException("Context already has a result");
+			else if (HasReturned)
+				throw CodaScriptException("Context has already returned");
 
 			if (Result)
-				this->Validity = kValidity_Good;
+				this->Result = *Result;
+
+			HasReturned = true;
+
+			if (EOL)
+				// the calling script is requesting destruction
+				ExecutionState = kExecutionState_End;
 			else
-				this->Validity = kValidity_Egregious;
-
-			return Result;
+				// break as normal, just end the current execution cycle
+				ExecutionState = kExecutionState_Break;
 		}
 
-		CodaScriptSyntaxTreeCompileVisitor::CodaScriptSyntaxTreeCompileVisitor( CodaScriptVM* VM,
-																				CodaScriptExecutionContext* Context,
-																				ICodaScriptExpressionParser* Parser ) :
-			ICodaScriptSyntaxTreeEvaluator(VM, Context, Parser),
-			Failed(false)
+		void CodaScriptExecutionContext::SetParameters(CodaScriptBackingStore::ArrayT& Parameters)
 		{
-			;//
-		}
+			CodaScriptVariableNameArrayT ParamNames;
+			Parent->GetParameters(ParamNames);
 
-		CodaScriptSyntaxTreeCompileVisitor::~CodaScriptSyntaxTreeCompileVisitor()
-		{
-			;//
-		}
+			if (ParamNames.size() != Parameters.size())
+				throw CodaScriptException("Incorrect number of parameters passed - Received %d, expected %d", Parameters.size(), ParamNames.size());
 
-#define CODASCRIPT_COMPILERHNDLR_PROLOG										\
-			try																\
+			for (int i = 0; i < ParamNames.size(); i++)
 			{
-#define CODASCRIPT_COMPILERHNDLR_EPILOG										\
-				return;														\
-			}
-#define CODASCRIPT_COMPILERERROR_CATCHER									\
-			catch (CodaScriptException& E)									\
-			{																\
-				GetVM()->GetMessageHandler()->Log("Compiler Error - %s", E.Get());		\
-			}																\
-			catch (std::exception& E)										\
-			{																\
-				GetVM()->GetMessageHandler()->Log("Compiler Error - %s", E.what());		\
-			}																\
-			catch (...)														\
-			{																\
-				GetVM()->GetMessageHandler()->Log("Unknown Compiler Error");				\
-			}																\
-			Failed = true;													\
-			return;
+				CodaScriptSourceCodeT& Name = ParamNames.at(i);
+				CodaScriptVariable* ParamVar = GetVariable(Name);
+				if (ParamVar == nullptr)
+					throw CodaScriptException("Parameter variable '%s' not found", Name.c_str());
 
-		void CodaScriptSyntaxTreeCompileVisitor::Visit( CodaScriptExpression* Node )
-		{
-			GenericCompile(Node);
-		}
-
-		void CodaScriptSyntaxTreeCompileVisitor::Visit( CodaScriptBEGINBlock* Node )
-		{
-			;//
-		}
-
-		void CodaScriptSyntaxTreeCompileVisitor::Visit( CodaScriptIFBlock* Node )
-		{
-			CODASCRIPT_COMPILERHNDLR_PROLOG
-
-			ParserAgent->Compile(this, Node, &Node->ByteCode);
-
-			if (Node->BranchELSE)
-				Node->BranchELSE->Accept(this);
-
-			for (CodaScriptIFBlock::ElseIfBlockArrayT::iterator Itr = Node->BranchELSEIF.begin(); Itr != Node->BranchELSEIF.end(); Itr++)
-				(*Itr)->Accept(this);
-
-			Node->Traverse(this);
-
-			CODASCRIPT_COMPILERHNDLR_EPILOG
-
-			CODASCRIPT_COMPILERERROR_CATCHER
-		}
-
-		void CodaScriptSyntaxTreeCompileVisitor::Visit( CodaScriptELSEIFBlock* Node )
-		{
-			GenericCompile(Node);
-		}
-
-		void CodaScriptSyntaxTreeCompileVisitor::Visit( CodaScriptELSEBlock* Node )
-		{
-			;//
-		}
-
-		void CodaScriptSyntaxTreeCompileVisitor::Visit( CodaScriptWHILEBlock* Node )
-		{
-			GenericCompile(Node);
-		}
-
-		void CodaScriptSyntaxTreeCompileVisitor::Visit( CodaScriptFOREACHBlock* Node )
-		{
-			GenericCompile(Node);
-		}
-
-		void CodaScriptSyntaxTreeCompileVisitor::Visit( ICodaScriptParseTree* Node )
-		{
-			;//
-		}
-
-		void CodaScriptSyntaxTreeCompileVisitor::GenericCompile( ICodaScriptExecutableCode* Node )
-		{
-			CODASCRIPT_COMPILERHNDLR_PROLOG
-
-			ParserAgent->Compile(this, Node, &Node->ByteCode);
-			Node->Traverse(this);
-
-			CODASCRIPT_COMPILERHNDLR_EPILOG
-
-			CODASCRIPT_COMPILERERROR_CATCHER
-		}
-
-		bool CodaScriptSyntaxTreeCompileVisitor::GetCompilationFailed( void ) const
-		{
-			return Failed;
-		}
-
-		CodaScriptException::CodaScriptException( ICodaScriptExecutableCode* Source, const char* Message, ... )
-		{
-			ZeroMemory(ErrorString, sizeof(ErrorString));
-			char Buffer[0x512] = {0};
-
-			va_list Args;
-			va_start(Args, Message);
-			vsprintf_s(Buffer, sizeof(Buffer), Message, Args);
-			va_end(Args);
-
-			if (Source)
-				sprintf_s(ErrorString, sizeof(ErrorString), "Line[%d] Type[%s] - %s", Source->GetLine(), Source->GetTypeString(), Buffer);
-			else
-				sprintf_s(ErrorString, sizeof(ErrorString), "%s", Buffer);
-		}
-
-		CodaScriptException::~CodaScriptException()
-		{
-			;//
-		}
-
-		const char* CodaScriptException::Get() const
-		{
-			return ErrorString;
-		}
-
-		void CodaScriptSyntaxTreeExecuteVisitor::SetResult( const CodaScriptBackingStore& Value )
-		{
-			SME_ASSERT(Result == nullptr);
-
-			Result = new CodaScriptBackingStore(Value);
-		}
-
-		CodaScriptSyntaxTreeExecuteVisitor::CodaScriptSyntaxTreeExecuteVisitor( CodaScriptVM* VM,
-																				CodaScriptExecutionContext* Context,
-																				ICodaScriptExpressionParser* Parser ) :
-			ICodaScriptSyntaxTreeEvaluator(VM, Context, Parser),
-			Result(nullptr),
-			ExecutingLoops(),
-			ExecutionState(kExecutionState_Default)
-		{
-			;//
-		}
-
-		CodaScriptSyntaxTreeExecuteVisitor::~CodaScriptSyntaxTreeExecuteVisitor()
-		{
-			SAFEDELETE(Result);
-
-			if (ExecutionState != kExecutionState_Terminate)
-				SME_ASSERT(ExecutingLoops.size() == 0);
-			else
-			{
-				while (ExecutingLoops.size())
-					ExecutingLoops.pop();
+				*ParamVar->GetStoreOwner() = Parameters.at(i);
 			}
 		}
 
-		UInt8 CodaScriptSyntaxTreeExecuteVisitor::GetState( void ) const
+		void CodaScriptExecutionContext::BeginLoop(ICodaScriptLoopBlock* Block)
 		{
-			return ExecutionState;
+			SME_ASSERT(Block);
+
+			LoopInfo NewLoop{ Block, false };
+			ExecutingLoops.push(NewLoop);
 		}
 
-		void CodaScriptSyntaxTreeExecuteVisitor::SetState( UInt8 State )
+		void CodaScriptExecutionContext::BreakLoop()
 		{
-			ExecutionState = State;
+			if (ExecutingLoops.size() == 0)
+				throw CodaScriptException("Loop stack empty");
+
+			LoopInfo& Current = ExecutingLoops.top();
+			SME_ASSERT(Current.BreakExecution == false);
+
+			Current.BreakExecution = true;
+			ExecutionState = kExecutionState_Break;
 		}
 
-		ICodaScriptLoopBlock* CodaScriptSyntaxTreeExecuteVisitor::GetCurrentLoop( void ) const
+		void CodaScriptExecutionContext::ContinueLoop()
+		{
+			if (ExecutingLoops.size() == 0)
+				throw CodaScriptException("Loop stack empty");
+
+			LoopInfo& Current = ExecutingLoops.top();
+			SME_ASSERT(Current.BreakExecution == false);
+
+			ExecutionState = kExecutionState_Break;
+		}
+
+		bool CodaScriptExecutionContext::EvaluateLoop()
+		{
+			bool ContineLoop = true;
+			if (ExecutingLoops.size() == 0)
+				throw CodaScriptException("Loop stack empty");
+
+			LoopInfo& Current = ExecutingLoops.top();
+			if (HasError())
+				ContineLoop = false;
+			else if (HasReturned)
+				ContineLoop = false;
+			else if (Current.BreakExecution)
+			{
+				// break was called
+				SME_ASSERT(ExecutionState == kExecutionState_Break);
+				ContineLoop = false;
+			}
+			else
+			{
+				// continue was called
+				SME_ASSERT(ExecutionState == kExecutionState_Break);
+				ExecutionState = kExecutionState_Default;
+			}
+
+			return ContineLoop;
+		}
+
+		void CodaScriptExecutionContext::EndLoop(ICodaScriptLoopBlock* Block)
+		{
+			SME_ASSERT(Block);
+
+			if (ExecutingLoops.size() == 0)
+				throw CodaScriptException("Loop stack empty");
+
+			LoopInfo& Current = ExecutingLoops.top();
+			if (Current.Block != Block)
+				throw CodaScriptException("Loop mismatch");
+
+			ExecutingLoops.pop();
+		}
+
+		void CodaScriptExecutionContext::ResetState(bool ResetVars /*= false*/)
 		{
 			if (ExecutingLoops.size())
-				return ExecutingLoops.top();
-			else
-				return nullptr;
+				throw CodaScriptException("Reseting context inside an executing loop");
+
+			CodaScriptBackingStore Empty;
+			HasReturned = false;
+			Result = Empty;
+			SME_ASSERT(Result.IsValid() == false);
+
+			ExecutionState = kExecutionState_Default;
+			PollingIntervalReminder = Parent->GetPollingInteval();
+
+			if (ResetVars)
+			{
+				for (auto& Itr : Variables)
+					*Itr.second->GetStoreOwner() = Empty;
+			}
 		}
 
-		CodaScriptBackingStore* CodaScriptSyntaxTreeExecuteVisitor::GetResult( void ) const
+		bool CodaScriptSyntaxTreeExecuteVisitor::EvaluateCondition(ICodaScriptConditionalCodeBlock* Block)
 		{
-			return Result;
+			CodaScriptBackingStore Result;
+			Parser->Evaluate(this, Block->GetByteCode(), &Result);
+
+			if (Result.GetIsNumber() == false)
+				throw CodaScriptException(Block, "Condition expression didn't evaluate to a boolean value");
+
+			return Result.GetNumber();
 		}
+
+		CodaScriptSyntaxTreeExecuteVisitor::CodaScriptSyntaxTreeExecuteVisitor(ICodaScriptVirtualMachine* VM,
+																			   ICodaScriptExecutionContext* Context) :
+			ICodaScriptSyntaxTreeEvaluator(VM, VM->GetParser(), Context)
+		{
+			SME_ASSERT(Context->GetProgram()->GetBoundParser() == Parser);
+		}
+
 
 #define CODASCRIPT_EXECUTEHNDLR_PROLOG										\
 			try																\
 			{																\
-				if (ExecutionState == kExecutionState_Terminate ||			\
-					ExecutionState == kExecutionState_Break ||				\
-					ExecutionState == kExecutionState_End)					\
-				{															\
+				if (Context->CanExecute() == false)							\
 					return;													\
-				}
+
 #define CODASCRIPT_EXECUTEHNDLR_EPILOG										\
 				return;														\
 			}
+
 #define CODASCRIPT_EXECUTEERROR_CATCHER										\
 			catch (CodaScriptException& E)									\
 			{																\
-				GetVM()->GetMessageHandler()->Log("Evaluate Error - %s", E.Get());		\
+				VM->GetMessageHandler()->Log("Runtime Error [Script: %s] - %s", Context->GetProgram()->GetName().c_str(), E.Get());		\
 			}																\
 			catch (std::exception& E)										\
 			{																\
-				GetVM()->GetMessageHandler()->Log("Evaluate Error - %s", E.what());		\
+				VM->GetMessageHandler()->Log("Runtime Error [Script: %s] - %s", Context->GetProgram()->GetName().c_str(), E.what());		\
 			}																\
 			catch (...)														\
 			{																\
-				GetVM()->GetMessageHandler()->Log("Unknown Evaluate Error");				\
+				VM->GetMessageHandler()->Log("Unknown Runtime Error [Script: %s]", Context->GetProgram()->GetName().c_str());				\
 			}																\
-			SetState(kExecutionState_Terminate);							\
+			Context->FlagError();											\
 			return;
 
 		void CodaScriptSyntaxTreeExecuteVisitor::Visit( CodaScriptExpression* Node )
 		{
 			CODASCRIPT_EXECUTEHNDLR_PROLOG
 
-			ParserAgent->Evaluate(this, Node->ByteCode);
+			Parser->Evaluate(this, Node->GetByteCode());
 
 			CODASCRIPT_EXECUTEHNDLR_EPILOG
 
@@ -1560,27 +310,25 @@ namespace bgsee
 		{
 			CODASCRIPT_EXECUTEHNDLR_PROLOG
 
-			if (Node->EvaluateCondition(this))
+			if (EvaluateCondition(Node))
 			{
 				Node->Traverse(this);
 				return;
 			}
 			else
 			{
-				for (CodaScriptIFBlock::ElseIfBlockArrayT::iterator Itr = Node->BranchELSEIF.begin(); Itr != Node->BranchELSEIF.end(); Itr++)
+				for (auto Itr : Node->GetElseIfBlocks())
 				{
-					CodaScriptELSEIFBlock* Block = *Itr;
-
-					if (Block->EvaluateCondition(this))
+					if (EvaluateCondition(Itr))
 					{
-						Block->Accept(this);
+						Itr->Accept(this);
 						return;
 					}
 				}
 			}
 
-			if (Node->BranchELSE)
-				Node->BranchELSE->Accept(this);
+			if (Node->HasElseBlock())
+				Node->GetElseBlock().Accept(this);
 
 			CODASCRIPT_EXECUTEHNDLR_EPILOG
 
@@ -1601,26 +349,22 @@ namespace bgsee
 		{
 			CODASCRIPT_EXECUTEHNDLR_PROLOG
 
-			ICodaScriptLoopBlock::LoopStackOperator Operator(Node, this);
+			ScopedFunctor Sentinel([Node, this](ScopedFunctor::Event e) {
+				if (e == ScopedFunctor::Event::Construction)
+					Context->BeginLoop(Node);
+				else
+					Context->EndLoop(Node);
+			});
 			UInt32 IterationCounter = 0;
 
-			while (Node->EvaluateCondition(this))
+			while (EvaluateCondition(Node))
 			{
 				IterationCounter++;
-				if (IterationCounter >= ICodaScriptLoopBlock::kOverrunLimit)
+				if (IterationCounter >= kLoopOverrunLimit)
 					throw CodaScriptException(Node, "Loop overrun - When will it ennnnnnd?!");
 
 				Node->Traverse(this);
-
-				if (ExecutionState == kExecutionState_Terminate)
-					break;
-				else if (ExecutionState == kExecutionState_Break && Result == nullptr)
-					ExecutionState = kExecutionState_Default;
-
-				if (Node->State == ICodaScriptLoopBlock::kLoopState_Break)
-					break;
-
-				if (Result)			// we have a valid result (return was called), so break and unwind the loop stack
+				if (Context->EvaluateLoop() == false)
 					break;
 			}
 
@@ -1633,25 +377,31 @@ namespace bgsee
 		{
 			CODASCRIPT_EXECUTEHNDLR_PROLOG
 
-			ICodaScriptLoopBlock::LoopStackOperator Operator(Node, this);
+			ScopedFunctor Sentinel([Node, this](ScopedFunctor::Event e) {
+				if (e == ScopedFunctor::Event::Construction)
+					Context->BeginLoop(Node);
+				else
+					Context->EndLoop(Node);
+			});
 			CodaScriptVariable* Iterator = nullptr;
+			const CodaScriptSourceCodeT& IteratorName = Node->GetIteratorName();
 
-			if (Node->IteratorName == "")
+			if (IteratorName.empty())
 				throw CodaScriptException(Node, "Invalid expression - No iterator specified");
-			else if ((Iterator = this->LookupVariable(Node->IteratorName.c_str())) == nullptr)
-				throw CodaScriptException(Node, "Invalid iterator '%s'", Node->IteratorName.c_str());
+			else if ((Iterator = Context->GetVariable(IteratorName)) == nullptr)
+				throw CodaScriptException(Node, "Invalid iterator '%s'", IteratorName.c_str());
 
 			CodaScriptBackingStore ArrayResult((CodaScriptNumericDataTypeT)0),
 								IteratorBuffer((CodaScriptNumericDataTypeT)0),
 								IteratorContents;
 
 			IteratorContents = *Iterator->GetStoreOwner()->GetDataStore();
-			ParserAgent->Evaluate(this, Node->ByteCode, &ArrayResult);
+			Parser->Evaluate(this, Node->GetByteCode(), &ArrayResult);
 
 			if (ArrayResult.GetType() != ICodaScriptDataStore::kDataType_Array)
 				throw CodaScriptException(Node, "Invalid expression - Non-array result");
 
-			CodaScriptSharedHandleArrayT ArrayInstance(ArrayResult.GetArray());
+			ICodaScriptArrayDataType::SharedPtrT ArrayInstance(ArrayResult.GetArray());
 
 			for (int i = 0, j = ArrayInstance->Size(); i < j; i++)
 			{
@@ -1659,17 +409,9 @@ namespace bgsee
 					throw CodaScriptException(Node, "Index operator error - I[%d] S[%d]", i, ArrayInstance->Size());
 
 				*Iterator->GetStoreOwner() = IteratorBuffer;
+
 				Node->Traverse(this);
-
-				if (ExecutionState == kExecutionState_Terminate)
-					break;
-				else if (ExecutionState == kExecutionState_Break && Result == nullptr)
-					ExecutionState = kExecutionState_Default;
-
-				if (Node->State == ICodaScriptLoopBlock::kLoopState_Break)
-					break;
-
-				if (Result)			// return was called, so break
+				if (Context->EvaluateLoop() == false)
 					break;
 			}
 
@@ -1680,16 +422,12 @@ namespace bgsee
 			CODASCRIPT_EXECUTEERROR_CATCHER
 		}
 
-		void CodaScriptSyntaxTreeExecuteVisitor::Visit( ICodaScriptParseTree* Node )
-		{
-			;//
-		}
-
-		CodaScriptCommandHandlerUtilities::CodaScriptCommandHandlerUtilities() :
+		CodaScriptCommandHandlerUtilities::CodaScriptCommandHandlerUtilities(ICodaScriptVirtualMachine* VM) :
 			ICodaScriptCommandHandlerHelper(),
+			VM(VM),
 			AllocatedWrappers()
 		{
-			;//
+			SME_ASSERT(VM);
 		}
 
 		CodaScriptCommandHandlerUtilities::~CodaScriptCommandHandlerUtilities()
@@ -1697,12 +435,12 @@ namespace bgsee
 			AllocatedWrappers.clear();
 		}
 
-		CodaScriptBackingStore* CodaScriptCommandHandlerUtilities::CreateWrapper( CodaScriptSharedHandleArrayT Array )
+		CodaScriptBackingStore* CodaScriptCommandHandlerUtilities::CreateWrapper(ICodaScriptArrayDataType::SharedPtrT Array )
 		{
 			CodaScriptBackingStore* Result = new CodaScriptBackingStore(Array);
 
-			CodaScriptScopedHandleDataStoreT Wrapper(Result);
-			AllocatedWrappers.push_back(Wrapper);
+			ICodaScriptDataStore::PtrT Wrapper(Result);
+			AllocatedWrappers.push_back(std::move(Wrapper));
 			return Result;
 		}
 
@@ -1714,14 +452,14 @@ namespace bgsee
 			else
 				Result = new CodaScriptBackingStore(0.0);
 
-			CodaScriptScopedHandleDataStoreT Wrapper(Result);
-			AllocatedWrappers.push_back(Wrapper);
+			ICodaScriptDataStore::PtrT Wrapper(Result);
+			AllocatedWrappers.push_back(std::move(Wrapper));
 			return Result;
 		}
 
 		ICodaScriptDataStore* CodaScriptCommandHandlerUtilities::ArrayAllocate( UInt32 InitialSize /*= 0*/ )
 		{
-			CodaScriptSharedHandleArrayT NewArray = CodaScriptObjectFactory::BuildArray(CodaScriptObjectFactory::kFactoryType_MUP, InitialSize);
+			ICodaScriptArrayDataType::SharedPtrT NewArray = VM->BuildArray(InitialSize);
 
 			return CreateWrapper(NewArray);
 		}
@@ -1801,9 +539,9 @@ namespace bgsee
 			return Wrapper->GetArray()->Size();
 		}
 
-		bool CodaScriptCommandHandlerUtilities::ExtractArguments( ICodaScriptDataStore* Arguments,
-																ICodaScriptCommand::ParameterInfo* ParameterData,
-																UInt32 ArgumentCount, ... )
+		bool CodaScriptCommandHandlerUtilities::ExtractArguments(ICodaScriptDataStore* Arguments,
+																 ICodaScriptCommand::ParameterInfo* ParameterData,
+																 UInt32 ArgumentCount, ...)
 		{
 			bool Result = true;
 
@@ -1823,8 +561,8 @@ namespace bgsee
 
 				SME_ASSERT(CurrentArg->GetType() != ICodaScriptDataStore::kDataType_Invalid);
 				SME_ASSERT(CurrentArg->GetType() == CurrentParam->Type ||
-						CurrentParam->Type == ICodaScriptCommand::ParameterInfo::kType_Multi ||
-						CurrentArg->GetHasImplicitCast((ICodaScriptDataStore::DataType)CurrentParam->Type));
+						   CurrentParam->Type == ICodaScriptCommand::ParameterInfo::kType_Multi ||
+						   CurrentArg->GetHasImplicitCast((ICodaScriptDataStore::DataType)CurrentParam->Type));
 
 				switch (CurrentParam->Type)
 				{

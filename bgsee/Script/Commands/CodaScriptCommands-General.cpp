@@ -1,5 +1,7 @@
 #include "CodaScriptCommands-General.h"
 #include "Console.h"
+#include "CodaUtilities.h"
+#include "CodaCompiler.h"
 
 namespace bgsee
 {
@@ -38,31 +40,8 @@ namespace bgsee
 					if (ArgumentCount > 2)
 						throw CodaScriptException(ByteCode->GetSource(), "Too many arguments passed to Return command");
 
-					CodaScriptSyntaxTreeExecuteVisitor* Agent = dynamic_cast<CodaScriptSyntaxTreeExecuteVisitor*>(ExecutionAgent);
-
-					SME_ASSERT(Agent);
-
-					if (ArgumentCount)
-					{
-						CodaScriptBackingStore* ArgumentStore = dynamic_cast<CodaScriptBackingStore*>(Arguments);
-						SME_ASSERT(ArgumentStore);
-
-						Agent->SetResult(ArgumentStore[0]);
-					}
-					else
-						Agent->SetResult(CodaScriptBackingStore(0.0));
-
-					if (ArgumentCount == 2)
-					{
-						// the calling script is requesting destruction
-						Agent->SetState(CodaScriptSyntaxTreeExecuteVisitor::kExecutionState_End);
-					}
-					else
-					{
-						// break as normal, just end the current execution cycle
-						Agent->SetState(CodaScriptSyntaxTreeExecuteVisitor::kExecutionState_Break);
-					}
-
+					ExecutionAgent->GetContext()->Return(ArgumentCount ? dynamic_cast<CodaScriptBackingStore*>(Arguments) : nullptr,
+														 ArgumentCount == 2);
 					return true;
 				}
 
@@ -70,28 +49,28 @@ namespace bgsee
 				{
 					if (ArgumentCount < 1)
 						throw CodaScriptException(ByteCode->GetSource(), "Script name not passed to Call command");
-					else if (ArgumentCount > 1 + CodaScriptExecutionContext::kMaxParameters)
+					else if (ArgumentCount > 1 + CodaScriptCompiler::kMaxParameters)
 						throw CodaScriptException(ByteCode->GetSource(), "Too many arguments passed to Call command - Maximum allowed = %d",
-																		CodaScriptExecutionContext::kMaxParameters);
+												  CodaScriptCompiler::kMaxParameters);
 
 					const char* ScriptName = Arguments[0].GetString();
 					CodaScriptBackingStore* ArgumentStore = dynamic_cast<CodaScriptBackingStore*>(Arguments);
 					SME_ASSERT(ArgumentStore);
 
-					CodaScriptBackingStore CallResult(0.0);
-					bool ReturnedResult = false;
+					script::ICodaScriptVirtualMachine::ExecuteParams Input;
+					script::ICodaScriptVirtualMachine::ExecuteResult Output;
 
-					CodaScriptMutableDataArrayT PassedParameters;
+					Input.ScriptName = ScriptName;
 					for (int i = 1; i < ArgumentCount; i++)
 					{
-						const CodaScriptBackingStore* Store = dynamic_cast<const CodaScriptBackingStore*>(&ArgumentStore[i]);
-						PassedParameters.push_back(*Store);
+						const CodaScriptBackingStore* Store = &ArgumentStore[i];
+						Input.Parameters.push_back(*Store);
 					}
 
-					bool ExecuteResult = CODAVM->RunScript(ScriptName, (PassedParameters.size() ? &PassedParameters : nullptr), &CallResult, ReturnedResult);
+					CODAVM->RunScript(Input, Output);
 
-					if (ExecuteResult && ReturnedResult)
-						*Result = CallResult;
+					if (Output.Success && Output.HasResult())
+						*Result = *Output.Result;
 					else
 						*Result = 0.0;
 
@@ -100,35 +79,19 @@ namespace bgsee
 
 				CodaScriptCommandHandler(Break)
 				{
-					CodaScriptSyntaxTreeExecuteVisitor* Agent = dynamic_cast<CodaScriptSyntaxTreeExecuteVisitor*>(ExecutionAgent);
-					SME_ASSERT(Agent);
-
-					ICodaScriptLoopBlock* LoopBlock = Agent->GetCurrentLoop();
-					SME_ASSERT(LoopBlock);
-
-					LoopBlock->Break();
-					Agent->SetState(CodaScriptSyntaxTreeExecuteVisitor::kExecutionState_Break);
+					ExecutionAgent->GetContext()->BreakLoop();
 					return true;
 				}
 
 				CodaScriptCommandHandler(Continue)
 				{
-					CodaScriptSyntaxTreeExecuteVisitor* Agent = dynamic_cast<CodaScriptSyntaxTreeExecuteVisitor*>(ExecutionAgent);
-					SME_ASSERT(Agent);
-
-					Agent->SetState(CodaScriptSyntaxTreeExecuteVisitor::kExecutionState_Break);
+					ExecutionAgent->GetContext()->ContinueLoop();
 					return true;
 				}
 
 				CodaScriptCommandHandler(GetSecondsPassed)
 				{
-					CodaScriptSyntaxTreeExecuteVisitor* Agent = dynamic_cast<CodaScriptSyntaxTreeExecuteVisitor*>(ExecutionAgent);
-					SME_ASSERT(Agent);
-
-					CodaScriptExecutionContext* Context = Agent->GetContext();
-					SME_ASSERT(Context);
-
-					CodaScriptNumericDataTypeT TimePassed = Context->GetSecondsPassed();
+					CodaScriptNumericDataTypeT TimePassed = ExecutionAgent->GetContext()->GetSecondsPassed();
 					*Result = TimePassed;
 
 					return true;

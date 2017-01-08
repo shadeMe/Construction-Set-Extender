@@ -71,7 +71,7 @@ namespace bgsee
 					if (DragQueryFile(DropData, i, Buffer, sizeof(Buffer)))
 					{
 						char* Extension = strrchr(Buffer, '.');
-						if (Extension && !_stricmp(Extension, script::CodaScriptVM::kSourceExtension.c_str()))
+						if (Extension && !_stricmp(Extension, CODAVM->GetScriptFileExtension().c_str()))
 						{
 							*Extension = '\0';
 							const char* FileName = strrchr(Buffer, '\\');
@@ -88,14 +88,19 @@ namespace bgsee
 
 				if (DroppedScripts.size())
 				{
-					BGSEECONSOLE_MESSAGE("Executing %d Coda scripts...", DroppedScripts.size());
-					BGSEECONSOLE->Indent();
+					Instance->LogMsg(BGSEEMAIN->ExtenderGetShortName(), "Executing %d Coda scripts...", DroppedScripts.size());
+					Instance->Indent();
 
-					bool Throwaway = false;
 					for (int i = 0; i < DroppedScripts.size(); i++)
-						CODAVM->RunScript(DroppedScripts[i], nullptr, nullptr, Throwaway);
+					{
+						script::ICodaScriptVirtualMachine::ExecuteParams Input;
+						script::ICodaScriptVirtualMachine::ExecuteResult Output;
 
-					BGSEECONSOLE->Outdent();
+						Input.ScriptName = DroppedScripts[i];
+						CODAVM->RunScript(Input, Output);
+					}
+
+					Instance->Outdent();
 				}
 			}
 

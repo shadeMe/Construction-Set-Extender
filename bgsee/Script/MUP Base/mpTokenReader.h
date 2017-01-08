@@ -107,7 +107,6 @@ namespace bgsee { namespace script { namespace mup {
 	mutable oprt_ifx_maptype *m_pInfixOprtDef;
 	mutable oprt_pfx_maptype *m_pPostOprtDef;
 	mutable val_maptype  *m_pConstDef;
-	val_vec_type *m_pDynVarShadowValues; ///< Value items created for holding values of variables created at parser runtime
 	var_maptype  *m_pVarDef;             ///< The only non const pointer to parser internals
 
 	readervec_type m_vValueReader;  ///< Value token identification function

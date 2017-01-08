@@ -21,10 +21,12 @@
     <ClInclude Include="Main.h" />
     <ClInclude Include="RenderWindowFlyCamera.h" />
     <ClInclude Include="RenderWindowPainter.h" />
+    <ClInclude Include="Script\CodaAST.h" />
+    <ClInclude Include="Script\CodaCompiler.h" />
     <ClInclude Include="Script\CodaDataTypes.h" />
     <ClInclude Include="Script\CodaInterpreter.h" />
-    <ClInclude Include="Script\CodaIntrinsics.h" />
     <ClInclude Include="Script\CodaPublicAPI.h" />
+    <ClInclude Include="Script\CodaUtilities.h" />
     <ClInclude Include="Script\CodaVM.h" />
     <ClInclude Include="Script\Commands\CodaScriptCommand.h" />
     <ClInclude Include="Script\Commands\CodaScriptCommands-Array.h" />
@@ -70,6 +72,7 @@
     <ClInclude Include="Script\MUP Implementation\CodaMUPExpressionParser.h" />
     <ClInclude Include="Script\MUP Implementation\CodaMUPScriptCommand.h" />
     <ClInclude Include="Script\MUP Implementation\CodaMUPValue.h" />
+    <ClInclude Include="Script\MUP Implementation\CodaMUPVariable.h" />
     <ClInclude Include="ToolBox.h" />
     <ClInclude Include="UIManager.h" />
     <ClInclude Include="WorkspaceManager.h" />
@@ -90,8 +93,11 @@
     </ClCompile>
     <ClCompile Include="RenderWindowFlyCamera.cpp" />
     <ClCompile Include="RenderWindowPainter.cpp" />
+    <ClCompile Include="Script\CodaAST.cpp" />
+    <ClCompile Include="Script\CodaCompiler.cpp" />
     <ClCompile Include="Script\CodaDataTypes.cpp" />
     <ClCompile Include="Script\CodaInterpreter.cpp" />
+    <ClCompile Include="Script\CodaUtilities.cpp" />
     <ClCompile Include="Script\CodaVM.cpp" />
     <ClCompile Include="Script\Commands\CodaScriptCommand.cpp" />
     <ClCompile Include="Script\Commands\CodaScriptCommands-Array.cpp" />
@@ -130,6 +136,7 @@
     <ClCompile Include="Script\MUP Implementation\CodaMUPExpressionParser.cpp" />
     <ClCompile Include="Script\MUP Implementation\CodaMUPScriptCommand.cpp" />
     <ClCompile Include="Script\MUP Implementation\CodaMUPValue.cpp" />
+    <ClCompile Include="Script\MUP Implementation\CodaMUPVariable.cpp" />
     <ClCompile Include="ToolBox.cpp" />
     <ClCompile Include="UIManager.cpp" />
     <ClCompile Include="WorkspaceManager.cpp" />

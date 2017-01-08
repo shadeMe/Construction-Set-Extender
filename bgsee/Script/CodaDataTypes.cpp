@@ -83,7 +83,7 @@ namespace bgsee
 			return StringData;
 		}
 
-		CodaScriptSharedHandleArrayT CodaScriptBackingStore::GetArray() const
+		ICodaScriptArrayDataType::SharedPtrT CodaScriptBackingStore::GetArray() const
 		{
 			SME_ASSERT(GetIsArray());
 			return ArrayData;
@@ -129,7 +129,7 @@ namespace bgsee
 			ArrayData = RHS->ArrayData;
 		}
 
-		void CodaScriptBackingStore::SetArray( CodaScriptSharedHandleArrayT Data )
+		void CodaScriptBackingStore::SetArray(ICodaScriptArrayDataType::SharedPtrT Data )
 		{
 			Reset();
 			Type = kDataType_Array;
@@ -168,7 +168,7 @@ namespace bgsee
 			SetFormID(Form);
 		}
 
-		CodaScriptBackingStore::CodaScriptBackingStore( CodaScriptSharedHandleArrayT Array )
+		CodaScriptBackingStore::CodaScriptBackingStore(ICodaScriptArrayDataType::SharedPtrT Array )
 			: ICodaScriptDataStore(), NumericData(0), ArrayData()
 		{
 			GIC++;

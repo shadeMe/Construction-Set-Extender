@@ -102,7 +102,7 @@ void PackageCommon::AddToParser(CodaScriptMUPExpressionParser *pParser)
   pParser->DefineOprt(new OprtEQ);
   pParser->DefineOprt(new OprtNEQ);
   pParser->DefineOprt(new OprtLAnd(_T("and")));  // add logic and with a different identifier
-  pParser->DefineOprt(new OprtLOr(_T("or")));    // add logic and with a different identifier
+  pParser->DefineOprt(new OprtLOr(_T("or")));    // add logic or with a different identifier
 
   // assignement operators
   pParser->DefineOprt(new OprtAssign);

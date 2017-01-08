@@ -1,8 +1,9 @@
 #include "CodaVM.h"
-#include "CodaInterpreter.h"
+#include "CodaUtilities.h"
 #include "..\UIManager.h"
 #include "..\BGSEditorExtenderBase_Resource.h"
 
+#include "MUP Base\mpIToken.h"
 #include "MUP Implementation\CodaMUPArrayDataType.h"
 #include "MUP Implementation\CodaMUPExpressionParser.h"
 #include "MUP Implementation\CodaMUPValue.h"
@@ -113,17 +114,13 @@ namespace bgsee
 			return true;
 		}
 
-		void CodaScriptCommandRegistry::RegisterCommands( const CodaScriptRegistrarListT& Registrars )
+		void CodaScriptCommandRegistry::RegisterCommands( const CodaScriptCommandRegistrar::ListT& Registrars )
 		{
-			for (CodaScriptRegistrarListT::const_iterator Itr = Registrars.begin(); Itr != Registrars.end(); Itr++)
+			for (auto& Itr : Registrars)
 			{
-				CodaScriptCommandRegistrar* Current = *Itr;
-
-				for (CodaScriptCommandRegistrar::CommandListT::const_iterator ItrEx = Current->Commands.begin();
-																			ItrEx != Current->Commands.end();
-																			ItrEx++)
+				for (auto& Command : Itr->GetCommands())
 				{
-					RegisterCommand(Current->Category.c_str(), *ItrEx);
+					RegisterCommand(Itr->GetCategory(), Command);
 				}
 			}
 		}
@@ -232,162 +229,222 @@ namespace bgsee
 			ShellExecute(nullptr, "open", (LPSTR)"coda_command_doc.html", nullptr, nullptr, SW_SHOW);
 		}
 
-		CodaScriptCommandRegistrar::CodaScriptCommandRegistrar( const char* Category ) :
-			Commands(),
-			Category(Category)
+		ICodaScriptProgram* CodaScriptProgramCache::Lookup(std::string Filepath) const
 		{
-			;//
+			if (Store.count(Filepath) == 0)
+				return nullptr;
+			else
+				return Store.at(Filepath).get();
 		}
 
-		CodaScriptCommandRegistrar::~CodaScriptCommandRegistrar()
+		void CodaScriptProgramCache::Remove(std::string Filepath)
 		{
-			Commands.clear();
+			Store.erase(Filepath);
 		}
 
-		void CodaScriptCommandRegistrar::Add( ICodaScriptCommand* Command )
+		void CodaScriptProgramCache::Add(std::string Filepath, ICodaScriptProgram::PtrT& Program)
 		{
-			Commands.push_back(Command);
+			SME_ASSERT(Store.count(Filepath) == 0);
+
+			Store.insert(std::make_pair(Filepath, std::move(Program)));
 		}
 
-		CodaScriptProfiler::CodaScriptProfiler() :
-			Counters()
+		CodaScriptProgramCache::CodaScriptProgramCache(ICodaScriptVirtualMachine* VM) :
+			VM(VM),
+			Store()
 		{
-			;//
+			SME_ASSERT(VM);
 		}
 
-		CodaScriptProfiler::~CodaScriptProfiler()
+		CodaScriptProgramCache::~CodaScriptProgramCache()
 		{
-			SME_ASSERT(Counters.size() == 0);
+			for (auto& Itr : Store)
+			{
+				if (VM->IsProgramExecuting(Itr.second.get()))
+					BGSEECONSOLE_MESSAGE("Coda script program '%s' is still executing during disposal", Itr.second->GetName().c_str());
+			}
 		}
 
-		void CodaScriptProfiler::BeginProfiling( void )
+		ICodaScriptProgram* CodaScriptProgramCache::Get(std::string Filepath, bool Recompile /*= false*/)
 		{
-			Counters.push(CodaScriptElapsedTimeCounterT());
+			ICodaScriptProgram* OutProgram(Lookup(Filepath));
+
+			if (Recompile && OutProgram)
+			{
+				if (VM->IsProgramExecuting(OutProgram))
+					BGSEECONSOLE_MESSAGE("Ignored request to recompile executing Coda script program @ %s", Filepath.c_str());
+				else
+				{
+					Remove(Filepath);
+					OutProgram = nullptr;
+				}
+			}
+
+			// recompile if invalid
+			if (OutProgram && OutProgram->IsValid() == false)
+			{
+				SME_ASSERT(VM->IsProgramExecuting(OutProgram) == false);
+				Remove(Filepath);
+				OutProgram = nullptr;
+			}
+
+			if (OutProgram == nullptr)
+			{
+				// create the program context from disk
+				std::fstream InputStream(Filepath.c_str(), std::iostream::in);
+				if (InputStream.fail() == false)
+				{
+					ICodaScriptProgram::PtrT Program(CodaScriptCompiler::Instance.Compile(VM, InputStream));
+
+					if (Program->IsValid() == false)
+						BGSEECONSOLE_MESSAGE("Couldn't compile Coda script @ %s", Filepath.c_str());
+					else
+					{
+						OutProgram = Program.get();
+						Add(Filepath, Program);
+					}
+				}
+				else
+					BGSEECONSOLE_MESSAGE("Couldn't read Coda script @ %s", Filepath.c_str());
+			}
+
+			return OutProgram;
 		}
 
-		long double CodaScriptProfiler::EndProfiling( void )
+		void CodaScriptProgramCache::Invalidate()
 		{
-			SME_ASSERT(Counters.size());
-
-			CodaScriptElapsedTimeCounterT& Current = Counters.top();
-			Current.Update();
-
-			long double ElapsedTime = Current.GetTimePassed();
-			Counters.pop();
-
-			return ElapsedTime;
+			for (auto& Itr : Store)
+			{
+				SME_ASSERT(CODAVM->IsProgramExecuting(Itr.second.get()) == false);
+				Itr.second->InvalidateBytecode();
+			}
 		}
 
-		CodaScriptMessageHandler::CodaScriptMessageHandler() :
-			ConsoleContext(nullptr),
-			DefaultContextLoggingState(true)
-		{
-			ConsoleContext = BGSEECONSOLE->RegisterMessageLogContext("Coda Script");
-		}
-
-		CodaScriptMessageHandler::~CodaScriptMessageHandler()
-		{
-			BGSEECONSOLE->UnregisterMessageLogContext(ConsoleContext);
-		}
-
-		void CodaScriptMessageHandler::SuspendDefaultContextLogging( void )
-		{
-			SME_ASSERT(DefaultContextLoggingState == true);
-
-			DefaultContextLoggingState = false;
-		}
-
-		void CodaScriptMessageHandler::ResumeDefaultContextLogging( void )
-		{
-			SME_ASSERT(DefaultContextLoggingState == false);
-
-			DefaultContextLoggingState = true;
-		}
-
-		void CodaScriptMessageHandler::Log( const char* Format, ... )
-		{
-			va_list Args;
-			char Buffer[0x1000] = {0};
-
-			va_start(Args, Format);
-			vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
-			va_end(Args);
-
-			BGSEECONSOLE->PrintToMessageLogContext(ConsoleContext, false, Buffer);
-			if (DefaultContextLoggingState)
-				BGSEECONSOLE_MESSAGE(Buffer);
-		}
-
-		const UInt32											CodaScriptExecutive::kMaxRecursionLimit = 30;
 
 #define CODASCRIPTEXECUTIVE_INISECTION							"CodaExecutive"
 		SME::INI::INISetting									CodaScriptExecutive::kINI_Profiling("Profiling", CODASCRIPTEXECUTIVE_INISECTION,
 																									"Profile script execution",
 																									(SInt32)0);
 
-		CodaScriptExecutive::CodaScriptExecutive( CodaScriptMessageHandler* MsgHdlr ) :
-			ExecutionStack(),
+		SME::INI::INISetting									CodaScriptExecutive::kINI_RecursionLimit("RecursionLimit", CODASCRIPTEXECUTIVE_INISECTION,
+																									"Maximum number of times scripts can recursively call themselves or other scripts. Large values may cause instability",
+																									(SInt32)50);
+
+		void CodaScriptExecutive::Push(ICodaScriptExecutionContext* Context)
+		{
+			ICodaScriptProgram* Program = Context->GetProgram();
+			if (ExecutionCounter.count(Program))
+				ExecutionCounter[Program]++;
+			else
+				ExecutionCounter[Program] = 1;
+
+			ExecutingContexts.push(Context);
+		}
+
+		void CodaScriptExecutive::Pop(ICodaScriptExecutionContext* Context)
+		{
+			ICodaScriptProgram* Program = Context->GetProgram();
+			SME_ASSERT(ExecutionCounter.count(Program));
+			SME_ASSERT(ExecutingContexts.size() && ExecutingContexts.top() == Context);
+
+			int Count = ExecutionCounter[Program]--;
+			if (Count == 1)
+				ExecutionCounter.erase(Program);
+			else
+				SME_ASSERT(Count);
+
+			ExecutingContexts.pop();
+		}
+
+		CodaScriptExecutive::CodaScriptExecutive(ICodaScriptVirtualMachine* VM) :
+			ExecutionCounter(),
+			ExecutingContexts(),
 			Profiler(),
 			OwnerThreadID(0),
-			MessageHandler(MsgHdlr)
+			VM(VM)
 		{
-			SME_ASSERT(MessageHandler);
+			SME_ASSERT(VM);
 
 			OwnerThreadID = GetCurrentThreadId();
 		}
 
 		CodaScriptExecutive::~CodaScriptExecutive()
 		{
-			SME_ASSERT(ExecutionStack.size() == 0);
+			SME_ASSERT(ExecutingContexts.empty());
+			SME_ASSERT(ExecutionCounter.empty());
 		}
 
-		bool CodaScriptExecutive::Execute( CodaScriptExecutionContext* Context, CodaScriptBackingStore* Result, bool& ReturnedResult )
+		void CodaScriptExecutive::Execute(ICodaScriptExecutionContext* Context,
+										  ICodaScriptVirtualMachine::ExecuteResult& Out)
 		{
-			SME_ASSERT(Context && OwnerThreadID == GetCurrentThreadId());
+			SME_ASSERT(OwnerThreadID == GetCurrentThreadId());
+			SME_ASSERT(Context);
+			SME_ASSERT(Context->CanExecute());
+			SME_ASSERT(Out.HasResult() == false && Out.Success == false);
 
-			if (ExecutionStack.size() >= kMaxRecursionLimit)
+			ICodaScriptProgram* Program = Context->GetProgram();
+			SME_ASSERT(Program->IsValid());
+
+			if (ExecutingContexts.size() > kINI_RecursionLimit().i)
 			{
-				MessageHandler->Log("Maximum script recursion depth hit");
-				return false;
+				VM->GetMessageHandler()->Log("Maximum script recursion depth hit");
+				Out.Success = false;
+				return;
 			}
 
-			bool ProfilerEnabled = kINI_Profiling.GetData().i;
-
+			bool ProfilerEnabled = kINI_Profiling().i;
 			if (ProfilerEnabled)
-			{
 				Profiler.BeginProfiling();
-			}
 
-			ExecutionStack.push(Context);
-			CodaScriptSyntaxTreeExecuteVisitor Visitor(Context->VirtualMachine, Context, Context->BoundParser);
-			bool ExecuteResult = Context->Execute(&Visitor, Result, ReturnedResult);
-			ExecutionStack.pop();
+			Push(Context);
+			{
+				ICodaScriptExpressionParser::EvaluateData EvaluatorInput(Context, VM->GetGlobals());
+				try
+				{
+					CodaScriptSyntaxTreeExecuteVisitor Visitor(VM, Context);
+					VM->GetParser()->BeginEvaluation(Program, EvaluatorInput);
+					Program->Accept(&Visitor);		// doesn't throw any exceptions, so the next statement will always be executed
+					VM->GetParser()->EndEvaluation(Program);
+
+					Out.Success = Context->HasError() == false;
+					if (Context->HasResult())
+						Out.Result = std::move(ICodaScriptDataStore::PtrT(new CodaScriptBackingStore(Context->GetResult())));
+				}
+				catch (CodaScriptException& E)
+				{
+					VM->GetMessageHandler()->Log("Runtime Error [Script: %s] - %s", Program->GetName().c_str(), E.Get());
+				}
+				catch (...)
+				{
+					VM->GetMessageHandler()->Log("Unknown Runtime Error!");
+				}
+			}
+			Pop(Context);
 
 			if (ProfilerEnabled)
 			{
 				double ElapsedTime = Profiler.EndProfiling() * 1.0;
-				MessageHandler->Log("Profiler: %s [%.4f ms]", Context->ScriptName.c_str(), ElapsedTime);
+				VM->GetMessageHandler()->Log("Profiler: %s [%.4f ms]", Context->GetProgram()->GetName().c_str(), ElapsedTime);
 			}
-
-			return ExecuteResult;
 		}
 
-		CodaScriptExecutionContext* CodaScriptExecutive::GetExecutingContext( void )
+		bool CodaScriptExecutive::IsBusy() const
 		{
-			if (ExecutionStack.size())
-				return ExecutionStack.top();
-			else
-				return nullptr;
+			return ExecutingContexts.empty() == false;
+		}
+
+		bool CodaScriptExecutive::IsProgramExecuting(ICodaScriptProgram* Program) const
+		{
+			return ExecutionCounter.count(Program);
 		}
 
 		void CodaScriptExecutive::RegisterINISettings( INISettingDepotT& Depot )
 		{
 			Depot.push_back(&kINI_Profiling);
+			Depot.push_back(&kINI_RecursionLimit);
 		}
 
 
-
-		const std::string										CodaScriptBackgrounder::kDepotName	= "Background";
 
 #define CODASCRIPTBACKGROUNDER_INISECTION						"CodaBackgrounder"
 		SME::INI::INISetting									CodaScriptBackgrounder::kINI_Enabled("Enabled", CODASCRIPTBACKGROUNDER_INISECTION,
@@ -402,44 +459,34 @@ namespace bgsee
 
 		VOID CALLBACK CodaScriptBackgrounder::CallbackProc( HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime )
 		{
-			if (CODAVM->Backgrounder && CODAVM->Backgrounder->TimerID == idEvent)
-				CODAVM->Backgrounder->Tick(CODAVM->Executive);
+			CodaScriptBackgrounder* Daemon = (CodaScriptBackgrounder*)idEvent;
+			Daemon->Tick();
 		}
 
-		void CodaScriptBackgrounder::ResetCache( CodaScriptBackgroundExecutionCacheT& Cache, bool Renew /*= false*/ )
+		void CodaScriptBackgrounder::ResetDepotCache(bool Renew /*= false*/ )
 		{
 			SME_ASSERT(Backgrounding == false);
 
-			for (CodaScriptBackgroundExecutionCacheT::iterator Itr = Cache.begin(); Itr != Cache.end(); Itr++)
-				delete *Itr;
-
-			Cache.clear();
+			DepotCache.clear();
 
 			if (Renew)
 			{
-				for (IDirectoryIterator Itr(SourceDepot().c_str(), (std::string("*" + CodaScriptVM::kSourceExtension)).c_str()); !Itr.Done(); Itr.Next())
+				for (IDirectoryIterator Itr(SourceDepot().c_str(), (std::string("*" + VM->GetScriptFileExtension())).c_str()); !Itr.Done(); Itr.Next())
 				{
 					std::string FullPath = SourceDepot() + "\\" + std::string(Itr.Get()->cFileName);
-					std::fstream InputStream(FullPath.c_str(), std::ios::in);
-
-					if (InputStream.fail() == false)
+					VM->GetMessageHandler()->Log("Script: %s", Itr.Get()->cFileName);
+					VM->GetMessageHandler()->Indent();
 					{
-						BGSEECONSOLE_MESSAGE("Script: %s", Itr.Get()->cFileName);
-						BGSEECONSOLE->Indent();
+						ICodaScriptProgram* BackgroundScript = VM->GetProgramCache()->Get(FullPath, true);
+						if (BackgroundScript)
+						{
+							VM->GetMessageHandler()->Log("Success: %s [%.4f s]", BackgroundScript->GetName().c_str(), BackgroundScript->GetPollingInteval());
 
-						CodaScriptExecutionContext* BackgroundScript = CODAVM->CreateExecutionContext(InputStream, nullptr);
-						if (BackgroundScript->GetIsValid())
-						{
-							BGSEECONSOLE_MESSAGE("Success: %s [%.6f s]", BackgroundScript->ScriptName.c_str(), BackgroundScript->PollingInterval);
-							Cache.push_back(BackgroundScript);
+							ICodaScriptExecutionContext::PtrT Context(new CodaScriptExecutionContext(VM, BackgroundScript));
+							DepotCache.push_back(std::move(Context));
 						}
-						else
-						{
-							BGSEECONSOLE_MESSAGE("Failure!");
-							delete BackgroundScript;
-						}
-						BGSEECONSOLE->Exdent();
 					}
+					VM->GetMessageHandler()->Outdent();
 				}
 			}
 		}
@@ -448,56 +495,53 @@ namespace bgsee
 		{
 			SME_ASSERT(Backgrounding == false);
 
-			KillTimer(nullptr, TimerID);
-			TimerID = 0;
+			if (TimerDummyWindow)
+				KillTimer(TimerDummyWindow, (UINT_PTR)this);
 
 			if (Renew)
 			{
+				SME_ASSERT(TimerDummyWindow);
+
 				UInt32 UpdatePeriod = kINI_UpdatePeriod.GetData().i;
-				TimerID = SetTimer(nullptr, 0, UpdatePeriod, &CallbackProc);
-				SME_ASSERT(TimerID);
+				UINT_PTR Result = SetTimer(TimerDummyWindow, (UINT_PTR)this, UpdatePeriod, &CallbackProc);
+				SME_ASSERT(Result);
 			}
 		}
 
-		void CodaScriptBackgrounder::Execute( CodaScriptBackgroundExecutionCacheT& Cache, CodaScriptExecutive* Executive, double TimePassed )
+		void CodaScriptBackgrounder::Execute( ContextArrayT& Cache,  double TimePassed )
 		{
-			for (CodaScriptBackgroundExecutionCacheT::iterator Itr = Cache.begin(); Itr != Cache.end();)
+			for (auto Itr = Cache.begin(); Itr != Cache.end();)
 			{
-				CodaScriptExecutionContext* BackgroundScript = *Itr;
-				BackgroundScript->PollingIntervalReminder -= TimePassed;
-
-				if (BackgroundScript->PollingIntervalReminder <= 0.0f)
+				ICodaScriptExecutionContext* BackgroundScript = (*Itr).get();
+				if (BackgroundScript->GetProgram()->IsValid() == false)
 				{
-					BackgroundScript->PollingIntervalReminder = BackgroundScript->PollingInterval;
+					VM->GetMessageHandler()->Log("Background script '%s' halted - Invalid program", BackgroundScript->GetProgram()->GetName().c_str());
+					Itr = Cache.erase(Itr);
+					continue;
+				}
 
-					if (GetState())
+				if (BackgroundScript->TickPollingInterval(TimePassed))
+				{
+					if (IsEnabled())
 					{
-						bool Throwaway = false;
+						if (kINI_LogToDefaultConsoleContext().i == 0)
+							VM->GetMessageHandler()->SuspendDefaultContextLogging();
+						else
+							VM->GetMessageHandler()->Indent();
+
+						ICodaScriptVirtualMachine::ExecuteResult Result;
+						VM->GetExecutor()->Execute(BackgroundScript, Result);
 
 						if (kINI_LogToDefaultConsoleContext().i == 0)
-							CODAVM->GetMessageHandler()->SuspendDefaultContextLogging();
+							VM->GetMessageHandler()->ResumeDefaultContextLogging();
 						else
-							BGSEECONSOLE->Indent();
+							VM->GetMessageHandler()->Outdent();
 
-						bool ExecuteResult = Executive->Execute(BackgroundScript, nullptr, Throwaway);
-
-						if (kINI_LogToDefaultConsoleContext().i == 0)
-							CODAVM->GetMessageHandler()->ResumeDefaultContextLogging();
-						else
-							BGSEECONSOLE->Exdent();
-
-						if (BackgroundScript->GetIsValid() == false)
+						if (BackgroundScript->CanExecute() == false)
 						{
-							if (BackgroundScript->GetIsEnded() == false)
-							{
-								BGSEECONSOLE_MESSAGE("CodaScriptBackgrounder::Execute - Script '%s' halted!", BackgroundScript->ScriptName.c_str());
-							}
-							else
-							{
-								BGSEECONSOLE_MESSAGE("CodaScriptBackgrounder::Execute - Script '%s' says 'Byeee!'", BackgroundScript->ScriptName.c_str());
-							}
+							if (BackgroundScript->HasError())
+								VM->GetMessageHandler()->Log("Background script '%s' halted - Unhandled exception", BackgroundScript->GetProgram()->GetName().c_str());
 
-							delete BackgroundScript;
 							Itr = Cache.erase(Itr);
 							continue;
 						}
@@ -508,12 +552,10 @@ namespace bgsee
 			}
 		}
 
-		void CodaScriptBackgrounder::Tick( CodaScriptExecutive* Executive )
+		void CodaScriptBackgrounder::Tick()
 		{
-			SME_ASSERT(Executive);
-
 			// prevent nested calls that might crop in the event of message pump congestions
-			if (Executive->GetExecutingContext() || Backgrounding)
+			if (VM->GetExecutor()->IsBusy() || Backgrounding)
 				return;
 
 			SME::MiscGunk::ScopedSetter<bool> GuardBackgrounding(Backgrounding, true);
@@ -521,22 +563,38 @@ namespace bgsee
 			PollingTimeCounter.Update();
 			double TimePassed = PollingTimeCounter.GetTimePassed() / 1000.0f;
 
-			Execute(DepotCache, Executive, TimePassed);
-			Execute(RuntimeCache, Executive, TimePassed);
+			Execute(DepotCache, TimePassed);
+			Execute(RuntimeCache, TimePassed);
 		}
 
-		CodaScriptBackgrounder::CodaScriptBackgrounder( ResourceLocation Source, INIManagerGetterFunctor Getter, INIManagerSetterFunctor Setter ) :
+		CodaScriptBackgrounder::CodaScriptBackgrounder(ICodaScriptVirtualMachine* VM,
+													   ResourceLocation Source,
+													   INIManagerGetterFunctor Getter,
+													   INIManagerSetterFunctor Setter ) :
 			SourceDepot(Source),
 			DepotCache(),
 			RuntimeCache(),
 			State(false),
 			Backgrounding(false),
-			TimerID(0),
+			TimerDummyWindow(NULL),
 			PollingTimeCounter(),
+			VM(VM),
 			INISettingGetter(Getter),
 			INISettingSetter(Setter)
 		{
+			SME_ASSERT(VM);
 			State = kINI_Enabled.GetData().i;
+
+			const char* ClassName = "BACKGROUNDER_TIMER_WINDOW";
+			WNDCLASSEX wx = {};
+			wx.cbSize = sizeof(WNDCLASSEX);
+			wx.lpfnWndProc = [](HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) { return DefWindowProc(hWnd, uMsg, wParam, lParam); };
+			wx.hInstance = BGSEEMAIN->GetExtenderHandle();
+			wx.lpszClassName = ClassName;
+			SME_ASSERT(RegisterClassEx(&wx));
+
+			TimerDummyWindow = CreateWindowEx(0, ClassName, ClassName, 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, NULL, NULL);
+			ResetTimer(true);
 		}
 
 		CodaScriptBackgrounder::~CodaScriptBackgrounder()
@@ -544,38 +602,11 @@ namespace bgsee
 			SME_ASSERT(Backgrounding == false);
 
 			ResetTimer();
-			ResetCache(DepotCache);
-			ResetCache(RuntimeCache);
+			ResetDepotCache();
+			RuntimeCache.clear();
 
+			DestroyWindow(TimerDummyWindow);
 			kINI_Enabled.SetInt(State);
-		}
-
-		void CodaScriptBackgrounder::Suspend( void )
-		{
-			SME_ASSERT(Backgrounding == false);
-
-			State = false;
-		}
-
-		void CodaScriptBackgrounder::Resume( void )
-		{
-			SME_ASSERT(Backgrounding == false);
-
-			State = true;
-		}
-
-		bool CodaScriptBackgrounder::GetState( void ) const
-		{
-			return State;
-		}
-
-		void CodaScriptBackgrounder::Rebuild( void )
-		{
-			BGSEECONSOLE_MESSAGE("Backgrounder:");
-			BGSEECONSOLE->Indent();
-			ResetTimer(true);
-			ResetCache(DepotCache, true);
-			BGSEECONSOLE->Exdent();
 		}
 
 		void CodaScriptBackgrounder::RegisterINISettings( INISettingDepotT& Depot )
@@ -585,14 +616,50 @@ namespace bgsee
 			Depot.push_back(&kINI_LogToDefaultConsoleContext);
 		}
 
-		void CodaScriptBackgrounder::Queue( CodaScriptExecutionContext* Context )
+		const ResourceLocation& CodaScriptBackgrounder::GetBackgroundScriptRepository() const
 		{
-			SME_ASSERT(Backgrounding == false);
-
-			RuntimeCache.push_back(Context);
+			return SourceDepot;
 		}
 
+		void CodaScriptBackgrounder::Suspend()
+		{
+			SME_ASSERT(Backgrounding == false);
+			State = false;
+		}
 
+		void CodaScriptBackgrounder::Resume()
+		{
+			SME_ASSERT(Backgrounding == false);
+			State = true;
+		}
+
+		bool CodaScriptBackgrounder::IsEnabled() const
+		{
+			return State;
+		}
+
+		bool CodaScriptBackgrounder::IsBackgrounding() const
+		{
+			return Backgrounding;
+		}
+
+		void CodaScriptBackgrounder::Rebuild()
+		{
+			VM->GetMessageHandler()->Log("Coda Script Backgrounder:");
+			VM->GetMessageHandler()->Indent();
+			ResetTimer(true);
+			ResetDepotCache(true);
+			VM->GetMessageHandler()->Outdent();
+		}
+
+		void CodaScriptBackgrounder::Queue(ICodaScriptExecutionContext* Context)
+		{
+			SME_ASSERT(Backgrounding == false);
+			SME_ASSERT(Context->CanExecute());
+
+			ICodaScriptExecutionContext::PtrT NewScript(Context);
+			RuntimeCache.push_back(std::move(NewScript));
+		}
 
 #define CODASCRIPTGLOBALDATASTORE_INISECTION					"CodaGlobalDataStore"
 
@@ -618,16 +685,14 @@ namespace bgsee
 					SendMessage(GlobaList, LB_RESETCONTENT, NULL, NULL);
 
 					char Buffer[0x100] = {0};
-					for (CodaScriptVariableArrayT::const_iterator Itr = Instance->Cache.begin(); Itr != Instance->Cache.end(); Itr++)
+					for (auto Itr : Instance->Cache)
 					{
-						CodaScriptVariable* GlobalVar = *Itr;
-
 						sprintf_s(Buffer, sizeof(Buffer), "[%c]\t\t%s",
-							GlobalVar->GetStoreOwner()->GetDataStore()->GetType(),
-							GlobalVar->GetName());
+								  Itr->GetStoreOwner()->GetDataStore()->GetType(),
+								  Itr->GetName());
 
 						int Index = SendMessage(GlobaList, LB_INSERTSTRING, -1, (LPARAM)Buffer);
-						SendMessage(GlobaList, LB_SETITEMDATA, Index, (LPARAM)GlobalVar);
+						SendMessage(GlobaList, LB_SETITEMDATA, Index, (LPARAM)Itr);
 					}
 
 					SendMessage(GlobaList, LB_SETCURSEL, -1, NULL);
@@ -777,7 +842,7 @@ namespace bgsee
 
 			if (Global == nullptr)
 			{
-				ICodaScriptDataStoreOwner* StoreOwner = CodaScriptObjectFactory::BuildDataStoreOwner(CodaScriptObjectFactory::kFactoryType_MUP);
+				ICodaScriptDataStoreOwner* StoreOwner = VM->BuildDataStoreOwner();
 				Global = new CodaScriptVariable(std::string(Name), StoreOwner);
 				Cache.push_back(Global);
 
@@ -807,7 +872,7 @@ namespace bgsee
 
 		void CodaScriptGlobalDataStore::Remove( CodaScriptVariable* Variable )
 		{
-			CodaScriptVariableArrayT::iterator Match;
+			CodaScriptVariable::ArrayT::iterator Match;
 			if (Lookup(Variable, Match))
 			{
 				delete Variable;
@@ -817,7 +882,7 @@ namespace bgsee
 
 		CodaScriptVariable* CodaScriptGlobalDataStore::Lookup( const char* Name )
 		{
-			for (CodaScriptVariableArrayT::iterator Itr = Cache.begin(); Itr != Cache.end(); Itr++)
+			for (auto Itr = Cache.begin(); Itr != Cache.end(); Itr++)
 			{
 				CodaScriptVariable* Global = *Itr;
 				if (!_stricmp(Global->GetName(), Name))
@@ -827,9 +892,9 @@ namespace bgsee
 			return nullptr;
 		}
 
-		bool CodaScriptGlobalDataStore::Lookup( CodaScriptVariable* Variable, CodaScriptVariableArrayT::iterator& Match )
+		bool CodaScriptGlobalDataStore::Lookup( CodaScriptVariable* Variable, CodaScriptVariable::ArrayT::iterator& Match )
 		{
-			for (CodaScriptVariableArrayT::iterator Itr = Cache.begin(); Itr != Cache.end(); Itr++)
+			for (auto Itr = Cache.begin(); Itr != Cache.end(); Itr++)
 			{
 				CodaScriptVariable* Global = *Itr;
 				if (Global == Variable)
@@ -844,8 +909,8 @@ namespace bgsee
 
 		void CodaScriptGlobalDataStore::Clear( void )
 		{
-			for (CodaScriptVariableArrayT::iterator Itr = Cache.begin(); Itr != Cache.end(); Itr++)
-				delete *Itr;
+			for (auto Itr : Cache)
+				delete Itr;
 
 			Cache.clear();
 		}
@@ -857,8 +922,8 @@ namespace bgsee
 			char SectionBuffer[0x8000] = {0};
 			if (INISettingGetter(CODASCRIPTGLOBALDATASTORE_INISECTION, SectionBuffer, sizeof(SectionBuffer)))
 			{
-				BGSEECONSOLE_MESSAGE("Global Data Store:");
-				BGSEECONSOLE->Indent();
+				VM->GetMessageHandler()->Log("Global Data Store:");
+				VM->GetMessageHandler()->Indent();
 				for (const char* Itr = SectionBuffer; *Itr != '\0'; Itr += strlen(Itr) + 1)
 				{
 					std::string StrBuffer(Itr);
@@ -877,10 +942,10 @@ namespace bgsee
 						else
 							Add(Name.c_str(), atof(Value.c_str()), Throwaway);
 
-						BGSEECONSOLE_MESSAGE("%s = %s", Name.c_str(), Value.c_str());
+						VM->GetMessageHandler()->Log("%s = %s", Name.c_str(), Value.c_str());
 					}
 				}
-				BGSEECONSOLE->Exdent();
+				VM->GetMessageHandler()->Outdent();
 			}
 		}
 
@@ -889,18 +954,16 @@ namespace bgsee
 			INISettingSetter(CODASCRIPTGLOBALDATASTORE_INISECTION, nullptr);
 			char Buffer[0x512] = {0};
 
-			for (CodaScriptVariableArrayT::iterator Itr = Cache.begin(); Itr != Cache.end(); Itr++)
+			for (auto Itr : Cache)
 			{
-				CodaScriptVariable* Global = *Itr;
-
 				bool InvalidType = false;
-				switch (Global->GetStoreOwner()->GetDataStore()->GetType())
+				switch (Itr->GetStoreOwner()->GetDataStore()->GetType())
 				{
 				case ICodaScriptDataStore::kDataType_Numeric:
-					FORMAT_STR(Buffer, "n|%0.6f", Global->GetStoreOwner()->GetDataStore()->GetNumber() * 1.0);
+					FORMAT_STR(Buffer, "n|%0.6f", Itr->GetStoreOwner()->GetDataStore()->GetNumber() * 1.0);
 					break;
 				case ICodaScriptDataStore::kDataType_String:
-					FORMAT_STR(Buffer, "s|%s", Global->GetStoreOwner()->GetDataStore()->GetString());
+					FORMAT_STR(Buffer, "s|%s", Itr->GetStoreOwner()->GetDataStore()->GetString());
 					break;
 				default:
 					InvalidType = true;
@@ -909,28 +972,30 @@ namespace bgsee
 
 				if (InvalidType)
 				{
-					BGSEECONSOLE_MESSAGE("CodaScriptGlobalDataStore::INISaveState - Blasphemy!! Unexpected data store value of type %c! Did you assign a reference/array to a global variable? Why dammit?!",
-										Global->GetStoreOwner()->GetDataStore()->GetType());
+					VM->GetMessageHandler()->Log("Couldn't save Coda script global variable '%s' - Unexpected type %c!",
+												 Itr->GetName(), Itr->GetStoreOwner()->GetDataStore()->GetType());
 				}
 				else
-				{
-					INISettingSetter(Global->GetName(), CODASCRIPTGLOBALDATASTORE_INISECTION, Buffer);
-				}
+					INISettingSetter(Itr->GetName(), CODASCRIPTGLOBALDATASTORE_INISECTION, Buffer);
 			}
 		}
 
-		CodaScriptGlobalDataStore::CodaScriptGlobalDataStore( INIManagerGetterFunctor Getter, INIManagerSetterFunctor Setter ) :
+		CodaScriptGlobalDataStore::CodaScriptGlobalDataStore(ICodaScriptVirtualMachine* VM,
+															 INIManagerGetterFunctor Getter,
+															 INIManagerSetterFunctor Setter ) :
 			Cache(),
 			INISettingGetter(Getter),
-			INISettingSetter(Setter)
+			INISettingSetter(Setter),
+			VM(VM)
 		{
-			this->INILoadState();
+			SME_ASSERT(VM);
+			INILoadState();
 		}
 
 		CodaScriptGlobalDataStore::~CodaScriptGlobalDataStore()
 		{
-			this->INISaveState();
-			this->Clear();
+			INISaveState();
+			Clear();
 		}
 
 		void CodaScriptGlobalDataStore::ShowEditDialog( HINSTANCE ResourceInstance, HWND Parent )
@@ -938,14 +1003,17 @@ namespace bgsee
 			BGSEEUI->ModalDialog(ResourceInstance, MAKEINTRESOURCE(IDD_BGSEE_CODAGLOBALDATASTORE), Parent, EditDlgProc, (LPARAM)this);
 		}
 
-		CodaScriptVariableArrayT& CodaScriptGlobalDataStore::GetCache( void )
+		CodaScriptVariable::ArrayT& CodaScriptGlobalDataStore::GetCache( void )
 		{
 			return Cache;
 		}
 
-		const std::string										CodaScriptVM::kSourceExtension	= ".coda";
-		CodaScriptVM*											CodaScriptVM::Singleton			= nullptr;
-		bgsee::ConsoleCommandInfo				CodaScriptVM::kDumpCodaDocsConsoleCommandData =
+		const std::string				CodaScriptVM::kBackgroundDepotName	= "Background";
+		const std::string				CodaScriptVM::kSourceExtension		= ".coda";
+		CodaScriptVM*					CodaScriptVM::Singleton				= nullptr;
+
+
+		bgsee::ConsoleCommandInfo		CodaScriptVM::kDumpCodaDocsConsoleCommandData =
 		{
 			"DumpCodaDocs",
 			0,
@@ -961,14 +1029,17 @@ namespace bgsee
 								   const char* WikiURL,
 								   INIManagerGetterFunctor INIGetter,
 								   INIManagerSetterFunctor INISetter,
-								   CodaScriptRegistrarListT& ScriptCommands) :
-			BaseDirectory(),
-			CommandRegistry(nullptr),
-			MessageHandler(nullptr),
-			Executive(nullptr),
-			Backgrounder(nullptr),
-			GlobalStore(nullptr),
-			ExpressionParser(nullptr),
+								   CodaScriptCommandRegistrar::ListT& ScriptCommands) :
+			ICodaScriptVirtualMachine(ObjectFactoryType::MUP),
+			BaseDirectory(BasePath),
+			CommandRegistry(new CodaScriptCommandRegistry(WikiURL)),
+			MessageHandler(new CodaScriptMessageHandler("Coda Script")),
+			ProgramCache(new CodaScriptProgramCache(this)),
+			Executive(new CodaScriptExecutive(this)),
+			Backgrounder(new CodaScriptBackgrounder(this,
+													BaseDirectory.GetRelativePath() + "\\" + kBackgroundDepotName, INIGetter, INISetter)),
+			GlobalStore(new CodaScriptGlobalDataStore(this, INIGetter, INISetter)),
+			ExpressionParser(BuildExpressionParser()),
 			Initialized(false)
 		{
 			SME_ASSERT(Singleton == nullptr);
@@ -976,21 +1047,13 @@ namespace bgsee
 
 			Initialized = true;
 
-			BaseDirectory = BasePath;
-			CommandRegistry = new CodaScriptCommandRegistry(WikiURL);
-			MessageHandler = new CodaScriptMessageHandler();
-			Executive = new CodaScriptExecutive(MessageHandler);
-			Backgrounder = new CodaScriptBackgrounder(BaseDirectory.GetRelativePath() + "\\" + CodaScriptBackgrounder::kDepotName, INIGetter, INISetter);
-			GlobalStore = new CodaScriptGlobalDataStore(INIGetter, INISetter);
-			ExpressionParser = CodaScriptObjectFactory::BuildExpressionParser(CodaScriptObjectFactory::kFactoryType_MUP);
-
 			// register built-in commands first
 			ScriptCommands.push_front(commands::general::GetRegistrar());
 			ScriptCommands.push_front(commands::string::GetRegistrar());
 			ScriptCommands.push_front(commands::array::GetRegistrar());
 
 			CommandRegistry->RegisterCommands(ScriptCommands);
-			CommandRegistry->InitializeExpressionParser(ExpressionParser);
+			CommandRegistry->InitializeExpressionParser(GetParser());
 
 			// register console command
 			BGSEECONSOLE->RegisterConsoleCommand(&kDumpCodaDocsConsoleCommandData);
@@ -998,49 +1061,58 @@ namespace bgsee
 			Backgrounder->Rebuild();
 		}
 
-		CodaScriptExecutionContext* CodaScriptVM::CreateExecutionContext( std::fstream& Input, CodaScriptMutableDataArrayT* Parameters /*= NULL*/ )
-		{
-			return new CodaScriptExecutionContext(this, Input, ExpressionParser, Parameters);
-		}
-
 		CodaScriptVM::~CodaScriptVM()
 		{
-			SAFEDELETE(Executive);
-			SAFEDELETE(Backgrounder);
-			SAFEDELETE(GlobalStore);
-			SAFEDELETE(CommandRegistry);
-			SAFEDELETE(ExpressionParser);
-			SAFEDELETE(MessageHandler);
+			// we need to release the following pointers in an order-dependent fashion
+			GlobalStore.reset(nullptr);
+			Backgrounder.reset(nullptr);
+			ProgramCache.reset(nullptr);
+			Executive.reset(nullptr);
+			ExpressionParser.reset(nullptr);
 
 			bool Leakage = false;
 
-			if (ICodaScriptExecutableCode::GIC)
+			if (ICodaScriptExecutableCode::GetGIC())
 			{
-				BGSEECONSOLE_MESSAGE("CodaScriptVM::D'tor - Session leaked %d instances of ICodaScriptExecutableCode!", ICodaScriptExecutableCode::GIC);
+				MessageHandler->Log("CodaScriptVM::D'tor - Session leaked %d instances of ICodaScriptExecutableCode!", ICodaScriptExecutableCode::GetGIC());
 				Leakage = true;
 			}
 
-			if (CodaScriptBackingStore::GIC)
+			if (CodaScriptBackingStore::GetGIC())
 			{
-				BGSEECONSOLE_MESSAGE("CodaScriptVM::D'tor - Session leaked %d instances of CodaScriptBackingStore!", CodaScriptBackingStore::GIC);
+				MessageHandler->Log("CodaScriptVM::D'tor - Session leaked %d instances of CodaScriptBackingStore!", CodaScriptBackingStore::GetGIC());
 				Leakage = true;
 			}
 
-			if (CodaScriptVariable::GIC)
+			if (CodaScriptVariable::GetGIC())
 			{
-				BGSEECONSOLE_MESSAGE("CodaScriptVM::D'tor - Session leaked %d instances of CodaScriptVariable!", CodaScriptVariable::GIC);
+				MessageHandler->Log("CodaScriptVM::D'tor - Session leaked %d instances of CodaScriptVariable!", CodaScriptVariable::GetGIC());
 				Leakage = true;
 			}
 
-			if (mup::CodaScriptMUPArrayDataType::GIC)
+			if (mup::CodaScriptMUPArrayDataType::GetGIC())
 			{
-				BGSEECONSOLE_MESSAGE("CodaScriptVM::D'tor - Session leaked %d instances of mup::CodaScriptMUPArrayDataType!", mup::CodaScriptMUPArrayDataType::GIC);
+				MessageHandler->Log("CodaScriptVM::D'tor - Session leaked %d instances of mup::CodaScriptMUPArrayDataType!", mup::CodaScriptMUPArrayDataType::GetGIC());
 				Leakage = true;
 			}
 
-			if (mup::CodaScriptMUPValue::GIC)
+			if (mup::CodaScriptMUPValue::GetGIC())
 			{
-				BGSEECONSOLE_MESSAGE("CodaScriptVM::D'tor - Session leaked %d instances of mup::CodaScriptMUPValue!", mup::CodaScriptMUPValue::GIC);
+				MessageHandler->Log("CodaScriptVM::D'tor - Session leaked %d instances of mup::CodaScriptMUPValue!", mup::CodaScriptMUPValue::GetGIC());
+				Leakage = true;
+			}
+
+			if (mup::CodaScriptMUPVariable::GetGIC())
+			{
+				MessageHandler->Log("CodaScriptVM::D'tor - Session leaked %d instances of mup::CodaScriptMUPVariable!", mup::CodaScriptMUPVariable::GetGIC());
+				Leakage = true;
+			}
+
+			std::string MUPLeakage;
+			if (mup::IToken::LeakageReport(MUPLeakage))
+			{
+				MessageHandler->Log("CodaScriptVM::D'tor - Session leaked mup::IToken!");
+				MessageHandler->Log("%s", MUPLeakage.c_str());
 				Leakage = true;
 			}
 
@@ -1061,7 +1133,7 @@ namespace bgsee
 										const char* WikiURL,
 										INIManagerGetterFunctor INIGetter,
 										INIManagerSetterFunctor INISetter,
-										CodaScriptRegistrarListT& ScriptCommands )
+										CodaScriptCommandRegistrar::ListT& ScriptCommands )
 		{
 			if (Singleton)
 				return false;
@@ -1076,102 +1148,17 @@ namespace bgsee
 			delete Singleton;
 		}
 
-		bool CodaScriptVM::RunScript(std::string ScriptName,
-									CodaScriptMutableDataArrayT* Parameters,
-									CodaScriptBackingStore* Result,
-									bool& ReturnedResult,
-									bool RunInBackground /*= false*/ )
+		void CodaScriptVM::ShowGlobalStoreEditDialog(HINSTANCE ResourceInstance, HWND Parent)
 		{
-			std::replace(ScriptName.begin(), ScriptName.end(), '\\', ' ');
-			std::replace(ScriptName.begin(), ScriptName.end(), '/', ' ');
+			SME_ASSERT(Backgrounder->IsBackgrounding() == false);
 
-			ResourceLocation Path(BaseDirectory.GetRelativePath() + "\\" + ScriptName + CodaScriptVM::kSourceExtension);
-			std::fstream InputStream(Path().c_str(), std::iostream::in);
-
-			if (InputStream.fail() == false)
-			{
-				BGSEECONSOLE->Indent();
-				std::auto_ptr<CodaScriptExecutionContext> ScriptContext(CreateExecutionContext(InputStream, Parameters));
-				BGSEECONSOLE->Exdent();
-
-				if (ScriptContext->GetIsValid() == false)
-				{
-					BGSEECONSOLE_MESSAGE("CodaScriptVM::RunScript - Script '%s' has outstanding errors!", ScriptContext->ScriptName.c_str());
-				}
-				else
-				{
-					if (RunInBackground == false)
-					{
-						BGSEECONSOLE->Indent();
-						bool Success = Executive->Execute(ScriptContext.get(), Result, ReturnedResult);
-						BGSEECONSOLE->Exdent();
-						return Success;
-					}
-					else
-					{
-						// queue the script for execution
-						Backgrounder->Queue(ScriptContext.release());
-						return true;
-					}
-				}
-			}
-			else
-			{
-				BGSEECONSOLE_MESSAGE("CodaScriptVM::RunScript - Script at '%s' couldn't be opened for reading!", Path().c_str());
-			}
-
-			return false;
-		}
-
-		void CodaScriptVM::ShowGlobalStoreEditDialog( HINSTANCE ResourceInstance, HWND Parent )
-		{
-			SME_ASSERT(Backgrounder->Backgrounding == false);
-
-			bool BackgrounderState = GetBackgrounderState();
+			bool BackgrounderState = Backgrounder->IsEnabled();
 			Backgrounder->Suspend();
 
 			GlobalStore->ShowEditDialog(ResourceInstance, Parent);
-			BGSEECONSOLE_MESSAGE("Reinitializing Coda Virtual Machine");
-			BGSEECONSOLE->Indent();
-			Backgrounder->Rebuild();
-			BGSEECONSOLE->Exdent();
 
 			if (BackgrounderState)
 				Backgrounder->Resume();
-		}
-
-		CodaScriptVariable* CodaScriptVM::GetGlobal( const char* Name )
-		{
-			return GlobalStore->Lookup(Name);
-		}
-
-		CodaScriptVariableArrayT& CodaScriptVM::GetGlobals( void ) const
-		{
-			return GlobalStore->GetCache();
-		}
-
-		CodaScriptMessageHandler* CodaScriptVM::GetMessageHandler( void )
-		{
-			return MessageHandler;
-		}
-
-		bool CodaScriptVM::GetBackgrounderState( void ) const
-		{
-			return Backgrounder->GetState();
-		}
-
-		bool CodaScriptVM::ToggleBackgrounderState( void )
-		{
-			if (Backgrounder->GetState())
-			{
-				Backgrounder->Suspend();
-				return false;
-			}
-			else
-			{
-				Backgrounder->Resume();
-				return true;
-			}
 		}
 
 		void CodaScriptVM::OpenScriptRepository( void ) const
@@ -1179,39 +1166,122 @@ namespace bgsee
 			ShellExecute(nullptr, "open", BaseDirectory.GetFullPath().c_str(), nullptr, nullptr, SW_SHOW);
 		}
 
-		ICodaScriptExpressionParser* CodaScriptObjectFactory::BuildExpressionParser( UInt8 Type )
+		ICodaScriptExpressionParser* CodaScriptVM::BuildExpressionParser()
 		{
-			switch (Type)
+			switch (FactoryType)
 			{
-			case CodaScriptObjectFactory::kFactoryType_MUP:
+			case ObjectFactoryType::MUP:
 				return new mup::CodaScriptMUPExpressionParser();
 			default:
-				return nullptr;
+				throw CodaScriptException("Invalid ObjectFactoryType");
 			}
 		}
 
-		ICodaScriptDataStoreOwner* CodaScriptObjectFactory::BuildDataStoreOwner( UInt8 Type )
+		ICodaScriptDataStoreOwner* CodaScriptVM::BuildDataStoreOwner()
 		{
-			switch (Type)
+			switch (FactoryType)
 			{
-			case CodaScriptObjectFactory::kFactoryType_MUP:
+			case ObjectFactoryType::MUP:
 				return new mup::CodaScriptMUPValue((mup::float_type)0.0);
 			default:
-				return nullptr;
+				throw CodaScriptException("Invalid ObjectFactoryType");
 			}
 		}
 
-		CodaScriptSharedHandleArrayT CodaScriptObjectFactory::BuildArray( UInt8 Type, UInt32 InitialSize )
+		ICodaScriptArrayDataType::SharedPtrT CodaScriptVM::BuildArray(UInt32 InitialSize /*= 0*/)
 		{
-			switch (Type)
+			switch (FactoryType)
 			{
-			case CodaScriptObjectFactory::kFactoryType_MUP:
+			case ObjectFactoryType::MUP:
 				{
-					CodaScriptSharedHandleArrayT Array(new mup::CodaScriptMUPArrayDataType(InitialSize));
+					ICodaScriptArrayDataType::SharedPtrT Array(new mup::CodaScriptMUPArrayDataType(InitialSize));
 					return Array;
 				}
 			default:
-				return CodaScriptSharedHandleArrayT();
+				throw CodaScriptException("Invalid ObjectFactoryType");
+			}
+		}
+
+		const ResourceLocation& CodaScriptVM::GetScriptRepository() const
+		{
+			return BaseDirectory;
+		}
+
+		const std::string& CodaScriptVM::GetScriptFileExtension() const
+		{
+			return kSourceExtension;
+		}
+
+		CodaScriptVariable* CodaScriptVM::GetGlobal(const char* Name) const
+		{
+			return GlobalStore->Lookup(Name);
+		}
+
+		const CodaScriptVariable::ArrayT& CodaScriptVM::GetGlobals() const
+		{
+			return GlobalStore->GetCache();
+		}
+
+		CodaScriptMessageHandler* CodaScriptVM::GetMessageHandler() const
+		{
+			return MessageHandler.get();
+		}
+
+		ICodaScriptExpressionParser* CodaScriptVM::GetParser() const
+		{
+			return ExpressionParser.get();
+		}
+
+		ICodaScriptExecutor* CodaScriptVM::GetExecutor() const
+		{
+			return Executive.get();
+		}
+
+		ICodaScriptBackgroundDaemon* CodaScriptVM::GetBackgroundDaemon() const
+		{
+			return Backgrounder.get();
+		}
+
+		ICodaScriptProgramCache* CodaScriptVM::GetProgramCache() const
+		{
+			return ProgramCache.get();
+		}
+
+		bool CodaScriptVM::IsProgramExecuting(ICodaScriptProgram* Program) const
+		{
+			return Executive->IsProgramExecuting(Program);
+		}
+
+		void CodaScriptVM::RunScript(ExecuteParams& Input, ExecuteResult& Output)
+		{
+			ResourceLocation Path(BaseDirectory.GetRelativePath() + "\\" + Input.ScriptName + CodaScriptVM::kSourceExtension);
+			if (ResourceLocation::IsRelativeTo(Path, Backgrounder->GetBackgroundScriptRepository()))
+			{
+				MessageHandler->Log("Cannot execute background script '%s' manually", Input.ScriptName.c_str());
+				return;
+			}
+
+			ICodaScriptProgram* Program = ProgramCache->Get(Path.GetFullPath(), Input.Recompile);
+			if (Program)
+			{
+				try
+				{
+					ICodaScriptExecutionContext::PtrT Context(new CodaScriptExecutionContext(this, Program));
+					if (Input.Parameters.empty() == false)
+						Context->SetParameters(Input.Parameters);
+
+					if (Input.RunInBackground)
+					{
+						Backgrounder->Queue(Context.release());
+						Output.Success = true;
+					}
+					else
+						Executive->Execute(Context.get(), Output);
+				}
+				catch (CodaScriptException& ex)
+				{
+					MessageHandler->Log("Couldn't execute script '%s' - %s", Program->GetName().c_str(), ex.Get());
+				}
 			}
 		}
 	}

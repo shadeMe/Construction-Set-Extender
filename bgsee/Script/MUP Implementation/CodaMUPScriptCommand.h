@@ -1,6 +1,6 @@
 #pragma once
-#include "CodaIntrinsics.h"
 #include "mpICallback.h"
+#include "CodaBaseInterfaces.inl"
 
 namespace bgsee
 {

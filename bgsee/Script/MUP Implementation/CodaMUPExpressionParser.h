@@ -13,6 +13,7 @@
 #include "mpTokenReader.h"
 #include "CodaInterpreter.h"
 #include "CodaMUPValue.h"
+#include "CodaMUPVariable.h"
 
 namespace bgsee
 {
@@ -31,7 +32,6 @@ namespace bgsee
 				CodaScriptMUPParserByteCode& operator=(const CodaScriptMUPParserByteCode &ByteCode);
 			protected:
 				CodaScriptMUPExpressionParser*	Parser;
-				std::auto_ptr<TokenReader>		Tokenizer;
 
 				mutable int						TokenPos;
 				mutable RPN						RPNStack;			///< reverse polish notation
@@ -42,52 +42,90 @@ namespace bgsee
 				virtual ~CodaScriptMUPParserByteCode();
 			};
 
+			class CodaScriptMUPParserMetadata : public ICodaScriptCompilerMetadata
+			{
+				friend class CodaScriptMUPExpressionParser;
+
+				CodaScriptMUPParserMetadata(const CodaScriptMUPParserMetadata &ByteCode);
+				CodaScriptMUPParserMetadata& operator=(const CodaScriptMUPParserMetadata &ByteCode);
+			protected:
+				typedef std::unordered_map<CodaScriptSourceCodeT, CodaScriptMUPVariable::PtrT>		VarWrapperMapT;		// key = name
+
+				CodaScriptMUPExpressionParser*	Parser;
+				ICodaScriptProgram*				Program;
+				VarWrapperMapT					Locals;
+				VarWrapperMapT					Globals;
+
+				CodaScriptMUPVariable*			CreateWrapper(const CodaScriptSourceCodeT& Name, bool Global);
+				CodaScriptMUPVariable*			GetWrapper(const CodaScriptSourceCodeT& Name, bool Global) const;
+
+				void							BindWrappers(ICodaScriptExpressionParser::EvaluateData& Data);
+				void							UnbindWrappers();
+			public:
+				CodaScriptMUPParserMetadata(CodaScriptMUPExpressionParser* Parser, ICodaScriptProgram* Program);
+				virtual ~CodaScriptMUPParserMetadata();
+
+				virtual ICodaScriptExpressionParser*	GetParentParser() const override;
+				virtual ICodaScriptProgram*				GetSourceProgram() const override;
+			};
+
 			// a stripped-down and slightly different implementation of mup::ParserXBase
 			class CodaScriptMUPExpressionParser : public ICodaScriptExpressionParser
 			{
 				friend class TokenReader;
-				friend class CodaScriptMUPFunction;
 
 				CodaScriptMUPExpressionParser(const CodaScriptMUPExpressionParser &a_Parser);
 				CodaScriptMUPExpressionParser& operator=(const CodaScriptMUPExpressionParser &a_Parser);
-
-				class ByteCodeAgentStackOperator
-				{
-					friend class CodaScriptMUPExpressionParser;
-
-					CodaScriptMUPExpressionParser*			Parent;
-					CodaScriptMUPParserByteCode*			ByteCode;
-					ICodaScriptSyntaxTreeEvaluator*			EvalAgent;
-
-					void									Push(void);
-					void									Pop(void);
-				public:
-					ByteCodeAgentStackOperator(CodaScriptMUPExpressionParser* Parent, CodaScriptMUPParserByteCode* ByteCode, ICodaScriptSyntaxTreeEvaluator* Agent);
-					ByteCodeAgentStackOperator(CodaScriptMUPExpressionParser* Parent, CodaScriptMUPParserByteCode* ByteCode);
-					ByteCodeAgentStackOperator(CodaScriptMUPExpressionParser* Parent, ICodaScriptSyntaxTreeEvaluator* Agent);
-					~ByteCodeAgentStackOperator();
-				};
-
-				friend class ByteCodeAgentStackOperator;
 			protected:
 				static const char_type*												c_DefaultOprt[];
-				typedef std::map<CodaScriptExecutionContext*, var_maptype>			ContextSpecificVariableMapT;
 
+				enum class OperationType
+				{
+					Compile, Evaluate
+				};
+
+				struct OperationContext
+				{
+					typedef std::stack<OperationContext>		StackT;
+
+					OperationType						Type;
+					ICodaScriptProgram*					Program;
+					ICodaScriptSyntaxTreeEvaluator*		Agent;
+					CodaScriptMUPParserByteCode*		Bytecode;		// currently being compiled/evaluated
+
+					struct
+					{
+						ICodaScriptExecutionContext*	ExecutionContext;
+					} EvaluateData;
+
+					struct
+					{
+						CodaScriptMUPParserMetadata*	Metadata;
+						var_maptype						Variables;		// locals and globals
+					} CompileData;
+
+					OperationContext(OperationType Type, ICodaScriptProgram* Program, ICodaScriptExecutionContext* Context) :
+						Type(Type), Program(Program), Agent(nullptr), Bytecode(nullptr), EvaluateData{ Context }, CompileData{ nullptr }
+					{
+					}
+
+					OperationContext(OperationType Type, ICodaScriptProgram* Program) :
+						Type(Type), Program(Program), Agent(nullptr), Bytecode(nullptr), EvaluateData{ nullptr }, CompileData{ nullptr }
+					{
+					}
+				};
+
+				std::unique_ptr<TokenReader>					m_TokenReader;
 				fun_maptype										m_FunDef;           ///< Function definitions
 				oprt_pfx_maptype								m_PostOprtDef;		///< Postfix operator callbacks
 				oprt_ifx_maptype								m_InfixOprtDef;		///< Infix operator callbacks.
 				oprt_bin_maptype								m_OprtDef;			///< Binary operator callbacks
 				val_maptype										m_valDef;			///< Definition of parser constants
-				val_vec_type									m_valDynVarShadow;  ///< Value objects referenced by variables created at parser runtime
-				var_maptype										m_varDef;           ///< User defined variables. Deprecated, always empty
-				ContextSpecificVariableMapT						m_CSVarDef;			///< Maps execution contexts to a MUP var_maptype variable map
+				OperationContext::StackT						m_opContext;		///< Stores the contexts of the executing parser operations
 
 				string_type										m_sNameChars;       ///< Charset for names
 				string_type										m_sOprtChars;       ///< Charset for postfix/ binary operator tokens
 				string_type										m_sInfixOprtChars;  ///< Charset for infix operator tokens
-
-				std::stack<CodaScriptMUPParserByteCode*>		m_ByteCodeStack;	///< Only populated inside an Evaluate/Compile call
-				std::stack<ICodaScriptSyntaxTreeEvaluator*>		m_EvalAgentStack;	///< Same as above
 
 				void											Error(EErrorCodes a_iErrc, int a_iPos = -1,	const IToken *a_pTok = 0) const;
 
@@ -97,6 +135,19 @@ namespace bgsee
 
 				void											CheckName(const string_type &a_sName, const string_type &a_CharSet) const;
 				void											CreateRPN(CodaScriptMUPParserByteCode* OutByteCode) const;
+
+				const var_maptype&								GetVar() const;
+				const char_type**								GetOprtDef() const;
+
+				const char_type*								ValidNameChars() const;
+				const char_type*								ValidOprtChars() const;
+				const char_type*								ValidInfixOprtChars() const;
+
+				void											DefineNameChars(const char_type *a_szCharset);
+				void											DefineOprtChars(const char_type *a_szCharset);
+				void											DefineInfixOprtChars(const char_type *a_szCharset);
+
+				void											CheckVariableName(const CodaScriptSourceCodeT& Name, const var_maptype& RegisteredVars) const;
 			public:
 				CodaScriptMUPExpressionParser();
 				virtual ~CodaScriptMUPExpressionParser();
@@ -112,36 +163,26 @@ namespace bgsee
 				void											DefinePostfixOprt(const TokenPtr<IOprtPostfix> &a_pOprt);
 				void											DefineInfixOprt(const TokenPtr<IOprtInfix> &a_iOprt);
 
-				const var_maptype&								GetVar() const;
-				const val_maptype&								GetConst() const;
-				const fun_maptype&								GetFunDef() const;
-				const string_type&								GetExpr() const;
-				const char_type**								GetOprtDef() const;
+				virtual void									RegisterCommand(ICodaScriptCommand* Command) override;
+				virtual void									RegisterConstant(const char* Name, CodaScriptBackingStore& Value) override;
 
-				const char_type*								ValidNameChars() const;
-				const char_type*								ValidOprtChars() const;
-				const char_type*								ValidInfixOprtChars() const;
+				virtual void									RegisterProgram(ICodaScriptProgram* Program) override;
+				virtual void									DeregisterProgram(ICodaScriptProgram* Program) override;
 
-				void											DefineNameChars(const char_type *a_szCharset);
-				void											DefineOprtChars(const char_type *a_szCharset);
-				void											DefineInfixOprtChars(const char_type *a_szCharset);
-
-				CodaScriptMUPParserByteCode*					GetCurrentByteCode(void) const;
-				ICodaScriptSyntaxTreeEvaluator*					GetCurrentEvaluationAgent(void) const;
-
-				virtual void									RegisterCommand(ICodaScriptCommand* Command);
-				virtual void									RegisterConstant(const char* Name, CodaScriptBackingStore& Value);
-
-				virtual void									RegisterVariables(CodaScriptExecutionContext* ParentContext,
-																				CodaScriptVariableArrayT& VariableList);
-				virtual void									UnregisterVariables(CodaScriptExecutionContext* ParentContext);
-
+				virtual void									BeginCompilation(ICodaScriptProgram* Program, CompileData Data) override;
 				virtual void									Compile(ICodaScriptSyntaxTreeEvaluator* EvaluationAgent,
 																		ICodaScriptExecutableCode* SourceCode,
-																		ICodaScriptExpressionByteCode** OutByteCode);
+																		ICodaScriptExpressionByteCode** OutByteCode) override;
+				virtual void									EndCompilation(ICodaScriptProgram* Program, ICodaScriptCompilerMetadata** OutMetadata) override;
+
+				virtual void									BeginEvaluation(ICodaScriptProgram* Program, EvaluateData Data) override;
 				virtual void									Evaluate(ICodaScriptSyntaxTreeEvaluator* EvaluationAgent,
-																		ICodaScriptExpressionByteCode* ByteCode,
-																		CodaScriptBackingStore* Result = nullptr);
+																		 ICodaScriptExpressionByteCode* ByteCode,
+																		 CodaScriptBackingStore* Result = nullptr) override;
+				virtual void									EndEvaluation(ICodaScriptProgram* Program) override;
+
+				ICodaScriptSyntaxTreeEvaluator*					GetCurrentEvaluationAgent() const;
+				CodaScriptMUPParserByteCode*					GetCurrentByteCode(void) const;
 			};
 		}
 	}

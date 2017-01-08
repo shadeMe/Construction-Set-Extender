@@ -10,6 +10,9 @@
 #include "mpPackageCommon.h"
 #include "mpPackageMatrix.h"
 #include "CodaMUPScriptCommand.h"
+#include "CodaUtilities.h"
+#include "Main.h"
+#include "Console.h"
 
 namespace bgsee
 {
@@ -20,16 +23,12 @@ namespace bgsee
 			CodaScriptMUPParserByteCode::CodaScriptMUPParserByteCode( CodaScriptMUPExpressionParser* Parent, ICodaScriptExecutableCode* Source ) :
 				ICodaScriptExpressionByteCode(Source),
 				Parser(Parent),
-				Tokenizer(),
 				TokenPos(0),
 				RPNStack(),
 				StackBuffer(),
 				Cache()
 			{
 				SME_ASSERT(Parser);
-
-				Tokenizer.reset(new TokenReader(Parser));
-				Tokenizer->SetExpr(Source->GetCode());
 			}
 
 			CodaScriptMUPParserByteCode::~CodaScriptMUPParserByteCode()
@@ -40,6 +39,116 @@ namespace bgsee
 				RPNStack.Reset();
 				StackBuffer.clear();
 				Cache.ReleaseAll();
+			}
+
+			CodaScriptMUPVariable* CodaScriptMUPParserMetadata::CreateWrapper(const CodaScriptSourceCodeT& Name, bool Global)
+			{
+				if (GetWrapper(Name, Global))
+					throw CodaScriptException("Variable wrapper '%s' already exists", Name);
+
+				VarWrapperMapT& Source = Global ? Globals : Locals;
+				CodaScriptMUPVariable* Out = new CodaScriptMUPVariable(Name);
+				CodaScriptMUPVariable::PtrT Addend(Out);
+				Source.insert(std::make_pair(Name, std::move(Addend)));
+				return Out;
+			}
+
+			CodaScriptMUPVariable* CodaScriptMUPParserMetadata::GetWrapper(const CodaScriptSourceCodeT& Name, bool Global) const
+			{
+				const VarWrapperMapT& Source = Global ? Globals : Locals;
+				if (Source.count(Name) == 0)
+					return nullptr;
+				else
+					return Source.at(Name).get();
+			}
+
+			void CodaScriptMUPParserMetadata::BindWrappers(ICodaScriptExpressionParser::EvaluateData& Data)
+			{
+				int LocalCount = Data.Context->GetProgram()->GetVariableCount();
+				int GlobalCount = Data.GlobalVariables.size();
+				std::vector<CodaScriptMUPVariable*> Transaction;
+
+				try
+				{
+					if (LocalCount != Locals.size())
+						throw CodaScriptException("Local variable count mismatch - Expected %d, received %d", Locals.size(), LocalCount);
+					else if (GlobalCount < Globals.size())
+						// new globals aren't an issue as they aren't referenced by the bytecode
+						throw CodaScriptException("Global variable count mismatch - Expected %d, received %d", Globals.size(), GlobalCount);
+
+					for (auto& Itr : Locals)
+					{
+						CodaScriptVariable* Var = Data.Context->GetVariable(Itr.first);
+						if (Var == nullptr)
+							throw CodaScriptException("Couldn't find wrapped local variable '%s'", Itr.first.c_str());
+
+						Itr.second->Bind(Var);
+						Transaction.push_back(Itr.second.get());
+					}
+
+					for (auto& Itr : Globals)
+					{
+						CodaScriptVariable* Var = Data.GetGlobal(Itr.first);
+						if (Var == nullptr)
+							throw CodaScriptException("Couldn't find wrapped global variable '%s'", Itr.first.c_str());
+
+						Itr.second->Bind(Var);
+						Transaction.push_back(Itr.second.get());
+
+					}
+				}
+				catch (...)
+				{
+					// reset the transaction, flag the program and rethrow
+					for (auto Itr : Transaction)
+						Itr->Unbind();
+
+					Data.Context->GetProgram()->InvalidateBytecode();
+					throw;
+				}
+			}
+
+			void CodaScriptMUPParserMetadata::UnbindWrappers()
+			{
+				for (auto& Itr : Locals)
+					Itr.second->Unbind();
+
+				for (auto& Itr : Globals)
+					Itr.second->Unbind();
+			}
+
+			CodaScriptMUPParserMetadata::CodaScriptMUPParserMetadata(CodaScriptMUPExpressionParser* Parser, ICodaScriptProgram* Program) :
+				Parser(Parser),
+				Program(Program),
+				Locals(),
+				Globals()
+			{
+				SME_ASSERT(Parser && Program);
+			}
+
+			CodaScriptMUPParserMetadata::~CodaScriptMUPParserMetadata()
+			{
+				for (auto& Itr : Locals)
+				{
+					if (Itr.second->IsBound())
+						BGSEECONSOLE_MESSAGE("Local variable wrapper '%s' still bound to a value", Itr.first.c_str());
+				}
+
+				for (auto& Itr : Globals)
+				{
+					if (Itr.second->IsBound())
+						BGSEECONSOLE_MESSAGE("Global variable wrapper '%s' still bound to a value", Itr.first.c_str());
+				}
+			}
+
+			ICodaScriptProgram* CodaScriptMUPParserMetadata::GetSourceProgram() const
+			{
+				return Program;
+			}
+
+			ICodaScriptExpressionParser* CodaScriptMUPParserMetadata::GetParentParser() const
+			{
+				return Parser;
 			}
 
 			//------------------------------------------------------------------------------
@@ -70,69 +179,6 @@ namespace bgsee
 				_T("SCRIPT_FUNC "),
 				_T("UNKNOWN     ") };
 
-			CodaScriptMUPExpressionParser::ByteCodeAgentStackOperator::ByteCodeAgentStackOperator( CodaScriptMUPExpressionParser* Parent,
-																								CodaScriptMUPParserByteCode* ByteCode,
-																								ICodaScriptSyntaxTreeEvaluator* Agent ) :
-				Parent(Parent),
-				ByteCode(ByteCode),
-				EvalAgent(Agent)
-			{
-				SME_ASSERT(Parent && ByteCode && Agent);
-
-				Push();
-			}
-
-			CodaScriptMUPExpressionParser::ByteCodeAgentStackOperator::ByteCodeAgentStackOperator( CodaScriptMUPExpressionParser* Parent,
-																								CodaScriptMUPParserByteCode* ByteCode ) :
-				Parent(Parent),
-				ByteCode(ByteCode),
-				EvalAgent(nullptr)
-			{
-				SME_ASSERT(Parent && ByteCode);
-
-				Push();
-			}
-
-			CodaScriptMUPExpressionParser::ByteCodeAgentStackOperator::ByteCodeAgentStackOperator( CodaScriptMUPExpressionParser* Parent,
-																								ICodaScriptSyntaxTreeEvaluator* Agent ) :
-				Parent(Parent),
-				ByteCode(nullptr),
-				EvalAgent(Agent)
-			{
-				SME_ASSERT(Parent && Agent);
-
-				Push();
-			}
-
-			CodaScriptMUPExpressionParser::ByteCodeAgentStackOperator::~ByteCodeAgentStackOperator()
-			{
-				Pop();
-			}
-
-			void CodaScriptMUPExpressionParser::ByteCodeAgentStackOperator::Push( void )
-			{
-				if (ByteCode)
-					Parent->m_ByteCodeStack.push(ByteCode);
-
-				if (EvalAgent)
-					Parent->m_EvalAgentStack.push(EvalAgent);
-			}
-
-			void CodaScriptMUPExpressionParser::ByteCodeAgentStackOperator::Pop( void )
-			{
-				if (ByteCode)
-				{
-					SME_ASSERT(Parent->m_ByteCodeStack.top() == ByteCode);
-					Parent->m_ByteCodeStack.pop();
-				}
-
-				if (EvalAgent)
-				{
-					SME_ASSERT(Parent->m_EvalAgentStack.top() == EvalAgent);
-					Parent->m_EvalAgentStack.pop();
-				}
-			}
-
 			const char_type* CodaScriptMUPExpressionParser::c_DefaultOprt[] = { _T("("),
 				_T(")"),
 				_T("["),
@@ -150,7 +196,7 @@ namespace bgsee
 
 				CodaScriptMUPParserByteCode* ByteCode = GetCurrentByteCode();
 				if (ByteCode)
-					err.Expr = string_type(ByteCode->Tokenizer->GetExpr());
+					err.Expr = string_type(ByteCode->GetSource()->GetSourceCode());
 
 				err.Ident = (a_pTok) ? a_pTok->GetIdent() : _T("");
 				throw ParserError(err);
@@ -162,7 +208,7 @@ namespace bgsee
 					return;
 
 				CodaScriptMUPParserByteCode* ByteCode = GetCurrentByteCode();
-				SME_ASSERT(ByteCode && ByteCode->Tokenizer.get());
+				SME_ASSERT(ByteCode);
 
 				ptr_tok_type tok = a_stOpt.pop();
 				ICallback *pFun = tok->AsICallback();
@@ -177,14 +223,14 @@ namespace bgsee
 			void CodaScriptMUPExpressionParser::ApplyIfElse( Stack<ptr_tok_type> &a_stOpt ) const
 			{
 				CodaScriptMUPParserByteCode* ByteCode = GetCurrentByteCode();
-				SME_ASSERT(ByteCode && ByteCode->Tokenizer.get());
+				SME_ASSERT(ByteCode);
 
 				while (a_stOpt.size() && a_stOpt.top()->GetCode()==cmELSE)
 				{
 					MUP_ASSERT(a_stOpt.size()>0);
 					MUP_ASSERT(ByteCode->TokenPos>=3);
 					MUP_ASSERT(a_stOpt.top()->GetCode()==cmELSE);
-					
+
 					ptr_tok_type opElse = a_stOpt.pop();
 					ptr_tok_type opIf = a_stOpt.pop();
 					MUP_ASSERT(opElse->GetCode()==cmELSE)
@@ -234,9 +280,9 @@ namespace bgsee
 
 			void CodaScriptMUPExpressionParser::CreateRPN( CodaScriptMUPParserByteCode* OutByteCode ) const
 			{
-				SME_ASSERT(OutByteCode && OutByteCode->Tokenizer.get());
+				SME_ASSERT(OutByteCode);
 
-				if (!OutByteCode->Tokenizer->GetExpr().length())
+				if (!m_TokenReader->GetExpr().length())
 					Error(ecUNEXPECTED_EOF, 0);
 
 				// The Stacks take the ownership over the tokens
@@ -246,11 +292,11 @@ namespace bgsee
 				Stack<int>  stIdxCount;
 				ptr_tok_type pTok, pTokPrev;
 				CodaScriptMUPValue val;
-				
+
 				for(;;)
 				{
 					pTokPrev = pTok;
-					pTok = OutByteCode->Tokenizer->ReadNextToken();
+					pTok = m_TokenReader->ReadNextToken();
 
 					ECmdCode eCmd = pTok->GetCode();
 					switch (eCmd)
@@ -341,8 +387,8 @@ namespace bgsee
 									Error(ecTOO_FEW_PARAMS, pTok->GetExprPos(), pFun);
 
 								// Apply function, if present
-								if (stOpt.size() && 
-									stOpt.top()->GetCode()!=cmOPRT_INFIX && 
+								if (stOpt.size() &&
+									stOpt.top()->GetCode()!=cmOPRT_INFIX &&
 									stOpt.top()->GetCode()!=cmOPRT_BIN)
 								{
 									ApplyFunc(stOpt, iArgc);
@@ -371,7 +417,7 @@ namespace bgsee
 
 					case  cmARG_SEP:
 						if (stArgCount.empty())
-							Error(ecUNEXPECTED_COMMA, OutByteCode->Tokenizer->GetPos());
+							Error(ecUNEXPECTED_COMMA, m_TokenReader->GetPos());
 
 						++stArgCount.top();
 
@@ -461,7 +507,7 @@ namespace bgsee
 
 								ICallback *pOuterFunc = stFunc.top();
 								if (pOuterFunc->GetArgc()!=-1 && iArgc>pOuterFunc->GetArgc())
-									Error(ecTOO_MANY_PARAMS, OutByteCode->Tokenizer->GetPos());
+									Error(ecTOO_MANY_PARAMS, m_TokenReader->GetPos());
 
 								MUP_ASSERT(pOuterFunc->GetArgc()==-1 || iArgc<=pOuterFunc->GetArgc());
 							}
@@ -487,36 +533,36 @@ namespace bgsee
 
 			CodaScriptMUPExpressionParser::CodaScriptMUPExpressionParser() :
 				ICodaScriptExpressionParser(),
+				m_TokenReader(),
 				m_FunDef(),
 				m_PostOprtDef(),
 				m_InfixOprtDef(),
 				m_OprtDef(),
 				m_valDef(),
-				m_valDynVarShadow(),
-				m_varDef(),
-				m_CSVarDef(),
 				m_sNameChars(),
 				m_sOprtChars(),
 				m_sInfixOprtChars(),
-				m_ByteCodeStack(),
-				m_EvalAgentStack()
+				m_opContext()
 			{
 				DefineNameChars(_T("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"));
 				DefineOprtChars(_T("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*^/?<>=#!$%&|~'_µ{}"));
 				DefineInfixOprtChars(_T("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ()/+-*^?<>=#!$%&|~'_"));
+
+				m_TokenReader.reset(new TokenReader(this));
+
+				AddPackage(PackageCommon::Instance());
+				AddPackage(PackageNonCmplx::Instance());
+				AddPackage(PackageStr::Instance());
 			}
 
 			CodaScriptMUPExpressionParser::~CodaScriptMUPExpressionParser()
 			{
-				SME_ASSERT(m_ByteCodeStack.size() == 0 && m_EvalAgentStack.size() == 0);
+				SME_ASSERT(m_opContext.empty());
 			}
 
 			void CodaScriptMUPExpressionParser::AddValueReader( IValueReader *a_pReader )
 			{
-				CodaScriptMUPParserByteCode* ByteCode = GetCurrentByteCode();
-				SME_ASSERT(ByteCode && ByteCode->Tokenizer.get());
-
-				ByteCode->Tokenizer->AddValueReader(a_pReader);
+				m_TokenReader->AddValueReader(a_pReader);
 			}
 
 			void CodaScriptMUPExpressionParser::AddPackage( IPackage *p )
@@ -532,7 +578,7 @@ namespace bgsee
 					m_FunDef[a_pFunc.Get()->GetIdent()] = ptr_tok_type(a_pFunc.Get());
 				}
 				else {
-		;//			throw ParserError(ErrorContext(ecFUNOPRT_DEFINED, 0, a_pFunc.Get()->GetIdent()));
+					throw ParserError(ErrorContext(ecFUNOPRT_DEFINED, 0, a_pFunc.Get()->GetIdent()));
 				}
 			}
 
@@ -540,12 +586,12 @@ namespace bgsee
 			{
 				CheckName(a_sName, ValidNameChars());
 
-				if (m_varDef.find(a_sName) == m_varDef.end()) {
+				if (m_valDef.find(a_sName) == m_valDef.end()) {
 					// Constant is not added yet, add it.
 					m_valDef[a_sName] = ptr_tok_type( a_Val.Clone() );
 				}
 				else {
-			;//		throw ParserError(ErrorContext(ecCONSTANT_DEFINED, 0, a_sName));
+					throw ParserError(ErrorContext(ecCONSTANT_DEFINED, 0, a_sName));
 				}
 			}
 
@@ -558,7 +604,7 @@ namespace bgsee
 						ptr_tok_type(a_Oprt.Get())));
 				}
 				else {
-			;//		throw ParserError(ErrorContext(ecFUNOPRT_DEFINED, 0, a_Oprt.Get()->GetIdent()));
+					throw ParserError(ErrorContext(ecFUNOPRT_DEFINED, 0, a_Oprt.Get()->GetIdent()));
 				}
 			}
 
@@ -570,7 +616,7 @@ namespace bgsee
 					m_PostOprtDef[a_pOprt.Get()->GetIdent()] = ptr_tok_type(a_pOprt.Get());
 				}
 				else {
-			;//		throw ParserError(ErrorContext(ecFUNOPRT_DEFINED, 0, a_pOprt.Get()->GetIdent()));
+					throw ParserError(ErrorContext(ecFUNOPRT_DEFINED, 0, a_pOprt.Get()->GetIdent()));
 				}
 			}
 
@@ -582,38 +628,18 @@ namespace bgsee
 					m_InfixOprtDef[a_iOprt.Get()->GetIdent()] = ptr_tok_type(a_iOprt.Get());
 				}
 				else {
-			;//		throw ParserError(ErrorContext(ecFUNOPRT_DEFINED, 0, a_iOprt.Get()->GetIdent()));
+					throw ParserError(ErrorContext(ecFUNOPRT_DEFINED, 0, a_iOprt.Get()->GetIdent()));
 				}
 			}
 
 			const var_maptype& CodaScriptMUPExpressionParser::GetVar() const
 			{
-				ICodaScriptSyntaxTreeEvaluator* EvalAgent = GetCurrentEvaluationAgent();
-				SME_ASSERT(EvalAgent && EvalAgent->GetContext());
+				SME_ASSERT(m_opContext.empty() == false);
 
-				ContextSpecificVariableMapT::const_iterator Match = m_CSVarDef.find(EvalAgent->GetContext());
-				if (Match == m_CSVarDef.end())
-					return m_varDef;					// return the empty collection
-				else
-					return Match->second;
-			}
+				const OperationContext& Context = m_opContext.top();
+				SME_ASSERT(Context.Type == OperationType::Compile);
 
-			const val_maptype& CodaScriptMUPExpressionParser::GetConst() const
-			{
-				return m_valDef;
-			}
-
-			const fun_maptype& CodaScriptMUPExpressionParser::GetFunDef() const
-			{
-				return m_FunDef;
-			}
-
-			const string_type& CodaScriptMUPExpressionParser::GetExpr() const
-			{
-				CodaScriptMUPParserByteCode* ByteCode = GetCurrentByteCode();
-				SME_ASSERT(ByteCode && ByteCode->Tokenizer.get());
-
-				return ByteCode->Tokenizer->GetExpr();
+				return Context.CompileData.Variables;
 			}
 
 			const char_type** CodaScriptMUPExpressionParser::GetOprtDef() const
@@ -667,80 +693,87 @@ namespace bgsee
 				DefineConst(Name, CodaScriptMUPValue(Value));
 			}
 
-			void CodaScriptMUPExpressionParser::RegisterVariables( CodaScriptExecutionContext* ParentContext, CodaScriptVariableArrayT& VariableList )
+			void CodaScriptMUPExpressionParser::RegisterProgram(ICodaScriptProgram* Program)
 			{
-				SME_ASSERT(ParentContext);
+				;// nothing to do here
+			}
 
-				ContextSpecificVariableMapT::const_iterator Match = m_CSVarDef.find(ParentContext);
-				if (Match == m_CSVarDef.end())
-					m_CSVarDef[ParentContext] = m_varDef;
+			void CodaScriptMUPExpressionParser::DeregisterProgram(ICodaScriptProgram* Program)
+			{
+				;// nothing to do here
+			}
 
-				for (CodaScriptVariableArrayT::const_iterator Itr = VariableList.begin(); Itr != VariableList.end(); Itr++)
+			void CodaScriptMUPExpressionParser::BeginCompilation(ICodaScriptProgram* Program, CompileData Data)
+			{
+				std::unique_ptr<CodaScriptMUPParserMetadata> Metadata(new CodaScriptMUPParserMetadata(this, Program));
+				OperationContext OpContext(OperationType::Compile, Program);
+
+				// register variables and globals
+				CodaScriptVariableNameArrayT Locals;
+				for (auto& Itr : Program->GetVariables(Locals))
 				{
-					CodaScriptVariable* Var = *Itr;
-					CodaScriptMUPValue* Bound = dynamic_cast<CodaScriptMUPValue*>(Var->GetStoreOwner());
-					SME_ASSERT(Bound);
+					CheckVariableName(Itr, OpContext.CompileData.Variables);
 
-					try
-					{
-						CheckName(string_type(Var->GetName()), ValidNameChars());
-					}
-					catch (ParserError& E)
-					{
-						throw CodaScriptException(nullptr, "P[%d] %s", E.GetPos(), E.GetMsg().c_str());
-					}
-
-					m_CSVarDef[ParentContext][Var->GetName()] = ptr_tok_type(new Variable(Bound));
+					CodaScriptMUPVariable* Wrapper = Metadata->CreateWrapper(Itr, false);
+					SME_ASSERT(Wrapper);
+					OpContext.CompileData.Variables[Itr] = ptr_tok_type(new Variable(Wrapper));
 				}
+
+				for (auto Itr : Data.GlobalVariables)
+				{
+					CheckVariableName(Itr->GetName(), OpContext.CompileData.Variables);
+
+					CodaScriptMUPVariable* Wrapper = Metadata->CreateWrapper(Itr->GetName(), true);
+					SME_ASSERT(Wrapper);
+					OpContext.CompileData.Variables[Itr->GetName()] = ptr_tok_type(new Variable(Wrapper));
+				}
+
+				OpContext.CompileData.Metadata = Metadata.release();
+				m_opContext.push(OpContext);
 			}
 
-			void CodaScriptMUPExpressionParser::UnregisterVariables( CodaScriptExecutionContext* ParentContext )
-			{
-				SME_ASSERT(ParentContext);
-
-				ContextSpecificVariableMapT::const_iterator Match = m_CSVarDef.find(ParentContext);
-				if (Match != m_CSVarDef.end())
-					m_CSVarDef.erase(Match);
-			}
-
-			void CodaScriptMUPExpressionParser::Compile( ICodaScriptSyntaxTreeEvaluator* EvaluationAgent,
+			void CodaScriptMUPExpressionParser::Compile(ICodaScriptSyntaxTreeEvaluator* EvaluationAgent,
 														ICodaScriptExecutableCode* SourceCode,
-														ICodaScriptExpressionByteCode** OutByteCode )
+														ICodaScriptExpressionByteCode** OutByteCode)
 			{
-				SME_ASSERT(SourceCode && OutByteCode && EvaluationAgent->GetContext() && EvaluationAgent->GetVM());
+				SME_ASSERT(SourceCode && OutByteCode && EvaluationAgent);
+				SME_ASSERT(m_opContext.empty() == false);
+
+				OperationContext& Context = m_opContext.top();
+				SME_ASSERT(Context.Type == OperationType::Compile && Context.CompileData.Metadata);
+				SME_ASSERT(Context.Bytecode == nullptr);
+				SME_ASSERT(Context.Program == EvaluationAgent->GetProgram());
 
 				try
 				{
-					ByteCodeAgentStackOperator PrologAgent(this, EvaluationAgent);
-					ByteCodeAgentStackOperator PrologByteCode(this, new CodaScriptMUPParserByteCode(this, SourceCode));
-					CodaScriptMUPParserByteCode* NewByteCode = PrologByteCode.ByteCode;
+					std::unique_ptr<CodaScriptMUPParserByteCode> GeneratedCode(new CodaScriptMUPParserByteCode(this, SourceCode));
+					ScopedFunctor Sentinel([&Context, &GeneratedCode, &EvaluationAgent](ScopedFunctor::Event e) {
+						if (e == ScopedFunctor::Event::Construction)
+						{
+							Context.Agent = EvaluationAgent;
+							Context.Bytecode = GeneratedCode.get();
+						}
+						else
+						{
+							Context.Agent = nullptr;
+							Context.Bytecode = nullptr;
+						}
+					});
 
 					*OutByteCode = nullptr;
 
-					try									// ugly, but meh
-					{
-						AddPackage(PackageCommon::Instance());
-						AddPackage(PackageNonCmplx::Instance());
-						AddPackage(PackageStr::Instance());
-					}
-					catch (...)
-					{
-						SAFEDELETE(NewByteCode);
-						throw;
-					}
+					m_TokenReader->SetExpr(SourceCode->GetSourceCode());
+					CreateRPN(GeneratedCode.get());
+					GeneratedCode->StackBuffer.assign(GeneratedCode->RPNStack.GetRequiredStackSize(), ptr_val_type());
 
-					std::auto_ptr<CodaScriptMUPParserByteCode> CompiledByteCode(NewByteCode);
-					CreateRPN(CompiledByteCode.get());
-
-					CompiledByteCode->StackBuffer.assign(CompiledByteCode->RPNStack.GetRequiredStackSize(), ptr_val_type());
-					for (std::size_t i = 0; i < CompiledByteCode->StackBuffer.size(); ++i)
+					for (std::size_t i = 0; i < GeneratedCode->StackBuffer.size(); ++i)
 					{
 						CodaScriptMUPValue *pValue = new CodaScriptMUPValue;
-						pValue->BindToCache(&CompiledByteCode->Cache);
-						CompiledByteCode->StackBuffer[i].Reset(pValue);
+						pValue->BindToCache(&GeneratedCode->Cache);
+						GeneratedCode->StackBuffer[i].Reset(pValue);
 					}
 
-					*OutByteCode = CompiledByteCode.release();
+					*OutByteCode = GeneratedCode.release();
 				}
 				catch (ParserError& E)
 				{
@@ -748,27 +781,69 @@ namespace bgsee
 				}
 			}
 
-			void CodaScriptMUPExpressionParser::Evaluate( ICodaScriptSyntaxTreeEvaluator* EvaluationAgent,
-														ICodaScriptExpressionByteCode* ByteCode,
-														CodaScriptBackingStore* Result /*= NULL*/ )
+			void CodaScriptMUPExpressionParser::EndCompilation(ICodaScriptProgram* Program, ICodaScriptCompilerMetadata** OutMetadata)
 			{
-				CodaScriptMUPParserByteCode* CompiledByteCode = dynamic_cast<CodaScriptMUPParserByteCode*>(ByteCode);
+				SME_ASSERT(OutMetadata);
 
-				// ByteCode and EvalAgent stacks can be populated in here if the execution stack depth is > 1
-				SME_ASSERT(ByteCode && EvaluationAgent->GetContext() && EvaluationAgent->GetVM());
-				SME_ASSERT(CompiledByteCode && CompiledByteCode->Tokenizer.get());
+				if (m_opContext.empty())
+					throw CodaScriptException("Parser operation stack underflow");
+
+				OperationContext& Current = m_opContext.top();
+				if (Current.Type != OperationType::Compile || Current.Program != Program)
+					throw CodaScriptException("Mismatched end compilation call");
+
+				*OutMetadata = Current.CompileData.Metadata;
+				m_opContext.pop();
+			}
+
+			void CodaScriptMUPExpressionParser::BeginEvaluation(ICodaScriptProgram* Program, EvaluateData Data)
+			{
+				OperationContext OpContext(OperationType::Evaluate, Program, Data.Context);
+				CodaScriptMUPParserMetadata* Metadata = dynamic_cast<CodaScriptMUPParserMetadata*>(Program->GetCompilerMetadata());
+				SME_ASSERT(Metadata);
+
+				// bind the variables to the execution context
+				Metadata->BindWrappers(Data);
+				m_opContext.push(OpContext);
+			}
+
+			void CodaScriptMUPExpressionParser::Evaluate(ICodaScriptSyntaxTreeEvaluator* EvaluationAgent,
+														 ICodaScriptExpressionByteCode* ByteCode,
+														 CodaScriptBackingStore* Result /*= nullptr*/)
+			{
+				SME_ASSERT(ByteCode && EvaluationAgent);
+
+				CodaScriptMUPParserByteCode* CompiledByteCode = dynamic_cast<CodaScriptMUPParserByteCode*>(ByteCode);
+				SME_ASSERT(CompiledByteCode);
+
+				SME_ASSERT(m_opContext.empty() == false);
+				OperationContext& Context = m_opContext.top();
+				SME_ASSERT(Context.Type == OperationType::Evaluate && Context.EvaluateData.ExecutionContext == EvaluationAgent->GetContext());
+				SME_ASSERT(Context.Bytecode == nullptr);
+				SME_ASSERT(Context.Program == EvaluationAgent->GetProgram());
 
 				try
 				{
-					ByteCodeAgentStackOperator Prolog(this, CompiledByteCode, EvaluationAgent);
+					ScopedFunctor Sentinel([&Context, &CompiledByteCode, &EvaluationAgent](ScopedFunctor::Event e) {
+						if (e == ScopedFunctor::Event::Construction)
+						{
+							Context.Agent = EvaluationAgent;
+							Context.Bytecode = CompiledByteCode;
+						}
+						else
+						{
+							Context.Agent = nullptr;
+							Context.Bytecode = nullptr;
+						}
+					});
 
 					ptr_val_type *pStack = &CompiledByteCode->StackBuffer[0];
-					if (CompiledByteCode->RPNStack.GetSize()==0)
+					if (CompiledByteCode->RPNStack.GetSize() == 0)
 					{
 						ErrorContext err;
-						err.Expr = CompiledByteCode->Tokenizer->GetExpr();
+						err.Expr = CompiledByteCode->GetSource()->GetSourceCode();
 						err.Errc = ecUNEXPECTED_EOF;
-						err.Pos  = 0;
+						err.Pos = 0;
 						throw ParserError(err);
 					}
 
@@ -776,7 +851,7 @@ namespace bgsee
 
 					int sidx = -1;
 					std::size_t lenRPN = CompiledByteCode->RPNStack.GetSize();
-					for (std::size_t i=0; i<lenRPN; ++i)
+					for (std::size_t i = 0; i < lenRPN; ++i)
 					{
 						IToken *pTok = pRPN[i].Get();
 						ECmdCode eCode = pTok->GetCode();
@@ -791,7 +866,7 @@ namespace bgsee
 								IValue *pVal = static_cast<IValue*>(pTok);
 
 								sidx++;
-								assert(sidx<(int)CompiledByteCode->StackBuffer.size());
+								assert(sidx < (int)CompiledByteCode->StackBuffer.size());
 								if (pVal->IsVariable())
 								{
 									pStack[sidx].Reset(pVal);
@@ -811,7 +886,7 @@ namespace bgsee
 								IOprtIndex *pIdxOprt = static_cast<IOprtIndex*>(pTok);
 								int nArgs = pIdxOprt->GetArgsPresent();
 								sidx -= nArgs - 1;
-								assert(sidx>=0);
+								assert(sidx >= 0);
 
 								ptr_val_type &idx = pStack[sidx];     // Pointer to the first index
 								ptr_val_type &val = pStack[--sidx];   // Pointer to the variable or value being indexed
@@ -826,7 +901,7 @@ namespace bgsee
 								ICallback *pFun = static_cast<ICallback*>(pTok);
 								int nArgs = pFun->GetArgsPresent();
 								sidx -= nArgs - 1;
-								assert(sidx>=0);
+								assert(sidx >= 0);
 
 								ptr_val_type &val = pStack[sidx];
 								try
@@ -840,29 +915,29 @@ namespace bgsee
 									else
 										pFun->Eval(val, &val, nArgs);
 								}
-								catch(ParserError &exc)
+								catch (ParserError &exc)
 								{
 									// <ibg 20130131> Not too happy about that:
-									// Multiarg functions may throw ecTOO_FEW_PARAMS from eval. I don't 
+									// Multiarg functions may throw ecTOO_FEW_PARAMS from eval. I don't
 									// want this to be converted to ecEVAL because fixed argument functions
-									// already throw ecTOO_FEW_PARAMS in case of missing parameters and two 
-									// different error codes would be inconsistent. 
-									if (exc.GetCode()==ecTOO_FEW_PARAMS || exc.GetCode()==ecDOMAIN_ERROR || exc.GetCode()==ecOVERFLOW)
+									// already throw ecTOO_FEW_PARAMS in case of missing parameters and two
+									// different error codes would be inconsistent.
+									if (exc.GetCode() == ecTOO_FEW_PARAMS || exc.GetCode() == ecDOMAIN_ERROR || exc.GetCode() == ecOVERFLOW)
 										throw;
 									// </ibg>
 
 									ErrorContext err;
-									err.Expr = CompiledByteCode->Tokenizer->GetExpr();
+									err.Expr = CompiledByteCode->GetSource()->GetSourceCode();
 									err.Ident = pFun->GetIdent();
 									err.Errc = ecEVAL;
 									err.Pos = pFun->GetExprPos();
 									err.Hint = exc.GetMsg();
 									throw ParserError(err);
 								}
-								catch(MatrixError& /*exc*/)
+								catch (MatrixError& /*exc*/)
 								{
 									ErrorContext err;
-									err.Expr = CompiledByteCode->Tokenizer->GetExpr();
+									err.Expr = CompiledByteCode->GetSource()->GetSourceCode();
 									err.Ident = pFun->GetIdent();
 									err.Errc = ecMATRIX_DIMENSION_MISMATCH;
 									err.Pos = pFun->GetExprPos();
@@ -871,9 +946,9 @@ namespace bgsee
 							}
 							continue;
 						case cmIF:
-							MUP_ASSERT(sidx>=0);
-							if (pStack[sidx--]->GetBool()==false)
-								i+=static_cast<TokenIfThenElse*>(pTok)->GetOffset();
+							MUP_ASSERT(sidx >= 0);
+							if (pStack[sidx--]->GetBool() == false)
+								i += static_cast<TokenIfThenElse*>(pTok)->GetOffset();
 							continue;
 						case cmELSE:
 						case cmJMP:
@@ -897,26 +972,62 @@ namespace bgsee
 				}
 			}
 
+
+			void CodaScriptMUPExpressionParser::EndEvaluation(ICodaScriptProgram* Program)
+			{
+				CodaScriptMUPParserMetadata* Metadata = dynamic_cast<CodaScriptMUPParserMetadata*>(Program->GetCompilerMetadata());
+				SME_ASSERT(Metadata);
+
+				if (m_opContext.empty())
+					throw CodaScriptException("Parser operation stack underflow");
+
+				OperationContext& Current = m_opContext.top();
+				if (Current.Type != OperationType::Evaluate || Current.Program != Program)
+					throw CodaScriptException("Mismatched end evaluation call");
+
+				// restore the variables to their previous binding
+				Metadata->UnbindWrappers();
+				m_opContext.pop();
+			}
+
 			string_type CodaScriptMUPExpressionParser::GetVersion() const
 			{
 				return MUP_PARSER_VERSION;
 			}
 
-			CodaScriptMUPParserByteCode* CodaScriptMUPExpressionParser::GetCurrentByteCode( void ) const
+			void CodaScriptMUPExpressionParser::CheckVariableName(const CodaScriptSourceCodeT& Name, const var_maptype& RegisteredVars) const
 			{
-				if (m_ByteCodeStack.size())
-					return m_ByteCodeStack.top();
+				try
+				{
+					CheckName(string_type(Name), ValidNameChars());
+
+					if (RegisteredVars.find(Name) != RegisteredVars.end())
+						throw CodaScriptException("Variable '%s' already exists", Name.c_str());
+					else if (m_valDef.find(Name) != m_valDef.end())
+						throw CodaScriptException("Variable name collision - Constant '%s' already exists", Name.c_str());
+				}
+				catch (ParserError& E)
+				{
+					throw CodaScriptException("P[%d] %s", E.GetPos(), E.GetMsg().c_str());
+				}
+			}
+
+			ICodaScriptSyntaxTreeEvaluator* CodaScriptMUPExpressionParser::GetCurrentEvaluationAgent() const
+			{
+				if (m_opContext.size())
+					return m_opContext.top().Agent;
 				else
 					return nullptr;
 			}
 
-			ICodaScriptSyntaxTreeEvaluator* CodaScriptMUPExpressionParser::GetCurrentEvaluationAgent( void ) const
+			CodaScriptMUPParserByteCode* CodaScriptMUPExpressionParser::GetCurrentByteCode(void) const
 			{
-				if (m_EvalAgentStack.size())
-					return m_EvalAgentStack.top();
+				if (m_opContext.size())
+					return m_opContext.top().Bytecode;
 				else
 					return nullptr;
 			}
+
 		}
 	}
 }

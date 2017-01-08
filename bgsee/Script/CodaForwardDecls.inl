@@ -6,7 +6,6 @@ namespace bgsee
 	{
 		class ICodaScriptSyntaxTreeNode;
 		class ICodaScriptSyntaxTreeVisitor;
-		class ICodaScriptSyntaxTreeEvaluator;
 		class ICodaScriptCommand;
 		class ICodaScriptExpressionParser;
 		class ICodaScriptExecutableCode;
@@ -16,8 +15,15 @@ namespace bgsee
 		class ICodaScriptArrayDataType;
 		class ICodaScriptDataStore;
 		class ICodaScriptDataStoreOwner;
-		class ICodaScriptParseTree;
+		class CodaScriptAbstractSyntaxTree;
 		class ICodaScriptExpressionByteCode;
+		class ICodaScriptCompilerMetadata;
+		class ICodaScriptExecutionContext;
+		class ICodaScriptProgram;
+		class ICodaScriptBackgroundDaemon;
+		class ICodaScriptVirtualMachine;
+		class ICodaScriptExecutor;
+		class ICodaScriptProgramCache;
 
 		class CodaScriptVM;
 		class CodaScriptExecutive;
@@ -29,6 +35,8 @@ namespace bgsee
 		class CodaScriptBackgrounder;
 		class CodaScriptGlobalDataStore;
 		class CodaScriptCommandRegistrar;
+		class CodaScriptProgram;
+		class CodaScriptCompiler;
 
 		class CodaScriptExpression;
 		class CodaScriptBEGINBlock;
@@ -42,17 +50,9 @@ namespace bgsee
 		class CodaScriptCommandCall;
 		class CodaScriptCommandBreak;
 		class CodaScriptCommandContinue;
-		
-		typedef std::string												CodaScriptSourceCodeT;
-		typedef UInt32													CodaScriptKeywordT;
-		typedef std::vector<CodaScriptBackingStore>						CodaScriptMutableDataArrayT;
-		typedef std::vector<ICodaScriptSyntaxTreeNode*>					CodaScriptSyntaxTreeNodeArrayT;
-		typedef std::vector<CodaScriptVariable*>						CodaScriptVariableArrayT;
-		typedef std::stack<CodaScriptKeywordT>							CodaScriptKeywordStackT;
-		typedef std::stack<ICodaScriptLoopBlock*>						CodaScriptLoopBlockStackT;
-		typedef std::stack<CodaScriptExecutionContext*>					CodaScriptExecutionContextStackT;
-		typedef std::stack<ICodaScriptExecutableCode*>					CodaScriptExecutableCodeStackT;
-		typedef SME::MiscGunk::ElapsedTimeCounter						CodaScriptElapsedTimeCounterT;
-		typedef std::list<CodaScriptCommandRegistrar*>					CodaScriptRegistrarListT;
+
+		typedef std::string										CodaScriptSourceCodeT;
+		typedef UInt32											CodaScriptKeywordT;
+		typedef std::vector<CodaScriptSourceCodeT>				CodaScriptVariableNameArrayT;
 	}
 }

@@ -164,7 +164,7 @@ namespace bgsee
 				GIC++;
 			}
 
-			CodaScriptMUPValue::CodaScriptMUPValue( CodaScriptSharedHandleArrayT val ) :
+			CodaScriptMUPValue::CodaScriptMUPValue( ICodaScriptArrayDataType::SharedPtrT val ) :
 				ICodaScriptDataStoreOwner(),
 				IValue(cmVAL),
 				m_cType('i'),

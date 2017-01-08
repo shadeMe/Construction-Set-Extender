@@ -1,4 +1,5 @@
 #include "CodaScriptCommands-String.h"
+#include "CodaUtilities.h"
 
 namespace bgsee
 {

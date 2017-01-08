@@ -96,9 +96,9 @@ namespace bgsee
 				return AddElement<const CodaScriptBackingStore&>(*Data, Index);
 			}
 
-			bool CodaScriptMUPArrayDataType::Insert(CodaScriptSharedHandleArrayT Data, int Index /* = -1 */)
+			bool CodaScriptMUPArrayDataType::Insert(ICodaScriptArrayDataType::SharedPtrT Data, int Index /* = -1 */)
 			{
-				return AddElement<CodaScriptSharedHandleArrayT>(Data, Index);
+				return AddElement<ICodaScriptArrayDataType::SharedPtrT>(Data, Index);
 			}
 
 			bool CodaScriptMUPArrayDataType::Insert(CodaScriptReferenceDataTypeT Data, int Index /* = -1 */)
