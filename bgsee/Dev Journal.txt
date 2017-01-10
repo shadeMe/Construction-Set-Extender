@@ -14,7 +14,4 @@ BGSEEBase		---->
 
 
 --! CodaScript:
-	> Add a self constant that refers to the calling script, for easy recursion
-	> Call command name resolution: current script's directory > absolute path passed as the arg
-	> Shorthand for calling UDFs
 	> Multi-line expressions
