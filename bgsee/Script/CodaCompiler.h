@@ -1,5 +1,6 @@
 #pragma once
 #include "CodaAST.h"
+#include "WorkspaceManager.h"
 
 namespace bgsee
 {
@@ -20,6 +21,7 @@ namespace bgsee
 			virtual bool									IsValid() const = 0;
 			virtual void									InvalidateBytecode() = 0;
 			virtual void									Accept(ICodaScriptSyntaxTreeEvaluator* Visitor) noexcept = 0;
+			virtual const ResourceLocation&					GetFilepath() const = 0;
 
 			typedef std::unique_ptr<ICodaScriptProgram>		PtrT;
 		};
@@ -126,6 +128,7 @@ namespace bgsee
 			typedef std::unique_ptr<CodaScriptAbstractSyntaxTree>	ScopedASTPointerT;
 			typedef std::unique_ptr<ICodaScriptCompilerMetadata>	ScopedMetadataPointerT;
 
+			ResourceLocation					Filepath;
 			CodaScriptSourceCodeT				Name;
 			VariableInfoArrayT					Variables;
 			ParameterInfoArrayT					Parameters;
@@ -142,9 +145,10 @@ namespace bgsee
 			void								AddParameter(const VariableInfo* BoundVar);
 			bool								IsParameter(const VariableInfo* Var) const;
 
-			CodaScriptProgram(ICodaScriptVirtualMachine* VM);
-			virtual ~CodaScriptProgram();
+			CodaScriptProgram(ICodaScriptVirtualMachine* VM, const ResourceLocation& Filepath);
 		public:
+			virtual ~CodaScriptProgram();
+
 			virtual const CodaScriptSourceCodeT&		GetName() const override;
 			virtual const CodaScriptVariableNameArrayT&	GetVariables(CodaScriptVariableNameArrayT& OutNames) const override;
 			virtual UInt32								GetVariableCount() const override;
@@ -155,7 +159,7 @@ namespace bgsee
 			virtual bool								IsValid() const override;
 			virtual void								InvalidateBytecode() override;
 			virtual void								Accept(ICodaScriptSyntaxTreeEvaluator* Visitor) noexcept override;
-
+			virtual const ResourceLocation&				GetFilepath() const override;
 		};
 
 
@@ -189,12 +193,13 @@ namespace bgsee
 
 			void								Preprocess(std::fstream& SourceCode, std::string& OutPreprocessedCode);
 			CodaScriptProgram*					GenerateProgram(ICodaScriptVirtualMachine* VirtualMachine,
-														std::stringstream& SourceCode);
+																CodaScriptProgram* Instance,
+																std::stringstream& SourceCode);
 			CodaScriptProgram*					GenerateByteCode(ICodaScriptVirtualMachine* VirtualMachine,
 																 CodaScriptProgram* In);
 		public:
 			CodaScriptProgram*					Compile(ICodaScriptVirtualMachine* VirtualMachine,
-														std::fstream& SourceCode);
+														const ResourceLocation& Filepath);
 
 			static CodaScriptCompiler			Instance;
 

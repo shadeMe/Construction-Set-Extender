@@ -3,6 +3,8 @@
 #include "WorkspaceManager.h"
 #include "UIManager.h"
 
+#include <boost/algorithm/string/replace.hpp>
+
 namespace bgsee
 {
 	WorkspaceManager* WorkspaceManager::Singleton = nullptr;
@@ -154,6 +156,7 @@ namespace bgsee
 		RelativePath(Path)
 	{
 		SME_ASSERT(CheckPath() == true);
+		AnnealPath(RelativePath);
 	}
 
 	ResourceLocation::ResourceLocation() :
@@ -177,7 +180,42 @@ namespace bgsee
 		return RelativePath;
 	}
 
-	ResourceLocation& ResourceLocation::operator=( const ResourceLocation& rhs )
+	bool ResourceLocation::IsFile() const
+	{
+		return IsDirectory() == false;
+	}
+
+	bool ResourceLocation::IsDirectory() const
+	{
+		if (Exists() == false)
+			return false;
+		else
+			return GetFileAttributes(GetFullPath().c_str()) == FILE_ATTRIBUTE_DIRECTORY;
+	}
+
+	bool ResourceLocation::Exists() const
+	{
+		return GetFileAttributes(GetFullPath().c_str()) != INVALID_FILE_ATTRIBUTES;
+	}
+
+	ResourceLocation ResourceLocation::GetCurrentDirectory() const
+	{
+		if (IsDirectory())
+			return *this;
+		else
+			return GetParentDirectory();
+	}
+
+	ResourceLocation ResourceLocation::GetParentDirectory() const
+	{
+		int Slash = RelativePath.rfind("\\");
+		if (Slash == -1)
+			return *this;
+		else
+			return RelativePath.substr(0, Slash);
+	}
+
+	ResourceLocation& ResourceLocation::operator=(const ResourceLocation& rhs)
 	{
 		this->RelativePath = rhs.RelativePath;
 
@@ -188,6 +226,7 @@ namespace bgsee
 	{
 		this->RelativePath = rhs;
 		SME_ASSERT(CheckPath() == true);
+		AnnealPath(RelativePath);
 
 		return *this;
 	}
@@ -207,6 +246,27 @@ namespace bgsee
 		return PathB.find(BaseB) == std::string::npos;
 	}
 
+	void ResourceLocation::AnnealPath(std::string& Path)
+	{
+		SME::StringHelpers::MakeLower(Path);
+		boost::replace_all(Path, "\\\\", "\\");
+	}
+
+	std::string ResourceLocation::GetExtension() const
+	{
+		std::string Out;
+		if (IsFile())
+		{
+			int Dot = RelativePath.rfind(".");
+			int Slash = RelativePath.rfind("\\");
+
+			if (Dot > Slash)
+				Out = RelativePath.substr(Dot + 1);
+		}
+
+		return Out;
+	}
+
 	const std::string& ResourceLocation::GetBasePath(void)
 	{
 		// initialized here to ensure statically allocated BGSEEResourceLocation instances never trigger assertions inside CRTMain
@@ -216,10 +276,30 @@ namespace bgsee
 
 	bool ResourceLocation::IsRelativeTo(const ResourceLocation& Path, const ResourceLocation& RelativeTo)
 	{
-		if (Path.GetRelativePath().find(RelativeTo.GetBasePath()) == 0)
+		if (Path.GetRelativePath().find(RelativeTo.GetRelativePath()) == 0)
 			return true;
 		else
 			return false;
+	}
+
+	bool ResourceLocation::IsRelativeTo(const std::string& Path, const ResourceLocation& RelativeTo)
+	{
+		if (Path.find(RelativeTo.GetRelativePath()) == 0)
+			return true;
+		else
+			return false;
+	}
+
+	std::string ResourceLocation::ExtractRelative(const std::string& Path, const std::string& RelativeTo)
+	{
+		std::string A(Path), B(RelativeTo);
+		AnnealPath(A); AnnealPath(B);
+		int Index = A.find(B);
+		if (Index == 0)
+			return A.substr(B.length() - 1);
+		else
+			return A;
+
 	}
 
 }

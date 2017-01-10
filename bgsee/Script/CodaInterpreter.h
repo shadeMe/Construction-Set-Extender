@@ -15,12 +15,14 @@ namespace bgsee
 
 			struct ExecuteParams
 			{
-				std::string						ScriptName;			// can also be a path relative to the repository
+				std::string						Filepath;			// path to the script (must be relative to the repository)
+				ICodaScriptProgram*				Program;
 				CodaScriptBackingStore::ArrayT	Parameters;
 				bool							RunInBackground;
 				bool							Recompile;
 
-				ExecuteParams() : ScriptName(), Parameters(), RunInBackground(false), Recompile(false) {}
+				ExecuteParams() : Filepath(), Program(nullptr),
+					Parameters(), RunInBackground(false), Recompile(false) {}
 			};
 
 			struct ExecuteResult
@@ -85,7 +87,7 @@ namespace bgsee
 		public:
 			virtual ~ICodaScriptProgramCache() = 0 {}
 
-			virtual ICodaScriptProgram*			Get(std::string Filepath, bool Recompile = false) = 0;		// returns a nullptr if no valid script was found
+			virtual ICodaScriptProgram*			Get(const ResourceLocation& Filepath, bool Recompile = false) = 0;		// returns a nullptr if no valid script was found
 			virtual void						Invalidate() = 0;
 
 			typedef std::unique_ptr<ICodaScriptProgramCache>		PtrT;

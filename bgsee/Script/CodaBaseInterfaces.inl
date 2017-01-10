@@ -40,23 +40,23 @@ namespace bgsee
 			bool		GetIsString() const { return (Type == kDataType_String); }
 			bool		GetIsArray() const { return (Type == kDataType_Array); }
 
-			virtual bool													GetHasImplicitCast(DataType NewType) const = 0;
-																			// the GetXXX accessory functions should perform the necessary casting internally
-			virtual CodaScriptReferenceDataTypeT							GetFormID() const = 0;
-			virtual CodaScriptNumericDataTypeT								GetNumber() const = 0;
-			virtual CodaScriptStringParameterTypeT							GetString() const = 0;
+			virtual bool								GetHasImplicitCast(DataType NewType) const = 0;
+														// the GetXXX accessory functions should perform the necessary casting internally
+			virtual CodaScriptReferenceDataTypeT		GetFormID() const = 0;
+			virtual CodaScriptNumericDataTypeT			GetNumber() const = 0;
+			virtual CodaScriptStringParameterTypeT		GetString() const = 0;
 
-			virtual void													SetFormID(CodaScriptReferenceDataTypeT Data) = 0;
-			virtual void													SetNumber(CodaScriptNumericDataTypeT Data) = 0;
-			virtual void													SetString(CodaScriptStringParameterTypeT Data) = 0;
-			virtual void													SetArray(ICodaScriptDataStore* Data) = 0;
+			virtual void								SetFormID(CodaScriptReferenceDataTypeT Data) = 0;
+			virtual void								SetNumber(CodaScriptNumericDataTypeT Data) = 0;
+			virtual void								SetString(CodaScriptStringParameterTypeT Data) = 0;
+			virtual void								SetArray(ICodaScriptDataStore* Data) = 0;
 
-			virtual ICodaScriptDataStore&									operator=(const ICodaScriptDataStore& rhs) = 0;
-			virtual ICodaScriptDataStore&									operator=(CodaScriptNumericDataTypeT Num) = 0;
-			virtual ICodaScriptDataStore&									operator=(CodaScriptStringParameterTypeT Str) = 0;
-			virtual ICodaScriptDataStore&									operator=(CodaScriptReferenceDataTypeT Form) = 0;
+			virtual ICodaScriptDataStore&				operator=(const ICodaScriptDataStore& rhs) = 0;
+			virtual ICodaScriptDataStore&				operator=(CodaScriptNumericDataTypeT Num) = 0;
+			virtual ICodaScriptDataStore&				operator=(CodaScriptStringParameterTypeT Str) = 0;
+			virtual ICodaScriptDataStore&				operator=(CodaScriptReferenceDataTypeT Form) = 0;
 
-			typedef std::unique_ptr<ICodaScriptDataStore>					PtrT;
+			typedef std::unique_ptr<ICodaScriptDataStore>		PtrT;
 		};
 
 		class ICodaScriptDataStoreOwner

@@ -9,6 +9,8 @@ namespace bgsee
 		{
 			namespace general
 			{
+				extern const std::string			kConstant_ScriptSelf;
+
 				CodaScriptCommandRegistrarDecl;
 
 				CodaScriptVariadicCommandPrototype(Return,

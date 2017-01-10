@@ -40,14 +40,14 @@ namespace bgsee
 			ICodaScriptVirtualMachine*		VM;
 			ProgramMapT						Store;
 
-			ICodaScriptProgram*				Lookup(std::string Filepath) const;
-			void							Remove(std::string Filepath);
-			void							Add(std::string Filepath, ICodaScriptProgram::PtrT& Program);
+			ICodaScriptProgram*				Lookup(const std::string& Filepath) const;
+			void							Remove(const std::string& Filepath);
+			void							Add(const std::string& Filepath, ICodaScriptProgram::PtrT& Program);
 		public:
 			CodaScriptProgramCache(ICodaScriptVirtualMachine* VM);
 			virtual ~CodaScriptProgramCache();
 
-			virtual ICodaScriptProgram*			Get(std::string Filepath, bool Recompile = false) override;
+			virtual ICodaScriptProgram*			Get(const ResourceLocation& Filepath, bool Recompile = false) override;
 			virtual void						Invalidate() override;
 		};
 

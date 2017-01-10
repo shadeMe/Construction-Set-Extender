@@ -11,6 +11,8 @@ namespace bgsee
 		{
 			namespace general
 			{
+				const std::string		kConstant_ScriptSelf = "SELF";
+
 				CodaScriptCommandRegistrarDef("General")
 
 				CodaScriptCommandPrototypeDef(Return);
@@ -57,15 +59,22 @@ namespace bgsee
 					CodaScriptBackingStore* ArgumentStore = dynamic_cast<CodaScriptBackingStore*>(Arguments);
 					SME_ASSERT(ArgumentStore);
 
+					ICodaScriptProgram* CurrentProgram = ExecutionAgent->GetProgram();
+					bool CallSelf = !_stricmp(kConstant_ScriptSelf.c_str(), ScriptName);
+
 					script::ICodaScriptVirtualMachine::ExecuteParams Input;
 					script::ICodaScriptVirtualMachine::ExecuteResult Output;
 
-					Input.ScriptName = ScriptName;
 					for (int i = 1; i < ArgumentCount; i++)
 					{
 						const CodaScriptBackingStore* Store = &ArgumentStore[i];
 						Input.Parameters.push_back(*Store);
 					}
+
+					if (CallSelf)
+						Input.Program = CurrentProgram;
+					else
+						Input.Filepath = ScriptName;
 
 					CODAVM->RunScript(Input, Output);
 

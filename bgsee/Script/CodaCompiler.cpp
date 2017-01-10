@@ -70,7 +70,8 @@ namespace bgsee
 			return false;
 		}
 
-		CodaScriptProgram::CodaScriptProgram(ICodaScriptVirtualMachine* VM) :
+		CodaScriptProgram::CodaScriptProgram(ICodaScriptVirtualMachine* VM, const ResourceLocation& Filepath) :
+			Filepath(Filepath),
 			Name("<unknown>"),
 			Variables(),
 			Parameters(),
@@ -115,6 +116,11 @@ namespace bgsee
 		{
 			SME_ASSERT(AST);
 			AST->Accept(Visitor);
+		}
+
+		const ResourceLocation& CodaScriptProgram::GetFilepath() const
+		{
+			return Filepath;
 		}
 
 		const CodaScriptSourceCodeT& CodaScriptProgram::GetName() const
@@ -285,9 +291,11 @@ namespace bgsee
 
 		void CodaScriptCompiler::Preprocess(std::fstream& SourceCode, std::string& OutPreprocessedCode)
 		{
-			char Buffer[0x512] = { 0 };
-			UInt32 CurrentLine = 1;
+			// Call macro: @<script_path>(<args>)
+			// use '.' instead of '\' in the path
+			static const char kCallMacro_StartSymbol = '@';
 
+			char Buffer[0x512] = { 0 };
 			CodaScriptTokenizer Tokenizer;
 
 			OutPreprocessedCode.clear();
@@ -296,13 +304,55 @@ namespace bgsee
 				ZeroMemory(Buffer, sizeof(Buffer));
 				SourceCode.getline(Buffer, sizeof(Buffer));
 
-				OutPreprocessedCode.append(Buffer).append("\n");
+				CodaScriptSourceCodeT LineBuffer;
+				CodaScriptSourceCodeT Initer;
+				Tokenizer.Sanitize(Buffer, LineBuffer,
+								   CodaScriptTokenizer::kSanitizeOps_StripComments);
+
+				CodaScriptSourceCodeT Processed;
+				bool ProcessCall = false;
+				CodaScriptSourceCodeT CurrentScriptCall;
+
+				for (auto& Itr : LineBuffer)
+				{
+					if (ProcessCall)
+					{
+						// process until the opening parenthesis
+						if (Itr == '(')
+						{
+							ProcessCall = false;
+							CurrentScriptCall += "\", ";
+							Processed += CurrentScriptCall;
+						}
+						else if (Itr == '.')
+							CurrentScriptCall += "\\\\";
+						else
+							CurrentScriptCall += Itr;
+
+						continue;
+					}
+
+					if (Itr == kCallMacro_StartSymbol)
+					{
+						SME_ASSERT(ProcessCall == false);
+						ProcessCall = true;
+
+						CurrentScriptCall = "CALL(\"";
+						continue;
+					}
+					else
+						Processed += Itr;
+				}
+
+				OutPreprocessedCode.append(Processed).append("\n");
 			}
 		}
 
-		CodaScriptProgram* CodaScriptCompiler::GenerateProgram(ICodaScriptVirtualMachine* VirtualMachine, std::stringstream& SourceCode)
+		CodaScriptProgram* CodaScriptCompiler::GenerateProgram(ICodaScriptVirtualMachine* VirtualMachine,
+															   CodaScriptProgram* Instance,
+															   std::stringstream& SourceCode)
 		{
-			CodaScriptProgram* Out = new CodaScriptProgram(VirtualMachine);
+			CodaScriptProgram* Out = Instance;
 
 			char Buffer[0x512] = { 0 };
 			UInt32 CurrentLine = 1;
@@ -311,7 +361,7 @@ namespace bgsee
 
 			CodaScriptTokenizer Tokenizer;
 			CodaScriptKeywordStackT	BlockStack;
-			CodaScriptBEGINBlock* Root = nullptr;
+			std::unique_ptr<CodaScriptBEGINBlock> Root;
 			ICodaScriptExecutableCode::StackT CodeStack;
 
 			BlockStack.push(CodaScriptTokenizer::kTokenType_Invalid);
@@ -451,8 +501,8 @@ namespace bgsee
 							if (Result == false)
 								break;
 
-							Root = new CodaScriptBEGINBlock(SourceLine, CurrentLine);
-							CodeStack.push(Root);
+							Root.reset(new CodaScriptBEGINBlock(SourceLine, CurrentLine));
+							CodeStack.push(Root.get());
 						}
 
 						break;
@@ -687,12 +737,11 @@ namespace bgsee
 
 			if (Result == false)
 			{
-				SAFEDELETE(Root);
 				Out->Flags |= CodaScriptProgram::kFlag_CompileError;
 
 				if (CodeInstanceCounter.GetCount())
 				{
-					BGSEECONSOLE_MESSAGE("CodaScriptProgram::GenerateAST - By the Power of Grey-Skull! We are leaking executable code!");
+					VirtualMachine->GetMessageHandler()->Log("CodaScriptProgram::GenerateAST - By the Power of Grey-Skull! We are leaking executable code!");
 					MessageBeep(MB_ICONERROR);
 				}
 			}
@@ -714,7 +763,7 @@ namespace bgsee
 					}
 				}
 
-				CodaScriptProgram::ScopedASTPointerT Temp(new CodaScriptAbstractSyntaxTree(Root, Initers));
+				CodaScriptProgram::ScopedASTPointerT Temp(new CodaScriptAbstractSyntaxTree(Root.release(), Initers));
 				Out->AST = std::move(Temp);
 			}
 
@@ -758,19 +807,28 @@ namespace bgsee
 		}
 
 		CodaScriptProgram* CodaScriptCompiler::Compile(ICodaScriptVirtualMachine* VirtualMachine,
-													   std::fstream& SourceCode)
+													   const ResourceLocation& Filepath)
 		{
-			VirtualMachine->GetMessageHandler()->Indent();
-			std::string Preprocessed;
-			Preprocess(SourceCode, Preprocessed);
+			std::unique_ptr<CodaScriptProgram> Out(new CodaScriptProgram(VirtualMachine, Filepath));
+			std::fstream InputStream(Filepath(), std::iostream::in);
 
-			CodaScriptProgram* Out(GenerateProgram(VirtualMachine, std::stringstream(Preprocessed)));
-			GenerateByteCode(VirtualMachine, Out);
-			VirtualMachine->GetMessageHandler()->Outdent();
+			if (InputStream.fail() == false)
+			{
+				VirtualMachine->GetMessageHandler()->Indent();
+				std::string Preprocessed;
+				Preprocess(InputStream, Preprocessed);
 
-			return Out;
+				GenerateProgram(VirtualMachine, Out.get(), std::stringstream(Preprocessed));
+				GenerateByteCode(VirtualMachine, Out.get());
+				VirtualMachine->GetMessageHandler()->Outdent();
+			}
+			else
+			{
+				VirtualMachine->GetMessageHandler()->Log("Couldn't read Coda script @ %s", Filepath().c_str());
+				Out->Flags |= CodaScriptProgram::kFlag_Uncompiled;
+			}
+
+			return Out.release();
 		}
-
-
 	}
 }

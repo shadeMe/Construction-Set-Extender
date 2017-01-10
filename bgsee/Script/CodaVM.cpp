@@ -16,7 +16,7 @@ namespace bgsee
 {
 	namespace script
 	{
-		void CodaScriptCommandRegistry::AppendToStream( std::fstream& Out, const char* Fmt, ... )
+		void CodaScriptCommandRegistry::AppendToStream(std::fstream& Out, const char* Fmt, ...)
 		{
 			va_list Args;
 			char Buffer[0x1000] = {0};
@@ -66,6 +66,10 @@ namespace bgsee
 				ICodaScriptCommand* Command = Itr->second;
 				Parser->RegisterCommand(Command);
 			}
+
+			// register constants
+			Parser->RegisterConstant(commands::general::kConstant_ScriptSelf.c_str(),
+									 CodaScriptBackingStore(commands::general::kConstant_ScriptSelf.c_str()));
 		}
 
 		CodaScriptCommandRegistry::CodaScriptCommandRegistry(const char* WikiURL) :
@@ -229,7 +233,7 @@ namespace bgsee
 			ShellExecute(nullptr, "open", (LPSTR)"coda_command_doc.html", nullptr, nullptr, SW_SHOW);
 		}
 
-		ICodaScriptProgram* CodaScriptProgramCache::Lookup(std::string Filepath) const
+		ICodaScriptProgram* CodaScriptProgramCache::Lookup(const std::string& Filepath) const
 		{
 			if (Store.count(Filepath) == 0)
 				return nullptr;
@@ -237,12 +241,12 @@ namespace bgsee
 				return Store.at(Filepath).get();
 		}
 
-		void CodaScriptProgramCache::Remove(std::string Filepath)
+		void CodaScriptProgramCache::Remove(const std::string& Filepath)
 		{
 			Store.erase(Filepath);
 		}
 
-		void CodaScriptProgramCache::Add(std::string Filepath, ICodaScriptProgram::PtrT& Program)
+		void CodaScriptProgramCache::Add(const std::string& Filepath, ICodaScriptProgram::PtrT& Program)
 		{
 			SME_ASSERT(Store.count(Filepath) == 0);
 
@@ -261,21 +265,21 @@ namespace bgsee
 			for (auto& Itr : Store)
 			{
 				if (VM->IsProgramExecuting(Itr.second.get()))
-					BGSEECONSOLE_MESSAGE("Coda script program '%s' is still executing during disposal", Itr.second->GetName().c_str());
+					VM->GetMessageHandler()->Log("Coda script program '%s' is still executing during disposal", Itr.second->GetName().c_str());
 			}
 		}
 
-		ICodaScriptProgram* CodaScriptProgramCache::Get(std::string Filepath, bool Recompile /*= false*/)
+		ICodaScriptProgram* CodaScriptProgramCache::Get(const ResourceLocation& Filepath, bool Recompile /*= false*/)
 		{
-			ICodaScriptProgram* OutProgram(Lookup(Filepath));
+			ICodaScriptProgram* OutProgram(Lookup(Filepath()));
 
 			if (Recompile && OutProgram)
 			{
 				if (VM->IsProgramExecuting(OutProgram))
-					BGSEECONSOLE_MESSAGE("Ignored request to recompile executing Coda script program @ %s", Filepath.c_str());
+					VM->GetMessageHandler()->Log("Ignored request to recompile executing Coda script program @ %s", Filepath().c_str());
 				else
 				{
-					Remove(Filepath);
+					Remove(Filepath());
 					OutProgram = nullptr;
 				}
 			}
@@ -284,28 +288,22 @@ namespace bgsee
 			if (OutProgram && OutProgram->IsValid() == false)
 			{
 				SME_ASSERT(VM->IsProgramExecuting(OutProgram) == false);
-				Remove(Filepath);
+				Remove(Filepath());
 				OutProgram = nullptr;
 			}
 
 			if (OutProgram == nullptr)
 			{
 				// create the program context from disk
-				std::fstream InputStream(Filepath.c_str(), std::iostream::in);
-				if (InputStream.fail() == false)
-				{
-					ICodaScriptProgram::PtrT Program(CodaScriptCompiler::Instance.Compile(VM, InputStream));
+				ICodaScriptProgram::PtrT Program(CodaScriptCompiler::Instance.Compile(VM, Filepath));
 
-					if (Program->IsValid() == false)
-						BGSEECONSOLE_MESSAGE("Couldn't compile Coda script @ %s", Filepath.c_str());
-					else
-					{
-						OutProgram = Program.get();
-						Add(Filepath, Program);
-					}
-				}
+				if (Program->IsValid() == false)
+					VM->GetMessageHandler()->Log("Couldn't compile Coda script @ %s", Filepath().c_str());
 				else
-					BGSEECONSOLE_MESSAGE("Couldn't read Coda script @ %s", Filepath.c_str());
+				{
+					OutProgram = Program.get();
+					Add(Filepath(), Program);
+				}
 			}
 
 			return OutProgram;
@@ -471,9 +469,10 @@ namespace bgsee
 
 			if (Renew)
 			{
-				for (IDirectoryIterator Itr(SourceDepot().c_str(), (std::string("*" + VM->GetScriptFileExtension())).c_str()); !Itr.Done(); Itr.Next())
+				for (IDirectoryIterator Itr(SourceDepot().c_str(),
+					(std::string("*" + VM->GetScriptFileExtension())).c_str()); !Itr.Done(); Itr.Next())
 				{
-					std::string FullPath = SourceDepot() + "\\" + std::string(Itr.Get()->cFileName);
+					std::string FullPath = SourceDepot.GetRelativePath() + "\\" + std::string(Itr.Get()->cFileName);
 					VM->GetMessageHandler()->Log("Script: %s", Itr.Get()->cFileName);
 					VM->GetMessageHandler()->Indent();
 					{
@@ -1254,15 +1253,16 @@ namespace bgsee
 
 		void CodaScriptVM::RunScript(ExecuteParams& Input, ExecuteResult& Output)
 		{
-			ResourceLocation Path(BaseDirectory.GetRelativePath() + "\\" + Input.ScriptName + CodaScriptVM::kSourceExtension);
+			ResourceLocation Path(Input.Program ? Input.Program->GetFilepath().GetRelativePath() :
+								BaseDirectory.GetRelativePath() + "\\" + Input.Filepath + CodaScriptVM::kSourceExtension);
 			if (ResourceLocation::IsRelativeTo(Path, Backgrounder->GetBackgroundScriptRepository()))
 			{
-				MessageHandler->Log("Cannot execute background script '%s' manually", Input.ScriptName.c_str());
+				MessageHandler->Log("Cannot execute background script '%s' manually", Input.Filepath.c_str());
 				return;
 			}
 
-			ICodaScriptProgram* Program = ProgramCache->Get(Path.GetFullPath(), Input.Recompile);
-			if (Program)
+			ICodaScriptProgram* Program = ProgramCache->Get(Path, Input.Recompile);
+			if (Program && Program->IsValid())
 			{
 				try
 				{

@@ -96,7 +96,7 @@ namespace bgsee
 						script::ICodaScriptVirtualMachine::ExecuteParams Input;
 						script::ICodaScriptVirtualMachine::ExecuteResult Output;
 
-						Input.ScriptName = DroppedScripts[i];
+						Input.Filepath = DroppedScripts[i];
 						CODAVM->RunScript(Input, Output);
 					}
 
