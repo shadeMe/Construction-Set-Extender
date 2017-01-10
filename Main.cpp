@@ -90,13 +90,13 @@ namespace cse
 		XSECommandTableData.GetCommandReturnType = XSECommandTableIntfc->GetReturnType;
 		XSECommandTableData.GetParentPlugin = XSECommandTableIntfc->GetParentPlugin;
 		XSECommandTableData.GetRequiredOBSEVersion = XSECommandTableIntfc->GetRequiredOBSEVersion;
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Component DLLs");
 		BGSEECONSOLE->Indent();
 		if (cliWrapper::ImportInterfaces(OBSE) == false)
 			return false;
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		return true;
 	}
@@ -127,24 +127,24 @@ namespace cse
 		hooks::PatchMiscHooks();
 		hooks::PatchMessageHanders();
 		hooks::PatchEventHooks();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Events");
 		BGSEECONSOLE->Indent();
 		events::InitializeSinks();
 		events::InitializeSources();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Serialization");
 		BGSEECONSOLE->Indent();
 		serialization::Initialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing UI Manager");
 		BGSEECONSOLE->Indent();
 		bool ComponentInitialized = bgsee::UIManager::Initialize("TES Construction Set",
 																 LoadMenu(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDR_MAINMENU)));
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		if (ComponentInitialized == false)
 			return false;
@@ -173,7 +173,7 @@ namespace cse
 		BGSEECONSOLE->Indent();
 		bool ComponentInitialized = _RENDERWIN_MGR.Initialize();
 		SME_ASSERT(ComponentInitialized);
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		if (settings::dialogs::kShowMainWindowsInTaskbar.GetData().i)
 		{
@@ -198,33 +198,33 @@ namespace cse
 		BGSEECONSOLE_MESSAGE("Initializing Component DLL Interfaces");
 		BGSEECONSOLE->Indent();
 		cliWrapper::QueryInterfaces();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Console");
 		BGSEECONSOLE->Indent();
 		console::Initialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Auxiliary Viewport");
 		BGSEECONSOLE->Indent();
 		AUXVIEWPORT->Initialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing CSInterop Manager");
 		BGSEECONSOLE->Indent();
 		if (CSIOM->Initialize() == false)
 			BGSEECONSOLE_MESSAGE("Failed to initialize successfully! Lip service will be unavailable for this session");
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Achievements");
 		BGSEECONSOLE->Indent();
 		achievements::Initialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Hall of Fame");
 		BGSEECONSOLE->Indent();
 		hallOfFame::Initialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing ScriptEditor");
 		BGSEECONSOLE->Indent();
@@ -236,78 +236,78 @@ namespace cse
 		cliWrapper::interfaces::SE->InitializeComponents(&XSECommandTableData, &GMSTCollectionData);
 		BGSEECONSOLE->Indent();
 		BGSEECONSOLE_MESSAGE("Bound %d developer URLs", PluginAPIManager::Instance.ConsumeIntelliSenseInterface());
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Coda \"Virtual Machine\"");
 		BGSEECONSOLE->Indent();
 		script::Initialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Toolbox");
 		BGSEECONSOLE->Indent();
 		bgsee::ToolBox::Initialize(BGSEEMAIN->INIGetter(), BGSEEMAIN->INISetter());
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Workspace Manager");
 		BGSEECONSOLE->Indent();
 		workspaceManager::Initialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Dialogs");
 		BGSEECONSOLE->Indent();
 		uiManager::Initialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Render Window");
 		BGSEECONSOLE->Indent();
 		renderWindow::Initialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing GMST Default Copy");
 		BGSEECONSOLE->Indent();
 		GameSettingCollection::Instance->CreateDefaultCopy();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing IdleAnim Tree");
 		BGSEECONSOLE->Indent();
 		TESIdleForm::InitializeIdleFormTreeRootNodes();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Archive Manager");
 		BGSEECONSOLE->Indent();
 		ArchiveManager::LoadSkippedArchives((std::string(std::string(BGSEEMAIN->GetAPPPath()) + "Data\\")).c_str());
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Change Log Manager");
 		BGSEECONSOLE->Indent();
 		changeLogManager::Initialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Panic Save Handler");
 		BGSEECONSOLE->Indent();
 		_DATAHANDLER->PanicSave(true);
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Global Clipboard");
 		BGSEECONSOLE->Indent();
 		globalClipboard::Initialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Form Undo Stack");
 		BGSEECONSOLE->Indent();
 		formUndoStack::Initialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Startup Manager");
 		BGSEECONSOLE->Indent();
 		StartupManager::LoadStartupWorkspace();
 		StartupManager::LoadStartupPlugin();
 		StartupManager::LoadStartupScript();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
-		BGSEECONSOLE->ExdentAll();
+		BGSEECONSOLE->OutdentAll();
 		BGSEECONSOLE_MESSAGE("%s Initialized!", BGSEEMAIN->ExtenderGetDisplayName());
 		BGSEECONSOLE->Pad(2);
 
@@ -339,7 +339,7 @@ namespace cse
 			BGSEECONSOLE->Indent();
 			BGSEECONSOLE->LogMsg("shadeMe", "Thank you kindly");
 			BGSEECONSOLE->LogMsg("shadeMe", "The guy who wrote this message");
-			BGSEECONSOLE->ExdentAll();
+			BGSEECONSOLE->OutdentAll();
 			BGSEECONSOLE->Pad(2);
 		}
 #endif
@@ -377,79 +377,79 @@ namespace cse
 		BGSEECONSOLE_MESSAGE("Deinitializing Render Window");
 		BGSEECONSOLE->Indent();
 		renderWindow::Deinitialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Achievements Manager");
 		BGSEECONSOLE->Indent();
 		achievements::Deinitialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Hall Of Fame");
 		BGSEECONSOLE->Indent();
 		hallOfFame::Deinitialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Tool Manager");
 		BGSEECONSOLE->Indent();
 		bgsee::ToolBox::Deinitialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Workspace Manager");
 		BGSEECONSOLE->Indent();
 		workspaceManager::Deinitialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Coda \"Virtual Machine\"");
 		BGSEECONSOLE->Indent();
 		script::Deinitialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Global Clipboard");
 		BGSEECONSOLE->Indent();
 		globalClipboard::Deinitialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Form Undo Stack");
 		BGSEECONSOLE->Indent();
 		formUndoStack::Deinitialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Auxiliary Viewport");
 		BGSEECONSOLE->Indent();
 		delete AUXVIEWPORT;
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Script Editor");
 		BGSEECONSOLE->Indent();
 		cliWrapper::interfaces::SE->Deinitalize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Change Log Manager");
 		BGSEECONSOLE->Indent();
 		changeLogManager::Deinitialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing CSInterop Manager");
 		BGSEECONSOLE->Indent();
 		delete CSIOM;
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Serialization");
 		BGSEECONSOLE->Indent();
 		serialization::Deinitialize();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Events");
 		BGSEECONSOLE->Indent();
 		events::DeinitializeSinks();
 		events::DeinitializeSources();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 #ifndef NDEBUG
 		BGSEECONSOLE_MESSAGE("Performing Diagnostics...");
 		BGSEECONSOLE->Indent();
 		componentDLLInterface::DumpInstanceCounters();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 #endif
 
 		return true;
@@ -488,8 +488,8 @@ namespace cse
 		if (BGSEEDAEMON->GetFullInitComplete())
 			BGSEEACHIEVEMENTS->Unlock(achievements::kSaboteur, false, true);
 
-		BGSEECONSOLE->Exdent();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
+		BGSEECONSOLE->Outdent();
 
 		// it's highly inadvisable to do anything inside the handler apart from the bare minimum of diagnostics
 		// memory allocations are a big no-no as the CRT state can potentially be corrupted...
@@ -567,7 +567,7 @@ namespace cse
 
 				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kToolbar_DataFiles, 0);
 
-				BGSEECONSOLE->Exdent();
+				BGSEECONSOLE->Outdent();
 			}
 			else if (strlen(PluginName) >= 1)
 				BGSEECONSOLE_MESSAGE("Non-existent startup plugin '%s'", PluginName);
@@ -608,7 +608,7 @@ namespace cse
 				BGSEECONSOLE_MESSAGE("Dispatching Plugin Interop Interface to '%s'", Msg->sender);
 				BGSEECONSOLE->Indent();
 				XSEMsgIntfc->Dispatch(XSEPluginHandle, 'CSEI', (void*)PluginAPIManager::Instance.GetInterface(), 4, Msg->sender);
-				BGSEECONSOLE->Exdent();
+				BGSEECONSOLE->Outdent();
 			}
 
 			break;

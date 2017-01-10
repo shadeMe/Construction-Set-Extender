@@ -32,7 +32,7 @@ namespace cse
 
 		UInt32							ConsumeIntelliSenseInterface();
 		void							ConsumeConsoleInterface();
-		void							ConsumeScriptInterface(bgsee::script::CodaScriptRegistrarListT& Registrars);
+		void							ConsumeScriptInterface(bgsee::script::CodaScriptCommandRegistrar::ListT& OutRegistrars);
 
 		static UInt8					GetVersion();
 		static const void*				InitializeInterface(UInt8 InterfaceType);

@@ -74,11 +74,11 @@ namespace cse
 		BGSEECONSOLE->RegisterPrintCallback(ConsolePrintCallbackPrototype);
 	}
 
-	void PluginAPIManager::ConsumeScriptInterface( bgsee::script::CodaScriptRegistrarListT& Registrars )
+	void PluginAPIManager::ConsumeScriptInterface( bgsee::script::CodaScriptCommandRegistrar::ListT& OutRegistrars )
 	{
 		SME_ASSERT(Initialized);
 
-		Registrars.push_back(&CodaScriptPluginCommandRegistrar);
+		OutRegistrars.push_back(&CodaScriptPluginCommandRegistrar);
 	}
 
 	void PluginAPIManager::Initialize( void )

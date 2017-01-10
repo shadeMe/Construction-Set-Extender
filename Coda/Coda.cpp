@@ -53,8 +53,16 @@ namespace cse
 
 			BGSEECONSOLE_MESSAGE("Executing Coda Script '%s'", ScriptName.c_str());
 
-			bool ThrowAway = false;
-			if (CODAVM->RunScript(ScriptName, nullptr, nullptr, ThrowAway, (RunInBackground == "1" ? true : false)))
+			bgsee::script::ICodaScriptVirtualMachine::ExecuteParams Input;
+			bgsee::script::ICodaScriptVirtualMachine::ExecuteResult Output;
+
+			Input.Filepath = ScriptName;
+			Input.Recompile = true;
+			Input.RunInBackground = RunInBackground == "1" ? true : false;
+
+			CODAVM->RunScript(Input, Output);
+
+			if (Output.Success)
 				BGSEEACHIEVEMENTS->Unlock(achievements::kAutomaton);
 		}
 
@@ -62,7 +70,7 @@ namespace cse
 
 		void Initialize()
 		{
-			bgsee::script::CodaScriptRegistrarListT ScriptCommands;
+			bgsee::script::CodaScriptCommandRegistrar::ListT ScriptCommands;
 
 			PluginAPIManager::Instance.ConsumeScriptInterface(ScriptCommands);
 			ScriptCommands.push_back(commands::form::GetRegistrar());

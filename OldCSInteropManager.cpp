@@ -356,7 +356,7 @@ namespace cse
 			BGSEECONSOLE_ERROR("Couldn't delete temporary WAV file '%s'!", WAVPath.c_str());
 		}
 
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 
 		return Result;
 	}

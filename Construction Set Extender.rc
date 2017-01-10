@@ -603,6 +603,9 @@ BEGIN
         MENUITEM "Open Script Repository",      IDC_MAINMENU_CODAOPENSCRIPTREPOSITORY
         MENUITEM SEPARATOR
         MENUITEM "Execute Background Scripts",  IDC_MAINMENU_CODABACKGROUNDER
+        MENUITEM "Reload Background Scripts",   IDC_MAINMENU_CODARELOADBACKGROUNDSCRIPTS
+        MENUITEM SEPARATOR
+        MENUITEM "Reset Script Cache",          IDC_MAINMENU_CODARESETSCRIPTCACHE
     END
     MENUITEM "Tools",                       IDC_MAINMENU_TOOLS
     POPUP "&Help"

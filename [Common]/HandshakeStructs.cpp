@@ -373,6 +373,6 @@ namespace componentDLLInterface
 		else
 			BGSEECONSOLE_MESSAGE("No delinquents");
 
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 	}
 }

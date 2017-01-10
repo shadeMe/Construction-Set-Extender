@@ -132,7 +132,7 @@ namespace cse
 
 									break;
 								case IDC_MAINMENU_CODABACKGROUNDER:
-									if (CODAVM->GetBackgrounderState())
+									if (CODAVM->GetBackgroundDaemon()->IsEnabled())
 										CheckItem = true;
 
 									break;
@@ -348,7 +348,10 @@ namespace cse
 
 					break;
 				case IDC_MAINMENU_CODABACKGROUNDER:
-					CODAVM->ToggleBackgrounderState();
+					if (CODAVM->GetBackgroundDaemon()->IsEnabled())
+						CODAVM->GetBackgroundDaemon()->Suspend();
+					else
+						CODAVM->GetBackgroundDaemon()->Resume();
 
 					break;
 				case IDC_MAINMENU_SAVEOPTIONS_SAVEESPMASTERS:
@@ -544,7 +547,7 @@ namespace cse
 						GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&MemCounter, sizeof(MemCounter));
 						RAMUsage = MemCounter.WorkingSetSize / (1024 * 1024);
 						BGSEECONSOLE_MESSAGE("Current RAM Usage: %d MB", RAMUsage);
-						BGSEECONSOLE->Exdent();
+						BGSEECONSOLE->Outdent();
 					}
 
 					break;
@@ -628,6 +631,12 @@ namespace cse
 							TESRenderWindow::Redraw(true);
 					}
 
+					break;
+				case IDC_MAINMENU_CODARELOADBACKGROUNDSCRIPTS:
+					CODAVM->GetBackgroundDaemon()->Rebuild();
+					break;
+				case IDC_MAINMENU_CODARESETSCRIPTCACHE:
+					CODAVM->GetProgramCache()->Invalidate();
 					break;
 				default:
 					Return = false;

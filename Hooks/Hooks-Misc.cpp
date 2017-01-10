@@ -276,7 +276,7 @@ namespace cse
 
 			BGSEECONSOLE->Indent();
 			BGSEECONSOLE->LogAssertion("CS", "ASSERTION FAILED: 0x%08X", EIP);
-			BGSEECONSOLE->Exdent();
+			BGSEECONSOLE->Outdent();
 
 			MessageBeep(MB_ICONHAND);
 		}

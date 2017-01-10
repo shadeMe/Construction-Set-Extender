@@ -389,12 +389,12 @@ void RecompileScripts(void)
 				BGSEECONSOLE_MESSAGE("Preprocessing failed!");
 			}
 
-			BGSEECONSOLE->Exdent();
+			BGSEECONSOLE->Outdent();
 		}
 	}
 
 	delete [] PreprocessedTextBuffer;
-	BGSEECONSOLE->Exdent();
+	BGSEECONSOLE->Outdent();
 
 	DestroyWindow(NotificationDialog);
 	BGSEECONSOLE_MESSAGE("Recompile active scripts operation completed!");
@@ -685,7 +685,7 @@ void CompileCrossReferencedForms(TESForm* Form)
 			}
 		}
 
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 	}
 
 	// quests
@@ -731,7 +731,7 @@ void CompileCrossReferencedForms(TESForm* Form)
 		}
 
 		(*Itr)->UpdateUsageInfo();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 	}
 
 	// topic infos
@@ -752,10 +752,10 @@ void CompileCrossReferencedForms(TESForm* Form)
 					TESConditionItem::GetScriptableFormConditionCount(&(*Itr)->conditions, Form));
 
 		(*Itr)->UpdateUsageInfo();
-		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Outdent();
 	}
 
-	BGSEECONSOLE->Exdent();
+	BGSEECONSOLE->Outdent();
 }
 
 void CompileDependencies(const char* EditorID)
@@ -807,7 +807,7 @@ void CompileDependencies(const char* EditorID)
 					}
 				}
 
-				BGSEECONSOLE->Exdent();
+				BGSEECONSOLE->Outdent();
 			}
 		}
 		break;
@@ -827,12 +827,12 @@ void CompileDependencies(const char* EditorID)
 		break;
 	}
 	}
-	BGSEECONSOLE->Exdent();
+	BGSEECONSOLE->Outdent();
 
 	BGSEECONSOLE_MESSAGE("Parsing direct dependencies...");
 	CompileCrossReferencedForms(Form);
 
-	BGSEECONSOLE->Exdent();
+	BGSEECONSOLE->Outdent();
 	BGSEECONSOLE_MESSAGE("Recompile dependencies operation completed!");
 }
 
@@ -1019,7 +1019,7 @@ void UpdateScriptVarNames(const char* EditorID, componentDLLInterface::ScriptVar
 				}
 			}
 
-			BGSEECONSOLE->Exdent();
+			BGSEECONSOLE->Outdent();
 			ScriptForm->SetFromActiveFile(true);
 		}
 	}
