@@ -18,6 +18,7 @@ namespace bgsee
 				CodaScriptCommandPrototypeDef(StringInsert);
 				CodaScriptCommandPrototypeDef(StringSubStr);
 				CodaScriptCommandPrototypeDef(StringIsNumber);
+				CodaScriptCommandPrototypeDef(StringToNumber);
 
 				CodaScriptCommandParamData(StringCompare, 3)
 				{
@@ -179,6 +180,18 @@ namespace bgsee
 							}
 						}
 					}
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(StringToNumber)
+				{
+					CodaScriptStringParameterTypeT Buffer = nullptr;
+
+					CodaScriptCommandExtractArgs(&Buffer);
+
+					if (Buffer)
+						Result->SetNumber(std::atof(Buffer));
 
 					return true;
 				}

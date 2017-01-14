@@ -57,9 +57,10 @@ namespace bgsee
 			static INISetting							kINI_RecursionLimit;
 
 			typedef std::unordered_map<ICodaScriptProgram*, int>	ProgramCounterMapT;		// value = executing instance counter
+			typedef std::vector<ICodaScriptExecutionContext*>		IterableExectionContextStackT;
 
 			ProgramCounterMapT							ExecutionCounter;
-			ICodaScriptExecutionContext::StackT			ExecutingContexts;
+			IterableExectionContextStackT				ExecutingContexts;
 			CodaScriptProfiler							Profiler;
 			DWORD										OwnerThreadID;
 			ICodaScriptVirtualMachine*					VM;
@@ -74,6 +75,7 @@ namespace bgsee
 																ICodaScriptVirtualMachine::ExecuteResult& Out) override;
 			virtual bool								IsBusy() const override;
 			virtual bool								IsProgramExecuting(ICodaScriptProgram* Program) const override;
+			virtual void								RaiseGlobalException() override;
 
 			static void									RegisterINISettings(INISettingDepotT& Depot);
 		};

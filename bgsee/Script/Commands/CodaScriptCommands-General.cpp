@@ -23,6 +23,7 @@ namespace bgsee
 				CodaScriptCommandPrototypeDef(FormatNumber);
 				CodaScriptCommandPrototypeDef(PrintToConsole);
 				CodaScriptCommandPrototypeDef(RandomNumber);
+				CodaScriptCommandPrototypeDef(Error);
 
 				CodaScriptCommandParamData(FormatNumber, 3)
 				{
@@ -157,6 +158,20 @@ namespace bgsee
 					}
 
 					*Result = Value;
+					return true;
+				}
+
+				CodaScriptCommandHandler(Error)
+				{
+					CodaScriptStringParameterTypeT Message = nullptr;
+
+					CodaScriptCommandExtractArgs(&Message);
+
+					ExecutionAgent->GetVM()->GetMessageHandler()->Log("** Error [%s, Line %d] ** %s",
+																	  ExecutionAgent->GetProgram()->GetName().c_str(),
+																	  ByteCode->GetSource()->GetLine(),
+																	  Message);
+					ExecutionAgent->GetVM()->GetExecutor()->RaiseGlobalException();
 					return true;
 				}
 			}

@@ -190,6 +190,7 @@ namespace bgsee
 
 			bool								GetKeywordInStack(CodaScriptKeywordStackT& Stack, CodaScriptKeywordT Keyword) const;
 			bool								GetKeywordOnStackTop(CodaScriptKeywordStackT& Stack, CodaScriptKeywordT Keyword) const;
+			bool								CheckVariableName(const CodaScriptSourceCodeT& Name) const;
 
 			void								Preprocess(std::fstream& SourceCode, std::string& OutPreprocessedCode);
 			CodaScriptProgram*					GenerateProgram(ICodaScriptVirtualMachine* VirtualMachine,

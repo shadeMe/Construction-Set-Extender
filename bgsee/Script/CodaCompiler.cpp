@@ -289,6 +289,17 @@ namespace bgsee
 				return false;
 		}
 
+		bool CodaScriptCompiler::CheckVariableName(const CodaScriptSourceCodeT& Name) const
+		{
+			for (auto& Itr : Name)
+			{
+				if (_ismbcalnum(Itr) == 0 && Itr != '_')
+					return false;
+			}
+
+			return true;
+		}
+
 		void CodaScriptCompiler::Preprocess(std::fstream& SourceCode, std::string& OutPreprocessedCode)
 		{
 			// Call macro: @<script_path>(<args>)
@@ -464,9 +475,9 @@ namespace bgsee
 							VirtualMachine->GetMessageHandler()->Log("Line %d: Variable '%s' redeclaration", CurrentLine, SecondToken.c_str());
 							Result = false;
 						}
-						else if (SecondToken == "" || SME::StringHelpers::GetHasNonAlnumCharacter(SecondToken))
+						else if (SecondToken == "" || CheckVariableName(SecondToken) == false)
 						{
-							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid variable name - Only alphabets and digits allowed", CurrentLine);
+							VirtualMachine->GetMessageHandler()->Log("Line %d: Invalid variable name - Only alphabets, digits and underscores allowed", CurrentLine);
 							Result = false;
 						}
 						else if (VirtualMachine->GetGlobal(SecondToken.c_str()))

@@ -59,6 +59,7 @@ namespace bgsee
 										ICodaScriptVirtualMachine::ExecuteResult& Out) = 0;
 			virtual bool		IsBusy() const = 0;							// true if any script's currently executing
 			virtual bool		IsProgramExecuting(ICodaScriptProgram* Program) const = 0;
+			virtual void		RaiseGlobalException() = 0;		// stops the execution of all active scripts
 
 			typedef std::unique_ptr<ICodaScriptExecutor>		PtrT;
 		};

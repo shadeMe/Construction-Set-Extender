@@ -373,13 +373,9 @@ namespace bgsee
 					err.Type2 = a_cType;
 
 					if (GetIdent().length())
-					{
 						err.Ident = GetIdent();
-					}
 					else
-					{
-						err.Ident = "CodaScriptMUPValue";
-					}
+						err.Ident = "<intermediate/temporary>";
 
 					throw ParserError(err);
 				}
@@ -395,13 +391,9 @@ namespace bgsee
 					err.Type2 = a_cType;
 
 					if (GetIdent().length())
-					{
 						err.Ident = GetIdent();
-					}
 					else
-					{
-						err.Ident = "CodaScriptMUPValue";
-					}
+						err.Ident = "<intermediate/temporary>";
 
 					throw ParserError(err);
 				}
@@ -526,20 +518,20 @@ namespace bgsee
 
 			//-----------------------------------------------------------------------------------------------
 			CodaScriptMUPValue::operator int ()
-			{ 
-				return GetInteger(); 
+			{
+				return GetInteger();
 			}
 
 			//-----------------------------------------------------------------------------------------------
 			CodaScriptMUPValue::operator string_type()
-			{ 
-				return GetString(); 
+			{
+				return GetString();
 			}
 
 			//-----------------------------------------------------------------------------------------------
 			CodaScriptMUPValue::operator float_type()
-			{ 
-				return GetFloat(); 
+			{
+				return GetFloat();
 			}
 
 			//-----------------------------------------------------------------------------------------------

@@ -336,14 +336,14 @@ namespace bgsee
 			else
 				ExecutionCounter[Program] = 1;
 
-			ExecutingContexts.push(Context);
+			ExecutingContexts.push_back(Context);
 		}
 
 		void CodaScriptExecutive::Pop(ICodaScriptExecutionContext* Context)
 		{
 			ICodaScriptProgram* Program = Context->GetProgram();
 			SME_ASSERT(ExecutionCounter.count(Program));
-			SME_ASSERT(ExecutingContexts.size() && ExecutingContexts.top() == Context);
+			SME_ASSERT(ExecutingContexts.size() && ExecutingContexts.back() == Context);
 
 			int Count = ExecutionCounter[Program]--;
 			if (Count == 1)
@@ -351,7 +351,7 @@ namespace bgsee
 			else
 				SME_ASSERT(Count);
 
-			ExecutingContexts.pop();
+			ExecutingContexts.pop_back();
 		}
 
 		CodaScriptExecutive::CodaScriptExecutive(ICodaScriptVirtualMachine* VM) :
@@ -364,6 +364,7 @@ namespace bgsee
 			SME_ASSERT(VM);
 
 			OwnerThreadID = GetCurrentThreadId();
+			ExecutingContexts.reserve(kINI_RecursionLimit().i * 2);
 		}
 
 		CodaScriptExecutive::~CodaScriptExecutive()
@@ -436,13 +437,20 @@ namespace bgsee
 			return ExecutionCounter.count(Program);
 		}
 
+		void CodaScriptExecutive::RaiseGlobalException()
+		{
+			if (ExecutingContexts.empty())
+				throw CodaScriptException("No active scripts");
+
+			for (auto& Itr : ExecutingContexts)
+				Itr->FlagError();
+		}
+
 		void CodaScriptExecutive::RegisterINISettings( INISettingDepotT& Depot )
 		{
 			Depot.push_back(&kINI_Profiling);
 			Depot.push_back(&kINI_RecursionLimit);
 		}
-
-
 
 #define CODASCRIPTBACKGROUNDER_INISECTION						"CodaBackgrounder"
 		SME::INI::INISetting									CodaScriptBackgrounder::kINI_Enabled("Enabled", CODASCRIPTBACKGROUNDER_INISECTION,

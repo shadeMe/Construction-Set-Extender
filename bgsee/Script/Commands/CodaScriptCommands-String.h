@@ -61,6 +61,14 @@ namespace bgsee
 					1,
 					OneString,
 					ICodaScriptDataStore::kDataType_Numeric);
+
+				CodaScriptParametricCommandPrototype(StringToNumber,
+					"Str2Num",
+					"Parses the passed string and returns the (floating point) number it represents.",
+					0,
+					1,
+					OneString,
+					ICodaScriptDataStore::kDataType_Numeric);
 			}
 		}
 	}

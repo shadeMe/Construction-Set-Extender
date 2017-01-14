@@ -64,6 +64,14 @@ namespace bgsee
 					0,
 					2,
 					ICodaScriptDataStore::kDataType_Numeric);
+
+				CodaScriptParametricCommandPrototype(Error,
+					"throw",
+					"Stops the execution of the all executing scripts in the call hierarchy and prints a message to the BGSEE Console window.",
+					0,
+					1,
+					OneString,
+					ICodaScriptDataStore::kDataType_Invalid);
 			}
 		}
 	}
