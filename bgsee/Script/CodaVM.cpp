@@ -1069,6 +1069,7 @@ namespace bgsee
 			Executive.reset(nullptr);
 			ExpressionParser.reset(nullptr);
 
+#ifndef NDEBUG
 			bool Leakage = false;
 
 			if (ICodaScriptExecutableCode::GetGIC())
@@ -1117,7 +1118,7 @@ namespace bgsee
 
 			if (Leakage)
 				SHOW_LEAKAGE_MESSAGE("CodaScriptVM");
-
+#endif
 			Initialized = false;
 
 			Singleton = nullptr;

@@ -284,7 +284,9 @@ namespace bgsee
 
 	bool ResourceLocation::IsRelativeTo(const std::string& Path, const ResourceLocation& RelativeTo)
 	{
-		if (Path.find(RelativeTo.GetRelativePath()) == 0)
+		std::string Annealed(Path);
+		AnnealPath(Annealed);
+		if (Annealed.find(RelativeTo.GetRelativePath()) == 0)
 			return true;
 		else
 			return false;

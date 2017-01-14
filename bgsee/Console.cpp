@@ -1024,6 +1024,18 @@ namespace bgsee
 		PrimaryContext->Print(Prefix.c_str(), Buffer);
 	}
 
+	void Console::LogMsg(const char* Prefix, const char* Format, ...)
+	{
+		char Buffer[0x1000] = { 0 };
+
+		va_list Args;
+		va_start(Args, Format);
+		vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
+		va_end(Args);
+
+		PrimaryContext->Print(Prefix, Buffer);
+	}
+
 	void Console::LogWindowsError( std::string Prefix, const char* Format, ... )
 	{
 		char Buffer[0x1000] = {0};

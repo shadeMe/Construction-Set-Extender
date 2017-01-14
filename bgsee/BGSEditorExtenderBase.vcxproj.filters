@@ -391,7 +391,6 @@
     <ClCompile Include="Script\MUP Implementation\CodaMUPVariable.cpp">
       <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Implementation</Filter>
     </ClCompile>
-    <ClCompile Include="Script\CodaIntrinsics.cpp" />
     <ClCompile Include="Script\CodaAST.cpp">
       <Filter>Modules\Coda</Filter>
     </ClCompile>

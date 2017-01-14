@@ -266,6 +266,7 @@ namespace bgsee
 															ConsoleWarningRegistrar& Registrar);
 
 		virtual void				LogMsg(std::string Prefix, const char* Format, ...);
+		virtual void				LogMsg(const char* Prefix, const char* Format, ...);
 		virtual void				LogWindowsError(std::string Prefix, const char* Format, ...);
 		virtual void				LogWarning(std::string Prefix, const char* Format, ...);
 		virtual void				LogAssertion(std::string Prefix, const char* Format, ...);

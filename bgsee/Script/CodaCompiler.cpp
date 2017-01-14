@@ -313,15 +313,21 @@ namespace bgsee
 				bool ProcessCall = false;
 				CodaScriptSourceCodeT CurrentScriptCall;
 
+				int Index = -1;
 				for (auto& Itr : LineBuffer)
 				{
+					Index++;
 					if (ProcessCall)
 					{
 						// process until the opening parenthesis
 						if (Itr == '(')
 						{
 							ProcessCall = false;
-							CurrentScriptCall += "\", ";
+							if (LineBuffer.length() > Index + 1 && LineBuffer[Index + 1] != ')')
+								CurrentScriptCall += "\", ";
+							else
+								CurrentScriptCall += "\"";
+
 							Processed += CurrentScriptCall;
 						}
 						else if (Itr == '.')
@@ -337,12 +343,16 @@ namespace bgsee
 						SME_ASSERT(ProcessCall == false);
 						ProcessCall = true;
 
-						CurrentScriptCall = "CALL(\"";
+						CurrentScriptCall = "call(\"";
 						continue;
 					}
 					else
 						Processed += Itr;
 				}
+
+				// append the unprocessed line if we couldn't find the opening parenthesis
+				if (ProcessCall)
+					Processed = LineBuffer;
 
 				OutPreprocessedCode.append(Processed).append("\n");
 			}
@@ -352,11 +362,16 @@ namespace bgsee
 															   CodaScriptProgram* Instance,
 															   std::stringstream& SourceCode)
 		{
+			static const char kLineAppendSymbol = '\\';
+
 			CodaScriptProgram* Out = Instance;
 
 			char Buffer[0x512] = { 0 };
 			UInt32 CurrentLine = 1;
+			UInt32 NextLine = 0;
+			bool AppendLine = false;
 			bool Result = true;
+			CodaScriptSourceCodeT LineAccum;
 			CodaScriptSimpleInstanceCounter<ICodaScriptExecutableCode> CodeInstanceCounter;
 
 			CodaScriptTokenizer Tokenizer;
@@ -372,6 +387,25 @@ namespace bgsee
 				ZeroMemory(Buffer, sizeof(Buffer));
 				SourceCode.getline(Buffer, sizeof(Buffer));
 				CodaScriptSourceCodeT SourceLine(Buffer);
+				Tokenizer.Sanitize(CodaScriptSourceCodeT(Buffer), SourceLine, CodaScriptTokenizer::kSanitizeOps_StripComments);
+/*
+
+				if (SourceLine.back() == kLineAppendSymbol)
+				{
+					if (SourceCode.eof())
+					{
+						// it's the last line, skip
+						if (AppendLine)
+							SourceLine
+					}
+					else if (AppendLine == false)
+					AppendLine = true;
+					NextLine = CurrentLine;
+					LineAccum = SourceLine.substr(0, SourceLine.length() - 1);
+
+
+					continue;
+				}*/
 
 				if (Tokenizer.Tokenize(Buffer, false))
 				{

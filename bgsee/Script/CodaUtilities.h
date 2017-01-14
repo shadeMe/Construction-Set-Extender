@@ -115,6 +115,7 @@ namespace bgsee
 		{
 			bool			DefaultContextLoggingState;
 			void*			ConsoleContext;
+			char			Buffer[0x5000];
 		public:
 			CodaScriptMessageHandler(const char* ConsoleContextName);
 			~CodaScriptMessageHandler();

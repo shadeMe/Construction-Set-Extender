@@ -201,12 +201,13 @@ namespace bgsee
 				SME_ASSERT(ExecutionState == kExecutionState_Break);
 				ContineLoop = false;
 			}
-			else
+			else if (ExecutionState == kExecutionState_Break)
 			{
 				// continue was called
-				SME_ASSERT(ExecutionState == kExecutionState_Break);
 				ExecutionState = kExecutionState_Default;
 			}
+			else
+				SME_ASSERT(ExecutionState == kExecutionState_Default);
 
 			return ContineLoop;
 		}

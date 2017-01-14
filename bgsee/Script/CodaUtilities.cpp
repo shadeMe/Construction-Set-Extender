@@ -282,7 +282,8 @@ namespace bgsee
 
 		CodaScriptMessageHandler::CodaScriptMessageHandler(const char* ConsoleContextName) :
 			ConsoleContext(nullptr),
-			DefaultContextLoggingState(true)
+			DefaultContextLoggingState(true),
+			Buffer{}
 		{
 			SME_ASSERT(ConsoleContextName && strlen(ConsoleContextName));
 			ConsoleContext = BGSEECONSOLE->RegisterMessageLogContext(ConsoleContextName);
@@ -311,7 +312,6 @@ namespace bgsee
 		void CodaScriptMessageHandler::Log(const char* Format, ...)
 		{
 			va_list Args;
-			char Buffer[0x5000] = { 0 };
 
 			va_start(Args, Format);
 			vsprintf_s(Buffer, sizeof(Buffer), Format, Args);

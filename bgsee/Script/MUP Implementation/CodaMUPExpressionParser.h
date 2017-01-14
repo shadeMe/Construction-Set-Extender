@@ -31,15 +31,37 @@ namespace bgsee
 				CodaScriptMUPParserByteCode(const CodaScriptMUPParserByteCode &ByteCode);
 				CodaScriptMUPParserByteCode& operator=(const CodaScriptMUPParserByteCode &ByteCode);
 			protected:
+				struct ValueBuffer
+				{
+					val_vec_type					StackBuffer;
+					ValueCache						Cache;				///< A cache for recycling value items instead of deleting them
+
+					ValueBuffer();
+					~ValueBuffer();
+
+					typedef std::unique_ptr<ValueBuffer>	PtrT;
+					typedef std::stack<PtrT>				StackT;
+				};
+
 				CodaScriptMUPExpressionParser*	Parser;
 
-				mutable int						TokenPos;
-				mutable RPN						RPNStack;			///< reverse polish notation
-				mutable val_vec_type			StackBuffer;
-				mutable ValueCache				Cache;				///< A cache for recycling value items instead of deleting them
+				int								TokenPos;
+				RPN								RPNStack;			///< reverse polish notation
+				ValueBuffer::StackT				Buffer;				// buffers for currently executing contexts
+
+				ValueBuffer*					CreateBufferContext() const;
+				ValueBuffer&					GetCurrentBufferContext() const;
 			public:
 				CodaScriptMUPParserByteCode(CodaScriptMUPExpressionParser* Parent, ICodaScriptExecutableCode* Source);
 				virtual ~CodaScriptMUPParserByteCode();
+
+				void							PushBufferContext();
+				void							PopBufferContext();
+
+				val_vec_type&					GetStackBuffer() const;
+				ValueCache&						GetCache() const;
+
+				typedef std::vector<CodaScriptMUPParserByteCode*>		ArrayT;
 			};
 
 			class CodaScriptMUPParserMetadata : public ICodaScriptCompilerMetadata
@@ -51,10 +73,11 @@ namespace bgsee
 			protected:
 				typedef std::unordered_map<CodaScriptSourceCodeT, CodaScriptMUPVariable::PtrT>		VarWrapperMapT;		// key = name
 
-				CodaScriptMUPExpressionParser*	Parser;
-				ICodaScriptProgram*				Program;
-				VarWrapperMapT					Locals;
-				VarWrapperMapT					Globals;
+				CodaScriptMUPExpressionParser*			Parser;
+				ICodaScriptProgram*						Program;
+				VarWrapperMapT							Locals;
+				VarWrapperMapT							Globals;
+				CodaScriptMUPParserByteCode::ArrayT		CompiledBytecode;
 
 				CodaScriptMUPVariable*			CreateWrapper(const CodaScriptSourceCodeT& Name, bool Global);
 				CodaScriptMUPVariable*			GetWrapper(const CodaScriptSourceCodeT& Name, bool Global) const;

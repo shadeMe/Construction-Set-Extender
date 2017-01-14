@@ -20,25 +20,84 @@ namespace bgsee
 	{
 		namespace mup
 		{
-			CodaScriptMUPParserByteCode::CodaScriptMUPParserByteCode( CodaScriptMUPExpressionParser* Parent, ICodaScriptExecutableCode* Source ) :
+			CodaScriptMUPParserByteCode::ValueBuffer::ValueBuffer() :
+				StackBuffer(), Cache()
+			{
+				;//
+			}
+
+			CodaScriptMUPParserByteCode::ValueBuffer::~ValueBuffer()
+			{
+				// It is important to release the stack buffer before
+				// releasing the value cache. Since it may contain
+				// Values referencing the cache.
+				StackBuffer.clear();
+				Cache.ReleaseAll();
+			}
+
+			CodaScriptMUPParserByteCode::ValueBuffer& CodaScriptMUPParserByteCode::GetCurrentBufferContext() const
+			{
+				if (Buffer.empty())
+					throw CodaScriptException("Value buffer stack underflow");
+				else
+					return *Buffer.top();
+			}
+
+			CodaScriptMUPParserByteCode::ValueBuffer* CodaScriptMUPParserByteCode::CreateBufferContext() const
+			{
+				ValueBuffer* Out = new ValueBuffer;
+				Out->StackBuffer.assign(RPNStack.GetRequiredStackSize(), ptr_val_type());
+
+				for (std::size_t i = 0; i < Out->StackBuffer.size(); ++i)
+				{
+					CodaScriptMUPValue *pValue = new CodaScriptMUPValue;
+					pValue->BindToCache(&Out->Cache);
+					Out->StackBuffer[i].Reset(pValue);
+				}
+
+				return Out;
+			}
+
+			void CodaScriptMUPParserByteCode::PushBufferContext()
+			{
+				ValueBuffer::PtrT Context(CreateBufferContext());
+				Buffer.push(std::move(Context));
+			}
+
+			void CodaScriptMUPParserByteCode::PopBufferContext()
+			{
+				if (Buffer.empty())
+					throw CodaScriptException("Value buffer stack underflow");
+				else
+					Buffer.pop();
+			}
+
+			CodaScriptMUPParserByteCode::CodaScriptMUPParserByteCode(CodaScriptMUPExpressionParser* Parent, ICodaScriptExecutableCode* Source) :
 				ICodaScriptExpressionByteCode(Source),
 				Parser(Parent),
 				TokenPos(0),
 				RPNStack(),
-				StackBuffer(),
-				Cache()
+				Buffer()
 			{
 				SME_ASSERT(Parser);
 			}
 
 			CodaScriptMUPParserByteCode::~CodaScriptMUPParserByteCode()
 			{
-				// It is important to release the stack buffer before
-				// releasing the value cache. Since it may contain
-				// Values referencing the cache.
+				if (Buffer.size())
+					BGSEECONSOLE_MESSAGE("Value buffer still in use");
+
 				RPNStack.Reset();
-				StackBuffer.clear();
-				Cache.ReleaseAll();
+			}
+
+			val_vec_type& CodaScriptMUPParserByteCode::GetStackBuffer() const
+			{
+				return GetCurrentBufferContext().StackBuffer;
+			}
+
+			ValueCache& CodaScriptMUPParserByteCode::GetCache() const
+			{
+				return GetCurrentBufferContext().Cache;
 			}
 
 			CodaScriptMUPVariable* CodaScriptMUPParserMetadata::CreateWrapper(const CodaScriptSourceCodeT& Name, bool Global)
@@ -121,7 +180,8 @@ namespace bgsee
 				Parser(Parser),
 				Program(Program),
 				Locals(),
-				Globals()
+				Globals(),
+				CompiledBytecode()
 			{
 				SME_ASSERT(Parser && Program);
 			}
@@ -764,14 +824,7 @@ namespace bgsee
 
 					m_TokenReader->SetExpr(SourceCode->GetSourceCode());
 					CreateRPN(GeneratedCode.get());
-					GeneratedCode->StackBuffer.assign(GeneratedCode->RPNStack.GetRequiredStackSize(), ptr_val_type());
-
-					for (std::size_t i = 0; i < GeneratedCode->StackBuffer.size(); ++i)
-					{
-						CodaScriptMUPValue *pValue = new CodaScriptMUPValue;
-						pValue->BindToCache(&GeneratedCode->Cache);
-						GeneratedCode->StackBuffer[i].Reset(pValue);
-					}
+					Context.CompileData.Metadata->CompiledBytecode.push_back(GeneratedCode.get());
 
 					*OutByteCode = GeneratedCode.release();
 				}
@@ -805,6 +858,10 @@ namespace bgsee
 				// bind the variables to the execution context
 				Metadata->BindWrappers(Data);
 				m_opContext.push(OpContext);
+
+				// create new value buffers for the current context
+				for (auto& Itr : Metadata->CompiledBytecode)
+					Itr->PushBufferContext();
 			}
 
 			void CodaScriptMUPExpressionParser::Evaluate(ICodaScriptSyntaxTreeEvaluator* EvaluationAgent,
@@ -837,7 +894,7 @@ namespace bgsee
 						}
 					});
 
-					ptr_val_type *pStack = &CompiledByteCode->StackBuffer[0];
+					ptr_val_type *pStack = &CompiledByteCode->GetStackBuffer()[0];
 					if (CompiledByteCode->RPNStack.GetSize() == 0)
 					{
 						ErrorContext err;
@@ -866,7 +923,7 @@ namespace bgsee
 								IValue *pVal = static_cast<IValue*>(pTok);
 
 								sidx++;
-								assert(sidx < (int)CompiledByteCode->StackBuffer.size());
+								assert(sidx < (int)CompiledByteCode->GetStackBuffer().size());
 								if (pVal->IsVariable())
 								{
 									pStack[sidx].Reset(pVal);
@@ -875,7 +932,7 @@ namespace bgsee
 								{
 									ptr_val_type &val = pStack[sidx];
 									if (val->IsVariable())
-										val.Reset(CompiledByteCode->Cache.CreateFromCache());
+										val.Reset(CompiledByteCode->GetCache().CreateFromCache());
 
 									*val = *(static_cast<IValue*>(pTok));
 								}
@@ -908,7 +965,7 @@ namespace bgsee
 								{
 									if (val->IsVariable())
 									{
-										ptr_val_type buf(CompiledByteCode->Cache.CreateFromCache());
+										ptr_val_type buf(CompiledByteCode->GetCache().CreateFromCache());
 										pFun->Eval(buf, &val, nArgs);
 										val = buf;
 									}
@@ -988,6 +1045,10 @@ namespace bgsee
 				// restore the variables to their previous binding
 				Metadata->UnbindWrappers();
 				m_opContext.pop();
+
+				// release the current value buffer
+				for (auto& Itr : Metadata->CompiledBytecode)
+					Itr->PopBufferContext();
 			}
 
 			string_type CodaScriptMUPExpressionParser::GetVersion() const
@@ -1027,6 +1088,8 @@ namespace bgsee
 				else
 					return nullptr;
 			}
+
+
 
 		}
 	}
