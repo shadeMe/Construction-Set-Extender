@@ -210,6 +210,20 @@ namespace cse
 					1,
 					OneForm,
 					ICodaScriptDataStore::kDataType_Invalid);
+
+				CodaScriptCommandPrototype(GetCellCoordinates,
+					0,
+					"Returns the X and Y coordinates of the given cell as an array. Will return an empty array if the passed cell is an interior.",
+					0,
+					1,
+					ICodaScriptDataStore::kDataType_Array);
+
+				CodaScriptCommandPrototype(GetLandcapeTextureAtCoordinates,
+					0,
+					"Returns the landscape texture at the coordinates of the given cell, if any. Will return zero otherwise.",
+					0,
+					3,
+					ICodaScriptDataStore::kDataType_Reference);
 			}
 		}
 	}

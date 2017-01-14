@@ -11,7 +11,7 @@ namespace cse
 		{
 			namespace reference
 			{
-				CodaScriptCommandRegistrarDef("Reference")
+				CodaScriptCommandRegistrarDef("Reference and Cell")
 
 				CodaScriptCommandPrototypeDef(CreateRef);
 				CodaScriptCommandPrototypeDef(GetRefPosition);
@@ -39,6 +39,8 @@ namespace cse
 				CodaScriptCommandPrototypeDef(FloorRef);
 				CodaScriptCommandPrototypeDef(LoadRefIntoRenderWindow);
 				CodaScriptCommandPrototypeDef(DeleteRef);
+				CodaScriptCommandPrototypeDef(GetCellCoordinates);
+				CodaScriptCommandPrototypeDef(GetLandcapeTextureAtCoordinates);
 
 				CodaScriptCommandParamData(CreateRef, 9)
 				{
@@ -93,6 +95,18 @@ namespace cse
 				{
 					{ "References", ICodaScriptDataStore::kDataType_Array },
 					{ "Group Name", ICodaScriptDataStore::kDataType_String }
+				};
+
+				CodaScriptCommandParamData(GetCellCoordinates, 1)
+				{
+					{ "Cell", ICodaScriptDataStore::kDataType_Reference }
+				};
+
+				CodaScriptCommandParamData(GetLandcapeTextureAtCoordinates, 3)
+				{
+					{ "Cell", ICodaScriptDataStore::kDataType_Reference },
+					{ "X Coord", ICodaScriptDataStore::kDataType_Numeric },
+					{ "Y Coord", ICodaScriptDataStore::kDataType_Numeric }
 				};
 
 				CodaScriptCommandHandler(CreateRef)
@@ -709,6 +723,61 @@ namespace cse
 						return false;
 
 					Reference->Delete();
+					return true;
+				}
+
+				CodaScriptCommandHandler(GetCellCoordinates)
+				{
+					TESForm* Form = nullptr;
+
+					CodaScriptCommandExtractArgs(&Form);
+					ExtractFormArguments(1, &Form);
+
+					if (Form == nullptr)
+						return false;
+
+					TESObjectCELL* Cell = CS_CAST(Form, TESForm, TESObjectCELL);
+					if (!Cell)
+						return false;
+
+					ICodaScriptDataStore* Array = Utilities->ArrayAllocate();
+					SME_ASSERT(Array);
+
+					if (Cell->IsInterior() == false)
+					{
+						Utilities->ArrayPushback(Array, (CodaScriptNumericDataTypeT)Cell->cellData.coords->x);
+						Utilities->ArrayPushback(Array, (CodaScriptNumericDataTypeT)Cell->cellData.coords->y);
+					}
+
+					Result->SetArray(Array);
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(GetLandcapeTextureAtCoordinates)
+				{
+					TESObjectCELL* Cell = nullptr;
+					CodaScriptNumericDataTypeT XCoord, YCoord;
+
+					CodaScriptCommandExtractArgs(&Cell, &XCoord, &YCoord);
+
+					Cell = CS_CAST(Cell, TESForm, TESObjectCELL);
+					if (!Cell)
+						return false;
+
+					Result->SetFormID(0);
+
+					if (Cell->IsInterior() == false)
+					{
+						TESObjectLAND* Land = Cell->GetLand();
+						if (Land)
+						{
+							TESLandTexture* Texture = Land->GetLandTextureAt(&Vector3(XCoord, YCoord, 0.f));
+							if (Texture)
+								Result->SetFormID(Texture->formID);
+						}
+					}
+
 					return true;
 				}
 			}

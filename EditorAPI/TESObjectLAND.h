@@ -136,6 +136,7 @@ public:
 	bool						ReleaseLandData();
 	void						Refresh3D(bool ReloadTextures);
 	NiNode*						GetQuadLandNode(int Quad);
+	TESLandTexture*				GetLandTextureAt(Vector3* Coords);
 
 	static HWND*				WindowHandle;
 };

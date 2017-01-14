@@ -23,3 +23,8 @@ NiNode* TESObjectLAND::GetQuadLandNode(int Quad)
 {
 	return thisCall<NiNode*>(0x00523720, this, Quad);
 }
+
+TESLandTexture* TESObjectLAND::GetLandTextureAt(Vector3* Coords)
+{
+	return thisCall<TESLandTexture*>(0x00527E40, this, Coords);
+}
