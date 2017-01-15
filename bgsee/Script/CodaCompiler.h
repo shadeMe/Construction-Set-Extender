@@ -192,10 +192,15 @@ namespace bgsee
 			bool								GetKeywordOnStackTop(CodaScriptKeywordStackT& Stack, CodaScriptKeywordT Keyword) const;
 			bool								CheckVariableName(const CodaScriptSourceCodeT& Name) const;
 
-			void								Preprocess(std::fstream& SourceCode, std::string& OutPreprocessedCode);
+			struct SourceData
+			{
+				std::map<int, CodaScriptSourceCodeT>		Lines;		// key = line no
+			};
+
+			void								Preprocess(std::fstream& SourceCode, SourceData& OutPreprocessedCode);
 			CodaScriptProgram*					GenerateProgram(ICodaScriptVirtualMachine* VirtualMachine,
 																CodaScriptProgram* Instance,
-																std::stringstream& SourceCode);
+																SourceData& SourceCode);
 			CodaScriptProgram*					GenerateByteCode(ICodaScriptVirtualMachine* VirtualMachine,
 																 CodaScriptProgram* In);
 		public:
