@@ -106,7 +106,7 @@ namespace bgsee
 					throw CodaScriptException("Variable wrapper '%s' already exists", Name);
 
 				VarWrapperMapT& Source = Global ? Globals : Locals;
-				CodaScriptMUPVariable* Out = new CodaScriptMUPVariable(Name);
+				CodaScriptMUPVariable* Out = new CodaScriptMUPVariable(Name, Global);
 				CodaScriptMUPVariable::PtrT Addend(Out);
 				Source.insert(std::make_pair(Name, std::move(Addend)));
 				return Out;

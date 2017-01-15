@@ -12,7 +12,6 @@ namespace bgsee
 		{
 			// a second level of indirection b'ween a regular MUP Variable and a CodaScriptVariable
 			// allows the rebinding of variables after the bytecode has been generated
-			// ### prevent the assignment of arrays and references to globals
 			class CodaScriptMUPVariable : public IValue
 			{
 				static int					GIC;
@@ -21,11 +20,12 @@ namespace bgsee
 
 				CodaScriptSourceCodeT		Name;
 				ValueStackT					BoundValues;
-				CodaScriptMUPValue*			CurrentValue;		// the value on the top of the stack, if any
+				CodaScriptMUPValue*			CurrentValue;					// the value on the top of the stack, if any
+				bool						RestrictedAssignment;			// when true, references and arrays can't be assigned to this variable
 
 				CodaScriptMUPValue*			GetCurrentValue() const;
 			public:
-				CodaScriptMUPVariable(const CodaScriptSourceCodeT& Name);
+				CodaScriptMUPVariable(const CodaScriptSourceCodeT& Name, bool RestrictedAssignment);
 				CodaScriptMUPVariable(const CodaScriptMUPVariable &a_Var);
 				virtual ~CodaScriptMUPVariable();
 
@@ -39,6 +39,8 @@ namespace bgsee
 				virtual IValue&				operator=(float_type val);
 				virtual IValue&				operator=(string_type val);
 				virtual IValue&				operator=(bool_type val);
+				virtual IValue&				operator=(const IValue &ref);
+
 				virtual IValue&				operator+=(const IValue &ref);
 				virtual IValue&				operator-=(const IValue &ref);
 				virtual IValue&				operator*=(const IValue &val);

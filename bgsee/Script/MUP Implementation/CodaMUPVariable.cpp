@@ -29,9 +29,9 @@ namespace bgsee
 			  Such variable objects must be bound later in order to be of any use. The parser
 			  does NOT assume ownership over the pointer!
 			*/
-			CodaScriptMUPVariable::CodaScriptMUPVariable(const CodaScriptSourceCodeT& Name)
+			CodaScriptMUPVariable::CodaScriptMUPVariable(const CodaScriptSourceCodeT& Name, bool RestrictedAssignment)
 				:IValue(cmVAL)
-				, Name(Name), BoundValues(), CurrentValue(nullptr)
+				, Name(Name), BoundValues(), CurrentValue(nullptr), RestrictedAssignment(RestrictedAssignment)
 			{
 				AddFlags(IToken::flVOLATILE);
 				GIC++;
@@ -41,7 +41,8 @@ namespace bgsee
 				:IValue(cmVAL),
 				Name(obj.Name),
 				BoundValues(obj.BoundValues),
-				CurrentValue(obj.CurrentValue)
+				CurrentValue(obj.CurrentValue),
+				RestrictedAssignment(obj.RestrictedAssignment)
 			{
 				AddFlags(IToken::flVOLATILE);
 				GIC++;
@@ -53,15 +54,36 @@ namespace bgsee
 			*/
 			IValue& CodaScriptMUPVariable::operator=(const CodaScriptMUPValue &ref)
 			{
+				return operator=(static_cast<const IValue&>(ref));
+			}
+
+			IValue& CodaScriptMUPVariable::operator=(const IValue &ref)
+			{
 				SME_ASSERT(CurrentValue);
+				ICodaScriptDataStore* Store = const_cast<IValue&>(ref).GetStore();
+				if (RestrictedAssignment && (Store->GetIsArray() || Store->GetIsReference()))
+				{
+					char Buffer[0x100] = { 0 };
+					FORMAT_STR(Buffer, "Cannot assign value of type '%c' to restricted variable '%s'", Store->GetType(), Name.c_str());
+					throw ParserError(Buffer);
+				}
 				*CurrentValue = ref;
 				return *this;
 			}
+
 
 			//-----------------------------------------------------------------------------------------------
 			IValue& CodaScriptMUPVariable::operator=(int_type val)
 			{
 				SME_ASSERT(CurrentValue);
+				if (RestrictedAssignment)
+				{
+					char Buffer[0x100] = { 0 };
+					FORMAT_STR(Buffer, "Cannot assign value of type '%c' to restricted variable '%s'",
+							   ICodaScriptDataStore::DataType::kDataType_Reference, Name.c_str());
+					throw ParserError(Buffer);
+				}
+
 				return CurrentValue->operator=(val);
 			}
 

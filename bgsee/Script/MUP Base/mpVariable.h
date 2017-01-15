@@ -62,6 +62,7 @@ namespace bgsee { namespace script { namespace mup {
 	virtual IValue& At(int nRow, int nCol);
 	virtual IValue& At(const IValue &nRows, const IValue &nCols);
 
+	virtual IValue&	operator=(const IValue &ref);
 	virtual IValue& operator=(const CodaScriptMUPValue &val);
 	virtual IValue& operator=(const matrix_type &val);
 	virtual IValue& operator=(const cmplx_type &val);

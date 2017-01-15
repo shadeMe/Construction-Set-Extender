@@ -59,7 +59,8 @@ namespace bgsee
 										ICodaScriptVirtualMachine::ExecuteResult& Out) = 0;
 			virtual bool		IsBusy() const = 0;							// true if any script's currently executing
 			virtual bool		IsProgramExecuting(ICodaScriptProgram* Program) const = 0;
-			virtual void		RaiseGlobalException() = 0;		// stops the execution of all active scripts
+			virtual void		RaiseGlobalException() = 0;					// stops the execution of all active scripts
+			virtual void		PrintStackTrace() const = 0;
 
 			typedef std::unique_ptr<ICodaScriptExecutor>		PtrT;
 		};
@@ -198,18 +199,22 @@ namespace bgsee
 		{
 			static const UInt32					kLoopOverrunLimit = 0xFFFFFF;
 
+			ICodaScriptExecutableCode*			CurrentCode;		// code being evaluated currently
+
 			bool								EvaluateCondition(ICodaScriptConditionalCodeBlock* Block);
 		public:
 			CodaScriptSyntaxTreeExecuteVisitor(ICodaScriptVirtualMachine* VM, ICodaScriptExecutionContext* Context);
 			inline virtual ~CodaScriptSyntaxTreeExecuteVisitor() = default;
 
-			virtual void									Visit(CodaScriptExpression* Node) override;
-			virtual void									Visit(CodaScriptBEGINBlock* Node) override;
-			virtual void									Visit(CodaScriptIFBlock* Node) override;
-			virtual void									Visit(CodaScriptELSEIFBlock* Node) override;
-			virtual void									Visit(CodaScriptELSEBlock* Node) override;
-			virtual void									Visit(CodaScriptWHILEBlock* Node) override;
-			virtual void									Visit(CodaScriptFOREACHBlock* Node) override;
+			virtual void						Visit(CodaScriptExpression* Node) override;
+			virtual void						Visit(CodaScriptBEGINBlock* Node) override;
+			virtual void						Visit(CodaScriptIFBlock* Node) override;
+			virtual void						Visit(CodaScriptELSEIFBlock* Node) override;
+			virtual void						Visit(CodaScriptELSEBlock* Node) override;
+			virtual void						Visit(CodaScriptWHILEBlock* Node) override;
+			virtual void						Visit(CodaScriptFOREACHBlock* Node) override;
+
+			ICodaScriptExecutableCode*			GetCurrentCode() const;
 		};
 
 

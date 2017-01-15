@@ -56,16 +56,27 @@ namespace bgsee
 			static INISetting							kINI_Profiling;
 			static INISetting							kINI_RecursionLimit;
 
+			struct ExecutingContext
+			{
+				ICodaScriptExecutionContext*			ProgramContext;
+				CodaScriptSyntaxTreeExecuteVisitor		ExecutionAgent;
+				int										InstanceCounter;
+
+				ExecutingContext(ICodaScriptVirtualMachine* VM, ICodaScriptExecutionContext* Context) :
+					ProgramContext(Context), ExecutionAgent(VM, Context), InstanceCounter(0) {}
+
+				typedef std::vector<ExecutingContext>		IterableStackT;
+			};
+
 			typedef std::unordered_map<ICodaScriptProgram*, int>	ProgramCounterMapT;		// value = executing instance counter
-			typedef std::vector<ICodaScriptExecutionContext*>		IterableExectionContextStackT;
 
 			ProgramCounterMapT							ExecutionCounter;
-			IterableExectionContextStackT				ExecutingContexts;
+			ExecutingContext::IterableStackT			ExecutingContexts;
 			CodaScriptProfiler							Profiler;
 			DWORD										OwnerThreadID;
 			ICodaScriptVirtualMachine*					VM;
 
-			void										Push(ICodaScriptExecutionContext* Context);
+			ExecutingContext&							Push(ICodaScriptExecutionContext* Context);
 			void										Pop(ICodaScriptExecutionContext* Context);
 		public:
 			CodaScriptExecutive(ICodaScriptVirtualMachine* VM);
@@ -76,6 +87,7 @@ namespace bgsee
 			virtual bool								IsBusy() const override;
 			virtual bool								IsProgramExecuting(ICodaScriptProgram* Program) const override;
 			virtual void								RaiseGlobalException() override;
+			virtual void								PrintStackTrace() const override;
 
 			static void									RegisterINISettings(INISettingDepotT& Depot);
 		};

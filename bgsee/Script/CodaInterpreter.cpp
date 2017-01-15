@@ -259,13 +259,20 @@ namespace bgsee
 
 		CodaScriptSyntaxTreeExecuteVisitor::CodaScriptSyntaxTreeExecuteVisitor(ICodaScriptVirtualMachine* VM,
 																			   ICodaScriptExecutionContext* Context) :
-			ICodaScriptSyntaxTreeEvaluator(VM, VM->GetParser(), Context)
+			ICodaScriptSyntaxTreeEvaluator(VM, VM->GetParser(), Context),
+			CurrentCode(nullptr)
 		{
 			SME_ASSERT(Context->GetProgram()->GetBoundParser() == Parser);
 		}
 
 
 #define CODASCRIPT_EXECUTEHNDLR_PROLOG										\
+			ScopedFunctor Sentinel([&Node, this](ScopedFunctor::Event e) {	\
+				if (e == ScopedFunctor::Event::Construction)				\
+					CurrentCode = Node;										\
+				else														\
+					CurrentCode = nullptr;									\
+				});															\
 			try																\
 			{																\
 				if (Context->CanExecute() == false)							\
@@ -289,6 +296,7 @@ namespace bgsee
 				VM->GetMessageHandler()->Log("Unknown Runtime Error [Script: %s]", Context->GetProgram()->GetName().c_str());				\
 			}																\
 			Context->FlagError();											\
+			VM->GetExecutor()->PrintStackTrace();							\
 			return;
 
 		void CodaScriptSyntaxTreeExecuteVisitor::Visit( CodaScriptExpression* Node )
@@ -421,6 +429,11 @@ namespace bgsee
 			CODASCRIPT_EXECUTEHNDLR_EPILOG
 
 			CODASCRIPT_EXECUTEERROR_CATCHER
+		}
+
+		ICodaScriptExecutableCode* CodaScriptSyntaxTreeExecuteVisitor::GetCurrentCode() const
+		{
+			return CurrentCode;
 		}
 
 		CodaScriptCommandHandlerUtilities::CodaScriptCommandHandlerUtilities(ICodaScriptVirtualMachine* VM) :

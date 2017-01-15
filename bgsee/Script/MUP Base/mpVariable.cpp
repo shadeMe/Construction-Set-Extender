@@ -77,9 +77,14 @@ namespace bgsee { namespace script { namespace mup {
   */
   IValue& Variable::operator=(const CodaScriptMUPValue &ref)
   {
-	assert(m_pVal);
-	*m_pVal = ref;
-	return *this;
+	  return operator=(static_cast<const IValue&>(ref));
+  }
+
+  IValue& Variable::operator=(const IValue &ref)
+  {
+	  assert(m_pVal);
+	  *m_pVal = ref;
+	  return *this;
   }
 
   //-----------------------------------------------------------------------------------------------

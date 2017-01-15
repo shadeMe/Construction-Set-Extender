@@ -328,7 +328,7 @@ namespace bgsee
 																									"Maximum number of times scripts can recursively call themselves or other scripts. Large values may cause instability",
 																									(SInt32)50);
 
-		void CodaScriptExecutive::Push(ICodaScriptExecutionContext* Context)
+		CodaScriptExecutive::ExecutingContext& CodaScriptExecutive::Push(ICodaScriptExecutionContext* Context)
 		{
 			ICodaScriptProgram* Program = Context->GetProgram();
 			if (ExecutionCounter.count(Program))
@@ -336,20 +336,27 @@ namespace bgsee
 			else
 				ExecutionCounter[Program] = 1;
 
-			ExecutingContexts.push_back(Context);
+			ExecutingContext NewContext(VM, Context);
+			NewContext.InstanceCounter = ExecutionCounter.at(Program);
+			ExecutingContexts.push_back(NewContext);
+			return ExecutingContexts.back();
 		}
 
 		void CodaScriptExecutive::Pop(ICodaScriptExecutionContext* Context)
 		{
 			ICodaScriptProgram* Program = Context->GetProgram();
 			SME_ASSERT(ExecutionCounter.count(Program));
-			SME_ASSERT(ExecutingContexts.size() && ExecutingContexts.back() == Context);
+
 
 			int Count = ExecutionCounter[Program]--;
 			if (Count == 1)
 				ExecutionCounter.erase(Program);
 			else
 				SME_ASSERT(Count);
+
+			SME_ASSERT(ExecutingContexts.size());
+			ExecutingContext& Top = ExecutingContexts.back();
+			SME_ASSERT(Top.ProgramContext == Context);
 
 			ExecutingContexts.pop_back();
 		}
@@ -395,14 +402,13 @@ namespace bgsee
 			if (ProfilerEnabled)
 				Profiler.BeginProfiling();
 
-			Push(Context);
+			ExecutingContext& ExecutionData = Push(Context);
 			{
 				ICodaScriptExpressionParser::EvaluateData EvaluatorInput(Context, VM->GetGlobals());
 				try
 				{
-					CodaScriptSyntaxTreeExecuteVisitor Visitor(VM, Context);
 					VM->GetParser()->BeginEvaluation(Program, EvaluatorInput);
-					Program->Accept(&Visitor);		// doesn't throw any exceptions, so the next statement will always be executed
+					Program->Accept(&ExecutionData.ExecutionAgent);		// doesn't throw any exceptions, so the next statement will always be executed
 					VM->GetParser()->EndEvaluation(Program);
 
 					Out.Success = Context->HasError() == false;
@@ -443,7 +449,31 @@ namespace bgsee
 				throw CodaScriptException("No active scripts");
 
 			for (auto& Itr : ExecutingContexts)
-				Itr->FlagError();
+				Itr.ProgramContext->FlagError();
+		}
+
+		void CodaScriptExecutive::PrintStackTrace() const
+		{
+			if (ExecutingContexts.empty())
+				throw CodaScriptException("No active scripts");
+
+			VM->GetMessageHandler()->Log("Stacktrace:");
+			for (auto& Itr : boost::adaptors::reverse(ExecutingContexts))
+			{
+				ICodaScriptProgram* Program = Itr.ProgramContext->GetProgram();
+				ICodaScriptExecutableCode* Code = Itr.ExecutionAgent.GetCurrentCode();
+				SME_ASSERT(Code);
+
+				char Buffer[0x100] = {0};
+				FORMAT_STR(Buffer, "\tat Script %s#%d Line %d [%s]: %s",
+						   Program->GetName().c_str(),
+						   Itr.InstanceCounter,
+						   Code->GetLine(),
+						   Code->GetTypeString(),
+						   Code->GetSourceCode().c_str());
+
+				VM->GetMessageHandler()->Log(Buffer);
+			}
 		}
 
 		void CodaScriptExecutive::RegisterINISettings( INISettingDepotT& Depot )
@@ -451,6 +481,7 @@ namespace bgsee
 			Depot.push_back(&kINI_Profiling);
 			Depot.push_back(&kINI_RecursionLimit);
 		}
+
 
 #define CODASCRIPTBACKGROUNDER_INISECTION						"CodaBackgrounder"
 		SME::INI::INISetting									CodaScriptBackgrounder::kINI_Enabled("Enabled", CODASCRIPTBACKGROUNDER_INISECTION,
@@ -1276,8 +1307,7 @@ namespace bgsee
 				try
 				{
 					ICodaScriptExecutionContext::PtrT Context(new CodaScriptExecutionContext(this, Program));
-					if (Input.Parameters.empty() == false)
-						Context->SetParameters(Input.Parameters);
+					Context->SetParameters(Input.Parameters);
 
 					if (Input.RunInBackground)
 					{

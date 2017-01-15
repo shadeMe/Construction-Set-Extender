@@ -47,7 +47,7 @@ namespace bgsee
 			ICodaScriptExecutableCode*						GetSource(void) const;
 		};
 
-		// since the language syntax and feature set is predominantly based around the muParserX expression parser's,
+		// since the language syntax and feature set is predominantly based on the muParserX expression parser's,
 		// the interface expects all implementations to support at least as much as the former
 		class ICodaScriptExpressionParser
 		{

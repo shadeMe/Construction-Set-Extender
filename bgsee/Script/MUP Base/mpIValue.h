@@ -76,7 +76,7 @@ namespace bgsee { namespace script { namespace mup {
 	virtual IValue& operator=(bool_type val) = 0;
 	virtual IValue& operator=(const cmplx_type &val) = 0;
 	virtual IValue& operator=(const matrix_type &val) = 0;
-			IValue& operator=(const IValue &ref);
+	virtual IValue& operator=(const IValue &ref);
 
 	virtual IValue& operator+=(const IValue &ref) = 0;
 	virtual IValue& operator-=(const IValue &ref) = 0;

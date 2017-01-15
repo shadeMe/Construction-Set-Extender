@@ -87,6 +87,7 @@
 #include <boost\shared_array.hpp>
 #include <boost\intrusive_ptr.hpp>
 #include <boost\weak_ptr.hpp>
+#include <boost\range\adaptor\reversed.hpp>
 
 // xSE Common
 #include <ITypes.h>
