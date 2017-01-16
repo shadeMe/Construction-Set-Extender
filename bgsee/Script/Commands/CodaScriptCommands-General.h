@@ -72,6 +72,12 @@ namespace bgsee
 					1,
 					OneString,
 					ICodaScriptDataStore::kDataType_Invalid);
+
+				CodaScriptSimpleCommandPrototype(DebugBreak,
+					0,
+					"** Internal command ** Breaks into the attached debugger, if any.",
+					0,
+					ICodaScriptDataStore::kDataType_Invalid);
 			}
 		}
 	}

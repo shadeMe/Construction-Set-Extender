@@ -95,21 +95,7 @@ namespace bgsee
 			{
 				GIC++;
 
-				switch (a_Val.GetType())
-				{
-				case 'i':
-				case 'f':
-					break;
-				case 's':
-					*m_StringBuffer = a_Val.GetString();
-					break;
-				default:
-					SME_ASSERT(a_Val.GetType() == 'i' || a_Val.GetType() == 'f' || a_Val.GetType() == 's');
-					break;
-				}
-
-				m_DataStore = *(a_Val.GetStore());
-				m_cType = a_Val.GetType();
+				Assign(a_Val);
 			}
 
 			CodaScriptMUPValue::CodaScriptMUPValue( CodaScriptBackingStore *val ) :
@@ -412,6 +398,30 @@ namespace bgsee
 					*m_StringBuffer = a_Val.GetString();
 			}
 
+			void CodaScriptMUPValue::Assign(const IValue& a_Val)
+			{
+				if (this == &a_Val)
+					return;
+
+				CodaScriptBackingStore* Store = a_Val.GetStore();
+				SME_ASSERT(Store);
+
+				Assign(*Store);
+			}
+
+			void CodaScriptMUPValue::Assign(const CodaScriptBackingStore& a_Val)
+			{
+				m_DataStore = a_Val;
+
+				if (m_DataStore.GetType() == ICodaScriptDataStore::kDataType_String)
+				{
+					m_cType = 's';
+					*m_StringBuffer = a_Val.GetString();
+				}
+				else if (m_DataStore.GetType() == ICodaScriptDataStore::kDataType_Numeric)
+					m_cType = 'f';
+			}
+
 			void CodaScriptMUPValue::Release()
 			{
 				if (m_pCache)
@@ -502,7 +512,13 @@ namespace bgsee
 				return &m_DataStore;
 			}
 
-			char_type CodaScriptMUPValue::GetMUPType( ICodaScriptDataStore::DataType Type ) const
+			IValue& CodaScriptMUPValue::operator=(const IValue &ref)
+			{
+				Assign(ref);
+				return *this;
+			}
+
+			char_type CodaScriptMUPValue::GetMUPType(ICodaScriptDataStore::DataType Type) const
 			{
 				switch (Type)
 				{

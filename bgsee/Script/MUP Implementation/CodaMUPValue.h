@@ -24,26 +24,29 @@ namespace bgsee
 				void										CheckType(char_type a_cType) const;
 				void										CheckType(ICodaScriptDataStore::DataType a_cType) const;
 				void										Assign(const CodaScriptMUPValue &a_Val);
+				void										Assign(const IValue& a_Val);
+				void										Assign(const CodaScriptBackingStore& a_Val);
 				char_type									GetMUPType(ICodaScriptDataStore::DataType Type) const;
 
 				virtual void								Release();
 			public:
 				explicit CodaScriptMUPValue(char_type cType = 'v');
-				CodaScriptMUPValue(float_type val);
-				CodaScriptMUPValue(string_type val);
-				CodaScriptMUPValue(const char_type *val);
-				CodaScriptMUPValue(CodaScriptBackingStore* val);
-				CodaScriptMUPValue(CodaScriptReferenceDataTypeT val);
-				CodaScriptMUPValue(ICodaScriptArrayDataType::SharedPtrT val);
-				CodaScriptMUPValue(const CodaScriptBackingStore& val);
-				CodaScriptMUPValue(const CodaScriptMUPValue& a_Val );
-				CodaScriptMUPValue(const IValue &a_Val);
-				CodaScriptMUPValue& operator=(const CodaScriptMUPValue &a_Val);
+				explicit CodaScriptMUPValue(float_type val);
+				explicit CodaScriptMUPValue(string_type val);
+				explicit CodaScriptMUPValue(const char_type *val);
+				explicit CodaScriptMUPValue(CodaScriptBackingStore* val);
+				explicit CodaScriptMUPValue(CodaScriptReferenceDataTypeT val);
+				explicit CodaScriptMUPValue(ICodaScriptArrayDataType::SharedPtrT val);
+				explicit CodaScriptMUPValue(const CodaScriptBackingStore& val);
+				explicit CodaScriptMUPValue(const CodaScriptMUPValue& a_Val );
+				explicit CodaScriptMUPValue(const IValue &a_Val);
 				virtual ~CodaScriptMUPValue();
 
 				virtual IValue&								At(int nRow, int nCol = 0);
 				virtual IValue&								At(const IValue &row, const IValue &col);
 
+				CodaScriptMUPValue&							operator=(const CodaScriptMUPValue &a_Val);
+				virtual IValue&								operator=(const IValue &ref);
 				virtual IValue&								operator=(int_type a_iVal);
 				virtual IValue&								operator=(float_type a_fVal);
 				virtual IValue&								operator=(string_type a_sVal);

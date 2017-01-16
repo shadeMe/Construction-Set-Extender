@@ -74,7 +74,7 @@ namespace bgsee { namespace script { namespace mup {
               if (m==1)
                 *ret = 1.0;
               else
-                *ret = matrix_type(a_pArg[0]->GetInteger(), 1, 1.0);
+                *ret = matrix_type(a_pArg[0]->GetInteger(), 1, CodaScriptMUPValue(1.0));
             }
             break;
 
@@ -86,7 +86,7 @@ namespace bgsee { namespace script { namespace mup {
               if (m==n && m==1)
                 *ret = 1.0;
               else
-                *ret = matrix_type(a_pArg[0]->GetInteger(), a_pArg[1]->GetInteger(), 1.0);
+                *ret = matrix_type(a_pArg[0]->GetInteger(), a_pArg[1]->GetInteger(), CodaScriptMUPValue(1.0));
             }
             break;
 

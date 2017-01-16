@@ -180,7 +180,7 @@ namespace bgsee { namespace script { namespace mup {
   }; // class IValue
 
   //---------------------------------------------------------------------------------------------
-  CodaScriptMUPValue operator*(const IValue& lhs, const IValue& rhs);
+ // CodaScriptMUPValue operator*(const IValue& lhs, const IValue& rhs);
 
 /*
   //---------------------------------------------------------------------------------------------

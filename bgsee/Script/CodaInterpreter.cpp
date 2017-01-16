@@ -200,6 +200,7 @@ namespace bgsee
 				// break was called
 				SME_ASSERT(ExecutionState == kExecutionState_Break);
 				ContineLoop = false;
+				ExecutionState = kExecutionState_Default;
 			}
 			else if (ExecutionState == kExecutionState_Break)
 			{

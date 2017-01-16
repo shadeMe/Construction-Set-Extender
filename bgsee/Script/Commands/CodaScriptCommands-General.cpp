@@ -24,6 +24,7 @@ namespace bgsee
 				CodaScriptCommandPrototypeDef(PrintToConsole);
 				CodaScriptCommandPrototypeDef(RandomNumber);
 				CodaScriptCommandPrototypeDef(Error);
+				CodaScriptCommandPrototypeDef(DebugBreak);
 
 				CodaScriptCommandParamData(FormatNumber, 3)
 				{
@@ -172,6 +173,14 @@ namespace bgsee
 																	  ByteCode->GetSource()->GetLine(),
 																	  Message);
 					ExecutionAgent->GetVM()->GetExecutor()->RaiseGlobalException();
+					return true;
+				}
+
+				CodaScriptCommandHandler(DebugBreak)
+				{
+					if (IsDebuggerPresent())
+						__asm { int 3 }
+
 					return true;
 				}
 			}

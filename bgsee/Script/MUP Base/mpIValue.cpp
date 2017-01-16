@@ -78,10 +78,10 @@ namespace bgsee { namespace script { namespace mup {
 #endif
 
   //---------------------------------------------------------------------------------------------
-  CodaScriptMUPValue operator*(const IValue& lhs, const IValue& rhs)
-  {
-	return CodaScriptMUPValue(lhs) *= rhs;
-  }
+//   CodaScriptMUPValue operator*(const IValue& lhs, const IValue& rhs)
+//   {
+// 	return CodaScriptMUPValue(lhs) *= rhs;
+//   }
 
   //---------------------------------------------------------------------------
   IValue::IValue(ECmdCode a_iCode)

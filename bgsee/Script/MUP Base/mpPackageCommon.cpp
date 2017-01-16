@@ -75,8 +75,8 @@ void PackageCommon::AddToParser(CodaScriptMUPExpressionParser *pParser)
   pParser->AddValueReader(new BoolValReader);
 
   // Constants
-  pParser->DefineConst( _T("pi"), (float_type)MUP_CONST_PI );
-  pParser->DefineConst( _T("e"),  (float_type)MUP_CONST_E );
+  pParser->DefineConst( _T("pi"), CodaScriptMUPValue((float_type)MUP_CONST_PI) );
+  pParser->DefineConst( _T("e"), CodaScriptMUPValue((float_type)MUP_CONST_E) );
 
   // Generic functions
   pParser->DefineFun(new FunMax());
@@ -120,11 +120,11 @@ void PackageCommon::AddToParser(CodaScriptMUPExpressionParser *pParser)
   pParser->DefineInfixOprt(new OprtCastToStr("$"));
   pParser->DefineInfixOprt(new OprtTypeID);
 
-  pParser->DefineConst( _T("TYPEINFO_INVALID"), (float_type)ICodaScriptDataStore::kDataType_Invalid);
-  pParser->DefineConst( _T("TYPEINFO_NUMERIC"), (float_type)ICodaScriptDataStore::kDataType_Numeric);
-  pParser->DefineConst( _T("TYPEINFO_REFERENCE"), (float_type)ICodaScriptDataStore::kDataType_Reference);
-  pParser->DefineConst( _T("TYPEINFO_STRING"), (float_type)ICodaScriptDataStore::kDataType_String);
-  pParser->DefineConst( _T("TYPEINFO_ARRAY"), (float_type)ICodaScriptDataStore::kDataType_Array);
+  pParser->DefineConst( _T("TYPEINFO_INVALID"), CodaScriptMUPValue((float_type)ICodaScriptDataStore::kDataType_Invalid));
+  pParser->DefineConst( _T("TYPEINFO_NUMERIC"), CodaScriptMUPValue((float_type)ICodaScriptDataStore::kDataType_Numeric));
+  pParser->DefineConst( _T("TYPEINFO_REFERENCE"), CodaScriptMUPValue((float_type)ICodaScriptDataStore::kDataType_Reference));
+  pParser->DefineConst( _T("TYPEINFO_STRING"), CodaScriptMUPValue((float_type)ICodaScriptDataStore::kDataType_String));
+  pParser->DefineConst( _T("TYPEINFO_ARRAY"), CodaScriptMUPValue((float_type)ICodaScriptDataStore::kDataType_Array));
 }
 
 //------------------------------------------------------------------------------
