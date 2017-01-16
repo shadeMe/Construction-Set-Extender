@@ -51,8 +51,6 @@ namespace cse
 				}
 			}
 
-			BGSEECONSOLE_MESSAGE("Executing Coda Script '%s'", ScriptName.c_str());
-
 			bgsee::script::ICodaScriptVirtualMachine::ExecuteParams Input;
 			bgsee::script::ICodaScriptVirtualMachine::ExecuteResult Output;
 
