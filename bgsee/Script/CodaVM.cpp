@@ -417,7 +417,7 @@ namespace bgsee
 				}
 				catch (CodaScriptException& E)
 				{
-					VM->GetMessageHandler()->Log("Runtime Error [Script: %s] - %s", Program->GetName().c_str(), E.Get());
+					VM->GetMessageHandler()->Log("Runtime Error [Script: %s] - %s", Program->GetName().c_str(), E.ToString().c_str());
 				}
 				catch (...)
 				{
@@ -1317,9 +1317,9 @@ namespace bgsee
 					else
 						Executive->Execute(Context.get(), Output);
 				}
-				catch (CodaScriptException& ex)
+				catch (CodaScriptException& E)
 				{
-					MessageHandler->Log("Couldn't execute script '%s' - %s", Program->GetName().c_str(), ex.Get());
+					MessageHandler->Log("Couldn't execute script '%s' - %s", Program->GetName().c_str(), E.ToString().c_str());
 				}
 			}
 		}

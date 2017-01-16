@@ -260,18 +260,18 @@ namespace bgsee
 		CodaScriptSyntaxTreeExecuteVisitor::CodaScriptSyntaxTreeExecuteVisitor(ICodaScriptVirtualMachine* VM,
 																			   ICodaScriptExecutionContext* Context) :
 			ICodaScriptSyntaxTreeEvaluator(VM, VM->GetParser(), Context),
-			CurrentCode(nullptr)
+			CurrentCode()
 		{
 			SME_ASSERT(Context->GetProgram()->GetBoundParser() == Parser);
 		}
 
 
 #define CODASCRIPT_EXECUTEHNDLR_PROLOG										\
-			ScopedFunctor Sentinel([&Node, this](ScopedFunctor::Event e) {	\
+			ScopedFunctor CodeSentinel([&Node, this](ScopedFunctor::Event e) {	\
 				if (e == ScopedFunctor::Event::Construction)				\
-					CurrentCode = Node;										\
+					CurrentCode.push(Node);									\
 				else														\
-					CurrentCode = nullptr;									\
+					CurrentCode.pop();										\
 				});															\
 			try																\
 			{																\
@@ -285,15 +285,15 @@ namespace bgsee
 #define CODASCRIPT_EXECUTEERROR_CATCHER										\
 			catch (CodaScriptException& E)									\
 			{																\
-				VM->GetMessageHandler()->Log("Runtime Error [Script: %s] - %s", Context->GetProgram()->GetName().c_str(), E.Get());		\
+				VM->GetMessageHandler()->Log("Runtime Error: %s", E.GetMessage());		\
 			}																\
 			catch (std::exception& E)										\
 			{																\
-				VM->GetMessageHandler()->Log("Runtime Error [Script: %s] - %s", Context->GetProgram()->GetName().c_str(), E.what());		\
+				VM->GetMessageHandler()->Log("Runtime Error: %s", E.what());		\
 			}																\
 			catch (...)														\
 			{																\
-				VM->GetMessageHandler()->Log("Unknown Runtime Error [Script: %s]", Context->GetProgram()->GetName().c_str());				\
+				VM->GetMessageHandler()->Log("Unknown Runtime Error");		\
 			}																\
 			Context->FlagError();											\
 			VM->GetExecutor()->PrintStackTrace();							\
@@ -358,7 +358,7 @@ namespace bgsee
 		{
 			CODASCRIPT_EXECUTEHNDLR_PROLOG
 
-			ScopedFunctor Sentinel([Node, this](ScopedFunctor::Event e) {
+			ScopedFunctor LoopSentinel([Node, this](ScopedFunctor::Event e) {
 				if (e == ScopedFunctor::Event::Construction)
 					Context->BeginLoop(Node);
 				else
@@ -386,19 +386,15 @@ namespace bgsee
 		{
 			CODASCRIPT_EXECUTEHNDLR_PROLOG
 
-			ScopedFunctor Sentinel([Node, this](ScopedFunctor::Event e) {
+			ScopedFunctor LoopSentinel([Node, this](ScopedFunctor::Event e) {
 				if (e == ScopedFunctor::Event::Construction)
 					Context->BeginLoop(Node);
 				else
 					Context->EndLoop(Node);
 			});
-			CodaScriptVariable* Iterator = nullptr;
 			const CodaScriptSourceCodeT& IteratorName = Node->GetIteratorName();
-
-			if (IteratorName.empty())
-				throw CodaScriptException(Node, "Invalid expression - No iterator specified");
-			else if ((Iterator = Context->GetVariable(IteratorName)) == nullptr)
-				throw CodaScriptException(Node, "Invalid iterator '%s'", IteratorName.c_str());
+			CodaScriptVariable* Iterator = Context->GetVariable(IteratorName);
+			SME_ASSERT(Iterator);
 
 			CodaScriptBackingStore ArrayResult((CodaScriptNumericDataTypeT)0),
 								IteratorBuffer((CodaScriptNumericDataTypeT)0),
@@ -433,7 +429,10 @@ namespace bgsee
 
 		ICodaScriptExecutableCode* CodaScriptSyntaxTreeExecuteVisitor::GetCurrentCode() const
 		{
-			return CurrentCode;
+			if (CurrentCode.empty())
+				return nullptr;
+			else
+				return CurrentCode.top();
 		}
 
 		CodaScriptCommandHandlerUtilities::CodaScriptCommandHandlerUtilities(ICodaScriptVirtualMachine* VM) :

@@ -212,33 +212,22 @@ namespace bgsee
 			return kCodaKeywordArray[0];
 		}
 
-		CodaScriptException::CodaScriptException(const ICodaScriptExecutableCode* Source, const char* Message, ...)
+		CodaScriptException::CodaScriptException(const ICodaScriptExecutableCode* Source, const char* Message, ...) :
+			ErrorSource(Source), ErrorMessage{}
 		{
-			ZeroMemory(ErrorString, sizeof(ErrorString));
-			char Buffer[0x512] = { 0 };
-
 			va_list Args;
 			va_start(Args, Message);
-			vsprintf_s(Buffer, sizeof(Buffer), Message, Args);
+			vsprintf_s(ErrorMessage, sizeof(ErrorMessage), Message, Args);
 			va_end(Args);
-
-			if (Source)
-				sprintf_s(ErrorString, sizeof(ErrorString), "Line[%d] Type[%s] - %s", Source->GetLine(), Source->GetTypeString(), Buffer);
-			else
-				sprintf_s(ErrorString, sizeof(ErrorString), "%s", Buffer);
 		}
 
-		CodaScriptException::CodaScriptException(const char* Message, ...)
+		CodaScriptException::CodaScriptException(const char* Message, ...) :
+			ErrorSource(nullptr), ErrorMessage{}
 		{
-			ZeroMemory(ErrorString, sizeof(ErrorString));
-			char Buffer[0x512] = { 0 };
-
 			va_list Args;
 			va_start(Args, Message);
-			vsprintf_s(Buffer, sizeof(Buffer), Message, Args);
+			vsprintf_s(ErrorMessage, sizeof(ErrorMessage), Message, Args);
 			va_end(Args);
-
-			sprintf_s(ErrorString, sizeof(ErrorString), "%s", Buffer);
 		}
 
 		CodaScriptException::~CodaScriptException()
@@ -246,9 +235,23 @@ namespace bgsee
 			;//
 		}
 
-		const char* CodaScriptException::Get() const
+		std::string CodaScriptException::ToString() const
 		{
-			return ErrorString;
+			if (ErrorSource)
+			{
+				char Buffer[0x512] = { 0 };
+				FORMAT_STR(Buffer, "Line[%d] Type[%s] - %s",
+						   ErrorSource->GetLine(),
+						   ErrorSource->GetTypeString(), ErrorMessage);
+				return Buffer;
+			}
+			else
+				return ErrorMessage;
+		}
+
+		const char* CodaScriptException::GetMessage() const
+		{
+			return ErrorMessage;
 		}
 
 		CodaScriptProfiler::CodaScriptProfiler() :

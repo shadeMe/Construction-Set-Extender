@@ -199,7 +199,7 @@ namespace bgsee
 		{
 			static const UInt32					kLoopOverrunLimit = 0xFFFFFF;
 
-			ICodaScriptExecutableCode*			CurrentCode;		// code being evaluated currently
+			ICodaScriptExecutableCode::StackT	CurrentCode;		// code being evaluated currently
 
 			bool								EvaluateCondition(ICodaScriptConditionalCodeBlock* Block);
 		public:

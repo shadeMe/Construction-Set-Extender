@@ -74,13 +74,15 @@ namespace bgsee
 		class CodaScriptException
 		{
 		protected:
-			char											ErrorString[0x768];
+			const ICodaScriptExecutableCode*	ErrorSource;
+			char								ErrorMessage[0x512];
 		public:
 			CodaScriptException(const ICodaScriptExecutableCode* Source, const char* Message, ...);
 			CodaScriptException(const char* Message, ...);
 			virtual ~CodaScriptException();
 
-			virtual const char*								Get() const;
+			virtual const char*			GetMessage() const;
+			virtual std::string			ToString() const;
 		};
 
 		struct ScopedFunctor

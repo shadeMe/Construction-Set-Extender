@@ -28,7 +28,7 @@ namespace bgsee
 			return nullptr;
 		}
 
-		void CodaScriptProgram::AddVariable(CodaScriptSourceCodeT& Name, CodaScriptSourceCodeT& Initalizer, UInt32 Line)
+		void CodaScriptProgram::AddVariable(const CodaScriptSourceCodeT& Name, const CodaScriptSourceCodeT& Initalizer, UInt32 Line)
 		{
 			if (GetVariable(Name) == nullptr)
 			{
@@ -37,7 +37,7 @@ namespace bgsee
 			}
 		}
 
-		const CodaScriptProgram::VariableInfo* CodaScriptProgram::GetVariable(CodaScriptSourceCodeT& Name) const
+		const CodaScriptProgram::VariableInfo* CodaScriptProgram::GetVariable(const CodaScriptSourceCodeT& Name) const
 		{
 			return GetVariable(Name.c_str());
 		}
@@ -143,6 +143,11 @@ namespace bgsee
 			return Variables.size();
 		}
 
+		bool CodaScriptProgram::HasVariable(const CodaScriptSourceCodeT& Name) const
+		{
+			return GetVariable(Name) != nullptr;
+		}
+
 		const CodaScriptVariableNameArrayT& CodaScriptProgram::GetParameters(CodaScriptVariableNameArrayT& OutNames) const
 		{
 			OutNames.clear();
@@ -185,11 +190,11 @@ namespace bgsee
 #define CODASCRIPT_COMPILERERROR_CATCHER									\
 			catch (CodaScriptException& E)									\
 			{																\
-				VM->GetMessageHandler()->Log("Compiler Error [Script: %s] - %s", Program->GetName().c_str(), E.Get());		\
+				VM->GetMessageHandler()->Log("Compiler Error [Script: %s]: %s", Program->GetName().c_str(), E.ToString().c_str());		\
 			}																\
 			catch (std::exception& E)										\
 			{																\
-				VM->GetMessageHandler()->Log("Compiler Error [Script: %s] - %s", Program->GetName().c_str(), E.what());		\
+				VM->GetMessageHandler()->Log("Compiler Error [Script: %s]: %s", Program->GetName().c_str(), E.what());		\
 			}																\
 			catch (...)														\
 			{																\
@@ -244,7 +249,19 @@ namespace bgsee
 
 		void CodaScriptSyntaxTreeCompileVisitor::Visit(CodaScriptFOREACHBlock* Node)
 		{
-			GenericCompile(Node);
+			CODASCRIPT_COMPILERHNDLR_PROLOG
+
+			if (Node->IteratorName.empty())
+				throw CodaScriptException(Node, "Invalid expression - No iterator specified");
+			else if (GetProgram()->HasVariable(Node->GetIteratorName()) == false)
+				throw CodaScriptException(Node, "Invalid iterator variable '%s'", Node->GetIteratorName().c_str());
+
+			Parser->Compile(this, Node, &Node->ByteCode);
+			Node->Traverse(this);
+
+			CODASCRIPT_COMPILERHNDLR_EPILOG
+
+			CODASCRIPT_COMPILERERROR_CATCHER
 		}
 
 		void CodaScriptSyntaxTreeCompileVisitor::GenericCompile(ICodaScriptExecutableCode* Node)
@@ -837,6 +854,7 @@ namespace bgsee
 
 			if (Result == false)
 			{
+				Root.reset(nullptr);
 				Out->Flags |= CodaScriptProgram::kFlag_CompileError;
 
 				if (CodeInstanceCounter.GetCount())
@@ -891,7 +909,7 @@ namespace bgsee
 			}
 			catch (CodaScriptException& E)
 			{
-				VirtualMachine->GetMessageHandler()->Log("Compiler Error [Script: %s] - %s", In->GetName().c_str(), E.Get());
+				VirtualMachine->GetMessageHandler()->Log("Compiler Error [Script: %s]: %s", In->GetName().c_str(), E.ToString().c_str());
 				In->Flags |= CodaScriptProgram::kFlag_CompileError;
 			}
 			catch (...)

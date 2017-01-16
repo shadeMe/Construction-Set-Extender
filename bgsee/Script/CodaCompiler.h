@@ -14,6 +14,7 @@ namespace bgsee
 			virtual const CodaScriptSourceCodeT&			GetName() const = 0;
 			virtual const CodaScriptVariableNameArrayT&		GetVariables(CodaScriptVariableNameArrayT& OutNames) const = 0;
 			virtual UInt32									GetVariableCount() const = 0;
+			virtual bool									HasVariable(const CodaScriptSourceCodeT& Name) const = 0;
 			virtual const CodaScriptVariableNameArrayT&		GetParameters(CodaScriptVariableNameArrayT& OutNames) const = 0;		// returns the ordered list of parameter variables
 			virtual double									GetPollingInteval() const = 0;
 			virtual ICodaScriptExpressionParser*			GetBoundParser() const = 0;
@@ -113,7 +114,8 @@ namespace bgsee
 				CodaScriptSourceCodeT			Initalizer;
 				UInt32							Line;
 
-				VariableInfo(CodaScriptSourceCodeT& Name, CodaScriptSourceCodeT& Initalizer, UInt32 Line) : Name(Name), Initalizer(Initalizer), Line(Line) {}
+				VariableInfo(const CodaScriptSourceCodeT& Name, const CodaScriptSourceCodeT& Initalizer, UInt32 Line) :
+					Name(Name), Initalizer(Initalizer), Line(Line) {}
 			};
 
 			struct ParameterInfo
@@ -139,8 +141,8 @@ namespace bgsee
 			ICodaScriptExpressionParser*		Parser;
 			ScopedMetadataPointerT				Metadata;
 
-			void								AddVariable(CodaScriptSourceCodeT& Name, CodaScriptSourceCodeT& Initalizer, UInt32 Line);
-			const VariableInfo*					GetVariable(CodaScriptSourceCodeT& Name) const;
+			void								AddVariable(const CodaScriptSourceCodeT& Name, const CodaScriptSourceCodeT& Initalizer, UInt32 Line);
+			const VariableInfo*					GetVariable(const CodaScriptSourceCodeT& Name) const;
 			const VariableInfo*					GetVariable(const char* Name) const;
 			void								AddParameter(const VariableInfo* BoundVar);
 			bool								IsParameter(const VariableInfo* Var) const;
@@ -152,6 +154,7 @@ namespace bgsee
 			virtual const CodaScriptSourceCodeT&		GetName() const override;
 			virtual const CodaScriptVariableNameArrayT&	GetVariables(CodaScriptVariableNameArrayT& OutNames) const override;
 			virtual UInt32								GetVariableCount() const override;
+			virtual bool								HasVariable(const CodaScriptSourceCodeT& Name) const override;
 			virtual const CodaScriptVariableNameArrayT&	GetParameters(CodaScriptVariableNameArrayT& OutNames) const override;
 			virtual double								GetPollingInteval() const override;
 			virtual ICodaScriptExpressionParser*		GetBoundParser() const override;
