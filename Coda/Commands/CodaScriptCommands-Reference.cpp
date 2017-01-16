@@ -760,6 +760,7 @@ namespace cse
 					CodaScriptNumericDataTypeT XCoord, YCoord;
 
 					CodaScriptCommandExtractArgs(&Cell, &XCoord, &YCoord);
+					ExtractFormArguments(1, &Cell);
 
 					Cell = CS_CAST(Cell, TESForm, TESObjectCELL);
 					if (!Cell)
