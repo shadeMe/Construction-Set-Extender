@@ -38,6 +38,7 @@ namespace bgsee
 
 				if (argc)
 				{
+					WrappedArgs.reserve(argc);
 					if (ParamCount != -1 && ParamArray == nullptr)
 						throw CodaScriptException(ByteCode->GetSource(),
 												"Non-variadic command '%s' has no parameter data",

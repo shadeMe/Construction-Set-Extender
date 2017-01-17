@@ -35,14 +35,6 @@ namespace bgsee
 				Cache.ReleaseAll();
 			}
 
-			CodaScriptMUPParserByteCode::ValueBuffer& CodaScriptMUPParserByteCode::GetCurrentBufferContext() const
-			{
-				if (Buffer.empty())
-					throw CodaScriptException("Value buffer stack underflow");
-				else
-					return *Buffer.top();
-			}
-
 			CodaScriptMUPParserByteCode::ValueBuffer* CodaScriptMUPParserByteCode::CreateBufferContext() const
 			{
 				ValueBuffer* Out = new ValueBuffer;
@@ -60,7 +52,10 @@ namespace bgsee
 
 			void CodaScriptMUPParserByteCode::PushBufferContext()
 			{
+				SME_ASSERT(CurrentValueCache == nullptr);
+
 				ValueBuffer::PtrT Context(CreateBufferContext());
+				CurrentValueCache = Context.get();
 				Buffer.push(std::move(Context));
 			}
 
@@ -70,6 +65,11 @@ namespace bgsee
 					throw CodaScriptException("Value buffer stack underflow");
 				else
 					Buffer.pop();
+
+				if (Buffer.empty())
+					CurrentValueCache = nullptr;
+				else
+					CurrentValueCache = Buffer.top().get();
 			}
 
 			CodaScriptMUPParserByteCode::CodaScriptMUPParserByteCode(CodaScriptMUPExpressionParser* Parent, ICodaScriptExecutableCode* Source) :
@@ -77,7 +77,8 @@ namespace bgsee
 				Parser(Parent),
 				TokenPos(0),
 				RPNStack(),
-				Buffer()
+				Buffer(),
+				CurrentValueCache(nullptr)
 			{
 				SME_ASSERT(Parser);
 			}
@@ -92,12 +93,12 @@ namespace bgsee
 
 			val_vec_type& CodaScriptMUPParserByteCode::GetStackBuffer() const
 			{
-				return GetCurrentBufferContext().StackBuffer;
+				return CurrentValueCache->StackBuffer;
 			}
 
 			ValueCache& CodaScriptMUPParserByteCode::GetCache() const
 			{
-				return GetCurrentBufferContext().Cache;
+				return CurrentValueCache->Cache;
 			}
 
 			CodaScriptMUPVariable* CodaScriptMUPParserMetadata::CreateWrapper(const CodaScriptSourceCodeT& Name, bool Global)

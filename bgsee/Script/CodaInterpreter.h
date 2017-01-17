@@ -22,7 +22,10 @@ namespace bgsee
 				bool							Recompile;
 
 				ExecuteParams() : Filepath(), Program(nullptr),
-					Parameters(), RunInBackground(false), Recompile(false) {}
+					Parameters(), RunInBackground(false), Recompile(false)
+				{
+					Parameters.reserve(CodaScriptCompiler::kMaxParameters);
+				}
 			};
 
 			struct ExecuteResult

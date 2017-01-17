@@ -347,7 +347,6 @@ namespace bgsee
 			ICodaScriptProgram* Program = Context->GetProgram();
 			SME_ASSERT(ExecutionCounter.count(Program));
 
-
 			int Count = ExecutionCounter[Program]--;
 			if (Count == 1)
 				ExecutionCounter.erase(Program);

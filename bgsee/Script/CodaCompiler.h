@@ -16,6 +16,7 @@ namespace bgsee
 			virtual UInt32									GetVariableCount() const = 0;
 			virtual bool									HasVariable(const CodaScriptSourceCodeT& Name) const = 0;
 			virtual const CodaScriptVariableNameArrayT&		GetParameters(CodaScriptVariableNameArrayT& OutNames) const = 0;		// returns the ordered list of parameter variables
+			virtual UInt32									GetParameterCount() const = 0;
 			virtual double									GetPollingInteval() const = 0;
 			virtual ICodaScriptExpressionParser*			GetBoundParser() const = 0;
 			virtual ICodaScriptCompilerMetadata*			GetCompilerMetadata() const = 0;
@@ -156,6 +157,7 @@ namespace bgsee
 			virtual UInt32								GetVariableCount() const override;
 			virtual bool								HasVariable(const CodaScriptSourceCodeT& Name) const override;
 			virtual const CodaScriptVariableNameArrayT&	GetParameters(CodaScriptVariableNameArrayT& OutNames) const override;
+			virtual UInt32								GetParameterCount() const override;
 			virtual double								GetPollingInteval() const override;
 			virtual ICodaScriptExpressionParser*		GetBoundParser() const override;
 			virtual ICodaScriptCompilerMetadata*		GetCompilerMetadata() const override;

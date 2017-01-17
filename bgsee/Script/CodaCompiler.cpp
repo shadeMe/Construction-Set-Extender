@@ -132,6 +132,7 @@ namespace bgsee
 		{
 			OutNames.clear();
 
+			OutNames.reserve(Variables.size());
 			for (auto& Itr : Variables)
 				OutNames.push_back(Itr.Name);
 
@@ -151,11 +152,17 @@ namespace bgsee
 		const CodaScriptVariableNameArrayT& CodaScriptProgram::GetParameters(CodaScriptVariableNameArrayT& OutNames) const
 		{
 			OutNames.clear();
+			OutNames.reserve(Parameters.size());
 
 			for (auto& Itr : Parameters)
 				OutNames.push_back(Itr.BoundVariable->Name);
 
 			return OutNames;
+		}
+
+		UInt32 CodaScriptProgram::GetParameterCount() const
+		{
+			return Parameters.size();
 		}
 
 		double CodaScriptProgram::GetPollingInteval() const

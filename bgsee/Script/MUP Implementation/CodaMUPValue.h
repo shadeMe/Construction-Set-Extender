@@ -19,7 +19,7 @@ namespace bgsee
 				EFlags										m_iFlags;				///< Additional flags
 				ValueCache*									m_pCache;				///< Pointer to the Value Cache
 				mutable CodaScriptBackingStore				m_DataStore;			///< Actual container for the data
-				std::auto_ptr<string_type>					m_StringBuffer;			///< Storage buffer for GetString() calls
+				string_type									m_StringBuffer;			///< Storage buffer for GetString() calls
 
 				void										CheckType(char_type a_cType) const;
 				void										CheckType(ICodaScriptDataStore::DataType a_cType) const;
@@ -78,6 +78,7 @@ namespace bgsee
 
 				virtual ICodaScriptDataStore*				GetDataStore();
 				virtual ICodaScriptDataStoreOwner&			operator=(const ICodaScriptDataStore& rhs);
+				virtual void								SetIdentifier(const char* Identifier);
 
 				static const int&							GetGIC() { return GIC; }
 

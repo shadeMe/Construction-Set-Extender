@@ -276,13 +276,14 @@ namespace bgsee
 
 			void CodaScriptMUPVariable::Bind(const CodaScriptVariable* Var)
 			{
+#ifdef _DEBUG
 				bool NameMismatch = _stricmp(Var->GetName(), Name.c_str());
 				SME_ASSERT(NameMismatch == false);
+#endif // _DEBUG
 
 				CodaScriptMUPValue* NewVal = dynamic_cast<CodaScriptMUPValue*>(Var->GetStoreOwner());
 				SME_ASSERT(NewVal);
 
-				NewVal->SetIdent(Name);
 				BoundValues.push(NewVal);
 				CurrentValue = GetCurrentValue();
 			}
@@ -291,9 +292,6 @@ namespace bgsee
 			{
 				SME_ASSERT(BoundValues.empty() == false);
 
-				CodaScriptMUPValue* OldVal = BoundValues.top();
-
-				OldVal->SetIdent("");
 				BoundValues.pop();
 				CurrentValue = GetCurrentValue();
 			}

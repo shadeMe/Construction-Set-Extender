@@ -18,7 +18,7 @@ namespace bgsee
 				m_iFlags(flNONE),
 				m_pCache(nullptr),
 				m_DataStore(0.0),
-				m_StringBuffer(new string_type())
+				m_StringBuffer()
 			{
 				GIC++;
 
@@ -44,7 +44,7 @@ namespace bgsee
 				m_iFlags(flNONE),
 				m_pCache(nullptr),
 				m_DataStore((CodaScriptNumericDataTypeT)val),
-				m_StringBuffer(new string_type())
+				m_StringBuffer()
 			{
 				GIC++;
 			}
@@ -56,7 +56,7 @@ namespace bgsee
 				m_iFlags(flNONE),
 				m_pCache(nullptr),
 				m_DataStore(val.c_str()),
-				m_StringBuffer(new string_type(val))
+				m_StringBuffer(val)
 			{
 				GIC++;
 			}
@@ -68,7 +68,7 @@ namespace bgsee
 				m_iFlags(flNONE),
 				m_pCache(nullptr),
 				m_DataStore(val),
-				m_StringBuffer(new string_type(val))
+				m_StringBuffer(val)
 			{
 				GIC++;
 			}
@@ -79,7 +79,7 @@ namespace bgsee
 				m_iFlags(flNONE),
 				m_pCache(nullptr),
 				m_DataStore(),
-				m_StringBuffer(new string_type())
+				m_StringBuffer()
 			{
 				GIC++;
 
@@ -91,7 +91,7 @@ namespace bgsee
 				IValue(cmVAL),
 				m_pCache(nullptr),
 				m_DataStore(),
-				m_StringBuffer(new string_type())
+				m_StringBuffer()
 			{
 				GIC++;
 
@@ -105,14 +105,14 @@ namespace bgsee
 				m_iFlags(flNONE),
 				m_pCache(nullptr),
 				m_DataStore(val),
-				m_StringBuffer(new string_type())
+				m_StringBuffer()
 			{
 				GIC++;
 
 				if (m_DataStore.GetType() == ICodaScriptDataStore::kDataType_String)
 				{
 					m_cType = 's';
-					*m_StringBuffer = val->GetString();
+					m_StringBuffer = val->GetString();
 				}
 				else if (m_DataStore.GetType() == ICodaScriptDataStore::kDataType_Numeric)
 					m_cType = 'f';
@@ -125,14 +125,14 @@ namespace bgsee
 				m_iFlags(flNONE),
 				m_pCache(nullptr),
 				m_DataStore(val),
-				m_StringBuffer(new string_type())
+				m_StringBuffer()
 			{
 				GIC++;
 
 				if (m_DataStore.GetType() == ICodaScriptDataStore::kDataType_String)
 				{
 					m_cType = 's';
-					*m_StringBuffer = val.GetString();
+					m_StringBuffer = val.GetString();
 				}
 				else if (m_DataStore.GetType() == ICodaScriptDataStore::kDataType_Numeric)
 					m_cType = 'f';
@@ -145,7 +145,7 @@ namespace bgsee
 				m_iFlags(flNONE),
 				m_pCache(nullptr),
 				m_DataStore(val),
-				m_StringBuffer(new string_type())
+				m_StringBuffer()
 			{
 				GIC++;
 			}
@@ -157,7 +157,7 @@ namespace bgsee
 				m_iFlags(flNONE),
 				m_pCache(nullptr),
 				m_DataStore(val),
-				m_StringBuffer(new string_type())
+				m_StringBuffer()
 			{
 				GIC++;
 			}
@@ -236,7 +236,7 @@ namespace bgsee
 			IValue& CodaScriptMUPValue::operator=( string_type a_sVal )
 			{
 				m_DataStore.SetString(a_sVal.c_str());
-				*m_StringBuffer = a_sVal;
+				m_StringBuffer = a_sVal;
 
 				m_cType = 's';
 				m_iFlags = flNONE;
@@ -272,7 +272,7 @@ namespace bgsee
 			IValue& CodaScriptMUPValue::operator=( const char_type *a_szVal )
 			{
 				m_DataStore.SetString(a_szVal);
-				*m_StringBuffer = a_szVal;
+				m_StringBuffer = a_szVal;
 
 				m_cType = 's';
 				m_iFlags = flNONE;
@@ -286,7 +286,7 @@ namespace bgsee
 				m_cType = GetMUPType(m_DataStore.GetType());
 
 				if (m_cType == 's')
-					*m_StringBuffer = m_DataStore.GetString();
+					m_StringBuffer = m_DataStore.GetString();
 
 				return *this;
 			}
@@ -395,7 +395,7 @@ namespace bgsee
 				m_DataStore = a_Val.m_DataStore;
 
 				if (m_cType == 's')
-					*m_StringBuffer = a_Val.GetString();
+					m_StringBuffer = a_Val.GetString();
 			}
 
 			void CodaScriptMUPValue::Assign(const IValue& a_Val)
@@ -416,7 +416,7 @@ namespace bgsee
 				if (m_DataStore.GetType() == ICodaScriptDataStore::kDataType_String)
 				{
 					m_cType = 's';
-					*m_StringBuffer = a_Val.GetString();
+					m_StringBuffer = a_Val.GetString();
 				}
 				else if (m_DataStore.GetType() == ICodaScriptDataStore::kDataType_Numeric)
 					m_cType = 'f';
@@ -467,7 +467,7 @@ namespace bgsee
 			const string_type& CodaScriptMUPValue::GetString() const
 			{
 				CheckType(ICodaScriptDataStore::kDataType_String);
-				return *m_StringBuffer.get();
+				return m_StringBuffer;
 			}
 
 			const matrix_type& CodaScriptMUPValue::GetArray() const
@@ -510,6 +510,11 @@ namespace bgsee
 			ICodaScriptDataStore* CodaScriptMUPValue::GetDataStore()
 			{
 				return &m_DataStore;
+			}
+
+			void CodaScriptMUPValue::SetIdentifier(const char* Identifier)
+			{
+				SetIdent(Identifier);
 			}
 
 			IValue& CodaScriptMUPValue::operator=(const IValue &ref)

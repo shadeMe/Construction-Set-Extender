@@ -48,9 +48,9 @@ namespace bgsee
 				int								TokenPos;
 				RPN								RPNStack;			///< reverse polish notation
 				ValueBuffer::StackT				Buffer;				// buffers for currently executing contexts
+				ValueBuffer*					CurrentValueCache;
 
 				ValueBuffer*					CreateBufferContext() const;
-				ValueBuffer&					GetCurrentBufferContext() const;
 			public:
 				CodaScriptMUPParserByteCode(CodaScriptMUPExpressionParser* Parent, ICodaScriptExecutableCode* Source);
 				virtual ~CodaScriptMUPParserByteCode();

@@ -319,6 +319,7 @@ namespace bgsee
 		{
 			SME_ASSERT(Name.length() > 2);
 			this->Name = Name;
+			BoundOwner->SetIdentifier(Name.c_str());
 		}
 
 		ICodaScriptDataStoreOwner* CodaScriptVariable::GetStoreOwner() const

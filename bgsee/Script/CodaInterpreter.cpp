@@ -136,20 +136,22 @@ namespace bgsee
 
 		void CodaScriptExecutionContext::SetParameters(CodaScriptBackingStore::ArrayT& Parameters)
 		{
-			CodaScriptVariableNameArrayT ParamNames;
-			Parent->GetParameters(ParamNames);
-
-			if (ParamNames.size() != Parameters.size())
-				throw CodaScriptException("Incorrect number of parameters passed - Received %d, expected %d", Parameters.size(), ParamNames.size());
-
-			for (int i = 0; i < ParamNames.size(); i++)
+			if (Parent->GetParameterCount() != Parameters.size())
+				throw CodaScriptException("Incorrect number of parameters passed - Received %d, expected %d", Parameters.size(), Parent->GetParameterCount());
+			else
 			{
-				CodaScriptSourceCodeT& Name = ParamNames.at(i);
-				CodaScriptVariable* ParamVar = GetVariable(Name);
-				if (ParamVar == nullptr)
-					throw CodaScriptException("Parameter variable '%s' not found", Name.c_str());
+				CodaScriptVariableNameArrayT ParamNames;
+				Parent->GetParameters(ParamNames);
 
-				*ParamVar->GetStoreOwner() = Parameters.at(i);
+				for (int i = 0; i < ParamNames.size(); i++)
+				{
+					CodaScriptSourceCodeT& Name = ParamNames.at(i);
+					CodaScriptVariable* ParamVar = GetVariable(Name);
+					if (ParamVar == nullptr)
+						throw CodaScriptException("Parameter variable '%s' not found", Name.c_str());
+
+					*ParamVar->GetStoreOwner() = Parameters.at(i);
+				}
 			}
 		}
 

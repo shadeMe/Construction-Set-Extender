@@ -66,6 +66,7 @@ namespace bgsee
 
 			virtual ICodaScriptDataStore*									GetDataStore() = 0;
 			virtual ICodaScriptDataStoreOwner&								operator=(const ICodaScriptDataStore& rhs) = 0;
+			virtual void													SetIdentifier(const char* Identifier) = 0;
 
 			typedef std::unique_ptr<ICodaScriptDataStoreOwner>				PtrT;
 		};
