@@ -29,18 +29,24 @@ namespace bgsee
 
 		class CodaScriptBackingStore : public ICodaScriptDataStore
 		{
-			static int												GIC;
+			static int								GIC;
 		protected:
 			union
 			{
-				CodaScriptNumericDataTypeT							NumericData;
-				CodaScriptReferenceDataTypeT						RefData;
-				CodaScriptStringDataTypeT							StringData;
+				CodaScriptNumericDataTypeT			NumericData;
+				CodaScriptReferenceDataTypeT		RefData;
+				CodaScriptStringDataTypeT			StringData;
 			};
-			ICodaScriptArrayDataType::SharedPtrT					ArrayData;				// not a trivial data type, so can't be a part of the union
+			ICodaScriptArrayDataType::SharedPtrT	ArrayData;				// not a trivial data type, so can't be a part of the union
 
-			void													Reset(void);
-			void													Copy(const CodaScriptBackingStore& Source);
+			void									Reset(void);
+			void									Copy(const CodaScriptBackingStore& Source);
+
+			static bool								CompareString(CodaScriptStringParameterTypeT lhs, CodaScriptStringParameterTypeT rhs);
+			static bool								CompareNumber(const CodaScriptNumericDataTypeT& lhs, const CodaScriptNumericDataTypeT& rhs);
+			static bool								CompareReference(const CodaScriptReferenceDataTypeT& lhs, const CodaScriptReferenceDataTypeT& rhs);
+			static bool								CompareArray(const ICodaScriptArrayDataType::SharedPtrT& lhs,
+																 const ICodaScriptArrayDataType::SharedPtrT& rhs);	// shallow/pointer comparison
 		public:
 			CodaScriptBackingStore();
 			explicit CodaScriptBackingStore(CodaScriptBackingStore* Data);
@@ -57,7 +63,7 @@ namespace bgsee
 			CodaScriptBackingStore& operator-=(const CodaScriptBackingStore &rhs);
 			CodaScriptBackingStore& operator*=(const CodaScriptBackingStore &rhs);
 
-			virtual bool											GetHasImplicitCast(DataType NewType) const;
+			virtual bool											HasImplicitCast(DataType NewType) const;
 
 			virtual CodaScriptReferenceDataTypeT					GetFormID() const;
 			virtual CodaScriptNumericDataTypeT						GetNumber() const;
@@ -75,9 +81,15 @@ namespace bgsee
 			virtual ICodaScriptDataStore&							operator=(CodaScriptStringParameterTypeT Str);
 			virtual ICodaScriptDataStore&							operator=(CodaScriptReferenceDataTypeT Form);
 
+
 			static const int&										GetGIC() { return GIC; }
 
-			typedef std::vector<CodaScriptBackingStore>				ArrayT;
+			virtual bool											operator ==(const ICodaScriptDataStore& rhs) const override;
+			virtual bool											operator ==(const CodaScriptNumericDataTypeT& rhs) const override;
+			virtual bool											operator ==(CodaScriptStringParameterTypeT& rhs) const override;
+			virtual bool											operator ==(const CodaScriptReferenceDataTypeT& rhs) const override;
+
+			typedef std::vector<CodaScriptBackingStore>				NonPtrArrayT;
 		};
 
 		class CodaScriptVariable

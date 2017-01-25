@@ -78,6 +78,12 @@ namespace bgsee
 					"** Internal command ** Breaks into the attached debugger, if any.",
 					0,
 					ICodaScriptDataStore::kDataType_Invalid);
+
+				CodaScriptSimpleCommandPrototype(IsBackgrounding,
+					0,
+					"Returns true if the calling script is being executed in the background, false otherwise.",
+					0,
+					ICodaScriptDataStore::kDataType_Numeric);
 			}
 		}
 	}

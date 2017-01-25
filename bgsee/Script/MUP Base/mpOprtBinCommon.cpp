@@ -43,8 +43,8 @@ namespace bgsee { namespace script { namespace mup {
 	//
 	//-----------------------------------------------------------------------------------------------
 
-	OprtStrAdd::OprtStrAdd() 
-		:IOprtBin(_T("//"), (int)prADD_SUB, oaLEFT) 
+	OprtStrAdd::OprtStrAdd()
+		:IOprtBin(_T("//"), (int)prADD_SUB, oaLEFT)
 	{}
 
 	//-----------------------------------------------------------------------------------------------
@@ -57,15 +57,15 @@ namespace bgsee { namespace script { namespace mup {
 	}
 
 	//-----------------------------------------------------------------------------------------------
-	const char_type* OprtStrAdd::GetDesc() const 
-	{ 
-		return _T("string concatenation"); 
+	const char_type* OprtStrAdd::GetDesc() const
+	{
+		return _T("string concatenation");
 	}
 
 	//-----------------------------------------------------------------------------------------------
 	IToken* OprtStrAdd::Clone() const
-	{ 
-		return new OprtStrAdd(*this); 
+	{
+		return new OprtStrAdd(*this);
 	}
 
 
@@ -75,26 +75,26 @@ namespace bgsee { namespace script { namespace mup {
 	//
 	//-----------------------------------------------------------------------------------------------
 
-	OprtEQ::OprtEQ() 
-		:IOprtBin(_T("=="), (int)prRELATIONAL1, oaLEFT) 
+	OprtEQ::OprtEQ()
+		:IOprtBin(_T("=="), (int)prRELATIONAL1, oaLEFT)
 	{}
 
 	//-----------------------------------------------------------------------------------------------
 	void OprtEQ::Eval(ptr_val_type& ret, const ptr_val_type *a_pArg, int)
-	{ 
-		*ret = *a_pArg[0] == *a_pArg[1]; 
+	{
+		*ret = *a_pArg[0] == *a_pArg[1];
 	}
 
 	//-----------------------------------------------------------------------------------------------
-	const char_type* OprtEQ::GetDesc() const 
-	{ 
-		return _T("equals operator"); 
+	const char_type* OprtEQ::GetDesc() const
+	{
+		return _T("equals operator");
 	}
 
 	//-----------------------------------------------------------------------------------------------
 	IToken* OprtEQ::Clone() const
-	{ 
-		return new OprtEQ(*this); 
+	{
+		return new OprtEQ(*this);
 	}
 
 	//-----------------------------------------------------------------------------------------------
@@ -103,26 +103,26 @@ namespace bgsee { namespace script { namespace mup {
 	//
 	//-----------------------------------------------------------------------------------------------
 
-	OprtNEQ::OprtNEQ() 
-		:IOprtBin(_T("!="), (int)prRELATIONAL1, oaLEFT) 
+	OprtNEQ::OprtNEQ()
+		:IOprtBin(_T("!="), (int)prRELATIONAL1, oaLEFT)
 	{}
 
 	//-----------------------------------------------------------------------------------------------
 	void OprtNEQ::Eval(ptr_val_type& ret, const ptr_val_type *a_pArg, int)
-	{ 
-		*ret = *a_pArg[0] != *a_pArg[1]; 
+	{
+		*ret = *a_pArg[0] != *a_pArg[1];
 	}
 
 	//-----------------------------------------------------------------------------------------------
-	const char_type* OprtNEQ::GetDesc() const 
-	{ 
-		return _T("not equal operator"); 
+	const char_type* OprtNEQ::GetDesc() const
+	{
+		return _T("not equal operator");
 	}
 
 	//-----------------------------------------------------------------------------------------------
 	IToken* OprtNEQ::Clone() const
-	{ 
-		return new OprtNEQ(*this); 
+	{
+		return new OprtNEQ(*this);
 	}
 
 	//-----------------------------------------------------------------------------------------------
@@ -131,26 +131,26 @@ namespace bgsee { namespace script { namespace mup {
 	//
 	//-----------------------------------------------------------------------------------------------
 
-	OprtLT::OprtLT() 
-		:IOprtBin(_T("<"), (int)prRELATIONAL2, oaLEFT) 
+	OprtLT::OprtLT()
+		:IOprtBin(_T("<"), (int)prRELATIONAL2, oaLEFT)
 	{}
 
 	//-----------------------------------------------------------------------------------------------
 	void OprtLT::Eval(ptr_val_type& ret, const ptr_val_type *a_pArg, int)
-	{ 
+	{
 		*ret = *a_pArg[0] < *a_pArg[1];
 	}
 
 	//-----------------------------------------------------------------------------------------------
-	const char_type* OprtLT::GetDesc() const 
-	{ 
-		return _T("less than operator"); 
+	const char_type* OprtLT::GetDesc() const
+	{
+		return _T("less than operator");
 	}
 
 	//-----------------------------------------------------------------------------------------------
 	IToken* OprtLT::Clone() const
-	{ 
-		return new OprtLT(*this); 
+	{
+		return new OprtLT(*this);
 	}
 
 	//-----------------------------------------------------------------------------------------------
@@ -159,25 +159,25 @@ namespace bgsee { namespace script { namespace mup {
 	//
 	//-----------------------------------------------------------------------------------------------
 
-	OprtGT::OprtGT() 
+	OprtGT::OprtGT()
 		:IOprtBin(_T(">"), (int)prRELATIONAL2, oaLEFT) {}
 
 	//-----------------------------------------------------------------------------------------------
 	void OprtGT::Eval(ptr_val_type& ret, const ptr_val_type *a_pArg, int)
-	{ 
-		*ret = *a_pArg[0] > *a_pArg[1]; 
+	{
+		*ret = *a_pArg[0] > *a_pArg[1];
 	}
 
 	//-----------------------------------------------------------------------------------------------
-	const char_type* OprtGT::GetDesc() const 
-	{ 
-		return _T("greater than operator"); 
+	const char_type* OprtGT::GetDesc() const
+	{
+		return _T("greater than operator");
 	}
 
 	//-----------------------------------------------------------------------------------------------
 	IToken* OprtGT::Clone() const
-	{ 
-		return new OprtGT(*this); 
+	{
+		return new OprtGT(*this);
 	}
 
 	//-----------------------------------------------------------------------------------------------
@@ -186,26 +186,26 @@ namespace bgsee { namespace script { namespace mup {
 	//
 	//-----------------------------------------------------------------------------------------------
 
-	OprtLE::OprtLE() 
-		:IOprtBin(_T("<="), (int)prRELATIONAL2, oaLEFT) 
+	OprtLE::OprtLE()
+		:IOprtBin(_T("<="), (int)prRELATIONAL2, oaLEFT)
 	{}
 
 	//-----------------------------------------------------------------------------------------------
 	void OprtLE::Eval(ptr_val_type& ret, const ptr_val_type *a_pArg, int)
-	{ 
+	{
 		*ret = *a_pArg[0] <= *a_pArg[1];
 	}
 
 	//-----------------------------------------------------------------------------------------------
-	const char_type* OprtLE::GetDesc() const 
-	{ 
-		return _T("less or equal operator"); 
+	const char_type* OprtLE::GetDesc() const
+	{
+		return _T("less or equal operator");
 	}
 
 	//-----------------------------------------------------------------------------------------------
 	IToken* OprtLE::Clone() const
-	{ 
-		return new OprtLE(*this); 
+	{
+		return new OprtLE(*this);
 	}
 
 	//-----------------------------------------------------------------------------------------------
@@ -214,26 +214,26 @@ namespace bgsee { namespace script { namespace mup {
 	//
 	//-----------------------------------------------------------------------------------------------
 
-	OprtGE::OprtGE() 
-		:IOprtBin(_T(">="), (int)prRELATIONAL2, oaLEFT) 
+	OprtGE::OprtGE()
+		:IOprtBin(_T(">="), (int)prRELATIONAL2, oaLEFT)
 	{}
 
 	//-----------------------------------------------------------------------------------------------
 	void OprtGE::Eval(ptr_val_type& ret, const ptr_val_type *a_pArg, int)
-	{ 
-		*ret = *a_pArg[0] >= *a_pArg[1]; 
+	{
+		*ret = *a_pArg[0] >= *a_pArg[1];
 	}
 
 	//-----------------------------------------------------------------------------------------------
-	const char_type* OprtGE::GetDesc() const 
-	{ 
-		return _T("greater or equal operator"); 
+	const char_type* OprtGE::GetDesc() const
+	{
+		return _T("greater or equal operator");
 	}
 
 	//-----------------------------------------------------------------------------------------------
 	IToken* OprtGE::Clone() const
-	{ 
-		return new OprtGE(*this); 
+	{
+		return new OprtGE(*this);
 	}
 
   //-----------------------------------------------------------
@@ -419,7 +419,7 @@ namespace bgsee { namespace script { namespace mup {
 
 	if (std::fabs(result) >= std::fabs(std::pow(10.0, numDigits)))
 		throw ParserError(ErrorContext(ecOVERFLOW, GetExprPos(), GetIdent()));
-		
+
 	if (result>0)
 		*ret = std::floor(result);
 	else
@@ -463,10 +463,10 @@ namespace bgsee { namespace script { namespace mup {
 		  b = a_pArg[1]->GetFloat();
 
 	  if (a!=(int_type)a)
-		  throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, GetExprPos(), a_pArg[0]->GetIdent(), a_pArg[0]->GetType(), 'i', 1) ); 
+		  throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, GetExprPos(), a_pArg[0]->GetIdent(), a_pArg[0]->GetType(), 'i', 1) );
 
 	  if (b!=(int_type)b)
-		  throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, GetExprPos(), a_pArg[1]->GetIdent(), a_pArg[1]->GetType(), 'i', 2) ); 
+		  throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, GetExprPos(), a_pArg[1]->GetIdent(), a_pArg[1]->GetType(), 'i', 2) );
 
 	  float_type result = a*std::pow(2, -b);
 	  int numDigits = std::numeric_limits<float_type>::digits10;
@@ -638,6 +638,10 @@ namespace bgsee { namespace script { namespace mup {
 		  break;
 	  case ICodaScriptDataStore::kDataType_String:
 		  *ret = string_type(Store->GetString());
+		  break;
+	  case ICodaScriptDataStore::kDataType_Array:
+		  sprintf_s(Buffer, sizeof(Buffer), "array[%d]", Store->GetArray()->Size());
+		  *ret = string_type(Buffer);
 		  break;
 	  default:
 		  {

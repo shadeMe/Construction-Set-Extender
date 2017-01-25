@@ -369,7 +369,7 @@ namespace bgsee
 
 			void CodaScriptMUPValue::CheckType( ICodaScriptDataStore::DataType a_cType ) const
 			{
-				if (m_DataStore.GetType() != a_cType && m_DataStore.GetHasImplicitCast(a_cType) == false)
+				if (m_DataStore.GetType() != a_cType && m_DataStore.HasImplicitCast(a_cType) == false)
 				{
 					ErrorContext err;
 					err.Errc  = ecTYPE_CONFLICT;

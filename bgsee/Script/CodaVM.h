@@ -134,6 +134,7 @@ namespace bgsee
 			virtual void						Resume() override;
 			virtual bool						IsEnabled() const override;
 			virtual bool						IsBackgrounding() const override;
+			virtual bool						IsContextBackgrounding(ICodaScriptExecutionContext* Context) const override;
 
 			virtual void						Rebuild() override;
 			virtual void						Queue(ICodaScriptExecutionContext* Context) override;

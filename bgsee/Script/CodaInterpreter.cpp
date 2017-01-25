@@ -134,7 +134,7 @@ namespace bgsee
 				ExecutionState = kExecutionState_Break;
 		}
 
-		void CodaScriptExecutionContext::SetParameters(CodaScriptBackingStore::ArrayT& Parameters)
+		void CodaScriptExecutionContext::SetParameters(CodaScriptBackingStore::NonPtrArrayT& Parameters)
 		{
 			if (Parent->GetParameterCount() != Parameters.size())
 				throw CodaScriptException("Incorrect number of parameters passed - Received %d, expected %d", Parameters.size(), Parent->GetParameterCount());
@@ -254,7 +254,7 @@ namespace bgsee
 			CodaScriptBackingStore Result;
 			Parser->Evaluate(this, Block->GetByteCode(), &Result);
 
-			if (Result.GetIsNumber() == false)
+			if (Result.IsNumber() == false)
 				throw CodaScriptException(Block, "Condition expression didn't evaluate to a boolean value");
 
 			return Result.GetNumber();
@@ -578,7 +578,7 @@ namespace bgsee
 				SME_ASSERT(CurrentArg->GetType() != ICodaScriptDataStore::kDataType_Invalid);
 				SME_ASSERT(CurrentArg->GetType() == CurrentParam->Type ||
 						   CurrentParam->Type == ICodaScriptCommand::ParameterInfo::kType_Multi ||
-						   CurrentArg->GetHasImplicitCast((ICodaScriptDataStore::DataType)CurrentParam->Type));
+						   CurrentArg->HasImplicitCast((ICodaScriptDataStore::DataType)CurrentParam->Type));
 
 				switch (CurrentParam->Type)
 				{

@@ -15,11 +15,11 @@ namespace bgsee
 
 			struct ExecuteParams
 			{
-				std::string						Filepath;			// path to the script (must be relative to the repository)
-				ICodaScriptProgram*				Program;
-				CodaScriptBackingStore::ArrayT	Parameters;
-				bool							RunInBackground;
-				bool							Recompile;
+				std::string								Filepath;			// path to the script (must be relative to the repository)
+				ICodaScriptProgram*						Program;
+				CodaScriptBackingStore::NonPtrArrayT	Parameters;
+				bool									RunInBackground;
+				bool									Recompile;
 
 				ExecuteParams() : Filepath(), Program(nullptr),
 					Parameters(), RunInBackground(false), Recompile(false)
@@ -79,6 +79,7 @@ namespace bgsee
 			virtual void						Resume() = 0;					// resumes background executinon
 			virtual bool						IsEnabled() const = 0;			// true if background script execution is allowed
 			virtual bool						IsBackgrounding() const = 0;	// true if background scripts are being executed
+			virtual bool						IsContextBackgrounding(ICodaScriptExecutionContext* Context) const = 0;	// true if the execution context is currently executing in the background
 
 			virtual void						Rebuild() = 0;					// recompiles the stable background scripts
 			virtual void						Queue(ICodaScriptExecutionContext* Context) = 0;	// queues a (regular)script for background execution, takes ownership of pointer
@@ -105,7 +106,6 @@ namespace bgsee
 
 			virtual bool								HasError() const = 0;					// returns true if the script encountered an exception during runtime
 			virtual bool								HasEnded() const = 0;					// returns true if the (background) script was terminated
-
 			virtual bool								CanExecute() const = 0;					// returns false if execution is disabled, true otherwise
 			virtual void								FlagError() = 0;
 
@@ -122,7 +122,7 @@ namespace bgsee
 
 			virtual void								Return(CodaScriptBackingStore* Result = nullptr, bool EOL = false) = 0;		// breaks execution
 
-			virtual void								SetParameters(CodaScriptBackingStore::ArrayT& Parameters) = 0;
+			virtual void								SetParameters(CodaScriptBackingStore::NonPtrArrayT& Parameters) = 0;
 
 			virtual void								BeginLoop(ICodaScriptLoopBlock* Block) = 0;
 			virtual void								BreakLoop() = 0;		// flags the currently executing loop to break
@@ -187,7 +187,7 @@ namespace bgsee
 			virtual CodaScriptVariable*					GetVariable(const CodaScriptSourceCodeT& Name) const override;
 			virtual CodaScriptVariable*					GetVariable(const char* Name) const override;
 
-			virtual void								SetParameters(CodaScriptBackingStore::ArrayT& Parameters) override;
+			virtual void								SetParameters(CodaScriptBackingStore::NonPtrArrayT& Parameters) override;
 
 			virtual void								BeginLoop(ICodaScriptLoopBlock* Block) override;
 			virtual void								BreakLoop() override;

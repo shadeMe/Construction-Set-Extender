@@ -35,12 +35,16 @@ namespace bgsee
 			DataType	GetType() const { return Type; }
 			bool		IsValid() const { return Type != kDataType_Invalid; }
 
-			bool		GetIsNumber() const { return (Type == kDataType_Numeric || GetHasImplicitCast(kDataType_Numeric)); }
-			bool		GetIsReference() const { return (Type == kDataType_Reference); }
-			bool		GetIsString() const { return (Type == kDataType_String); }
-			bool		GetIsArray() const { return (Type == kDataType_Array); }
+			bool		IsNumber(bool AllowCasting = true) const
+			{
+				// only numbers have implicit casts
+				return Type == kDataType_Numeric || (AllowCasting && HasImplicitCast(kDataType_Numeric));
+			}
+			bool		IsReference() const { return (Type == kDataType_Reference); }
+			bool		IsString() const { return (Type == kDataType_String); }
+			bool		IsArray() const { return (Type == kDataType_Array); }
 
-			virtual bool								GetHasImplicitCast(DataType NewType) const = 0;
+			virtual bool								HasImplicitCast(DataType NewType) const = 0;
 														// the GetXXX accessory functions should perform the necessary casting internally
 			virtual CodaScriptReferenceDataTypeT		GetFormID() const = 0;
 			virtual CodaScriptNumericDataTypeT			GetNumber() const = 0;
@@ -55,6 +59,11 @@ namespace bgsee
 			virtual ICodaScriptDataStore&				operator=(CodaScriptNumericDataTypeT Num) = 0;
 			virtual ICodaScriptDataStore&				operator=(CodaScriptStringParameterTypeT Str) = 0;
 			virtual ICodaScriptDataStore&				operator=(CodaScriptReferenceDataTypeT Form) = 0;
+
+			virtual bool								operator==(const ICodaScriptDataStore& rhs) const = 0;
+			virtual bool								operator==(const CodaScriptNumericDataTypeT& rhs) const = 0;
+			virtual bool								operator==(CodaScriptStringParameterTypeT& rhs) const = 0;
+			virtual bool								operator==(const CodaScriptReferenceDataTypeT& rhs) const = 0;
 
 			typedef std::unique_ptr<ICodaScriptDataStore>		PtrT;
 		};

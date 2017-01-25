@@ -183,6 +183,16 @@ namespace bgsee
 
 					return true;
 				}
+
+				CodaScriptCommandHandler(IsBackgrounding)
+				{
+					if (ExecutionAgent->GetVM()->GetBackgroundDaemon()->IsContextBackgrounding(ExecutionAgent->GetContext()))
+						Result->SetNumber(1.f);
+					else
+						Result->SetNumber(0.f);
+
+					return true;
+				}
 			}
 		}
 	}

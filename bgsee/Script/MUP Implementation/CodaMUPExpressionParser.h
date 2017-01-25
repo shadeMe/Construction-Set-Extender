@@ -129,13 +129,11 @@ namespace bgsee
 
 					OperationContext(OperationType Type, ICodaScriptProgram* Program, ICodaScriptExecutionContext* Context) :
 						Type(Type), Program(Program), Agent(nullptr), Bytecode(nullptr), EvaluateData{ Context }, CompileData{ nullptr }
-					{
-					}
+					{}
 
 					OperationContext(OperationType Type, ICodaScriptProgram* Program) :
 						Type(Type), Program(Program), Agent(nullptr), Bytecode(nullptr), EvaluateData{ nullptr }, CompileData{ nullptr }
-					{
-					}
+					{}
 				};
 
 				std::unique_ptr<TokenReader>					m_TokenReader;

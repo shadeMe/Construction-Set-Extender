@@ -61,7 +61,7 @@ namespace bgsee
 			{
 				SME_ASSERT(CurrentValue);
 				ICodaScriptDataStore* Store = const_cast<IValue&>(ref).GetStore();
-				if (RestrictedAssignment && (Store->GetIsArray() || Store->GetIsReference()))
+				if (RestrictedAssignment && (Store->IsArray() || Store->IsReference()))
 				{
 					char Buffer[0x100] = { 0 };
 					FORMAT_STR(Buffer, "Cannot assign value of type '%c' to restricted variable '%s'", Store->GetType(), Name.c_str());

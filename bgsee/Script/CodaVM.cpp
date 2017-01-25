@@ -698,6 +698,23 @@ namespace bgsee
 			RuntimeCache.push_back(std::move(NewScript));
 		}
 
+		bool CodaScriptBackgrounder::IsContextBackgrounding(ICodaScriptExecutionContext* Context) const
+		{
+			for (auto& Itr : RuntimeCache)
+			{
+				if (Itr.get() == Context)
+					return true;
+			}
+
+			for (auto& Itr : DepotCache)
+			{
+				if (Itr.get() == Context)
+					return true;
+			}
+
+			return false;
+		}
+
 #define CODASCRIPTGLOBALDATASTORE_INISECTION					"CodaGlobalDataStore"
 
 #define IDM_BGSEE_CODAGLOBALDATASTORE_CLEAREDITFIELD			(WM_USER + 5003)

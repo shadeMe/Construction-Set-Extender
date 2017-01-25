@@ -94,7 +94,7 @@ namespace bgsee
 
 			typedef std::function<void(Event)>		FunctorT;
 
-			ScopedFunctor(FunctorT Functor) : Functor(Functor) { this->Functor(Event::Construction); }
+			ScopedFunctor(FunctorT&& Functor) : Functor(Functor) { this->Functor(Event::Construction); }
 			~ScopedFunctor() { this->Functor(Event::Destruction); }
 		private:
 			FunctorT		Functor;
@@ -151,7 +151,7 @@ namespace bgsee
 		class CodaScriptSimpleInstanceCounter
 		{
 			const int&	BaseGIC;
-			int		InitGIC;
+			int			InitGIC;
 		public:
 			CodaScriptSimpleInstanceCounter() : BaseGIC(T::GetGIC()), InitGIC(BaseGIC) {}
 

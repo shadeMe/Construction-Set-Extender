@@ -39,7 +39,28 @@ namespace bgsee
 			}
 		}
 
-		bool CodaScriptBackingStore::GetHasImplicitCast( DataType NewType ) const
+		bool CodaScriptBackingStore::CompareString(CodaScriptStringParameterTypeT lhs, CodaScriptStringParameterTypeT rhs)
+		{
+			return _stricmp(lhs, rhs) == 0;
+		}
+
+		bool CodaScriptBackingStore::CompareNumber(const CodaScriptNumericDataTypeT& lhs, const CodaScriptNumericDataTypeT& rhs)
+		{
+			return lhs == rhs;
+		}
+
+		bool CodaScriptBackingStore::CompareReference(const CodaScriptReferenceDataTypeT& lhs, const CodaScriptReferenceDataTypeT& rhs)
+		{
+			return lhs == rhs;
+		}
+
+		bool CodaScriptBackingStore::CompareArray(const ICodaScriptArrayDataType::SharedPtrT& lhs,
+												  const ICodaScriptArrayDataType::SharedPtrT& rhs)
+		{
+			return lhs == rhs;
+		}
+
+		bool CodaScriptBackingStore::HasImplicitCast(DataType NewType) const
 		{
 			bool Result = false;
 
@@ -57,13 +78,13 @@ namespace bgsee
 
 		CodaScriptReferenceDataTypeT CodaScriptBackingStore::GetFormID() const
 		{
-			SME_ASSERT(GetIsReference());
+			SME_ASSERT(IsReference());
 			return RefData;
 		}
 
 		CodaScriptNumericDataTypeT CodaScriptBackingStore::GetNumber() const
 		{
-			SME_ASSERT(GetIsNumber());
+			SME_ASSERT(IsNumber());
 
 			switch (Type)
 			{
@@ -79,13 +100,13 @@ namespace bgsee
 
 		CodaScriptStringParameterTypeT CodaScriptBackingStore::GetString() const
 		{
-			SME_ASSERT(GetIsString());
+			SME_ASSERT(IsString());
 			return StringData;
 		}
 
 		ICodaScriptArrayDataType::SharedPtrT CodaScriptBackingStore::GetArray() const
 		{
-			SME_ASSERT(GetIsArray());
+			SME_ASSERT(IsArray());
 			return ArrayData;
 		}
 
@@ -136,7 +157,54 @@ namespace bgsee
 			ArrayData = Data;
 		}
 
-		CodaScriptBackingStore::CodaScriptBackingStore( CodaScriptBackingStore* Data )
+		bool CodaScriptBackingStore::operator==(CodaScriptStringParameterTypeT& rhs) const
+		{
+			if (IsString() == false)
+				return false;
+			else
+				return CompareString(StringData, rhs);
+		}
+
+		bool CodaScriptBackingStore::operator==(const ICodaScriptDataStore& rhs) const
+		{
+			if (GetType() != rhs.GetType())
+				return false;
+			else switch (GetType())
+			{
+			case kDataType_Numeric:
+				return CompareNumber(NumericData, rhs.GetNumber());
+			case kDataType_Reference:
+				return CompareReference(RefData, rhs.GetFormID());
+			case kDataType_String:
+				return CompareString(StringData, rhs.GetString());
+			case kDataType_Array:
+				{
+					const CodaScriptBackingStore* Store = dynamic_cast<const CodaScriptBackingStore*>(&rhs);
+					SME_ASSERT(Store);
+					return CompareArray(ArrayData, Store->ArrayData);
+				}
+			default:
+				return false;
+			}
+		}
+
+		bool CodaScriptBackingStore::operator==(const CodaScriptNumericDataTypeT& rhs) const
+		{
+			if (IsNumber(false) == false)
+				return false;
+			else
+				return CompareNumber(NumericData, rhs);
+		}
+
+		bool CodaScriptBackingStore::operator==(const CodaScriptReferenceDataTypeT& rhs) const
+		{
+			if (IsReference() == false)
+				return false;
+			else
+				return CompareReference(RefData, rhs);
+		}
+
+		CodaScriptBackingStore::CodaScriptBackingStore(CodaScriptBackingStore* Data)
 			: ICodaScriptDataStore(), NumericData(0), ArrayData()
 		{
 			GIC++;
@@ -291,17 +359,6 @@ namespace bgsee
 		{
 			SME_ASSERT(Storage);
 			GIC++;
-		}
-
-		CodaScriptVariable::CodaScriptVariable( const CodaScriptVariable& rhs )
-		{
-			;// blocked
-		}
-
-		CodaScriptVariable& CodaScriptVariable::operator=( const CodaScriptVariable& rhs )
-		{
-			;// blocked
-			return *this;
 		}
 
 		CodaScriptVariable::~CodaScriptVariable()

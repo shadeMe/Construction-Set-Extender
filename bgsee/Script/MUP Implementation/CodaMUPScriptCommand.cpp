@@ -31,7 +31,7 @@ namespace bgsee
 
 				SME_ASSERT(ExecutionAgent && ByteCode);
 
-				CodaScriptBackingStore::ArrayT WrappedArgs;
+				CodaScriptBackingStore::NonPtrArrayT WrappedArgs;
 				ICodaScriptCommand::ParameterInfo* ParamArray = nullptr;
 				UInt8 ReturnType = ICodaScriptDataStore::kDataType_Invalid;
 				int ParamCount = Parent->GetParameterData(&ParamCount, &ParamArray, &ReturnType);
@@ -55,7 +55,7 @@ namespace bgsee
 
 							if (CurrentArg->GetType() != CurrentParam->Type &&
 								CurrentParam->Type != ICodaScriptCommand::ParameterInfo::kType_Multi &&
-								CurrentArg->GetHasImplicitCast((ICodaScriptDataStore::DataType)CurrentParam->Type) == false)
+								CurrentArg->HasImplicitCast((ICodaScriptDataStore::DataType)CurrentParam->Type) == false)
 							{
 									throw CodaScriptException(ByteCode->GetSource(),
 															"Parameter %d type mismatch for command '%s' - Expected '%c', received '%c'",
@@ -91,7 +91,7 @@ namespace bgsee
 				{
 					if (ResultStore.GetType() != ReturnType &&
 						ReturnType != ICodaScriptCommand::ParameterInfo::kType_Multi &&
-						ResultStore.GetHasImplicitCast((ICodaScriptDataStore::DataType)ReturnType) == false)
+						ResultStore.HasImplicitCast((ICodaScriptDataStore::DataType)ReturnType) == false)
 					{
 						throw CodaScriptException(ByteCode->GetSource(),
 							"Return type mismatch for command '%s' - Expected '%c', received '%c'",
