@@ -40,7 +40,9 @@ namespace cse
 				CodaScriptCommandPrototypeDef(LoadRefIntoRenderWindow);
 				CodaScriptCommandPrototypeDef(DeleteRef);
 				CodaScriptCommandPrototypeDef(GetCellCoordinates);
-				CodaScriptCommandPrototypeDef(GetLandcapeTextureAtCoordinates);
+				CodaScriptCommandPrototypeDef(GetLandscapeTextureAtCoordinates);
+				CodaScriptCommandPrototypeDef(GetCellLandscapeTextures);
+				CodaScriptCommandPrototypeDef(GetLinkedDoor);
 
 				CodaScriptCommandParamData(CreateRef, 9)
 				{
@@ -102,11 +104,22 @@ namespace cse
 					{ "Cell", ICodaScriptDataStore::kDataType_Reference }
 				};
 
-				CodaScriptCommandParamData(GetLandcapeTextureAtCoordinates, 3)
+				CodaScriptCommandParamData(GetLandscapeTextureAtCoordinates, 3)
 				{
 					{ "Cell", ICodaScriptDataStore::kDataType_Reference },
 					{ "X Coord", ICodaScriptDataStore::kDataType_Numeric },
 					{ "Y Coord", ICodaScriptDataStore::kDataType_Numeric }
+				};
+
+				CodaScriptCommandParamData(GetCellLandscapeTextures, 2)
+				{
+					{ "Cell", ICodaScriptDataStore::kDataType_Reference },
+					{ "Quad", ICodaScriptDataStore::kDataType_Numeric }
+				};
+
+				CodaScriptCommandParamData(GetLinkedDoor, 1)
+				{
+					{ "Door", ICodaScriptDataStore::kDataType_Reference }
 				};
 
 				CodaScriptCommandHandler(CreateRef)
@@ -593,7 +606,7 @@ namespace cse
 							ICodaScriptDataStore* Current = nullptr;
 							if (Utilities->ArrayAt(Array, i, &Current))
 							{
-								if (Current->GetIsReference())
+								if (Current->IsReference())
 								{
 									TESObjectREFR* Ref = CS_CAST(TESForm::LookupByFormID(Current->GetFormID()), TESForm, TESObjectREFR);
 									if (Ref)
@@ -639,7 +652,7 @@ namespace cse
 							ICodaScriptDataStore* Current = nullptr;
 							if (Utilities->ArrayAt(Array, i, &Current))
 							{
-								if (Current->GetIsReference())
+								if (Current->IsReference())
 								{
 									TESObjectREFR* Ref = CS_CAST(TESForm::LookupByFormID(Current->GetFormID()), TESForm, TESObjectREFR);
 									if (Ref)
@@ -754,7 +767,7 @@ namespace cse
 					return true;
 				}
 
-				CodaScriptCommandHandler(GetLandcapeTextureAtCoordinates)
+				CodaScriptCommandHandler(GetLandscapeTextureAtCoordinates)
 				{
 					TESObjectCELL* Cell = nullptr;
 					CodaScriptNumericDataTypeT XCoord, YCoord;
@@ -778,6 +791,76 @@ namespace cse
 								Result->SetFormID(Texture->formID);
 						}
 					}
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(GetCellLandscapeTextures)
+				{
+					TESObjectCELL* Cell = nullptr;
+					CodaScriptNumericDataTypeT Quad;
+
+					CodaScriptCommandExtractArgs(&Cell, &Quad);
+					ExtractFormArguments(1, &Cell);
+
+					Cell = CS_CAST(Cell, TESForm, TESObjectCELL);
+					if (!Cell)
+						return false;
+
+					ICodaScriptDataStore* Array = Utilities->ArrayAllocate();
+					SME_ASSERT(Array);
+
+					if (Cell->IsInterior() == false)
+					{
+						TESObjectLAND* Land = Cell->GetLand();
+						if (Land)
+						{
+							if (Quad < 0)
+								Quad = 0;
+							else if (Quad > 3)
+								Quad = 3;
+
+							if (Land->landData)
+							{
+								auto LandTexData = Land->landData->quadTextures[(int)Quad];
+								if (LandTexData)
+								{
+									for (auto Itr : LandTexData->textures)
+									{
+										if (Itr)
+											Utilities->ArrayPushback(Array, (CodaScriptReferenceDataTypeT)Itr->formID);
+									}
+								}
+							}
+						}
+					}
+
+					Result->SetArray(Array);
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(GetLinkedDoor)
+				{
+					TESObjectREFR* Ref = nullptr;
+
+					CodaScriptCommandExtractArgs(&Ref);
+					ExtractFormArguments(1, &Ref);
+
+					if (Ref == nullptr)
+						return false;
+
+					Ref = CS_CAST(Ref, TESForm, TESObjectREFR);
+					if (!Ref || !Ref->baseForm)
+						return false;
+					else if (Ref->baseForm->formType != TESForm::kFormType_Door)
+						return false;
+
+					Result->SetFormID(NULL);
+
+					auto* xTeleport = CS_CAST(Ref->extraData.GetExtraDataByType(ExtraTeleport::kExtra_Teleport), BSExtraData, ExtraTeleport);
+					if (xTeleport && xTeleport->data && xTeleport->data->linkedDoor)
+						Result->SetFormID(xTeleport->data->linkedDoor->formID);
 
 					return true;
 				}

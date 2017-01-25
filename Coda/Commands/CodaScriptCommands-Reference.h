@@ -218,11 +218,25 @@ namespace cse
 					1,
 					ICodaScriptDataStore::kDataType_Array);
 
-				CodaScriptCommandPrototype(GetLandcapeTextureAtCoordinates,
+				CodaScriptCommandPrototype(GetLandscapeTextureAtCoordinates,
 					0,
-					"Returns the landscape texture at the coordinates of the given cell, if any. Will return zero otherwise.",
+					"Returns the landscape texture at the coordinates of the given cell, if any. Will return zero otherwise. The cell must be loaded into the render window.",
 					0,
 					3,
+					ICodaScriptDataStore::kDataType_Reference);
+
+				CodaScriptCommandPrototype(GetCellLandscapeTextures,
+					0,
+					"Returns the given cell's landscape textures as an array, if any. Will return an empty array if the passed cell is an interior.",
+					0,
+					2,
+					ICodaScriptDataStore::kDataType_Array);
+
+				CodaScriptCommandPrototype(GetLinkedDoor,
+					0,
+					"Returns the door that the given door links to.",
+					0,
+					1,
 					ICodaScriptDataStore::kDataType_Reference);
 			}
 		}

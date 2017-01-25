@@ -30,6 +30,13 @@ struct CSEInterface
 	const void*		(* InitializeInterface)(UInt8 InterfaceType);
 	// Returns the implementation version of the extender interface
 	UInt8			(* GetInterfaceVersion)(void);
+
+	/*
+	 *	Version History:
+	 *		1/2 - Pre-8.0
+	 *		  3 - Deprecate Renderer interface
+	 *		  4 - Coda public API changes
+	 */
 };
 
 struct CSEIntelliSenseInterface
@@ -54,7 +61,7 @@ struct CSEConsoleInterface
 
 struct CSERendererInterface
 {
-	// OBSOLETE SINCE INTERFACE VERSION 3
+	// ** DEPRECATED **
 	// Queues a text message for display in the render window
 	void			(* PrintToRenderWindow)(const char* Message, float DisplayDuration);
 };

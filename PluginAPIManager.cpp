@@ -32,7 +32,7 @@ namespace cse
 	};
 
 	PluginAPIManager						PluginAPIManager::Instance;
-	const UInt8								PluginAPIManager::kInterfaceVersion = 3;
+	const UInt8								PluginAPIManager::kInterfaceVersion = 4;
 
 	PluginAPIManager::PluginAPIManager() :
 		ConsolePrintCallbacks(),
