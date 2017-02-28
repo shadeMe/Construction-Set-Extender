@@ -21,7 +21,7 @@ namespace bgsee
 
 				CodaScriptCommandPrototype(ArrayInsert,
 					"ArInsert",
-					"Inserts an element into an array at a specific index. Pass -1 as index to append. Returns true if successful.",
+					"Sets the element at a specific index in an array. Pass -1 as index to append. Returns true if successful.",
 					0,
 					3,
 					ICodaScriptDataStore::kDataType_Numeric);
