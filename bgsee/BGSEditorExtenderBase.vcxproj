@@ -34,7 +34,6 @@
     <ClInclude Include="Script\Commands\CodaScriptCommands-String.h" />
     <ClInclude Include="Script\MUP Base\mpDefines.h" />
     <ClInclude Include="Script\MUP Base\mpError.h" />
-    <ClInclude Include="Script\MUP Base\mpFuncCmplx.h" />
     <ClInclude Include="Script\MUP Base\mpFuncCommon.h" />
     <ClInclude Include="Script\MUP Base\mpFuncMatrix.h" />
     <ClInclude Include="Script\MUP Base\mpFuncNonCmplx.h" />
@@ -104,7 +103,6 @@
     <ClCompile Include="Script\Commands\CodaScriptCommands-General.cpp" />
     <ClCompile Include="Script\Commands\CodaScriptCommands-String.cpp" />
     <ClCompile Include="Script\MUP Base\mpError.cpp" />
-    <ClCompile Include="Script\MUP Base\mpFuncCmplx.cpp" />
     <ClCompile Include="Script\MUP Base\mpFuncCommon.cpp" />
     <ClCompile Include="Script\MUP Base\mpFuncMatrix.cpp" />
     <ClCompile Include="Script\MUP Base\mpFuncNonCmplx.cpp" />
@@ -227,6 +225,9 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <ForcedIncludeFiles>StdAfx.h</ForcedIncludeFiles>
       <BasicRuntimeChecks>UninitializedLocalUsageCheck</BasicRuntimeChecks>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <FloatingPointExceptions>
+      </FloatingPointExceptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -262,6 +263,9 @@
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <ForcedIncludeFiles>StdAfx.h</ForcedIncludeFiles>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <FloatingPointExceptions>
+      </FloatingPointExceptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

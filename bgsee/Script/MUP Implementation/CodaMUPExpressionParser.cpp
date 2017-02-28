@@ -52,8 +52,6 @@ namespace bgsee
 
 			void CodaScriptMUPParserByteCode::PushBufferContext()
 			{
-				SME_ASSERT(CurrentValueCache == nullptr);
-
 				ValueBuffer::PtrT Context(CreateBufferContext());
 				CurrentValueCache = Context.get();
 				Buffer.push(std::move(Context));

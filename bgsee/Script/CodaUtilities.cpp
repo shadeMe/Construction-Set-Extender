@@ -169,7 +169,7 @@ namespace bgsee
 		{
 			Out.clear();
 
-			if (Tokenize(In, false))
+			if (Tokenize(In, true))
 			{
 				if ((OperationMask & kSanitizeOps_StripLeadingWhitespace))
 					Out = In.substr(Indices[0]);

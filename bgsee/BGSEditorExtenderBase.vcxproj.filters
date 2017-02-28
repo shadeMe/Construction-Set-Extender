@@ -85,9 +85,6 @@
     <ClInclude Include="Script\MUP Base\mpError.h">
       <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
     </ClInclude>
-    <ClInclude Include="Script\MUP Base\mpFuncCmplx.h">
-      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
-    </ClInclude>
     <ClInclude Include="Script\MUP Base\mpFuncCommon.h">
       <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
     </ClInclude>
@@ -278,9 +275,6 @@
       <Filter>Modules</Filter>
     </ClCompile>
     <ClCompile Include="Script\MUP Base\mpError.cpp">
-      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
-    </ClCompile>
-    <ClCompile Include="Script\MUP Base\mpFuncCmplx.cpp">
       <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
     </ClCompile>
     <ClCompile Include="Script\MUP Base\mpFuncCommon.cpp">
