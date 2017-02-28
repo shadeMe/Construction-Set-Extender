@@ -359,6 +359,8 @@ namespace bgsee
 		{
 			SME_ASSERT(Storage);
 			GIC++;
+
+			BoundOwner->SetIdentifier(Name.c_str());
 		}
 
 		CodaScriptVariable::~CodaScriptVariable()
