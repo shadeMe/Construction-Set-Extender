@@ -16,6 +16,9 @@ namespace bgsee
 				CodaScriptCommandPrototypeDef(ArrayErase);
 				CodaScriptCommandPrototypeDef(ArrayClear);
 				CodaScriptCommandPrototypeDef(ArraySize);
+				CodaScriptCommandPrototypeDef(ArrayInsertAt);
+				CodaScriptCommandPrototypeDef(ArraySetAt);
+				CodaScriptCommandPrototypeDef(ArrayAppend);
 
 				CodaScriptCommandParamData(ArrayInsert, 3)
 				{
@@ -28,6 +31,26 @@ namespace bgsee
 				{
 					{ "Array",								ICodaScriptDataStore::kDataType_Array	},
 					{ "Index",								ICodaScriptDataStore::kDataType_Numeric	}
+				};
+
+				CodaScriptCommandParamData(ArrayInsertAt, 3)
+				{
+					{ "Array",								ICodaScriptDataStore::kDataType_Array	},
+					{ "Element",							ParameterInfo::kType_Multi				},
+					{ "Index",								ICodaScriptDataStore::kDataType_Numeric	}
+				};
+
+				CodaScriptCommandParamData(ArraySetAt, 3)
+				{
+					{ "Array",								ICodaScriptDataStore::kDataType_Array	},
+					{ "Element",							ParameterInfo::kType_Multi				},
+					{ "Index",								ICodaScriptDataStore::kDataType_Numeric	}
+				};
+
+				CodaScriptCommandParamData(ArrayAppend, 2)
+				{
+					{ "Array",								ICodaScriptDataStore::kDataType_Array	},
+					{ "Element",							ParameterInfo::kType_Multi				}
 				};
 
 				CodaScriptCommandHandler(ArrayCreate)
@@ -96,6 +119,53 @@ namespace bgsee
 					SME_ASSERT(ArrayStore);
 
 					Result->SetNumber(ArrayStore->GetArray()->Size());
+					return true;
+				}
+
+				CodaScriptCommandHandler(ArrayInsertAt)
+				{
+					ICodaScriptDataStore* Array = nullptr;
+					ICodaScriptDataStore* Element = nullptr;
+					CodaScriptNumericDataTypeT Index = -1;
+
+					CodaScriptCommandExtractArgs(&Array, &Element, &Index);
+
+					CodaScriptBackingStore* ArrayStore = dynamic_cast<CodaScriptBackingStore*>(Array);
+					CodaScriptBackingStore* ElementStore = dynamic_cast<CodaScriptBackingStore*>(Element);
+					SME_ASSERT(ArrayStore && ElementStore);
+
+					Result->SetNumber(ArrayStore->GetArray()->Insert(ElementStore, Index, false));
+					return true;
+				}
+
+				CodaScriptCommandHandler(ArraySetAt)
+				{
+					ICodaScriptDataStore* Array = nullptr;
+					ICodaScriptDataStore* Element = nullptr;
+					CodaScriptNumericDataTypeT Index = -1;
+
+					CodaScriptCommandExtractArgs(&Array, &Element, &Index);
+
+					CodaScriptBackingStore* ArrayStore = dynamic_cast<CodaScriptBackingStore*>(Array);
+					CodaScriptBackingStore* ElementStore = dynamic_cast<CodaScriptBackingStore*>(Element);
+					SME_ASSERT(ArrayStore && ElementStore);
+
+					Result->SetNumber(ArrayStore->GetArray()->Insert(ElementStore, Index, true));
+					return true;
+				}
+
+				CodaScriptCommandHandler(ArrayAppend)
+				{
+					ICodaScriptDataStore* Array = nullptr;
+					ICodaScriptDataStore* Element = nullptr;
+
+					CodaScriptCommandExtractArgs(&Array, &Element);
+
+					CodaScriptBackingStore* ArrayStore = dynamic_cast<CodaScriptBackingStore*>(Array);
+					CodaScriptBackingStore* ElementStore = dynamic_cast<CodaScriptBackingStore*>(Element);
+					SME_ASSERT(ArrayStore && ElementStore);
+
+					Result->SetNumber(ArrayStore->GetArray()->Insert(ElementStore, -1, true));
 					return true;
 				}
 			}

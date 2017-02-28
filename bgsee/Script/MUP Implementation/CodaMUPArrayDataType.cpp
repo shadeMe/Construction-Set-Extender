@@ -14,7 +14,7 @@ namespace bgsee
 			}
 
 			template<typename ElementT>
-			bool CodaScriptMUPArrayDataType::AddElement(ElementT Element, int Index)
+			bool CodaScriptMUPArrayDataType::AddElement(ElementT Element, int Index, bool Replace)
 			{
 				if (Index == -1)
 				{
@@ -23,7 +23,11 @@ namespace bgsee
 				}
 				else if (Index < Size())
 				{
-					DataStore[Index] = CodaScriptMUPValue(Element);
+					if (Replace)
+						DataStore[Index] = CodaScriptMUPValue(Element);
+					else
+						DataStore.emplace(DataStore.begin() + Index, CodaScriptMUPValue(Element));
+
 					return true;
 				}
 				else
@@ -46,7 +50,7 @@ namespace bgsee
 				GIC++;
 
 				for (int i = 0; i < Size; i++)
-					AddElement<const CodaScriptBackingStore&>(Elements[i], -1);
+					AddElement<const CodaScriptBackingStore&>(Elements[i], -1, true);
 			}
 
 			CodaScriptMUPArrayDataType::CodaScriptMUPArrayDataType( CodaScriptMUPArrayDataType* Source ) :
@@ -91,29 +95,29 @@ namespace bgsee
 				return *this;
 			}
 
-			bool CodaScriptMUPArrayDataType::Insert(CodaScriptBackingStore* Data, int Index /* = -1 */)
+			bool CodaScriptMUPArrayDataType::Insert(CodaScriptBackingStore* Data, int Index /* = -1 */, bool Replace /* = true */)
 			{
-				return AddElement<const CodaScriptBackingStore&>(*Data, Index);
+				return AddElement<const CodaScriptBackingStore&>(*Data, Index, Replace);
 			}
 
-			bool CodaScriptMUPArrayDataType::Insert(ICodaScriptArrayDataType::SharedPtrT Data, int Index /* = -1 */)
+			bool CodaScriptMUPArrayDataType::Insert(ICodaScriptArrayDataType::SharedPtrT Data, int Index /* = -1 */, bool Replace /* = true */)
 			{
-				return AddElement<ICodaScriptArrayDataType::SharedPtrT>(Data, Index);
+				return AddElement<ICodaScriptArrayDataType::SharedPtrT>(Data, Index, Replace);
 			}
 
-			bool CodaScriptMUPArrayDataType::Insert(CodaScriptReferenceDataTypeT Data, int Index /* = -1 */)
+			bool CodaScriptMUPArrayDataType::Insert(CodaScriptReferenceDataTypeT Data, int Index /* = -1 */, bool Replace /* = true */)
 			{
-				return AddElement<CodaScriptReferenceDataTypeT>(Data, Index);
+				return AddElement<CodaScriptReferenceDataTypeT>(Data, Index, Replace);
 			}
 
-			bool CodaScriptMUPArrayDataType::Insert(CodaScriptStringParameterTypeT Data, int Index /* = -1 */)
+			bool CodaScriptMUPArrayDataType::Insert(CodaScriptStringParameterTypeT Data, int Index /* = -1 */, bool Replace /* = true */)
 			{
-				return AddElement<CodaScriptStringParameterTypeT>(Data, Index);
+				return AddElement<CodaScriptStringParameterTypeT>(Data, Index, Replace);
 			}
 
-			bool CodaScriptMUPArrayDataType::Insert(CodaScriptNumericDataTypeT Data, int Index /* = -1 */)
+			bool CodaScriptMUPArrayDataType::Insert(CodaScriptNumericDataTypeT Data, int Index /* = -1 */, bool Replace /* = true */)
 			{
-				return AddElement<CodaScriptNumericDataTypeT>(Data, Index);
+				return AddElement<CodaScriptNumericDataTypeT>(Data, Index, Replace);
 			}
 
 			bool CodaScriptMUPArrayDataType::Erase( UInt32 Index )

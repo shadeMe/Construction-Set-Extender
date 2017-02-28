@@ -14,11 +14,11 @@ namespace bgsee
 
 			typedef std::shared_ptr<ICodaScriptArrayDataType>		SharedPtrT;
 
-			virtual bool											Insert(CodaScriptBackingStore* Data, int Index = -1) = 0;
-			virtual bool											Insert(CodaScriptNumericDataTypeT Data, int Index = -1) = 0;
-			virtual bool											Insert(CodaScriptStringParameterTypeT Data, int Index = -1) = 0;
-			virtual bool											Insert(CodaScriptReferenceDataTypeT Data, int Index = -1) = 0;
-			virtual bool											Insert(SharedPtrT Data, int Index = -1) = 0;
+			virtual bool											Insert(CodaScriptBackingStore* Data, int Index = -1, bool Replace = true) = 0;
+			virtual bool											Insert(CodaScriptNumericDataTypeT Data, int Index = -1, bool Replace = true) = 0;
+			virtual bool											Insert(CodaScriptStringParameterTypeT Data, int Index = -1, bool Replace = true) = 0;
+			virtual bool											Insert(CodaScriptReferenceDataTypeT Data, int Index = -1, bool Replace = true) = 0;
+			virtual bool											Insert(SharedPtrT Data, int Index = -1, bool Replace = true) = 0;
 
 			virtual bool											Erase(UInt32 Index) = 0;
 			virtual void											Clear(void) = 0;

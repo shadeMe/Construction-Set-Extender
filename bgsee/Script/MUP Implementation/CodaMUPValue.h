@@ -38,8 +38,8 @@ namespace bgsee
 				explicit CodaScriptMUPValue(CodaScriptReferenceDataTypeT val);
 				explicit CodaScriptMUPValue(ICodaScriptArrayDataType::SharedPtrT val);
 				explicit CodaScriptMUPValue(const CodaScriptBackingStore& val);
-				explicit CodaScriptMUPValue(const CodaScriptMUPValue& a_Val );
 				explicit CodaScriptMUPValue(const IValue &a_Val);
+				CodaScriptMUPValue(const CodaScriptMUPValue& a_Val );
 				virtual ~CodaScriptMUPValue();
 
 				virtual IValue&								At(int nRow, int nCol = 0);
