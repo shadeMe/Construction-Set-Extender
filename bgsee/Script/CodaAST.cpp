@@ -345,6 +345,7 @@ namespace bgsee
 			if (Tokenizer.Tokenize(this->Source, false))
 			{
 				this->IteratorName = Tokenizer.Tokens[1];		// second token
+				SME::StringHelpers::MakeLower(IteratorName);
 
 				ConditionExpression = this->Source.substr(Tokenizer.Indices[2] + Tokenizer.Tokens[2].length());		// everything past the third token (<-)
 				Tokenizer.Sanitize(ConditionExpression, this->Condition,

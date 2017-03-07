@@ -579,6 +579,7 @@ namespace bgsee
 									Initer = LineBuffer.substr(Tokenizer.Indices[1]);
 							}
 
+							SME::StringHelpers::MakeLower(SecondToken);
 							Out->AddVariable(SecondToken, Initer, LineNo);
 						}
 

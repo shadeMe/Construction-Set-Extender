@@ -154,7 +154,8 @@ namespace bgsee
 			};
 
 			typedef std::stack<LoopInfo>		LoopStackT;
-			typedef std::unordered_map<CodaScriptSourceCodeT, CodaScriptVariable::PtrT>		VarMapT;		// key = name, value = variable
+			typedef std::unordered_map<CodaScriptSourceCodeT,
+				CodaScriptVariable::PtrT>		VarMapT;		// key = name, value = variable
 
 			ICodaScriptProgram*					Parent;
 			VarMapT								Variables;
