@@ -45,8 +45,8 @@ namespace bgsee
 
 				CodaScriptCommandPrototype(FormatNumber,
 					"FmtNum",
-					"Formats a numeric value as a string. References must be interpreted as unsigned integers for precise conversions.",
-					"Refer to <a href=\"http://msdn.microsoft.com/en-us/library/56e442dc(v=VS.100).aspx\">this article</a> for format specification info.",
+					"Formats a numeric value as a string. There may be a loss in precision when the value is interpreted as an unsigned integer.",
+					"Refer to <a href=\"http://msdn.microsoft.com/en-us/library/56e442dc(v=VS.100).aspx\">this article</a> for format specification info. Only use specifiers that interpret the value as a double precision floating point number or, when applicable, an unsigned integer.",
 					3,
 					ICodaScriptDataStore::kDataType_String);
 

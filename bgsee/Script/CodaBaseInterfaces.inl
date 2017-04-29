@@ -21,13 +21,13 @@ namespace bgsee
 			enum DataType
 			{
 				kDataType_Invalid	= '?',								// default implementation details:
-				kDataType_Numeric	= 'n',								//		-
+				kDataType_Numeric	= 'n',								//		double precision float
 				kDataType_Reference	= 'r',								//		formIDs
-				kDataType_String	= 's',								//		-
-				kDataType_Array		= 'a',								//		ref counted
+				kDataType_String	= 's',								//		c-string
+				kDataType_Array		= 'a',								//		ref counted vectors
 			};
 		protected:
-			DataType														Type;
+			DataType		Type;
 		public:
 			ICodaScriptDataStore() : Type(kDataType_Invalid) {}
 			virtual ~ICodaScriptDataStore() = 0 {}
