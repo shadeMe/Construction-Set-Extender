@@ -669,7 +669,7 @@ BEGIN
             BEGIN
                 MENUITEM "Enabled",                     IDC_RENDERWINDOWCONTEXT_OSD_MOUSEREF
                 MENUITEM SEPARATOR
-                MENUITEM "CTRL Key Modified",           IDC_RENDERWINDOWCONTEXT_OSD_MOUSEREF_CTRLMODIFIED
+                MENUITEM "Hold CTRL Key to Show",       IDC_RENDERWINDOWCONTEXT_OSD_MOUSEREF_CTRLMODIFIED
             END
         END
         MENUITEM "Render Window Properties...", 293

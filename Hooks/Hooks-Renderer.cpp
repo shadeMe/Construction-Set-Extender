@@ -1308,6 +1308,7 @@ namespace cse
 			{
 				cmp		eax, 1
 				jz		LOCAL
+
 				test	bl, bl
 				jz		LOCAL
 
