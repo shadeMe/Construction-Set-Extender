@@ -112,8 +112,7 @@ void PackageCommon::AddToParser(CodaScriptMUPExpressionParser *pParser)
   pParser->DefineOprt(new OprtAssignDiv);
 
   // infix operators
-  pParser->DefineInfixOprt(new OprtCastToFloat);
-  pParser->DefineInfixOprt(new OprtCastToInt);
+  pParser->DefineInfixOprt(new OprtCastToNum);
   pParser->DefineInfixOprt(new OprtCastToRef);
   pParser->DefineInfixOprt(new OprtCastToArray);
   pParser->DefineInfixOprt(new OprtCastToStr("(str)"));

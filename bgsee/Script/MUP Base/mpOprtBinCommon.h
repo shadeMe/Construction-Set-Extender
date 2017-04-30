@@ -219,32 +219,15 @@ namespace bgsee { namespace script { namespace mup {
 	virtual IToken* Clone() const;
   };
 
-  //---------------------------------------------------------------------------
-  /** \brief Callback for an operator allowing to cast values to floating 
-			 point values.
-	  \ingroup infix
-  */
-  class OprtCastToFloat : public IOprtInfix
-  {
-  public:
-	OprtCastToFloat();
-	virtual void Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int a_iArgc);
-	virtual const char_type* GetDesc() const;
-	virtual IToken* Clone() const;
-  }; // class OprtCastToFloat
+	class OprtCastToNum : public IOprtInfix
+	{
+	public:
+		OprtCastToNum() : IOprtInfix("(num)", prINFIX) {}
 
-  //---------------------------------------------------------------------------
-  /** \brief Callback for an operator allowing to cast values to integer values.
-	  \ingroup infix
-  */
-  class OprtCastToInt : public IOprtInfix
-  {
-  public:
-	OprtCastToInt();
-	virtual void Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int a_iArgc);
-	virtual const char_type* GetDesc() const;
-	virtual IToken* Clone() const;
-  }; // class OprtCastToInt
+		virtual void				Eval(mup::ptr_val_type &ret, const ptr_val_type *a_pArg, int a_iArgc);
+		virtual const char_type*	GetDesc() const;
+		virtual IToken*				Clone() const;
+	};
 
 	class OprtCastToRef : public IOprtInfix
 	{

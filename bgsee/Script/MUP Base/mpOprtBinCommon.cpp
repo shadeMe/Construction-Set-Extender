@@ -492,23 +492,13 @@ namespace bgsee { namespace script { namespace mup {
 	return new OprtShr(*this);
   }
 
-  //------------------------------------------------------------------------------
-  //
-  //  Cast To Float
-  //
-  //------------------------------------------------------------------------------
 
-  OprtCastToFloat::OprtCastToFloat()
-	:IOprtInfix( _T("(float)"), prINFIX)
-  {}
-
-  //------------------------------------------------------------------------------
-  void OprtCastToFloat::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int /*a_iArgc*/)
+  void OprtCastToNum::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int /*a_iArgc*/)
   {
 	  CodaScriptBackingStore* Store = a_pArg[0]->GetStore();
 	  SME_ASSERT(Store);
 
-	  switch(Store->GetType())
+	  switch (Store->GetType())
 	  {
 	  case ICodaScriptDataStore::kDataType_Numeric:
 		  *ret = (float_type)Store->GetNumber();
@@ -527,63 +517,14 @@ namespace bgsee { namespace script { namespace mup {
 	  }
   }
 
-  //------------------------------------------------------------------------------
-  const char_type* OprtCastToFloat::GetDesc() const
+  const char_type* OprtCastToNum::GetDesc() const
   {
-	return _T("cast a value into a floating point number");
+	  return _T("Cast a value into a number");
   }
 
-  //------------------------------------------------------------------------------
-  IToken* OprtCastToFloat::Clone() const
+  IToken* OprtCastToNum::Clone() const
   {
-	return new OprtCastToFloat(*this);
-  }
-
-  //------------------------------------------------------------------------------
-  //
-  //  Cast To Int
-  //
-  //------------------------------------------------------------------------------
-
-  OprtCastToInt::OprtCastToInt()
-	:IOprtInfix( _T("(int)"), prINFIX)
-  {}
-
-  //------------------------------------------------------------------------------
-  void OprtCastToInt::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int /*a_iArgc*/)
-  {
-	  CodaScriptBackingStore* Store = a_pArg[0]->GetStore();
-	  SME_ASSERT(Store);
-
-	  switch(Store->GetType())
-	  {
-	  case ICodaScriptDataStore::kDataType_Numeric:
-		  *ret = (float_type)Store->GetNumber();
-		  break;
-	  case ICodaScriptDataStore::kDataType_Reference:
-		  *ret = (float_type)Store->GetFormID();
-		  break;
-	default:
-	  {
-		ErrorContext err;
-		err.Errc = ecINVALID_TYPECAST;
-		err.Type1 = Store->GetType();
-		err.Type2 = ICodaScriptDataStore::kDataType_Numeric;
-		throw ParserError(err);
-	  }
-	} // switch value type
-  }
-
-  //------------------------------------------------------------------------------
-  const char_type* OprtCastToInt::GetDesc() const
-  {
-	return _T("cast a value into a floating point number");
-  }
-
-  //------------------------------------------------------------------------------
-  IToken* OprtCastToInt::Clone() const
-  {
-	return new OprtCastToInt(*this);
+	  return new OprtCastToNum(*this);
   }
 
   void OprtCastToRef::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int /*a_iArgc*/)
