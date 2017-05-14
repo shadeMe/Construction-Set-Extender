@@ -1046,7 +1046,8 @@ namespace cse
 
 					// render the aux viewport's perspective
 					if (*TESRenderWindow::RefreshFlag && *TESRenderWindow::ActiveCell &&
-						TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kState_NotInUse)
+						TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kState_NotInUse &&
+						Instance.IsRenderingScene() == false)
 					{
 						AUXVIEWPORT->Draw(nullptr, nullptr);
 					}
