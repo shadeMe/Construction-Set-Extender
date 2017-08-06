@@ -5,7 +5,6 @@
 #include "Hooks-LOD.h"
 
 #pragma warning(push)
-/*#pragma optimize("", off)*/
 #pragma warning(disable: 4005 4748 4410)
 
 
@@ -1529,4 +1528,3 @@ namespace cse
 }
 
 #pragma warning(pop)
-/*#pragma optimize("", on)*/

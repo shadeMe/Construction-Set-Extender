@@ -2,7 +2,6 @@
 #include "[Common]/CLIWrapper.h"
 
 #pragma warning(push)
-/*#pragma optimize("", off)*/
 #pragma warning(disable: 4005 4748)
 
 namespace cse
@@ -89,9 +88,7 @@ namespace cse
 		void __stdcall DoRerouteScriptErrorsHook(UInt32 Line, const char* Message)
 		{
 			if (TESScriptCompiler::PreventErrorDetours == false)	// don't handle when compiling result scripts or recompiling
-			{
 				TESScriptCompiler::AuxiliaryErrorDepot.push_back(TESScriptCompiler::CompilerErrorData(Line, Message));
-			}
 		}
 
 		#define _hhName		RerouteScriptErrors
@@ -238,4 +235,3 @@ namespace cse
 }
 
 #pragma warning(pop)
-/*#pragma optimize("", on)*/

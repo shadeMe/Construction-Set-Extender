@@ -1175,22 +1175,26 @@ namespace cse
 
 						for each (DocumentLine^ Line in ParentEditor->Document->Lines)
 						{
-							String^ CurrentLine = ParentEditor->Document->GetText(Line);
-
-							int Index = 0, Start = 0;
-							while ((Index = CurrentLine->IndexOf(SelectionText, Start, System::StringComparison::CurrentCultureIgnoreCase)) != -1)
+							// skip lines that are not visible
+							if (ParentEditor->TextArea->TextView->GetVisualLine(Line->LineNumber))
 							{
-								int EndIndex = Index + SelectionText->Length;
-								RenderBackground(textView,
-												drawingContext,
-												Line->Offset + Index,
-												Line->Offset + EndIndex,
-												Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
-												Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
-												1,
-												false);
+								String^ CurrentLine = ParentEditor->Document->GetText(Line);
 
-								Start = Index + 1;
+								int Index = 0, Start = 0;
+								while ((Index = CurrentLine->IndexOf(SelectionText, Start, System::StringComparison::CurrentCultureIgnoreCase)) != -1)
+								{
+									int EndIndex = Index + SelectionText->Length;
+									RenderBackground(textView,
+													 drawingContext,
+													 Line->Offset + Index,
+													 Line->Offset + EndIndex,
+													 Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
+													 Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
+													 1,
+													 false);
+
+									Start = Index + 1;
+								}
 							}
 						}
 					}

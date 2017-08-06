@@ -454,11 +454,39 @@ namespace cse
 
 				if (Result.Success)
 				{
+					// deactive modifiers for non-modifier overrides before tunneling to prevent spurious triggering of built-in key combos
+					// we only want the their base state flags to be updated
+					switch (BuiltInKey)
+					{
+					case BuiltIn::kHoldable_X:
+					case BuiltIn::kHoldable_Y:
+					case BuiltIn::kHoldable_Z:
+					case BuiltIn::kHoldable_S:
+					case BuiltIn::kHoldable_V:
+						BuiltIn::ModifierOverride::Instance.Activate(BuiltIn::kModifier_Control, false);
+						BuiltIn::ModifierOverride::Instance.Activate(BuiltIn::kModifier_Shift, false);
+						BuiltIn::ModifierOverride::Instance.Activate(BuiltIn::kModifier_Alt, false);
+						break;
+					}
+
 					// tunnel the built-in key on success
 					BGSEEUI->GetSubclasser()->TunnelDialogMessage(*TESRenderWindow::WindowHandle,
 																  uMsg,
 																  BuiltInKey,
 																  NULL);
+
+					switch (BuiltInKey)
+					{
+					case BuiltIn::kHoldable_X:
+					case BuiltIn::kHoldable_Y:
+					case BuiltIn::kHoldable_Z:
+					case BuiltIn::kHoldable_S:
+					case BuiltIn::kHoldable_V:
+						BuiltIn::ModifierOverride::Instance.Deactivate(BuiltIn::kModifier_Control);
+						BuiltIn::ModifierOverride::Instance.Deactivate(BuiltIn::kModifier_Shift);
+						BuiltIn::ModifierOverride::Instance.Deactivate(BuiltIn::kModifier_Alt);
+						break;
+					}
 
 					// the SPACE key's vanilla KEYUP handler doesn't release the mouse capture, so fix it here
 					if (uMsg == WM_KEYUP && BuiltInKey == BuiltIn::kHoldable_Space)
