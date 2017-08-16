@@ -67,8 +67,7 @@ namespace cse
 		_DeclareMemHdlr(RotateCameraDrag, "prevent the shift key from rotating the camera when lasso'ing, and add support for a custom camera pivot");
 		_DeclareMemHdlr(RubberbandSelectionDragDeselectRefs, "allow ref drag deselection with the Shift key");
 		_DeclareMemHdlr(LandscapeTextureLoad, "adds support for landscape texture swaps");
-		_DeclareMemHdlr(PatchGetAsyncKeyStateA, "adds support for custom hotkeys");
-		_DeclareMemHdlr(PatchGetAsyncKeyStateB, "");
+		_DeclareMemHdlr(PatchGetAsyncKeyState, "adds support for custom hotkeys");
 		_DeclareMemHdlr(UndoStackUndoOp3, "fixes a bug that caused a CTD when trying to redo/undo an operation");
 		_DeclareMemHdlr(UndoStackRedoOp3, "");
 		_DeclareMemHdlr(MoveSelectionClampMul, "prevent refs from being moved so far that it causes a FP overflow");

@@ -1648,10 +1648,13 @@ namespace cse
 
 					if (uMsg == WM_RBUTTONDOWN)
 					{
-						if (GetAsyncKeyState(VK_MENU) && GetAsyncKeyState(VK_CONTROL))
+						if (*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0)
 						{
-							// handle it for the button up event, early out
-							break;
+							if (GetAsyncKeyState(VK_MENU) && GetAsyncKeyState(VK_CONTROL))
+							{
+								// handle it for the place object palette button up event, early out
+								break;
+							}
 						}
 					}
 
@@ -1708,9 +1711,12 @@ namespace cse
 					{
 						if (GetAsyncKeyState(VK_MENU) && GetAsyncKeyState(VK_CONTROL))
 						{
-							// place palette object, if any
-							objectPalette::ObjectPaletteManager::Instance.PlaceObject(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-							break;
+							if (*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0)
+							{
+								// place palette object, if any
+								objectPalette::ObjectPaletteManager::Instance.PlaceObject(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+								break;
+							}
 						}
 					}
 
