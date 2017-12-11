@@ -169,7 +169,9 @@
     <PostBuildEvent>
       <Message>Installing DLL...</Message>
       <Command>copy "$(TargetPath)" "$(OblivionPath)\Data\obse\plugins\$(TargetFileName)"
-copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$(TargetFileName)"</Command>
+copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$(TargetFileName)"
+copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$(TargetName).pdb"
+</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>cscript.exe "$(SolutionDir)\BuildIncrement.jse"</Command>
