@@ -23,6 +23,7 @@ namespace cse
 			property bool										AutomaticallyPopup;
 			property UInt32										PopupThresholdLength;
 			property bool										UseSubstringFiltering;
+			property bool										InsertSuggestionOnEnterKey;
 
 			property bool										OverrideThresholdCheck;
 			property bool										Enabled;

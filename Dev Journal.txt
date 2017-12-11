@@ -10,6 +10,8 @@ NOTE	---->
 CSE		---->
 
 	BUGFIX			=
+		> Unrestricted mouse movement can be janky (when using the track pad, for instance)
+			>> Seems like the message that centers the cursor is somehow being handled
 		> Dirty edits?
 			>> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=25301452
 		> Object window columns like Auto calc, Enchantment type, Count don't sort consistently
@@ -30,6 +32,8 @@ CSE		---->
 		> Overhaul of the Region Editor, with a larger (adjustable?) window, a larger rendering area and greater control of node placement and repositioning.
 
 	CODA			=
+		> Get/SetCellRegions
+		> CreateRegion
 
 
 	MISC			=

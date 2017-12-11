@@ -735,6 +735,11 @@ namespace cse
 										CheckItem = true;
 
 									break;
+								case IDC_RENDERWINDOWCONTEXT_UNRESTRICTEDMOUSEMOVEMENT:
+									if (settings::renderer::kUnrestrictedMouseMovement().i)
+										CheckItem = true;
+
+									break;
 								default:
 									UpdateItem = false;
 									break;
@@ -959,6 +964,13 @@ namespace cse
 
 					if (*TESRenderWindow::ActiveCell)
 						Instance.KeyboardInputManager->ShowHotKeyEditor();
+
+					break;
+				case IDC_RENDERWINDOWCONTEXT_UNRESTRICTEDMOUSEMOVEMENT:
+					{
+						settings::renderer::kUnrestrictedMouseMovement.ToggleData();
+						Return = true;
+					}
 
 					break;
 				}

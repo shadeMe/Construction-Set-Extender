@@ -24,6 +24,7 @@ namespace cse
 			AutomaticallyPopup = PREFERENCES->FetchSettingAsInt("AutoSuggest", "IntelliSense") != 0;
 			PopupThresholdLength = PREFERENCES->FetchSettingAsInt("ThresholdLength", "IntelliSense");
 			UseSubstringFiltering = PREFERENCES->FetchSettingAsInt("SubstringSearch", "IntelliSense") != 0;
+			InsertSuggestionOnEnterKey = PREFERENCES->FetchSettingAsInt("InsertOnEnter", "IntelliSense") != 0;
 
 			OverrideThresholdCheck = false;
 			Enabled = true;
@@ -87,6 +88,7 @@ namespace cse
 			AutomaticallyPopup = PREFERENCES->FetchSettingAsInt("AutoSuggest", "IntelliSense") != 0;
 			PopupThresholdLength = PREFERENCES->FetchSettingAsInt("ThresholdLength", "IntelliSense");
 			UseSubstringFiltering = PREFERENCES->FetchSettingAsInt("SubstringSearch", "IntelliSense") != 0;
+			InsertSuggestionOnEnterKey = PREFERENCES->FetchSettingAsInt("InsertOnEnter", "IntelliSense") != 0;
 		}
 
 		void IntelliSenseInterfaceModel::ParentEditor_KeyDown(Object^ Sender, textEditors::IntelliSenseKeyDownEventArgs^ E)
@@ -167,13 +169,17 @@ namespace cse
 				}
 				else if (BoundParent->Visible)
 				{
-					PickSelection();
+					if (InsertSuggestionOnEnterKey)
+						PickSelection();
 					LastOperation = IIntelliSenseInterfaceModel::Operation::Default;
 					OverrideThresholdCheck = false;
 					BoundParent->Hide();
 
-					E->PreventNextTextChangeEvent = true;
-					E->Handled = true;
+					if (InsertSuggestionOnEnterKey)
+					{
+						E->PreventNextTextChangeEvent = true;
+						E->Handled = true;
+					}
 				}
 
 				break;

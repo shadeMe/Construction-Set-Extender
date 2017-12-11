@@ -179,7 +179,7 @@ namespace cse
 							(UInt32)kPathGridLinkedRefIndicatorFlag_HidePointBoundingBox | kPathGridLinkedRefIndicatorFlag_HideLinkedRefNode | kPathGridLinkedRefIndicatorFlag_HideLineConnector);
 			INISetting		kGrassOverlayTexturePath("GrassOverlayTexturePath", RENDERER_INISECTION, "Path relative to the Textures\\Landscape folder that gets applied when the grass overlay is enabled", "CSE_GrassOverlay.dds");
 			INISetting		kNotifyOnInvalidExecutionContext("NotifyOnInvalidExecutionContext", RENDERER_INISECTION, "Display a message when an operation is invoked in the wrong edit mode", (SInt32)0);
-			INISetting		kUnrestrictedMouseMovement("UnrestrictedMouseMovement", RENDERER_INISECTION, "Unrestricted mouse movement when transforming the camera/selection", (SInt32)1);
+			INISetting		kUnrestrictedMouseMovement("UnrestrictedMouseMovement", RENDERER_INISECTION, "Unrestricted mouse movement when transforming the camera/selection", (SInt32)0);
 		}
 
 		namespace renderWindowOSD

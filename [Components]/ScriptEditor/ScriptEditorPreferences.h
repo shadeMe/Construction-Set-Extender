@@ -145,6 +145,7 @@ namespace cse
 			CheckBox^									DefaultInlineSearch;
 			CheckBox^									AutoSuggest;
 			CheckBox^									ShowBreadcrumbBar;
+			CheckBox^									InsertOnEnter;
 
 			// hidden controls, for settings that aren't displayed in the preferences window
 

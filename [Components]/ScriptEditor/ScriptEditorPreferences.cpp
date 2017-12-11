@@ -204,6 +204,7 @@ namespace cse
 			SettingCollection->Add(gcnew INISetting("NoFocusUI", "IntelliSense", "0"), gcnew BoundControl(NoFocusUI, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 			SettingCollection->Add(gcnew INISetting("SubstringSearch", "IntelliSense", "1"), gcnew BoundControl(SubstringSearch, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 			SettingCollection->Add(gcnew INISetting("AutoSuggest", "IntelliSense", "1"), gcnew BoundControl(AutoSuggest, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("InsertOnEnter", "IntelliSense", "1"), gcnew BoundControl(InsertOnEnter, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 
 			// Preprocessor
 			SettingCollection->Add(gcnew INISetting("AllowRedefinitions", "Preprocessor", "0"), gcnew BoundControl(AllowRedefinitions, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
@@ -413,6 +414,7 @@ namespace cse
 			DefaultInlineSearch = gcnew CheckBox;
 			AutoSuggest = gcnew CheckBox;
 			ShowBreadcrumbBar = gcnew CheckBox;
+			InsertOnEnter = gcnew CheckBox;
 
 			//
 			// Hidden Controls
@@ -582,6 +584,7 @@ namespace cse
 			TabIntelliSense->Controls->Add(ForceDatabaseUpdate);
 			TabIntelliSense->Controls->Add(SubstringSearch);
 			TabIntelliSense->Controls->Add(AutoSuggest);
+			TabIntelliSense->Controls->Add(InsertOnEnter);
 			TabIntelliSense->Location = System::Drawing::Point(4, 22);
 			TabIntelliSense->Name = L"TabIntelliSense";
 			TabIntelliSense->Padding = Padding(3);
@@ -672,6 +675,14 @@ namespace cse
 			this->ForceDatabaseUpdate->Text = L"Update Database Now";
 			this->ForceDatabaseUpdate->UseVisualStyleBackColor = true;
 			ForceDatabaseUpdate->Click += gcnew EventHandler(this, &ScriptEditorPreferences::ForceDatabaseUpdate_Click);
+
+			this->InsertOnEnter->AutoSize = true;
+			this->InsertOnEnter->Location = System::Drawing::Point(231, 65);
+			this->InsertOnEnter->Name = L"InsertOnEnter";
+			this->InsertOnEnter->Size = System::Drawing::Size(154, 17);
+			this->InsertOnEnter->TabIndex = 6;
+			this->InsertOnEnter->Text = L"Insert suggestion with ENTER key";
+			this->InsertOnEnter->UseVisualStyleBackColor = true;
 			//
 			// TabPreprocessor
 			//
