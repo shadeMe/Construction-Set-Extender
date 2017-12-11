@@ -389,7 +389,7 @@ namespace bgsee
 		else if (OSInfo.dwMajorVersion >= 6 && OSInfo.dwMinorVersion > 3)
 		{
 			BGSEECONSOLE_MESSAGE("Your current version of Windows (%d.%d.%d) is not officially supported - Expect general weirdness such as collapsing time vortexes and code cannibalism", OSInfo.dwMajorVersion, OSInfo.dwMinorVersion, OSInfo.dwBuildNumber);
-			BGSEECONSOLE_MESSAGE("You may attempt to run the editor in Windows' Compatibility Mode. This can be done by opening the 'File Properties' dialog for the xSE loader and editor executables and enabling the 'Run this program in compatibility mode for:' option from the 'Compatibility' tab and set the option to 'Windows 7 Service Pack 1' ");
+			BGSEECONSOLE_MESSAGE("You may attempt to run the editor in Windows' Compatibility Mode. This can be done by opening the 'File Properties' dialog for the xSE loader and editor executables and enabling the 'Run this program in compatibility mode for:' option from the 'Compatibility' tab, and setting the option to 'Windows 7 Service Pack 1' ");
 		}
 
 		char NativeProgramFilesFolder[MAX_PATH] = {0};
