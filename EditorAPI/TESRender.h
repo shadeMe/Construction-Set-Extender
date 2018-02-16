@@ -61,6 +61,7 @@ public:
 		void								RenderNode(NiCamera* Camera = nullptr, NiNode* NodeToRender = nullptr, BSRenderedTexture* RenderToTexture = nullptr);
 		void								GetCameraPivot(Vector3* OutPivot, float ScaleFactor);
 		const NiVector3*					GetCameraWorldTranslate();
+		void								UpdateRendererCameraData();
 
 		void								MoveReferenceSelection(int XOffset, int YOffset, bool AxisX, bool AxisY, bool AxisZ);
 		void								RotateReferenceSelection(int Offset, bool AxisX, bool AxisY, bool AxisZ);

@@ -5,6 +5,7 @@
 #include "RenderWindowCellLists.h"
 #include "RenderWindowInput.h"
 #include "RenderWindowLayers.h"
+#include "RenderWindowGizmos.h"
 #include <bgsee\RenderWindowFlyCamera.h>
 
 namespace cse
@@ -17,10 +18,7 @@ namespace cse
 		class IRenderWindowSceneGraphModifier
 		{
 		public:
-			virtual ~IRenderWindowSceneGraphModifier() = 0
-			{
-				;//
-			}
+			virtual ~IRenderWindowSceneGraphModifier() = 0 {}
 
 			struct RenderData
 			{
@@ -226,6 +224,7 @@ namespace cse
 			input::RenderWindowKeyboardManager*			KeyboardInputManager;
 			input::RenderWindowMouseManager*			MouseInputManager;
 			RenderWindowDeferredExecutor*				DeferredExecutor;
+			RenderWindowGizmoManager*					GizmoManager;
 			GlobalEventSink*							EventSink;
 			TESObjectREFRArrayT							ActiveRefCache;
 			bool										RenderingScene;

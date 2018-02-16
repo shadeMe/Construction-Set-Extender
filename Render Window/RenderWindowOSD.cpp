@@ -1,6 +1,7 @@
 ﻿#include "RenderWindowOSD.h"
 #include "Render Window\RenderWindowManager.h"
 #include "IMGUI\imgui_internal.h"
+#include "IMGUI\ImGuizmo.h"
 #include "IconFontCppHeaders\IconsMaterialDesign.h"
 
 #include "DefaultOverlayOSDLayer.h"
@@ -493,6 +494,7 @@ namespace cse
 
 			// Start the frame
 			ImGui::NewFrame();
+			ImGuizmo::BeginFrame();
 
 			// manually update the double click state as ImGui's default polling doesn't consistently catch the events given our conditional rendering
 			io.MouseDoubleClicked[0] = MouseDoubleClicked[0];
@@ -856,6 +858,10 @@ namespace cse
 					if (ModalWindowProviderOSDLayer::Instance.HasOpenModals())
 					{
 						State.ConsumeMouseInputEvents = State.ConsumeKeyboardInputEvents = true;
+						Handled = true;
+					}
+					else if (ImGuizmo::IsUsing() || ImGuizmo::IsOver())
+					{
 						Handled = true;
 					}
 					else if (Pipeline->CanAllowInputEventPassthrough(uMsg, wParam, lParam,

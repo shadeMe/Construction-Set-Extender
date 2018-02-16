@@ -17,6 +17,7 @@
 #define _WIN32_WINNT	0x0601
 #define DIRECTINPUT_VERSION 0x0800
 #define DPSAPI_VERSION	1
+#define NOMINMAX 1
 
 // WIN32
 #include <winsock2.h>

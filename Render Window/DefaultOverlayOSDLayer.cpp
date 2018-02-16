@@ -171,9 +171,9 @@ namespace cse
 
 							ImGui::TextColored(ImColor(R, G, B), "Rotation:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
 							ImGui::TextColored(ImColor(R, G, B), "%.03f, %.03f, %.03f   ",
-											   Selection->rotation.x * 57.2957763671875,
-											   Selection->rotation.y * 57.2957763671875,
-											   Selection->rotation.z * 57.2957763671875); ImGui::NextColumn();
+											   Selection->rotation.x * REFR_RAD2DEG,
+											   Selection->rotation.y * REFR_RAD2DEG,
+											   Selection->rotation.z * REFR_RAD2DEG); ImGui::NextColumn();
 
 							ImGui::TextColored(ImColor(R, G, B), "Scale:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
 							ImGui::TextColored(ImColor(R, G, B), "%0.3f", Selection->scale); ImGui::NextColumn();

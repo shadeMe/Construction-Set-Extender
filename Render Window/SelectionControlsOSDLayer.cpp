@@ -177,7 +177,7 @@ namespace cse
 				Vector3 Position(ThisRef->position);
 				Vector3 Rotation(ThisRef->rotation);
 				float Scale = ThisRef->scale;
-				Rotation.Scale(57.2957763671875);
+				Rotation.Scale(REFR_RAD2DEG);
 
 				ImGui::Columns(2, "Ref Info", false);
 				{

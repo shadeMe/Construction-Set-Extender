@@ -84,3 +84,7 @@ public:
 };
 
 typedef std::vector<TESObjectREFR*>	TESObjectREFRArrayT;
+
+#define REFR_DEG2RAD			0.01745329238474369f
+#define REFR_RAD2DEG			57.2957763671875f
+

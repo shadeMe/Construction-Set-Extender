@@ -1095,7 +1095,7 @@ namespace cse
 		FORMAT_STR(Buffer, "(%f, %f, %f)", For->position.x, For->position.y, For->position.z);
 		Descriptor->Position = Buffer;
 
-		FORMAT_STR(Buffer, "(%f, %f, %f)", For->rotation.x * 57.2957763671875, For->rotation.y * 57.2957763671875, For->rotation.z * 57.2957763671875);
+		FORMAT_STR(Buffer, "(%f, %f, %f)", For->rotation.x * REFR_RAD2DEG, For->rotation.y * REFR_RAD2DEG, For->rotation.z * REFR_RAD2DEG);
 		Descriptor->Rotation = Buffer;
 
 		FORMAT_STR(Buffer, "%f", For->scale);

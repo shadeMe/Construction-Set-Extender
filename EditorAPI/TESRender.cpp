@@ -231,6 +231,11 @@ const NiVector3* TESRender::PrimaryRenderer::GetCameraWorldTranslate()
 	return &primaryCamera->m_worldTranslate;
 }
 
+void TESRender::PrimaryRenderer::UpdateRendererCameraData()
+{
+	thisCall<void>(0x006F8120, _NIRENDERER, primaryCamera);
+}
+
 void TESRender::PrimaryRenderer::MoveReferenceSelection(int XOffset, int YOffset, bool AxisX, bool AxisY, bool AxisZ)
 {
 	cdeclCall<void>(0x00425670, this, XOffset, YOffset, AxisX, AxisY, AxisZ);
@@ -297,7 +302,7 @@ void TESRender::SetCameraFOV( NiCamera* Camera, float FOV, float Width /*= -1*/,
 		Height = (Bounds.bottom - Bounds.top) * 1.0f;
 
 	float SizeRatio = Height / Width * 1.0f;
-	float FOVMultiplier = FOV * 0.01745329238474369 * 0.5;
+	float FOVMultiplier = FOV * REFR_DEG2RAD * 0.5;
 
 	ViewFrustum.l = -tan(FOVMultiplier);
 	ViewFrustum.r = tan(FOVMultiplier);

@@ -124,9 +124,9 @@ void TESObjectREFR::SetRotation( float X, float Y, float Z, bool Radians /*= fal
 
 	if (Radians == false)
 	{
-		X *= 0.01745329238474369;
-		Y *= 0.01745329238474369;
-		Z *= 0.01745329238474369;
+		X *= REFR_DEG2RAD;
+		Y *= REFR_DEG2RAD;
+		Z *= REFR_DEG2RAD;
 	}
 
 	rotation.x = X;

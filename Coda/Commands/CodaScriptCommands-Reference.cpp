@@ -147,7 +147,7 @@ namespace cse
 
 					// convert rotation to radians first
 					Vector3 OutRotation(Rotation.x, Rotation.y, Rotation.z);
-					OutRotation.Scale(0.01745329238474369);
+					OutRotation.Scale(REFR_DEG2RAD);
 
 					TESObjectREFR* NewRef = _DATAHANDLER->PlaceObjectRef(Base,
 																		&(Vector3(Position.x, Position.y, Position.z)),
@@ -202,11 +202,11 @@ namespace cse
 						return false;
 
 					if (!_stricmp(Buffer, "x"))
-						Result->SetNumber(Reference->rotation.x * 57.2957763671875);
+						Result->SetNumber(Reference->rotation.x * REFR_RAD2DEG);
 					else if (!_stricmp(Buffer, "y"))
-						Result->SetNumber(Reference->rotation.y * 57.2957763671875);
+						Result->SetNumber(Reference->rotation.y * REFR_RAD2DEG);
 					else
-						Result->SetNumber(Reference->rotation.z * 57.2957763671875);
+						Result->SetNumber(Reference->rotation.z * REFR_RAD2DEG);
 
 					return true;
 				}
@@ -373,11 +373,11 @@ namespace cse
 
 					Vector3 Rot(Reference->rotation);
 					if (!_stricmp(Buffer, "x"))
-						Rot.x = Value * 0.01745329238474369;
+						Rot.x = Value * REFR_DEG2RAD;
 					else if (!_stricmp(Buffer, "y"))
-						Rot.y = Value * 0.01745329238474369;
+						Rot.y = Value * REFR_DEG2RAD;
 					else
-						Rot.z = Value * 0.01745329238474369;
+						Rot.z = Value * REFR_DEG2RAD;
 
 					Reference->SetRotation(Rot.x, Rot.y, Rot.z, true);
 					return true;

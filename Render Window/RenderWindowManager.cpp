@@ -1133,6 +1133,7 @@ namespace cse
 			KeyboardInputManager = new input::RenderWindowKeyboardManager();
 			MouseInputManager = new input::RenderWindowMouseManager();
 			DeferredExecutor = new RenderWindowDeferredExecutor();
+			GizmoManager = new RenderWindowGizmoManager();
 			ActiveRefCache.reserve(500);
 			RenderingScene = false;
 
@@ -1153,6 +1154,7 @@ namespace cse
 			SAFEDELETE(KeyboardInputManager);
 			SAFEDELETE(MouseInputManager);
 			SAFEDELETE(DeferredExecutor);
+			SAFEDELETE(GizmoManager);
 
 			Initialized = false;
 		}
@@ -1185,6 +1187,7 @@ namespace cse
 #ifndef NDEBUG
 			SceneGraphManager->AddModifier(&DebugSceneGraphModifier::Instance);
 #endif
+			GizmoManager->Initialize(OSD);
 			CellLists->Initialize();
 			GroupManager->Initialize();
 			LayerManager->Initialize();
@@ -1241,6 +1244,7 @@ namespace cse
 			LayerManager->Deinitialize();
 			GroupManager->Deinitialize();
 			CellLists->Deinitialize();
+			GizmoManager->Deinitialize(OSD);
 			OSD->Deinitialize();
 			SceneGraphManager->RemoveModifier(&ReferenceParentChildIndicator::Instance);
 			SceneGraphManager->RemoveModifier(&ReferenceVisibilityModifier::Instance);

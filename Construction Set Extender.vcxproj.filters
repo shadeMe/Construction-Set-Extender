@@ -384,6 +384,15 @@
     <ClCompile Include="Render Window\RenderWindowGroups.cpp">
       <Filter>Components\Render Window</Filter>
     </ClCompile>
+    <ClCompile Include="IMGUI\ImGuizmo.cpp">
+      <Filter>Components\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Render Window\RenderWindowGizmos.cpp">
+      <Filter>Components\Render Window</Filter>
+    </ClCompile>
+    <ClCompile Include="..\OBSE\obse\NiTypes.cpp">
+      <Filter>OBSE</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -910,6 +919,12 @@
     </ClInclude>
     <ClInclude Include="EditorAPI\TESLevSpell.h">
       <Filter>EditorAPI\Forms\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="IMGUI\ImGuizmo.h">
+      <Filter>Components\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\RenderWindowGizmos.h">
+      <Filter>Components\Render Window</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
