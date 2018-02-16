@@ -133,7 +133,7 @@ namespace cse
 			;//
 		}
 
-#define CURRENT_COLWIDTH_MINUS_10	ImGui::GetColumnWidth() - 10
+#define CURRENT_COLWIDTH_MINUS_10	ImGui::GetColumnWidth()
 
 		void SelectionControlsOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
@@ -145,7 +145,7 @@ namespace cse
 				return;
 
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 5));
-			ImGui::SetNextWindowPosCenter(ImGuiSetCond_FirstUseEver);
+			ImGui::SetNextWindowPosCenter(ImGuiCond_FirstUseEver);
 			if (!ImGui::Begin("Selection Controls", nullptr, ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize))
 			{
 				ImGui::End();
@@ -188,9 +188,9 @@ namespace cse
 					ImGui::NextColumn();
 
 					float ColWidth = ImGui::GetColumnWidth() - 20;
-					ImGui::PushStyleColor(ImGuiCol_Button, ImColor::HSV(0, 0.6f, 0.6f));
-					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImColor::HSV(0, 0.7f, 0.7f));
-					ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImColor::HSV(0, 0.8f, 0.8f));
+					ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0, 0.6f, 0.6f));
+					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0, 0.7f, 0.7f));
+					ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0, 0.8f, 0.8f));
 					{
 						if (ImGui::Button("Reference##edit_ref", ImVec2(ColWidth / 2 - 10, 20)))
 						{

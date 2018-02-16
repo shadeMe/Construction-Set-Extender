@@ -1285,7 +1285,7 @@ namespace cse
 				ModalWindowProviderOSDLayer::Instance.ShowModal("Render Window Keyboard Bindings",
 																std::bind(&RenderWindowKeyboardManager::RenderModalHotKeyEditor, this, std::placeholders::_1, std::placeholders::_2),
 																nullptr,
-																ImGuiWindowFlags_NoResize, ImVec2(700, 600), ImGuiSetCond_Once);
+																ImGuiWindowFlags_NoResize, ImVec2(700, 600), ImGuiCond_Once);
 			}
 
 

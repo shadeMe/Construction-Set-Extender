@@ -7,9 +7,9 @@ namespace cse
 {
 	namespace renderWindow
 	{
-#define PUSH_TRANSPARENT_BUTTON_COLORS				ImGui::PushStyleColor(ImGuiCol_Button, ImColor::HSV(0, 0, 0, 0)); \
-													ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImColor::HSV(0, 0, 0, 0)); \
-													ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImColor::HSV(0, 0, 0, 0))
+#define PUSH_TRANSPARENT_BUTTON_COLORS				ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0, 0, 0, 0)); \
+													ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0, 0, 0, 0)); \
+													ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0, 0, 0, 0))
 #define POP_TRANSPARENT_BUTTON_COLORS				ImGui::PopStyleColor(3);
 #define TOOLBAR_BUTTON_SIZE							ImVec2(30, 0)
 
@@ -342,10 +342,10 @@ namespace cse
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Reference");
 
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImColor::HSV(4 / 7.0f, 0.5f, 0.5f));
-				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImColor::HSV(4 / 7.0f, 0.6f, 0.5f));
-				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImColor::HSV(4 / 7.0f, 0.7f, 0.5f));
-				ImGui::PushStyleColor(ImGuiCol_SliderGrab, ImColor::HSV(4 / 7.0f, 0.9f, 0.9f));
+				ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(4 / 7.0f, 0.5f, 0.5f));
+				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(4 / 7.0f, 0.6f, 0.5f));
+				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(4 / 7.0f, 0.7f, 0.5f));
+				ImGui::PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(4 / 7.0f, 0.9f, 0.9f));
 				{
 					ImGui::VSliderFloat("##cam_pan", ImVec2(18, 160), &CamPan, 0.01f, 10.0f, "");
 					if (ImGui::IsItemActive() || ImGui::IsItemHovered())

@@ -287,13 +287,13 @@ namespace cse
 				void*							UserData;
 				ImGuiWindowFlags				Flags;
 				ImVec2							WindowSize;
-				ImGuiSetCond					SizeSetCondition;
+				ImGuiCond						SizeSetCondition;
 
 				bool							Open;
 				bool							HasCustomSize;
 
 				ModalData(const char* Name, ModalRenderDelegateT Delegate, void* UserData,
-						  ImGuiWindowFlags Flags, const ImVec2& Size, ImGuiSetCond SizeCond);
+						  ImGuiWindowFlags Flags, const ImVec2& Size, ImGuiCond SizeCond);
 			};
 
 			typedef std::stack<ModalData>		ModalDataStackT;
@@ -307,7 +307,7 @@ namespace cse
 			virtual bool					NeedsBackgroundUpdate();
 
 			void							ShowModal(const char* Name, ModalRenderDelegateT Delegate, void* UserData,
-													  ImGuiWindowFlags Flags, const ImVec2& Size = ImVec2(0, 0), ImGuiSetCond SizeCond = NULL);
+													  ImGuiWindowFlags Flags, const ImVec2& Size = ImVec2(0, 0), ImGuiCond SizeCond = NULL);
 			bool							HasOpenModals() const;
 
 			static ModalWindowProviderOSDLayer		Instance;

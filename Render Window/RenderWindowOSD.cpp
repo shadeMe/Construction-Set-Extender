@@ -223,7 +223,6 @@ namespace cse
 			icons_config.OversampleH = 2;
 			icons_config.OversampleV = 2;
 			icons_config.PixelSnapH = true;
-			icons_config.MergeGlyphCenterV = true;
 			if (GetFileAttributes(IconFontPath) != INVALID_FILE_ATTRIBUTES)
 				io.Fonts->AddFontFromFileTTF(IconFontPath, settings::renderWindowOSD::kFontSize().i + 2, &icons_config, icons_ranges);
 		}
@@ -671,7 +670,7 @@ namespace cse
 				return false;
 
 			ImGuiContext* RenderContext = ImGui::GetCurrentContext();
-			if (ImGui::IsMouseDragging() && RenderContext->ActiveId == RenderContext->MovedWindowMoveId)
+			if (ImGui::IsMouseDragging() && RenderContext->ActiveId == RenderContext->MovingWindowMoveId)
 				return true;
 			else
 				return false;
@@ -1497,7 +1496,7 @@ namespace cse
 		ModalWindowProviderOSDLayer			ModalWindowProviderOSDLayer::Instance;
 
 		ModalWindowProviderOSDLayer::ModalData::ModalData(const char* Name, ModalRenderDelegateT Delegate,
-														  void* UserData, ImGuiWindowFlags Flags, const ImVec2& Size, ImGuiSetCond SizeCond) :
+														  void* UserData, ImGuiWindowFlags Flags, const ImVec2& Size, ImGuiCond SizeCond) :
 			WindowName(Name),
 			Delegate(Delegate),
 			UserData(UserData),
@@ -1549,7 +1548,7 @@ namespace cse
 				if (Top.HasCustomSize)
 					ImGui::SetNextWindowSize(Top.WindowSize, Top.SizeSetCondition);
 
-				ImGui::SetNextWindowPosCenter(ImGuiSetCond_Once);
+				ImGui::SetNextWindowPosCenter(ImGuiCond_Appearing);
 				if (ImGui::BeginPopupModal(Top.WindowName.c_str(), nullptr, Top.Flags | ImGuiWindowFlags_NoSavedSettings))
 				{
 					if (Top.Delegate(OSD, GUI, Top.UserData))
@@ -1569,7 +1568,7 @@ namespace cse
 		}
 
 		void ModalWindowProviderOSDLayer::ShowModal(const char* Name, ModalRenderDelegateT Delegate, void* UserData,
-													ImGuiWindowFlags Flags, const ImVec2& Size, ImGuiSetCond SizeCond)
+													ImGuiWindowFlags Flags, const ImVec2& Size, ImGuiCond SizeCond)
 		{
 			SME_ASSERT(Name && Delegate);
 			SME_ASSERT(*TESRenderWindow::ActiveCell);		// ### modal doesn't show up when called when the scenegraph is empty
