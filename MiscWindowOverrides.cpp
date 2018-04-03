@@ -252,10 +252,12 @@ namespace cse
 
 					if (PluginFile)
 					{
-						for (int i = 0; i < PluginFile->masterCount; i++)
-							SendMessage(hWnd, WM_DATADLG_RECURSEMASTERS, NULL, (LPARAM)PluginFile->masterFiles[i]);
-
-						PluginFile->SetLoaded(true);
+						if (PluginFile->IsLoaded() == false)
+						{
+							PluginFile->SetLoaded(true);
+							for (int i = 0; i < PluginFile->masterCount; i++)
+								SendMessage(hWnd, WM_DATADLG_RECURSEMASTERS, NULL, (LPARAM)PluginFile->masterFiles[i]);
+						}
 					}
 				}
 
@@ -450,7 +452,7 @@ namespace cse
 					}
 
 					break;
-				case 1:		// OK
+				case TESDialog::kStandardButton_Ok:
 					if (cliWrapper::interfaces::SE->GetOpenEditorCount())
 					{
 						if (BGSEEUI->MsgBoxW(hWnd, MB_YESNO, "There are open script windows. Are you sure you'd like to proceed?") == IDNO)

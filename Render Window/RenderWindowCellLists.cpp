@@ -192,7 +192,7 @@ namespace cse
 			ImGui::BeginChild("contents_child_frame", ImVec2(0, 500));
 			{
 				TESObjectCELL* ToSelect = nullptr;
-				if (ImGui::CollapsingHeader("Bookmarks", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowOverlapMode))
+				if (ImGui::CollapsingHeader("Bookmarks", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap))
 				{
 					ImGui::SameLine(0, 85);
 					if (ImGui::Button(ICON_MD_BOOKMARK "##bookmark_current_cell_btn") && _TES->GetCurrentCell())

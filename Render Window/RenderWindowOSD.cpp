@@ -294,7 +294,7 @@ namespace cse
 
 			style.WindowPadding = ImVec2(10, 10);
 			style.WindowRounding = 5.0f;
-			style.ChildWindowRounding = 5.0f;
+			style.ChildRounding = 5.0f;
 			style.FramePadding = ImVec2(5, 3);
 			style.FrameRounding = 4.0f;
 			style.ItemSpacing = ImVec2(12, 8);
@@ -306,7 +306,7 @@ namespace cse
 
 			style.Colors[ImGuiCol_WindowBg] = ImVec4(0.00f, 0.00f, 0.00f, settings::renderWindowOSD::kWindowBGAlpha().f);
 			style.Colors[ImGuiCol_PopupBg] = ImVec4(0.00f, 0.00f, 0.00f, settings::renderWindowOSD::kWindowBGAlpha().f);
-			style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.f);
+			style.Colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.f);
 			style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.90f, 0.80f, 0.80f, 0.49f);
 			style.Colors[ImGuiCol_TitleBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.31f);
 			style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 0.20f);
@@ -692,7 +692,7 @@ namespace cse
 
 		bool ImGuiDX9::IsHoveringWindow() const
 		{
-			return ImGui::GetCurrentWindowRead() && ImGui::IsRootWindowOrAnyChildHovered();
+			return ImGui::GetCurrentWindowRead() && ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
 		}
 
 		bool ImGuiDX9::IsChildWindowHovering(void* RootWindow) const
@@ -1274,8 +1274,7 @@ namespace cse
 					break;
 				}
 
-				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10);
-				if (ImGui::BeginPopupWithStyling(PopupStrID, ImGuiWindowFlags_AlwaysAutoResize, ImGui::GetStyle().WindowRounding))
+				if (ImGui::BeginPopup(PopupStrID))
 				{
 					if (PopupData.PositionType != kPosition_Default)
 						io.MousePos = MousPosBuffer;
@@ -1316,7 +1315,6 @@ namespace cse
 					if (PopupData.PositionType != kPosition_Default)
 						io.MousePos = MousPosBuffer;
 				}
-				ImGui::PopStyleVar();
 			}
 		}
 
@@ -1489,7 +1487,7 @@ namespace cse
 
 		void DebugOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
-			ImGui::ShowTestWindow();
+			ImGui::ShowDemoWindow();
 			ImGui::ShowMetricsWindow();
 		}
 

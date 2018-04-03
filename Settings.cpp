@@ -29,6 +29,7 @@ namespace cse
 
 			Depot.push_back(&general::kShowNumericEditorIDWarning);
 			Depot.push_back(&general::kCrashHandlerMode);
+			Depot.push_back(&general::kSalvageActivePluginOnCrash);
 			Depot.push_back(&general::kFaceGenPreviewResponseWindow);
 			Depot.push_back(&general::kFaceGenPreviewVoiceDelay);
 			Depot.push_back(&general::kDisableSplashScreen);
@@ -133,6 +134,7 @@ namespace cse
 
 			INISetting		kShowNumericEditorIDWarning("ShowNumericEditorIDWarning", GENERAL_INISECTION, "Displays a warning when editorIDs start with an integer", (SInt32)1);
 			INISetting		kCrashHandlerMode("CrashHandlerMode", GENERAL_INISECTION, "0 - Terminate | 1 - Resume | 2 - Ask every time", (SInt32)2);
+			INISetting		kSalvageActivePluginOnCrash("SalvageActivePluginOnCrash", GENERAL_INISECTION, "Attempt to dump the active plugin when the editor crashes", (SInt32)1);
 			INISetting		kFaceGenPreviewResponseWindow("FaceGenPreviewResponseWindow", GENERAL_INISECTION, "Preview voice/lip file playback in NPC dialogs", (SInt32)0);
 			INISetting		kFaceGenPreviewVoiceDelay("FaceGenPreviewVoiceDelay", GENERAL_INISECTION, "Delay, in milliseconds, between voice file and lip sync file playback during previews", (SInt32)50);
 			INISetting		kDisableSplashScreen("DisableSplashScreen", GENERAL_INISECTION, "Disables the startup splash screen", (SInt32)0);

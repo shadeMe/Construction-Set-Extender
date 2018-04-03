@@ -46,8 +46,6 @@ namespace ImGui
 			ImFormatString(name, 20, "##popup_%08x", id); // Not recycling, so we can close/open during the same frame
 
 		bool is_open = ImGui::Begin(name, NULL, flags);
-		if (!(window->Flags & ImGuiWindowFlags_ShowBorders))
-			g.CurrentWindow->Flags &= ~ImGuiWindowFlags_ShowBorders;
 		if (!is_open) // NB: is_open can be 'false' when the popup is completely clipped (e.g. zero size display)
 			ImGui::EndPopup();
 

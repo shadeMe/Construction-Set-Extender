@@ -476,20 +476,24 @@ namespace cse
 		BGSEECONSOLE_MESSAGE("The editor crashed, dammit!");
 		BGSEECONSOLE->Indent();
 
-		BGSEECONSOLE_MESSAGE("Attempting to salvage the active file...");
-		BGSEECONSOLE->Indent();
-
 		bool PanicSaved = false;
-		if ((PanicSaved = _DATAHANDLER->PanicSave()))
-			BGSEECONSOLE_MESSAGE("Yup, we're good! Look for the panic save file in the Backup directory");
-		else
-			BGSEECONSOLE_MESSAGE("Bollocks-bollocks-bollocks! No can do...");
+		if (settings::general::kSalvageActivePluginOnCrash().i)
+		{
+			BGSEECONSOLE_MESSAGE("Attempting to salvage the active file...");
+			BGSEECONSOLE->Indent();
+			
+			if ((PanicSaved = _DATAHANDLER->PanicSave()))
+				BGSEECONSOLE_MESSAGE("Yup, we're good! Look for the panic save file in the Backup directory");
+			else
+				BGSEECONSOLE_MESSAGE("Bollocks-bollocks-bollocks! No can do...");
+
+			BGSEECONSOLE->Outdent();
+		}
+
+		BGSEECONSOLE->Outdent();
 
 		if (BGSEEDAEMON->GetFullInitComplete())
 			BGSEEACHIEVEMENTS->Unlock(achievements::kSaboteur, false, true);
-
-		BGSEECONSOLE->Outdent();
-		BGSEECONSOLE->Outdent();
 
 		// it's highly inadvisable to do anything inside the handler apart from the bare minimum of diagnostics
 		// memory allocations are a big no-no as the CRT state can potentially be corrupted...

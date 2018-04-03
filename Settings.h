@@ -39,6 +39,7 @@ namespace cse
 		{
 			extern INISetting					kShowNumericEditorIDWarning;
 			extern INISetting					kCrashHandlerMode;
+			extern INISetting					kSalvageActivePluginOnCrash;
 			extern INISetting					kFaceGenPreviewResponseWindow;
 			extern INISetting					kFaceGenPreviewVoiceDelay;
 			extern INISetting					kDisableSplashScreen;

@@ -2,19 +2,19 @@
 // v 1.04 WIP
 //
 // The MIT License(MIT)
-//
+// 
 // Copyright(c) 2016 Cedric Guillemet
-//
+// 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions :
-//
+// 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-//
+// 
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
@@ -24,7 +24,7 @@
 // SOFTWARE.
 //
 // -------------------------------------------------------------------------------------------
-// History :
+// History : 
 // 2016/09/11 Behind camera culling. Scaling Delta matrix not multiplied by source matrix scales. local/world rotation and translation fixed. Display message is incorrect (X: ... Y:...) in local mode.
 // 2016/09/09 Hatched negative axis. Snapping. Documentation update.
 // 2016/09/04 Axis switch and translation plan autohiding. Scale transform stability improved
@@ -38,9 +38,9 @@
 // - display rotation/translation/scale infos in local/world space and not only local
 // - finish local/world matrix application
 // - OPERATION as bitmask
-//
+// 
 // -------------------------------------------------------------------------------------------
-// Example
+// Example 
 #if 0
 void EditTransform(const Camera& camera, matrix_t& matrix)
 {
@@ -103,20 +103,30 @@ void EditTransform(const Camera& camera, matrix_t& matrix)
 #endif
 #pragma once
 
+#ifdef USE_IMGUI_API
+#include "imconfig.h"
+#endif
+#ifndef IMGUI_API
+#define IMGUI_API
+#endif
+
 namespace ImGuizmo
 {
+	// call inside your own window and before Manipulate() in order to draw gizmo to that window.
+	IMGUI_API void SetDrawlist();
+
 	// call BeginFrame right after ImGui_XXXX_NewFrame();
-	void BeginFrame();
+	IMGUI_API void BeginFrame();
 
 	// return true if mouse cursor is over any gizmo control (axis, plan or screen component)
-	bool IsOver();
+	IMGUI_API bool IsOver();
 
 	// return true if mouse IsOver or if the gizmo is in moving state
-	bool IsUsing();
+	IMGUI_API bool IsUsing();
 
 	// enable/disable the gizmo. Stay in the state until next call to Enable.
 	// gizmo is rendered with gray half transparent color when disabled
-	void Enable(bool enable);
+	IMGUI_API void Enable(bool enable);
 
 	// helper functions for manualy editing translation/rotation/scale with an input float
 	// translation, rotation and scale float points to 3 floats each
@@ -130,16 +140,16 @@ namespace ImGuizmo
 	// ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, gizmoMatrix.m16);
 	//
 	// These functions have some numerical stability issues for now. Use with caution.
-	void DecomposeMatrixToComponents(const float *matrix, float *translation, float *rotation, float *scale);
-	void RecomposeMatrixFromComponents(const float *translation, const float *rotation, const float *scale, float *matrix);
+	IMGUI_API void DecomposeMatrixToComponents(const float *matrix, float *translation, float *rotation, float *scale);
+	IMGUI_API void RecomposeMatrixFromComponents(const float *translation, const float *rotation, const float *scale, float *matrix);
 
-	void SetRect(float x, float y, float width, float height);
+	IMGUI_API void SetRect(float x, float y, float width, float height);
 
 	// Render a cube with face color corresponding to face normal. Usefull for debug/tests
-	void DrawCube(const float *view, const float *projection, float *matrix);
+	IMGUI_API void DrawCube(const float *view, const float *projection, float *matrix);
 
 	// call it when you want a gizmo
-	// Needs view and projection matrices.
+	// Needs view and projection matrices. 
 	// matrix parameter is the source matrix (where will be gizmo be drawn) and might be transformed by the function. Return deltaMatrix is optional
 	// translation is applied in world space
 	enum OPERATION
@@ -155,5 +165,5 @@ namespace ImGuizmo
 		WORLD
 	};
 
-	void Manipulate(const float *view, const float *projection, OPERATION operation, MODE mode, float *matrix, float *deltaMatrix = 0, float *snap = 0, float *localBounds = NULL, float *boundsSnap = NULL);
+	IMGUI_API void Manipulate(const float *view, const float *projection, OPERATION operation, MODE mode, float *matrix, float *deltaMatrix = 0, float *snap = 0, float *localBounds = NULL, float *boundsSnap = NULL);
 };
