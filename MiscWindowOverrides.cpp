@@ -1157,7 +1157,7 @@ namespace cse
 							BGSEEUI->MsgBoxE(hWnd, 0, "Couldn't find lip file at '%s'.", RelativeLipPath.c_str());
 							break;
 						}
-						else if (RelativeVoicePath != "" && _FILEFINDER->FindFile(RelativeVoicePath.c_str()) == FileFinder::kFileStatus_NotFound)
+						else if (!RelativeVoicePath.empty() && _FILEFINDER->FindFile(RelativeVoicePath.c_str()) == FileFinder::kFileStatus_NotFound)
 						{
 							BGSEEUI->MsgBoxE(hWnd, 0, "Couldn't find voice file at '%s'.", RelativeVoicePath.c_str());
 							break;
@@ -1178,7 +1178,7 @@ namespace cse
 						SendDlgItemMessage(hWnd, kFaceGenControl_PreviewCtrl, WM_KEYDOWN, 0x4C, NULL);		// L key
 
 																											// delay voice file playback to account for synchronization
-						if (RelativeVoicePath != "")
+						if (!RelativeVoicePath.empty())
 						{
 							FaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(FaceGenWindowData, ExtraData);
 							SME_ASSERT(xData);

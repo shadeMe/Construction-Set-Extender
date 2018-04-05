@@ -271,7 +271,8 @@ namespace cse
 
 		void __stdcall DoAssertOverrideHook(UInt32 EIP)
 		{
-			BGSEEACHIEVEMENTS->Unlock(achievements::kWTF);
+			if (BGSEEDAEMON->GetFullInitComplete())
+				BGSEEACHIEVEMENTS->Unlock(achievements::kWTF);
 
 			BGSEECONSOLE->Indent();
 			BGSEECONSOLE->LogAssertion("CS", "ASSERTION FAILED: 0x%08X", EIP);
