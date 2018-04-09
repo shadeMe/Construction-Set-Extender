@@ -1294,14 +1294,25 @@ namespace cse
 				return Shared;
 			}
 
-			POINT RenderWindowMouseManager::CenterCursor(HWND hWnd, bool UpdateBaseCoords)
+			POINT RenderWindowMouseManager::GetWindowCenter(HWND hWnd, bool ClientArea)
 			{
 				int X, Y, W, H;
 				GetWindowMetrics(hWnd, X, Y, W, H);
 
 				POINT Center = { X + W / 2, Y + H / 2 };
+				if (ClientArea)
+					ScreenToClient(hWnd, &Center);
+
+				return Center;
+			}
+
+			POINT RenderWindowMouseManager::CenterCursor(HWND hWnd, bool UpdateBaseCoords)
+			{
+				POINT Center = GetWindowCenter(hWnd, false);
 				POINT Out(Center);
 				SetCursorPos(Center.x, Center.y);
+				MSG msg;
+				while (::PeekMessage(&msg, NULL, WM_MOUSEMOVE, WM_MOUSEMOVE, PM_REMOVE)) {};
 
 				if (UpdateBaseCoords)
 				{
@@ -1319,8 +1330,7 @@ namespace cse
 				int X, Y, W, H;
 				GetWindowMetrics(hWnd, X, Y, W, H);
 
-				POINT Center = { X + W / 2, Y + H / 2 };
-				ScreenToClient(hWnd, &Center);
+				POINT Center = GetWindowCenter(hWnd, true);
 
 				int PosX = GET_X_LPARAM(lParam);
 				int PosY = GET_Y_LPARAM(lParam);
@@ -1331,7 +1341,7 @@ namespace cse
 					return false;
 			}
 
-			void RenderWindowMouseManager::GetWindowMetrics(HWND hWnd, int& X, int& Y, int& Width, int& Height) const
+			void RenderWindowMouseManager::GetWindowMetrics(HWND hWnd, int& X, int& Y, int& Width, int& Height)
 			{
 				RECT WindowRect = { 0 };
 				GetWindowRect(hWnd, &WindowRect);
@@ -1528,9 +1538,17 @@ namespace cse
 							break;
 						else if (MouseDelta.x == 0 && MouseDelta.y == 0)
 						{
-							// windows sends suprious WM_MOUSEMOVE messages even if the mouse didn't actually (because Windows)
+							// windows sends suprious WM_MOUSEMOVE messages even if the mouse didn't actually move (because Windows)
 							// we need to consume it and break early or we'll be calling the original handler unnecessarily
 							break;
+						}
+
+						if (FreeMouseMovement) {
+							BGSEECONSOLE_MESSAGE("Last(%d,%d)\tCur(%d,%d)\tDelta(%d,%d)\tCenter(%s)",
+												 LastMouseCoord.x, LastMouseCoord.y,
+												 CurrentMouseCoord.x, CurrentMouseCoord.y,
+												 MouseDelta.x, MouseDelta.y,
+												 IsCenteringCursor(hWnd, lParam) ? "true" : "false");
 						}
 
 						_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;

@@ -6,7 +6,10 @@ namespace cse
 {
 #define INJECT_TIMEOUT			5000
 
-	OldCSInteropManager* OldCSInteropManager::Singleton = nullptr;
+	OldCSInteropManager*	OldCSInteropManager::Singleton = nullptr;
+	const char*				OldCSInteropManager::kTempMp3Path = "templip.mp3";
+	const char*				OldCSInteropManager::kTempWavPath = "templip.wav";
+	const char*				OldCSInteropManager::kTempLipPath = "templip.lip";
 
 	OldCSInteropManager* OldCSInteropManager::GetSingleton()
 	{
@@ -236,51 +239,6 @@ namespace cse
 		return Loaded;
 	}
 
-	bool OldCSInteropManager::CreateTempWAVFile(const char* MP3Path, const char* WAVPath)
-	{
-		STARTUPINFO StartupInfo = { 0 };
-		PROCESS_INFORMATION ProcInfo = { 0 };
-		StartupInfo.cb = sizeof(StartupInfo);
-
-		IFileStream	TempFile;
-
-		if (TempFile.Open(MP3Path) == false)
-		{
-			BGSEECONSOLE_MESSAGE("Couldn't find source MP3 file!");
-			return false;
-		}
-
-		std::string DecoderArgs = std::string(BGSEEMAIN->GetAPPPath()) +
-								"lame.exe \"" +
-								std::string(BGSEEMAIN->GetAPPPath()) + std::string(MP3Path) +
-								"\" \"" +
-								std::string(BGSEEMAIN->GetAPPPath()) + std::string(WAVPath) +
-								"\" --decode";
-
-		bool Result = CreateProcess(nullptr,
-									(LPSTR)DecoderArgs.c_str(),
-									nullptr,		// default process security
-									nullptr,		// default thread security
-									FALSE,		// don't inherit handles
-									NULL,
-									nullptr,		// no new environment
-									nullptr,		// no new cwd
-									&StartupInfo, &ProcInfo) != 0;
-
-		if (Result == false)
-		{
-			BGSEECONSOLE_ERROR("Couldn't launch LAME decoder!");
-			return false;
-		}
-
-		WaitForSingleObject(ProcInfo.hProcess, INFINITE);		// wait till the decoder's done its job
-
-		CloseHandle(ProcInfo.hProcess);
-		CloseHandle(ProcInfo.hThread);
-
-		return true;
-	}
-
 	bool OldCSInteropManager::GenerateLIPSyncFile(const char* InputPath, const char* ResponseText)
 	{
 		if (Loaded == false)
@@ -289,74 +247,128 @@ namespace cse
 			return false;
 		}
 
-		bool Result = false, ExitLoop = false;
+		BGSEECONSOLE_MESSAGE("Generating LIP file for '%s'...", InputPath);
+
+		bool Result = false, ExitLoop = false, UsingTempWav = false;
 		DWORD ByteCounter = 0;
-		std::string MP3Path(InputPath), WAVPath(InputPath);
-		MP3Path += ".mp3", WAVPath += ".wav";
+		std::string MP3Path(InputPath), WAVPath(InputPath), LIPPath(InputPath);
+		MP3Path += ".mp3", WAVPath += ".wav", LIPPath += ".lip";
+
+		IFileStream	TempWav;
+		if (TempWav.Open(WAVPath.c_str()))
+			;// use the existing wav file
+		else
+		{
+			// convert the source mp3 file to a temp wav
+			WAVPath = kTempWavPath;
+			UsingTempWav = true;
+
+			IFileStream	TempMp3;
+			if (TempMp3.Open(MP3Path.c_str()) == false)
+			{
+				// if not found, look in the archives
+				if (ArchiveManager::ExtractArchiveFile(MP3Path.c_str(), kTempMp3Path) == false)
+				{
+					BGSEECONSOLE_MESSAGE("Couldn't find source MP3/WAV file!");
+					return false;
+				}
+				else
+					MP3Path = kTempMp3Path;
+			}
+
+			STARTUPINFO StartupInfo = { 0 };
+			PROCESS_INFORMATION ProcInfo = { 0 };
+			StartupInfo.cb = sizeof(StartupInfo);
+
+			std::string FullMp3Path = std::string(BGSEEMAIN->GetAPPPath()) + std::string(MP3Path);
+			std::string FullWavPath = std::string(BGSEEMAIN->GetAPPPath()) + std::string(WAVPath);
+
+			std::string DecoderArgs(BGSEEMAIN->GetAPPPath());
+			DecoderArgs += "lame.exe \"" + FullMp3Path + "\" \"" + FullWavPath + "\" --decode";
+
+			bool Result = CreateProcess(nullptr,
+										(LPSTR)DecoderArgs.c_str(),
+										nullptr,		// default process security
+										nullptr,		// default thread security
+										FALSE,		// don't inherit handles
+										NULL,
+										nullptr,		// no new environment
+										nullptr,		// no new cwd
+										&StartupInfo, &ProcInfo) != 0;
+
+			if (Result == false)
+			{
+				BGSEECONSOLE_ERROR("Couldn't launch LAME decoder!");
+				return false;
+			}
+
+			WaitForSingleObject(ProcInfo.hProcess, INFINITE);		// wait till the decoder's done its job
+
+			CloseHandle(ProcInfo.hProcess);
+			CloseHandle(ProcInfo.hThread);
+		}
 
 		OldCSInteropData InteropDataOut(OldCSInteropData::kMessageType_GenerateLIP), InteropDataIn(OldCSInteropData::kMessageType_Wait);
 		sprintf_s(InteropDataOut.StringBufferA, sizeof(InteropDataOut.StringBufferA), "%s", WAVPath.c_str());
 		sprintf_s(InteropDataOut.StringBufferB, sizeof(InteropDataOut.StringBufferB), "%s", ResponseText);
 
-		bool HasWAVFile = false;
-		IFileStream	TempFile;
-		if (TempFile.Open(WAVPath.c_str()))
-			HasWAVFile = true;
-
-		BGSEECONSOLE_MESSAGE("Generating LIP file for '%s'...", InputPath);
-		BGSEECONSOLE->Indent();
-
-		if (HasWAVFile || CreateTempWAVFile(MP3Path.c_str(), WAVPath.c_str()))
+		if (PerformPipeOperation(InteropPipeHandle, kPipeOperation_Write, &InteropDataOut, &ByteCounter))
 		{
-			if (PerformPipeOperation(InteropPipeHandle, kPipeOperation_Write, &InteropDataOut, &ByteCounter))
+			InteropDataOut.MessageType = OldCSInteropData::kMessageType_Wait;
+
+			while (true)
 			{
-				InteropDataOut.MessageType = OldCSInteropData::kMessageType_Wait;
-
-				while (true)
+				if (PerformPipeOperation(InteropPipeHandle, kPipeOperation_Read, &InteropDataIn, &ByteCounter))
 				{
-					if (PerformPipeOperation(InteropPipeHandle, kPipeOperation_Read, &InteropDataIn, &ByteCounter))
+					switch (InteropDataIn.MessageType)
 					{
-						switch (InteropDataIn.MessageType)
-						{
-						case OldCSInteropData::kMessageType_DebugPrint:
-							BGSEECONSOLE_MESSAGE(InteropDataIn.StringBufferA);
-							break;
-						case OldCSInteropData::kMessageType_OperationResult:
-							Result = InteropDataIn.OperationResult;
-							ExitLoop = true;
-							break;
-						}
-
-						if (ExitLoop)
-							break;
-					}
-					else
-					{
-						BGSEECONSOLE_ERROR("CSInteropManager::GenerateLIPSyncFile - Idle loop encountered an error!");
+					case OldCSInteropData::kMessageType_DebugPrint:
+						BGSEECONSOLE_MESSAGE(InteropDataIn.StringBufferA);
+						break;
+					case OldCSInteropData::kMessageType_OperationResult:
+						Result = InteropDataIn.OperationResult;
+						ExitLoop = true;
 						break;
 					}
-				}
 
-				PerformPipeOperation(InteropPipeHandle, kPipeOperation_Write, &InteropDataOut, &ByteCounter);
+					if (ExitLoop)
+						break;
+				}
+				else
+				{
+					BGSEECONSOLE_ERROR("CSInteropManager::GenerateLIPSyncFile - Idle loop encountered an error!");
+					break;
+				}
 			}
-			else
-			{
-				BGSEECONSOLE_ERROR("Couldn't communicate with CS v1.0!");
-			}
+
+			PerformPipeOperation(InteropPipeHandle, kPipeOperation_Write, &InteropDataOut, &ByteCounter);
 		}
 		else
 		{
-			BGSEECONSOLE_MESSAGE("Couldn't create temporary WAV file for LIP generation!");
+			BGSEECONSOLE_ERROR("Couldn't communicate with CS v1.0!");
 		}
 
-		if (HasWAVFile == false &&
-			DeleteFile((std::string(BGSEEMAIN->GetAPPPath() + WAVPath)).c_str()) == FALSE &&
-			GetLastError() != ERROR_FILE_NOT_FOUND)
+		// copy the result to the correct directory
+		if (Result && UsingTempWav)
 		{
-			BGSEECONSOLE_ERROR("Couldn't delete temporary WAV file '%s'!", WAVPath.c_str());
+			std::string IntermediatePath(BGSEEMAIN->GetAPPPath() + std::string(InputPath));
+			IntermediatePath.erase(IntermediatePath.rfind("\\"));
+
+			if (SHCreateDirectoryEx(nullptr, IntermediatePath.c_str(), nullptr) &&
+				GetLastError() != ERROR_FILE_EXISTS &&
+				GetLastError() != ERROR_ALREADY_EXISTS)
+			{
+				BGSEECONSOLE_ERROR("Couldn't create intermediate path for the lip file! - %s", IntermediatePath.c_str());
+			}
+			else
+				CopyFile(std::string(BGSEEMAIN->GetAPPPath() + std::string(kTempLipPath)).c_str(), LIPPath.c_str(), FALSE);
 		}
 
-		BGSEECONSOLE->Outdent();
+		// delete temp files
+		DeleteFile((std::string(BGSEEMAIN->GetAPPPath() + std::string(kTempWavPath))).c_str());
+		DeleteFile((std::string(BGSEEMAIN->GetAPPPath() + std::string(kTempMp3Path))).c_str());
+		DeleteFile((std::string(BGSEEMAIN->GetAPPPath() + std::string(kTempLipPath))).c_str());
+
 
 		return Result;
 	}

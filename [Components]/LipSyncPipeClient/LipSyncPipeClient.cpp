@@ -21,16 +21,22 @@ BOOL WINAPI DllMain(HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 	switch (dwReason)
 	{
 	case DLL_PROCESS_ATTACH:
-		_MemHdlr(Crt0EntryPointInitialization).WriteUInt8(0x0);
-		_MemHdlr(InitializeWindows).WriteNop();
-		_MemHdlr(ShowSplashScreenWindow).WriteJump();
-		_MemHdlr(MainWindowMessageLoop).WriteJump();
-		_MemHdlr(MessageHandlerDebugPrint).WriteUInt32((UInt32)&HandleDebugText);
-		_MemHdlr(LogOC3AnimFactoryMessagesA).WriteJump();
-		_MemHdlr(LogOC3AnimFactoryMessagesB).WriteNop();
-		_MemHdlr(AllowMultipleEditors).WriteUInt8(0xEB);
+		{
+			_MemHdlr(Crt0EntryPointInitialization).WriteUInt8(0x0);
+			_MemHdlr(InitializeWindows).WriteNop();
+			_MemHdlr(ShowSplashScreenWindow).WriteJump();
+			_MemHdlr(MainWindowMessageLoop).WriteJump();
+			_MemHdlr(MessageHandlerDebugPrint).WriteUInt32((UInt32)&HandleDebugText);
+			_MemHdlr(LogOC3AnimFactoryMessagesA).WriteJump();
+			_MemHdlr(LogOC3AnimFactoryMessagesB).WriteNop();
+			_MemHdlr(AllowMultipleEditors).WriteUInt8(0xEB);
 
-		g_DebugLog = _fsopen("LipSyncPipeClient.log", "w", _SH_DENYWR);
+			_DefineJumpHdlr(Test, 0x0087F750, 0x0087F7E9);
+	//		_MemHdlr(Test).WriteJump();
+
+			g_DebugLog = _fsopen("LipSyncPipeClient.log", "w", _SH_DENYWR);
+		}
+
 		break;
 	case DLL_PROCESS_DETACH:
 		break;

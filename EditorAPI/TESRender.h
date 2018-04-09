@@ -304,7 +304,7 @@ public:
 
 	static float*						RefMovementSpeed;
 	static float*						RefRotationSpeed;
-	static float*						SnapAngle;						// the snap angle and dist. are weird - they are actually unsigned ints but declaring them as such causes issues (### why? compiler related?)
+	static float*						SnapAngle;						// ### the snap angle and dist. are weird - they are actually unsigned ints but declaring them as such causes issues (### why? compiler related?)
 	static float*						SnapGridDistance;				// so we need to cast them as UInt32 pointers before dereferencing them
 	static float*						CameraRotationSpeed;
 	static float*						CameraZoomSpeed;

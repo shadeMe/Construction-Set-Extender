@@ -45,7 +45,7 @@ bool ArchiveManager::ExtractArchiveFile( const char* InPath, const char* OutPath
 
 	if (InPath)
 	{
-		std::string Path(InPath); 
+		std::string Path(InPath);
 		SME::StringHelpers::MakeLower(Path);
 
 		if (Path.find("data\\") != -1)
@@ -74,13 +74,13 @@ bool ArchiveManager::ExtractArchiveFile( const char* InPath, const char* OutPath
 
 				if (!ArchiveFileStream->DirectRead(Buffer, FileSize))
 				{
-					BGSEECONSOLE_MESSAGE("ArchiveManager::ExtractArchiveFile - Couldn't read file %s from archive %s", ArchiveFileStream->fileName, ArchiveFileStream->parentArchive->fileName);
+					BGSEECONSOLE_MESSAGE("Couldn't read file %s from archive %s", ArchiveFileStream->fileName, ArchiveFileStream->parentArchive->fileName);
 				}
 				else
 				{
 					if (!TempFile->DirectWrite(Buffer, FileSize))
 					{
-						BGSEECONSOLE_MESSAGE("ArchiveManager::ExtractArchiveFile - Couldn't write to file %s", TempFile->fileName);
+						BGSEECONSOLE_MESSAGE("Couldn't write extracted archive file to %s", TempFile->fileName);
 					}
 					else
 						Result = true;

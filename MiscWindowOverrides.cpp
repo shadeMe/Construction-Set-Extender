@@ -678,7 +678,7 @@ namespace cse
 						}
 
 						break;
-					case 1016:					// Generate LIP
+					case ResponseEditorData::kGenerateLIPFileButton:
 						if (ListView_GetItem(VoiceList, &SelectedVoiceItem) != TRUE)
 						{
 							Return = true;

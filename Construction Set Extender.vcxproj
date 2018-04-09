@@ -356,7 +356,16 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\OBSE\obse\NiTypes.cpp" />
+    <ClCompile Include="..\OBSE\obse\NiTypes.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug - Attach Debugger|Win32'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release - No CrashRpt, Attach Debugger|Win32'">
+      </ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="CellViewWindowOverrides.cpp" />
     <ClCompile Include="Coda\Commands\CodaScriptCommands-BFC.cpp" />
     <ClCompile Include="Coda\Commands\CodaScriptCommands-Form.cpp" />

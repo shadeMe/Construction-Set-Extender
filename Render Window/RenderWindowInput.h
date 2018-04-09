@@ -342,9 +342,10 @@ namespace cse
 				bool				CellViewUpdatesDeferred;
 				bool				TransformingSelection;
 
+				static POINT		GetWindowCenter(HWND hWnd, bool ClientArea);
 				POINT				CenterCursor(HWND hWnd, bool UpdateBaseCoords);			// returns the center coords (in screen area)
 				bool				IsCenteringCursor(HWND hWnd, LPARAM lParam) const;
-				void				GetWindowMetrics(HWND hWnd, int& X, int& Y, int& Width, int& Height) const;
+				static void			GetWindowMetrics(HWND hWnd, int& X, int& Y, int& Width, int& Height);
 				void				ToggleCellViewUpdate(bool State);
 				void				ToggleFreeMouseMovement(HWND hWnd, bool State);
 				void				HandleFreeMouseMovementKeyEvent(UInt8 Type);
@@ -358,6 +359,32 @@ namespace cse
 
 				bool				IsPaintingSelection() const;
 				bool				IsTransformingSelection() const;
+			};
+
+			class RenderWindowDirectInputTranslator
+			{
+			public:
+				enum class Device
+				{
+					None		= 0,
+					Mouse		= 1,
+					Keyboard	= 2,
+				};
+			private:
+				LPDIRECTINPUT8				DInput;
+				LPDIRECTINPUTDEVICE8		DIMouse;
+				LPDIRECTINPUTDEVICE8		DIKeyboard;
+				bool						InputValid;
+
+				DIMOUSESTATE				DIMouseState;
+				BYTE						DIKeyboardState[256];
+				Device						ActiveDevice;
+
+			public:
+				RenderWindowDirectInputTranslator();
+				~RenderWindowDirectInputTranslator();
+
+
 			};
 		}
 	}

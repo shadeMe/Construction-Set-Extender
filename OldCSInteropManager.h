@@ -7,6 +7,10 @@ namespace cse
 	{
 		static OldCSInteropManager*		Singleton;
 
+		static const char*				kTempMp3Path;
+		static const char*				kTempWavPath;
+		static const char*				kTempLipPath;
+
 		OldCSInteropManager();
 
 		PROCESS_INFORMATION				CS10ProcInfo;
@@ -18,7 +22,6 @@ namespace cse
 		void							DoInjectDLL(PROCESS_INFORMATION * info);
 		bool							InjectDLL(PROCESS_INFORMATION * info);
 		bool							CreateNamedPipeServer(char** GUIDOut);
-		bool							CreateTempWAVFile(const char* MP3Path, const char* WAVPath);
 	public:
 		~OldCSInteropManager();
 
