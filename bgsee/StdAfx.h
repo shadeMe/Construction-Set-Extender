@@ -19,7 +19,6 @@
 #define DPSAPI_VERSION	1
 
 // WIN32
-#include <winsock2.h>
 #include <windows.h>
 #include <windowsx.h>
 #include <atltypes.h>
