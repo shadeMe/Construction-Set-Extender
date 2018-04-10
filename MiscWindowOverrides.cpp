@@ -238,9 +238,8 @@ namespace cse
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
 
-			TESFile** ActiveTESFilePtr = (TESFile**)0x00A0AA7C;
-			TESFile* ActiveTESFile = *ActiveTESFilePtr;
-			HWND PluginList = GetDlgItem(hWnd, kDataDlg_PluginFileList);
+			TESFile* ActiveTESFile = *DataDialog::ActivePlugin;
+			HWND PluginList = GetDlgItem(hWnd, DataDialog::kCtrlId_PluginFileList);
 
 			switch (uMsg)
 			{
@@ -285,7 +284,8 @@ namespace cse
 					switch (NotificationData->code)
 					{
 					case NM_CUSTOMDRAW:
-						if (wParam == kDataDlg_PluginFileList)
+						if (wParam == DataDialog::kCtrlId_PluginFileList ||
+							wParam == DataDialog::kCtrlId_ParentMasterFileList)
 						{
 							NMLVCUSTOMDRAW* DrawData = (NMLVCUSTOMDRAW*)lParam;
 
@@ -301,44 +301,57 @@ namespace cse
 								break;
 							case CDDS_ITEMPREPAINT:
 								{
-									UInt32 PluginIndex = (UInt32)DrawData->nmcd.lItemlParam;
-									TESFile* CurrentFile = _DATAHANDLER->LookupPluginByIndex(PluginIndex);
-
-									if (CurrentFile)
+									bool Update = true;
+									if (wParam == DataDialog::kCtrlId_PluginFileList)
 									{
-										bool Update = true;
+										UInt32 PluginIndex = (UInt32)DrawData->nmcd.lItemlParam;
+										TESFile* CurrentFile = _DATAHANDLER->LookupPluginByIndex(PluginIndex);
 
-										if (CurrentFile->IsMaster())
+										if (CurrentFile)
 										{
-											DrawData->clrTextBk = RGB(242, 247, 243);
-											DrawData->clrText = RGB(0, 0, 0);
-										}
+											if (CurrentFile->IsMaster())
+											{
+												DrawData->clrTextBk = RGB(242, 247, 243);
+												DrawData->clrText = RGB(0, 0, 0);
+											}
 
-										if (CurrentFile == ActiveTESFile)
-										{
-											DrawData->clrTextBk = RGB(227, 183, 251);
-											DrawData->clrText = RGB(0, 0, 0);
+											if (CurrentFile == ActiveTESFile)
+											{
+												DrawData->clrTextBk = RGB(227, 183, 251);
+												DrawData->clrText = RGB(0, 0, 0);
+											}
+											else if (!_stricmp(settings::startup::kPluginName.GetData().s, CurrentFile->fileName))
+											{
+												DrawData->clrTextBk = RGB(248, 227, 186);
+												DrawData->clrText = RGB(0, 0, 0);
+											}
+											else if (CurrentFile->authorName.c_str() &&
+													 !_stricmp(CurrentFile->authorName.c_str(), "shadeMe"))
+											{
+												DrawData->clrTextBk = RGB(249, 255, 255);
+												DrawData->clrText = RGB(0, 0, 0);
+											}
+											else
+												Update = false;
 										}
-										else if (!_stricmp(settings::startup::kPluginName.GetData().s, CurrentFile->fileName))
+									}
+									else
+									{
+										if (DrawData->nmcd.lItemlParam == NULL)
 										{
-											DrawData->clrTextBk = RGB(248, 227, 186);
-											DrawData->clrText = RGB(0, 0, 0);
-										}
-										else if (CurrentFile->authorName.c_str() &&
-												 !_stricmp(CurrentFile->authorName.c_str(), "shadeMe"))
-										{
-											DrawData->clrTextBk = RGB(249, 255, 255);
+											// missing master
+											DrawData->clrTextBk = RGB(244, 75, 66);
 											DrawData->clrText = RGB(0, 0, 0);
 										}
 										else
 											Update = false;
+									}
 
-										if (Update)
-										{
-											SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NEWFONT);
-											DlgProcResult = TRUE;
-											Return = true;
-										}
+									if (Update)
+									{
+										SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NEWFONT);
+										DlgProcResult = TRUE;
+										Return = true;
 									}
 								}
 
@@ -348,7 +361,7 @@ namespace cse
 
 						break;
 					case LVN_KEYDOWN:
-						if (wParam == kDataDlg_ParentMasterFileList)
+						if (wParam == DataDialog::kCtrlId_ParentMasterFileList)
 						{
 							NMLVKEYDOWN* KeyData = (NMLVKEYDOWN*)lParam;
 
@@ -375,6 +388,27 @@ namespace cse
 								}
 
 								break;
+							}
+						}
+
+						break;
+					case LVN_GETDISPINFO:
+						{
+							if (wParam == DataDialog::kCtrlId_ParentMasterFileList)
+							{
+								Return = true;
+
+								auto Info = (NMLVDISPINFO*)lParam;
+								auto Plugin = (TESFile*)Info->item.lParam;
+								if (Plugin)
+									sprintf_s(Info->item.pszText, Info->item.cchTextMax, "%s", Plugin->fileName);
+								else
+								{
+									// the masters are added in the same order as in the header
+									// use the index of the list view item to get the corresponding missing master's name
+									auto MissingMasterName = (*DataDialog::CurrentSelection)->masterNames.GetNthItem(Info->item.iItem);
+									sprintf_s(Info->item.pszText, Info->item.cchTextMax, "%s", MissingMasterName);
+								}
 							}
 						}
 
@@ -416,7 +450,7 @@ namespace cse
 						for (tList<TESFile>::Iterator Itr = _DATAHANDLER->fileList.Begin(); Itr.Get() && Itr.End() == false; ++Itr)
 							Itr.Get()->SetLoaded(false);
 
-						ActiveTESFilePtr = nullptr;
+						*DataDialog::ActivePlugin = nullptr;
 						ActiveTESFile = nullptr;
 						BGSEEUI->GetInvalidationManager()->Redraw(PluginList);
 					}

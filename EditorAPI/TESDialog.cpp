@@ -4,6 +4,10 @@
 #include "Hooks\Hooks-Dialog.h"
 #include "Achievements.h"
 
+TESFile**					DataDialog::ActivePlugin = (TESFile**)0x00A0AA7C;
+TESFile**					DataDialog::CurrentSelection = (TESFile**)0x00A0AA78;
+
+
 tList<HWND>*				TESDialog::OpenDialogWindows = (tList<HWND>*)0x00A0B55C;
 bool						TESDialog::PackageCellDragDropInProgress = false;
 UInt8*						TESDialog::TESFormIDListViewDragDropInProgress = (UInt8*)0x00A0BE45;
@@ -679,3 +683,4 @@ TESObjectREFR* RefSelectControl::ShowSelectReferenceDialog(HWND Parent, TESObjec
 
 	return Selection;
 }
+

@@ -291,11 +291,20 @@ enum
 	kFaceGenControl_AdvancedParamsListView = 1020,
 };
 
-enum
+class DataDialog
 {
-	kDataDlg_PluginFileList = 1056,
-	kDataDlg_ParentMasterFileList = 1057,
+public:
+	enum
+	{
+		kCtrlId_PluginFileList = 1056,
+		kCtrlId_ParentMasterFileList = 1057,
+	};
+
+	static TESFile**				ActivePlugin;
+	static TESFile**				CurrentSelection;
 };
+
+
 
 enum
 {

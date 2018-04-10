@@ -12,8 +12,6 @@ CSE		---->
 	BUGFIX			=
 		> Unrestricted mouse movement can be janky (when using the track pad, for instance)
 			>> Seems like the message that centers the cursor is somehow being handled
-		> Can't generate more than 2 LIP files
-			>> The interop pipe gets closed for some reason
 		> Keep OSD popup open when it has keyboard focus
 		> Dirty edits?
 			>> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=25301452
@@ -23,7 +21,6 @@ CSE		---->
 
 
 	ENHANCEMENT		=
-		> Show missing masters in data dialog
 		> Wildcard find/replace
 		> Add an option to restore a saved backup for some esp/esm, instead of manually recover it from Data/Backup folder and moving it back to Data folder.
 		> Render window gizmos
