@@ -89,4 +89,7 @@ public:
 	// method
 	void						SetStartGameEnabledFlag(bool State);
 	void						SetAllowedRepeatedStagesFlag(bool State);
+
+	static HWND*				WindowHandle;
+	static HWND*				FilteredDialogWindowHandle;
 };
