@@ -10,7 +10,6 @@ NOTE	---->
 CSE		---->
 
 	BUGFIX			=
-		> Keep OSD popup open when it has keyboard focus
 		> Dirty edits?
 			>> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=25301452
 		> Object window columns like Auto calc, Enchantment type, Count don't sort consistently

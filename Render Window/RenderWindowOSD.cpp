@@ -292,13 +292,14 @@ namespace cse
 			// set up window styles and colors
 			ImGuiStyle& style = ImGui::GetStyle();
 
-			style.WindowPadding = ImVec2(10, 10);
+			style.WindowPadding = ImVec2(15, 10);
 			style.WindowRounding = 5.0f;
+			style.PopupRounding = 5.0f;
 			style.ChildRounding = 5.0f;
-			style.FramePadding = ImVec2(5, 3);
-			style.FrameRounding = 4.0f;
+			style.FramePadding = ImVec2(6, 3);
+			style.FrameRounding = 2.0f;
 			style.ItemSpacing = ImVec2(12, 8);
-			style.ItemInnerSpacing = ImVec2(8, 6);
+			style.ItemInnerSpacing = ImVec2(10, 8);
 			style.IndentSpacing = 25.0f;
 			style.ScrollbarSize = 12.0f;
 			style.ScrollbarRounding = 9.0f;
@@ -1147,7 +1148,7 @@ namespace cse
 																			   RenderDelegateT DrawButton, RenderDelegateT DrawPopup,
 																			   UInt8 PositionType, ImVec2& Pos)
 		{
-			// ### this will break if the position of the data inside the vector changes
+			// ### TODO this will break if the position of the data inside the vector changes
 			// ### hash the name (it's supposed to be unique) and use it as the ID instead
 			RegisteredPopups.push_back(PopupData(Name, DrawButton, DrawPopup, PositionType, Pos));
 			return RegisteredPopups.size() - 1;
@@ -1240,10 +1241,12 @@ namespace cse
 						// render the contents of the current popup
 						PopupData.DrawPopup();
 
+						bool NeedsKeyboard = false, Throwaway = false;
+						GUI->NeedsInput(Throwaway, Throwaway, NeedsKeyboard);
 						if (Hovering == false &&
-							(GUI->IsPopupHovered() || GUI->HasRootWindow(GUI->GetHoveredWindow(), PopupID)))
+							(GUI->IsPopupHovered() || GUI->HasRootWindow(GUI->GetHoveredWindow(), PopupID) || NeedsKeyboard))
 						{
-							// reset the timeout/prevent ticking every frame when the mouse is hovering over the popup or its children
+							// reset the timeout/prevent ticking every frame when the mouse is hovering over the popup or its children or has keyboard input
 							PreventActivePopupTicking = true;
 							ActivePopupTimeout = kTimeout;
 						}
