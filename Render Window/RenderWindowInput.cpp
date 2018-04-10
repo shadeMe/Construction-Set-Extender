@@ -1288,69 +1288,109 @@ namespace cse
 																ImGuiWindowFlags_NoResize, ImVec2(700, 600), ImGuiCond_Once);
 			}
 
-
 			SharedBindings& RenderWindowKeyboardManager::GetSharedBindings()
 			{
 				return Shared;
 			}
 
-			POINT RenderWindowMouseManager::GetWindowCenter(HWND hWnd, bool ClientArea)
+#ifndef HID_USAGE_PAGE_GENERIC
+#define HID_USAGE_PAGE_GENERIC         ((USHORT) 0x01)
+#endif
+#ifndef HID_USAGE_GENERIC_MOUSE
+#define HID_USAGE_GENERIC_MOUSE        ((USHORT) 0x02)
+#endif
+
+			MouseRawInput::MouseRawInput() :
+				Parent(NULL),
+				CursorRestorePos{ 0 },
+				Active(false)
 			{
-				int X, Y, W, H;
-				GetWindowMetrics(hWnd, X, Y, W, H);
-
-				POINT Center = { X + W / 2, Y + H / 2 };
-				if (ClientArea)
-					ScreenToClient(hWnd, &Center);
-
-				return Center;
+				;//
 			}
 
-			POINT RenderWindowMouseManager::CenterCursor(HWND hWnd, bool UpdateBaseCoords)
+			MouseRawInput::~MouseRawInput()
 			{
-				POINT Center = GetWindowCenter(hWnd, false);
-				POINT Out(Center);
-				SetCursorPos(Center.x, Center.y);
-				MSG msg;
-				while (::PeekMessage(&msg, NULL, WM_MOUSEMOVE, WM_MOUSEMOVE, PM_REMOVE)) {};
+				if (Active)
+					Deactivate();
+			}
 
-				if (UpdateBaseCoords)
+			void MouseRawInput::Activate(HWND hWnd)
+			{
+				SME_ASSERT(IsActive() == false);
+
+				GetCursorPos(&CursorRestorePos);
+				Active = true;
+				Parent = hWnd;
+				while (ShowCursor(FALSE) >= 0)
+					;//
+
+				RAWINPUTDEVICE Rid[1];
+				Rid[0].usUsagePage = HID_USAGE_PAGE_GENERIC;
+				Rid[0].usUsage = HID_USAGE_GENERIC_MOUSE;
+				Rid[0].dwFlags = RIDEV_INPUTSINK;
+				Rid[0].hwndTarget = Parent;
+				RegisterRawInputDevices(Rid, 1, sizeof(Rid[0]));
+			}
+
+			void MouseRawInput::Deactivate()
+			{
+				SME_ASSERT(IsActive());
+
+				RAWINPUTDEVICE Rid[1];
+				Rid[0].usUsagePage = HID_USAGE_PAGE_GENERIC;
+				Rid[0].usUsage = HID_USAGE_GENERIC_MOUSE;
+				Rid[0].dwFlags = RIDEV_REMOVE;
+				Rid[0].hwndTarget = NULL;
+				RegisterRawInputDevices(Rid, 1, sizeof(Rid[0]));
+
+				SetCursorPos(CursorRestorePos.x, CursorRestorePos.y);
+
+				Active = false;
+				Parent = NULL;
+				while (ShowCursor(TRUE) < 0)
+					;//
+			}
+
+			bool MouseRawInput::IsActive() const
+			{
+				return Active;
+			}
+
+			bool MouseRawInput::HandleInput(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, POINT& OutMouseDelta)
+			{
+				bool Result = false;
+
+				if (IsActive())
 				{
-					ScreenToClient(hWnd, &Center);
-					TESRenderWindow::LastMouseCoords->x = Center.x;
-					TESRenderWindow::LastMouseCoords->y = Center.y;
+					switch (uMsg)
+					{
+					case WM_INPUT:
+						{
+							UINT dwSize = 40;
+							static BYTE lpb[40];
+
+							GetRawInputData((HRAWINPUT)lParam, RID_INPUT,
+											lpb, &dwSize, sizeof(RAWINPUTHEADER));
+
+							RAWINPUT* raw = (RAWINPUT*)lpb;
+
+							if (raw->header.dwType == RIM_TYPEMOUSE)
+							{
+								int xPosRelative = raw->data.mouse.lLastX;
+								int yPosRelative = raw->data.mouse.lLastY;
+
+								OutMouseDelta.x = xPosRelative;
+								OutMouseDelta.y = yPosRelative;
+
+								Result = true;
+							}
+						}
+
+						break;
+					}
 				}
 
-				return Out;
-			}
-
-			bool RenderWindowMouseManager::IsCenteringCursor(HWND hWnd, LPARAM lParam) const
-			{
-				// ### HACK, kludge to workaround the WM_MOUSEMOVE feedback loop we get when allowing free movement
-				int X, Y, W, H;
-				GetWindowMetrics(hWnd, X, Y, W, H);
-
-				POINT Center = GetWindowCenter(hWnd, true);
-
-				int PosX = GET_X_LPARAM(lParam);
-				int PosY = GET_Y_LPARAM(lParam);
-
-				if (PosX == Center.x && PosY == Center.y)
-					return true;
-				else
-					return false;
-			}
-
-			void RenderWindowMouseManager::GetWindowMetrics(HWND hWnd, int& X, int& Y, int& Width, int& Height)
-			{
-				RECT WindowRect = { 0 };
-				GetWindowRect(hWnd, &WindowRect);
-
-				Width = WindowRect.right - WindowRect.left;
-				Height = WindowRect.bottom - WindowRect.top;
-
-				X = WindowRect.left;
-				Y = WindowRect.top;
+				return Result;
 			}
 
 			void RenderWindowMouseManager::ToggleCellViewUpdate(bool State)
@@ -1386,26 +1426,17 @@ namespace cse
 
 				if (State)
 				{
-					if (FreeMouseMovement == false)
+					if (FreeMouseMovement.IsActive() == false)
 					{
-						GetCursorPos(&MouseDownCursorPos);
-						// hide the cursor and reset it to the center
-						FreeMouseMovement = true;
-						CenterCursor(hWnd, true);
-						while (ShowCursor(FALSE) > 0)
-							;//
+						FreeMouseMovement.Activate(hWnd);
+						_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
+						_RENDERWIN_XSTATE.CurrentMousePathGridPoint = nullptr;
 					}
 				}
 				else
 				{
-					if (FreeMouseMovement)
-					{
-						// restore the cursor
-						FreeMouseMovement = false;
-						SetCursorPos(MouseDownCursorPos.x, MouseDownCursorPos.y);
-						while (ShowCursor(TRUE) < 0)
-							;//
-					}
+					if (FreeMouseMovement.IsActive())
+						FreeMouseMovement.Deactivate();
 				}
 			}
 
@@ -1419,11 +1450,9 @@ namespace cse
 			}
 
 			RenderWindowMouseManager::RenderWindowMouseManager() :
-				CurrentMouseCoord{ 0 },
 				PaintingSelection(false),
 				SelectionPaintingMode(kSelectionPainting_NotSet),
-				MouseDownCursorPos{ 0 },
-				FreeMouseMovement(false),
+				FreeMouseMovement(),
 				CellViewUpdatesDeferred(false),
 				TransformingSelection(false)
 			{
@@ -1448,6 +1477,20 @@ namespace cse
 			{
 				bool Handled = false;
 
+				POINT RawMouseDelta = { 0 };
+				bool RawMouseData = FreeMouseMovement.HandleInput(hWnd, uMsg, wParam, lParam, RawMouseDelta);
+				if (RawMouseData)
+				{
+					// convert the message and pass it down
+					uMsg = WM_MOUSEMOVE;
+					wParam = NULL;
+
+					POINT ClientPos;
+					ClientPos.x = TESRenderWindow::LastMouseCoords->x + RawMouseDelta.x;
+					ClientPos.y = TESRenderWindow::LastMouseCoords->y + RawMouseDelta.y;
+					lParam = MAKELPARAM(ClientPos.x, ClientPos.y);
+				}
+
 				switch (uMsg)
 				{
 				case WM_LBUTTONDBLCLK:
@@ -1469,7 +1512,7 @@ namespace cse
 					break;
 				case WM_SETCURSOR:
 					{
-						if (GetCapture() != hWnd)
+						if (FreeMouseMovement.IsActive() == false && GetCapture() != hWnd)
 						{
 							HCURSOR Icon = *TESRenderWindow::CursorArrow;
 
@@ -1528,89 +1571,62 @@ namespace cse
 					{
 						Handled = true;
 
-						POINT MousePos = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-						POINT MouseDelta = { CurrentMouseCoord.x - MousePos.x, CurrentMouseCoord.y - MousePos.y };
-						POINT LastMouseCoord(CurrentMouseCoord);
-						CurrentMouseCoord.x = MousePos.x;
-						CurrentMouseCoord.y = MousePos.y;
-
-						if (FreeMouseMovement && IsCenteringCursor(hWnd, lParam))
+						// ignore superfluous mouse move messages when registered for raw data
+						if (FreeMouseMovement.IsActive() && RawMouseData == false)
 							break;
-						else if (MouseDelta.x == 0 && MouseDelta.y == 0)
-						{
-							// windows sends suprious WM_MOUSEMOVE messages even if the mouse didn't actually move (because Windows)
-							// we need to consume it and break early or we'll be calling the original handler unnecessarily
-							break;
-						}
-
-						if (FreeMouseMovement) {
-							BGSEECONSOLE_MESSAGE("Last(%d,%d)\tCur(%d,%d)\tDelta(%d,%d)\tCenter(%s)",
-												 LastMouseCoord.x, LastMouseCoord.y,
-												 CurrentMouseCoord.x, CurrentMouseCoord.y,
-												 MouseDelta.x, MouseDelta.y,
-												 IsCenteringCursor(hWnd, lParam) ? "true" : "false");
-						}
 
 						_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
 						_RENDERWIN_XSTATE.CurrentMousePathGridPoint = nullptr;
+						POINT MousePos{ GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
-						if (*TESRenderWindow::LandscapeEditFlag == 0)
+						if (FreeMouseMovement.IsActive() == false)
 						{
-							if (*TESRenderWindow::PathGridEditFlag == 0)
+							if (*TESRenderWindow::LandscapeEditFlag == 0)
 							{
-								_RENDERWIN_XSTATE.CurrentMouseRef = TESRender::PickRefAtCoords(MousePos.x, MousePos.y);
-								if (_RENDERWIN_XSTATE.CurrentMouseRef)
+								if (*TESRenderWindow::PathGridEditFlag == 0)
 								{
-									if (ReferenceVisibilityManager::IsCulled(_RENDERWIN_XSTATE.CurrentMouseRef) ||
-										ReferenceVisibilityManager::ShouldBeInvisible(_RENDERWIN_XSTATE.CurrentMouseRef))
+									_RENDERWIN_XSTATE.CurrentMouseRef = TESRender::PickRefAtCoords(MousePos.x, MousePos.y);
+									if (_RENDERWIN_XSTATE.CurrentMouseRef)
 									{
-										_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
+										if (ReferenceVisibilityManager::IsCulled(_RENDERWIN_XSTATE.CurrentMouseRef) ||
+											ReferenceVisibilityManager::ShouldBeInvisible(_RENDERWIN_XSTATE.CurrentMouseRef))
+										{
+											_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
+										}
 									}
 								}
-							}
-							else
-							{
-								_RENDERWIN_XSTATE.CurrentMousePathGridPoint = TESRender::PickPathGridPointAtCoords(MousePos.x,
-																												   MousePos.y);
-							}
-						}
-
-						if (PaintingSelection)
-						{
-							// paint only when the alt key is held down
-							if (GetAsyncKeyState(VK_MENU))
-							{
-								TESObjectREFR* MouseRef = _RENDERWIN_XSTATE.CurrentMouseRef;
-								if (MouseRef)
+								else
 								{
-									if (SelectionPaintingMode == kSelectionPainting_NotSet)
+									_RENDERWIN_XSTATE.CurrentMousePathGridPoint = TESRender::PickPathGridPointAtCoords(MousePos.x,
+																													   MousePos.y);
+								}
+							}
+
+							if (PaintingSelection)
+							{
+								// paint only when the alt key is held down
+								if (GetAsyncKeyState(VK_MENU))
+								{
+									TESObjectREFR* MouseRef = _RENDERWIN_XSTATE.CurrentMouseRef;
+									if (MouseRef)
 									{
-										if (_RENDERSEL->HasObject(MouseRef))
-											SelectionPaintingMode = kSelectionPainting_Deselect;
+										if (SelectionPaintingMode == kSelectionPainting_NotSet)
+										{
+											if (_RENDERSEL->HasObject(MouseRef))
+												SelectionPaintingMode = kSelectionPainting_Deselect;
+											else
+												SelectionPaintingMode = kSelectionPainting_Select;
+										}
+
+										if (SelectionPaintingMode == kSelectionPainting_Select)
+											ReferenceSelectionManager::AddToSelection(MouseRef, true, PaintingSelection);
 										else
-											SelectionPaintingMode = kSelectionPainting_Select;
+											ReferenceSelectionManager::RemoveFromSelection(MouseRef, true);
 									}
-
-									if (SelectionPaintingMode == kSelectionPainting_Select)
-										ReferenceSelectionManager::AddToSelection(MouseRef, true, PaintingSelection);
-									else
-										ReferenceSelectionManager::RemoveFromSelection(MouseRef, true);
 								}
+
+								break;
 							}
-
-							break;
-						}
-
-						// handle free movement
-						if (FreeMouseMovement)
-						{
-							// center the mouse and tunnel just the offset
-							CenterCursor(hWnd, false);
-
-							POINT ClientPos;
-							ClientPos.x = TESRenderWindow::LastMouseCoords->x - MouseDelta.x;
-							ClientPos.y = TESRenderWindow::LastMouseCoords->y - MouseDelta.y;
-							lParam = MAKELPARAM(ClientPos.x, ClientPos.y);
 						}
 
 						bool MoveCameraWithSel = Manager->GetKeyboardInputManager()->GetSharedBindings().MoveCameraWithSelection->IsHeldDown();
@@ -1774,6 +1790,12 @@ namespace cse
 			{
 				return TransformingSelection;
 			}
+
+			bool RenderWindowMouseManager::IsFreeMouseMovementActive() const
+			{
+				return FreeMouseMovement.IsActive();
+			}
+
 		}
 	}
 }

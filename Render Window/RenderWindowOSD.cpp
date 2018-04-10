@@ -229,6 +229,7 @@ namespace cse
 		}
 
 		ImGuiDX9::ImGuiDX9() :
+			FreeMouseMovement(),
 			PassthroughWhitelistMouseEvents()
 		{
 			VertexBuffer = nullptr;
@@ -245,7 +246,6 @@ namespace cse
 			ConsumeNextMouseRButtonDown = false;
 			CurrentMouseCoord.x = CurrentMouseCoord.y = 0;
 			MouseDownCursorPos.x = MouseDownCursorPos.y = 0;
-			FreeMouseMovement = false;
 			Initialized = false;
 		}
 
@@ -392,73 +392,22 @@ namespace cse
 			return Active != NULL;
 		}
 
-
-		POINT ImGuiDX9::CenterCursor(HWND hWnd)
-		{
-			int X, Y, W, H;
-			GetWindowMetrics(hWnd, X, Y, W, H);
-
-			POINT Center = { X + W / 2, Y + H / 2 };
-			POINT Out(Center);
-			SetCursorPos(Center.x, Center.y);
-			return Out;
-		}
-
-		bool ImGuiDX9::IsCenteringCursor(HWND hWnd, LPARAM lParam) const
-		{
-			// ### HACK, kludge to workaround the WM_MOUSEMOVE feedback loop we get when allowing free movement
-			int X, Y, W, H;
-			GetWindowMetrics(hWnd, X, Y, W, H);
-
-			POINT Center = { X + W / 2, Y + H / 2 };
-			ScreenToClient(hWnd, &Center);
-
-			int PosX = GET_X_LPARAM(lParam);
-			int PosY = GET_Y_LPARAM(lParam);
-
-			if (PosX == Center.x && PosY == Center.y)
-				return true;
-			else
-				return false;
-		}
-
-		void ImGuiDX9::GetWindowMetrics(HWND hWnd, int& X, int& Y, int& Width, int& Height) const
-		{
-			RECT WindowRect = { 0 };
-			GetWindowRect(hWnd, &WindowRect);
-
-			Width = WindowRect.right - WindowRect.left;
-			Height = WindowRect.bottom - WindowRect.top;
-
-			X = WindowRect.left;
-			Y = WindowRect.top;
-		}
-
 		void ImGuiDX9::ToggleFreeMouseMovement(HWND hWnd, bool State)
 		{
 			if (State)
 			{
-				if (FreeMouseMovement == false)
+				if (FreeMouseMovement.IsActive() == false)
 				{
-					GetCursorPos(&MouseDownCursorPos);
-					// hide the cursor and reset it to the center
-					FreeMouseMovement = true;
-					CenterCursor(hWnd);
+					FreeMouseMovement.Activate(hWnd);
 					SetCapture(hWnd);
-					while (ShowCursor(FALSE) > 0)
-						;//
 				}
 			}
 			else
 			{
-				if (FreeMouseMovement)
+				if (FreeMouseMovement.IsActive())
 				{
-					// restore the cursor
-					FreeMouseMovement = false;
-					SetCursorPos(MouseDownCursorPos.x, MouseDownCursorPos.y);
+					FreeMouseMovement.Deactivate();
 					ReleaseCapture();
-					while (ShowCursor(TRUE) < 0)
-						;//
 				}
 			}
 		}
@@ -557,6 +506,16 @@ namespace cse
 		{
 			ImGuiIO& io = ImGui::GetIO();
 
+			POINT RawMouseDelta = { 0 };
+			bool RawMouseData = FreeMouseMovement.HandleInput(hWnd, msg, wParam, lParam, RawMouseDelta);
+			if (RawMouseData)
+			{
+				// handle directly
+				io.MousePos.x += RawMouseDelta.x;
+				io.MousePos.y += RawMouseDelta.y;
+				return true;
+			}
+
 			switch (msg)
 			{
 			case WM_LBUTTONDOWN:
@@ -590,33 +549,16 @@ namespace cse
 				return true;
 			case WM_MOUSEMOVE:
 				{
-					POINT MousePos = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-					POINT MouseDelta = { CurrentMouseCoord.x - MousePos.x, CurrentMouseCoord.y - MousePos.y };
-					POINT LastMouseCoord(CurrentMouseCoord);
-					CurrentMouseCoord.x = MousePos.x;
-					CurrentMouseCoord.y = MousePos.y;
-
-					if (FreeMouseMovement && IsCenteringCursor(hWnd, lParam))
-						return true;
-					else if (MouseDelta.x == 0 && MouseDelta.y == 0)
-						return true;
+					if (FreeMouseMovement.IsActive() && RawMouseData == false)
+						return false;
 
 					// free mouse movement needs to be turned on here as we don't want to hide the cursor until we're sure we're dragging the mouse
 					// only when hovering over a widget
 					if (ImGui::IsAnyItemHovered() && ImGui::IsMouseDragging())
 						ToggleFreeMouseMovement(hWnd, true);
 
-					if (FreeMouseMovement)
-					{
-						CenterCursor(hWnd);
-						io.MousePos.x += -MouseDelta.x;
-						io.MousePos.y += -MouseDelta.y;
-					}
-					else
-					{
-						io.MousePos.x = (signed short)(lParam);
-						io.MousePos.y = (signed short)(lParam >> 16);
-					}
+					io.MousePos.x = (signed short)(lParam);
+					io.MousePos.y = (signed short)(lParam >> 16);
 				}
 
 				return true;
@@ -849,28 +791,32 @@ namespace cse
 				return Handled;
 
 			// get input data and flag the viewport for update
-			if (Pipeline->UpdateInputState(hWnd, uMsg, wParam, lParam))
+			// don't update input if the mouse input manager has free movement
+			if (Manager->GetMouseInputManager()->IsFreeMouseMovementActive() == false)
 			{
-				State.MouseHoveringOSD = Pipeline->IsHoveringWindow();
-				if (GetCapture() != hWnd && GetActiveWindow() == hWnd)
+				if (Pipeline->UpdateInputState(hWnd, uMsg, wParam, lParam))
 				{
-					// consume all input if we have modal windows open
-					if (ModalWindowProviderOSDLayer::Instance.HasOpenModals())
+					State.MouseHoveringOSD = Pipeline->IsHoveringWindow();
+					if (GetCapture() != hWnd && GetActiveWindow() == hWnd)
 					{
-						State.ConsumeMouseInputEvents = State.ConsumeKeyboardInputEvents = true;
-						Handled = true;
+						// consume all input if we have modal windows open
+						if (ModalWindowProviderOSDLayer::Instance.HasOpenModals())
+						{
+							State.ConsumeMouseInputEvents = State.ConsumeKeyboardInputEvents = true;
+							Handled = true;
+						}
+						else if (ImGuizmo::IsUsing() || ImGuizmo::IsOver())
+						{
+							Handled = true;
+						}
+						else if (Pipeline->CanAllowInputEventPassthrough(uMsg, wParam, lParam,
+																		 State.ConsumeMouseInputEvents,
+																		 State.ConsumeKeyboardInputEvents) == false)
+						{
+							Handled = true;
+						}
 					}
-					else if (ImGuizmo::IsUsing() || ImGuizmo::IsOver())
-					{
-						Handled = true;
-					}
-					else if (Pipeline->CanAllowInputEventPassthrough(uMsg, wParam, lParam,
-																	 State.ConsumeMouseInputEvents,
-																	 State.ConsumeKeyboardInputEvents) == false)
-					{
-						Handled = true;
-					}
-				}
+				}				
 			}
 
 			switch (uMsg)

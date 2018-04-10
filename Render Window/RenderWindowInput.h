@@ -1,7 +1,6 @@
 #pragma once
 #include "RenderWindowCommon.h"
 #include "RenderWindowActions.h"
-#include "RenderWindowOSD.h"
 
 /************************************************************************/
 /*
@@ -325,6 +324,22 @@ namespace cse
 				SharedBindings&				GetSharedBindings();
 			};
 
+			class MouseRawInput
+			{
+				HWND			Parent;
+				POINT			CursorRestorePos;
+				bool			Active;
+			public:
+				MouseRawInput();
+				~MouseRawInput();
+
+				void			Activate(HWND hWnd);		// hides cursor
+				void			Deactivate();				// restores cursor
+				bool			IsActive() const;
+
+				bool			HandleInput(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, POINT& OutMouseDelta);	// returns true if input was handled
+			};
+
 			class RenderWindowMouseManager
 			{
 				enum
@@ -334,18 +349,12 @@ namespace cse
 					kSelectionPainting_Deselect
 				};
 
-				POINT				CurrentMouseCoord;
 				bool				PaintingSelection;
 				UInt8				SelectionPaintingMode;
-				POINT				MouseDownCursorPos;
-				bool				FreeMouseMovement;
+				MouseRawInput		FreeMouseMovement;
 				bool				CellViewUpdatesDeferred;
 				bool				TransformingSelection;
 
-				static POINT		GetWindowCenter(HWND hWnd, bool ClientArea);
-				POINT				CenterCursor(HWND hWnd, bool UpdateBaseCoords);			// returns the center coords (in screen area)
-				bool				IsCenteringCursor(HWND hWnd, LPARAM lParam) const;
-				static void			GetWindowMetrics(HWND hWnd, int& X, int& Y, int& Width, int& Height);
 				void				ToggleCellViewUpdate(bool State);
 				void				ToggleFreeMouseMovement(HWND hWnd, bool State);
 				void				HandleFreeMouseMovementKeyEvent(UInt8 Type);
@@ -359,32 +368,7 @@ namespace cse
 
 				bool				IsPaintingSelection() const;
 				bool				IsTransformingSelection() const;
-			};
-
-			class RenderWindowDirectInputTranslator
-			{
-			public:
-				enum class Device
-				{
-					None		= 0,
-					Mouse		= 1,
-					Keyboard	= 2,
-				};
-			private:
-				LPDIRECTINPUT8				DInput;
-				LPDIRECTINPUTDEVICE8		DIMouse;
-				LPDIRECTINPUTDEVICE8		DIKeyboard;
-				bool						InputValid;
-
-				DIMOUSESTATE				DIMouseState;
-				BYTE						DIKeyboardState[256];
-				Device						ActiveDevice;
-
-			public:
-				RenderWindowDirectInputTranslator();
-				~RenderWindowDirectInputTranslator();
-
-
+				bool				IsFreeMouseMovementActive() const;
 			};
 		}
 	}

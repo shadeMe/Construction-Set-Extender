@@ -10,8 +10,6 @@ NOTE	---->
 CSE		---->
 
 	BUGFIX			=
-		> Unrestricted mouse movement can be janky (when using the track pad, for instance)
-			>> Seems like the message that centers the cursor is somehow being handled
 		> Keep OSD popup open when it has keyboard focus
 		> Dirty edits?
 			>> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=25301452
@@ -24,6 +22,7 @@ CSE		---->
 		> Wildcard find/replace
 		> Add an option to restore a saved backup for some esp/esm, instead of manually recover it from Data/Backup folder and moving it back to Data folder.
 		> Render window gizmos
+			> Imguizmo has issues with the CS' renderer (view matrix related)
 		> Selection mask
 		> Show Target NPCs context menu tool
 			>> Would it be possible to have the option to view the list of NPCs, a sort of Use Info option just for NPCs who meet the conditions for speaking a response?
