@@ -33,9 +33,6 @@
 #include <Psapi.h>
 #include <Shellapi.h>
 
-// .NET INTEROP
-#include <MSCorEE.h>
-
 // CRT
 #include <time.h>
 #include <intrin.h>
