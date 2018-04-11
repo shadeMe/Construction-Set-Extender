@@ -557,7 +557,7 @@ namespace cse
 
 					// free mouse movement needs to be turned on here as we don't want to hide the cursor until we're sure we're dragging the mouse
 					// only when hovering over a widget
-					if (ImGui::IsAnyItemHovered() && ImGui::IsMouseDragging())
+					if (ImGui::IsAnyItemHovered() && ImGui::IsMouseDragging() && io.WantTextInput == false)
 						ToggleFreeMouseMovement(hWnd, true);
 
 					io.MousePos.x = (signed short)(lParam);
