@@ -225,7 +225,7 @@ namespace cse
 			icons_config.OversampleV = 2;
 			icons_config.PixelSnapH = true;
 			if (GetFileAttributes(IconFontPath) != INVALID_FILE_ATTRIBUTES)
-				io.Fonts->AddFontFromFileTTF(IconFontPath, settings::renderWindowOSD::kFontSize().i + 2, &icons_config, icons_ranges);
+				io.Fonts->AddFontFromFileTTF(IconFontPath, settings::renderWindowOSD::kFontSize().i + 2, &icons_config, icons_ranges)->DisplayOffset.y = 1;
 		}
 
 		ImGuiDX9::ImGuiDX9() :
@@ -265,6 +265,8 @@ namespace cse
 			if (!QueryPerformanceCounter((LARGE_INTEGER *)&Time))
 				return false;
 
+			ImGui::CreateContext();
+
 			ImGuiIO& io = ImGui::GetIO();
 			io.KeyMap[ImGuiKey_Tab] = VK_TAB;
 			io.KeyMap[ImGuiKey_LeftArrow] = VK_LEFT;
@@ -286,7 +288,6 @@ namespace cse
 			io.KeyMap[ImGuiKey_Y] = 'Y';
 			io.KeyMap[ImGuiKey_Z] = 'Z';
 			io.MouseDoubleClickTime = 1.f;
-			io.RenderDrawListsFn = RenderDrawLists;
 			io.UserData = this;
 
 			// set up window styles and colors
@@ -324,7 +325,7 @@ namespace cse
 		void ImGuiDX9::Shutdown()
 		{
 			InvalidateDeviceObjects();
-			ImGui::Shutdown();
+			ImGui::DestroyContext();
 		}
 
 		bool ImGuiDX9::IsActiveItemInWhitelist(const ImGuiWidgetIDArrayT& Whitelist) const
@@ -454,6 +455,7 @@ namespace cse
 		void ImGuiDX9::Render()
 		{
 			ImGui::Render();
+			RenderDrawLists(ImGui::GetDrawData());
 
 			// reset mouse double click state for the next frame
 			MouseDoubleClicked[0] = MouseDoubleClicked[1] = false;
@@ -566,12 +568,12 @@ namespace cse
 			case WM_SYSKEYDOWN:
 			case WM_KEYDOWN:
 				if (wParam < 256)
-					io.KeysDown[wParam] = 1;
+					io.KeysDown[wParam] = true;
 				return true;
 			case WM_SYSKEYUP:
 			case WM_KEYUP:
 				if (wParam < 256)
-					io.KeysDown[wParam] = 0;
+					io.KeysDown[wParam] = false;
 				return true;
 			case WM_CHAR:
 				// You can also use ToAscii()+GetKeyboardState() to retrieve characters.
@@ -615,7 +617,7 @@ namespace cse
 				return false;
 
 			ImGuiContext* RenderContext = ImGui::GetCurrentContext();
-			if (ImGui::IsMouseDragging() && RenderContext->ActiveId == RenderContext->MovingWindowMoveId)
+			if (ImGui::IsMouseDragging() && RenderContext->MovingWindow && RenderContext->ActiveId == RenderContext->MovingWindow->RootWindow->ID)
 				return true;
 			else
 				return false;
@@ -784,6 +786,9 @@ namespace cse
 
 		bool RenderWindowOSD::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, RenderWindowManager* Manager)
 		{
+			if (Initialized == false)
+				return false;
+
 			bool Handled = false;
 			bool Update = false;
 
@@ -817,7 +822,7 @@ namespace cse
 							Handled = true;
 						}
 					}
-				}				
+				}
 			}
 
 			switch (uMsg)
@@ -1201,9 +1206,6 @@ namespace cse
 
 			if (ActivePopup == ID)
 			{
-				if (BeginHover)
-					ImGui::OpenPopup(PopupStrID);
-
 				// ### HACK HACK
 				// manually update the mouse position to modify the popup's start pos
 				// reset it after the window's created
@@ -1220,6 +1222,9 @@ namespace cse
 					io.MousePos.y += PopupData.Position.y;
 					break;
 				}
+
+				if (BeginHover)
+					ImGui::OpenPopup(PopupStrID);
 
 				if (ImGui::BeginPopup(PopupStrID))
 				{

@@ -20,20 +20,6 @@ namespace cse
 			TESDialog::ShowFormEditDialog(Ref->baseForm);
 		}
 
-		void SelectionControlsOSDLayer::DrawDragTrail()
-		{
-			if (ImGui::IsItemActive())
-			{
-				ImDrawList* DrawList = ImGui::GetWindowDrawList();
-				DrawList->PushClipRectFullScreen();
-				DrawList->AddLine(ImGui::CalcItemRectClosestPoint(ImGui::GetIO().MousePos, true, -2.0f),
-								  ImGui::GetIO().MousePos,
-								  ImColor(ImGui::GetStyle().Colors[ImGuiCol_Button]),
-								  4.0f);
-				DrawList->PopClipRect();
-			}
-		}
-
 		void SelectionControlsOSDLayer::MoveSelection(bool X, bool Y, bool Z)
 		{
 			if (ImGui::IsItemActive() == false)
@@ -146,6 +132,7 @@ namespace cse
 
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 5));
 			ImGui::SetNextWindowPosCenter(ImGuiCond_FirstUseEver);
+			ImGui::SetNextWindowContentSize(ImVec2(350, 0.0f));
 			if (!ImGui::Begin("Selection Controls", nullptr, ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize))
 			{
 				ImGui::End();
@@ -245,18 +232,18 @@ namespace cse
 				float Width = 0;
 				ImGui::Columns(4, "Position + Rotation", false);
 				{
-					ImGui::Button("X##multi_pos_x", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)); MoveSelection(true, false, false); DrawDragTrail(); ImGui::NextColumn();
-					ImGui::Button("Y##multi_pos_y", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)); MoveSelection(false, true, false); DrawDragTrail(); ImGui::NextColumn();
-					ImGui::Button("Z##multi_pos_z", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)); MoveSelection(false, false, true); DrawDragTrail(); ImGui::NextColumn();
+					ImGui::Button("X##multi_pos_x", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)); MoveSelection(true, false, false); ImGui::NextColumn();
+					ImGui::Button("Y##multi_pos_y", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)); MoveSelection(false, true, false); ImGui::NextColumn();
+					ImGui::Button("Z##multi_pos_z", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)); MoveSelection(false, false, true); ImGui::NextColumn();
 
 					ImGui::Text("Position"); ImGui::NextColumn();
 
 					ImGui::Button("X##multi_rot_x", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)); RotateSelection(LocalTransformation, true, false, false);
-					DrawDragTrail(); ImGui::NextColumn();
+					ImGui::NextColumn();
 					ImGui::Button("Y##multi_rot_y", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)); RotateSelection(LocalTransformation, false, true, false);
-					DrawDragTrail(); ImGui::NextColumn();
+					ImGui::NextColumn();
 					ImGui::Button("Z##multi_rot_z", ImVec2(CURRENT_COLWIDTH_MINUS_10, 20)); RotateSelection(LocalTransformation, false, false, true);
-					DrawDragTrail(); ImGui::NextColumn();
+					ImGui::NextColumn();
 
 					Width = ImGui::GetColumnOffset();
 					ImGui::Text("Rotation"); ImGui::NextColumn();
@@ -386,7 +373,7 @@ namespace cse
 						ImGui::Text("Linked Ref:"); ImGui::NextColumn();
 						if (xParent)
 						{
-							ImGui::Text("%s(%08X)",
+							TEXT_WITH_TOOLTIP("%s(%08X)",
 								((xParent->parent->editorID.Size()) ? (xParent->parent->editorID.c_str()) : ("")), xParent->parent->formID);
 						}
 						else
@@ -470,7 +457,7 @@ namespace cse
 						ImGui::Text("Linked Ref:"); ImGui::NextColumn();
 						if (SameParent && ParentRefMark)
 						{
-							ImGui::Text("%s(%08X)",
+							TEXT_WITH_TOOLTIP("%s(%08X)",
 								((ParentRefMark->editorID.Size()) ? (ParentRefMark->editorID.c_str()) : ("")), ParentRefMark->formID);
 						}
 						else if (SameParent && ParentRefMark == nullptr)

@@ -227,17 +227,17 @@ namespace cse
 
 		ToolbarOSDLayer::ToolbarOSDLayer() :
 			IRenderWindowOSDLayer(&settings::renderWindowOSD::kShowToolbar)
+
 		{
-			PopupSnapControls = BottomToolbarPopupProvider.RegisterPopup("popup_snap_controls",
-															[]() {
+			auto SnapControlsButton = []() {
 				PUSH_TRANSPARENT_BUTTON_COLORS;
 				ImGui::Button(ICON_MD_GRID_ON "##popupbtn_snap_controls", TOOLBAR_BUTTON_SIZE);
 				POP_TRANSPARENT_BUTTON_COLORS;
 
 				if (ImGui::IsItemHoveredRect())
 					ImGui::SetTooltip("Snap Controls");
-			},
-															[]() {
+			};
+			auto SnapControlsPopup = []() {
 				UInt32 Flags = *TESRenderWindow::StateFlags;
 				bool SnapGrid = Flags & TESRenderWindow::kRenderWindowState_SnapToGrid;
 				bool SnapAngle = Flags & TESRenderWindow::kRenderWindowState_SnapToAngle;
@@ -296,12 +296,16 @@ namespace cse
 				*(UInt32*)TESRenderWindow::SnapAngle = AngleVal;
 				*TESRenderWindow::StateFlags = Flags;
 				*TESRenderWindow::SnapReference = SnapRef;
-			},
-				MouseOverPopupProvider::kPosition_Relative,
-				ImVec2(-85, -165));
+			};
 
-			PopupMovementControls= BottomToolbarPopupProvider.RegisterPopup("popup_movement_controls",
-															   []() {
+			PopupSnapControls = BottomToolbarPopupProvider.RegisterPopup("popup_snap_controls",
+																		 SnapControlsButton,
+																		 SnapControlsPopup,
+																		MouseOverPopupProvider::kPosition_Relative,
+																		ImVec2(-85, -175));
+
+
+			auto MovementControlsButton = []() {
 				const ImVec4 MainColor = ImColor::HSV(4 / 7.0f, 0.6f, 0.6f);
 
 				PUSH_TRANSPARENT_BUTTON_COLORS;
@@ -310,8 +314,8 @@ namespace cse
 
 				if (ImGui::IsItemHoveredRect())
 					ImGui::SetTooltip("Movement Controls");
-			},
-															   []() {
+			};
+			auto MovementControlsPopup = []() {
 				bool Alternate = _RENDERWIN_XSTATE.UseAlternateMovementSettings;
 
 				float CamPan = *TESRenderWindow::CameraPanSpeed;
@@ -420,20 +424,23 @@ namespace cse
 				ImGui::Dummy(ImVec2(10, 5));
 				if (ImGui::Checkbox("Alternate Settings", &Alternate))
 					actions::ToggleAlternateMovementSettings();
-			},
-				MouseOverPopupProvider::kPosition_Relative,
-				ImVec2(-75, -280));
+			};
+			PopupMovementControls= BottomToolbarPopupProvider.RegisterPopup("popup_movement_controls",
+																			MovementControlsButton,
+																			MovementControlsPopup,
+																			MouseOverPopupProvider::kPosition_Relative,
+																			ImVec2(-75, -290));
 
-			PopupVisibilityToggles = BottomToolbarPopupProvider.RegisterPopup("popup_visibility_toggles",
-																 []() {
+
+			auto VisibilityButtons = []() {
 				PUSH_TRANSPARENT_BUTTON_COLORS;
 				ImGui::Button(ICON_MD_REMOVE_RED_EYE "##popupbtn_visibility_toggles", TOOLBAR_BUTTON_SIZE);
 				POP_TRANSPARENT_BUTTON_COLORS;
 
 				if (ImGui::IsItemHoveredRect())
 					ImGui::SetTooltip("Visibility Toggles");
-			},
-																 []() {
+			};
+			auto VisibilityPopup = []() {
 				ImGui::PushID("visibility_toggle_menu_item");
 				{
 					static const char* kNames[actions::ToggleVisibilityRWA::kType__MAX] =
@@ -468,17 +475,19 @@ namespace cse
 					}
 				}
 				ImGui::PopID();
-			},
-				MouseOverPopupProvider::kPosition_Relative,
-				ImVec2(-10, -585));
+			};
+			PopupVisibilityToggles = BottomToolbarPopupProvider.RegisterPopup("popup_visibility_toggles",
+																			  VisibilityButtons,
+																			  VisibilityPopup,
+																			  MouseOverPopupProvider::kPosition_Relative,
+																			  ImVec2(-10, -595));
 
-			PopupMiscControls = BottomToolbarPopupProvider.RegisterPopup("popup_misc_controls",
-																		 []() {
+			auto MiscButton = []() {
 				PUSH_TRANSPARENT_BUTTON_COLORS;
 				ImGui::Button(ICON_MD_MORE_HORIZ "##popupbtn_misc_controls", TOOLBAR_BUTTON_SIZE);
 				POP_TRANSPARENT_BUTTON_COLORS;
-			},
-																		 []() {
+			};
+			auto MiscPopup = []() {
 
 				float TOD = _TES->GetSkyTOD();
 				float FOV = settings::renderer::kCameraFOV().f;
@@ -511,9 +520,12 @@ namespace cse
 					settings::renderer::kCameraFOV.SetFloat(FOV);
 					_RENDERWIN_MGR.RefreshFOV();
 				}
-			},
-				MouseOverPopupProvider::kPosition_Relative,
-				ImVec2(-25, -10));
+			};
+			PopupMiscControls = BottomToolbarPopupProvider.RegisterPopup("popup_misc_controls",
+																		 MiscButton,
+																		 MiscPopup,
+																		 MouseOverPopupProvider::kPosition_Relative,
+																		 ImVec2(-35, -20));
 
 			FilterRefs.reserve(100);
 			CurrentFilterRefIndex = -1;

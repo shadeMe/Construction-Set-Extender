@@ -1036,4 +1036,9 @@
       <Filter>Resources</Filter>
     </ResourceCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="IMGUI\imgui.natvis">
+      <Filter>Components\IMGUI</Filter>
+    </Natvis>
+  </ItemGroup>
 </Project>

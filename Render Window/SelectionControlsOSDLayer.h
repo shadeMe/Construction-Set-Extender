@@ -16,7 +16,6 @@ namespace cse
 
 			void					EditReference(TESObjectREFR* Ref);
 			void					EditBaseForm(TESObjectREFR* Ref);
-			void					DrawDragTrail();
 
 			void					MoveSelection(bool X, bool Y, bool Z);
 			void					RotateSelection(bool Local, bool X, bool Y, bool Z);

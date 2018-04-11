@@ -21,9 +21,12 @@ namespace cse
 
 		void DefaultOverlayOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
-			static const float FirstCoulmnWidth = 150;
+			static const float FirstColumnWidth = 150;
 
 			ImGui::SetNextWindowPos(ImVec2(10, 10));
+
+			// the auto-resize flag doesn't work with columns since imgui v1.53, use a fixed width instead
+			ImGui::SetNextWindowContentSize(ImVec2(350, 0.0f));
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 6));
 			if (!ImGui::Begin("Default Info Overlay", nullptr,
 				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing))
@@ -53,7 +56,7 @@ namespace cse
 								   CurrentCell->cellData.coords->y, CurrentCell->formID);
 					}
 
-					ImGui::Text("Current Cell:"); ImGui::SameLine(); ImGui::TextDisabled("  (?)"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+					ImGui::Text("Current Cell:"); ImGui::SameLine(); ImGui::TextDisabled("  (?)"); ImGui::NextColumn(); ImGui::SetColumnWidth(-1, FirstColumnWidth);
 					if (ImGui::IsItemHovered())
 					{
 						std::string Geom(TESRenderWindow::GetCellGeomDescription(CurrentCell).c_str());
@@ -75,7 +78,8 @@ namespace cse
 						}
 						ImGui::SetTooltip("Geometry:\n%s", Extract.c_str());
 					}
-					ImGui::Text("%s  ", Buffer);
+					TEXT_WITH_TOOLTIP("%s  ", Buffer);
+
 					const char* EditModeIcon = nullptr;
 					const char* EditModeLabel = nullptr;
 
@@ -101,8 +105,8 @@ namespace cse
 						ImGui::SetTooltip("%s Edit Mode", EditModeLabel);
 					ImGui::NextColumn();
 
-					ImGui::Text("Camera:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
-					ImGui::Text("%.0f, %0.f, %0.f  ", CameraCoords->x, CameraCoords->y, CameraCoords->z); ImGui::NextColumn();
+					ImGui::Text("Camera:"); ImGui::NextColumn(); ImGui::SetColumnWidth(-1, FirstColumnWidth);
+					TEXT_WITH_TOOLTIP("%.0f, %0.f, %0.f  ", CameraCoords->x, CameraCoords->y, CameraCoords->z); ImGui::NextColumn();
 					ImGui::Separator();
 				}
 			}
@@ -151,8 +155,8 @@ namespace cse
 						}
 
 						ImGui::NextColumn();
-						ImGui::TextColored(ImColor(R, G, B), "Nominal Center:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
-						ImGui::TextColored(ImColor(R, G, B), "%.3f, %.3f, %.3f   ", _RENDERSEL->selectionPositionVectorSum.x,
+						ImGui::TextColored(ImColor(R, G, B), "Nominal Center:"); ImGui::NextColumn(); ImGui::SetColumnWidth(-1, FirstColumnWidth);
+						COLORTEXT_WITH_TOOLTIP(ImColor(R, G, B), "%.3f, %.3f, %.3f   ", _RENDERSEL->selectionPositionVectorSum.x,
 										   _RENDERSEL->selectionPositionVectorSum.y, _RENDERSEL->selectionPositionVectorSum.z); ImGui::NextColumn();
 					}
 					else
@@ -160,29 +164,29 @@ namespace cse
 						TESObjectREFR* Selection = CS_CAST(_RENDERSEL->selectionList->Data, TESForm, TESObjectREFR);
 						if (Selection)	// in the off-chance that the selection contains a regular form
 						{
-							ImGui::TextColored(ImColor(R, G, B), "%s(%08X)%s", ((Selection->editorID.Size()) ? (Selection->editorID.c_str()) : ("")), Selection->formID, Selection->IsActive() ? "*" : ""); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
-							ImGui::TextColored(ImColor(R, G, B), "%s", TESForm::GetFormTypeIDLongName(Selection->baseForm->formType)); ImGui::NextColumn();
+							COLORTEXT_WITH_TOOLTIP(ImColor(R, G, B), "%s(%08X)%s", ((Selection->editorID.Size()) ? (Selection->editorID.c_str()) : ("")), Selection->formID, Selection->IsActive() ? "*" : ""); ImGui::NextColumn(); ImGui::SetColumnWidth(-1, FirstColumnWidth);
+							COLORTEXT_WITH_TOOLTIP(ImColor(R, G, B), "%s", TESForm::GetFormTypeIDLongName(Selection->baseForm->formType)); ImGui::NextColumn();
 
-							ImGui::TextColored(ImColor(R, G, B), "Base Form:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
-							ImGui::TextColored(ImColor(R, G, B), "%s(%08X)",
+							ImGui::TextColored(ImColor(R, G, B), "Base Form:"); ImGui::NextColumn(); ImGui::SetColumnWidth(-1, FirstColumnWidth);
+							COLORTEXT_WITH_TOOLTIP(ImColor(R, G, B), "%s(%08X)",
 								((Selection->baseForm->editorID.Size()) ? (Selection->baseForm->editorID.c_str()) : ("")), Selection->baseForm->formID); ImGui::NextColumn();
 
-							ImGui::TextColored(ImColor(R, G, B), "Position:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
-							ImGui::TextColored(ImColor(R, G, B), "%.03f, %.03f, %.03f   ", Selection->position.x, Selection->position.y, Selection->position.z); ImGui::NextColumn();
+							ImGui::TextColored(ImColor(R, G, B), "Position:"); ImGui::NextColumn(); ImGui::SetColumnWidth(-1, FirstColumnWidth);
+							COLORTEXT_WITH_TOOLTIP(ImColor(R, G, B), "%.03f, %.03f, %.03f   ", Selection->position.x, Selection->position.y, Selection->position.z); ImGui::NextColumn();
 
-							ImGui::TextColored(ImColor(R, G, B), "Rotation:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
-							ImGui::TextColored(ImColor(R, G, B), "%.03f, %.03f, %.03f   ",
+							ImGui::TextColored(ImColor(R, G, B), "Rotation:"); ImGui::NextColumn(); ImGui::SetColumnWidth(-1, FirstColumnWidth);
+							COLORTEXT_WITH_TOOLTIP(ImColor(R, G, B), "%.03f, %.03f, %.03f   ",
 											   Selection->rotation.x * REFR_RAD2DEG,
 											   Selection->rotation.y * REFR_RAD2DEG,
 											   Selection->rotation.z * REFR_RAD2DEG); ImGui::NextColumn();
 
-							ImGui::TextColored(ImColor(R, G, B), "Scale:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
-							ImGui::TextColored(ImColor(R, G, B), "%0.3f", Selection->scale); ImGui::NextColumn();
+							ImGui::TextColored(ImColor(R, G, B), "Scale:"); ImGui::NextColumn(); ImGui::SetColumnWidth(-1, FirstColumnWidth);
+							COLORTEXT_WITH_TOOLTIP(ImColor(R, G, B), "%0.3f", Selection->scale); ImGui::NextColumn();
 
-							ImGui::TextColored(ImColor(R, G, B), "Flags:");  ImGui::SameLine(); ImGui::TextDisabled("  (?)"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+							ImGui::TextColored(ImColor(R, G, B), "Flags:");  ImGui::SameLine(); ImGui::TextDisabled("  (?)"); ImGui::NextColumn(); ImGui::SetColumnWidth(-1, FirstColumnWidth);
 							if (ImGui::IsItemHovered())
 								ImGui::SetTooltip("P  - Persistent\nD  - Initially Disabled\nV  - Visible When Distant\nI  - Invisible (Editor only)\nCI - Children Invisible (Editor only)\nF  - Frozen (Editor only)");
-							ImGui::TextColored(ImColor(R, G, B), "%s %s %s %s %s %s   ",
+							COLORTEXT_WITH_TOOLTIP(ImColor(R, G, B), "%s %s %s %s %s %s   ",
 								((Selection->formFlags & TESForm::kFormFlags_QuestItem) ? ("P") : ("-")),
 											   ((Selection->formFlags & TESForm::kFormFlags_Disabled) ? ("D") : ("-")),
 											   ((Selection->formFlags & TESForm::kFormFlags_VisibleWhenDistant) ? ("V") : ("-")),
@@ -195,8 +199,8 @@ namespace cse
 							if (xData)
 							{
 								ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
-								ImGui::TextColored(ImColor(R, G, B), "Parent:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
-								ImGui::TextColored(ImColor(R, G, B), "%s(%08X) %s   ",
+								ImGui::TextColored(ImColor(R, G, B), "Parent:"); ImGui::NextColumn(); ImGui::SetColumnWidth(-1, FirstColumnWidth);
+								COLORTEXT_WITH_TOOLTIP(ImColor(R, G, B), "%s(%08X) %s   ",
 									((xParent->parent->editorID.Size()) ? (xParent->parent->editorID.c_str()) : ("")),
 												   xParent->parent->formID,
 												   (xParent->oppositeState ? "[X]" : "")); ImGui::NextColumn();
@@ -207,8 +211,8 @@ namespace cse
 							char cBuffer[0x50] = { 0 };
 							if (Selection->parentCell->IsInterior() == false)
 							{
-								ImGui::TextColored(ImColor(R, G, B), "Parent Cell:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
-								ImGui::TextColored(ImColor(R, G, B), "%s(%08X) %d,%d   ", Selection->parentCell->GetEditorID(), Selection->parentCell->formID,
+								ImGui::TextColored(ImColor(R, G, B), "Parent Cell:"); ImGui::NextColumn(); ImGui::SetColumnWidth(-1, FirstColumnWidth);
+								COLORTEXT_WITH_TOOLTIP(ImColor(R, G, B), "%s(%08X) %d,%d   ", Selection->parentCell->GetEditorID(), Selection->parentCell->formID,
 												   Selection->parentCell->cellData.coords->x, Selection->parentCell->cellData.coords->y); ImGui::NextColumn();
 							}
 						}
@@ -221,12 +225,12 @@ namespace cse
 				if (TESRenderWindow::SelectedPathGridPoints->Count() == 1)
 				{
 					TESPathGridPoint* Point = TESRenderWindow::SelectedPathGridPoints->Head()->Item();
-					ImGui::TextColored(ImColor(R, G, B), "Position:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
-					ImGui::TextColored(ImColor(R, G, B), "%.03f, %.03f, %.03f   ", Point->position.x, Point->position.y, Point->position.z); ImGui::NextColumn();
+					ImGui::TextColored(ImColor(R, G, B), "Position:"); ImGui::NextColumn(); ImGui::SetColumnWidth(-1, FirstColumnWidth);
+					COLORTEXT_WITH_TOOLTIP(ImColor(R, G, B), "%.03f, %.03f, %.03f   ", Point->position.x, Point->position.y, Point->position.z); ImGui::NextColumn();
 					if (Point->linkedRef)
 					{
-						ImGui::TextColored(ImColor(R, G, B), "Linked Reference:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
-						ImGui::TextColored(ImColor(R, G, B), "%s(%08X)", ((Point->linkedRef->editorID.Size()) ? (Point->linkedRef->editorID.c_str()) : ("")), Point->linkedRef->formID); ImGui::NextColumn();
+						ImGui::TextColored(ImColor(R, G, B), "Linked Reference:"); ImGui::NextColumn(); ImGui::SetColumnWidth(-1, FirstColumnWidth);
+						COLORTEXT_WITH_TOOLTIP(ImColor(R, G, B), "%s(%08X)", ((Point->linkedRef->editorID.Size()) ? (Point->linkedRef->editorID.c_str()) : ("")), Point->linkedRef->formID); ImGui::NextColumn();
 					}
 
 					ImGui::Separator();
@@ -241,11 +245,11 @@ namespace cse
 				if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&MemCounter, sizeof(MemCounter)))
 				{
 					UInt32 CurrentRAMCounter = MemCounter.WorkingSetSize / (1024 * 1024);		// in megabytes
-					ImGui::TextColored(ImColor(R, G, B), "RAM Usage:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+					ImGui::TextColored(ImColor(R, G, B), "RAM Usage:"); ImGui::NextColumn(); ImGui::SetColumnWidth(-1, FirstColumnWidth);
 					ImGui::TextColored(ImColor(R, G, B), "%d MB  ", CurrentRAMCounter); ImGui::NextColumn();
 				}
 
-				ImGui::Text("FPS:"); ImGui::NextColumn(); ImGui::SetColumnOffset(-1, FirstCoulmnWidth);
+				ImGui::Text("FPS:"); ImGui::NextColumn(); ImGui::SetColumnWidth(-1, FirstColumnWidth);
 				ImGui::Text("%.1f  ", ImGui::GetIO().Framerate); ImGui::NextColumn();
 			}
 			ImGui::Columns(1);
