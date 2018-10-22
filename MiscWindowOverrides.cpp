@@ -667,6 +667,7 @@ namespace cse
 						{
 							if (ListView_GetItem(VoiceList, &SelectedVoiceItem) != TRUE)
 							{
+								BGSEEUI->MsgBoxI(hWnd, NULL, "Please select a voice file first from the list above.");
 								Return = true;
 								break;
 							}
@@ -715,6 +716,7 @@ namespace cse
 					case ResponseEditorData::kGenerateLIPFileButton:
 						if (ListView_GetItem(VoiceList, &SelectedVoiceItem) != TRUE)
 						{
+							BGSEEUI->MsgBoxI(hWnd, NULL, "Please select a voice file first from the list above.");
 							Return = true;
 							break;
 						}
