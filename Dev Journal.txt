@@ -17,6 +17,7 @@ CSE		---->
 
 
 	ENHANCEMENT		=
+		> Double click on formIds/editorIds in the console
 		> Wildcard find/replace
 		> Add an option to restore a saved backup for some esp/esm, instead of manually recover it from Data/Backup folder and moving it back to Data folder.
 		> Render window gizmos
