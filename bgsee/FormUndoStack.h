@@ -54,7 +54,7 @@ namespace bgsee
 		FormUndoStack(FormUndoStackOperator* Operator);
 		~FormUndoStack();
 
-		typedef boost::shared_ptr<FormUndoProxy>		UndoProxyHandleT;
+		typedef std::shared_ptr<FormUndoProxy>		UndoProxyHandleT;
 		typedef std::stack<UndoProxyHandleT>			UndoProxyStackT;
 
 		FormUndoStackOperator*				Operator;

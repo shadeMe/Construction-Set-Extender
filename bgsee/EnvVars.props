@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <CrashRptIncludePath>C:\Users\shadeMe\Documents\VC++ LIB\CrashRpt\include</CrashRptIncludePath>
+    <CrashRptLibPath>C:\Users\shadeMe\Documents\VC++ LIB\CrashRpt\lib</CrashRptLibPath>
+    <DirectXIncludePath>C:\Users\shadeMe\Documents\VC++ LIB\DirectX\Include</DirectXIncludePath>
+    <DirectXLibPath>C:\Users\shadeMe\Documents\VC++ LIB\DirectX\Lib\x86</DirectXLibPath>
+    <SMESundriesIncludePath>C:\Users\shadeMe\Documents\[TES]\[Code]\[Libraries]\SME Sundries</SMESundriesIncludePath>
+    <XSECommonIncludePath>C:\Users\shadeMe\Documents\[TES]\[Code]\[Libraries]\xSE Common</XSECommonIncludePath>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemDefinitionGroup />
+  <ItemGroup>
+    <BuildMacro Include="CrashRptIncludePath">
+      <Value>$(CrashRptIncludePath)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="CrashRptLibPath">
+      <Value>$(CrashRptLibPath)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="DirectXIncludePath">
+      <Value>$(DirectXIncludePath)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="DirectXLibPath">
+      <Value>$(DirectXLibPath)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="SMESundriesIncludePath">
+      <Value>$(SMESundriesIncludePath)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="XSECommonIncludePath">
+      <Value>$(XSECommonIncludePath)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+  </ItemGroup>
+</Project>

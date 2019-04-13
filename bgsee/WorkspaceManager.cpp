@@ -3,8 +3,6 @@
 #include "WorkspaceManager.h"
 #include "UIManager.h"
 
-#include <boost/algorithm/string/replace.hpp>
-
 namespace bgsee
 {
 	WorkspaceManager* WorkspaceManager::Singleton = nullptr;
@@ -249,7 +247,9 @@ namespace bgsee
 	void ResourceLocation::AnnealPath(std::string& Path)
 	{
 		SME::StringHelpers::MakeLower(Path);
-		boost::replace_all(Path, "\\\\", "\\");
+
+		for (size_t Index(Path.find("\\\\")); Index != std::string::npos; Index = Path.find("\\\\"))
+			Path.erase(Index, 1);
 	}
 
 	std::string ResourceLocation::GetExtension() const

@@ -457,8 +457,9 @@ namespace bgsee
 				throw CodaScriptException("No active scripts");
 
 			VM->GetMessageHandler()->Log("Stacktrace:");
-			for (auto& Itr : boost::adaptors::reverse(ExecutingContexts))
+			for (int i(ExecutingContexts.size() - 1); i >= 0; ++i)
 			{
+				auto& Itr(ExecutingContexts.at(i));
 				ICodaScriptProgram* Program = Itr.ProgramContext->GetProgram();
 				ICodaScriptExecutableCode* Code = Itr.ExecutionAgent.GetCurrentCode();
 				SME_ASSERT(Code);

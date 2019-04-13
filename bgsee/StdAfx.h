@@ -21,7 +21,6 @@
 // WIN32
 #include <windows.h>
 #include <windowsx.h>
-#include <atltypes.h>
 #include <commctrl.h>
 #include <richedit.h>
 #include <shlobj.h>
@@ -78,15 +77,6 @@
 #include <d3dx9.h>
 #include <d3dx9tex.h>
 #include <dinput.h>
-
-// BOOST
-#include <boost\scoped_ptr.hpp>
-#include <boost\scoped_array.hpp>
-#include <boost\shared_ptr.hpp>
-#include <boost\shared_array.hpp>
-#include <boost\intrusive_ptr.hpp>
-#include <boost\weak_ptr.hpp>
-#include <boost\range\adaptor\reversed.hpp>
 
 // xSE Common
 #include <ITypes.h>

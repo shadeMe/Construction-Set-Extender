@@ -285,9 +285,9 @@ namespace bgsee { namespace script { namespace mup {
 	  prLOGIC_AND    =  3,
 	  prBIT_OR       =  4,
 	  prBIT_XOR      =  5,
-	  prBIT_AND      =  6, 
+	  prBIT_AND      =  6,
 
-	  prRELATIONAL1  =  7, ///< For "==", "!=" 
+	  prRELATIONAL1  =  7, ///< For "==", "!="
 	  prRELATIONAL2  =  8, ///< Relational operators "<", "<=", ">", ">="
 	  prSHIFT        =  9, ///< Shift operators "<<", ">>"
 

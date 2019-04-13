@@ -44,7 +44,7 @@ namespace bgsee
 
 	class WindowExtraDataCollection
 	{
-		typedef std::map<const WindowExtraDataIDT, WindowExtraData*>		ExtraDataMapT;
+		typedef std::unordered_map<WindowExtraDataIDT, WindowExtraData*>		ExtraDataMapT;
 
 		ExtraDataMapT			DataStore;
 	public:
@@ -114,8 +114,8 @@ namespace bgsee
 			WindowSubclassUserData();
 		};
 
-		typedef std::map<ResourceTemplateT, DialogSubclassData>		DialogSubclassMapT;
-		typedef std::map<HWND, WindowSubclassData>					WindowSubclassMapT;
+		typedef std::unordered_map<ResourceTemplateT, DialogSubclassData>		DialogSubclassMapT;
+		typedef std::unordered_map<HWND, WindowSubclassData>					WindowSubclassMapT;
 
 		static INT_PTR CALLBACK					DialogSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK					RegularWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -157,7 +157,7 @@ namespace bgsee
 	{
 		friend class UIManager;
 	protected:
-		typedef std::map<ResourceTemplateT, HINSTANCE>		TemplateResourceInstanceMapT;
+		typedef std::unordered_map<ResourceTemplateT, HINSTANCE>		TemplateResourceInstanceMapT;
 
 		ResourceLocation					SourceDepot;
 		TemplateResourceInstanceMapT			TemplateMap;
@@ -209,7 +209,7 @@ namespace bgsee
 			};
 		};
 	private:
-		typedef std::map<ResourceTemplateT, StyleData>		TemplateStyleMapT;
+		typedef std::unordered_map<ResourceTemplateT, StyleData>		TemplateStyleMapT;
 
 		TemplateStyleMapT						StyleListings;
 
@@ -226,7 +226,7 @@ namespace bgsee
 
 	class WindowInvalidationManager
 	{
-		typedef std::map<HWND, UInt32>		InvalidationMapT;
+		typedef std::unordered_map<HWND, UInt32>		InvalidationMapT;
 
 		InvalidationMapT					ActiveInvalidatedWindows;
 

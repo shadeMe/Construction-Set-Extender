@@ -47,6 +47,7 @@ namespace bgsee
 
 		bool						FullInitComplete;
 		bool						Deinitializing;
+		bool						Crashing;
 
 		bool						ExecuteDeinitCallbacks(void);
 		bool						ExecuteCrashCallbacks(CR_CRASH_CALLBACK_INFO* Data);
@@ -63,6 +64,7 @@ namespace bgsee
 		bool						ExecuteInitCallbacks(UInt8 CallbackType);
 		bool						GetFullInitComplete(void) const;
 		bool						IsDeinitializing(void) const;
+		bool						IsCrashing(void) const;
 
 		static void					WaitForDebugger(void);
 
@@ -98,7 +100,7 @@ namespace bgsee
 	class ReleaseNameTable
 	{
 	protected:
-		typedef std::map<UInt32, std::string>			VersionNameMap;
+		typedef std::unordered_map<UInt32, std::string>			VersionNameMap;
 
 		VersionNameMap				Table;
 

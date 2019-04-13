@@ -14,7 +14,8 @@ namespace bgsee
 		DeinitCallbacks(),
 		CrashHandlerCallbacks(),
 		FullInitComplete(false),
-		Deinitializing(false)
+		Deinitializing(false),
+		Crashing(false)
 	{
 		SME_ASSERT(Singleton == nullptr);
 		Singleton = this;
@@ -105,6 +106,7 @@ namespace bgsee
 
 	bool Daemon::ExecuteCrashCallbacks( CR_CRASH_CALLBACK_INFO* Data )
 	{
+		Crashing = true;
 		bool Result = false;
 
 		for (DaemonCallbackArrayT::const_iterator Itr = CrashHandlerCallbacks.begin(); Itr != CrashHandlerCallbacks.end(); Itr++)
@@ -151,6 +153,11 @@ namespace bgsee
 	bool Daemon::IsDeinitializing(void) const
 	{
 		return Deinitializing;
+	}
+
+	bool Daemon::IsCrashing(void) const
+	{
+		return Crashing;
 	}
 
 	const char*		Main::INIManager::kSectionPrefix = "BGSEE::";
