@@ -38,16 +38,16 @@ namespace cse
 		{
 			try
 			{
-				bfs::path CosaveDir(kRepositoryPath());
+				std::filesystem::path CosaveDir(kRepositoryPath());
 
-				if (bfs::exists(CosaveDir) == false)
+				if (std::filesystem::exists(CosaveDir) == false)
 					return;
 
-				for (bfs::directory_iterator Itr(CosaveDir); Itr != bfs::directory_iterator(); ++Itr)
+				for (std::filesystem::directory_iterator Itr(CosaveDir); Itr != std::filesystem::directory_iterator(); ++Itr)
 				{
-					if (bfs::is_directory(Itr->path()) && GetFileCount(Itr->path()) == 0)
+					if (std::filesystem::is_directory(Itr->path()) && GetFileCount(Itr->path()) == 0)
 					{
-						if (bfs::remove(Itr->path()) == false)
+						if (std::filesystem::remove(Itr->path()) == false)
 							BGSEECONSOLE_MESSAGE("Couldn't remove empty cosave directory %s", Itr->path().string().c_str());
 					}
 				}
@@ -58,15 +58,15 @@ namespace cse
 			}
 		}
 
-		int PluginCosaveManager::GetFileCount(const boost::filesystem::path& DirectoryPath) const
+		int PluginCosaveManager::GetFileCount(const std::filesystem::path& DirectoryPath) const
 		{
 			try
 			{
-				if (bfs::exists(DirectoryPath) == false || bfs::is_directory(DirectoryPath) == false)
+				if (std::filesystem::exists(DirectoryPath) == false || std::filesystem::is_directory(DirectoryPath) == false)
 					return 0;
 
 				int Count = 0;
-				for (bfs::directory_iterator Itr(DirectoryPath); Itr != bfs::directory_iterator(); ++Itr)
+				for (std::filesystem::directory_iterator Itr(DirectoryPath); Itr != std::filesystem::directory_iterator(); ++Itr)
 					Count++;
 
 				return Count;
@@ -87,10 +87,10 @@ namespace cse
 				std::string OutDir(kRepositoryPath());
 				OutDir += "\\" + std::string(File->fileName) + "\\";
 
-				bfs::path CosavePath(OutDir);
-				if (bfs::exists(CosavePath))
+				std::filesystem::path CosavePath(OutDir);
+				if (std::filesystem::exists(CosavePath))
 				{
-					if (bfs::is_directory(CosavePath) == false)
+					if (std::filesystem::is_directory(CosavePath) == false)
 					{
 						BGSEECONSOLE_MESSAGE("Couldn't create cosave directory at %s - Another file with the same name exists", OutDir.c_str());
 						return false;
@@ -99,7 +99,7 @@ namespace cse
 						return true;
 				}
 
-				if (bfs::create_directory(CosavePath) == false)
+				if (std::filesystem::create_directory(CosavePath) == false)
 				{
 					BGSEECONSOLE_MESSAGE("Couldn't create cosave directory at %s", OutDir.c_str());
 					return false;
@@ -123,8 +123,8 @@ namespace cse
 				std::string OutDir(kRepositoryPath());
 				OutDir += "\\" + std::string(File->fileName) + "\\";
 
-				bfs::path CosavePath(OutDir);
-				if (bfs::exists(CosavePath) == false)
+				std::filesystem::path CosavePath(OutDir);
+				if (std::filesystem::exists(CosavePath) == false)
 				{
 					if (Create)
 					{
@@ -135,7 +135,7 @@ namespace cse
 				}
 				else
 				{
-					if (bfs::is_directory(CosavePath) == false)
+					if (std::filesystem::is_directory(CosavePath) == false)
 						BGSEECONSOLE_MESSAGE("Couldn't find cosave directory at %s - Found a file with the same name instead", OutDir.c_str());
 					else
 					{

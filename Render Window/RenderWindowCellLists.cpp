@@ -298,8 +298,8 @@ namespace cse
 			std::string FilePath(DirPath); FilePath += "\\" + std::string(RenderWindowCellLists::kSaveFileName);
 			try
 			{
-				if (bfs::exists(FilePath))
-					bfs::remove(FilePath);
+				if (std::filesystem::exists(FilePath))
+					std::filesystem::remove(FilePath);
 
 				serialization::TESForm2Text Serializer;
 				std::string OutString;
@@ -326,7 +326,7 @@ namespace cse
 			try
 			{
 				Bookmarks.clear();
-				if (bfs::exists(FilePath) == false)
+				if (std::filesystem::exists(FilePath) == false)
 					return;
 
 				serialization::TESForm2Text Serializer;

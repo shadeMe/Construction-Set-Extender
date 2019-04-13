@@ -160,7 +160,7 @@ namespace cse
 		bool				ParentOppositeState;
 	};
 
-	typedef boost::shared_ptr<ObjectRefDescriptor>				ObjectRefDescriptorHandleT;
+	typedef std::shared_ptr<ObjectRefDescriptor>				ObjectRefDescriptorHandleT;
 	typedef std::vector<ObjectRefDescriptorHandleT>				ObjectRefCollectionDescriptorArrayT;
 
 	// includes a shallow copy of the refs' baseforms (dependencies are ignored)

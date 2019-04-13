@@ -988,7 +988,7 @@ namespace cse
 			LRESULT DlgProcResult = TRUE;
 			Return = false;
 
-			if (Instance.Initialized == false)
+			if (Instance.Initialized == false || BGSEEDAEMON->IsCrashing())
 			{
 				// bugger off
 				return DlgProcResult;
@@ -1426,7 +1426,6 @@ namespace cse
 								if ((InvisibleReasons & ReferenceVisibilityManager::kReason_InitiallyDisabledChild))
 									FlagsBuffer.append(" DC");
 
-								boost::trim(FlagsBuffer);
 								ImGui::Selectable(FlagsBuffer.c_str());
 								ImGui::NextColumn();
 							}

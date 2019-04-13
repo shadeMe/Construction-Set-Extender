@@ -55,7 +55,7 @@ namespace cse
 			bool										Instantiate();
 		};
 
-		typedef boost::shared_ptr<PrefabObject>			PrefabObjectHandleT;
+		typedef std::shared_ptr<PrefabObject>			PrefabObjectHandleT;
 
 		class ObjectPrefabManager
 		{

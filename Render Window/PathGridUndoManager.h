@@ -32,7 +32,7 @@ namespace cse
 				void									Undo(PathGridUndoManager* Manager, TESPathGridPoint** CreatedPointOut = nullptr);
 			};
 		private:
-			typedef boost::shared_ptr<PathGridPointUndoProxy>		UndoProxyHandleT;
+			typedef std::shared_ptr<PathGridPointUndoProxy>		UndoProxyHandleT;
 			typedef std::vector<UndoProxyHandleT>					UndoProxyArrayT;
 			typedef std::stack<UndoProxyArrayT*>					UndoProxyStackT;
 

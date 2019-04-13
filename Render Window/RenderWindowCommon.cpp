@@ -605,8 +605,8 @@ namespace cse
 			std::string FilePath(DirPath); FilePath += "\\" + std::string(GetSaveFileName());
 			try
 			{
-				if (bfs::exists(FilePath))
-					bfs::remove(FilePath);
+				if (std::filesystem::exists(FilePath))
+					std::filesystem::remove(FilePath);
 
 				std::fstream Stream(FilePath.c_str(), std::ios::out);
 				for (auto& Itr : RegisteredCollections)
@@ -630,7 +630,7 @@ namespace cse
 			try
 			{
 				ClearCollections();
-				if (bfs::exists(FilePath) == false)
+				if (std::filesystem::exists(FilePath) == false)
 					return;
 
 				std::string Line;

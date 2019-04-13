@@ -40,7 +40,7 @@ namespace cse
 			TESObjectREFR*		Instantiate(const Vector3& Position, bool MarkAsTemporary) const;
 		};
 
-		typedef boost::shared_ptr<PaletteObject>	PaletteObjectHandleT;
+		typedef std::shared_ptr<PaletteObject>	PaletteObjectHandleT;
 
 		class ObjectPaletteManager
 		{

@@ -55,6 +55,7 @@ namespace cse
 		RegisterRelease(7, 1, "Bull-buggering Bollocks");
 		RegisterRelease(8, 0, "Dead Dove");
 		RegisterRelease(8, 1, "Logical Half Nelson");
+		RegisterRelease(8, 2, "Aha!");
 	}
 
 	ReleaseNameTable::~ReleaseNameTable()
@@ -481,7 +482,7 @@ namespace cse
 		{
 			BGSEECONSOLE_MESSAGE("Attempting to salvage the active file...");
 			BGSEECONSOLE->Indent();
-			
+
 			if ((PanicSaved = _DATAHANDLER->PanicSave()))
 				BGSEECONSOLE_MESSAGE("Yup, we're good! Look for the panic save file in the Backup directory");
 			else

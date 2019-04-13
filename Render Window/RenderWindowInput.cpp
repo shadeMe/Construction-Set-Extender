@@ -1695,7 +1695,7 @@ namespace cse
 					if (uMsg == WM_LBUTTONDOWN)
 					{
 						if (GetAsyncKeyState(VK_MENU) && GetAsyncKeyState(VK_CONTROL) &&
-							*TESRenderWindow::LandscapeEditFlag == 0 && *TESRenderWindow::PathGridEditFlag == 0)
+							*TESRenderWindow::LandscapeEditFlag == 0 && *TESRenderWindow::PathGridEditFlag == 0 && *TES::HavokSimDisabledFlag == 1)
 						{
 							SME_ASSERT(PaintingSelection == false && SelectionPaintingMode == kSelectionPainting_NotSet);
 

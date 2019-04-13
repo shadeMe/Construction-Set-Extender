@@ -275,6 +275,9 @@ public:
 	bhkWorldM*						GetHavokWorld() const;
 
 	static TES**					Singleton;
+
+	static UInt8*					HavokSimDisabledFlag;
+
 };
 STATIC_ASSERT(sizeof(TES) == 0xAC);
 

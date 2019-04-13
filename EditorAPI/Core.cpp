@@ -8,6 +8,7 @@ TESDataHandler**					TESDataHandler::Singleton = (TESDataHandler **)0x00A0E064;
 bool								TESDataHandler::PluginLoadSaveInProgress = false;
 
 TES**								TES::Singleton = (TES**)0x00A0ABB0;
+UInt8*								TES::HavokSimDisabledFlag = (UInt8*)0x009ED634;
 FileFinder**						FileFinder::Singleton = (FileFinder**)0x00A0DE8C;
 BSTexturePalette**					BSTexturePalette::Singleton = (BSTexturePalette**)0x00A10004;
 BSTextureManager**					BSTextureManager::Singleton = (BSTextureManager**)0x00A8E760;

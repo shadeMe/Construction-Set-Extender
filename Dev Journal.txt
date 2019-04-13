@@ -10,6 +10,7 @@ NOTE	---->
 CSE		---->
 
 	BUGFIX			=
+		> Prevent the selection of refs through the cell view dialog when editing landscape/pathgrids
 		> Dirty edits?
 			>> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=25301452
 		> Object window columns like Auto calc, Enchantment type, Count don't sort consistently
@@ -17,6 +18,7 @@ CSE		---->
 
 
 	ENHANCEMENT		=
+		> Scroll cell view object list on selection change
 		> Double click on formIds/editorIds in the console
 		> Wildcard find/replace
 		> Add an option to restore a saved backup for some esp/esm, instead of manually recover it from Data/Backup folder and moving it back to Data folder.

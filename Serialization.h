@@ -40,7 +40,7 @@ namespace cse
 			mutable bool						InvokingHandlers;
 
 			void								CleanupEmptyDirectories() const;
-			int									GetFileCount(const boost::filesystem::path& DirectoryPath) const;					// includes subdirectories
+			int									GetFileCount(const std::filesystem::path& DirectoryPath) const;					// includes subdirectories
 			bool								CreateCosaveDirectory(TESFile* File) const;
 			bool								GetCosaveDirectory(TESFile* File, std::string& OutPath, bool Create = true) const;
 			void								HandleLoad() const;
