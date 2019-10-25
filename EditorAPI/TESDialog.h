@@ -697,6 +697,7 @@ public:
 		kToolbar_DataFiles = 40145,
 		kToolbar_Save = 40146,
 
+		kWindowMessage_Unk413 = 0x413,	// appears to be used in some of the older dialog windows (from the Morrowind codebase) too, probably has something to do with loading
 		kWindowMessage_Save = 0x40C,
 	};
 };

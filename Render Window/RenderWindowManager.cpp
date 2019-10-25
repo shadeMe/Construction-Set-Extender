@@ -628,6 +628,10 @@ namespace cse
 
 			switch (Source->GetTypeID())
 			{
+			case events::TypedEventSource::kType_CellView_SelectCell:
+				Parent->GetState().CurrentMouseRef = nullptr;
+				Parent->GetState().CurrentMousePathGridPoint = nullptr;
+				break;
 			case events::TypedEventSource::kType_Plugin_ClearData:
 				Parent->HandleClearData();
 				break;

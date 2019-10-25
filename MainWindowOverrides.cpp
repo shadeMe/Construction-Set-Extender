@@ -261,13 +261,13 @@ namespace cse
 						}
 
 						*TESCSMain::AllowAutoSaveFlag = 0;
-						char FileName[0x104] = { 0 };
+						char FileName[MAX_PATH] = { 0 };
 
 						if (TESDialog::SelectTESFileCommonDialog(hWnd,
 																 INISettingCollection::Instance->LookupByName("sLocalMasterPath:General")->value.s,
 																 0,
 																 FileName,
-																 0x104))
+																 sizeof(FileName)))
 						{
 							TESFile* SaveAsBuffer = _DATAHANDLER->activeFile;
 
@@ -668,6 +668,13 @@ namespace cse
 
 			switch (uMsg)
 			{
+			case TESCSMain::kWindowMessage_Unk413:
+				// if multiple editor instances are disabled, the secondary instance will send this message to the primary
+				// strangely, when the primary instance has an active/open preview control, the call crashes (presumably due to a corrupt lParam pointer)
+				// as far as I can tell, the corresponding code path is never executed, so we can consume this message entirely
+
+				Return = true;
+				break;
 			case WM_INITDIALOG:
 				{
 					SetTimer(hWnd, ID_PATHGRIDTOOLBARBUTTION_TIMERID, 500, nullptr);
