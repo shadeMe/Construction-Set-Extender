@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BSString.h"
+#include "Archive.h"
 
 //	EditorAPI: BaseFormComponent class and its derivatives.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
@@ -17,7 +18,6 @@
 class   TESFile;
 class   TESForm;
 class   NiNode;
-struct  FULL_HASH;  // Usage unknown - struct {void* unk00; void* unk04; void* unk08;}
 class   Script;
 class   SpellItem;
 class   TESLevSpell;
@@ -96,17 +96,29 @@ public:
 };
 STATIC_ASSERT(sizeof(TESIconTree) == 0x18);
 
+
+// C
+struct FULL_HASH
+{
+	/*00*/ BSFilePathHash* filenameDdsHash;
+	/*04*/ BSFilePathHash* filenameDdxHash;	// @Ian: DDX files are a bethesda custom dds-like format designed for consoles.
+											// On the 360 it uses xmemcodec for compression and stores each mipmap in pre-tiled (reorganized for better access by the gpu) format.
+											// The mips are also split in to two separate compressed blocks, the first one for the smaller mips and the second for the larger (much better for streaming)
+	/*08*/ BSFilePathHash* folderHash;
+};
+STATIC_ASSERT(sizeof(FULL_HASH) == 0xC);
+
 // 24
 class TESModel : public BaseFormComponent
 {
 public:
-	typedef NiTListBase<FULL_HASH*> ModelHashList;  // probably a named class, but without it's own vtbl or RTTI info
+	typedef NiTListBase<FULL_HASH*> ModelTextureHashList;  // probably a named class, but without it's own vtbl or RTTI info
 
 	// members
 	//     /*00*/ void**            vtbl;
 	/*04*/ BSString					modelPath;
 	/*0C*/ float					modelBound;
-	/*10*/ ModelHashList			modelHashList;		// texture hash list ?
+	/*10*/ ModelTextureHashList		modelTextureHashList;
 	/*20*/ UInt32					modelPathDlgItem;	// Dialog Control ID for model path
 };
 STATIC_ASSERT(sizeof(TESModel) == 0x24);
