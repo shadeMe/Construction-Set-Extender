@@ -1027,7 +1027,16 @@ void UpdateScriptVarNames(const char* EditorID, componentDLLInterface::ScriptVar
 
 bool CanUpdateIntelliSenseDatabase(void)
 {
-	return TESDataHandler::PluginLoadSaveInProgress == false;
+	if (BGSEEDAEMON->GetFullInitComplete() == false)
+		return false;
+	else if (BGSEEDAEMON->IsCrashing())
+		return false;
+	else if (BGSEEDAEMON->IsDeinitializing())
+		return false;
+	else if (TESDataHandler::PluginLoadSaveInProgress)
+		return false;
+
+	return true;
 }
 
 const char* GetDefaultCachePath(void)
