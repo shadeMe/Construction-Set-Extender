@@ -5,461 +5,597 @@
 
 namespace cse
 {
-	UseInfoList^% UseInfoList::GetSingleton()
+	void CentralizedUseInfoList::ListViewForms_SelectionChanged(Object^ Sender, EventArgs^ E)
+	{
+		if (ListViewForms->SelectedObject == nullptr)
+		{
+			ListViewObjectUsage->ClearObjects();
+			ListViewCellUsage->ClearObjects();
+			return;
+		}
+
+		NativeFormWrapper^ Data = (NativeFormWrapper^)ListViewForms->SelectedObject;
+		PopulateUsageInfo(Data);
+	}
+
+	void CentralizedUseInfoList::ListViewForms_ItemActivate(Object^ Sender, EventArgs^ E)
+	{
+		if (ListViewForms->SelectedObject == nullptr)
+			return;
+
+		NativeFormWrapper^ Data = (NativeFormWrapper^)ListViewForms->SelectedObject;
+		nativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEditByEditorID(CString(Data->EditorID).c_str());
+
+	}
+
+	void CentralizedUseInfoList::ListViewForms_FormatRow(Object^ Sender, BrightIdeasSoftware::FormatRowEventArgs^ E)
+	{
+		if (E->Model == nullptr)
+			return;
+
+		NativeFormWrapper^ Data = (NativeFormWrapper^)E->Model;
+		if (Data->Active)
+			HandleActiveFormHighlighting(E);
+	}
+
+	void CentralizedUseInfoList::ListViewObjectUsage_ItemActivate(Object^ Sender, EventArgs^ E)
+	{
+		if (ListViewForms->SelectedObject == nullptr)
+			return;
+
+		NativeFormWrapper^ Data = (NativeFormWrapper^)ListViewObjectUsage->SelectedObject;
+		nativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEditByEditorID(CString(Data->EditorID).c_str());
+	}
+
+	void CentralizedUseInfoList::ListViewObjectUsage_FormatRow(Object^ Sender, BrightIdeasSoftware::FormatRowEventArgs^ E)
+	{
+		if (E->Model == nullptr)
+			return;
+
+		NativeFormWrapper^ Data = (NativeFormWrapper^)E->Model;
+		if (Data->Active)
+			HandleActiveFormHighlighting(E);
+	}
+
+	void CentralizedUseInfoList::ListViewCellUsage_ItemActivate(Object^ Sender, EventArgs^ E)
+	{
+		if (ListViewForms->SelectedObject == nullptr)
+			return;
+
+		NativeCellUsageWrapper^ Data = (NativeCellUsageWrapper^)ListViewCellUsage->SelectedObject;
+		nativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEditByFormID(Data->FirstRefFormID);
+	}
+
+	void CentralizedUseInfoList::ListViewCellUsage_FormatRow(Object^ Sender, BrightIdeasSoftware::FormatRowEventArgs^ E)
+	{
+		if (E->Model == nullptr)
+			return;
+
+		NativeCellUsageWrapper^ Data = (NativeCellUsageWrapper^)E->Model;
+		if (Data->Active)
+			HandleActiveFormHighlighting(E);
+	}
+
+	void CentralizedUseInfoList::TextBoxFilter_TextChanged(Object^ Sender, EventArgs^ E)
+	{
+		PopulateLoadedForms(TextBoxFilter->Text);
+	}
+
+	void CentralizedUseInfoList::Dialog_KeyPress(Object^ Sender, KeyPressEventArgs^ E)
+	{
+		switch (E->KeyChar)
+		{
+		case 'f':
+			if (Control::ModifierKeys == Keys::Control)
+			{
+				E->Handled = true;
+				TextBoxFilter->Focus();
+			}
+			break;
+		case (char)27:		// Escape key
+			E->Handled = true;
+			this->Close();
+			break;
+		}
+	}
+
+	void CentralizedUseInfoList::Dialog_Cancel(Object^ Sender, CancelEventArgs^ E)
+	{
+		if (LoadedForms)
+		{
+			nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(LoadedForms, false);
+			LoadedForms = nullptr;
+		}
+	}
+
+	void CentralizedUseInfoList::InitializeComponent(void)
+	{
+		this->TextBoxFilter = (gcnew System::Windows::Forms::TextBox());
+		this->ListViewForms = (gcnew BrightIdeasSoftware::FastObjectListView());
+		this->LVFormCType = (gcnew BrightIdeasSoftware::OLVColumn());
+		this->LVFormCEditorID = (gcnew BrightIdeasSoftware::OLVColumn());
+		this->LVFormCFormID = (gcnew BrightIdeasSoftware::OLVColumn());
+		this->LVFormCPlugin = (gcnew BrightIdeasSoftware::OLVColumn());
+		this->LabelFilter = (gcnew System::Windows::Forms::Label());
+		this->LabelObjects = (gcnew System::Windows::Forms::Label());
+		this->LabelCells = (gcnew System::Windows::Forms::Label());
+		this->ListViewObjectUsage = (gcnew BrightIdeasSoftware::FastObjectListView());
+		this->LVObjectsCType = (gcnew BrightIdeasSoftware::OLVColumn());
+		this->LVObjectsCEditorID = (gcnew BrightIdeasSoftware::OLVColumn());
+		this->LVObjectsCFormID = (gcnew BrightIdeasSoftware::OLVColumn());
+		this->LVObjectsCPlugin = (gcnew BrightIdeasSoftware::OLVColumn());
+		this->ListViewCellUsage = (gcnew BrightIdeasSoftware::FastObjectListView());
+		this->LVCellsCWorldEditorID = (gcnew BrightIdeasSoftware::OLVColumn());
+		this->LVCellsCCellEditorID = (gcnew BrightIdeasSoftware::OLVColumn());
+		this->LVCellsCGrid = (gcnew BrightIdeasSoftware::OLVColumn());
+		this->LVCellsCUseCount = (gcnew BrightIdeasSoftware::OLVColumn());
+		this->LVCellsCRef = (gcnew BrightIdeasSoftware::OLVColumn());
+		(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewForms))->BeginInit();
+		(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewObjectUsage))->BeginInit();
+		(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewCellUsage))->BeginInit();
+		this->SuspendLayout();
+		//
+		// TextBoxFilter
+		//
+		this->TextBoxFilter->Location = System::Drawing::Point(44, 665);
+		this->TextBoxFilter->MaxLength = 100;
+		this->TextBoxFilter->Multiline = true;
+		this->TextBoxFilter->Name = L"TextBoxFilter";
+		this->TextBoxFilter->Size = System::Drawing::Size(396, 23);
+		this->TextBoxFilter->TabIndex = 0;
+		//
+		// ListViewForms
+		//
+		this->ListViewForms->AllColumns->Add(this->LVFormCType);
+		this->ListViewForms->AllColumns->Add(this->LVFormCEditorID);
+		this->ListViewForms->AllColumns->Add(this->LVFormCFormID);
+		this->ListViewForms->AllColumns->Add(this->LVFormCPlugin);
+		this->ListViewForms->CellEditUseWholeCell = false;
+		this->ListViewForms->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(4) {
+			this->LVFormCType,
+				this->LVFormCEditorID, this->LVFormCFormID, this->LVFormCPlugin
+		});
+		this->ListViewForms->Cursor = System::Windows::Forms::Cursors::Default;
+		this->ListViewForms->HideSelection = false;
+		this->ListViewForms->Location = System::Drawing::Point(12, 12);
+		this->ListViewForms->MultiSelect = false;
+		this->ListViewForms->Name = L"ListViewForms";
+		this->ListViewForms->ShowGroups = false;
+		this->ListViewForms->Size = System::Drawing::Size(428, 647);
+		this->ListViewForms->TabIndex = 1;
+		this->ListViewForms->UseCompatibleStateImageBehavior = false;
+		this->ListViewForms->View = System::Windows::Forms::View::Details;
+		this->ListViewForms->VirtualMode = true;
+		this->ListViewForms->FullRowSelect = true;
+		//
+		// LVFormCType
+		//
+		this->LVFormCType->Text = L"Type";
+		this->LVFormCType->Width = 65;
+		this->LVFormCType->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&CentralizedUseInfoList::LVFormAspectGetterType);
+		//
+		// LVFormCEditorID
+		//
+		this->LVFormCEditorID->Text = L"Editor ID";
+		this->LVFormCEditorID->Width = 165;
+		this->LVFormCEditorID->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&CentralizedUseInfoList::LVFormAspectGetterEditorID);
+		//
+		// LVFormCFormID
+		//
+		this->LVFormCFormID->Text = L"Form ID";
+		this->LVFormCFormID->Width = 70;
+		this->LVFormCFormID->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&CentralizedUseInfoList::LVFormAspectGetterFormID);
+		this->LVFormCFormID->AspectToStringConverter = gcnew BrightIdeasSoftware::AspectToStringConverterDelegate(&CentralizedUseInfoList::LVFormAspectToStringFormID);
+		//
+		// LVFormCPlugin
+		//
+		this->LVFormCPlugin->Text = L"Parent Plugin";
+		this->LVFormCPlugin->Width = 140;
+		this->LVFormCPlugin->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&CentralizedUseInfoList::LVFormAspectGetterParentPlugin);
+		//
+		// LabelFilter
+		//
+		this->LabelFilter->AutoSize = true;
+		this->LabelFilter->Location = System::Drawing::Point(12, 668);
+		this->LabelFilter->Name = L"LabelFilter";
+		this->LabelFilter->Size = System::Drawing::Size(29, 13);
+		this->LabelFilter->TabIndex = 6;
+		this->LabelFilter->Text = L"Filter";
+		//
+		// LabelObjects
+		//
+		this->LabelObjects->AutoSize = true;
+		this->LabelObjects->Location = System::Drawing::Point(443, 14);
+		this->LabelObjects->Name = L"LabelObjects";
+		this->LabelObjects->Size = System::Drawing::Size(119, 13);
+		this->LabelObjects->TabIndex = 7;
+		this->LabelObjects->Text = L"Used By These Objects";
+		//
+		// LabelCells
+		//
+		this->LabelCells->AutoSize = true;
+		this->LabelCells->Location = System::Drawing::Point(443, 354);
+		this->LabelCells->Name = L"LabelCells";
+		this->LabelCells->Size = System::Drawing::Size(102, 13);
+		this->LabelCells->TabIndex = 8;
+		this->LabelCells->Text = L"Used In These Cells";
+		//
+		// ListViewObjectUsage
+		//
+		this->ListViewObjectUsage->AllColumns->Add(this->LVObjectsCType);
+		this->ListViewObjectUsage->AllColumns->Add(this->LVObjectsCEditorID);
+		this->ListViewObjectUsage->AllColumns->Add(this->LVObjectsCFormID);
+		this->ListViewObjectUsage->AllColumns->Add(this->LVObjectsCPlugin);
+		this->ListViewObjectUsage->CellEditUseWholeCell = false;
+		this->ListViewObjectUsage->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(4) {
+			this->LVObjectsCType,
+				this->LVObjectsCEditorID, this->LVObjectsCFormID, this->LVObjectsCPlugin
+		});
+		this->ListViewObjectUsage->Cursor = System::Windows::Forms::Cursors::Default;
+		this->ListViewObjectUsage->HideSelection = false;
+		this->ListViewObjectUsage->Location = System::Drawing::Point(446, 30);
+		this->ListViewObjectUsage->MultiSelect = false;
+		this->ListViewObjectUsage->Name = L"ListViewObjectUsage";
+		this->ListViewObjectUsage->ShowGroups = false;
+		this->ListViewObjectUsage->Size = System::Drawing::Size(549, 318);
+		this->ListViewObjectUsage->TabIndex = 2;
+		this->ListViewObjectUsage->UseCompatibleStateImageBehavior = false;
+		this->ListViewObjectUsage->View = System::Windows::Forms::View::Details;
+		this->ListViewObjectUsage->VirtualMode = true;
+		this->ListViewObjectUsage->FullRowSelect = true;
+		//
+		// LVObjectsCType
+		//
+		this->LVObjectsCType->Text = L"Type";
+		this->LVObjectsCType->Width = 65;
+		this->LVObjectsCType->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&CentralizedUseInfoList::LVFormAspectGetterType);
+		//
+		// LVObjectsCEditorID
+		//
+		this->LVObjectsCEditorID->Text = L"Editor ID";
+		this->LVObjectsCEditorID->Width = 165;
+		this->LVObjectsCEditorID->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&CentralizedUseInfoList::LVFormAspectGetterEditorID);
+		//
+		// LVObjectsCFormID
+		//
+		this->LVObjectsCFormID->Text = L"Form ID";
+		this->LVObjectsCFormID->Width = 65;
+		this->LVObjectsCFormID->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&CentralizedUseInfoList::LVFormAspectGetterFormID);
+		this->LVObjectsCFormID->AspectToStringConverter = gcnew BrightIdeasSoftware::AspectToStringConverterDelegate(&CentralizedUseInfoList::LVFormAspectToStringFormID);
+		//
+		// LVObjectsCPlugin
+		//
+		this->LVObjectsCPlugin->Text = L"Parent Plugin";
+		this->LVObjectsCPlugin->Width = 165;
+		this->LVObjectsCPlugin->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&CentralizedUseInfoList::LVFormAspectGetterParentPlugin);
+		//
+		// ListViewCellUsage
+		//
+		this->ListViewCellUsage->AllColumns->Add(this->LVCellsCWorldEditorID);
+		this->ListViewCellUsage->AllColumns->Add(this->LVCellsCCellEditorID);
+		this->ListViewCellUsage->AllColumns->Add(this->LVCellsCGrid);
+		this->ListViewCellUsage->AllColumns->Add(this->LVCellsCUseCount);
+		this->ListViewCellUsage->AllColumns->Add(this->LVCellsCRef);
+		this->ListViewCellUsage->CellEditUseWholeCell = false;
+		this->ListViewCellUsage->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(5) {
+			this->LVCellsCWorldEditorID,
+				this->LVCellsCCellEditorID, this->LVCellsCGrid, this->LVCellsCUseCount, this->LVCellsCRef
+		});
+		this->ListViewCellUsage->Cursor = System::Windows::Forms::Cursors::Default;
+		this->ListViewCellUsage->HideSelection = false;
+		this->ListViewCellUsage->Location = System::Drawing::Point(446, 370);
+		this->ListViewCellUsage->MultiSelect = false;
+		this->ListViewCellUsage->Name = L"ListViewCellUsage";
+		this->ListViewCellUsage->ShowGroups = false;
+		this->ListViewCellUsage->Size = System::Drawing::Size(549, 318);
+		this->ListViewCellUsage->TabIndex = 3;
+		this->ListViewCellUsage->UseCompatibleStateImageBehavior = false;
+		this->ListViewCellUsage->View = System::Windows::Forms::View::Details;
+		this->ListViewCellUsage->VirtualMode = true;
+		this->ListViewCellUsage->FullRowSelect = true;
+		//
+		// LVCellsCWorldEditorID
+		//
+		this->LVCellsCWorldEditorID->Text = L"World";
+		this->LVCellsCWorldEditorID->Width = 100;
+		this->LVCellsCWorldEditorID->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&CentralizedUseInfoList::LVCellAspectGetterWorldEditorID);
+		//
+		// LVCellsCCellEditorID
+		//
+		this->LVCellsCCellEditorID->Text = L"Cell";
+		this->LVCellsCCellEditorID->Width = 150;
+		this->LVCellsCCellEditorID->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&CentralizedUseInfoList::LVCellAspectGetterCellEditorID);
+		//
+		// LVCellsCGrid
+		//
+		this->LVCellsCGrid->Text = L"Grid";
+		this->LVCellsCGrid->Width = 50;
+		this->LVCellsCGrid->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&CentralizedUseInfoList::LVCellAspectGetterGrid);
+		//
+		// LVCellsCUseCount
+		//
+		this->LVCellsCUseCount->Text = L"Use Count";
+		this->LVCellsCUseCount->Width = 70;
+		this->LVCellsCUseCount->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&CentralizedUseInfoList::LVCellAspectGetterUseCount);
+		//
+		// LVCellsCRef
+		//
+		this->LVCellsCRef->Text = L"First Reference";
+		this->LVCellsCRef->Width = 165;
+		this->LVCellsCRef->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&CentralizedUseInfoList::LVCellAspectGetterRef);
+		this->LVCellsCRef->AspectToStringConverter = gcnew BrightIdeasSoftware::AspectToStringConverterDelegate(&CentralizedUseInfoList::LVFormAspectToStringFormID);
+		//
+		// UseInfoList
+		//
+		this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
+		this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
+		this->ClientSize = System::Drawing::Size(1007, 700);
+		this->Controls->Add(this->ListViewCellUsage);
+		this->Controls->Add(this->ListViewObjectUsage);
+		this->Controls->Add(this->LabelCells);
+		this->Controls->Add(this->LabelObjects);
+		this->Controls->Add(this->LabelFilter);
+		this->Controls->Add(this->ListViewForms);
+		this->Controls->Add(this->TextBoxFilter);
+		this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedSingle;
+		this->KeyPreview = true;
+		this->MaximizeBox = false;
+		this->Name = L"UseInfoList";
+		this->StartPosition = System::Windows::Forms::FormStartPosition::CenterParent;
+		this->Text = L"Centeralized Use Info Listing";
+		(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewForms))->EndInit();
+		(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewObjectUsage))->EndInit();
+		(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewCellUsage))->EndInit();
+		this->ResumeLayout(false);
+		this->PerformLayout();
+
+		// ### The invocation of the SelectionChanged event apparently is tied to the parent thread's idle message loop
+		// ### This breaks event handling for this event when the idle loop isn't active (which are usually active when thread-modal dialog is being shown)
+		// ### We need to use SelectedIndexChanged instead.
+		ListViewForms->SelectedIndexChanged += gcnew EventHandler(this, &CentralizedUseInfoList::ListViewForms_SelectionChanged);
+		ListViewForms->ItemActivate += gcnew EventHandler(this, &CentralizedUseInfoList::ListViewForms_ItemActivate);
+		ListViewForms->FormatRow += gcnew EventHandler<BrightIdeasSoftware::FormatRowEventArgs^>(this, &CentralizedUseInfoList::ListViewForms_FormatRow);
+		ListViewObjectUsage->ItemActivate += gcnew EventHandler(this, &CentralizedUseInfoList::ListViewObjectUsage_ItemActivate);
+		ListViewObjectUsage->FormatRow += gcnew EventHandler<BrightIdeasSoftware::FormatRowEventArgs^>(this, &CentralizedUseInfoList::ListViewObjectUsage_FormatRow);
+		ListViewCellUsage->ItemActivate += gcnew EventHandler(this, &CentralizedUseInfoList::ListViewCellUsage_ItemActivate);
+		ListViewCellUsage->FormatRow += gcnew EventHandler<BrightIdeasSoftware::FormatRowEventArgs^>(this, &CentralizedUseInfoList::ListViewCellUsage_FormatRow);
+
+		TextBoxFilter->TextChanged += gcnew EventHandler(this, &CentralizedUseInfoList::TextBoxFilter_TextChanged);
+		this->KeyPress += gcnew KeyPressEventHandler(this, &CentralizedUseInfoList::Dialog_KeyPress);
+		this->Closing += gcnew CancelEventHandler(this, &CentralizedUseInfoList::Dialog_Cancel);
+	}
+
+	void CentralizedUseInfoList::PopulateLoadedForms(String^ FilterString)
+	{
+		ListViewForms->DeselectAll();
+		ListViewForms->ClearObjects();
+
+		ListViewObjectUsage->DeselectAll();
+		ListViewCellUsage->DeselectAll();
+
+		ListViewObjectUsage->ClearObjects();
+		ListViewCellUsage->ClearObjects();
+
+		if (LoadedForms == nullptr)
+			return;
+
+		List<NativeFormWrapper^>^ Model = gcnew List<NativeFormWrapper ^>;
+		for (int i = 0; i < LoadedForms->FormCount; i++)
+		{
+			componentDLLInterface::FormData* ThisForm = &LoadedForms->FormListHead[i];
+			NativeFormWrapper^ NewItem = gcnew NativeFormWrapper(ThisForm);
+
+			if (FilterString->Length > 0)
+			{
+				if (NewItem->EditorID->IndexOf(FilterString, StringComparison::CurrentCultureIgnoreCase) == -1)
+					continue;
+			}
+
+			Model->Add(NewItem);
+		}
+
+		ListViewForms->SetObjects(Model);
+		if (ListViewForms->GetItemCount())
+			ListViewForms->SelectedIndex = 0;
+	}
+
+	void CentralizedUseInfoList::PopulateUsageInfo(NativeFormWrapper^ BaseForm)
+	{
+		ListViewObjectUsage->DeselectAll();
+		ListViewCellUsage->DeselectAll();
+
+		ListViewObjectUsage->ClearObjects();
+		ListViewCellUsage->ClearObjects();
+
+		CString BaseFormEID(BaseForm->EditorID);
+		List<NativeFormWrapper^>^ CrossRefModel = gcnew List<NativeFormWrapper^>;
+		DisposibleDataAutoPtr<componentDLLInterface::UseInfoListCrossRefData> CrossRefs
+			(nativeWrapper::g_CSEInterfaceTable->UseInfoList.GetCrossRefDataForForm(BaseFormEID.c_str()));
+
+		if (CrossRefs)
+		{
+			for (int i = 0; i < CrossRefs->FormCount; i++)
+			{
+				componentDLLInterface::FormData* ThisForm = &CrossRefs->FormListHead[i];
+				CrossRefModel->Add(gcnew NativeFormWrapper(ThisForm));
+			}
+		}
+
+		List<NativeCellUsageWrapper^>^ CellUsageModel = gcnew List<NativeCellUsageWrapper^>;
+		DisposibleDataAutoPtr<componentDLLInterface::UseInfoListCellItemListData> CellUsage
+			(nativeWrapper::g_CSEInterfaceTable->UseInfoList.GetCellRefDataForForm(BaseFormEID.c_str()));
+
+		if (CellUsage)
+		{
+			for (int i = 0; i < CellUsage->UseInfoListCellItemListCount; i++)
+			{
+				componentDLLInterface::UseInfoListCellItemData* ThisForm = &CellUsage->UseInfoListCellItemListHead[i];
+				CellUsageModel->Add(gcnew NativeCellUsageWrapper(ThisForm));
+			}
+		}
+
+		ListViewObjectUsage->SetObjects(CrossRefModel);
+		if (ListViewObjectUsage->GetItemCount())
+			ListViewObjectUsage->SelectedIndex = 0;
+
+		ListViewCellUsage->SetObjects(CellUsageModel);
+		if (ListViewCellUsage->GetItemCount())
+			ListViewCellUsage->SelectedIndex = 0;
+	}
+
+	void CentralizedUseInfoList::HandleActiveFormHighlighting(BrightIdeasSoftware::FormatRowEventArgs^ E)
+	{
+		bool ColorizeActiveForms = nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetShouldColorizeActiveForms();
+		if (ColorizeActiveForms == false)
+			return;
+
+		UInt32 ActiveForeColor = nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemForegroundColor();
+		UInt32 ActiveBackColor = nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemBackgroundColor();
+
+		E->Item->ForeColor = System::Drawing::Color::FromArgb(ActiveForeColor & 0xFF,
+			(ActiveForeColor >> 8) & 0xFF,
+			(ActiveForeColor >> 16) & 0xFF);
+		E->Item->BackColor = System::Drawing::Color::FromArgb(ActiveBackColor & 0xFF,
+			(ActiveBackColor >> 8) & 0xFF,
+			(ActiveBackColor >> 16) & 0xFF);
+	}
+
+	System::Object^ CentralizedUseInfoList::LVFormAspectGetterEditorID(Object^ Model)
+	{
+		if (Model == nullptr)
+			return nullptr;
+
+		NativeFormWrapper^ Data = (NativeFormWrapper^)Model;
+		return Data->EditorID;
+	}
+
+	System::Object^ CentralizedUseInfoList::LVFormAspectGetterFormID(Object^ Model)
+	{
+		if (Model == nullptr)
+			return nullptr;
+
+		NativeFormWrapper^ Data = (NativeFormWrapper^)Model;
+		return Data->FormID;
+	}
+
+	System::String^ CentralizedUseInfoList::LVFormAspectToStringFormID(Object^ Model)
+	{
+		if (Model == nullptr)
+			return nullptr;
+
+		return ((UInt32)Model).ToString("X8");
+	}
+
+	System::Object^ CentralizedUseInfoList::LVFormAspectGetterType(Object^ Model)
+	{
+		if (Model == nullptr)
+			return nullptr;
+
+		NativeFormWrapper^ Data = (NativeFormWrapper^)Model;
+		return Data->Type;
+	}
+
+	System::Object^ CentralizedUseInfoList::LVFormAspectGetterParentPlugin(Object^ Model)
+	{
+		if (Model == nullptr)
+			return nullptr;
+
+		NativeFormWrapper^ Data = (NativeFormWrapper^)Model;
+		return Data->ParentPlugin;
+	}
+
+	System::Object^ CentralizedUseInfoList::LVCellAspectGetterWorldEditorID(Object^ Model)
+	{
+		if (Model == nullptr)
+			return nullptr;
+
+		NativeCellUsageWrapper^ Data = (NativeCellUsageWrapper^)Model;
+		return Data->WorldEditorID;
+	}
+
+	System::Object^ CentralizedUseInfoList::LVCellAspectGetterCellEditorID(Object^ Model)
+	{
+		if (Model == nullptr)
+			return nullptr;
+
+		NativeCellUsageWrapper^ Data = (NativeCellUsageWrapper^)Model;
+		return Data->CellEditorID;
+	}
+
+	System::Object^ CentralizedUseInfoList::LVCellAspectGetterGrid(Object^ Model)
+	{
+		if (Model == nullptr)
+			return nullptr;
+
+		NativeCellUsageWrapper^ Data = (NativeCellUsageWrapper^)Model;
+		if (Data->Interior)
+			return String::Empty;
+
+		return String::Format("{0},{1}", Data->ExteriorGrid.X, Data->ExteriorGrid.Y);
+	}
+
+	System::Object^ CentralizedUseInfoList::LVCellAspectGetterUseCount(Object^ Model)
+	{
+		if (Model == nullptr)
+			return nullptr;
+
+		NativeCellUsageWrapper^ Data = (NativeCellUsageWrapper^)Model;
+		return Data->UseCount;
+	}
+
+	System::Object^ CentralizedUseInfoList::LVCellAspectGetterRef(Object^ Model)
+	{
+		if (Model == nullptr)
+			return nullptr;
+
+		NativeCellUsageWrapper^ Data = (NativeCellUsageWrapper^)Model;
+		return Data->FirstRefFormID;
+	}
+
+	CentralizedUseInfoList::CentralizedUseInfoList(String^ FilterString)
+	{
+		InitializeComponent();
+
+		TextBoxFilter->Text = FilterString;
+		LoadedForms = nativeWrapper::g_CSEInterfaceTable->UseInfoList.GetLoadedForms();
+
+		PopulateLoadedForms(FilterString);
+		this->Show();
+	}
+
+	CentralizedUseInfoList::~CentralizedUseInfoList()
+	{
+		if (LoadedForms)
+		{
+			nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(LoadedForms, false);
+			LoadedForms = nullptr;
+		}
+
+		if (components)
+		{
+			delete components;
+		}
+
+		Singleton = nullptr;
+	}
+
+	void CentralizedUseInfoList::Open(String^ FilterString)
+	{
+		if (Singleton)
+		{
+			Singleton->PopulateLoadedForms(FilterString);
+			Singleton->BringToFront();
+			return;
+		}
+
+		Singleton = gcnew CentralizedUseInfoList(FilterString);
+	}
+
+	void CentralizedUseInfoList::Close()
 	{
 		if (Singleton == nullptr)
-		{
-			Singleton = gcnew UseInfoList();
-		}
-		return Singleton;
-	}
-
-	UseInfoList::UseInfoList()
-	{
-		Application::EnableVisualStyles();
-		FormList = (gcnew ListView());
-		FormListCType = (gcnew ColumnHeader());
-		FormListCEditorID = (gcnew ColumnHeader());
-		FormListCFormID = (gcnew ColumnHeader());
-		UseListObject = (gcnew ListView());
-		UseListObjectCType = (gcnew ColumnHeader());
-		UseListObjectCEditorID = (gcnew ColumnHeader());
-		UseListObjectCFormID = (gcnew ColumnHeader());
-		UseListObjectGroup = (gcnew GroupBox());
-		UseListCellGroup = (gcnew GroupBox());
-		UseListCell = (gcnew ListView());
-		UseListCellCWorldEditorID = (gcnew ColumnHeader());
-		UseListCellCCellFormID = (gcnew ColumnHeader());
-		UseListCellCCellEditorID = (gcnew ColumnHeader());
-		UseListCellCCellGrid = (gcnew ColumnHeader());
-		UseListCellCUseCount = (gcnew ColumnHeader());
-		UseListCellCFirstRef = (gcnew ColumnHeader());
-		SearchBox = (gcnew TextBox());
-		ExportDataButton = (gcnew Button());
-
-		FormList->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(3) {this->FormListCType, this->FormListCEditorID,
-			FormListCFormID});
-		FormList->Location = System::Drawing::Point(12, 12);
-		FormList->Name = L"FormList";
-		FormList->Size = System::Drawing::Size(475, 638);
-		FormList->TabIndex = 0;
-		FormList->UseCompatibleStateImageBehavior = false;
-		FormList->View = View::Details;
-		FormList->MultiSelect = false;
-		FormList->CheckBoxes = false;
-		FormList->FullRowSelect = true;
-		FormList->HideSelection = false;
-		FormList->SelectedIndexChanged += gcnew EventHandler(this, &UseInfoList::FormList_SelectedIndexChanged);
-		FormList->KeyDown += gcnew KeyEventHandler(this, &UseInfoList::FormList_KeyDown);
-		FormList->ColumnClick += gcnew ColumnClickEventHandler(this, &UseInfoList::FormList_ColumnClick);
-		FormList->MouseUp += gcnew MouseEventHandler(this, &UseInfoList::FormList_MouseUp);
-		FormList->MouseDoubleClick += gcnew MouseEventHandler(this, &UseInfoList::FormList_MouseDoubleClick);
-
-		FormListCType->Text = L"Type";
-		FormListCType->Width = 75;
-
-		FormListCEditorID->Text = L"Editor ID";
-		FormListCEditorID->Width = 280;
-
-		FormListCFormID->Text = L"Form ID";
-		FormListCFormID->Width = 70;
-
-		UseListObject->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(3) {this->UseListObjectCType,
-			UseListObjectCEditorID, this->UseListObjectCFormID});
-		UseListObject->Location = System::Drawing::Point(6, 19);
-		UseListObject->Name = L"UseListObject";
-		UseListObject->Size = System::Drawing::Size(355, 190);
-		UseListObject->TabIndex = 1;
-		UseListObject->UseCompatibleStateImageBehavior = false;
-		UseListObject->View = View::Details;
-		UseListObject->MultiSelect = false;
-		UseListObject->CheckBoxes = false;
-		UseListObject->FullRowSelect = true;
-		UseListObject->HideSelection = false;
-		UseListObject->Dock = System::Windows::Forms::DockStyle::Fill;
-		UseListObject->MouseDoubleClick += gcnew MouseEventHandler(this, &UseInfoList::UseListObject_MouseDoubleClick);
-
-		UseListObjectCType->Text = L"Type";
-		UseListObjectCType->Width = 75;
-
-		UseListObjectCEditorID->Text = L"Editor ID";
-		UseListObjectCEditorID->Width = 275;
-
-		UseListObjectCFormID->Text = L"Form ID";
-		UseListObjectCFormID->Width = 70;
-
-		UseListObjectGroup->Controls->Add(this->UseListObject);
-		UseListObjectGroup->Location = System::Drawing::Point(493, 12);
-		UseListObjectGroup->Name = L"UseListObjectGroup";
-		UseListObjectGroup->Size = System::Drawing::Size(469, 322);
-		UseListObjectGroup->TabIndex = 2;
-		UseListObjectGroup->TabStop = false;
-		UseListObjectGroup->Text = L"Used by these objects";
-
-		UseListCellGroup->Controls->Add(this->UseListCell);
-		UseListCellGroup->Location = System::Drawing::Point(493, 340);
-		UseListCellGroup->Name = L"UseListCellGroup";
-		UseListCellGroup->Size = System::Drawing::Size(469, 345);
-		UseListCellGroup->TabIndex = 3;
-		UseListCellGroup->TabStop = false;
-		UseListCellGroup->Text = L"Used in these cells";
-
-		UseListCell->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(6) {this->UseListCellCWorldEditorID,
-			UseListCellCCellFormID, this->UseListCellCCellEditorID, this->UseListCellCCellGrid, UseListCellCFirstRef, this->UseListCellCUseCount});
-		UseListCell->Location = System::Drawing::Point(6, 19);
-		UseListCell->Name = L"UseListCell";
-		UseListCell->Size = System::Drawing::Size(355, 190);
-		UseListCell->TabIndex = 1;
-		UseListCell->UseCompatibleStateImageBehavior = false;
-		UseListCell->View = View::Details;
-		UseListCell->MultiSelect = false;
-		UseListCell->CheckBoxes = false;
-		UseListCell->FullRowSelect = true;
-		UseListCell->HideSelection = false;
-		UseListCell->Dock = System::Windows::Forms::DockStyle::Fill;
-		UseListCell->MouseDoubleClick += gcnew MouseEventHandler(this, &UseInfoList::UseListCell_MouseDoubleClick);
-
-		UseListCellCWorldEditorID->Text = L"World Editor ID";
-		UseListCellCWorldEditorID->Width = 104;
-
-		UseListCellCCellFormID->Text = L"Cell Form ID";
-		UseListCellCCellFormID->Width = 5;
-
-		UseListCellCCellEditorID->Text = L"Cell Editor ID";
-		UseListCellCCellEditorID->Width = 112;
-
-		UseListCellCCellGrid->Text = L"Cell Grid";
-
-		UseListCellCUseCount->Text = L"Use Count";
-		UseListCellCUseCount->Width = 69;
-
-		UseListCellCFirstRef->Text = L"First Reference";
-		UseListCellCFirstRef->Width = 100;
-
-		SearchBox->Location = System::Drawing::Point(12, 656);
-		SearchBox->MaxLength = 255;
-		SearchBox->Multiline = true;
-		SearchBox->Name = L"SearchBox";
-		SearchBox->Size = System::Drawing::Size(371 - 371 + 475, 29);
-		SearchBox->TabIndex = 4;
-		SearchBox->TextChanged += gcnew EventHandler(this, &UseInfoList::SearchBox_TextChanged);
-		SearchBox->KeyDown += gcnew KeyEventHandler(this, &UseInfoList::SearchBox_KeyDown);
-		SearchBox->Font = gcnew Font("Consolas", 14.25F, FontStyle::Regular);
-
-		ExportDataButton->Visible = false;
-		ExportDataButton->Location = System::Drawing::Point(389, 656);
-		ExportDataButton->Size = System::Drawing::Size(98, 29);
-		ExportDataButton->TabIndex = 5;
-		ExportDataButton->Text = L"Export To CSV";
-		ExportDataButton->UseVisualStyleBackColor = true;
-		ExportDataButton->Click += gcnew EventHandler(this, &UseInfoList::ExportDataButton_Click);
-
-		UseInfoListBox = gcnew Form();
-//		UseInfoListBox->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
-//		UseInfoListBox->AutoScaleMode = AutoScaleMode::Font;
-		UseInfoListBox->ClientSize = System::Drawing::Size(974, 697);
-		UseInfoListBox->Controls->Add(ExportDataButton);
-		UseInfoListBox->Controls->Add(SearchBox);
-		UseInfoListBox->Controls->Add(UseListCellGroup);
-		UseInfoListBox->Controls->Add(FormList);
-		UseInfoListBox->Controls->Add(UseListObjectGroup);
-		UseInfoListBox->FormBorderStyle = FormBorderStyle::FixedSingle;
-		UseInfoListBox->MaximizeBox = false;
-		UseInfoListBox->StartPosition = FormStartPosition::CenterScreen;
-		UseInfoListBox->Text = L"Centralized Use Info Listing";
-		UseInfoListBox->Closing += gcnew CancelEventHandler(this, &UseInfoList::UseInfoListBox_Cancel);
-		UseInfoListBox->KeyPress += gcnew KeyPressEventHandler(this, &UseInfoList::UseInfoListBox_KeyPress);
-		UseInfoListBox->KeyDown += gcnew KeyEventHandler(this, &UseInfoList::UseInfoListBox_KeyDown);
-		UseInfoListBox->KeyPreview = true;
-
-		UseInfoListBox->Hide();
-		LastSortColumn = -1;
-	}
-
-	void UseInfoList::UseInfoListBox_Cancel(Object^ Sender, CancelEventArgs^ E)
-	{
-		Close();
-		E->Cancel = true;
-	}
-
-	void UseInfoList::UseInfoListBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
-	{
-		switch (E->KeyCode)
-		{
-		case Keys::Back:
-			if (SearchBox->Text->Length >= 1)
-			{
-				SearchBox->Text = SearchBox->Text->Remove(SearchBox->Text->Length - 1);
-				FormList->Focus();
-			}
-
-			E->Handled = true;
-			break;
-		}
-	}
-
-	void UseInfoList::UseInfoListBox_KeyPress(Object^ Sender, KeyPressEventArgs^ E)
-	{
-		if ((E->KeyChar > 0x29 && E->KeyChar < 0x3A) ||
-			(E->KeyChar > 0x60 && E->KeyChar < 0x7B))
-		{
-			SearchBox->Text += E->KeyChar.ToString();
-			FormList->Focus();
-			E->Handled = true;
-		}
-	}
-
-	void UseInfoList::ClearLists()
-	{
-		UseListCell->Items->Clear();
-		UseListObject->Items->Clear();
-	}
-
-	void UseInfoList::Close()
-	{
-		SearchBox->Text = "";
-		UseInfoListBox->Hide();
-	}
-
-	void UseInfoList::Open(const char* FilterString)
-	{
-		if (UseInfoListBox->Visible)
-		{
-			UseInfoListBox->Focus();
-		}
-		else
-		{
-			ClearLists();
-			PopulateFormList();
-			UseInfoListBox->Show();
-			UseInfoListBox->Focus();
-		}
-
-		if (FilterString)
-			SearchBox->Text = gcnew String(FilterString);
-	}
-
-	void UseInfoList::PopulateFormList()
-	{
-		FormList->Items->Clear();
-		FormList->BeginUpdate();
-
-		componentDLLInterface::UseInfoListFormData* Data = nativeWrapper::g_CSEInterfaceTable->UseInfoList.GetLoadedForms();
-		UInt32 ActiveForeColor = nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemForegroundColor();
-		UInt32 ActiveBackColor = nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemBackgroundColor();
-		bool ColorizeActiveForms = nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetShouldColorizeActiveForms();
-
-		if (Data)
-		{
-			for (int i = 0; i < Data->FormCount; i++)
-			{
-				componentDLLInterface::FormData* ThisForm = &Data->FormListHead[i];
-
-				ListViewItem^ Item = gcnew ListViewItem(gcnew String(nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(ThisForm->TypeID)));
-				Item->SubItems->Add(gcnew String(ThisForm->EditorID));
-				Item->SubItems->Add(ThisForm->FormID.ToString("X8"));
-				if (ThisForm->IsActive() && ColorizeActiveForms)
-				{
-					Item->ForeColor = System::Drawing::Color::FromArgb(ActiveForeColor & 0xFF,
-																	(ActiveForeColor >> 8) & 0xFF,
-																	(ActiveForeColor >> 16) & 0xFF);
-
-					Item->BackColor = System::Drawing::Color::FromArgb(ActiveBackColor & 0xFF,
-																	(ActiveBackColor >> 8) & 0xFF,
-																	(ActiveBackColor >> 16) & 0xFF);
-				}
-
-				FormList->Items->Add(Item);
-			}
-		}
-		nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
-		FormList->EndUpdate();
-	}
-
-	void UseInfoList::PopulateUseLists(const char* EditorID)
-	{
-		ClearLists();
-
-		UseListObject->BeginUpdate();
-		componentDLLInterface::UseInfoListCrossRefData* Data = nativeWrapper::g_CSEInterfaceTable->UseInfoList.GetCrossRefDataForForm(EditorID);
-		UInt32 ActiveForeColor = nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemForegroundColor();
-		UInt32 ActiveBackColor = nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemBackgroundColor();
-		bool ColorizeActiveForms = nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetShouldColorizeActiveForms();
-
-		if (Data)
-		{
-			for (int i = 0; i < Data->FormCount; i++)
-			{
-				componentDLLInterface::FormData* ThisForm = &Data->FormListHead[i];
-
-				ListViewItem^ Item = gcnew ListViewItem(gcnew String(nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(ThisForm->TypeID)));
-				Item->SubItems->Add(gcnew String(ThisForm->EditorID));
-				Item->SubItems->Add(ThisForm->FormID.ToString("X8"));
-				if (ThisForm->IsActive() && ColorizeActiveForms)
-				{
-					Item->ForeColor = System::Drawing::Color::FromArgb(ActiveForeColor & 0xFF,
-						(ActiveForeColor >> 8) & 0xFF,
-						(ActiveForeColor >> 16) & 0xFF);
-
-					Item->BackColor = System::Drawing::Color::FromArgb(ActiveBackColor & 0xFF,
-						(ActiveBackColor >> 8) & 0xFF,
-						(ActiveBackColor >> 16) & 0xFF);
-				}
-
-				UseListObject->Items->Add(Item);
-			}
-		}
-		nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
-		UseListObject->EndUpdate();
-
-		UseListCell->BeginUpdate();
-		componentDLLInterface::UseInfoListCellItemListData* DataEx = nativeWrapper::g_CSEInterfaceTable->UseInfoList.GetCellRefDataForForm(EditorID);
-		if (DataEx)
-		{
-			for (int i = 0; i < DataEx->UseInfoListCellItemListCount; i++)
-			{
-				componentDLLInterface::UseInfoListCellItemData* ThisForm = &DataEx->UseInfoListCellItemListHead[i];
-
-				ListViewItem^ Item = gcnew ListViewItem(gcnew String(ThisForm->WorldEditorID));
-				Item->SubItems->Add(ThisForm->FormID.ToString("X8"));
-				Item->SubItems->Add(gcnew String(ThisForm->EditorID));
-				Item->SubItems->Add((ThisForm->ParentCellInterior == false ? String::Format("{0}, {1}", ThisForm->XCoord, ThisForm->YCoord) : "Interior"));
-				Item->SubItems->Add(gcnew String(ThisForm->RefFormID.ToString("X8")));
-				Item->SubItems->Add(ThisForm->UseCount.ToString());
-				if (ThisForm->IsActive() && ColorizeActiveForms)
-				{
-					Item->ForeColor = System::Drawing::Color::FromArgb(ActiveForeColor & 0xFF,
-						(ActiveForeColor >> 8) & 0xFF,
-						(ActiveForeColor >> 16) & 0xFF);
-
-					Item->BackColor = System::Drawing::Color::FromArgb(ActiveBackColor & 0xFF,
-						(ActiveBackColor >> 8) & 0xFF,
-						(ActiveBackColor >> 16) & 0xFF);
-				}
-
-				UseListCell->Items->Add(Item);
-			}
-		}
-		nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(DataEx, false);
-		UseListCell->EndUpdate();
-	}
-
-	void UseInfoList::FormList_SelectedIndexChanged(Object^ Sender, EventArgs^ E)
-	{
-		if (GetListViewSelectedItem(FormList) == nullptr)
 			return;
 
-		CString CEID(GetListViewSelectedItem(FormList)->SubItems[1]->Text);
-		PopulateUseLists(CEID.c_str());
-	}
-
-	void UseInfoList::FormList_KeyDown(Object^ Sender, KeyEventArgs^ E)
-	{
-		switch (E->KeyCode)
-		{
-		case Keys::Escape:
-			UseInfoListBox->Close();
-			break;
-		}
-	}
-
-	void UseInfoList::FormList_MouseUp(Object^ Sender, MouseEventArgs^ E)
-	{
-		;//
-	}
-
-	void UseInfoList::FormList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
-	{
-		if (E->Column != LastSortColumn)
-		{
-			LastSortColumn = E->Column;
-			FormList->Sorting = SortOrder::Ascending;
-		}
-		else
-		{
-			if (FormList->Sorting == SortOrder::Ascending)
-				FormList->Sorting = SortOrder::Descending;
-			else
-				FormList->Sorting = SortOrder::Ascending;
-		}
-
-		FormList->Sort();
-		System::Collections::IComparer^ Sorter;
-		switch (E->Column)
-		{
-		case 2:							// FormID
-			Sorter = gcnew ListViewIntSorter(E->Column, FormList->Sorting, true);
-			break;
-		default:
-			Sorter = gcnew ListViewStringSorter(E->Column, FormList->Sorting);
-			break;
-		}
-		FormList->ListViewItemSorter = Sorter;
-	}
-
-	void UseInfoList::SearchBox_TextChanged(Object^ Sender, EventArgs^ E)
-	{
-		if (SearchBox->Text != "")
-		{
-			ListViewItem^ Result = FindItemWithText(FormList, SearchBox->Text, true, true);
-
-			if (Result != nullptr)
-			{
-				Result->Selected = true;
-				FormList->TopItem = Result;
-			}
-			else
-			{
-				Result = GetListViewSelectedItem(FormList);
-				if (Result != nullptr)
-					Result->Selected = false;
-			}
-		}
-	}
-
-	void UseInfoList::SearchBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
-	{
-		UseInfoList::FormList_KeyDown(nullptr, E);
-	}
-
-	void UseInfoList::FormList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
-	{
-		if (GetListViewSelectedItem(FormList) == nullptr)
-			return;
-
-		CString CEID(GetListViewSelectedItem(FormList)->SubItems[1]->Text);
-
-		nativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEditByEditorID(CEID.c_str());
-	}
-
-	void UseInfoList::UseListObject_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
-	{
-		if (GetListViewSelectedItem(UseListObject) == nullptr)
-			return;
-
-		CString CEID(GetListViewSelectedItem(UseListObject)->SubItems[1]->Text);
-
-		nativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEditByEditorID(CEID.c_str());
-	}
-
-	void UseInfoList::UseListCell_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
-	{
-		if (GetListViewSelectedItem(UseListCell) == nullptr)
-			return;
-
-		UInt32 FormID = 0;
-		UInt32::TryParse(GetListViewSelectedItem(UseListCell)->SubItems[4]->Text, System::Globalization::NumberStyles::HexNumber, nullptr, FormID);
-		if (FormID)
-			nativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEditByFormID(FormID);
-	}
-
-	void UseInfoList::ExportDataButton_Click( Object^ Sender, EventArgs^ E )
-	{
-		ExportListData();
-	}
-
-	void UseInfoList::ExportListData( void )
-	{
-		;//
+		Singleton->Form::Close();
 	}
 }

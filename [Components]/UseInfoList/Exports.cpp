@@ -21,12 +21,12 @@ void InitializeComponents(void)
 
 void ShowUseInfoListDialog(const char* FilterString)
 {
-	USELST->Open(FilterString);
+	CentralizedUseInfoList::Open(gcnew String(FilterString));
 }
 
 void HideUseInfoListDialog(void)
 {
-	USELST->Close();
+	CentralizedUseInfoList::Close();
 }
 
 componentDLLInterface::UseInfoListInterface g_InteropInterface =

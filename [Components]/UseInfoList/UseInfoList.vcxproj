@@ -138,6 +138,9 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Reference Include="ObjectListView">
+      <HintPath>..\..\[Depends]\ObjectListView.dll</HintPath>
+    </Reference>
     <Reference Include="System">
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>

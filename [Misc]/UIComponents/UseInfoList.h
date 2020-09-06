@@ -41,26 +41,50 @@ namespace UIComponents {
 				delete components;
 			}
 		}
-	private: System::Windows::Forms::ListView^  FormList;
-	protected: 
-	private: System::Windows::Forms::ColumnHeader^  FormListCType;
-	private: System::Windows::Forms::ColumnHeader^  FormListCEditorID;
-	private: System::Windows::Forms::ColumnHeader^  FormListCFormID;
-	private: System::Windows::Forms::ListView^  UseListObject;
-	private: System::Windows::Forms::ColumnHeader^  UseListObjectCType;
-	private: System::Windows::Forms::ColumnHeader^  UseListObjectCEditorID;
-	private: System::Windows::Forms::ColumnHeader^  UseListObjectCFormID;
-	private: System::Windows::Forms::GroupBox^  UseListObjectGroup;
-	private: System::Windows::Forms::GroupBox^  UseListCellGroup;
-	private: System::Windows::Forms::ListView^  UseListCell;
-	private: System::Windows::Forms::ColumnHeader^  UseListCellCWorldEditorID;
-	private: System::Windows::Forms::ColumnHeader^  UseListCellCCellFormID;
-	private: System::Windows::Forms::ColumnHeader^  UseListCellCCellEditorID;
-	private: System::Windows::Forms::ColumnHeader^  UseListCellCCellGrid;
-	private: System::Windows::Forms::ColumnHeader^  UseListCellCUseCount;
-	private: System::Windows::Forms::TextBox^  SearchBox;
+	private: System::Windows::Forms::TextBox^ TextBoxFilter;
+	protected:
 
-	private: System::Windows::Forms::Button^  FilterLabel;
+	protected: 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	private: BrightIdeasSoftware::FastObjectListView^ ListViewForms;
+
+	private: System::Windows::Forms::Label^ LabelFilter;
+	private: System::Windows::Forms::Label^ LabelObjects;
+	private: System::Windows::Forms::Label^ LabelCells;
+	private: BrightIdeasSoftware::FastObjectListView^ ListViewObjectUsage;
+	private: BrightIdeasSoftware::FastObjectListView^ ListViewCellUsage;
+	private: BrightIdeasSoftware::OLVColumn^ LVFormCType;
+	private: BrightIdeasSoftware::OLVColumn^ LVFormCEditorID;
+	private: BrightIdeasSoftware::OLVColumn^ LVFormCFormID;
+	private: BrightIdeasSoftware::OLVColumn^ LVFormCPlugin;
+	private: BrightIdeasSoftware::OLVColumn^ LVObjectsCType;
+	private: BrightIdeasSoftware::OLVColumn^ LVObjectsCEditorID;
+	private: BrightIdeasSoftware::OLVColumn^ LVObjectsCFormID;
+	private: BrightIdeasSoftware::OLVColumn^ LVObjectsCPlugin;
+	private: BrightIdeasSoftware::OLVColumn^ LVCellsCWorldEditorID;
+	private: BrightIdeasSoftware::OLVColumn^ LVCellsCCellEditorID;
+	private: BrightIdeasSoftware::OLVColumn^ LVCellsCGrid;
+	private: BrightIdeasSoftware::OLVColumn^ LVCellsCUseCount;
+	private: BrightIdeasSoftware::OLVColumn^ LVCellsCRef;
+
+
+
+
 
 
 
@@ -102,170 +126,226 @@ namespace UIComponents {
 		/// </summary>
 		void InitializeComponent(void)
 		{
-			this->FormList = (gcnew System::Windows::Forms::ListView());
-			this->FormListCType = (gcnew System::Windows::Forms::ColumnHeader());
-			this->FormListCEditorID = (gcnew System::Windows::Forms::ColumnHeader());
-			this->FormListCFormID = (gcnew System::Windows::Forms::ColumnHeader());
-			this->UseListObject = (gcnew System::Windows::Forms::ListView());
-			this->UseListObjectCType = (gcnew System::Windows::Forms::ColumnHeader());
-			this->UseListObjectCEditorID = (gcnew System::Windows::Forms::ColumnHeader());
-			this->UseListObjectCFormID = (gcnew System::Windows::Forms::ColumnHeader());
-			this->UseListObjectGroup = (gcnew System::Windows::Forms::GroupBox());
-			this->UseListCellGroup = (gcnew System::Windows::Forms::GroupBox());
-			this->UseListCell = (gcnew System::Windows::Forms::ListView());
-			this->UseListCellCWorldEditorID = (gcnew System::Windows::Forms::ColumnHeader());
-			this->UseListCellCCellFormID = (gcnew System::Windows::Forms::ColumnHeader());
-			this->UseListCellCCellEditorID = (gcnew System::Windows::Forms::ColumnHeader());
-			this->UseListCellCCellGrid = (gcnew System::Windows::Forms::ColumnHeader());
-			this->UseListCellCUseCount = (gcnew System::Windows::Forms::ColumnHeader());
-			this->SearchBox = (gcnew System::Windows::Forms::TextBox());
-			this->FilterLabel = (gcnew System::Windows::Forms::Button());
-			this->UseListObjectGroup->SuspendLayout();
-			this->UseListCellGroup->SuspendLayout();
+			this->TextBoxFilter = (gcnew System::Windows::Forms::TextBox());
+			this->ListViewForms = (gcnew BrightIdeasSoftware::FastObjectListView());
+			this->LVFormCType = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->LVFormCEditorID = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->LVFormCFormID = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->LVFormCPlugin = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->LabelFilter = (gcnew System::Windows::Forms::Label());
+			this->LabelObjects = (gcnew System::Windows::Forms::Label());
+			this->LabelCells = (gcnew System::Windows::Forms::Label());
+			this->ListViewObjectUsage = (gcnew BrightIdeasSoftware::FastObjectListView());
+			this->LVObjectsCType = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->LVObjectsCEditorID = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->LVObjectsCFormID = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->LVObjectsCPlugin = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->ListViewCellUsage = (gcnew BrightIdeasSoftware::FastObjectListView());
+			this->LVCellsCWorldEditorID = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->LVCellsCCellEditorID = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->LVCellsCGrid = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->LVCellsCUseCount = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->LVCellsCRef = (gcnew BrightIdeasSoftware::OLVColumn());
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewForms))->BeginInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewObjectUsage))->BeginInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewCellUsage))->BeginInit();
 			this->SuspendLayout();
 			// 
-			// FormList
+			// TextBoxFilter
 			// 
-			this->FormList->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(3) {this->FormListCType, this->FormListCEditorID, 
-				this->FormListCFormID});
-			this->FormList->Location = System::Drawing::Point(12, 12);
-			this->FormList->Name = L"FormList";
-			this->FormList->Size = System::Drawing::Size(475, 638);
-			this->FormList->TabIndex = 0;
-			this->FormList->UseCompatibleStateImageBehavior = false;
-			this->FormList->View = System::Windows::Forms::View::Details;
+			this->TextBoxFilter->Location = System::Drawing::Point(44, 665);
+			this->TextBoxFilter->MaxLength = 100;
+			this->TextBoxFilter->Multiline = true;
+			this->TextBoxFilter->Name = L"TextBoxFilter";
+			this->TextBoxFilter->Size = System::Drawing::Size(396, 23);
+			this->TextBoxFilter->TabIndex = 0;
 			// 
-			// FormListCType
+			// ListViewForms
 			// 
-			this->FormListCType->Text = L"Type";
-			this->FormListCType->Width = 46;
+			this->ListViewForms->AllColumns->Add(this->LVFormCType);
+			this->ListViewForms->AllColumns->Add(this->LVFormCEditorID);
+			this->ListViewForms->AllColumns->Add(this->LVFormCFormID);
+			this->ListViewForms->AllColumns->Add(this->LVFormCPlugin);
+			this->ListViewForms->CellEditUseWholeCell = false;
+			this->ListViewForms->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(4) {
+				this->LVFormCType,
+					this->LVFormCEditorID, this->LVFormCFormID, this->LVFormCPlugin
+			});
+			this->ListViewForms->Cursor = System::Windows::Forms::Cursors::Default;
+			this->ListViewForms->FullRowSelect = true;
+			this->ListViewForms->HideSelection = false;
+			this->ListViewForms->Location = System::Drawing::Point(12, 12);
+			this->ListViewForms->MultiSelect = false;
+			this->ListViewForms->Name = L"ListViewForms";
+			this->ListViewForms->ShowGroups = false;
+			this->ListViewForms->Size = System::Drawing::Size(428, 647);
+			this->ListViewForms->TabIndex = 1;
+			this->ListViewForms->UseCompatibleStateImageBehavior = false;
+			this->ListViewForms->View = System::Windows::Forms::View::Details;
+			this->ListViewForms->VirtualMode = true;
 			// 
-			// FormListCEditorID
+			// LVFormCType
 			// 
-			this->FormListCEditorID->Text = L"Editor ID";
-			this->FormListCEditorID->Width = 167;
+			this->LVFormCType->Text = L"Type";
+			this->LVFormCType->Width = 65;
 			// 
-			// FormListCFormID
+			// LVFormCEditorID
 			// 
-			this->FormListCFormID->Text = L"Form ID";
-			this->FormListCFormID->Width = 121;
+			this->LVFormCEditorID->Text = L"Editor ID";
+			this->LVFormCEditorID->Width = 165;
 			// 
-			// UseListObject
+			// LVFormCFormID
 			// 
-			this->UseListObject->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(3) {this->UseListObjectCType, 
-				this->UseListObjectCEditorID, this->UseListObjectCFormID});
-			this->UseListObject->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->UseListObject->Location = System::Drawing::Point(3, 16);
-			this->UseListObject->Name = L"UseListObject";
-			this->UseListObject->Size = System::Drawing::Size(463, 303);
-			this->UseListObject->TabIndex = 1;
-			this->UseListObject->UseCompatibleStateImageBehavior = false;
-			this->UseListObject->View = System::Windows::Forms::View::Details;
+			this->LVFormCFormID->Text = L"Form ID";
+			this->LVFormCFormID->Width = 70;
 			// 
-			// UseListObjectCType
+			// LVFormCPlugin
 			// 
-			this->UseListObjectCType->Text = L"Type";
+			this->LVFormCPlugin->Text = L"Parent Plugin";
+			this->LVFormCPlugin->Width = 140;
 			// 
-			// UseListObjectCEditorID
+			// LabelFilter
 			// 
-			this->UseListObjectCEditorID->Text = L"Editor ID";
+			this->LabelFilter->AutoSize = true;
+			this->LabelFilter->Location = System::Drawing::Point(12, 668);
+			this->LabelFilter->Name = L"LabelFilter";
+			this->LabelFilter->Size = System::Drawing::Size(29, 13);
+			this->LabelFilter->TabIndex = 6;
+			this->LabelFilter->Text = L"Filter";
 			// 
-			// UseListObjectCFormID
+			// LabelObjects
 			// 
-			this->UseListObjectCFormID->Text = L"Form ID";
+			this->LabelObjects->AutoSize = true;
+			this->LabelObjects->Location = System::Drawing::Point(443, 14);
+			this->LabelObjects->Name = L"LabelObjects";
+			this->LabelObjects->Size = System::Drawing::Size(119, 13);
+			this->LabelObjects->TabIndex = 7;
+			this->LabelObjects->Text = L"Used By These Objects";
 			// 
-			// UseListObjectGroup
+			// LabelCells
 			// 
-			this->UseListObjectGroup->Controls->Add(this->UseListObject);
-			this->UseListObjectGroup->Location = System::Drawing::Point(493, 12);
-			this->UseListObjectGroup->Name = L"UseListObjectGroup";
-			this->UseListObjectGroup->Size = System::Drawing::Size(469, 322);
-			this->UseListObjectGroup->TabIndex = 2;
-			this->UseListObjectGroup->TabStop = false;
-			this->UseListObjectGroup->Text = L"Used by these objects";
+			this->LabelCells->AutoSize = true;
+			this->LabelCells->Location = System::Drawing::Point(443, 354);
+			this->LabelCells->Name = L"LabelCells";
+			this->LabelCells->Size = System::Drawing::Size(102, 13);
+			this->LabelCells->TabIndex = 8;
+			this->LabelCells->Text = L"Used In These Cells";
 			// 
-			// UseListCellGroup
+			// ListViewObjectUsage
 			// 
-			this->UseListCellGroup->Controls->Add(this->UseListCell);
-			this->UseListCellGroup->Location = System::Drawing::Point(493, 340);
-			this->UseListCellGroup->Name = L"UseListCellGroup";
-			this->UseListCellGroup->Size = System::Drawing::Size(469, 345);
-			this->UseListCellGroup->TabIndex = 3;
-			this->UseListCellGroup->TabStop = false;
-			this->UseListCellGroup->Text = L"Used in these cells";
+			this->ListViewObjectUsage->AllColumns->Add(this->LVObjectsCType);
+			this->ListViewObjectUsage->AllColumns->Add(this->LVObjectsCEditorID);
+			this->ListViewObjectUsage->AllColumns->Add(this->LVObjectsCFormID);
+			this->ListViewObjectUsage->AllColumns->Add(this->LVObjectsCPlugin);
+			this->ListViewObjectUsage->CellEditUseWholeCell = false;
+			this->ListViewObjectUsage->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(4) {
+				this->LVObjectsCType,
+					this->LVObjectsCEditorID, this->LVObjectsCFormID, this->LVObjectsCPlugin
+			});
+			this->ListViewObjectUsage->Cursor = System::Windows::Forms::Cursors::Default;
+			this->ListViewObjectUsage->FullRowSelect = true;
+			this->ListViewObjectUsage->HideSelection = false;
+			this->ListViewObjectUsage->Location = System::Drawing::Point(446, 30);
+			this->ListViewObjectUsage->MultiSelect = false;
+			this->ListViewObjectUsage->Name = L"ListViewObjectUsage";
+			this->ListViewObjectUsage->ShowGroups = false;
+			this->ListViewObjectUsage->Size = System::Drawing::Size(549, 318);
+			this->ListViewObjectUsage->TabIndex = 2;
+			this->ListViewObjectUsage->UseCompatibleStateImageBehavior = false;
+			this->ListViewObjectUsage->View = System::Windows::Forms::View::Details;
+			this->ListViewObjectUsage->VirtualMode = true;
 			// 
-			// UseListCell
+			// LVObjectsCType
 			// 
-			this->UseListCell->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(5) {this->UseListCellCWorldEditorID, 
-				this->UseListCellCCellFormID, this->UseListCellCCellEditorID, this->UseListCellCCellGrid, this->UseListCellCUseCount});
-			this->UseListCell->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->UseListCell->Location = System::Drawing::Point(3, 16);
-			this->UseListCell->Name = L"UseListCell";
-			this->UseListCell->Size = System::Drawing::Size(463, 326);
-			this->UseListCell->TabIndex = 1;
-			this->UseListCell->UseCompatibleStateImageBehavior = false;
-			this->UseListCell->View = System::Windows::Forms::View::Details;
+			this->LVObjectsCType->Text = L"Type";
+			this->LVObjectsCType->Width = 65;
 			// 
-			// UseListCellCWorldEditorID
+			// LVObjectsCEditorID
 			// 
-			this->UseListCellCWorldEditorID->Text = L"World Editor ID";
-			this->UseListCellCWorldEditorID->Width = 104;
+			this->LVObjectsCEditorID->Text = L"Editor ID";
+			this->LVObjectsCEditorID->Width = 165;
 			// 
-			// UseListCellCCellFormID
+			// LVObjectsCFormID
 			// 
-			this->UseListCellCCellFormID->Text = L"Cell Form ID";
-			this->UseListCellCCellFormID->Width = 5;
+			this->LVObjectsCFormID->Text = L"Form ID";
+			this->LVObjectsCFormID->Width = 65;
 			// 
-			// UseListCellCCellEditorID
+			// LVObjectsCPlugin
 			// 
-			this->UseListCellCCellEditorID->Text = L"Cell Editor ID";
-			this->UseListCellCCellEditorID->Width = 112;
+			this->LVObjectsCPlugin->Text = L"Parent Plugin";
+			this->LVObjectsCPlugin->Width = 165;
 			// 
-			// UseListCellCCellGrid
+			// ListViewCellUsage
 			// 
-			this->UseListCellCCellGrid->Text = L"Cell Grid";
+			this->ListViewCellUsage->AllColumns->Add(this->LVCellsCWorldEditorID);
+			this->ListViewCellUsage->AllColumns->Add(this->LVCellsCCellEditorID);
+			this->ListViewCellUsage->AllColumns->Add(this->LVCellsCGrid);
+			this->ListViewCellUsage->AllColumns->Add(this->LVCellsCUseCount);
+			this->ListViewCellUsage->AllColumns->Add(this->LVCellsCRef);
+			this->ListViewCellUsage->CellEditUseWholeCell = false;
+			this->ListViewCellUsage->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(5) {
+				this->LVCellsCWorldEditorID,
+					this->LVCellsCCellEditorID, this->LVCellsCGrid, this->LVCellsCUseCount, this->LVCellsCRef
+			});
+			this->ListViewCellUsage->Cursor = System::Windows::Forms::Cursors::Default;
+			this->ListViewCellUsage->FullRowSelect = true;
+			this->ListViewCellUsage->HideSelection = false;
+			this->ListViewCellUsage->Location = System::Drawing::Point(446, 370);
+			this->ListViewCellUsage->MultiSelect = false;
+			this->ListViewCellUsage->Name = L"ListViewCellUsage";
+			this->ListViewCellUsage->ShowGroups = false;
+			this->ListViewCellUsage->Size = System::Drawing::Size(549, 318);
+			this->ListViewCellUsage->TabIndex = 3;
+			this->ListViewCellUsage->UseCompatibleStateImageBehavior = false;
+			this->ListViewCellUsage->View = System::Windows::Forms::View::Details;
+			this->ListViewCellUsage->VirtualMode = true;
 			// 
-			// UseListCellCUseCount
+			// LVCellsCWorldEditorID
 			// 
-			this->UseListCellCUseCount->Text = L"Use Count";
-			this->UseListCellCUseCount->Width = 69;
+			this->LVCellsCWorldEditorID->Text = L"World";
+			this->LVCellsCWorldEditorID->Width = 100;
 			// 
-			// SearchBox
+			// LVCellsCCellEditorID
 			// 
-			this->SearchBox->Location = System::Drawing::Point(12, 656);
-			this->SearchBox->MaxLength = 100;
-			this->SearchBox->Multiline = true;
-			this->SearchBox->Name = L"SearchBox";
-			this->SearchBox->Size = System::Drawing::Size(371, 29);
-			this->SearchBox->TabIndex = 4;
+			this->LVCellsCCellEditorID->Text = L"Cell";
+			this->LVCellsCCellEditorID->Width = 150;
 			// 
-			// FilterLabel
+			// LVCellsCGrid
 			// 
-			this->FilterLabel->Enabled = false;
-			this->FilterLabel->Location = System::Drawing::Point(389, 656);
-			this->FilterLabel->Name = L"FilterLabel";
-			this->FilterLabel->Size = System::Drawing::Size(98, 29);
-			this->FilterLabel->TabIndex = 5;
-			this->FilterLabel->Text = L"<< Filter String";
-			this->FilterLabel->UseVisualStyleBackColor = true;
+			this->LVCellsCGrid->Text = L"Grid";
+			this->LVCellsCGrid->Width = 50;
+			// 
+			// LVCellsCUseCount
+			// 
+			this->LVCellsCUseCount->Text = L"Use Count";
+			this->LVCellsCUseCount->Width = 70;
+			// 
+			// LVCellsCRef
+			// 
+			this->LVCellsCRef->Text = L"First Reference";
+			this->LVCellsCRef->Width = 165;
 			// 
 			// UseInfoList
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(974, 697);
-			this->Controls->Add(this->FilterLabel);
-			this->Controls->Add(this->SearchBox);
-			this->Controls->Add(this->UseListCellGroup);
-			this->Controls->Add(this->FormList);
-			this->Controls->Add(this->UseListObjectGroup);
+			this->ClientSize = System::Drawing::Size(1007, 700);
+			this->Controls->Add(this->ListViewCellUsage);
+			this->Controls->Add(this->ListViewObjectUsage);
+			this->Controls->Add(this->LabelCells);
+			this->Controls->Add(this->LabelObjects);
+			this->Controls->Add(this->LabelFilter);
+			this->Controls->Add(this->ListViewForms);
+			this->Controls->Add(this->TextBoxFilter);
 			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedSingle;
+			this->KeyPreview = true;
 			this->MaximizeBox = false;
 			this->Name = L"UseInfoList";
 			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterParent;
-			this->Text = L"Use Info List";
-			this->UseListObjectGroup->ResumeLayout(false);
-			this->UseListCellGroup->ResumeLayout(false);
+			this->Text = L"Centeralized Use Info Listing";
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewForms))->EndInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewObjectUsage))->EndInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewCellUsage))->EndInit();
 			this->ResumeLayout(false);
 			this->PerformLayout();
 
