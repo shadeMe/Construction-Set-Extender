@@ -29,70 +29,8 @@ namespace cse
 			}
 		};
 
-		ref class IntelliSenseKeyDownEventArgs : public KeyEventArgs
-		{
-		public:
-			property bool AllowForDisplay;
-
-			// results
-			property bool PreventNextTextChangeEvent;
-			property bool Display;
-			property intellisense::IIntelliSenseInterfaceModel::Operation DisplayOperation;
-
-			IntelliSenseKeyDownEventArgs(Keys Data) : KeyEventArgs(Data)
-			{
-				Handled = false;
-				AllowForDisplay = true;
-				PreventNextTextChangeEvent = false;
-				Display = false;
-				DisplayOperation = intellisense::IIntelliSenseInterfaceModel::Operation::Default;
-			}
-		};
-
-		ref class IntelliSensePositionEventArgs : public EventArgs
-		{
-		public:
-			property Point	Location;			// screen coords
-			property IntPtr	WindowHandle;		// parent
-
-			IntelliSensePositionEventArgs() : EventArgs()
-			{
-				Location = Point(0, 0);
-				WindowHandle = IntPtr::Zero;
-			}
-		};
-
-		ref class IntelliSenseShowEventArgs : public IntelliSensePositionEventArgs
-		{
-		public:
-			property bool UseActive;			// continue with the previous/active operation
-			property intellisense::IIntelliSenseInterfaceModel::Operation NewOperation;
-
-			IntelliSenseShowEventArgs() : IntelliSensePositionEventArgs()
-			{
-				UseActive = true;
-				NewOperation = intellisense::IIntelliSenseInterfaceModel::Operation::Default;
-			}
-		};
-
-		ref class IntelliSenseHideEventArgs : public EventArgs
-		{
-		public:
-			property bool Reset;
-
-			IntelliSenseHideEventArgs() : EventArgs()
-			{
-				Reset = false;
-			}
-		};
-
 		delegate void TextEditorScriptModifiedEventHandler(Object^ Sender, TextEditorScriptModifiedEventArgs^ E);
 		delegate void TextEditorMouseClickEventHandler(Object^ Sender, TextEditorMouseClickEventArgs^ E);
-		delegate void IntelliSenseKeyDownEventHandler(Object^ Sender, IntelliSenseKeyDownEventArgs^ E);
-		delegate void IntelliSenseKeyUpEventHandler(Object^ Sender, KeyEventArgs^ E);
-		delegate void IntelliSensePositionEventHandler(Object^ Sender, IntelliSensePositionEventArgs^ E);
-		delegate void IntelliSenseShowEventHandler(Object^ Sender, IntelliSenseShowEventArgs^ E);
-		delegate void IntelliSenseHideEventHandler(Object^ Sender, IntelliSenseHideEventArgs^ E);
 
 		ref struct CompilationData
 		{
@@ -110,7 +48,48 @@ namespace cse
 								CanCompile(false), HasDirectives(false), HasWarnings(false), CompileResult(nullptr) {}
 		};
 
-		interface class IScriptTextEditor
+		ref struct ScriptTextMetadata
+		{
+			ref struct Bookmark
+			{
+				property UInt32		Line;
+				property String^ Message;
+
+				Bookmark(UInt32 Line, String^ Message)
+				{
+					this->Line = Line;
+					this->Message = Message;
+				}
+			};
+
+			using CaretPosition = int;
+
+
+			property CaretPosition		CaretPos;
+			property List<Bookmark^>^	Bookmarks;
+			property bool				HasPreprocessorDirectives;
+
+			ScriptTextMetadata()
+			{
+				this->CaretPos = -1;
+				this->Bookmarks = gcnew List<Bookmark^>();
+				this->HasPreprocessorDirectives = false;
+			}
+		};
+
+		ref class ScriptTextMetadataHelper
+		{
+			static String^	kMetadataBlockMarker = "CSEBlock";
+			static String^	kMetadataSigilCaret = "CSECaretPos";
+			static String^	kMetadataSigilBookmark = "CSEBookmark";
+
+			static void		SeparateScriptTextFromMetadataBlock(String^ RawScriptText, String^% OutScriptText, String^% OutMetadata);
+		public:
+			static void		DeserializeRawScriptText(String^ RawScriptText, String^% OutScriptText, ScriptTextMetadata^% OutMetadata);
+			static String^	SerializeMetadata(ScriptTextMetadata^ Metadata);
+		};
+
+		interface class IScriptTextEditor : public intellisense::IIntelliSenseInterfaceConsumer
 		{
 			static enum class ScriptMessageType
 			{
@@ -180,29 +159,21 @@ namespace cse
 				}
 			};
 
-			event IntelliSenseKeyDownEventHandler^						IntelliSenseKeyDown;		// this has to be a separate event as we need to reliably return values from the handler
-			event IntelliSenseKeyUpEventHandler^						IntelliSenseKeyUp;
 
-			// these events are raised as requests
-			event IntelliSenseShowEventHandler^						IntelliSenseShow;
-			event IntelliSenseHideEventHandler^						IntelliSenseHide;
-			event IntelliSensePositionEventHandler^					IntelliSenseRelocate;
-
-			event TextEditorScriptModifiedEventHandler^				ScriptModified;
-			event KeyEventHandler^									KeyDown;
-			event TextEditorMouseClickEventHandler^					MouseClick;
-			event EventHandler^										LineChanged;					// raised when the current line changes
-			event EventHandler^										BackgroundAnalysisComplete;		// raised after a background semantic analysis task is successfully completed
-			event EventHandler^										TextUpdated;					// raised after the editor's entire text has been updated
+			event TextEditorScriptModifiedEventHandler^
+														ScriptModified;
+			event KeyEventHandler^						KeyDown;
+			event TextEditorMouseClickEventHandler^		MouseClick;
+			event EventHandler^							LineChanged;					// raised when the current line changes
+			event EventHandler^							BackgroundAnalysisComplete;		// raised after a background semantic analysis task is successfully completed
+			event EventHandler^							TextUpdated;					// raised after the editor's entire text has been updated
 
 			property Control^							Container;
 			property IntPtr								WindowHandle;
 			property bool								Enabled;
-
 			property int								CurrentLine;
 			property int								LineCount;
 			property int								Caret;
-
 			property bool								Modified;
 
 			// methods
@@ -214,21 +185,18 @@ namespace cse
 			String^										GetText();
 			String^										GetText(UInt32 LineNumber);
 			String^										GetPreprocessedText(bool% OutPreprocessResult, bool SuppressErrors);
-			void										SetText(String^ Text, bool PreventTextChangedEventHandling, bool ResetUndoStack);
-
+			void										SetText(String^ Text, bool ResetUndoStack);
 			String^										GetSelectedText(void);
-			void										SetSelectedText(String^ Text, bool PreventTextChangedEventHandling);
-
+			void										SetSelectedText(String^ Text);
 			int											GetCharIndexFromPosition(Point Position);
 			Point										GetPositionFromCharIndex(int Index, bool Absolute);
-
 			String^										GetTokenAtCharIndex(int Offset);
 			String^										GetTokenAtCaretPos();
 			void										SetTokenAtCaretPos(String^ Replacement);
-
 			void										ScrollToCaret();
-
+			void										ScrollToLine(UInt32 LineNumber);
 			void										FocusTextArea();
+
 			void										LoadFileFromDisk(String^ Path);
 			void										SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ DefaultName, String^ DefaultExtension);
 
@@ -237,20 +205,17 @@ namespace cse
 																	String^ Replacement,
 																	FindReplaceOptions Options);
 
-			void										ScrollToLine(UInt32 LineNumber);
-			Point										PointToScreen(Point Location);
 
 			void										BeginUpdate(void);
 			void										EndUpdate(bool FlagModification);
 
 			UInt32										GetIndentLevel(UInt32 LineNumber);
 			void										InsertVariable(String^ VariableName, obScriptParsing::Variable::DataType VariableType);
-
 			obScriptParsing::AnalysisData^				GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
 
+			void										InitializeState(String^ RawScriptText);			// clears tracked data and deserializes any metadata found in the script text
 			CompilationData^							BeginScriptCompilation();
 			void										EndScriptCompilation(CompilationData^ Data);
-			void										InitializeState(String^ RawScriptText);			// clears tracked data and deserializes any metadata found in the script text
 		};
-}
+	}
 }

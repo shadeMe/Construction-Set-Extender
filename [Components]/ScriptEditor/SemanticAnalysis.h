@@ -50,7 +50,7 @@ namespace cse
 			DispatchEvent,
 		};
 
-		ref class Tokenizer
+		ref class LineTokenizer
 		{
 			bool					Good;
 			String^					ReferenceDelimiters;
@@ -69,9 +69,9 @@ namespace cse
 				virtual bool get() { return Good; }
 			}
 
-			Tokenizer();
-			Tokenizer(String^ InputDelimiters);
-			Tokenizer(String^ InputDelimiters, String^ InputControlChars);
+			LineTokenizer();
+			LineTokenizer(String^ InputDelimiters);
+			LineTokenizer(String^ InputDelimiters, String^ InputControlChars);
 
 			bool						Tokenize(String^ Source, bool CollectEmptyTokens);
 			void						ResetState();
@@ -79,6 +79,7 @@ namespace cse
 			ScriptTokenType				GetFirstTokenType(void);
 			int							GetCommentTokenIndex(int SearchEndIndex);		// returns the index of the token that contains the comment delimiter. argument specifies the end token index for the search (pass -1 for full search)
 			int							GetTokenIndex(String^ Source);					// returns the token index corresponding to the first match
+			bool						IsIndexInsideString(int Index);
 
 			static ScriptTokenType		GetScriptTokenType(String^ ScriptToken);
 			static bool					GetIndexInsideString(String^ Source, int Index);	// returns true if the index follows a " character or if it is wrapped b'ween two
@@ -218,18 +219,18 @@ namespace cse
 				UserMessage(UInt32 Line, String^ Message, bool Critical);
 			};
 
-			String^										Name;
-			String^										Description;
-			List<Variable^>^							Variables;
-			UInt32										NextVariableLine;			// line where the next variable can be inserted
-			List<ControlBlock^>^						ControlBlocks;
-			bool										MalformedStructure;
-			UInt32										FirstStructuralErrorLine;
-			bool										UDF;
-			Variable^									UDFResult;
-			bool										UDFAmbiguousResult;
-			List<UserMessage^>^							AnalysisMessages;
-			property bool								HasCriticalMessages
+			String^					Name;
+			String^					Description;
+			List<Variable^>^		Variables;
+			UInt32					NextVariableLine;			// line where the next variable can be inserted
+			List<ControlBlock^>^	ControlBlocks;
+			bool					MalformedStructure;
+			UInt32					FirstStructuralErrorLine;
+			bool					UDF;
+			Variable^				UDFResult;
+			bool					UDFAmbiguousResult;
+			List<UserMessage^>^		AnalysisMessages;
+			property bool			HasCriticalMessages
 			{
 				virtual bool get() { return GetHasCriticalMessages(); }
 			}
@@ -252,21 +253,20 @@ namespace cse
 			AnalysisData();
 			~AnalysisData();
 
-			delegate void						CheckVariableNameCollision(String^ VarName, bool% HasCommandCollision, bool% HasFormCollision);
+			delegate void		CheckVariableNameCollision(String^ VarName, bool% HasCommandCollision, bool% HasFormCollision);
 
-			void								PerformAnalysis(String^ ScriptText, ScriptType Type, Operation Operations, CheckVariableNameCollision^ Delegate);
+			void				PerformAnalysis(String^ ScriptText, ScriptType Type, Operation Operations, CheckVariableNameCollision^ Delegate);
 
-			ControlBlock^						GetBlockStartingAt(UInt32 Line);
-			ControlBlock^						GetBlockEndingAt(UInt32 Line);
-			UInt32								GetLineIndentLevel(UInt32 Line);
-			Variable^							LookupVariable(String^ VarName);
-
-			static String^						PerformLocalizedIndenting(String^ Source, UInt32 DefaultIndentLevel);
+			ControlBlock^		GetBlockStartingAt(UInt32 Line);
+			ControlBlock^		GetBlockEndingAt(UInt32 Line);
+			UInt32				GetLineIndentLevel(UInt32 Line);
+			Variable^			LookupVariable(String^ VarName);
+			AnalysisData^		Clone();
 		private:
-			void								LogAnalysisMessage(UInt32 Line, String^ Message);
-			void								LogCriticalAnalysisMessage(UInt32 Line, String^ Message);
-			bool								GetHasCriticalMessages();
-			bool								ParseConditionExpression(UInt32 Line, String^ Expression);
+			void				LogAnalysisMessage(UInt32 Line, String^ Message);
+			void				LogCriticalAnalysisMessage(UInt32 Line, String^ Message);
+			bool				GetHasCriticalMessages();
+			bool				ParseConditionExpression(UInt32 Line, String^ Expression);
 		};
 
 		ref class Sanitizer
@@ -294,6 +294,8 @@ namespace cse
 			delegate String^					GetSanitizedIdentifier(String^ Identifier);
 
 			bool								SanitizeScriptText(Operation Operations, GetSanitizedIdentifier^ Delegate);		// returns false if unsuccessful
+
+			static String^						PerformLocalizedIndenting(String^ Source, UInt32 DefaultIndentLevel);
 		};
 
 		ref class Documenter
@@ -364,7 +366,7 @@ namespace cse
 	};
 
 #ifdef CSE_SE
-	typedef obScriptParsing::Tokenizer						ScriptParser;
+	typedef obScriptParsing::LineTokenizer						ScriptParser;
 	typedef obScriptParsing::AnalysisData::UserMessage		ScriptErrorMessage;
 #endif
 }

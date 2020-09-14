@@ -55,13 +55,22 @@ namespace cse
 		return &kCSEInterface;
 	}
 
-	UInt32 PluginAPIManager::ConsumeIntelliSenseInterface()
+	UInt32 PluginAPIManager::ConsumeIntelliSenseInterface(componentDLLInterface::CommandTableData* OutCommandData)
 	{
 		SME_ASSERT(Initialized);
 
-		for (CommandURLMapT::const_iterator Itr = ObScriptCommandURLs.begin(); Itr != ObScriptCommandURLs.end(); Itr++)
+		OutCommandData->DeveloperURLDataListCount = ObScriptCommandURLs.size();
+		if (!ObScriptCommandURLs.empty())
 		{
-			cliWrapper::interfaces::SE->AddScriptCommandDeveloperURL(Itr->first.c_str(), Itr->second.c_str());
+			OutCommandData->DeveloperURLDataListHead = new componentDLLInterface::CommandTableData::DeveloperURLData[OutCommandData->DeveloperURLDataListCount];
+			int i = 0;
+			for (const auto& Itr : ObScriptCommandURLs)
+			{
+				OutCommandData->DeveloperURLDataListHead[i].CommandName = Itr.first.c_str();
+				OutCommandData->DeveloperURLDataListHead[i].URL = Itr.second.c_str();
+				++i;
+			}
+
 		}
 
 		return ObScriptCommandURLs.size();

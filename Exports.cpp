@@ -157,17 +157,6 @@ ScriptData* LookupScriptableByEditorID(const char* EditorID)
 	return Result;
 }
 
-bool GetIsFormReference(const char* EditorID)
-{
-	TESForm* Form = TESForm::LookupByEditorID(EditorID);
-	bool Result = false;
-
-	if (Form)
-		Result = Form->IsReference();
-
-	return Result;
-}
-
 const char* GetFormTypeIDLongName(UInt8 TypeID)
 {
 	return TESForm::GetFormTypeIDLongName(TypeID);
@@ -264,6 +253,21 @@ bool GetShouldColorizeActiveForms(void)
 bool GetShouldSortActiveFormsFirst(void)
 {
 	return settings::dialogs::kSortFormListsByActiveForm.GetData().i;
+}
+
+componentDLLInterface::CSEInterfaceTable::IEditorAPI::ConsoleContextObjectPtr RegisterConsoleContext(const char* Name)
+{
+	return BGSEECONSOLE->RegisterMessageLogContext(Name);
+}
+
+void DeregisterConsoleContext(void* ContextObject)
+{
+	BGSEECONSOLE->UnregisterMessageLogContext(ContextObject);
+}
+
+void PrintToConsoleContext(void* ContextObject, const char* Message, bool PrintTimestamp)
+{
+	BGSEECONSOLE->PrintToMessageLogContext(ContextObject, PrintTimestamp == false, "%s", Message);
 }
 #pragma endregion
 /**** END EDITORAPI SUBINTERFACE ****/
@@ -841,21 +845,11 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 	IntelliSenseUpdateData* Data = new IntelliSenseUpdateData();
 
 	UInt32 QuestCount = _DATAHANDLER->quests.Count(),
-			ScriptCount = 0,
-			GlobalCount = _DATAHANDLER->globals.Count(),
-			EditorIDFormCount = 0;
+			ScriptCount = _DATAHANDLER->scripts.Count(),
+			GlobalCount = _DATAHANDLER->globals.Count();
 
 	ScriptData TestData;
-	std::vector<UInt32> UDFFormIDs;
-	for (tList<Script>::Iterator Itr = _DATAHANDLER->scripts.Begin(); !Itr.End() && Itr.Get(); ++Itr)
-	{
-		TestData.FillScriptData(Itr.Get());
-		if (TestData.UDF)
-		{
-			ScriptCount++;
-			UDFFormIDs.push_back(TestData.FormID);
-		}
-	}
+	std::vector<TESForm*> MiscForms;
 
 	for (cseOverride::NiTMapIterator Itr = TESForm::EditorIDMap->GetFirstPos(); Itr;)
 	{
@@ -868,6 +862,7 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 			if (Form->formType != TESForm::kFormType_GMST &&
 				Form->formType != TESForm::kFormType_Global &&
 				Form->formType != TESForm::kFormType_Quest &&
+				Form->formType != TESForm::kFormType_Script &&
 				Form->formType != TESForm::kFormType_LandTexture &&
 				Form->formType != TESForm::kFormType_Tree &&
 				Form->formType != TESForm::kFormType_Grass &&
@@ -875,8 +870,7 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 				Form->formType != TESForm::kFormType_LoadScreen &&
 				Form->formType != TESForm::kFormType_AnimObject)
 			{
-				if (std::find(UDFFormIDs.begin(), UDFFormIDs.end(), Form->formID) == UDFFormIDs.end())
-					EditorIDFormCount++;
+				MiscForms.push_back(Form);
 			}
 		}
 	}
@@ -887,64 +881,39 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 	Data->ScriptCount = ScriptCount;
 	Data->GlobalListHead = new GlobalData[GlobalCount];
 	Data->GlobalCount = GlobalCount;
-	Data->EditorIDListHead = new FormData[EditorIDFormCount];
-	Data->EditorIDCount = EditorIDFormCount;
+	Data->MiscFormListHead = new FormData[MiscForms.size()];
+	Data->MiscFormListCount = MiscForms.size();
 
-	QuestCount = 0, ScriptCount = 0, GlobalCount = 0, EditorIDFormCount = 0;
-	for (tList<TESQuest>::Iterator Itr = _DATAHANDLER->quests.Begin(); !Itr.End() && Itr.Get(); ++Itr)
+	QuestCount = 0, ScriptCount = 0, GlobalCount = 0;
+	for (tList<TESQuest>::Iterator Itr = _DATAHANDLER->quests.Begin(); !Itr.End() && Itr.Get(); ++Itr, ++QuestCount)
 	{
 		Data->QuestListHead[QuestCount].FillFormData(Itr.Get());
 		Data->QuestListHead[QuestCount].FullName = Itr.Get()->name.c_str();
 		Data->QuestListHead[QuestCount].ScriptName = nullptr;
 		if (Itr.Get()->script)
 			Data->QuestListHead[QuestCount].ScriptName = Itr.Get()->script->editorID.c_str();
-
-		QuestCount++;
 	}
 
-	for (tList<Script>::Iterator Itr = _DATAHANDLER->scripts.Begin(); !Itr.End() && Itr.Get(); ++Itr)
+	for (tList<Script>::Iterator Itr = _DATAHANDLER->scripts.Begin(); !Itr.End() && Itr.Get(); ++Itr, ++ScriptCount)
 	{
 		TestData.FillScriptData(Itr.Get());
-		if (TestData.UDF)
-		{
-			Data->ScriptListHead[ScriptCount].FillScriptData(Itr.Get());
-			ScriptCount++;
-		}
+		Data->ScriptListHead[ScriptCount].FillScriptData(Itr.Get());
 	}
 
-	for (tList<TESGlobal>::Iterator Itr = _DATAHANDLER->globals.Begin(); !Itr.End() && Itr.Get(); ++Itr)
+	for (tList<TESGlobal>::Iterator Itr = _DATAHANDLER->globals.Begin(); !Itr.End() && Itr.Get(); ++Itr, ++GlobalCount)
 	{
 		Data->GlobalListHead[GlobalCount].FillFormData(Itr.Get());
 		Data->GlobalListHead[GlobalCount].FillVariableData(Itr.Get());
-		GlobalCount++;
 	}
 
-	for (cseOverride::NiTMapIterator Itr = TESForm::EditorIDMap->GetFirstPos(); Itr;)
+	int i = 0;
+	for (const auto& Form : MiscForms)
 	{
-		const char*	 EditorID = nullptr;
-		TESForm* Form = nullptr;
-
-		TESForm::EditorIDMap->GetNext(Itr, EditorID, Form);
-		if (EditorID)
-		{
-			if (Form->formType != TESForm::kFormType_GMST &&
-				Form->formType != TESForm::kFormType_Global &&
-				Form->formType != TESForm::kFormType_Quest &&
-				Form->formType != TESForm::kFormType_LandTexture &&
-				Form->formType != TESForm::kFormType_Tree &&
-				Form->formType != TESForm::kFormType_Grass &&
-				Form->formType != TESForm::kFormType_Region &&
-				Form->formType != TESForm::kFormType_LoadScreen &&
-				Form->formType != TESForm::kFormType_AnimObject)
-			{
-				if (std::find(UDFFormIDs.begin(), UDFFormIDs.end(), Form->formID) == UDFFormIDs.end())
-				{
-					Data->EditorIDListHead[EditorIDFormCount].FillFormData(Form);
-					EditorIDFormCount++;
-				}
-			}
-		}
+		Data->MiscFormListHead[i].FillFormData(Form);
+		++i;
 	}
+
+	GameSettingCollection::Instance->MarshalAll(&Data->GMSTListHead, &Data->GMSTCount, true);
 
 	return Data;
 }
@@ -1409,7 +1378,6 @@ componentDLLInterface::CSEInterfaceTable g_InteropInterface =
 		GetRenderWindowHandle,
 		LookupFormByEditorID,
 		LookupScriptableByEditorID,
-		GetIsFormReference,
 		GetFormTypeIDLongName,
 		LoadFormForEditByEditorID,
 		LoadFormForEditByFormID,
@@ -1422,6 +1390,9 @@ componentDLLInterface::CSEInterfaceTable g_InteropInterface =
 		GetFormListActiveItemBackgroundColor,
 		GetShouldColorizeActiveForms,
 		GetShouldSortActiveFormsFirst,
+		RegisterConsoleContext,
+		DeregisterConsoleContext,
+		PrintToConsoleContext,
 	},
 	{
 		CreateNewScript,

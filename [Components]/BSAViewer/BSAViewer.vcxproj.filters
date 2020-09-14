@@ -10,9 +10,6 @@
     <Filter Include="Resources\Images">
       <UniqueIdentifier>{af79df12-93b4-42ef-8b54-509ae5b1e39f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Wrappers">
-      <UniqueIdentifier>{138783f3-f9c2-4fee-a16a-3a08eaa591e5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Interop">
       <UniqueIdentifier>{e668f968-4eea-4155-bb3e-b49bc904cd49}</UniqueIdentifier>
     </Filter>
@@ -27,9 +24,6 @@
     <ClInclude Include="..\..\[Common]\MiscUtilities.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\[Common]\NativeWrapper.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
     <ClInclude Include="BSAReader.h" />
     <ClInclude Include="BSAViewer.h" />
     <ClInclude Include="Exports.h" />
@@ -39,6 +33,9 @@
     </ClInclude>
     <ClInclude Include="..\..\[Common]\IncludesCLR.h">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\NativeWrapper.h">
+      <Filter>Interop</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -52,7 +49,7 @@
     <ClCompile Include="BSAViewer.cpp" />
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="..\..\[Common]\NativeWrapper.cpp">
-      <Filter>Wrappers</Filter>
+      <Filter>Interop</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,7 @@
 #include "WorkspaceModel.h"
 #include "[Common]\CustomInputBox.h"
-#include "ScriptEditorPreferences.h"
+#include "Preferences.h"
+#include "IntelliSenseInterfaceModel.h"
 #include "IntelliSenseDatabase.h"
 #include "RefactorTools.h"
 
@@ -25,15 +26,10 @@ namespace cse
 			BoundParent = nullptr;
 
 			AutoSaveTimer = gcnew Timer();
-			AutoSaveTimer->Interval = PREFERENCES->FetchSettingAsInt("AutoRecoverySavePeriod", "Backup") * 1000 * 60;
+			AutoSaveTimer->Interval = preferences::SettingsHolder::Get()->Backup->AutoRecoveryInterval * 1000 * 60;
 
-			Color ForeColor = Color::Black;
-			Color BackColor = Color::White;
-			Color HighlightColor = Color::Maroon;
-			Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"),
-										  PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"),
-										  (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
-			int TabSize = Decimal::ToInt32(PREFERENCES->FetchSettingAsInt("TabSize", "Appearance"));
+			Font^ CustomFont = safe_cast<Font^>(preferences::SettingsHolder::Get()->Appearance->TextFont->Clone());
+			int TabSize = preferences::SettingsHolder::Get()->Appearance->TabSize;
 
 			TextEditor = gcnew textEditors::avalonEditor::AvalonEditTextEditor(this,
 																			   gcnew textEditors::avalonEditor::JumpToScriptHandler(this, &ConcreteWorkspaceModel::JumpToScript),
@@ -52,7 +48,7 @@ namespace cse
 			TextEditor->ScriptModified += TextEditorScriptModifiedHandler;
 			TextEditor->MouseClick += TextEditorMouseClickHandler;
 
-			PREFERENCES->PreferencesSaved += ScriptEditorPreferencesSavedHandler;
+			preferences::SettingsHolder::Get()->SavedToDisk += ScriptEditorPreferencesSavedHandler;
 			AutoSaveTimer->Tick += AutoSaveTimerTickHandler;
 
 			AutoSaveTimer->Start();
@@ -73,7 +69,7 @@ namespace cse
 			TextEditor->ScriptModified -= TextEditorScriptModifiedHandler;
 			TextEditor->MouseClick -= TextEditorMouseClickHandler;
 
-			PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
+			preferences::SettingsHolder::Get()->SavedToDisk -= ScriptEditorPreferencesSavedHandler;
 			AutoSaveTimer->Tick -= AutoSaveTimerTickHandler;
 
 			SAFEDELETE_CLR(TextEditorKeyDownHandler);
@@ -129,29 +125,22 @@ namespace cse
 			if (Control::ModifierKeys == Keys::Control && E->Button == MouseButtons::Left)
 			{
 				String^ Token = TextEditor->GetTokenAtCharIndex(E->ScriptTextOffset);
-
-				CString EID(Token);
-				componentDLLInterface::ScriptData* Data = nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(EID.c_str());
-
-				if (Data && Data->IsValid())
-				{
-					BoundParent->Controller->Jump(BoundParent, this, gcnew String(Data->EditorID));
-				}
-
-				nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+				auto AttachedScript = intellisense::IntelliSenseBackend::Get()->GetAttachedScript(Token);
+				if (AttachedScript)
+					BoundParent->Controller->Jump(BoundParent, this, AttachedScript->GetIdentifier());
 			}
 		}
 
 		void ConcreteWorkspaceModel::ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E)
 		{
 			AutoSaveTimer->Stop();
-			AutoSaveTimer->Interval = PREFERENCES->FetchSettingAsInt("AutoRecoverySavePeriod", "Backup") * 1000 * 60;
+			AutoSaveTimer->Interval = preferences::SettingsHolder::Get()->Backup->AutoRecoveryInterval * 1000 * 60;
 			AutoSaveTimer->Start();
 		}
 
 		void ConcreteWorkspaceModel::AutoSaveTimer_Tick(Object^ Sender, EventArgs^ E)
 		{
-			if (PREFERENCES->FetchSettingAsInt("UseAutoRecovery", "Backup"))
+			if (preferences::SettingsHolder::Get()->Backup->UseAutoRecovery)
 			{
 				if (Initialized == true && New == false && TextEditor->Modified == true)
 				{
@@ -261,8 +250,7 @@ namespace cse
 			if (PartialUpdate == false &&
 				NewScriptFlag == false &&
 				Data->Compiled == false &&
-				Data->FormID >= 0x800 &&			// skip default forms
-				PREFERENCES->FetchSettingAsInt("WarnUncompiledScripts", "General"))
+				Data->FormID >= 0x800) 			// skip default forms
 			{
 				if (Bound)
 				{
@@ -272,7 +260,7 @@ namespace cse
 				}
 			}
 
-			if (PREFERENCES->FetchSettingAsInt("UseAutoRecovery", "Backup") && PartialUpdate == false && Bound)
+			if (preferences::SettingsHolder::Get()->Backup->UseAutoRecovery && PartialUpdate == false && Bound)
 				CheckAutoRecovery();
 
 			if (Bound)
@@ -472,7 +460,7 @@ namespace cse
 
 		String^ GetSanitizedIdentifier(String^ Identifier)
 		{
-			return intellisense::ISDB->SanitizeIdentifier(Identifier);
+			return intellisense::IntelliSenseBackend::Get()->SanitizeIdentifier(Identifier);
 		}
 
 		bool ConcreteWorkspaceModel::Sanitize()
@@ -480,21 +468,21 @@ namespace cse
 			obScriptParsing::Sanitizer^ Agent = gcnew obScriptParsing::Sanitizer(TextEditor->GetText());
 			obScriptParsing::Sanitizer::Operation Operation;
 
-			if (PREFERENCES->FetchSettingAsInt("AnnealCasing", "Sanitize"))
+			if (preferences::SettingsHolder::Get()->Sanitizer->NormalizeIdentifiers)
 				Operation = Operation | obScriptParsing::Sanitizer::Operation::AnnealCasing;
 
-			if (PREFERENCES->FetchSettingAsInt("EvalifyIfs", "Sanitize"))
+			if (preferences::SettingsHolder::Get()->Sanitizer->PrefixIfElseIfWithEval)
 				Operation = Operation | obScriptParsing::Sanitizer::Operation::EvalifyIfs;
 
-			if (PREFERENCES->FetchSettingAsInt("CompilerOverrideBlocks", "Sanitize"))
+			if (preferences::SettingsHolder::Get()->Sanitizer->ApplyCompilerOverride)
 				Operation = Operation | obScriptParsing::Sanitizer::Operation::CompilerOverrideBlocks;
 
-			if (PREFERENCES->FetchSettingAsInt("IndentLines", "Sanitize"))
+			if (preferences::SettingsHolder::Get()->Sanitizer->IndentLines)
 				Operation = Operation | obScriptParsing::Sanitizer::Operation::IndentLines;
 
 			bool Result = Agent->SanitizeScriptText(Operation, gcnew obScriptParsing::Sanitizer::GetSanitizedIdentifier(GetSanitizedIdentifier));
 			if (Result)
-				TextEditor->SetText(Agent->Output, false, false);
+				TextEditor->SetText(Agent->Output, false);
 
 			return Result;
 		}
@@ -551,7 +539,7 @@ namespace cse
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
 
-			Concrete->TextEditor->SetText(Text, true, ResetUndoStack);
+			Concrete->TextEditor->SetText(Text, ResetUndoStack);
 		}
 
 		String^ ConcreteWorkspaceModelController::GetText(IWorkspaceModel^ Model, bool Preprocess, bool% PreprocessResult)
@@ -777,7 +765,7 @@ namespace cse
 						obScriptParsing::Documenter^ Agent = gcnew obScriptParsing::Documenter(Concrete->TextEditor->GetText());
 						Agent->Document(Description, DocumentScriptData.ResultData->AsTable());
 
-						Concrete->TextEditor->SetText(Agent->Output, false, false);
+						Concrete->TextEditor->SetText(Agent->Output, false);
 						Result = true;
 					}
 				}

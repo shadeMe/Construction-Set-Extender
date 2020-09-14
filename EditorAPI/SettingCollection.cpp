@@ -64,13 +64,37 @@ void GameSettingCollection::ResetCollection()
 	}
 }
 
-UInt32 GameSettingCollection::GetGMSTCount()
+UInt32 GameSettingCollection::GetCount(bool OnlyActive)
 {
-	return settingMap.GetCount();
+	if (!OnlyActive)
+		return settingMap.GetCount();
+
+	UInt32 Count = 0;
+	for (cseOverride::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
+	{
+		const char* Name = nullptr;
+		Setting* Data = nullptr;
+
+		settingMap.GetNext(Itr, Name, Data);
+		if (Name)
+		{
+			GameSetting* SettingForm = (GameSetting*)((UInt32)Data - 0x24);
+			if (SettingForm->IsActive())
+				++Count;
+		}
+	}
+
+	return Count;
 }
 
-void GameSettingCollection::SerializeGMSTDataForHandShake(componentDLLInterface::GMSTData* HandShakeData)
+void GameSettingCollection::MarshalAll(componentDLLInterface::GMSTData** OutData, UInt32* OutCount, bool OnlyActive)
 {
+	*OutCount = GameSettingCollection::Instance->GetCount(OnlyActive);
+	if (*OutCount == 0)
+		return;
+
+	*OutData = new componentDLLInterface::GMSTData[*OutCount];
+
 	UInt32 Index = 0;
 	for (cseOverride::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
 	{
@@ -81,10 +105,14 @@ void GameSettingCollection::SerializeGMSTDataForHandShake(componentDLLInterface:
 		if (Name)
 		{
 			GameSetting* SettingForm = (GameSetting*)((UInt32)Data - 0x24);
-			HandShakeData[Index].FillFormData((TESForm*)SettingForm);
-			HandShakeData[Index].FillVariableData(Name);
-			Index++;
+			if (OnlyActive && SettingForm->IsActive() == false)
+				continue;
+
+			(*OutData)[Index].FillFormData(SettingForm);
+			(*OutData)[Index].FillVariableData(SettingForm);
+			++Index;
 		}
 	}
 }
+
 

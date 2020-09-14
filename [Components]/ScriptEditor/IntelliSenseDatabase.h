@@ -1,70 +1,159 @@
 #pragma once
+#include "IntelliSenseItem.h"
 
 namespace cse
 {
 	namespace intellisense
 	{
-		ref class Script;
-		ref class IntelliSenseItem;
-		ref class UserFunction;
-		ref class IntelliSenseInterface;
-		ref struct IntelliSenseParseScriptData;
 		ref class CodeSnippetCollection;
-		ref class IntelliSenseItemScriptCommand;
-		ref class IntelliSenseItemVariable;
 
-		ref class IntelliSenseDatabase
+		[Flags]
+		static enum class DatabaseLookupFilter
 		{
-		protected:
-			static IntelliSenseDatabase^						Singleton = nullptr;
+			None = 0,
 
-			IntelliSenseDatabase();
+			Command = 1 << 0,
+			GlobalVariable = 1 << 1,
+			Quest = 1 << 2,
+			Script = 1 << 3,
+			UserFunction = 1 << 4,
+			GameSetting = 1 << 5,
+			Form = 1 << 6,
+			ObjectReference = 1 << 7,
+			Snippet = 1 << 8,
 
-			virtual void										DatabaseUpdateTimer_Tick(Object^ Sender, EventArgs^ E);
-
-			Timer^												DatabaseUpdateTimer;
-			LinkedList<UserFunction^>^							UserFunctionList;
-			Dictionary<String^, String^>^						DeveloperURLMap;
-			Dictionary<String^, Script^>^						RemoteScripts;				// key = baseEditorID
-			CodeSnippetCollection^								CodeSnippets;
-			UInt32												UpdateTimerInterval;		// in minutes
-			LinkedList<IntelliSenseItemScriptCommand^>^			ScriptCommands;
-			LinkedList<IntelliSenseItemVariable^>^				GameSettings;
-			List<IntelliSenseItem^>^							Enumerables;
-
-			void												UpdateDatabase();
-		public:
-			~IntelliSenseDatabase();
-
-			static IntelliSenseDatabase^						GetSingleton();
-
-			property List<IntelliSenseItem^>^					ItemRegistry
-			{
-				List<IntelliSenseItem^>^ get() { return Enumerables; }
-			}
-
-			virtual UInt32										InitializeCommandTableDatabase(componentDLLInterface::CommandTableData* Data);
-			virtual void										InitializeGMSTDatabase(componentDLLInterface::IntelliSenseUpdateData* GMSTCollection);
-
-			void												RegisterDeveloperURL(String^ CmdName, String^ URL);
-			String^												LookupDeveloperURLByCommand(String^ CmdName);
-
-			String^												SanitizeIdentifier(String^ Name);
-
-			Script^												CacheRemoteScript(String^ BaseEditorID, String^ ScriptText);	// returns the cached script
-			IntelliSenseItem^									LookupRemoteScriptVariable(String^ BaseEditorID, String^ Variable);
-
-			bool												GetIsIdentifierUserFunction(String^ Name);
-			bool												GetIsIdentifierScriptCommand(String^ Name);
-			bool												GetIsIdentifierScriptableForm(String^ Name);
-			bool												GetIsIdentifierScriptableForm(String^ Name,
-																							  componentDLLInterface::ScriptData** OutScriptData);	// caller takes ownership of pointer
-			bool												GetIsIdentifierForm(String^ Name);
-
-			void												ForceUpdateDatabase();
-			void												ShowCodeSnippetManager();
+			All = Command | GlobalVariable | Quest | Script | UserFunction | GameSetting | Form | ObjectReference | Snippet
 		};
 
-#define ISDB											IntelliSenseDatabase::GetSingleton()
+		[Flags]
+		static enum class DatabaseLookupOptions
+		{
+			None = 0,
+
+			OnlyCommandsThatNeedCallingObject = 1 << 0,
+		};
+
+		ref struct FetchIntelliSenseItemsArgs
+		{
+			property String^					IdentifierToMatch;
+			property StringMatchType			MatchType;
+			property DatabaseLookupFilter		FilterBy;
+			property DatabaseLookupOptions		Options;
+
+			FetchIntelliSenseItemsArgs()
+			{
+				IdentifierToMatch = String::Empty;
+				MatchType = StringMatchType::StartsWith;
+				FilterBy = DatabaseLookupFilter::All;
+				Options = DatabaseLookupOptions::None;
+			}
+		};
+
+		ref struct ContextualIntelliSenseLookupArgs
+		{
+			property String^	CurrentToken;
+			property String^	PreviousToken;
+			property bool		DotOperatorInUse;
+			property bool		OnlyWithInsightInfo;
+
+			ContextualIntelliSenseLookupArgs()
+			{
+				CurrentToken = String::Empty;
+				PreviousToken = String::Empty;
+				DotOperatorInUse = false;
+				OnlyWithInsightInfo = false;
+			}
+		};
+
+		ref struct ContextualIntelliSenseLookupResult
+		{
+			property IntelliSenseItem^			CurrentToken;
+			property bool						CurrentTokenIsCallableObject;	// Callable Object = Quests, References (w/t attached scripts)
+			property bool						CurrentTokenIsObjectReference;
+
+			property IntelliSenseItem^			PreviousToken;
+			property bool						PreviousTokenIsCallableObject;
+			property bool						PreviousTokenIsObjectReference;
+
+			ContextualIntelliSenseLookupResult()
+			{
+				CurrentToken = nullptr;
+				CurrentTokenIsCallableObject = false;
+				CurrentTokenIsObjectReference = false;
+
+				PreviousToken = nullptr;
+				PreviousTokenIsCallableObject = false;
+				PreviousTokenIsObjectReference = false;
+			}
+		};
+
+		ref class IntelliSenseBackend
+		{
+			static IntelliSenseBackend^ Singleton = nullptr;
+
+			Timer^													UpdateTimer;
+			DateTime												LastUpdateTimestamp;
+
+			Dictionary<String^, IntelliSenseItemScriptCommand^>^	ScriptCommands;
+			Dictionary<String^, IntelliSenseItemGameSetting^>^		GameSettings;
+			Dictionary<String^, IntelliSenseItemScript^>^			Scripts;
+			Dictionary<String^, IntelliSenseItemGlobalVariable^>^	GlobalVariables;
+			Dictionary<String^, IntelliSenseItemQuest^>^			Quests;
+			Dictionary<String^, IntelliSenseItemForm^>^				Forms;
+			Dictionary<String^, IntelliSenseItemCodeSnippet^>^		Snippets;
+			CodeSnippetCollection^									SnippetCollection;
+
+			void					UpdateTimer_Tick(Object^ Sender, EventArgs^ E);
+			void					UpdateDatabase();
+			String^					GetVariableValueString(componentDLLInterface::VariableData* Data);
+			void					RefreshCodeSnippetIntelliSenseItems();
+
+			generic <typename T>
+			where T : IntelliSenseItem
+			static void				DoFetch(Dictionary<String^, T>^% Source,
+											FetchIntelliSenseItemsArgs^ Args,
+											List<IntelliSenseItem^>^% OutFetched);
+
+			IntelliSenseItem^		LookupIntelliSenseItem(String^ Identifier, bool OnlyWithInsightInfo);
+			bool					IsCallableObject(IntelliSenseItem^ Item);
+			bool					IsObjectReference(IntelliSenseItem^ Item);
+			bool					TryGetAttachedScriptData(String^ Identifier,
+															DisposibleDataAutoPtr<componentDLLInterface::ScriptData>* OutData);
+
+			IntelliSenseBackend();
+		public:
+			~IntelliSenseBackend();
+
+
+			property DateTime LastUpdateTime
+			{
+				DateTime get() { return LastUpdateTimestamp; }
+			}
+
+			void		InitializeScriptCommands(componentDLLInterface::CommandTableData* Data);
+			void		InitializeGameSettings(componentDLLInterface::IntelliSenseUpdateData* Data);
+
+			String^		GetScriptCommandDeveloperURL(String^ CommandName);
+
+			bool		IsUserFunction(String^ Identifier);
+			bool		IsScriptCommand(String^ Identifier, bool CheckCommandShorthand);
+			bool		IsForm(String^ Identifier);
+
+			bool						HasAttachedScript(String^ Identifier);
+			IntelliSenseItemScript^		GetAttachedScript(String^ Identifier);
+			IntelliSenseItemScript^		GetAttachedScript(IntelliSenseItem^ Item);
+
+			List<IntelliSenseItem^>^				FetchIntelliSenseItems(FetchIntelliSenseItemsArgs^ FetchArgs);
+			ContextualIntelliSenseLookupResult^		ContextualIntelliSenseLookup(ContextualIntelliSenseLookupArgs^ LookupArgs);
+			IntelliSenseItem^						LookupIntelliSenseItem(String^ Indentifier);
+
+			String^		SanitizeIdentifier(String^ Identifier);
+
+			void		Refresh(bool Force);
+			void		ShowCodeSnippetManager();
+
+			static IntelliSenseBackend^	Get();
+			static void					Deinitialize();
+		};
 	}
 }

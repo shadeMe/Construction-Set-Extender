@@ -2,7 +2,11 @@
 
 #include "stdafx.h"
 #include "SESnippetManager.h"
+#include "SEScriptList.h"
 #include "SEVariableIndex.h"
+#include "UseInfoList.h"
+#include "SESyncUI.h"
+#include "SEOptions.h"
 
 using namespace UIComponents;
 
@@ -14,6 +18,6 @@ int main(array<System::String ^> ^args)
 	Application::SetCompatibleTextRenderingDefault(false);
 
 	// Create the main window and run it
-	Application::Run(gcnew SEVariableIndex());
+	Application::Run(gcnew OptionsDialog());
 	return 0;
 }

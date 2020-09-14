@@ -492,6 +492,11 @@ namespace cse
 						if (BGSEEUI->MsgBoxW(hWnd, MB_YESNO, "There are open script windows. Are you sure you'd like to proceed?") == IDNO)
 							Return = true;
 					}
+					else if (cliWrapper::interfaces::SE->IsDiskSyncInProgress())
+					{
+						BGSEEUI->MsgBoxE(hWnd, 0, "Script syncing is currently in progress. The syncing process must be stopped before (re)loading plugins.");
+						Return = true;
+					}
 					else if (ActiveTESFile != nullptr && !_stricmp(ActiveTESFile->fileName, "oblivion.esm"))
 					{
 						if (BGSEEUI->MsgBoxW(hWnd,

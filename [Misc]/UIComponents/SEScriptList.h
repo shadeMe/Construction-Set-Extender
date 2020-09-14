@@ -42,12 +42,31 @@ namespace UIComponents {
 			}
 		}
 	private: System::Windows::Forms::TextBox^  PreviewBox;
-	private: System::Windows::Forms::ListView^  ScriptList;
-	private: System::Windows::Forms::ColumnHeader^  ScriptListCScriptName;
-	private: System::Windows::Forms::ColumnHeader^  ScriptListCFormID;
-	private: System::Windows::Forms::ColumnHeader^  ScriptListCScriptType;
-	private: System::Windows::Forms::TextBox^  SearchBox;
-	private: System::Windows::Forms::Button^  button1;
+
+
+
+
+
+
+	private: BrightIdeasSoftware::FastObjectListView^ ScriptList;
+	private: BrightIdeasSoftware::OLVColumn^ ScriptListCFlags;
+	private: BrightIdeasSoftware::OLVColumn^ ScriptListCScriptName;
+	private: BrightIdeasSoftware::OLVColumn^ ScriptListCFormID;
+	private: BrightIdeasSoftware::OLVColumn^ ScriptListCType;
+	private: BrightIdeasSoftware::OLVColumn^ ScriptListCParentPlugin;
+
+
+
+	private: System::Windows::Forms::ToolStrip^ BottomToolStrip;
+	private: System::Windows::Forms::ToolStripLabel^ ToolStripLabelFilter;
+	private: System::Windows::Forms::ToolStripTextBox^ ToolStripFilterTextBox;
+
+	private: System::Windows::Forms::ToolStripDropDownButton^ ToolStripLabelSelect;
+	private: System::Windows::Forms::ToolStripMenuItem^ ActiveScriptsToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^ UncompiledScriptsToolStripMenuItem;
+
+	private: System::Windows::Forms::ToolStripLabel^ ToolStripLabelSelectionCount;
+	private: System::Windows::Forms::Button^ ButtonCompleteSelection;
 
 
 
@@ -87,9 +106,13 @@ namespace UIComponents {
 
 
 
-	protected: 
 
-	protected: 
+
+
+
+	protected:
+
+	protected:
 
 	private:
 		/// <summary>
@@ -105,93 +128,189 @@ namespace UIComponents {
 		void InitializeComponent(void)
 		{
 			this->PreviewBox = (gcnew System::Windows::Forms::TextBox());
-			this->ScriptList = (gcnew System::Windows::Forms::ListView());
-			this->ScriptListCScriptName = (gcnew System::Windows::Forms::ColumnHeader());
-			this->ScriptListCFormID = (gcnew System::Windows::Forms::ColumnHeader());
-			this->ScriptListCScriptType = (gcnew System::Windows::Forms::ColumnHeader());
-			this->SearchBox = (gcnew System::Windows::Forms::TextBox());
-			this->button1 = (gcnew System::Windows::Forms::Button());
+			this->ScriptList = (gcnew BrightIdeasSoftware::FastObjectListView());
+			this->ScriptListCFlags = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->ScriptListCScriptName = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->ScriptListCFormID = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->ScriptListCType = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->ScriptListCParentPlugin = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->BottomToolStrip = (gcnew System::Windows::Forms::ToolStrip());
+			this->ToolStripLabelFilter = (gcnew System::Windows::Forms::ToolStripLabel());
+			this->ToolStripFilterTextBox = (gcnew System::Windows::Forms::ToolStripTextBox());
+			this->ToolStripLabelSelect = (gcnew System::Windows::Forms::ToolStripDropDownButton());
+			this->ActiveScriptsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->UncompiledScriptsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->ToolStripLabelSelectionCount = (gcnew System::Windows::Forms::ToolStripLabel());
+			this->ButtonCompleteSelection = (gcnew System::Windows::Forms::Button());
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ScriptList))->BeginInit();
+			this->BottomToolStrip->SuspendLayout();
 			this->SuspendLayout();
 			// 
 			// PreviewBox
 			// 
-			this->PreviewBox->Font = (gcnew System::Drawing::Font(L"Consolas", 9, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
+			this->PreviewBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
+				| System::Windows::Forms::AnchorStyles::Left)
+				| System::Windows::Forms::AnchorStyles::Right));
+			this->PreviewBox->Font = (gcnew System::Drawing::Font(L"Consolas", 9, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->PreviewBox->Location = System::Drawing::Point(462, 12);
+			this->PreviewBox->Location = System::Drawing::Point(484, 12);
 			this->PreviewBox->Multiline = true;
 			this->PreviewBox->Name = L"PreviewBox";
 			this->PreviewBox->ReadOnly = true;
 			this->PreviewBox->ScrollBars = System::Windows::Forms::ScrollBars::Both;
-			this->PreviewBox->Size = System::Drawing::Size(444, 520);
+			this->PreviewBox->Size = System::Drawing::Size(406, 552);
 			this->PreviewBox->TabIndex = 0;
+			this->PreviewBox->WordWrap = false;
 			// 
 			// ScriptList
 			// 
-			this->ScriptList->BorderStyle = System::Windows::Forms::BorderStyle::FixedSingle;
-			this->ScriptList->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(3) {this->ScriptListCScriptName, 
-				this->ScriptListCFormID, this->ScriptListCScriptType});
-			this->ScriptList->Font = (gcnew System::Drawing::Font(L"Consolas", 9, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
-				static_cast<System::Byte>(0)));
-			this->ScriptList->Location = System::Drawing::Point(12, 12);
+			this->ScriptList->AllColumns->Add(this->ScriptListCFlags);
+			this->ScriptList->AllColumns->Add(this->ScriptListCScriptName);
+			this->ScriptList->AllColumns->Add(this->ScriptListCFormID);
+			this->ScriptList->AllColumns->Add(this->ScriptListCType);
+			this->ScriptList->AllColumns->Add(this->ScriptListCParentPlugin);
+			this->ScriptList->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
+				| System::Windows::Forms::AnchorStyles::Left));
+			this->ScriptList->CellEditUseWholeCell = false;
+			this->ScriptList->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(5) {
+				this->ScriptListCFlags,
+					this->ScriptListCScriptName, this->ScriptListCFormID, this->ScriptListCType, this->ScriptListCParentPlugin
+			});
+			this->ScriptList->Cursor = System::Windows::Forms::Cursors::Default;
+			this->ScriptList->FullRowSelect = true;
+			this->ScriptList->HideSelection = false;
+			this->ScriptList->Location = System::Drawing::Point(12, 13);
 			this->ScriptList->Name = L"ScriptList";
-			this->ScriptList->Size = System::Drawing::Size(444, 485);
-			this->ScriptList->TabIndex = 1;
+			this->ScriptList->ShowGroups = false;
+			this->ScriptList->Size = System::Drawing::Size(466, 505);
+			this->ScriptList->TabIndex = 9;
+			this->ScriptList->TabStop = false;
 			this->ScriptList->UseCompatibleStateImageBehavior = false;
 			this->ScriptList->View = System::Windows::Forms::View::Details;
+			this->ScriptList->VirtualMode = true;
+			// 
+			// ScriptListCFlags
+			// 
+			this->ScriptListCFlags->MaximumWidth = 20;
+			this->ScriptListCFlags->MinimumWidth = 20;
+			this->ScriptListCFlags->Text = L"";
+			this->ScriptListCFlags->Width = 20;
 			// 
 			// ScriptListCScriptName
 			// 
 			this->ScriptListCScriptName->Text = L"Name";
-			this->ScriptListCScriptName->Width = 196;
+			this->ScriptListCScriptName->Width = 180;
 			// 
 			// ScriptListCFormID
 			// 
-			this->ScriptListCFormID->Text = L"FormID";
-			this->ScriptListCFormID->Width = 73;
+			this->ScriptListCFormID->Text = L"Form ID";
+			this->ScriptListCFormID->Width = 75;
 			// 
-			// ScriptListCScriptType
+			// ScriptListCType
 			// 
-			this->ScriptListCScriptType->Text = L"Type";
-			this->ScriptListCScriptType->Width = 87;
+			this->ScriptListCType->Text = L"Type";
+			this->ScriptListCType->Width = 54;
 			// 
-			// SearchBox
+			// ScriptListCParentPlugin
 			// 
-			this->SearchBox->Font = (gcnew System::Drawing::Font(L"Consolas", 14.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
-				static_cast<System::Byte>(0)));
-			this->SearchBox->Location = System::Drawing::Point(12, 503);
-			this->SearchBox->MaxLength = 512;
-			this->SearchBox->Name = L"SearchBox";
-			this->SearchBox->Size = System::Drawing::Size(312, 30);
-			this->SearchBox->TabIndex = 2;
+			this->ScriptListCParentPlugin->Text = L"Parent Plugin";
+			this->ScriptListCParentPlugin->Width = 114;
 			// 
-			// button1
+			// BottomToolStrip
 			// 
-			this->button1->Enabled = false;
-			this->button1->Location = System::Drawing::Point(330, 503);
-			this->button1->Name = L"button1";
-			this->button1->Size = System::Drawing::Size(126, 29);
-			this->button1->TabIndex = 3;
-			this->button1->Text = L"Filter";
-			this->button1->UseVisualStyleBackColor = true;
+			this->BottomToolStrip->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left));
+			this->BottomToolStrip->AutoSize = false;
+			this->BottomToolStrip->Dock = System::Windows::Forms::DockStyle::None;
+			this->BottomToolStrip->GripStyle = System::Windows::Forms::ToolStripGripStyle::Hidden;
+			this->BottomToolStrip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(4) {
+				this->ToolStripLabelFilter,
+					this->ToolStripFilterTextBox, this->ToolStripLabelSelect, this->ToolStripLabelSelectionCount
+			});
+			this->BottomToolStrip->Location = System::Drawing::Point(12, 532);
+			this->BottomToolStrip->Name = L"BottomToolStrip";
+			this->BottomToolStrip->RenderMode = System::Windows::Forms::ToolStripRenderMode::System;
+			this->BottomToolStrip->Size = System::Drawing::Size(379, 32);
+			this->BottomToolStrip->TabIndex = 0;
+			// 
+			// ToolStripLabelFilter
+			// 
+			this->ToolStripLabelFilter->Name = L"ToolStripLabelFilter";
+			this->ToolStripLabelFilter->Size = System::Drawing::Size(33, 29);
+			this->ToolStripLabelFilter->Text = L"Filter";
+			// 
+			// ToolStripFilterTextBox
+			// 
+			this->ToolStripFilterTextBox->AutoSize = false;
+			this->ToolStripFilterTextBox->Margin = System::Windows::Forms::Padding(5, 0, 5, 0);
+			this->ToolStripFilterTextBox->Name = L"ToolStripFilterTextBox";
+			this->ToolStripFilterTextBox->Size = System::Drawing::Size(150, 23);
+			// 
+			// ToolStripLabelSelect
+			// 
+			this->ToolStripLabelSelect->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {
+				this->ActiveScriptsToolStripMenuItem,
+					this->UncompiledScriptsToolStripMenuItem
+			});
+			this->ToolStripLabelSelect->Name = L"ToolStripLabelSelect";
+			this->ToolStripLabelSelect->Size = System::Drawing::Size(75, 29);
+			this->ToolStripLabelSelect->Text = L"Select all...";
+			// 
+			// ActiveScriptsToolStripMenuItem
+			// 
+			this->ActiveScriptsToolStripMenuItem->DisplayStyle = System::Windows::Forms::ToolStripItemDisplayStyle::Text;
+			this->ActiveScriptsToolStripMenuItem->Name = L"ActiveScriptsToolStripMenuItem";
+			this->ActiveScriptsToolStripMenuItem->Size = System::Drawing::Size(180, 22);
+			this->ActiveScriptsToolStripMenuItem->Text = L"Active Scripts";
+			this->ActiveScriptsToolStripMenuItem->TextImageRelation = System::Windows::Forms::TextImageRelation::TextAboveImage;
+			// 
+			// UncompiledScriptsToolStripMenuItem
+			// 
+			this->UncompiledScriptsToolStripMenuItem->DisplayStyle = System::Windows::Forms::ToolStripItemDisplayStyle::Text;
+			this->UncompiledScriptsToolStripMenuItem->Name = L"UncompiledScriptsToolStripMenuItem";
+			this->UncompiledScriptsToolStripMenuItem->Size = System::Drawing::Size(180, 22);
+			this->UncompiledScriptsToolStripMenuItem->Text = L"Uncompiled Scripts";
+			// 
+			// ToolStripLabelSelectionCount
+			// 
+			this->ToolStripLabelSelectionCount->Alignment = System::Windows::Forms::ToolStripItemAlignment::Right;
+			this->ToolStripLabelSelectionCount->Name = L"ToolStripLabelSelectionCount";
+			this->ToolStripLabelSelectionCount->Size = System::Drawing::Size(59, 29);
+			this->ToolStripLabelSelectionCount->Text = L"0 selected";
+			// 
+			// ButtonCompleteSelection
+			// 
+			this->ButtonCompleteSelection->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left));
+			this->ButtonCompleteSelection->ImageAlign = System::Drawing::ContentAlignment::MiddleLeft;
+			this->ButtonCompleteSelection->Location = System::Drawing::Point(412, 532);
+			this->ButtonCompleteSelection->Name = L"ButtonCompleteSelection";
+			this->ButtonCompleteSelection->Size = System::Drawing::Size(66, 32);
+			this->ButtonCompleteSelection->TabIndex = 5;
+			this->ButtonCompleteSelection->Text = L"OK";
+			this->ButtonCompleteSelection->UseVisualStyleBackColor = true;
 			// 
 			// Form1
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(916, 541);
-			this->Controls->Add(this->button1);
-			this->Controls->Add(this->SearchBox);
+			this->ClientSize = System::Drawing::Size(900, 573);
+			this->Controls->Add(this->ButtonCompleteSelection);
+			this->Controls->Add(this->BottomToolStrip);
 			this->Controls->Add(this->ScriptList);
 			this->Controls->Add(this->PreviewBox);
+			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::SizableToolWindow;
 			this->MaximizeBox = false;
 			this->MinimizeBox = false;
 			this->Name = L"Form1";
-			this->Text = L"Select Script";
+			this->StartPosition = System::Windows::Forms::FormStartPosition::Manual;
+			this->Text = L"Select Scripts";
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ScriptList))->EndInit();
+			this->BottomToolStrip->ResumeLayout(false);
+			this->BottomToolStrip->PerformLayout();
 			this->ResumeLayout(false);
 			this->PerformLayout();
 
 		}
 #pragma endregion
-};
+	};
 }
 

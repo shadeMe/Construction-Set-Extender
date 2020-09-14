@@ -4,9 +4,6 @@
     <Filter Include="Common">
       <UniqueIdentifier>{355ee5c0-74d0-4434-b4d6-765c74911b36}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Wrappers">
-      <UniqueIdentifier>{cff55da2-b311-485e-bd93-b5d4761e3e86}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resources">
       <UniqueIdentifier>{cb348db2-021e-47af-95d4-d3fe24eb2415}</UniqueIdentifier>
     </Filter>
@@ -24,9 +21,6 @@
     <ClInclude Include="..\..\[Common]\MiscUtilities.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\[Common]\NativeWrapper.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
     <ClInclude Include="Exports.h" />
     <ClInclude Include="Prefix.h" />
     <ClInclude Include="UseInfoList.h" />
@@ -35,6 +29,9 @@
     </ClInclude>
     <ClInclude Include="..\..\[Common]\IncludesCLR.h">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\NativeWrapper.h">
+      <Filter>Interop</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -47,7 +44,7 @@
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="UseInfoList.cpp" />
     <ClCompile Include="..\..\[Common]\NativeWrapper.cpp">
-      <Filter>Wrappers</Filter>
+      <Filter>Interop</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

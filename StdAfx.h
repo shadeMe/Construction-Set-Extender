@@ -80,17 +80,6 @@
 #include <d3dx9tex.h>
 #include <dinput.h>
 
-// BOOST
-//#include <boost\scoped_ptr.hpp>
-//#include <boost\scoped_array.hpp>
-//#include <boost\shared_ptr.hpp>
-//#include <boost\shared_array.hpp>
-//#include <boost\intrusive_ptr.hpp>
-//#include <boost\weak_ptr.hpp>
-//#include <boost\filesystem.hpp>
-//#include <boost\algorithm\string.hpp>
-//
-//namespace bfs = std::filesystem;
 
 // xSE Common
 #include <ITypes.h>

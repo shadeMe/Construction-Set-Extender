@@ -16,7 +16,7 @@ extern "C"
 
 void InitializeComponents(void)
 {
-	return;
+	nativeWrapper::Initialize();
 }
 
 void ShowUseInfoListDialog(const char* FilterString)

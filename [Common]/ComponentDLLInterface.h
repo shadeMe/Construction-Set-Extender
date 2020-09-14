@@ -18,6 +18,8 @@ namespace componentDLLInterface
 		class IEditorAPI
 		{
 		public:
+			typedef void* ConsoleContextObjectPtr;
+
 			void									(* DebugPrint)(UInt8 Source, const char* Message);
 			void									(* WriteToStatusBar)(int PanelIndex, const char* Message);
 			const char*								(* GetAppPath)(void);
@@ -26,7 +28,6 @@ namespace componentDLLInterface
 
 			FormData*								(* LookupFormByEditorID)(const char* EditorID);
 			ScriptData*								(* LookupScriptableFormByEditorID)(const char* EditorID);		// returns the form's script data
-			bool									(* GetIsFormReference)(const char* EditorID);
 			const char*								(* GetFormTypeIDLongName)(UInt8 TypeID);
 
 			void									(* LoadFormForEditByEditorID)(const char* EditorID);
@@ -43,6 +44,10 @@ namespace componentDLLInterface
 			UInt32									(* GetFormListActiveItemBackgroundColor)(void);
 			bool									(* GetShouldColorizeActiveForms)(void);
 			bool									(* GetShouldSortActiveFormsFirst)(void);
+
+			ConsoleContextObjectPtr					(* RegisterConsoleContext)(const char* Name);
+			void									(* DeregisterConsoleContext)(ConsoleContextObjectPtr ContextObject);
+			void									(* PrintToConsoleContext)(ConsoleContextObjectPtr ContextObject, const char* Message, bool PrintTimestamp);
 		};
 
 		class IScriptEditor
@@ -115,7 +120,7 @@ namespace componentDLLInterface
 	class ScriptEditorInterface
 	{
 	public:
-		UInt32										(* InitializeComponents)(CommandTableData* Data, IntelliSenseUpdateData* GMSTData);		// returns the no. of script commands (OBSE+Plugins) parsed
+		void										(* InitializeComponents)(CommandTableData* ScriptCommandData, IntelliSenseUpdateData* GMSTData);
 
 		void										(* InstantiateEditor)(ScriptData* InitializerScript,
 																		  UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height);
@@ -125,8 +130,8 @@ namespace componentDLLInterface
 																		   UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height);
 		void										(* InstantiateEditorsAndHighlight)(ScriptData** InitializerScripts, UInt32 ScriptCount, const char* SearchQuery,
 																					   UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height);
-		void										(* AddScriptCommandDeveloperURL)(const char* ScriptCommandName, const char* URL);
 
+		bool										(* IsDiskSyncInProgress)(void);
 		void										(* CloseAllOpenEditors)(void);
 		void										(* UpdateIntelliSenseDatabase)(void);
 		UInt32										(* GetOpenEditorCount)(void);

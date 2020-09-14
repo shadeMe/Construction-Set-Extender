@@ -15,7 +15,7 @@ extern "C"
 
 void InitializeComponents(void)
 {
-	return;
+	nativeWrapper::Initialize();
 }
 
 bool ShowBatchRefEditorDialog(BatchRefData* Data)

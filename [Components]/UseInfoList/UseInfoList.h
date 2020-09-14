@@ -81,7 +81,7 @@ namespace cse
 		void			ListViewCellUsage_FormatRow(Object^ Sender, BrightIdeasSoftware::FormatRowEventArgs^ E);
 
 		void			TextBoxFilter_TextChanged(Object^ Sender, EventArgs^ E);
-		void			Dialog_KeyPress(Object^ Sender, KeyPressEventArgs^ E);
+		void			Control_KeyPress(Object^ Sender, KeyPressEventArgs^ E);
 		void			Dialog_Cancel(Object^ Sender, CancelEventArgs^ E);
 
 		void			InitializeComponent();

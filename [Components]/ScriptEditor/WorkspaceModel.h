@@ -3,7 +3,6 @@
 #include "WorkspaceModelInterface.h"
 #include "WorkspaceViewInterface.h"
 #include "AvalonEditTextEditor.h"
-#include "IntelliSenseInterface.h"
 
 #define NEWSCRIPTID					"New Script"
 #define FIRSTRUNSCRIPTID			"New Workspace"
@@ -107,7 +106,7 @@ namespace cse
 			void									OnStateChangedDescription();
 		public:
 			textEditors::IScriptTextEditor^					TextEditor;
-			intellisense::IntelliSenseInterfaceModel^		IntelliSenseModel;
+			intellisense::IIntelliSenseInterfaceModel^		IntelliSenseModel;
 			Timer^											AutoSaveTimer;
 
 			void*									CurrentScript;

@@ -15,7 +15,7 @@ extern "C"
 
 void InitializeComponents(void)
 {
-	return;
+	nativeWrapper::Initialize();
 }
 
 void ShowTagBrowserDialog(HWND Parent)

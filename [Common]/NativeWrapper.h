@@ -6,6 +6,8 @@ namespace cse
 {
 	namespace nativeWrapper
 	{
+		extern componentDLLInterface::CSEInterfaceTable* g_CSEInterfaceTable;
+
 		[DllImport("Construction Set Extender.dll")]
 		void*											QueryInterface(void);
 
@@ -34,7 +36,70 @@ namespace cse
 
 		void											WriteToMainWindowStatusBar(int PanelIndex, String^ Message);
 		void											ShowNonActivatingWindow(Control^ Window, IntPtr ParentHandle);
+		void											PrintToConsole(UInt8 Source, String^% Message);
 
-		extern componentDLLInterface::CSEInterfaceTable*		g_CSEInterfaceTable;
+		void Initialize();
 	};
+
+	template <typename T>
+	class DisposibleDataAutoPtr
+	{
+		T* Data;
+	public:
+		DisposibleDataAutoPtr(T* Data = nullptr) : Data(Data) {}
+		~DisposibleDataAutoPtr() { reset(); }
+
+		T& operator*() { return *Data; }
+		T* operator->() { return Data; }
+		T* get() { return Data; }
+		operator bool() { return Data != nullptr; }
+		void reset(T* NewData = nullptr)
+		{
+			if (Data)
+				nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+
+			Data = NewData;
+		}
+		T* release()
+		{
+			auto Temp = Data;
+			Data = nullptr;
+			return Temp;
+		}
+	};
+
+	namespace log
+	{
+		enum MessageSource
+		{
+			e_CSE = 0,
+			e_CS,
+			e_BE,
+			e_UL,
+			e_SE,
+			e_BSA,
+			e_TAG
+		};
+
+		namespace scriptEditor
+		{
+			void DebugPrint(String^ Message, bool Achtung = false);
+		}
+		namespace useInfoList
+		{
+			void DebugPrint(String^ Message, bool Achtung = false);
+		}
+		namespace batchEditor
+		{
+			void DebugPrint(String^ Message, bool Achtung = false);
+		}
+		namespace bsaViewer
+		{
+			void DebugPrint(String^ Message, bool Achtung = false);
+		}
+		namespace tagBrowser
+		{
+			void DebugPrint(String^ Message, bool Achtung = false);
+		}
+	}
 }

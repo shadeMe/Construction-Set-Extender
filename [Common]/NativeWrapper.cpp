@@ -5,7 +5,13 @@ namespace cse
 {
 	namespace nativeWrapper
 	{
-		componentDLLInterface::CSEInterfaceTable*		g_CSEInterfaceTable = (componentDLLInterface::CSEInterfaceTable*)nativeWrapper::QueryInterface();
+		componentDLLInterface::CSEInterfaceTable* g_CSEInterfaceTable = nullptr;
+
+		void Initialize()
+		{
+			g_CSEInterfaceTable = (componentDLLInterface::CSEInterfaceTable*)nativeWrapper::QueryInterface();
+			Debug::Assert(g_CSEInterfaceTable != nullptr);
+		}
 
 		void nativeWrapper::ShowNonActivatingWindow(Control^ Window, IntPtr ParentHandle)
 		{
@@ -24,6 +30,66 @@ namespace cse
 		{
 			CString CStr(Message);
 			g_CSEInterfaceTable->EditorAPI.WriteToStatusBar(PanelIndex, CStr.c_str());
+		}
+
+		void PrintToConsole(UInt8 Source, String^% Message)
+		{
+			CString CStr(Message);
+			nativeWrapper::g_CSEInterfaceTable->EditorAPI.DebugPrint(Source, CStr.c_str());
+		}
+	}
+
+	namespace log
+	{
+		namespace scriptEditor
+		{
+			void DebugPrint(String^ Message, bool Achtung)
+			{
+				if (Achtung)
+					Media::SystemSounds::Hand->Play();
+
+				nativeWrapper::PrintToConsole(e_SE, Message);
+			}
+		}
+		namespace useInfoList
+		{
+			void DebugPrint(String^ Message, bool Achtung)
+			{
+				if (Achtung)
+					Media::SystemSounds::Hand->Play();
+
+				nativeWrapper::PrintToConsole(e_UL, Message);
+			}
+		}
+		namespace batchEditor
+		{
+			void DebugPrint(String^ Message, bool Achtung)
+			{
+				if (Achtung)
+					Media::SystemSounds::Hand->Play();
+
+				nativeWrapper::PrintToConsole(e_BE, Message);
+			}
+		}
+		namespace bsaViewer
+		{
+			void DebugPrint(String^ Message, bool Achtung)
+			{
+				if (Achtung)
+					Media::SystemSounds::Hand->Play();
+
+				nativeWrapper::PrintToConsole(e_BSA, Message);
+			}
+		}
+		namespace tagBrowser
+		{
+			void DebugPrint(String^ Message, bool Achtung)
+			{
+				if (Achtung)
+					Media::SystemSounds::Hand->Play();
+
+				nativeWrapper::PrintToConsole(e_TAG, Message);
+			}
 		}
 	}
 }

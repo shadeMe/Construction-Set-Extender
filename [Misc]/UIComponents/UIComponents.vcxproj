@@ -22,14 +22,14 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <CLRSupport>Pure</CLRSupport>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CLRSupport>Pure</CLRSupport>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -80,8 +80,12 @@
     <Reference Include="DevComponents.DotNetBar2">
       <HintPath>..\..\[Depends]\DevComponents.DotNetBar2.dll</HintPath>
     </Reference>
+    <Reference Include="ObjectListView">
+      <HintPath>..\..\[Depends]\ObjectListView.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -98,6 +102,7 @@
     <ClCompile Include="SERefactorUDF.cpp" />
     <ClCompile Include="SEScriptList.cpp" />
     <ClCompile Include="SESnippetManager.cpp" />
+    <ClCompile Include="SESyncUI.cpp" />
     <ClCompile Include="SEVariableIndex.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -128,6 +133,9 @@
       <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="SESnippetManager.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="SESyncUI.h">
       <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="SEVariableIndex.h">
@@ -165,6 +173,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SESnippetManager.resx">
       <DependentUpon>SESnippetManager.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SESyncUI.resx">
+      <DependentUpon>SESyncUI.h</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SEVariableIndex.resx">
       <DependentUpon>SEVariableIndex.h</DependentUpon>

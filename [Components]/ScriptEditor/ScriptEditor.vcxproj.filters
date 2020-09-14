@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Wrappers">
-      <UniqueIdentifier>{6b5c677a-b580-4d5a-9fa7-675116f4d714}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resources">
       <UniqueIdentifier>{2091f64c-1048-450e-91f9-516e91e2ee98}</UniqueIdentifier>
     </Filter>
@@ -33,23 +30,14 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\[Common]\NativeWrapper.cpp">
-      <Filter>Wrappers</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\[Common]\ListViewUtilities.cpp">
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\[Common]\MiscUtilities.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="ScriptListDialog.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="RefactorTools.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="ScriptEditorPreferences.cpp">
       <Filter>Components</Filter>
     </ClCompile>
     <ClCompile Include="..\..\[Common]\AuxiliaryWindowsForm.cpp">
@@ -84,20 +72,33 @@
     <ClCompile Include="IntelliSenseDatabase.cpp">
       <Filter>Components\IntelliSense</Filter>
     </ClCompile>
-    <ClCompile Include="IntelliSenseInterface.cpp">
-      <Filter>Components\IntelliSense</Filter>
-    </ClCompile>
     <ClCompile Include="IntelliSenseItem.cpp">
       <Filter>Components\IntelliSense</Filter>
     </ClCompile>
     <ClCompile Include="TextEditorAdornments.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="ScriptSync.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptTextEditorInterface.cpp" />
+    <ClCompile Include="SelectScriptDialog.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\[Common]\NativeWrapper.cpp">
+      <Filter>Interop</Filter>
+    </ClCompile>
+    <ClCompile Include="IntelliSenseInterfaceModel.cpp">
+      <Filter>Components\IntelliSense</Filter>
+    </ClCompile>
+    <ClCompile Include="IntelliSenseInterfaceView.cpp">
+      <Filter>Components\IntelliSense</Filter>
+    </ClCompile>
+    <ClCompile Include="Preferences.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\[Common]\NativeWrapper.h">
-      <Filter>Wrappers</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h">
       <Filter>Common</Filter>
     </ClInclude>
@@ -107,9 +108,6 @@
     <ClInclude Include="..\..\[Common]\MiscUtilities.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="ScriptListDialog.h">
-      <Filter>Components</Filter>
-    </ClInclude>
     <ClInclude Include="Exports.h" />
     <ClInclude Include="Globals.h" />
     <ClInclude Include="Prefix.h" />
@@ -117,9 +115,6 @@
       <Filter>Utilities</Filter>
     </ClInclude>
     <ClInclude Include="RefactorTools.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="ScriptEditorPreferences.h">
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="..\..\[Common]\ComponentDLLInterface.h">
@@ -155,9 +150,6 @@
     <ClInclude Include="SnippetManager.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="AvalonEditDefs.h">
-      <Filter>Components\TextEditors\AvalonEdit</Filter>
-    </ClInclude>
     <ClInclude Include="SemanticAnalysis.h">
       <Filter>Components</Filter>
     </ClInclude>
@@ -168,9 +160,6 @@
     <ClInclude Include="IntelliSenseDatabase.h">
       <Filter>Components\IntelliSense</Filter>
     </ClInclude>
-    <ClInclude Include="IntelliSenseInterface.h">
-      <Filter>Components\IntelliSense</Filter>
-    </ClInclude>
     <ClInclude Include="IntelliSenseItem.h">
       <Filter>Components\IntelliSense</Filter>
     </ClInclude>
@@ -178,6 +167,24 @@
       <Filter>Components\IntelliSense</Filter>
     </ClInclude>
     <ClInclude Include="TextEditorAdornments.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptSync.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="SelectScriptDialog.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\NativeWrapper.h">
+      <Filter>Interop</Filter>
+    </ClInclude>
+    <ClInclude Include="IntelliSenseInterfaceModel.h">
+      <Filter>Components\IntelliSense</Filter>
+    </ClInclude>
+    <ClInclude Include="IntelliSenseInterfaceView.h">
+      <Filter>Components\IntelliSense</Filter>
+    </ClInclude>
+    <ClInclude Include="Preferences.h">
       <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>
@@ -484,6 +491,57 @@
       <Filter>Resources\Images</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\tracepoint_Off_16xLG.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\arrow_Sync_16xLG.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\SyncContents_5706.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="Images\transparent_161.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Select.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Complete_and_ok_16xLG_color.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="StatusAnnotations_Complete_and_ok_16xLG_color1.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Critical_16xLG_color.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\AppearanceEditor\AppearanceEditor_16x.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ApplicationBehaviorSettings\ApplicationBehaviorSettings_16x.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\CleanData\CleanData_16x.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\FindInFile\FindInFile_16x.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\IntelliSenseDatabase\IntelliSenseDatabase_16x.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ListTime\ListTime_16x.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ParseDynamicValue\ParseDynamicValue_16x.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ValidateDocument\ValidateDocument_16x.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Critical_16xMD_color.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\BrushTool_207.png">
       <Filter>Resources\Images</Filter>
     </Image>
   </ItemGroup>

@@ -11,71 +11,75 @@ namespace cse
 		ref class IntelliSenseInterface;
 		ref class CodeSnippet;
 
+		static enum class StringMatchType
+		{
+			StartsWith,
+			Substring,
+			FullMatch
+		};
+
+		bool DoStringMatch(String^ Source, String^ Target, StringMatchType Comparison);
+
+
 		ref class IntelliSenseItem
 		{
-			static array<String^>^ IntelliSenseItemTypeID =
+			static array<String^>^ ItemTypeID =
 			{
 				"Unknown Object",
-				"Command",
-				"Local Variable",
-				"Remote Variable",
-				"Global Variable",
+				"Script Command",
+				"Script Variable",
 				"Quest",
+				"Script",
 				"User Defined Function",
 				"Game Setting",
-				"Object",
+				"Global Variable",
+				"Form",
 				"Code Snippet"
 			};
 		public:
-			static enum class IntelliSenseItemType
+			static enum class ItemType
 			{
 				Invalid = 0,
-				Command,
-				LocalVar,
-				RemoteVar,
-				GlobalVar,
+				ScriptCommand,
+				ScriptVariable,
 				Quest,
+				Script,
 				UserFunction,
-				GMST,
+				GameSetting,
+				GlobalVariable,
 				Form,
 				Snippet,
 			};
 
 			IntelliSenseItem();
-			IntelliSenseItem(String^ Desc, IntelliSenseItemType Type);
+			IntelliSenseItem(ItemType Type);
 
-			virtual String^										Describe();
-			virtual void										Insert(textEditors::IScriptTextEditor^ Editor);
+			virtual String^		Describe();
+			virtual void		Insert(textEditors::IScriptTextEditor^ Editor);
 
-																// returns true if the item can be enumerated in the interface
-			virtual bool										GetShouldEnumerate(String^ Token, bool SubstringSearch);
+			virtual bool		MatchesToken(String^ Token, StringMatchType Comparison);
+			virtual bool		HasInsightInfo();
 
-																// returns true if the item allows a quick view tooltip and the token matches
-			virtual bool										GetIsQuickViewable(String^ Token);
+			virtual String^		GetIdentifier() abstract;
+			virtual String^		GetSubstitution() abstract;
 
-																// identifier for display in the interface
-			virtual String^										GetIdentifier() abstract;
-
-																// string to be inserted into the code
-			virtual String^										GetSubstitution() abstract;
-
-			IntelliSenseItemType								GetItemType();
-			String^												GetItemTypeID();
+			ItemType			GetItemType();
+			virtual String^		GetItemTypeName();
 		protected:
-			String^												Description;
-			IntelliSenseItemType								Type;
+			String^				Description;
+			ItemType			Type;
 		};
 
 		ref class IntelliSenseItemScriptCommand : public IntelliSenseItem
 		{
 		public:
-			static enum class IntelliSenseCommandItemSourceType
+			static enum class SourceType
 			{
 				Vanilla = 0,
 				OBSE
 			};
 		private:
-			static array<String^>^ IntelliSenseItemCommandReturnTypeID =
+			static array<String^>^ ReturnValueTypeID =
 			{
 				"Numeric",
 				"Form",
@@ -84,7 +88,7 @@ namespace cse
 				"Array [Reference]",
 				"Ambiguous"
 			};
-			static enum class IntelliSenseItemCommandReturnType
+			static enum class ReturnValueType
 			{
 				Default = 0,
 				Form,
@@ -94,13 +98,14 @@ namespace cse
 				Ambiguous
 			};
 
-			String^												Name;
-			String^												CmdDescription;
-			String^												Shorthand;
-			UInt16												ParamCount;
-			bool												RequiresParent;
-			UInt16												ReturnType;
-			IntelliSenseCommandItemSourceType					Source;
+			String^						Name;
+			String^						CmdDescription;
+			String^						Shorthand;
+			UInt16						ParamCount;
+			bool						RequiresParent;
+			ReturnValueType				ResultType;
+			SourceType					Source;
+			String^						DeveloperURL;
 		public:
 			IntelliSenseItemScriptCommand(String^ Name,
 										  String^ Desc,
@@ -108,89 +113,41 @@ namespace cse
 										  UInt16 NoOfParams,
 										  bool RequiresParent,
 										  UInt16 ReturnType,
-										  IntelliSenseCommandItemSourceType Source,
-										  String^ Params);
+										  SourceType Source,
+										  String^ Params,
+										  String^ DeveloperURL);
 
-			virtual bool										GetShouldEnumerate(String^ Token, bool SubstringSearch) override;
-			virtual String^										GetIdentifier() override;
-			virtual String^										GetSubstitution() override;
-			virtual bool										GetIsQuickViewable(String^ Token) override;
-			bool												GetRequiresParent();
-			IntelliSenseCommandItemSourceType					GetSource();
-			String^												GetShorthand();
+			virtual bool				MatchesToken(String^ Token, StringMatchType Comparison) override;
+			virtual String^				GetIdentifier() override;
+			virtual String^				GetSubstitution() override;
+			bool						GetRequiresParent();
+			SourceType					GetSource();
+			String^						GetShorthand();
+			String^						GetDeveloperURL();
+			void						SetDeveloperURL(String^ URL);
 		};
 
-		ref class IntelliSenseItemVariable : public IntelliSenseItem
-		{
-			String^												Name;
-			obScriptParsing::Variable::DataType					DataType;
-			String^												Comment;
-		public:
-			IntelliSenseItemVariable(String^ Name, String^ Comment, obScriptParsing::Variable::DataType Type, IntelliSenseItemType Scope);
-
-			virtual String^										GetIdentifier() override;
-			virtual String^										GetSubstitution() override;
-			String^												GetComment();
-			obScriptParsing::Variable::DataType					GetDataType();
-			String^												GetDataTypeID();
-		};
-
-		ref class IntelliSenseItemQuest : public IntelliSenseItem
+		ref class IntelliSenseItemScriptVariable : public IntelliSenseItem
 		{
 		protected:
-			String^												Name;
-			String^												ScriptName;
+			String^								Name;
+			obScriptParsing::Variable::DataType	DataType;
+			String^								Comment;
+			String^								ParentEditorID;		// Optional editorID of the parent script
+																	// Empty for ad-hoc local variables.
 		public:
-			IntelliSenseItemQuest(String^ EditorID, String^ Desc, String^ ScrName);
+			IntelliSenseItemScriptVariable(String^ Name, String^ Comment, obScriptParsing::Variable::DataType Type,
+										String^ ParentEditorID);
 
-			virtual String^										GetIdentifier() override;
-			virtual String^										GetSubstitution() override;
+			virtual String^							GetItemTypeName() override;
+			virtual String^							GetIdentifier() override;
+			virtual String^							GetSubstitution() override;
+			String^									GetComment();
+			obScriptParsing::Variable::DataType		GetDataType();
+			String^									GetDataTypeID();
 		};
 
-		ref class Script
-		{
-		public:
-			typedef List<IntelliSenseItemVariable^>				VarListT;
-		protected:
-			Script();
-			Script(String^ ScriptText, String^ Name);
-
-			VarListT^											VarList;
-			String^												Name;
-			String^												CommentDescription;
-		public:
-			static Script^										NullScript = gcnew Script(gcnew String("scn nullscript"));
-
-			Script(String^ ScriptText);
-
-			virtual String^										Describe();
-			virtual String^										GetIdentifier();
-
-			List<IntelliSenseItemVariable^>::Enumerator^		GetVariableListEnumerator();
-		};
-
-		ref class UserFunction : public Script
-		{
-		protected:
-			Array^												Parameters;			// indices of the parameters in VarList
-			int													ReturnVar;			// index of the return var. -9 for ambiguous retn values
-		public:
-			UserFunction(String^ ScriptText);
-
-			virtual String^										Describe() override;
-		};
-
-		ref class IntelliSenseItemUserFunction : public IntelliSenseItem
-		{
-			UserFunction^										Parent;
-		public:
-			IntelliSenseItemUserFunction(UserFunction^ Parent);
-
-			virtual String^										GetIdentifier() override;
-			virtual String^										GetSubstitution() override;
-		};
-
-		ref class IntelliSenseItemEditorIDForm : public IntelliSenseItem
+		ref class IntelliSenseItemForm : public IntelliSenseItem
 		{
 		protected:
 			static enum class FormFlags
@@ -206,31 +163,107 @@ namespace cse
 				VisibleWhenDistant   = /*0F*/ 0x00008000,
 			};
 
-			String^												Name;
-			UInt32												TypeID;
-			UInt32												FormID;
-			UInt32												Flags;
+			String^		EditorID;
+			UInt32		TypeID;
+			UInt32		FormID;
+			UInt32		Flags;
+			bool		BaseForm;
+			String^		AttachedScriptEditorID;
 
-			String^												GetFormTypeIdentifier();
+			String^		GetFormTypeIdentifier();
+
+			IntelliSenseItemForm();
 		public:
-			IntelliSenseItemEditorIDForm(componentDLLInterface::FormData* Data);
+			IntelliSenseItemForm(componentDLLInterface::FormData* Data, componentDLLInterface::ScriptData* AttachedScript);
 
-			virtual String^										GetIdentifier() override;
-			virtual String^										GetSubstitution() override;
+			virtual String^ GetIdentifier() override;
+			virtual String^ GetSubstitution() override;
+			virtual String^ GetItemTypeName() override;
+			bool			IsObjectReference();
+			bool			HasAttachedScript();
+			String^			GetAttachedScriptEditorID();
+		};
+
+		ref class IntelliSenseItemGlobalVariable : public IntelliSenseItemForm
+		{
+		protected:
+			obScriptParsing::Variable::DataType	DataType;
+			String^								Value;
+		public:
+			IntelliSenseItemGlobalVariable(componentDLLInterface::FormData* Data,
+								obScriptParsing::Variable::DataType Type, String^ Value);
+
+			virtual String^ Describe() override;
+			virtual String^ GetItemTypeName() override;
+			void			SetValue(String^ Val);
+		};
+
+		ref class IntelliSenseItemGameSetting : public IntelliSenseItemGlobalVariable
+		{
+		public:
+			IntelliSenseItemGameSetting(componentDLLInterface::FormData* Data,
+				obScriptParsing::Variable::DataType Type, String^ Value);
+		};
+
+		ref class IntelliSenseItemQuest : public IntelliSenseItemForm
+		{
+		protected:
+			String^		FullName;
+		public:
+			IntelliSenseItemQuest(componentDLLInterface::FormData* Data,
+								componentDLLInterface::ScriptData* AttachedScript,
+								String^ FullName);
+
+			String^		GetFullName();
+		};
+
+		ref class IntelliSenseItemScript : public IntelliSenseItemForm
+		{
+			static IntelliSenseItemScript^ Empty = gcnew IntelliSenseItemScript;
+		protected:
+			IntelliSenseItemScript();
+
+			List<IntelliSenseItemScriptVariable^>^	VarList;
+			String^									CommentDescription;
+			obScriptParsing::AnalysisData^			InitialAnalysisData;
+		public:
+			IntelliSenseItemScript(componentDLLInterface::ScriptData* ScriptData);
+
+			static property IntelliSenseItemScript^ Default
+			{
+				IntelliSenseItemScript^ get() { return Empty; }
+			}
+
+			virtual String^								GetItemTypeName() override;
+			IEnumerable<IntelliSenseItemScriptVariable^>^
+														GetVariables();
+			IntelliSenseItemScriptVariable^				LookupVariable(String^ VariableName);
+			bool										IsUserDefinedFunction();
+		};
+
+		ref class IntelliSenseItemUserFunction : public IntelliSenseItemScript
+		{
+			static const int	kReturnVarIdxNone = -1;
+			static const int	kReturnVarIdxAmbiguous = -9;
+		protected:
+			List<int>^			ParameterIndices;
+			int					ReturnVarIndex;
+		public:
+			IntelliSenseItemUserFunction(componentDLLInterface::ScriptData* ScriptData);
 		};
 
 		ref class IntelliSenseItemCodeSnippet : public IntelliSenseItem
 		{
 		protected:
-			CodeSnippet^										Parent;
+			CodeSnippet^	Parent;
 		public:
 			IntelliSenseItemCodeSnippet(CodeSnippet^ Source);
 
-			virtual void										Insert(textEditors::IScriptTextEditor^ Editor) override;
-			virtual bool										GetShouldEnumerate(String^ Token, bool SubstringSearch) override;
-			virtual bool										GetIsQuickViewable(String^ Token) override;
-			virtual String^										GetIdentifier() override;
-			virtual String^										GetSubstitution() override;
+			virtual void	Insert(textEditors::IScriptTextEditor^ Editor) override;
+			virtual bool	MatchesToken(String^ Token, StringMatchType Comparison) override;
+			virtual bool	HasInsightInfo() override;
+			virtual String^ GetIdentifier() override;
+			virtual String^ GetSubstitution() override;
 		};
 
 		ref class IntelliSenseItemSorter : public System::Collections::Generic::IComparer<IntelliSenseItem^>
@@ -240,17 +273,7 @@ namespace cse
 		public:
 			IntelliSenseItemSorter(SortOrder Order) : Order(Order) {}
 
-			virtual int Compare(IntelliSenseItem^ X, IntelliSenseItem^ Y)
-			{
-				int Result = X->GetItemType() < Y->GetItemType();
-				if (X->GetItemType() == Y->GetItemType());
-					Result = String::Compare(X->GetIdentifier(), Y->GetIdentifier(), true);
-
-				if (Order == SortOrder::Descending)
-					Result *= -1;
-
-				return Result;
-			}
+			virtual int Compare(IntelliSenseItem^ X, IntelliSenseItem^ Y);
 		};
 	}
 }

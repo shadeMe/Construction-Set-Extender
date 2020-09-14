@@ -1,36 +1,48 @@
 #include "IntelliSenseItem.h"
 #include "IntelliSenseDatabase.h"
-#include "IntelliSenseInterface.h"
-
 #include "ScriptTextEditorInterface.h"
 #include "SnippetManager.h"
-
 #include "[Common]\NativeWrapper.h"
 
 namespace cse
 {
 	namespace intellisense
 	{
-		IntelliSenseItem::IntelliSenseItem()
+		bool DoStringMatch(String^ Source, String^ Target, StringMatchType Comparison)
 		{
-			this->Description = "";
-			this->Type = IntelliSenseItemType::Invalid;
+			switch (Comparison)
+			{
+			case StringMatchType::StartsWith:
+				return Source->StartsWith(Target, System::StringComparison::CurrentCultureIgnoreCase);
+			case StringMatchType::Substring:
+				return Source->IndexOf(Target, System::StringComparison::CurrentCultureIgnoreCase) != -1;
+			case StringMatchType::FullMatch:
+				return Source->Equals(Target, System::StringComparison::CurrentCultureIgnoreCase);
+			default:
+				return false;
+			}
 		}
 
-		IntelliSenseItem::IntelliSenseItem(String^ Desc, IntelliSenseItemType Type)
+		IntelliSenseItem::IntelliSenseItem()
 		{
-			this->Description = Desc;
+			this->Description = String::Empty;
+			this->Type = ItemType::Invalid;
+		}
+
+		IntelliSenseItem::IntelliSenseItem(ItemType Type)
+		{
+			this->Description = String::Empty;
 			this->Type = Type;
 		}
 
-		IntelliSenseItem::IntelliSenseItemType IntelliSenseItem::GetItemType()
+		IntelliSenseItem::ItemType IntelliSenseItem::GetItemType()
 		{
 			return Type;
 		}
 
-		String^ IntelliSenseItem::GetItemTypeID()
+		String^ IntelliSenseItem::GetItemTypeName()
 		{
-			return IntelliSenseItemTypeID[(int)Type];
+			return ItemTypeID[(int)Type];
 		}
 
 		String^ IntelliSenseItem::Describe()
@@ -43,17 +55,14 @@ namespace cse
 			Editor->SetTokenAtCaretPos(GetSubstitution());
 		}
 
-		bool IntelliSenseItem::GetShouldEnumerate( String^ Token, bool SubstringSearch )
+		bool IntelliSenseItem::MatchesToken( String^ Token, StringMatchType Comparison )
 		{
-			if (SubstringSearch)
-				return (GetIdentifier()->IndexOf(Token, System::StringComparison::CurrentCultureIgnoreCase) != -1);
-			else
-				return GetIdentifier()->StartsWith(Token, System::StringComparison::CurrentCultureIgnoreCase);
+			return DoStringMatch(GetIdentifier(), Token, Comparison);
 		}
 
-		bool IntelliSenseItem::GetIsQuickViewable(String^ Token)
+		bool IntelliSenseItem::HasInsightInfo()
 		{
-			return !String::Compare(GetIdentifier(), Token, true);
+			return true;
 		}
 
 		IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(String^ Name,
@@ -62,25 +71,26 @@ namespace cse
 																	 UInt16 NoOfParams,
 																	 bool RequiresParent,
 																	 UInt16 ReturnType,
-																	 IntelliSenseCommandItemSourceType Source,
-																	 String^ Params) :
-			IntelliSenseItem(String::Format("{0}{1}\n\n{4}\n\n{2} parameter(s){6}\nReturn Type: {3}{5}",
-												Name,
-												(Shorthand == "None")?"":(" [ " + Shorthand + " ]"),
-												NoOfParams.ToString(),
-												IntelliSenseItemScriptCommand::IntelliSenseItemCommandReturnTypeID[(int)ReturnType],
-												Desc, (RequiresParent)?"\n\nRequires a calling reference":"",
-												Params),
-								IntelliSenseItemType::Command),
-				Name(Name),
-				CmdDescription(Desc),
-				Shorthand(Shorthand),
-				ParamCount(NoOfParams),
-				RequiresParent(RequiresParent),
-				ReturnType(ReturnType),
-				Source(Source)
+																	 SourceType Source,
+																	 String^ Params,
+																	 String^ DeveloperURL) :
+			IntelliSenseItem(ItemType::ScriptCommand),
+			Name(Name),
+			CmdDescription(Desc),
+			Shorthand(Shorthand),
+			ParamCount(NoOfParams),
+			RequiresParent(RequiresParent),
+			ResultType((ReturnValueType)ReturnType),
+			Source(Source),
+			DeveloperURL(DeveloperURL)
 		{
-			;//
+			Description = String::Format("{0}{1}\n\n{4}\n\n{2} parameter(s){6}\nReturn Type: {3}{5}",
+										Name,
+										(Shorthand == "None") ? "" : (" [ " + Shorthand + " ]"),
+										NoOfParams.ToString(),
+										IntelliSenseItemScriptCommand::ReturnValueTypeID[(int)ReturnType],
+										Desc, (RequiresParent) ? "\n\nRequires a calling reference" : "",
+										Params);
 		}
 
 		String^ IntelliSenseItemScriptCommand::GetIdentifier()
@@ -93,7 +103,7 @@ namespace cse
 			return RequiresParent;
 		}
 
-		IntelliSenseItemScriptCommand::IntelliSenseCommandItemSourceType IntelliSenseItemScriptCommand::GetSource()
+		IntelliSenseItemScriptCommand::SourceType IntelliSenseItemScriptCommand::GetSource()
 		{
 			return Source;
 		}
@@ -103,28 +113,13 @@ namespace cse
 			return GetIdentifier();
 		}
 
-		bool IntelliSenseItemScriptCommand::GetShouldEnumerate(String^ Token, bool SubstringSearch)
+		bool IntelliSenseItemScriptCommand::MatchesToken(String^ Token, StringMatchType Comparison)
 		{
-			bool Found = false;
-			if (SubstringSearch)
-				Found = Name->IndexOf(Token, System::StringComparison::CurrentCultureIgnoreCase) != -1;
-			else
-				Found = Name->StartsWith(Token, System::StringComparison::CurrentCultureIgnoreCase);
-
-			if (Found == false)
-			{
-				if (SubstringSearch)
-					Found = Shorthand->IndexOf(Token, System::StringComparison::CurrentCultureIgnoreCase) != -1;
-				else
-					Found = Shorthand->StartsWith(Token, System::StringComparison::CurrentCultureIgnoreCase);
-			}
+			bool Found = DoStringMatch(Name, Token, Comparison);
+			if (!Found)
+				Found = DoStringMatch(Shorthand, Token, Comparison);
 
 			return Found;
-		}
-
-		bool IntelliSenseItemScriptCommand::GetIsQuickViewable(String^ Token)
-		{
-			return !String::Compare(Name, Token, true) || !String::Compare(Shorthand, Token, true);
 		}
 
 		String^ IntelliSenseItemScriptCommand::GetShorthand()
@@ -132,223 +127,80 @@ namespace cse
 			return Shorthand;
 		}
 
-		IntelliSenseItemVariable::IntelliSenseItemVariable(String^ Name, String^ Comment, obScriptParsing::Variable::DataType Type, IntelliSenseItemType Scope) :
-			IntelliSenseItem(String::Format("{0} [{1}]{2}{3}",
-											Name,
-											obScriptParsing::Variable::GetVariableDataTypeDescription(Type),
-											(Comment != "")?"\n\n":"",
-											Comment),
-							Scope),
-			Name(Name),
-			DataType(Type),
-			Comment(Comment)
+		System::String^ IntelliSenseItemScriptCommand::GetDeveloperURL()
 		{
-			;//
+			return DeveloperURL;
 		}
 
-		String^ IntelliSenseItemVariable::GetIdentifier()
+		void IntelliSenseItemScriptCommand::SetDeveloperURL(String^ URL)
+		{
+			DeveloperURL = URL;
+		}
+
+		IntelliSenseItemScriptVariable::IntelliSenseItemScriptVariable(String^ Name, String^ Comment,
+														obScriptParsing::Variable::DataType Type, String^ ParentEditorID) :
+			IntelliSenseItem(ItemType::ScriptVariable),
+			Name(Name),
+			DataType(Type),
+			Comment(Comment),
+			ParentEditorID(ParentEditorID)
+		{
+			Description = String::Format("{0} [{1}]{2}{3}",
+										Name,
+										obScriptParsing::Variable::GetVariableDataTypeDescription(DataType),
+										Comment->Length > 0 ? "\n\n" + Comment : "",
+										ParentEditorID->Length > 0 ? "\n\nParent Script: " + ParentEditorID : "");
+		}
+
+
+		System::String^ IntelliSenseItemScriptVariable::GetItemTypeName()
+		{
+			if (ParentEditorID->Length == 0)
+				return "Local Variable";
+			else
+				return "Script Variable";
+		}
+
+		String^ IntelliSenseItemScriptVariable::GetIdentifier()
 		{
 			return Name;
 		}
 
-		String^ IntelliSenseItemVariable::GetComment()
+		String^ IntelliSenseItemScriptVariable::GetComment()
 		{
 			return Comment;
 		}
 
-		String^ IntelliSenseItemVariable::GetDataTypeID()
+		String^ IntelliSenseItemScriptVariable::GetDataTypeID()
 		{
 			return obScriptParsing::Variable::GetVariableDataTypeDescription(DataType);
 		}
 
-		obScriptParsing::Variable::DataType IntelliSenseItemVariable::GetDataType()
+		obScriptParsing::Variable::DataType IntelliSenseItemScriptVariable::GetDataType()
 		{
 			return DataType;
 		}
 
-		String^ IntelliSenseItemVariable::GetSubstitution()
+		String^ IntelliSenseItemScriptVariable::GetSubstitution()
 		{
 			return GetIdentifier();
 		}
 
-		IntelliSenseItemQuest::IntelliSenseItemQuest(String^ EditorID, String^ Desc, String^ ScrName) :
-					IntelliSenseItem(EditorID + ((Desc != "")?"\n":"") + Desc + ((ScrName != "")?"\n\nQuest Script: ":"") + ScrName,
-									IntelliSenseItem::IntelliSenseItemType::Quest),
-					Name(EditorID),
-					ScriptName(ScrName)
-		{
-			;//
-		}
-
-		String^ IntelliSenseItemQuest::GetIdentifier()
-		{
-			return Name;
-		}
-
-		String^ IntelliSenseItemQuest::GetSubstitution()
-		{
-			return GetIdentifier();
-		}
-
-		Script::Script()
-		{
-			VarList = gcnew VarListT;
-		}
-
-		Script::Script(String^ ScriptText)
-		{
-			VarList = gcnew VarListT;
-
-			obScriptParsing::AnalysisData^ Data = gcnew obScriptParsing::AnalysisData();
-			Data->PerformAnalysis(ScriptText, obScriptParsing::ScriptType::None,
-								obScriptParsing::AnalysisData::Operation::FillVariables |
-								obScriptParsing::AnalysisData::Operation::FillControlBlocks |
-								obScriptParsing::AnalysisData::Operation::FillUDFData,
-								nullptr);
-
-			for each (obScriptParsing::Variable^ Itr in Data->Variables)
-				VarList->Add(gcnew IntelliSenseItemVariable(Itr->Name, Itr->Comment, Itr->Type, IntelliSenseItem::IntelliSenseItemType::RemoteVar));
-
-			Name = Data->Name;
-			CommentDescription = Data->Description;
-		}
-
-		Script::Script(String^ ScriptText, String^ Name)
-		{
-			VarList = gcnew VarListT;
-
-			obScriptParsing::AnalysisData^ Data = gcnew obScriptParsing::AnalysisData();
-			Data->PerformAnalysis(ScriptText, obScriptParsing::ScriptType::None,
-								  obScriptParsing::AnalysisData::Operation::FillVariables |
-								  obScriptParsing::AnalysisData::Operation::FillControlBlocks |
-								  obScriptParsing::AnalysisData::Operation::FillUDFData,
-								  nullptr);
-
-			for each (obScriptParsing::Variable^ Itr in Data->Variables)
-				VarList->Add(gcnew IntelliSenseItemVariable(Itr->Name, Itr->Comment, Itr->Type, IntelliSenseItem::IntelliSenseItemType::RemoteVar));
-
-			this->Name = Name;
-			CommentDescription = Data->Description;
-		}
-
-		String^ Script::Describe()
-		{
-			String^ Description;
-			Description += Name + "\n\n" + CommentDescription + "\nNumber of variables: " + VarList->Count;
-			return Description;
-		}
-
-		String^ Script::GetIdentifier()
-		{
-			return Name;
-		}
-
-		List<IntelliSenseItemVariable^>::Enumerator^ Script::GetVariableListEnumerator()
-		{
-			return VarList->GetEnumerator();
-		}
-
-		UserFunction::UserFunction(String^ ScriptText) : Script()
-		{
-			Parameters = Array::CreateInstance(int::typeid, 10);
-			Parameters->SetValue(-1, 0);
-			Parameters->SetValue(-1, 1);
-			Parameters->SetValue(-1, 2);
-			Parameters->SetValue(-1, 3);
-			Parameters->SetValue(-1, 4);
-			Parameters->SetValue(-1, 5);
-			Parameters->SetValue(-1, 6);
-			Parameters->SetValue(-1, 7);
-			Parameters->SetValue(-1, 8);
-			Parameters->SetValue(-1, 9);
-			ReturnVar = -1;
-
-			obScriptParsing::AnalysisData^ Data = gcnew obScriptParsing::AnalysisData();
-			Data->PerformAnalysis(ScriptText, obScriptParsing::ScriptType::None,
-								  obScriptParsing::AnalysisData::Operation::FillVariables |
-								  obScriptParsing::AnalysisData::Operation::FillControlBlocks |
-								  obScriptParsing::AnalysisData::Operation::FillUDFData,
-								  nullptr);
-
-			int VarIdx = 0;
-			for each (obScriptParsing::Variable^ Itr in Data->Variables)
-			{
-				VarList->Add(gcnew IntelliSenseItemVariable(Itr->Name, Itr->Comment, Itr->Type, IntelliSenseItem::IntelliSenseItemType::RemoteVar));
-				if (Itr->UDFParameter && Itr->ParameterIndex < 10)
-					Parameters->SetValue(VarIdx, (int)Itr->ParameterIndex);
-
-				if (Data->UDFResult == Itr)
-					ReturnVar = VarIdx;
-				else if (Data->UDFAmbiguousResult)
-					ReturnVar = -9;
-
-				VarIdx++;
-			}
-
-			Name = Data->Name;
-			CommentDescription = Data->Description;
-		}
-
-		String^ UserFunction::Describe()
-		{
-			String^ Description, ^Scratch;
-
-			int ParamIdx = 0;
-			while (ParamIdx < 10)
-			{
-				int VarIdx = (int)Parameters->GetValue(ParamIdx);
-				if (VarIdx == -1)
-					break;
-
-				String^% Comment = VarList[VarIdx]->GetComment(), ^% Name = VarList[VarIdx]->GetIdentifier();
-				Scratch += "\n\t" + ((Comment == "")?Name:Comment) + " [" + (dynamic_cast<IntelliSenseItemVariable^>(VarList[VarIdx]))->GetDataTypeID() + "]";
-				ParamIdx++;
-			}
-
-			if (CommentDescription->Length > 2)
-				CommentDescription = "\n\nDescription: " + CommentDescription;
-			else
-				CommentDescription = "\n";
-
-			Description += Name + CommentDescription + "\n" + ParamIdx + " Parameter(s)" + Scratch + "\n\n";
-			if (ReturnVar == -1)			Description += "Does not return a value";
-			else if (ReturnVar == -9)		Description += "Return Type: Ambiguous";
-			else							Description += "Return Type: " + (dynamic_cast<IntelliSenseItemVariable^>(VarList[ReturnVar]))->GetDataTypeID();
-
-			return Description;
-		}
-
-		IntelliSenseItemUserFunction::IntelliSenseItemUserFunction(UserFunction^ Parent) :
-				IntelliSenseItem(Parent->Describe(),
-								IntelliSenseItemType::UserFunction),
-				Parent(Parent)
-		{
-			;//
-		}
-
-		String^ IntelliSenseItemUserFunction::GetIdentifier()
-		{
-			return Parent->GetIdentifier();
-		}
-
-		String^ IntelliSenseItemUserFunction::GetSubstitution()
-		{
-			return GetIdentifier();
-		}
-
-		String^ IntelliSenseItemEditorIDForm::GetFormTypeIdentifier()
+		String^ IntelliSenseItemForm::GetFormTypeIdentifier()
 		{
 			return gcnew String(nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(TypeID));
 		}
 
-		IntelliSenseItemEditorIDForm::IntelliSenseItemEditorIDForm( componentDLLInterface::FormData* Data ) : IntelliSenseItem()
+		IntelliSenseItemForm::IntelliSenseItemForm( componentDLLInterface::FormData* Data,
+													componentDLLInterface::ScriptData* AttachedScript) :
+			IntelliSenseItem(ItemType::Form)
 		{
-			this->Type = IntelliSenseItem::IntelliSenseItemType::Form;
-
 			TypeID = Data->TypeID;
 			FormID = Data->FormID;
-			Name = gcnew String(Data->EditorID);
+			EditorID = gcnew String(Data->EditorID);
 			Flags = Data->Flags;
+			BaseForm = Data->ObjectReference == false;
+			AttachedScriptEditorID = AttachedScript && AttachedScript->IsValid() ? gcnew String(AttachedScript->EditorID) : String::Empty;
 
 			String^ FlagDescription = "" + ((Flags & (UInt32)FormFlags::FromMaster)?"   From Master File\n":"") +
 				((Flags & (UInt32)FormFlags::FromActiveFile)?"   From Active File\n":"") +
@@ -358,37 +210,234 @@ namespace cse
 				((Flags & (UInt32)FormFlags::Disabled)?"   Initially Disabled\n":"") +
 				((Flags & (UInt32)FormFlags::VisibleWhenDistant)?"   Visible When Distant\n":"");
 
+			String^ RefBaseFormDescription = "";
+			if (Data->ObjectReference && Data->BaseFormEditorID)
+				RefBaseFormDescription = "\nBase Form: " + gcnew String(Data->BaseFormEditorID);
+
 			String^ ScriptDescription = "";
-			componentDLLInterface::ScriptData* ScriptableData = 0;
-			if (TypeID != 13 && ISDB->GetIsIdentifierScriptableForm(Name, &ScriptableData))
-			{
-				if (ScriptableData && ScriptableData->IsValid())
-					ScriptDescription += "\nScript: " + gcnew String(ScriptableData->EditorID);
+			if (AttachedScriptEditorID->Length > 0)
+				ScriptDescription += "\nAttached Script: " + gcnew String(AttachedScript->EditorID);
 
-				nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(ScriptableData, false);
-			}
-
-			this->Description = Name +
-								"\n\nType: " + GetFormTypeIdentifier() +
+			this->Description = EditorID +
+								//"\n\nType: " + GetFormTypeIdentifier() +
 								"\nFormID: " + FormID.ToString("X8") +
 								(FlagDescription->Length ? "\nFlags:\n" + FlagDescription : "") +
-								ScriptDescription;
+								RefBaseFormDescription + ScriptDescription;
 		}
 
-		String^ IntelliSenseItemEditorIDForm::GetIdentifier()
+		IntelliSenseItemForm::IntelliSenseItemForm() :
+			IntelliSenseItem(ItemType::Form)
 		{
-			return Name;
+			TypeID = 0;
+			FormID = 0;
+			EditorID = "<InvalidIntelliSenseItemForm>";
+			Flags = 0;
+			BaseForm = false;
+			AttachedScriptEditorID = String::Empty;
+			Description = EditorID;
 		}
 
-		String^ IntelliSenseItemEditorIDForm::GetSubstitution()
+		String^ IntelliSenseItemForm::GetIdentifier()
+		{
+			return EditorID;
+		}
+
+		String^ IntelliSenseItemForm::GetSubstitution()
 		{
 			return GetIdentifier();
 		}
 
-		IntelliSenseItemCodeSnippet::IntelliSenseItemCodeSnippet( CodeSnippet^ Source ) :
+		System::String^ IntelliSenseItemForm::GetItemTypeName()
+		{
+			return GetFormTypeIdentifier();
+		}
+
+		bool IntelliSenseItemForm::IsObjectReference()
+		{
+			return BaseForm == false;
+		}
+
+		bool IntelliSenseItemForm::HasAttachedScript()
+		{
+			return AttachedScriptEditorID->Length > 0;
+		}
+
+		System::String^ IntelliSenseItemForm::GetAttachedScriptEditorID()
+		{
+			return AttachedScriptEditorID;
+		}
+
+
+		IntelliSenseItemGlobalVariable::IntelliSenseItemGlobalVariable(componentDLLInterface::FormData* Data,
+			obScriptParsing::Variable::DataType Type, String^ Value) :
+			IntelliSenseItemForm(Data, nullptr)
+
+		{
+			this->Type = IntelliSenseItem::ItemType::GlobalVariable;
+
+			this->DataType = Type;
+			this->Value = Value;
+		}
+
+		System::String^ IntelliSenseItemGlobalVariable::Describe()
+		{
+			const UInt32 kMaxValueStringLength = 30;
+
+			String^ TruncatedValue = gcnew String(Value);
+			if (TruncatedValue->Length > kMaxValueStringLength)
+				TruncatedValue = TruncatedValue->Substring(0, kMaxValueStringLength) + "...";
+
+			return Description + "\n\nType: " + obScriptParsing::Variable::GetVariableDataTypeDescription(DataType)
+					+ (TruncatedValue->Length > 0 ? "\nValue: " + TruncatedValue : "");
+		}
+
+		System::String^ IntelliSenseItemGlobalVariable::GetItemTypeName()
+		{
+			return IntelliSenseItem::GetItemTypeName();
+		}
+
+		void IntelliSenseItemGlobalVariable::SetValue(String^ Val)
+		{
+			Value = Val;
+		}
+
+		IntelliSenseItemGameSetting::IntelliSenseItemGameSetting(componentDLLInterface::FormData* Data,
+			obScriptParsing::Variable::DataType Type, String^ Value) :
+			IntelliSenseItemGlobalVariable(Data, Type, Value)
+		{
+			this->Type = IntelliSenseItem::ItemType::GameSetting;
+		}
+
+		IntelliSenseItemQuest::IntelliSenseItemQuest(componentDLLInterface::FormData* Data,
+													componentDLLInterface::ScriptData* AttachedScript,
+													String^ FullName) :
+			IntelliSenseItemForm(Data, AttachedScript)
+		{
+			this->Type = IntelliSenseItem::ItemType::Quest;
+			FullName = FullName;
+
+			Description += (FullName->Length > 0 ? "\n\n" + FullName : "");
+		}
+
+		System::String^ IntelliSenseItemQuest::GetFullName()
+		{
+			return FullName;
+		}
+
+
+		IntelliSenseItemScript::IntelliSenseItemScript() :
+			IntelliSenseItemForm()
+		{
+			this->Type = IntelliSenseItem::ItemType::Script;
+
+			VarList = gcnew List<IntelliSenseItemScriptVariable^>;
+			EditorID = "EmptyScript";
+			CommentDescription = String::Empty;
+		}
+
+		IntelliSenseItemScript::IntelliSenseItemScript(componentDLLInterface::ScriptData* ScriptData) :
+			IntelliSenseItemForm(ScriptData, nullptr)
+		{
+			this->Type = IntelliSenseItem::ItemType::Script;
+
+			VarList = gcnew List<IntelliSenseItemScriptVariable^>;
+			InitialAnalysisData = gcnew obScriptParsing::AnalysisData();
+
+			InitialAnalysisData->PerformAnalysis(gcnew String(ScriptData->Text), obScriptParsing::ScriptType::None,
+				obScriptParsing::AnalysisData::Operation::FillVariables |
+				obScriptParsing::AnalysisData::Operation::FillControlBlocks |
+				obScriptParsing::AnalysisData::Operation::FillUDFData,
+				nullptr);
+
+			for each (obScriptParsing::Variable ^ Itr in InitialAnalysisData->Variables)
+				VarList->Add(gcnew IntelliSenseItemScriptVariable(Itr->Name, Itr->Comment, Itr->Type, EditorID));
+
+			CommentDescription = InitialAnalysisData->Description;
+
+			Description += (CommentDescription ->Length > 0 ? "\n" + CommentDescription : "")
+						+ "\n\nNumber of variables: " + VarList->Count;
+		}
+
+		String^ IntelliSenseItemScript::GetItemTypeName()
+		{
+			return IntelliSenseItem::GetItemTypeName();
+		}
+
+		IntelliSenseItemScriptVariable ^ IntelliSenseItemScript::LookupVariable(String ^ VariableName)
+		{
+			for each (auto Itr in VarList)
+			{
+				if (Itr->MatchesToken(VariableName, StringMatchType::FullMatch))
+					return Itr;
+			}
+
+			return nullptr;
+		}
+
+		bool IntelliSenseItemScript::IsUserDefinedFunction()
+		{
+			return Type == IntelliSenseItem::ItemType::UserFunction;
+		}
+
+		IEnumerable<IntelliSenseItemScriptVariable^>^ IntelliSenseItemScript::GetVariables()
+		{
+			return VarList;
+		}
+
+		IntelliSenseItemUserFunction::IntelliSenseItemUserFunction(componentDLLInterface::ScriptData* ScriptData) :
+			IntelliSenseItemScript(ScriptData)
+		{
+			this->Type = ItemType::UserFunction;
+
+			ParameterIndices = gcnew List<int>;
+			for (int i = 0; i < 10; ++i)
+				ParameterIndices->Add(-1);
+			ReturnVarIndex = kReturnVarIdxNone;
+
+			Debug::Assert(InitialAnalysisData->UDF == true);
+
+			int VarIdx = 0;
+			for each (obScriptParsing::Variable ^ Itr in InitialAnalysisData->Variables)
+			{
+				if (Itr->UDFParameter && Itr->ParameterIndex < 10)
+					ParameterIndices[VarIdx] = (int)Itr->ParameterIndex;
+
+				if (InitialAnalysisData->UDFResult == Itr)
+					ReturnVarIndex = VarIdx;
+				else if (InitialAnalysisData->UDFAmbiguousResult)
+					ReturnVarIndex = kReturnVarIdxAmbiguous;
+
+				++VarIdx;
+			}
+
+
+			String^ Scratch = "";
+			int ParamIdx = 0;
+			while (ParamIdx < 10)
+			{
+				int VarIdx = ParameterIndices[ParamIdx];
+				if (VarIdx == -1)
+					break;
+
+				String^ Comment = VarList[VarIdx]->GetComment();
+				String^ Name = VarList[VarIdx]->GetIdentifier();
+				Scratch += "\n\t" + ((Comment == "") ? Name : Comment) + " [" + (safe_cast<IntelliSenseItemScriptVariable^>(VarList[VarIdx]))->GetDataTypeID() + "]";
+				ParamIdx++;
+			}
+
+			Description += "\n" + ParamIdx + " Parameter(s)" + Scratch + "\n\n";
+			if (ReturnVarIndex == kReturnVarIdxNone)
+				Description += "Does not return a value";
+			else if (ReturnVarIndex == kReturnVarIdxAmbiguous)
+				Description += "Return Type: Ambiguous";
+			else
+				Description += "Return Type: " + (safe_cast<IntelliSenseItemScriptVariable^>(VarList[ReturnVarIndex]))->GetDataTypeID();
+		}
+
+		IntelliSenseItemCodeSnippet::IntelliSenseItemCodeSnippet(CodeSnippet^ Source) :
 			IntelliSenseItem()
 		{
-			this->Type = IntelliSenseItem::IntelliSenseItemType::Snippet;
+			this->Type = IntelliSenseItem::ItemType::Snippet;
 
 			Parent = Source;
 
@@ -405,7 +454,7 @@ namespace cse
 
 			String^ Code = GetSubstitution();
 			UInt32 CurrentLineIndents = Editor->GetIndentLevel(Editor->CurrentLine);
-			Code = obScriptParsing::AnalysisData::PerformLocalizedIndenting(Code, CurrentLineIndents);
+			Code = obScriptParsing::Sanitizer::PerformLocalizedIndenting(Code, CurrentLineIndents);
 
 			Editor->BeginUpdate();
 			Editor->SetTokenAtCaretPos(Code);
@@ -414,12 +463,11 @@ namespace cse
 			Editor->ScrollToCaret();
 		}
 
-		bool IntelliSenseItemCodeSnippet::GetShouldEnumerate( String^ Token, bool SubstringSearch )
+		bool IntelliSenseItemCodeSnippet::MatchesToken( String^ Token, StringMatchType Comparison )
 		{
-			bool Found = (Parent->Name->IndexOf(Token, System::StringComparison::CurrentCultureIgnoreCase) != -1);
-
-			if (Found == false)
-				Found = (Parent->Shorthand->IndexOf(Token, System::StringComparison::CurrentCultureIgnoreCase) != -1);
+			bool Found = DoStringMatch(Parent->Name, Token, Comparison);
+			if (!Found)
+				Found = DoStringMatch(Parent->Shorthand, Token, Comparison);
 
 			return Found;
 		}
@@ -434,9 +482,23 @@ namespace cse
 			return Parent->Code;
 		}
 
-		bool IntelliSenseItemCodeSnippet::GetIsQuickViewable(String^ Token)
+		bool IntelliSenseItemCodeSnippet::HasInsightInfo()
 		{
 			return false;
 		}
+
+		int IntelliSenseItemSorter::Compare(IntelliSenseItem^ X, IntelliSenseItem^ Y)
+		{
+			int Result = X->GetItemType() < Y->GetItemType();
+			if (X->GetItemType() == Y->GetItemType());
+			Result = String::Compare(X->GetIdentifier(), Y->GetIdentifier(), true);
+
+			if (Order == SortOrder::Descending)
+				Result *= -1;
+
+			return Result;
+		}
+
+
 	}
 }

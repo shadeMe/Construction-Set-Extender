@@ -81,15 +81,15 @@ namespace cse
 		PopulateLoadedForms(TextBoxFilter->Text);
 	}
 
-	void CentralizedUseInfoList::Dialog_KeyPress(Object^ Sender, KeyPressEventArgs^ E)
+	void CentralizedUseInfoList::Control_KeyPress(Object^ Sender, KeyPressEventArgs^ E)
 	{
 		switch (E->KeyChar)
 		{
-		case 'f':
-			if (Control::ModifierKeys == Keys::Control)
+		case 'F':
+			if (Sender != TextBoxFilter)
 			{
 				E->Handled = true;
-				TextBoxFilter->Focus();
+				TextBoxFilter->Select();
 			}
 			break;
 		case (char)27:		// Escape key
@@ -139,7 +139,7 @@ namespace cse
 		//
 		this->TextBoxFilter->Location = System::Drawing::Point(44, 665);
 		this->TextBoxFilter->MaxLength = 100;
-		this->TextBoxFilter->Multiline = true;
+		this->TextBoxFilter->Multiline = false;
 		this->TextBoxFilter->Name = L"TextBoxFilter";
 		this->TextBoxFilter->Size = System::Drawing::Size(396, 23);
 		this->TextBoxFilter->TabIndex = 0;
@@ -338,7 +338,7 @@ namespace cse
 		this->Controls->Add(this->ListViewForms);
 		this->Controls->Add(this->TextBoxFilter);
 		this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedSingle;
-		this->KeyPreview = true;
+		this->KeyPreview = false;
 		this->MaximizeBox = false;
 		this->Name = L"UseInfoList";
 		this->StartPosition = System::Windows::Forms::FormStartPosition::CenterParent;
@@ -355,13 +355,16 @@ namespace cse
 		ListViewForms->SelectedIndexChanged += gcnew EventHandler(this, &CentralizedUseInfoList::ListViewForms_SelectionChanged);
 		ListViewForms->ItemActivate += gcnew EventHandler(this, &CentralizedUseInfoList::ListViewForms_ItemActivate);
 		ListViewForms->FormatRow += gcnew EventHandler<BrightIdeasSoftware::FormatRowEventArgs^>(this, &CentralizedUseInfoList::ListViewForms_FormatRow);
+		ListViewForms->KeyPress += gcnew KeyPressEventHandler(this, &CentralizedUseInfoList::Control_KeyPress);
 		ListViewObjectUsage->ItemActivate += gcnew EventHandler(this, &CentralizedUseInfoList::ListViewObjectUsage_ItemActivate);
 		ListViewObjectUsage->FormatRow += gcnew EventHandler<BrightIdeasSoftware::FormatRowEventArgs^>(this, &CentralizedUseInfoList::ListViewObjectUsage_FormatRow);
+		ListViewObjectUsage->KeyPress += gcnew KeyPressEventHandler(this, &CentralizedUseInfoList::Control_KeyPress);
 		ListViewCellUsage->ItemActivate += gcnew EventHandler(this, &CentralizedUseInfoList::ListViewCellUsage_ItemActivate);
 		ListViewCellUsage->FormatRow += gcnew EventHandler<BrightIdeasSoftware::FormatRowEventArgs^>(this, &CentralizedUseInfoList::ListViewCellUsage_FormatRow);
+		ListViewCellUsage->KeyPress += gcnew KeyPressEventHandler(this, &CentralizedUseInfoList::Control_KeyPress);
 
 		TextBoxFilter->TextChanged += gcnew EventHandler(this, &CentralizedUseInfoList::TextBoxFilter_TextChanged);
-		this->KeyPress += gcnew KeyPressEventHandler(this, &CentralizedUseInfoList::Dialog_KeyPress);
+		TextBoxFilter->KeyPress += gcnew KeyPressEventHandler(this, &CentralizedUseInfoList::Control_KeyPress);
 		this->Closing += gcnew CancelEventHandler(this, &CentralizedUseInfoList::Dialog_Cancel);
 	}
 

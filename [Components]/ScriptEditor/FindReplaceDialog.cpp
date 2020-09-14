@@ -1,5 +1,5 @@
 #include "FindReplaceDialog.h"
-#include "ScriptEditorPreferences.h"
+#include "Preferences.h"
 
 namespace cse
 {
@@ -347,11 +347,13 @@ namespace cse
 					ReplaceButton->PerformClick();
 
 				E->Handled = true;
+				E->SuppressKeyPress = true;
 
 				break;
 			case Keys::Escape:
 				Hide();
 				E->Handled = true;
+				E->SuppressKeyPress = true;
 
 				break;
 			}
@@ -450,33 +452,18 @@ namespace cse
 
 		void FindReplaceDialog::LoadOptions()
 		{
-			if (PREFERENCES->FetchSettingAsInt("CaseInsensitive", "FindReplace"))
-				CaseInsensitiveSearch->Checked = true;
-			else
-				CaseInsensitiveSearch->Checked = false;
-
-			if (PREFERENCES->FetchSettingAsInt("MatchWholeWord", "FindReplace"))
-				MatchWholeWord->Checked = true;
-			else
-				MatchWholeWord->Checked = false;
-
-			if (PREFERENCES->FetchSettingAsInt("UseRegEx", "FindReplace"))
-				UseRegEx->Checked = true;
-			else
-				UseRegEx->Checked = false;
-
-			if (PREFERENCES->FetchSettingAsInt("IgnoreComments", "FindReplace"))
-				IgnoreComments->Checked = true;
-			else
-				IgnoreComments->Checked = false;
+			CaseInsensitiveSearch->Checked = preferences::SettingsHolder::Get()->FindReplace->CaseInsensitive;
+			MatchWholeWord->Checked = preferences::SettingsHolder::Get()->FindReplace->MatchWholeWord;
+			UseRegEx->Checked = preferences::SettingsHolder::Get()->FindReplace->UseRegEx;
+			IgnoreComments->Checked = preferences::SettingsHolder::Get()->FindReplace->IgnoreComments;
 		}
 
 		void FindReplaceDialog::SaveOptions()
 		{
-			PREFERENCES->FetchSetting("CaseInsensitive", "FindReplace")->SetValue(((int)CaseInsensitiveSearch->Checked).ToString());
-			PREFERENCES->FetchSetting("MatchWholeWord", "FindReplace")->SetValue(((int)MatchWholeWord->Checked).ToString());
-			PREFERENCES->FetchSetting("UseRegEx", "FindReplace")->SetValue(((int)UseRegEx->Checked).ToString());
-			PREFERENCES->FetchSetting("IgnoreComments", "FindReplace")->SetValue(((int)IgnoreComments->Checked).ToString());
+			preferences::SettingsHolder::Get()->FindReplace->CaseInsensitive = CaseInsensitiveSearch->Checked;
+			preferences::SettingsHolder::Get()->FindReplace->MatchWholeWord = MatchWholeWord->Checked;
+			preferences::SettingsHolder::Get()->FindReplace->UseRegEx = UseRegEx->Checked;
+			preferences::SettingsHolder::Get()->FindReplace->IgnoreComments = IgnoreComments->Checked;
 		}
 	}
 }

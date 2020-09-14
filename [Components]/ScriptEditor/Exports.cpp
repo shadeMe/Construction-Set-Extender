@@ -3,7 +3,8 @@
 #include "Globals.h"
 #include "WorkspaceModel.h"
 #include "WorkspaceView.h"
-#include "ScriptEditorPreferences.h"
+#include "ScriptSync.h"
+#include "Preferences.h"
 
 #include <memory.h>
 
@@ -27,6 +28,7 @@ Assembly^ ResolvePreprocessorAssemblyLoad(Object^, ResolveEventArgs^ E)
 {
 	Assembly^ PreprocAssembly, ^ExecutingAssemblies;
 	String^ TempPath = "";
+	String^	AppPath = gcnew String(nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetAppPath());
 
 	ExecutingAssemblies = Assembly::GetExecutingAssembly();
 
@@ -34,7 +36,7 @@ Assembly^ ResolvePreprocessorAssemblyLoad(Object^, ResolveEventArgs^ E)
 	{
 		if (AssmbName->FullName->Substring(0, AssmbName->FullName->IndexOf(",")) == E->Name->Substring(0, E->Name->IndexOf(",")))
 		{
-			TempPath = Globals::AppPath + COMPONENTDLLFOLDER + E->Name->Substring(0, E->Name->IndexOf(",")) + ".dll";
+			TempPath = AppPath + COMPONENTDLLFOLDER + E->Name->Substring(0, E->Name->IndexOf(",")) + ".dll";
 			PreprocAssembly = Assembly::LoadFrom(TempPath);
 			return PreprocAssembly;
 		}
@@ -55,23 +57,25 @@ void CLRUnhandledExceptionFilter(Object^, UnhandledExceptionEventArgs^ E)
 					MessageBoxIcon::Error);
 }
 
-UInt32 InitializeComponents(CommandTableData* Data, IntelliSenseUpdateData* GMSTData)
+void InitializeComponents(CommandTableData* ScriptCommandData, IntelliSenseUpdateData* GMSTData)
 {
-	AppDomain^ CurrentDomain = AppDomain::CurrentDomain;
-	CurrentDomain->AssemblyResolve += gcnew ResolveEventHandler(&ResolvePreprocessorAssemblyLoad);
-	CurrentDomain->UnhandledException += gcnew UnhandledExceptionEventHandler(&CLRUnhandledExceptionFilter);
-	Application::EnableVisualStyles();
-
-	UInt32 NonVanillaCommandCount = ISDB->InitializeCommandTableDatabase(Data);
-	ISDB->InitializeGMSTDatabase(GMSTData);
-	ISDB->ForceUpdateDatabase();
+	if (Threading::SynchronizationContext::Current == nullptr)
+		Threading::SynchronizationContext::SetSynchronizationContext(gcnew Threading::SynchronizationContext());
 
 	Globals::MainThreadID = Threading::Thread::CurrentThread->ManagedThreadId;
 	Globals::MainThreadTaskScheduler = Threading::Tasks::TaskScheduler::FromCurrentSynchronizationContext();
 
+	nativeWrapper::Initialize();
+
+	AppDomain^ CurrentDomain = AppDomain::CurrentDomain;
+	CurrentDomain->AssemblyResolve += gcnew ResolveEventHandler(&ResolvePreprocessorAssemblyLoad);
+	CurrentDomain->UnhandledException += gcnew UnhandledExceptionEventHandler(&CLRUnhandledExceptionFilter);
 	System::Windows::Media::RenderOptions::ProcessRenderMode = System::Windows::Interop::RenderMode::Default;
 
-	return NonVanillaCommandCount;
+	preferences::SettingsHolder::Get()->LoadFromDisk();
+
+	intellisense::IntelliSenseBackend::Get()->InitializeScriptCommands(ScriptCommandData);
+	intellisense::IntelliSenseBackend::Get()->InitializeGameSettings(GMSTData);
 }
 
 void InstantiateEditor(componentDLLInterface::ScriptData* InitializerScript, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
@@ -125,9 +129,9 @@ void InstantiateEditorsAndHighlight(componentDLLInterface::ScriptData** Initiali
 	nativeWrapper::g_CSEInterfaceTable->DeleteData(InitializerScripts, true);
 }
 
-void AddScriptCommandDeveloperURL(const char* ScriptCommandName, const char* URL)
+bool IsDiskSyncInProgress(void)
 {
-	ISDB->RegisterDeveloperURL(gcnew String(ScriptCommandName), gcnew String(URL));
+	return scriptSync::DiskSync::Get()->InProgress;
 }
 
 void CloseAllOpenEditors(void)
@@ -137,7 +141,7 @@ void CloseAllOpenEditors(void)
 
 void UpdateIntelliSenseDatabase(void)
 {
-	ISDB->ForceUpdateDatabase();
+	intellisense::IntelliSenseBackend::Get()->Refresh(true);
 }
 
 UInt32 GetOpenEditorCount(void)
@@ -158,8 +162,8 @@ bool PreprocessScript(const char* ScriptText, char* OutPreprocessed, UInt32 Buff
 								gcnew scriptPreprocessor::StandardOutputError(&DummyPreprocessorErrorOutputWrapper),
 								gcnew ScriptEditorPreprocessorData(gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
 								gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
-								PREFERENCES->FetchSettingAsInt("AllowRedefinitions", "Preprocessor"),
-								PREFERENCES->FetchSettingAsInt("NoOfPasses", "Preprocessor")));
+								preferences::SettingsHolder::Get()->Preprocessor->AllowMacroRedefs,
+								preferences::SettingsHolder::Get()->Preprocessor->NumPasses));
 
 	if (OperationResult)
 	{
@@ -185,7 +189,8 @@ void Deinitalize(void)
 		DebugPrint("Couldn't purge auto-recovery cache!\n\tException: " + E->Message, true);
 	}
 
-	delete ISDB;
+	preferences::SettingsHolder::Get()->SaveToDisk();
+	intellisense::IntelliSenseBackend::Deinitialize();
 }
 
 componentDLLInterface::ScriptEditorInterface g_InteropInterface =
@@ -195,7 +200,7 @@ componentDLLInterface::ScriptEditorInterface g_InteropInterface =
 	InstantiateEditorAndHighlight,
 	InstantiateEditors,
 	InstantiateEditorsAndHighlight,
-	AddScriptCommandDeveloperURL,
+	IsDiskSyncInProgress,
 	CloseAllOpenEditors,
 	UpdateIntelliSenseDatabase,
 	GetOpenEditorCount,

@@ -155,9 +155,8 @@ namespace UIComponents {
 			// 
 			this->TextBoxFilter->Location = System::Drawing::Point(44, 665);
 			this->TextBoxFilter->MaxLength = 100;
-			this->TextBoxFilter->Multiline = true;
 			this->TextBoxFilter->Name = L"TextBoxFilter";
-			this->TextBoxFilter->Size = System::Drawing::Size(396, 23);
+			this->TextBoxFilter->Size = System::Drawing::Size(396, 20);
 			this->TextBoxFilter->TabIndex = 0;
 			// 
 			// ListViewForms

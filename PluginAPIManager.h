@@ -4,6 +4,7 @@
 #undef CSEAPI_NO_CODA
 
 #include "CSEInterfaceAPI.h"
+#include "[Common]\HandShakeStructs.h"
 #include <bgsee\Script\CodaVM.h>
 
 namespace cse
@@ -30,7 +31,7 @@ namespace cse
 
 		const CSEInterface*				GetInterface();
 
-		UInt32							ConsumeIntelliSenseInterface();
+		UInt32							ConsumeIntelliSenseInterface(componentDLLInterface::CommandTableData* OutCommandData);
 		void							ConsumeConsoleInterface();
 		void							ConsumeScriptInterface(bgsee::script::CodaScriptCommandRegistrar::ListT& OutRegistrars);
 

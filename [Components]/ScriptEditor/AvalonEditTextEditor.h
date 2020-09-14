@@ -1,6 +1,5 @@
 #pragma once
 
-#include "AvalonEditDefs.h"
 #include "AvalonEditXSHD.h"
 #include "AvalonEditComponents.h"
 #include "WorkspaceModelInterface.h"
@@ -45,18 +44,15 @@ namespace cse
 
 			ref class AvalonEditTextEditor : public IScriptTextEditor
 			{
-				static const double									kSetTextFadeAnimationDuration = 0.1;		// in seconds
-
-				static String^										kMetadataBlockMarker = "CSEBlock";
-				static String^										kMetadataSigilCaret = "CSECaretPos";
+				static const UInt32									kSetTextFadeAnimationDuration = 150;		// in ms
 
 				static AvalonEditXSHDManager^						SyntaxHighlightingManager = gcnew AvalonEditXSHDManager();
 			protected:
-				static enum class									PreventTextChangeFlagState
+				static enum class									TextChangeEventPropagation
 				{
-					Disabled,
-					AutoReset,
-					ManualReset
+					Propagate,
+					SuppressOnce,
+					SuppressAlways
 				};
 
 				static enum class									MoveSegmentDirection
@@ -77,7 +73,7 @@ namespace cse
 
 				bool												InitializingFlag;
 				bool												ModifiedFlag;
-				PreventTextChangeFlagState							PreventTextChangedEventFlag;
+				TextChangeEventPropagation							PreventTextChangedEventFlag;
 				System::Windows::Input::Key							KeyToPreventHandling;
 				int													LastKnownMouseClickOffset;
 				System::Windows::Input::Key							LastKeyThatWentDown;
@@ -108,7 +104,6 @@ namespace cse
 				scriptEditor::IWorkspaceModel^						ParentModel;
 				LineTrackingManager^								LineTracker;
 				JumpToScriptHandler^								JumpScriptDelegate;
-				ToolTip^											InsightPopup;
 				DefaultIconMargin^									IconBarMargin;
 				StructureVisualizerRenderer^						StructureVisualizer;
 				AvalonEdit::Search::SearchPanel^					InlineSearchPanel;
@@ -178,11 +173,9 @@ namespace cse
 				CancelEventHandler^							TextEditorContextMenuOpeningHandler;
 				void                                        TextEditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E);
 
-				bool										RaiseIntelliSenseKeyDown(System::Windows::Input::KeyEventArgs^ E);
-				bool										RaiseIntelliSenseKeyUp(System::Windows::Input::KeyEventArgs^ E);
-				void										RaiseIntelliSenseShow(bool DefaultOperation, intellisense::IIntelliSenseInterfaceModel::Operation NewOperation);
-				void										RaiseIntelliSenseHide(bool Reset);
-				void										RaiseIntelliSenseRelocate();
+				bool										RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::Event Type, System::Windows::Input::KeyEventArgs^ K, System::Windows::Input::MouseButtonEventArgs^ M);
+				void										RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::Event Type, int Offset, Windows::Point Location);
+				void										RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::Event Type);
 
 				void										OnScriptModified(bool ModificationState);
 				bool										OnKeyDown(System::Windows::Input::KeyEventArgs^ E);			// returns true if handled
@@ -229,14 +222,19 @@ namespace cse
 				void										ProcessBackgroundTaskOutput(Task<BackgroundTaskOutput^>^ Completed);
 				void										WaitForBackgroundTask();
 
-				String^										GetTokenAtIndex(int Index, bool SelectText, int% StartIndexOut, int% EndIndexOut);
-				String^										GetTextAtLocation(Point Location, bool SelectText);			// line breaks need to be replaced by the caller
-				String^										GetTextAtLocation(int Index, bool SelectText);
-				array<String^>^								GetTextAtLocation(int Index);								// gets three of the closest tokens surrounding the offset
+				String^										GetTokenAtIndex(int Index, bool SelectText,
+																			int% OutStartIndex, int% OutEndIndex,
+																			Char% OutStartDelimiter, Char% OutEndDelimiter);
+				String^										GetTokenAtLocation(Point Location, bool SelectText);		// line breaks need to be replaced by the caller
+				String^										GetTokenAtLocation(int Index, bool SelectText);
+				array<String^>^								GetTokenAtLocation(int Index);								// gets three of the closest tokens surrounding the offset
+				array<String^>^								GetTokenAtLocation(int Index,
+																			array<Tuple<Char, Char>^>^% OutDelimiters);	// same as above; also returns the leading and trailing delimiters of each token
+				Char										GetDelimiterAtLocation(int Index);
 
 				bool										GetCharIndexInsideStringSegment(int Index);
 
-				void										SetPreventTextChangedFlag(PreventTextChangeFlagState State);
+				void										SetPreventTextChangedFlag(TextChangeEventPropagation State);
 				void										HandleKeyEventForKey(System::Windows::Input::Key Key);
 
 				void										HandleTextChangeEvent();
@@ -286,19 +284,10 @@ namespace cse
 				int											GetLastKnownMouseClickOffset(void);
 				void										AddBookmark(int Index);
 
-				void                                        SerializeCaretPos(String^% Result);
-				void                                        SerializeBookmarks(String^% Result);
-				void                                        DeserializeCaretPos(String^ ExtractedBlock);
-				void                                        DeserializeBookmarks(String^ ExtractedBlock);
-
-				void										ShowInsightPopup(int Offset, Windows::Point Location);
-				void										HideInsightPopup();
-
 				bool										GetLineVisible(UInt32 LineNumber, bool CheckVisualLine);	// inside the text field's viewable area
 				UInt32										GetFirstVisibleLine();
+				Point										PointToScreen(Point Location);
 
-				String^										SerializeMetadata(bool AddPreprocessorSigil);
-				void										DeserializeMetadata(String^ Input, String^% OutMetadataBlock, String^% OutScriptText);
 
 				static enum class ToggleCommentOperation
 				{
@@ -311,6 +300,7 @@ namespace cse
 				void										CommentLines(ToggleCommentOperation Operation);
 
 				void										ToggleSearchPanel(bool State);
+				String^										GetCurrentLineText(bool ClipAtCaretPos);
 			public:
 				AvalonEditTextEditor(scriptEditor::IWorkspaceModel^ ParentModel, JumpToScriptHandler^ JumpScriptDelegate, Font^ Font, int TabSize);
 				~AvalonEditTextEditor();
@@ -321,11 +311,10 @@ namespace cse
 				}
 
 #pragma region Interfaces
-				virtual event IntelliSenseKeyDownEventHandler^				IntelliSenseKeyDown;
-				virtual event IntelliSenseKeyUpEventHandler^				IntelliSenseKeyUp;
-				virtual event IntelliSenseShowEventHandler^					IntelliSenseShow;
-				virtual event IntelliSenseHideEventHandler^					IntelliSenseHide;
-				virtual event IntelliSensePositionEventHandler^				IntelliSenseRelocate;
+				virtual event intellisense::IntelliSenseInputEventHandler^			IntelliSenseInput;
+				virtual event intellisense::IntelliSenseInsightHoverEventHandler^	IntelliSenseInsightHover;
+				virtual event intellisense::IntelliSenseContextChangeEventHandler^	IntelliSenseContextChange;
+
 				virtual event TextEditorScriptModifiedEventHandler^			ScriptModified;
 				virtual event KeyEventHandler^								KeyDown;
 				virtual event TextEditorMouseClickEventHandler^				MouseClick;
@@ -393,21 +382,18 @@ namespace cse
 				virtual String^								GetText();
 				virtual String^								GetText(UInt32 LineNumber);
 				virtual String^								GetPreprocessedText(bool% OutPreprocessResult, bool SuppressErrors);
-				virtual void								SetText(String^ Text, bool PreventTextChangedEventHandling, bool ResetUndoStack);
-
+				virtual void								SetText(String^ Text, bool ResetUndoStack);
 				virtual String^								GetSelectedText(void);
-				virtual void								SetSelectedText(String^ Text, bool PreventTextChangedEventHandling);
-
+				virtual void								SetSelectedText(String^ Text);
 				virtual int									GetCharIndexFromPosition(Point Position);
 				virtual Point								GetPositionFromCharIndex(int Index, bool Absolute);
-
 				virtual String^								GetTokenAtCharIndex(int Offset);
 				virtual String^								GetTokenAtCaretPos();
 				virtual void								SetTokenAtCaretPos(String^ Replacement);
-
 				virtual void								ScrollToCaret();
-
+				virtual void								ScrollToLine(UInt32 LineNumber);
 				virtual void								FocusTextArea();
+
 				virtual void								LoadFileFromDisk(String^ Path);
 				virtual void								SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ DefaultName, String^ DefaultExtension);
 
@@ -416,20 +402,17 @@ namespace cse
 																		String^ Replacement,
 																		IScriptTextEditor::FindReplaceOptions Options);
 
-				virtual void								ScrollToLine(UInt32 LineNumber);
-				virtual Point								PointToScreen(Point Location);
 
 				virtual void								BeginUpdate(void);
 				virtual void								EndUpdate(bool FlagModification);
 
 				virtual UInt32								GetIndentLevel(UInt32 LineNumber);
 				virtual void								InsertVariable(String^ VariableName, obScriptParsing::Variable::DataType VariableType);
-
 				virtual obScriptParsing::AnalysisData^		GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
 
+				virtual void								InitializeState(String^ RawScriptText);
 				virtual CompilationData^					BeginScriptCompilation();
 				virtual void								EndScriptCompilation(CompilationData^ Data);
-				virtual void								InitializeState(String^ RawScriptText);
 #pragma endregion
 			};
 		}

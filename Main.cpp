@@ -34,10 +34,8 @@
 namespace cse
 {
 	OBSEMessagingInterface*						XSEMsgIntfc = nullptr;
-	PluginHandle								XSEPluginHandle = kPluginHandle_Invalid;
-
 	OBSECommandTableInterface*					XSECommandTableIntfc = nullptr;
-	componentDLLInterface::CommandTableData		XSECommandTableData;
+	PluginHandle								XSEPluginHandle = kPluginHandle_Invalid;
 
 	ReleaseNameTable							ReleaseNameTable::Instance;
 	bool										shadeMeMode = false;
@@ -87,10 +85,6 @@ namespace cse
 			BGSEECONSOLE_MESSAGE("Messaging/CommandTable interface not found");
 			return false;
 		}
-
-		XSECommandTableData.GetCommandReturnType = XSECommandTableIntfc->GetReturnType;
-		XSECommandTableData.GetParentPlugin = XSECommandTableIntfc->GetParentPlugin;
-		XSECommandTableData.GetRequiredOBSEVersion = XSECommandTableIntfc->GetRequiredOBSEVersion;
 		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Component DLLs");
@@ -230,14 +224,17 @@ namespace cse
 		BGSEECONSOLE_MESSAGE("Initializing ScriptEditor");
 		BGSEECONSOLE->Indent();
 
+		componentDLLInterface::CommandTableData XSECommandTableData;
+		XSECommandTableData.GetCommandReturnType = XSECommandTableIntfc->GetReturnType;
+		XSECommandTableData.GetParentPlugin = XSECommandTableIntfc->GetParentPlugin;
+		XSECommandTableData.GetRequiredOBSEVersion = XSECommandTableIntfc->GetRequiredOBSEVersion;
+		XSECommandTableData.CommandTableStart = XSECommandTableIntfc->Start();
+		XSECommandTableData.CommandTableEnd = XSECommandTableIntfc->End();
+		PluginAPIManager::Instance.ConsumeIntelliSenseInterface(&XSECommandTableData);
+
 		componentDLLInterface::IntelliSenseUpdateData GMSTCollectionData;
-		GMSTCollectionData.GMSTCount = GameSettingCollection::Instance->GetGMSTCount();
-		GMSTCollectionData.GMSTListHead = new componentDLLInterface::GMSTData[GMSTCollectionData.GMSTCount];
-		GameSettingCollection::Instance->SerializeGMSTDataForHandShake(GMSTCollectionData.GMSTListHead);
+		GameSettingCollection::Instance->MarshalAll(&GMSTCollectionData.GMSTListHead, &GMSTCollectionData.GMSTCount, false);
 		cliWrapper::interfaces::SE->InitializeComponents(&XSECommandTableData, &GMSTCollectionData);
-		BGSEECONSOLE->Indent();
-		BGSEECONSOLE_MESSAGE("Bound %d developer URLs", PluginAPIManager::Instance.ConsumeIntelliSenseInterface());
-		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE->Outdent();
 
@@ -319,10 +316,8 @@ namespace cse
 
 		for (const CommandInfo* Itr = XSECommandTableData.CommandTableStart; Itr < XSECommandTableData.CommandTableEnd; ++Itr)
 		{
-			if (!_stricmp(Itr->longName, ""))
-				continue;
-
-			BGSEEACHIEVEMENTS->Unlock(achievements::kCommandant);
+			if (strlen(Itr->longName) > 0)
+				BGSEEACHIEVEMENTS->Unlock(achievements::kCommandant);
 		}
 
 		BGSEEACHIEVEMENTS->Unlock(achievements::kHappyBDayMoi, false, false, true);
@@ -625,11 +620,10 @@ namespace cse
 		switch (Msg->type)
 		{
 		case OBSEMessagingInterface::kMessage_PostLoad:
-			XSECommandTableData.CommandTableStart = XSECommandTableIntfc->Start();
-			XSECommandTableData.CommandTableEnd = XSECommandTableIntfc->End();
 			XSEMsgIntfc->RegisterListener(XSEPluginHandle, nullptr, CSEInteropHandler);
 			break;
 		case OBSEMessagingInterface::kMessage_PostPostLoad:
+
 			break;
 		}
 	}

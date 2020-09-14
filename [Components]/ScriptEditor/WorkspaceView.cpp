@@ -1,8 +1,8 @@
 #include "WorkspaceView.h"
 #include "[Common]\CustomInputBox.h"
 #include "IntelliSenseDatabase.h"
-#include "ScriptEditorPreferences.h"
-#include "IntelliSenseInterface.h"
+#include "Preferences.h"
+#include "IntelliSenseInterfaceView.h"
 #include "[Common]/ListViewUtilities.h"
 
 using namespace GlobalInputMonitor;
@@ -610,7 +610,7 @@ namespace cse
 			NavigationStackForward = gcnew Stack < IWorkspaceModel^ > ;
 			FreezeNavigationStacks = false;
 
-			EditorForm = gcnew AnimatedForm(0.10);
+			EditorForm = gcnew AnimatedForm(0.1);
 			EditorForm->SuspendLayout();
 
 			EditorForm->FormBorderStyle = FormBorderStyle::Sizable;
@@ -698,7 +698,7 @@ namespace cse
 			EditorTabStrip->TabRemoved += ScriptStripTabRemovedHandler;
 			EditorTabStrip->TabStripMouseClick += ScriptStripMouseClickHandler;
 			EditorTabStrip->TabMoving += ScriptStripTabMovingHandler;
-			PREFERENCES->PreferencesSaved += ScriptEditorPreferencesSavedHandler;
+			preferences::SettingsHolder::Get()->SavedToDisk += ScriptEditorPreferencesSavedHandler;
 			ConcreteWorkspaceViewSubscribeClickEvent(NewTabButton);
 			ConcreteWorkspaceViewSubscribeClickEvent(SortTabsButton);
 
@@ -778,15 +778,12 @@ namespace cse
 			ToolBarSnippetManager = gcnew ToolStripButton();
 			ToolBarByteCodeSize = gcnew ToolStripProgressBar();
 
-			ScriptListBox = gcnew ScriptListDialog();
 			FindReplaceBox = gcnew FindReplaceDialog(this);
 
-			Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
-			Color BackgroundColor = PREFERENCES->LookupColorByKey("BackgroundColor");
+			Color ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
+			Color BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
 			Color HighlightColor = Color::Maroon;
-			Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"),
-										  PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"),
-										  (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
+			Font^ CustomFont = safe_cast<Font^>(preferences::SettingsHolder::Get()->Appearance->TextFont->Clone());
 
 			OffsetTextViewer = gcnew textEditors::ScriptOffsetViewer(CustomFont, ForegroundColor, BackgroundColor, HighlightColor, WorkspaceSplitter->Panel1);
 			PreprocessorTextViewer = gcnew textEditors::SimpleTextViewer(CustomFont, ForegroundColor, BackgroundColor, HighlightColor, WorkspaceSplitter->Panel1);
@@ -808,6 +805,7 @@ namespace cse
 			ScopeCrumbBar->BackgroundStyle->BorderRight = DevComponents::DotNetBar::eStyleBorderType::None;
 			ScopeCrumbBar->BackgroundStyle->BorderTop = DevComponents::DotNetBar::eStyleBorderType::None;
 			ScopeCrumbBar->FadeEffect = false;
+			ScopeCrumbBar->ThemeAware = true;
 			ScopeCrumbBar->Font = gcnew Font("Segoe UI", 9);
 			ScopeCrumbBar->Margin = Padding(20, 0, 20, 0);
 			ScopeCrumbBar->Padding = Padding(20, 0, 20, 0);
@@ -1219,7 +1217,7 @@ namespace cse
 			ConcreteWorkspaceViewSubscribeClickEvent(ToolBarBindScript);
 			ConcreteWorkspaceViewSubscribeClickEvent(ToolBarSnippetManager);
 
-			if (PREFERENCES->FetchSettingAsInt("UseCSParent", "General"))
+			if (preferences::SettingsHolder::Get()->General->HideInTaskbar)
 			{
 				EditorForm->ShowInTaskbar = false;
 				EditorForm->Show(gcnew WindowHandleWrapper((IntPtr)nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetMainWindowHandle()));
@@ -1240,9 +1238,9 @@ namespace cse
 
 			EditorForm->Tag = int(1);			// safe to handle events
 
-			// needs to be defered until the form has been init'ed/layout is complete
-			// otherwise the breadcrum bar turns up above the tab control
-			ScopeCrumbManager->Visible = PREFERENCES->FetchSettingAsInt("ShowBreadcrumbBar", "Appearance");
+			// needs to be deferred until the form has been init'ed/layout is complete
+			// otherwise the breadcrumb bar turns up above the tab control
+			ScopeCrumbManager->Visible = preferences::SettingsHolder::Get()->Appearance->ShowScopeBar;
 		}
 
 		ConcreteWorkspaceView::~ConcreteWorkspaceView()
@@ -1288,7 +1286,7 @@ namespace cse
 			EditorTabStrip->TabMoving -= ScriptStripTabMovingHandler;
 			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(NewTabButton);
 			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(SortTabsButton);
-			PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
+			preferences::SettingsHolder::Get()->SavedToDisk -= ScriptEditorPreferencesSavedHandler;
 
 			SAFEDELETE_CLR(EditorFormCancelHandler);
 			SAFEDELETE_CLR(EditorFormKeyDownHandler);
@@ -1436,7 +1434,6 @@ namespace cse
 
 			SAFEDELETE_CLR(OffsetTextViewer);
 			SAFEDELETE_CLR(PreprocessorTextViewer);
-			SAFEDELETE_CLR(ScriptListBox);
 			SAFEDELETE_CLR(FindReplaceBox);
 			SAFEDELETE_CLR(IntelliSenseView);
 			SAFEDELETE_CLR(TabStripFilter);
@@ -1461,7 +1458,7 @@ namespace cse
 			ViewController = nullptr;
 			ViewFactory = nullptr;
 
-			PREFERENCES->SaveINI();
+			preferences::SettingsHolder::Get()->SaveToDisk();
 
 			EditorForm->ForceClose();
 			SAFEDELETE_CLR(EditorForm);
@@ -1686,16 +1683,14 @@ namespace cse
 
 		void ConcreteWorkspaceView::ToolBarOptions_Click(Object^ Sender, EventArgs^ E)
 		{
-			PREFERENCES->Show();
+			preferences::PreferencesDialog PreferencesDialog;
 		}
 
 		void ConcreteWorkspaceView::ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E)
 		{
-			Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"),
-										  PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"),
-										  (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
-			Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
-			Color BackgroundColor = PREFERENCES->LookupColorByKey("BackgroundColor");
+			Color ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
+			Color BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
+			Font^ CustomFont = safe_cast<Font^>(preferences::SettingsHolder::Get()->Appearance->TextFont->Clone());
 
 			OffsetTextViewer->SetFont(CustomFont);
 			OffsetTextViewer->SetForegroundColor(ForegroundColor);
@@ -1709,7 +1704,7 @@ namespace cse
 		//	ScopeCrumbBar->BackgroundStyle->BorderColor = System::Drawing::Color::FromArgb(200, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B);
 		//	ScopeCrumbBar->BackgroundStyle->BorderColor2 = System::Drawing::Color::FromArgb(200, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B);
 		//	ScopeCrumbBar->Font = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"), 9);
-			ScopeCrumbManager->Visible = PREFERENCES->FetchSettingAsInt("ShowBreadcrumbBar", "Appearance");
+			ScopeCrumbManager->Visible = preferences::SettingsHolder::Get()->Appearance->ShowScopeBar;
 			ScopeCrumbManager->RefreshCrumbs();
 
 			Redraw();
@@ -2058,7 +2053,7 @@ namespace cse
 
 		void ConcreteWorkspaceView::ToolBarSnippetManager_Click(Object^ Sender, EventArgs^ E)
 		{
-			intellisense::ISDB->ShowCodeSnippetManager();
+			intellisense::IntelliSenseBackend::Get()->ShowCodeSnippetManager();
 		}
 
 		void ConcreteWorkspaceView::ToolBarRefactorMenuContentsDocumentScript_Click(Object^ Sender, EventArgs^ E)
@@ -2117,7 +2112,7 @@ namespace cse
 
 			if (ModelController()->ApplyRefactor(Active, IWorkspaceModel::RefactorOperation::ModifyVariableIndices, nullptr))
 			{
-				if (PREFERENCES->FetchSettingAsInt("RecompileVarIdx", "General"))
+				if (preferences::SettingsHolder::Get()->General->RecompileDependsOnVarIdxMod)
 				{
 					ToolBarSaveScript->PerformButtonClick();
 					ToolBarCompileDependencies->PerformClick();
@@ -2341,20 +2336,25 @@ namespace cse
 
 		void ConcreteWorkspaceView::ShowOpenDialog()
 		{
-			List<String^>^ Selection = gcnew List < String^ > ;
-			if (ScriptListBox->Show(ScriptListDialog::ShowOperation::Open, "", Selection))
+			SelectScriptDialogParams^ Params = gcnew SelectScriptDialogParams;
+			Params->SelectedScriptEditorID = GetActiveModel()->ShortDescription;
+
+			SelectScriptDialog ScriptSelection(Params);
+			if (ScriptSelection.HasResult == false)
+				return;
+
+			BeginUpdate();
 			{
-				BeginUpdate();
 				NewTabOperationArgs^ E = gcnew NewTabOperationArgs;
 				int i = 0;
-				for each (auto Itr in Selection)
+				for each (auto Itr in ScriptSelection.ResultData->SelectedScriptEditorIDs)
 				{
 					CString EID(Itr);
 
 					if (i == 0)
 					{
 						ModelController()->Open(GetActiveModel(),
-												nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(EID.c_str()));
+							nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(EID.c_str()));
 					}
 					else
 					{
@@ -2367,20 +2367,23 @@ namespace cse
 
 					i++;
 				}
-				EndUpdate();
 			}
+			EndUpdate();
 		}
 
 		void ConcreteWorkspaceView::ShowDeleteDialog()
 		{
-			List<String^>^ Selection = gcnew List < String^ >;
-			if (ScriptListBox->Show(ScriptListDialog::ShowOperation::Delete, "", Selection))
+			SelectScriptDialogParams^ Params = gcnew SelectScriptDialogParams;
+			Params->SelectedScriptEditorID = GetActiveModel()->ShortDescription;
+
+			SelectScriptDialog ScriptSelection(Params);
+			if (ScriptSelection.HasResult == false)
+				return;
+
+			for each (auto Itr in ScriptSelection.ResultData->SelectedScriptEditorIDs)
 			{
-				for each (auto Itr in Selection)
-				{
-					CString EID(Itr);
-					nativeWrapper::g_CSEInterfaceTable->ScriptEditor.DeleteScript(EID.c_str());
-				}
+				CString EID(Itr);
+				nativeWrapper::g_CSEInterfaceTable->ScriptEditor.DeleteScript(EID.c_str());
 			}
 		}
 
@@ -2634,7 +2637,7 @@ namespace cse
 				break;
 			case NewTabOperationArgs::PostNewTabOperation::LoadFromDisk:
 				{
-					if (PREFERENCES->FetchSettingAsInt("LoadScriptUpdateExistingScripts", "General") == 0)
+					if (preferences::SettingsHolder::Get()->General->LoadScriptUpdatesExistingScripts == false)
 					{
 						New = ModelFactory()->CreateModel(nullptr);
 						ModelController()->New(New);

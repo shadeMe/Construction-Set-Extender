@@ -1,6 +1,6 @@
 #include "AvalonEditXSHD.h"
 #include "Globals.h"
-#include "ScriptEditorPreferences.h"
+#include "Preferences.h"
 
 namespace cse
 {
@@ -295,14 +295,14 @@ namespace cse
 
 			void AvalonEditXSHDManager::UpdateBaseDefinitions(void)
 			{
-				bool Bold = PREFERENCES->FetchSettingAsInt("BoldFacedHighlighting", "Appearance");
-				Color Comments = PREFERENCES->LookupColorByKey("SyntaxCommentsColor");
-				Color Preprocessor = PREFERENCES->LookupColorByKey("SyntaxPreprocessorColor");
-				Color Keywords = PREFERENCES->LookupColorByKey("SyntaxKeywordsColor");
-				Color Blocks = PREFERENCES->LookupColorByKey("SyntaxScriptBlocksColor");
-				Color Digits = PREFERENCES->LookupColorByKey("SyntaxDigitsColor");
-				Color Strings = PREFERENCES->LookupColorByKey("SyntaxStringsColor");
-				Color Vars = PREFERENCES->LookupColorByKey("SyntaxLocalVarsColor");
+				bool Bold = preferences::SettingsHolder::Get()->Appearance->BoldFaceHighlightedText;
+				Color Comments = preferences::SettingsHolder::Get()->Appearance->ForeColorComments;
+				Color Preprocessor = preferences::SettingsHolder::Get()->Appearance->ForeColorPreprocessor;
+				Color Keywords = preferences::SettingsHolder::Get()->Appearance->ForeColorKeywords;
+				Color Blocks = preferences::SettingsHolder::Get()->Appearance->ForeColorScriptBlocks;
+				Color Digits = preferences::SettingsHolder::Get()->Appearance->ForeColorDigits;
+				Color Strings = preferences::SettingsHolder::Get()->Appearance->ForeColorStringLiterals;
+				Color Vars = preferences::SettingsHolder::Get()->Appearance->ForeColorLocalVariables;
 
 				LinkedList<IXSHDElement^>^ Contents = gcnew LinkedList<IXSHDElement^>();
 				LinkedList<XSHDColor^>^ SerializedColors = gcnew LinkedList<XSHDColor^>();
@@ -446,7 +446,7 @@ namespace cse
 
 				if (LocalVariables && LocalVariables->Count)
 				{
-					bool Bold = PREFERENCES->FetchSettingAsInt("BoldFacedHighlighting", "Appearance");
+					bool Bold = preferences::SettingsHolder::Get()->Appearance->BoldFaceHighlightedText;
 					XSHDKeywords^ HighlightKeywords = gcnew XSHDKeywords(LocalVarsColor, Color::GhostWhite, Color::GhostWhite, Bold);
 
 					for each (String^ Itr in LocalVariables)
@@ -456,12 +456,6 @@ namespace cse
 
 				OutDefs += "</RuleSet>" + Environment::NewLine;
 				OutDefs += "</SyntaxDefinition>";
-
-#if 0
-				StreamWriter^ XSHDWriter = gcnew StreamWriter(Globals::AppPath + "XSHD-CSE.txt");
-				XSHDWriter->Write(OutDefs);
-				XSHDWriter->Close();
-#endif
 
 				array<Byte>^ ByteArray = System::Text::Encoding::ASCII->GetBytes(OutDefs);
 				XmlTextReader^ Reader = gcnew XmlTextReader(gcnew IO::MemoryStream(ByteArray));

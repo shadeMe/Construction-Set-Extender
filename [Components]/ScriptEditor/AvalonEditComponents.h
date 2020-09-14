@@ -1,6 +1,5 @@
 #pragma once
 
-#include "AvalonEditDefs.h"
 #include "[Common]/ListViewUtilities.h"
 #include "ScriptTextEditorInterface.h"
 
@@ -311,8 +310,6 @@ namespace cse
 					FindResults,
 				};
 			private:
-				static String^								kMetadataSigilBookmark = "CSEBookmark";
-
 				AvalonEdit::TextEditor^						Parent;
 
 				SimpleBindingList<ScriptMessage^>^			Messages;
@@ -369,9 +366,8 @@ namespace cse
 
 				void										AddBookmark(UInt32 Line, String^ Description);
 				UInt32										GetBookmarks(UInt32 Line, List<ScriptBookmark^>^% Out);
+				List<ScriptTextMetadata::Bookmark^>^		GetAllBookmarks();
 				void										ClearBookmarks();
-				String^										SerializeBookmarks();
-				void										DeserializeBookmarks(String^ Serialized, bool ClearExisting);
 
 				void										TrackFindResult(UInt32 Start, UInt32 End, String^ Text);
 				void										ClearFindResults(bool IndicatorOnly);
@@ -418,11 +414,7 @@ namespace cse
 				ObScriptIndentStrategy(AvalonEditTextEditor^ Parent, bool TrimTrailingWhitespace, bool CullEmptyLines);
 			};
 
-#if BUILD_AVALONEDIT_VERSION >= AVALONEDIT_5_0_1
 			ref class ObScriptCodeFoldingStrategy
-#else
-			ref class ObScriptCodeFoldingStrategy : public AvalonEdit::Folding::XmlFoldingStrategy
-#endif
 			{
 				ref class FoldingSorter : public IComparer<AvalonEdit::Folding::NewFolding^>
 				{
@@ -435,11 +427,7 @@ namespace cse
 			public:
 				virtual ~ObScriptCodeFoldingStrategy();
 
-#if BUILD_AVALONEDIT_VERSION >= AVALONEDIT_5_0_1
 				virtual IEnumerable<AvalonEdit::Folding::NewFolding^>^			CreateNewFoldings(AvalonEdit::Document::TextDocument^ document, int% firstErrorOffset);
-#else
-				virtual IEnumerable<AvalonEdit::Folding::NewFolding^>^			CreateNewFoldings(AvalonEdit::Document::TextDocument^ document, int% firstErrorOffset) override;
-#endif
 				ObScriptCodeFoldingStrategy(AvalonEditTextEditor^ Parent);
 			};
 
@@ -537,9 +525,11 @@ namespace cse
 			{
 				static int											InstanceCounter = 0;
 				static Windows::Media::Imaging::BitmapSource^		WarningIcon = nullptr;
+				static Windows::Media::Imaging::BitmapSource^		ErrorIcon = nullptr;
 				static Windows::Media::Imaging::BitmapSource^		BookmarkIcon = nullptr;
 
 				static Windows::Media::Imaging::BitmapSource^		GetWarningIcon();
+				static Windows::Media::Imaging::BitmapSource^		GetErrorIcon();
 				static Windows::Media::Imaging::BitmapSource^		GetBookmarkIcon();
 			protected:
 				AvalonEdit::TextEditor^		Parent;

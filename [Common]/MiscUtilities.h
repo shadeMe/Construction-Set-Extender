@@ -7,19 +7,17 @@ namespace cse
 {
 	ref class CString
 	{
-		IntPtr												P;
+		IntPtr	P;
 
-		void												Free() { Marshal::FreeHGlobal(P); }
+		void		Free() { Marshal::FreeHGlobal(P); }
 	public:
-		CString(String^% Source);
-
+		CString(String^ Source);
 		~CString();
 
-		const char*											c_str() { return static_cast<char*>(P.ToPointer()); }
+		const char* c_str() { return static_cast<char*>(P.ToPointer()); }
 	};
 
-	void													DebugDump(UInt8 Source, String^% Message);
-	void													ToggleFlag(UInt32* Flag, UInt32 Mask, bool State);		// state = 1 [ON], 0 [OFF]
+	void ToggleFlag(UInt32* Flag, UInt32 Mask, bool State);		// state = 1 [ON], 0 [OFF]
 
 	ref class CSEGeneralException : public System::InvalidOperationException
 	{
@@ -29,12 +27,12 @@ namespace cse
 
 	ref class ImageResourceManager
 	{
-		ResourceManager^					Manager;
+		ResourceManager^	Manager;
 	public:
 		ImageResourceManager(String^ BaseName);
 
-		Image^												CreateImage(String^ ResourceIdentifier);
-		void												SetupImageForToolStripButton(ToolStripButton^ Control);
+		Image^				CreateImage(String^ ResourceIdentifier);
+		void				SetupImageForToolStripButton(ToolStripButton^ Control);
 	};
 
 	ref class CSEControlDisposer
@@ -211,38 +209,11 @@ namespace cse
 		}
 	};
 
-	namespace log
+	// Fix for the white bottom border when using the System toolstrip renderer
+	// https://stackoverflow.com/questions/1918247/how-to-disable-the-line-under-tool-strip-in-winform-c
+	ref class CustomToolStripSystemRenderer : public ToolStripSystemRenderer
 	{
-		enum MessageSource
-		{
-			e_CSE = 0,
-			e_CS,
-			e_BE,
-			e_UL,
-			e_SE,
-			e_BSA,
-			e_TAG
-		};
-
-		namespace scriptEditor
-		{
-			void DebugPrint(String^ Message, bool Achtung = false);
-		}
-		namespace useInfoList
-		{
-			void DebugPrint(String^ Message, bool Achtung = false);
-		}
-		namespace batchEditor
-		{
-			void DebugPrint(String^ Message, bool Achtung = false);
-		}
-		namespace bsaViewer
-		{
-			void DebugPrint(String^ Message, bool Achtung = false);
-		}
-		namespace tagBrowser
-		{
-			void DebugPrint(String^ Message, bool Achtung = false);
-		}
-	}
+	protected:
+		virtual void OnRenderToolStripBorder(ToolStripRenderEventArgs^ e) override {}
+	};
 }

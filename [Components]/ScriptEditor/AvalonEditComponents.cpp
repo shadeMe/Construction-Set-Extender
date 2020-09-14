@@ -1,6 +1,6 @@
 #include "AvalonEditComponents.h"
 #include "AvalonEditTextEditor.h"
-#include "ScriptEditorPreferences.h"
+#include "Preferences.h"
 #include "Globals.h"
 
 namespace cse
@@ -82,11 +82,7 @@ namespace cse
 				TextSegment^ Segment = gcnew TextSegment();
 				Segment->StartOffset = StartOffset;
 				Segment->EndOffset = EndOffset;
-#if BUILD_AVALONEDIT_VERSION == AVALONEDIT_4_0_0_7070
-				for each (Windows::Rect R in BackgroundGeometryBuilder::GetRectsForSegment(Destination, Segment))
-#else
 				for each (Windows::Rect R in BackgroundGeometryBuilder::GetRectsForSegment(Destination, Segment, false))
-#endif
 				{
 					if (ColorEntireLine)
 					{
@@ -551,11 +547,7 @@ namespace cse
 				Segment->StartOffset = StartOffset;
 				Segment->EndOffset = EndOffset;
 
-#if BUILD_AVALONEDIT_VERSION == AVALONEDIT_4_0_0_7070
-				for each (Windows::Rect R in BackgroundGeometryBuilder::GetRectsForSegment(Destination, Segment))
-#else
 				for each (Windows::Rect R in BackgroundGeometryBuilder::GetRectsForSegment(Destination, Segment, false))
-#endif
 				{
 					Windows::Point StartPoint = R.BottomLeft;
 					Windows::Point EndPoint = R.BottomRight;
@@ -595,7 +587,7 @@ namespace cse
 
 			void ScriptErrorIndicator::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 			{
-				Color Buffer = PREFERENCES->LookupColorByKey("ErrorHighlightColor");
+				Color Buffer = preferences::SettingsHolder::Get()->Appearance->UnderlineColorError;
 				Windows::Media::Color RenderColor = Windows::Media::Color::FromArgb(255, Buffer.R, Buffer.G, Buffer.B);
 
 				for each (ColorizerSegment^ Itr in Delegate())
@@ -615,7 +607,7 @@ namespace cse
 
 			void ScriptFindResultIndicator::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 			{
-				Color Buffer = PREFERENCES->LookupColorByKey("FindResultsHighlightColor");
+				Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorFindResults;
 
 				for each (ColorizerSegment^ Itr in Delegate())
 				{
@@ -976,60 +968,24 @@ namespace cse
 				return Count;
 			}
 
+			List<cse::textEditors::ScriptTextMetadata::Bookmark^>^ LineTrackingManager::GetAllBookmarks()
+			{
+				List<ScriptTextMetadata::Bookmark^>^ Out = gcnew List<ScriptTextMetadata::Bookmark ^>;
+
+				for each (ScriptBookmark ^ Itr in Bookmarks)
+				{
+					if (Itr->Deleted() == false)
+						Out->Add(gcnew ScriptTextMetadata::Bookmark(Itr->Line(), Itr->Message()));
+				}
+
+				return Out;
+			}
+
 			void LineTrackingManager::ClearBookmarks()
 			{
 				Bookmarks->Clear();
 				RefreshBackgroundRenderers(false);
 				OnTrackedDataUpdated();
-			}
-
-			String^ LineTrackingManager::SerializeBookmarks()
-			{
-				String^ Out = "";
-
-				for each (ScriptBookmark^ Itr in Bookmarks)
-					Out += ";<" + kMetadataSigilBookmark + ">\t" + Itr->Line() + "\t" + Itr->Message() + "\t</" + kMetadataSigilBookmark + ">\n";
-
-				return Out;
-			}
-
-			void LineTrackingManager::DeserializeBookmarks(String^ Serialized, bool ClearExisting)
-			{
-				BeginUpdate(LineTrackingManager::UpdateSource::Bookmarks);
-
-				if (ClearExisting)
-					ClearBookmarks();
-
-				ScriptParser^ TextParser = gcnew ScriptParser();
-				StringReader^ StringParser = gcnew StringReader(Serialized);
-				String^ ReadLine = StringParser->ReadLine();
-				int LineNo = 0;
-
-				while (ReadLine != nullptr)
-				{
-					if (TextParser->Tokenize(ReadLine, false) == false)
-					{
-						ReadLine = StringParser->ReadLine();
-						continue;
-					}
-
-					if (TextParser->GetTokenIndex(";<" + kMetadataSigilBookmark + ">") == 0)
-					{
-						array<String^>^ Splits = ReadLine->Substring(TextParser->Indices[0])->Split((String("\t")).ToCharArray());
-						try	{
-							LineNo = int::Parse(Splits[1]);
-						} catch (...) {
-							LineNo = 1;
-						}
-
-						if (LineNo > 0 && LineNo <= Parent->Document->LineCount)
-							AddBookmark(LineNo, Splits[2]);
-					}
-
-					ReadLine = StringParser->ReadLine();
-				}
-
-				EndUpdate(true);
 			}
 
 			void LineTrackingManager::TrackFindResult(UInt32 Start, UInt32 End, String^ Text)
@@ -1139,7 +1095,7 @@ namespace cse
 				if (ParentEditor->TextArea->Selection->IsEmpty)
 				{
 					DocumentLine^ Line = ParentEditor->Document->GetLineByNumber(ParentEditor->TextArea->Caret->Line);
-					Color Buffer = PREFERENCES->LookupColorByKey("CurrentLineHighlightColor");
+					Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorCurrentLine;
 					RenderBackground(textView,
 									drawingContext,
 									Line->Offset,
@@ -1164,14 +1120,10 @@ namespace cse
 
 				if (!CurrentSelection->IsEmpty)
 				{
-#if VERSION_4_0_0_7070
-					String^ SelectionText = CurrentSelection->GetText(CurrentDocument)->Replace("\t", "")->Replace(" ", "")->Replace("\n", "")->Replace("\r\n", "");
-#else
 					String^ SelectionText = CurrentSelection->GetText()->Replace("\t", "")->Replace(" ", "")->Replace("\n", "")->Replace("\r\n", "");
-#endif
 					if (SelectionText->Length > 1)
 					{
-						Color Buffer = PREFERENCES->LookupColorByKey("SelectionHighlightColor");
+						Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorSelection;
 
 						for each (DocumentLine^ Line in ParentEditor->Document->Lines)
 						{
@@ -1209,7 +1161,7 @@ namespace cse
 
 			void LineLimitBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 			{
-				Color Buffer = PREFERENCES->LookupColorByKey("CharLimitHighlightColor");
+				Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorCharLimit;
 
 				for each (DocumentLine^ Line in ParentEditor->Document->Lines)
 				{
@@ -1336,9 +1288,6 @@ namespace cse
 			}
 
 			ObScriptCodeFoldingStrategy::ObScriptCodeFoldingStrategy(AvalonEditTextEditor^ Parent) :
-#if BUILD_AVALONEDIT_VERSION < AVALONEDIT_5_0_1
-				AvalonEdit::Folding::AbstractFoldingStrategy(),
-#endif
 				Parent(Parent),
 				Sorter(gcnew FoldingSorter())
 			{
@@ -1481,9 +1430,9 @@ namespace cse
 
 			Windows::UIElement^ StructureVisualizerRenderer::GenerateAdornment(UInt32 JumpLine, String^ ElementText)
 			{
-				Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
-				Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"),
-											  PREFERENCES->FetchSettingAsInt("FontSize", "Appearance") - 2,
+				Color ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
+				Font^ CustomFont = gcnew Font(preferences::SettingsHolder::Get()->Appearance->TextFont->FontFamily->Name,
+											  preferences::SettingsHolder::Get()->Appearance->TextFont->Size - 2,
 											  FontStyle::Italic);
 
 				Windows::Media::Brush^ ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(100,
@@ -1699,15 +1648,17 @@ namespace cse
 			Windows::Media::Imaging::BitmapSource^ DefaultIconMargin::GetWarningIcon()
 			{
 				if (WarningIcon == nullptr)
-				{
-					Color Current = SystemColors::Control;
-					if (Current.R < 100 && Current.B < 100 && Current.G < 100)
-						WarningIcon = WPFImageResourceGenerator::CreateImageSource("AvalonEditIconMarginWarningColor");
-					else
-						WarningIcon = WPFImageResourceGenerator::CreateImageSource("AvalonEditIconMarginWarningDark");
-				}
+					WarningIcon = WPFImageResourceGenerator::CreateImageSource("AvalonEditIconMarginWarningColor");
 
 				return WarningIcon;
+			}
+
+			Windows::Media::Imaging::BitmapSource^ DefaultIconMargin::GetErrorIcon()
+			{
+				if (ErrorIcon == nullptr)
+					ErrorIcon = WPFImageResourceGenerator::CreateImageSource("AvalonEditIconMarginErrorColor");
+
+				return ErrorIcon;
 			}
 
 			Windows::Media::Imaging::BitmapSource^ DefaultIconMargin::GetBookmarkIcon()
@@ -1728,8 +1679,24 @@ namespace cse
 				DisplayLocation.Y += GetVisualLineFromMousePosition(E)->Height;
 
 				List<ScriptMessage^>^ Warnings = gcnew List < ScriptMessage^ >;
+				List<ScriptMessage^>^ Errors = gcnew List < ScriptMessage^ >;
 				List<ScriptBookmark^>^ Bookmarks = gcnew List < ScriptBookmark^ >;
+
 				if (LineTracker->GetMessages(Line,
+										IScriptTextEditor::ScriptMessageSource::None,
+										IScriptTextEditor::ScriptMessageType::Error,
+										Errors))
+				{
+					DisplayPopup = true;
+					PopupIcon = ToolTipIcon::Error;
+					PopupTitle = Errors->Count + " Error" + (Errors->Count == 1 ? "" : "s");
+
+					for each (auto Itr in Errors)
+						PopupText += Itr->Message() + "\n";
+
+					PopupText = PopupText->TrimEnd();
+				}
+				else if (LineTracker->GetMessages(Line,
 										 IScriptTextEditor::ScriptMessageSource::None,
 										 IScriptTextEditor::ScriptMessageType::Warning,
 										 Warnings))
@@ -1741,8 +1708,7 @@ namespace cse
 					for each (auto Itr in Warnings)
 						PopupText += Itr->Message() + "\n";
 
-					if (PopupText->Length)
-						PopupText->Remove(PopupText->Length - 1);
+					PopupText = PopupText->TrimEnd();
 				}
 				else if (LineTracker->GetBookmarks(Line,Bookmarks))
 				{
@@ -1753,8 +1719,7 @@ namespace cse
 					for each (auto Itr in Bookmarks)
 						PopupText += Itr->Message() + "\n";
 
-					if (PopupText->Length)
-						PopupText->Remove(PopupText->Length - 1);
+					PopupText = PopupText->TrimEnd();
 				}
 
 				if (DisplayPopup)
@@ -1773,16 +1738,22 @@ namespace cse
 
 			bool DefaultIconMargin::GetRenderData(int Line, Windows::Media::Imaging::BitmapSource^% OutIcon, double% OutOpacity, int% Width, int% Height)
 			{
-				// warnings override bookmarks
+				List<ScriptMessage^>^ Errors = gcnew List < ScriptMessage^ >;
 				List<ScriptMessage^>^ Warnings = gcnew List < ScriptMessage^ >;
 				List<ScriptBookmark^>^ Bookmarks = gcnew List < ScriptBookmark^ >;
+				LineTracker->GetMessages(Line, IScriptTextEditor::ScriptMessageSource::None, IScriptTextEditor::ScriptMessageType::Error, Errors);
 				LineTracker->GetMessages(Line, IScriptTextEditor::ScriptMessageSource::None, IScriptTextEditor::ScriptMessageType::Warning, Warnings);
 				LineTracker->GetBookmarks(Line, Bookmarks);
 
-				if (Warnings->Count == 0 && Bookmarks->Count == 0)
+				if (Errors->Count == 0 && Warnings->Count == 0 && Bookmarks->Count == 0)
 					return false;
 
-				if (Warnings->Count)
+				if (Errors->Count)
+				{
+					OutIcon = GetErrorIcon();
+					Width = Height = 16;
+				}
+				else if (Warnings->Count)
 				{
 					OutIcon = GetWarningIcon();
 					Width = Height = 16;

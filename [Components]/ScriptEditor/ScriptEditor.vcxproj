@@ -157,6 +157,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xaml" />
     <Reference Include="WindowsFormsIntegration">
@@ -205,13 +206,16 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="AvalonEditXSHD.cpp" />
     <ClCompile Include="FindReplaceDialog.cpp" />
     <ClCompile Include="IntelliSenseDatabase.cpp" />
-    <ClCompile Include="IntelliSenseInterface.cpp" />
+    <ClCompile Include="IntelliSenseInterfaceModel.cpp" />
+    <ClCompile Include="IntelliSenseInterfaceView.cpp" />
     <ClCompile Include="IntelliSenseItem.cpp" />
     <ClCompile Include="NumberedRichTextBox.cpp" />
-    <ClCompile Include="ScriptEditorPreferences.cpp" />
+    <ClCompile Include="Preferences.cpp" />
     <ClCompile Include="RefactorTools.cpp" />
-    <ClCompile Include="ScriptListDialog.cpp" />
+    <ClCompile Include="SelectScriptDialog.cpp" />
     <ClCompile Include="Exports.cpp" />
+    <ClCompile Include="ScriptSync.cpp" />
+    <ClCompile Include="ScriptTextEditorInterface.cpp" />
     <ClCompile Include="SemanticAnalysis.cpp" />
     <ClCompile Include="SnippetManager.cpp" />
     <ClCompile Include="TextEditorAdornments.cpp" />
@@ -224,11 +228,11 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="..\..\[Common]\CustomInputBox.h" />
     <ClInclude Include="..\..\[Common]\NativeWrapper.h" />
     <ClInclude Include="AvalonEditComponents.h" />
-    <ClInclude Include="AvalonEditDefs.h" />
     <ClInclude Include="FindReplaceDialog.h" />
     <ClInclude Include="IIntelliSenseInterface.h" />
     <ClInclude Include="IntelliSenseDatabase.h" />
-    <ClInclude Include="IntelliSenseInterface.h" />
+    <ClInclude Include="IntelliSenseInterfaceModel.h" />
+    <ClInclude Include="IntelliSenseInterfaceView.h" />
     <ClInclude Include="IntelliSenseItem.h" />
     <ClInclude Include="RefactorTools.h" />
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h" />
@@ -239,8 +243,9 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="AvalonEditTextEditor.h" />
     <ClInclude Include="AvalonEditXSHD.h" />
     <ClInclude Include="NumberedRichTextBox.h" />
-    <ClInclude Include="ScriptEditorPreferences.h" />
-    <ClInclude Include="ScriptListDialog.h" />
+    <ClInclude Include="Preferences.h" />
+    <ClInclude Include="SelectScriptDialog.h" />
+    <ClInclude Include="ScriptSync.h" />
     <ClInclude Include="ScriptTextEditorInterface.h" />
     <ClInclude Include="Exports.h" />
     <ClInclude Include="Globals.h" />
@@ -278,6 +283,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\ico\Clearallrequests_8816.ico" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\AddEvent_5539.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Bookmark_5776.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\BrushTool_207.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\ChangeQueryType_updatequery_273.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Clearallrequests_8816.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Clearwindowcontent_6304.png" />
@@ -304,6 +310,8 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\RemoveUsingNamespace_10480.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Rename_6779.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Saveall_6518.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Select.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\SyncContents_5706.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Union_534.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\UpdatedJscriptIntelliSense_10740.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Annotations\png\Error_red_16x16.png" />
@@ -339,6 +347,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\action_add_16xMD.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\arrow_Next_16xLG_color.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\arrow_Previous_16xLG_color.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\arrow_Sync_16xLG.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\bookmark_001_16xSM.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\bookmark_002_16xMD.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\bookmark_003_16xLG.png" />
@@ -365,6 +374,9 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\server_remote_16xLG.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\snippet_16xLG.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\snippet_16xMD.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Complete_and_ok_16xLG_color.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Critical_16xLG_color.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Critical_16xMD_color.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Warning_16xLG_color.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Warning_16xMD.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Warning_16xMD_color.png" />
@@ -373,6 +385,16 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\tracepoint_Off_16xLG.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\type_16xLG.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\wizard_16xLG.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\AppearanceEditor\AppearanceEditor_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ApplicationBehaviorSettings\ApplicationBehaviorSettings_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\CleanData\CleanData_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\FindInFile\FindInFile_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\IntelliSenseDatabase\IntelliSenseDatabase_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ListTime\ListTime_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ParseDynamicValue\ParseDynamicValue_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ValidateDocument\ValidateDocument_16x.png" />
+    <Image Include="Images\transparent_161.png" />
+    <Image Include="StatusAnnotations_Complete_and_ok_16xLG_color1.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

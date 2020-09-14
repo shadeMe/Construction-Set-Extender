@@ -68,7 +68,7 @@ namespace cse
 		}
 	}
 
-	obScriptParsing::Tokenizer::Tokenizer()
+	obScriptParsing::LineTokenizer::LineTokenizer()
 	{
 		Tokens = gcnew List<String^>();
 		Indices = gcnew List<UInt32>();
@@ -79,7 +79,7 @@ namespace cse
 		this->ReferenceControlChars = gcnew String(DefaultControlChars);
 	}
 
-	obScriptParsing::Tokenizer::Tokenizer(String^ InputDelimiters, String^ InputControlChars)
+	obScriptParsing::LineTokenizer::LineTokenizer(String^ InputDelimiters, String^ InputControlChars)
 	{
 		Tokens = gcnew List<String^>();
 		Indices = gcnew List<UInt32>();
@@ -90,7 +90,7 @@ namespace cse
 		this->ReferenceControlChars = gcnew String(InputControlChars);
 	}
 
-	obScriptParsing::Tokenizer::Tokenizer(String^ InputDelimiters)
+	obScriptParsing::LineTokenizer::LineTokenizer(String^ InputDelimiters)
 	{
 		Tokens = gcnew List<String^>();
 		Indices = gcnew List<UInt32>();
@@ -101,7 +101,7 @@ namespace cse
 		this->ReferenceControlChars = gcnew String(DefaultControlChars);
 	}
 
-	bool obScriptParsing::Tokenizer::Tokenize(String^ Source, bool CollectEmptyTokens)
+	bool obScriptParsing::LineTokenizer::Tokenize(String^ Source, bool CollectEmptyTokens)
 	{
 		if (Source->Length && Source[Source->Length - 1] != '\n')
 			Source += "\n";
@@ -156,7 +156,7 @@ namespace cse
 		return Good;
 	}
 
-	void obScriptParsing::Tokenizer::ResetState()
+	void obScriptParsing::LineTokenizer::ResetState()
 	{
 		Tokens->Clear();
 		Delimiters->Clear();
@@ -164,7 +164,7 @@ namespace cse
 		Good = false;
 	}
 
-	obScriptParsing::ScriptTokenType obScriptParsing::Tokenizer::GetFirstTokenType(void)
+	obScriptParsing::ScriptTokenType obScriptParsing::LineTokenizer::GetFirstTokenType(void)
 	{
 		if (Good)
 			return GetScriptTokenType(Tokens[0]);
@@ -172,7 +172,7 @@ namespace cse
 			return ScriptTokenType::None;
 	}
 
-	int obScriptParsing::Tokenizer::GetCommentTokenIndex(int SearchEndIndex)
+	int obScriptParsing::LineTokenizer::GetCommentTokenIndex(int SearchEndIndex)
 	{
 		int Pos = 0;
 		int Result = -1;
@@ -192,7 +192,7 @@ namespace cse
 		return Result;
 	}
 
-	int obScriptParsing::Tokenizer::GetTokenIndex(String^ Source)
+	int obScriptParsing::LineTokenizer::GetTokenIndex(String^ Source)
 	{
 		int Result = -1, Count = 0;
 
@@ -209,7 +209,26 @@ namespace cse
 		return Result;
 	}
 
-	obScriptParsing::ScriptTokenType obScriptParsing::Tokenizer::GetScriptTokenType(String^ ScriptToken)
+	bool obScriptParsing::LineTokenizer::IsIndexInsideString(int Index)
+	{
+		if (!Good)
+			return false;
+
+		for (int i = 0; i < TokenCount; ++i)
+		{
+			String^ Token = Tokens[i];
+			int StartIndex = Indices[i];
+
+			if (Token[0] == '\"'
+				&& Index > StartIndex
+				&& Index < StartIndex + Token->Length - (Token[Token->Length - 1] == '\"' ? 1 : 0))
+				return true;
+		}
+
+		return false;
+	}
+
+	obScriptParsing::ScriptTokenType obScriptParsing::LineTokenizer::GetScriptTokenType(String^ ScriptToken)
 	{
 		ScriptTokenType Result = ScriptTokenType::None;
 		if (ScriptToken->Length)
@@ -261,7 +280,7 @@ namespace cse
 		return Result;
 	}
 
-	bool obScriptParsing::Tokenizer::GetIndexInsideString(String^ Source, int Index)
+	bool obScriptParsing::LineTokenizer::GetIndexInsideString(String^ Source, int Index)
 	{
 		if (Index >= Source->Length)
 			return false;
@@ -289,7 +308,7 @@ namespace cse
 		return false;
 	}
 
-	bool obScriptParsing::Tokenizer::HasIllegalChar(String^ Source, String^ Includes, String^ Excludes)
+	bool obScriptParsing::LineTokenizer::HasIllegalChar(String^ Source, String^ Includes, String^ Excludes)
 	{
 		bool Result = false;
 
@@ -625,7 +644,7 @@ namespace cse
 
 	void obScriptParsing::AnalysisData::PerformAnalysis(String^ ScriptText, ScriptType Type, Operation Operations, CheckVariableNameCollision^ Delegate)
 	{
-		Tokenizer^ Parser = gcnew Tokenizer();
+		LineTokenizer^ Parser = gcnew LineTokenizer();
 		LineTrackingStringReader^ Reader = gcnew LineTrackingStringReader(ScriptText);
 		Stack<ControlBlock::ControlBlockType>^ StructureStack = gcnew Stack<ControlBlock::ControlBlockType>();
 		Stack<ControlBlock^>^ BlockStack = gcnew Stack<ControlBlock^>();
@@ -765,8 +784,9 @@ namespace cse
 							StructureStack->Push(ControlBlock::ControlBlockType::ScriptBlock);
 							BlockStack->Push(NewBlock);
 							ControlBlocks->Add(NewBlock);
+							UDF = NewBlock->SBType == ScriptBlock::ScriptBlockType::Function;
 
-							if (Operations.HasFlag(Operation::FillUDFData) && NewBlock->SBType == ScriptBlock::ScriptBlockType::Function)
+							if (Operations.HasFlag(Operation::FillUDFData) && UDF)
 							{
 								int FirstIdx = ReadLine->IndexOf("{");
 								int ParamIdx = 0;
@@ -1057,12 +1077,8 @@ namespace cse
 						LogAnalysisMessage(Itr->Line, "Variable " + Itr->Name + " unreferenced in local context.");
 				}
 
-				bool InvalidVarName = false;
-				try	{
-					UInt32 Temp = int::Parse(Itr->Name);
-					InvalidVarName = true;
-				}
-				catch (...) {}
+				int Throwaway = 0;
+				bool InvalidVarName = int::TryParse(Itr->Name, Throwaway);
 
 				if (InvalidVarName)
 					LogCriticalAnalysisMessage(Itr->Line, "Variable '" + Itr->Name + "' has an all-numeric identifier.");
@@ -1097,6 +1113,24 @@ namespace cse
 		}
 
 		return nullptr;
+	}
+
+	obScriptParsing::AnalysisData^ obScriptParsing::AnalysisData::Clone()
+	{
+		auto Copy = gcnew obScriptParsing::AnalysisData;
+
+		Copy->Name = gcnew String(this->Name);
+		Copy->Description = gcnew String(this->Description);
+		Copy->Variables = gcnew List<Variable^>(this->Variables);
+		Copy->NextVariableLine = this->NextVariableLine;
+		Copy->ControlBlocks = gcnew List<ControlBlock ^>(this->ControlBlocks);
+		Copy->MalformedStructure = this->MalformedStructure;
+		Copy->FirstStructuralErrorLine = this->FirstStructuralErrorLine;
+		Copy->UDF = this->UDF;
+		Copy->UDFResult = this->UDFResult;
+		Copy->UDFAmbiguousResult = this->UDFAmbiguousResult;
+
+		return Copy;
 	}
 
 	void obScriptParsing::AnalysisData::LogAnalysisMessage(UInt32 Line, String^ Message)
@@ -1140,62 +1174,6 @@ namespace cse
 		return nullptr;
 	}
 
-	String^ obScriptParsing::AnalysisData::PerformLocalizedIndenting(String^ Source, UInt32 DefaultIndentLevel)
-	{
-		int IndentCount = DefaultIndentLevel;
-		String^ Result = "";
-		Tokenizer^ Parser = gcnew Tokenizer();
-		LineTrackingStringReader^ Reader = gcnew LineTrackingStringReader(Source);
-
-		for (String^ ReadLine = Reader->ReadLine(); ReadLine != nullptr; ReadLine = Reader->ReadLine())
-		{
-			String^ Indents = "";
-			int CurrentIndentCount = IndentCount;
-
-			if (Parser->Tokenize(ReadLine, false))
-			{
-				switch (Parser->GetFirstTokenType())
-				{
-				case ScriptTokenType::Begin:
-				case ScriptTokenType::If:
-				case ScriptTokenType::ForEach:
-				case ScriptTokenType::While:
-					IndentCount++;
-					break;
-				case ScriptTokenType::ElseIf:
-				case ScriptTokenType::Else:
-					CurrentIndentCount--;
-					break;
-				case ScriptTokenType::End:
-				case ScriptTokenType::EndIf:
-				case ScriptTokenType::Loop:
-					IndentCount--;
-					CurrentIndentCount--;
-					break;
-				}
-
-				if (IndentCount < 0)
-					IndentCount = 0;
-
-				if (CurrentIndentCount < 0)
-					CurrentIndentCount = 0;
-
-				if (Reader->LineNumber != 1)
-				{
-					for (int i = 0; i < CurrentIndentCount; i++)
-						Indents += "\t";
-				}
-
-				ReadLine = ReadLine->Substring(Parser->Indices[0]);
-			}
-
-			Result += Indents + ReadLine + "\n";
-		}
-
-		Result->Remove(Result->Length - 1);
-		return Result;
-	}
-
 	obScriptParsing::ControlBlock^ obScriptParsing::AnalysisData::GetBlockEndingAt(UInt32 Line)
 	{
 		for each (ControlBlock^ Itr in ControlBlocks)
@@ -1226,7 +1204,7 @@ namespace cse
 		bool Result = true;
 
 		// catch errors that the vanilla expression parser doesn't handle
-		Tokenizer^ Parser = gcnew Tokenizer;
+		LineTokenizer^ Parser = gcnew LineTokenizer;
 		if (Parser->Tokenize(Expression, false))
 		{
 			int InvalidOperator = Expression->IndexOf("<>");
@@ -1256,7 +1234,7 @@ namespace cse
 		if (Data->MalformedStructure)
 			return false;
 
-		Tokenizer^ Parser = gcnew Tokenizer();
+		LineTokenizer^ Parser = gcnew LineTokenizer();
 		LineTrackingStringReader^ Reader = gcnew LineTrackingStringReader(InputText);
 
 		for (String^ ReadLine = Reader->ReadLine(); ReadLine != nullptr; ReadLine = Reader->ReadLine())
@@ -1352,6 +1330,62 @@ namespace cse
 		return true;
 	}
 
+	System::String^ obScriptParsing::Sanitizer::PerformLocalizedIndenting(String^ Source, UInt32 DefaultIndentLevel)
+	{
+		int IndentCount = DefaultIndentLevel;
+		String^ Result = "";
+		LineTokenizer^ Parser = gcnew LineTokenizer();
+		LineTrackingStringReader^ Reader = gcnew LineTrackingStringReader(Source);
+
+		for (String^ ReadLine = Reader->ReadLine(); ReadLine != nullptr; ReadLine = Reader->ReadLine())
+		{
+			String^ Indents = "";
+			int CurrentIndentCount = IndentCount;
+
+			if (Parser->Tokenize(ReadLine, false))
+			{
+				switch (Parser->GetFirstTokenType())
+				{
+				case ScriptTokenType::Begin:
+				case ScriptTokenType::If:
+				case ScriptTokenType::ForEach:
+				case ScriptTokenType::While:
+					IndentCount++;
+					break;
+				case ScriptTokenType::ElseIf:
+				case ScriptTokenType::Else:
+					CurrentIndentCount--;
+					break;
+				case ScriptTokenType::End:
+				case ScriptTokenType::EndIf:
+				case ScriptTokenType::Loop:
+					IndentCount--;
+					CurrentIndentCount--;
+					break;
+				}
+
+				if (IndentCount < 0)
+					IndentCount = 0;
+
+				if (CurrentIndentCount < 0)
+					CurrentIndentCount = 0;
+
+				if (Reader->LineNumber != 1)
+				{
+					for (int i = 0; i < CurrentIndentCount; i++)
+						Indents += "\t";
+				}
+
+				ReadLine = ReadLine->Substring(Parser->Indices[0]);
+			}
+
+			Result += Indents + ReadLine + "\n";
+		}
+
+		Result = Result->TrimEnd();
+		return Result;
+	}
+
 	obScriptParsing::Documenter::Documenter(String^ Source) :
 		InputText(Source),
 		DocumentedText("")
@@ -1372,7 +1406,7 @@ namespace cse
 
 	void obScriptParsing::Documenter::Document(String^ ScriptDescription, Dictionary<String^, String^>^ VariableDescriptions)
 	{
-		Tokenizer^ Parser = gcnew Tokenizer();
+		LineTokenizer^ Parser = gcnew LineTokenizer();
 		LineTrackingStringReader^ Reader = gcnew LineTrackingStringReader(InputText);
 
 		String^ Description = "";

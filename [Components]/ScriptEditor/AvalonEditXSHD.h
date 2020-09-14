@@ -1,7 +1,5 @@
 #pragma once
 
-#include "AvalonEditDefs.h"
-
 namespace cse
 {
 	namespace textEditors

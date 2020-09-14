@@ -4,7 +4,7 @@
 #include "AuxiliaryTextEditor.h"
 #include "WorkspaceViewInterface.h"
 #include "WorkspaceModelInterface.h"
-#include "ScriptListDialog.h"
+#include "SelectScriptDialog.h"
 #include "FindReplaceDialog.h"
 #include "TextEditorAdornments.h"
 
@@ -382,7 +382,6 @@ namespace cse
 			DotNetBar::CrumbBar^					ScopeCrumbBar;
 			textEditors::ScopeBreadcrumbManager^	ScopeCrumbManager;
 
-			ScriptListDialog^						ScriptListBox;
 			FindReplaceDialog^						FindReplaceBox;
 
 			intellisense::IIntelliSenseInterfaceView^	IntelliSenseView;

@@ -3,6 +3,7 @@
 class TESForm;
 class Script;
 class TESGlobal;
+class GameSetting;
 
 #ifdef CSE
 struct CommandInfo;
@@ -18,11 +19,9 @@ namespace componentDLLInterface
 	class IDisposableData
 	{
 	public:
-		virtual ~IDisposableData() = 0
-		{
-			;//
-		}
+		virtual ~IDisposableData() = 0 {}
 	};
+
 	struct FormData : public IDisposableData
 	{
 		const char*										EditorID;
@@ -30,6 +29,9 @@ namespace componentDLLInterface
 		UInt8											TypeID;
 		UInt32											Flags;
 		TESForm*										ParentForm;
+		const char*										ParentPluginName;
+		bool											ObjectReference;
+		const char*										BaseFormEditorID;
 
 		virtual bool									IsValid() { return (EditorID) ? true : false; }
 		void											FillFormData(TESForm* Form);
@@ -38,7 +40,8 @@ namespace componentDLLInterface
 		FormData(TESForm* Parent);
 		virtual ~FormData();
 
-		bool											IsActive() { return ((Flags >> 1) & 1); }
+		bool		IsActive() { return ((Flags >> 1) & 1); }
+		bool		IsDeleted() { return ((Flags >> 5) & 1); }
 	};
 
 	struct FormListData : public IDisposableData
@@ -103,8 +106,14 @@ namespace componentDLLInterface
 		};
 
 		UInt8											Type;
+		union
+		{
+			int			i;
+			float		f;
+			const char*	s;
+		}												Value;
 
-		void											FillVariableData(const char* VariableName);
+		void											FillVariableData(GameSetting* GMST);
 		void											FillVariableData(TESGlobal* Global);
 
 		VariableData();
@@ -116,7 +125,7 @@ namespace componentDLLInterface
 
 	struct IntelliSenseUpdateData : public IDisposableData
 	{
-		ScriptData*										ScriptListHead;		// user-defined functions
+		ScriptData*										ScriptListHead;
 		UInt32											ScriptCount;
 
 		QuestData*										QuestListHead;
@@ -128,8 +137,8 @@ namespace componentDLLInterface
 		GMSTData*										GMSTListHead;
 		UInt32											GMSTCount;
 
-		FormData*										EditorIDListHead;
-		UInt32											EditorIDCount;
+		FormData*										MiscFormListHead;
+		UInt32											MiscFormListCount;
 
 		IntelliSenseUpdateData();
 		virtual ~IntelliSenseUpdateData();
@@ -398,7 +407,7 @@ namespace componentDLLInterface
 		UInt32											flags;
 	};
 
-	struct CommandTableData
+	struct CommandTableData : public IDisposableData
 	{
 #ifdef CSE
 		const CommandInfo*								CommandTableStart;
@@ -420,7 +429,19 @@ namespace componentDLLInterface
 		const PluginInfo*								(* GetParentPlugin)(const ObScriptCommandInfo* cmd);
 		UInt32											(* GetRequiredOBSEVersion)(const ObScriptCommandInfo* cmd);
 #endif
+		struct DeveloperURLData
+		{
+			const char*	CommandName;
+			const char*	URL;
+		};
+
+		DeveloperURLData*	DeveloperURLDataListHead;
+		UInt32				DeveloperURLDataListCount;
+
+		CommandTableData();
+		virtual ~CommandTableData();
 	};
+
 
 	typedef FormListData UseInfoListFormData;
 	typedef FormListData UseInfoListCrossRefData;

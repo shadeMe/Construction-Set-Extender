@@ -1,6 +1,6 @@
 #include "TextEditorAdornments.h"
 #include "Globals.h"
-#include "ScriptEditorPreferences.h"
+#include "Preferences.h"
 
 using namespace DevComponents;
 
@@ -158,7 +158,7 @@ namespace cse
 			Bar->Items->Add(Root);
 			Bar->ItemClick += gcnew EventHandler(&ScopeBreadcrumbManager::OnItemClick);
 
-			PREFERENCES->PreferencesSaved += ScriptEditorPreferencesSavedHandler;
+			preferences::SettingsHolder::Get()->SavedToDisk += ScriptEditorPreferencesSavedHandler;
 		}
 
 		ScopeBreadcrumbManager::~ScopeBreadcrumbManager()
@@ -166,7 +166,7 @@ namespace cse
 			Debug::Assert(Bound == false);
 
 			Bar->Items->Clear();
-			PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
+			preferences::SettingsHolder::Get()->SavedToDisk -= ScriptEditorPreferencesSavedHandler;
 
 			SAFEDELETE_CLR(Root);
 			SAFEDELETE_CLR(ParentLineChangedHandler);

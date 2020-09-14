@@ -18,7 +18,7 @@ namespace cse
 		try
 		{
 			String^ ExpandedToken = "";
-			obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
+			obScriptParsing::LineTokenizer^ LocalParser = gcnew obScriptParsing::LineTokenizer();
 
 			LocalParser->Tokenize(Token, true);
 			if (!LocalParser->Valid)
@@ -69,7 +69,7 @@ namespace cse
 	{
 		String^ Result = "";
 		bool SliceStartFound = false, SliceEndFound = false;
-		obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
+		obScriptParsing::LineTokenizer^ LocalParser = gcnew obScriptParsing::LineTokenizer();
 
 		String^ ReadLine = TextReader->ReadLine();
 		while (ReadLine != nullptr)
@@ -161,7 +161,7 @@ namespace cse
 		this->Type = DirectiveType::Define;
 		this->Encoding = EncodingType::SingleLine;
 
-		obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
+		obScriptParsing::LineTokenizer^ LocalParser = gcnew obScriptParsing::LineTokenizer();
 
 		try
 		{
@@ -205,7 +205,7 @@ namespace cse
 		this->Type = DirectiveType::Define;
 		this->Encoding = EncodingType::MultiLine;
 
-		obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
+		obScriptParsing::LineTokenizer^ LocalParser = gcnew obScriptParsing::LineTokenizer();
 
 		try
 		{
@@ -320,7 +320,7 @@ namespace cse
 		this->Type = DirectiveType::Import;
 		this->Encoding = EncodingType::SingleLine;
 
-		obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
+		obScriptParsing::LineTokenizer^ LocalParser = gcnew obScriptParsing::LineTokenizer();
 
 		try
 		{
@@ -379,7 +379,7 @@ namespace cse
 
 	void EnumDirective::ParseComponentDefineDirectives(String^ Source, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber)
 	{
-		obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer(", (){}[]\t\n");		// don't use the decimal separator as a delimiter as we're parsing FP numbers
+		obScriptParsing::LineTokenizer^ LocalParser = gcnew obScriptParsing::LineTokenizer(", (){}[]\t\n");		// don't use the decimal separator as a delimiter as we're parsing FP numbers
 
 		LocalParser->Tokenize(Source, false);
 		float PreviousValue = 0;
@@ -418,7 +418,7 @@ namespace cse
 		this->Encoding = EncodingType::SingleLine;
 		ComponentDefineDirectives = gcnew LinkedList<DefineDirective^>();
 
-		obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
+		obScriptParsing::LineTokenizer^ LocalParser = gcnew obScriptParsing::LineTokenizer();
 
 		try
 		{
@@ -460,7 +460,7 @@ namespace cse
 		this->Encoding = EncodingType::MultiLine;
 		ComponentDefineDirectives = gcnew LinkedList<DefineDirective^>();
 
-		obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
+		obScriptParsing::LineTokenizer^ LocalParser = gcnew obScriptParsing::LineTokenizer();
 
 		try
 		{
@@ -715,7 +715,7 @@ namespace cse
 			String^ PostFixExpression = "";
 			Stack<String^>^ ExpressionStack = gcnew Stack<String^>();
 
-			obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
+			obScriptParsing::LineTokenizer^ LocalParser = gcnew obScriptParsing::LineTokenizer();
 			LocalParser->Tokenize(InfixExpression, true);
 
 			if (LocalParser->Valid)
@@ -814,7 +814,7 @@ namespace cse
 			if (ConvertInfixExpressionToPostFix(Base, PostFixExpression, ErrorOutput, PreprocessorInstance))
 			{
 				Stack<String^>^ ExpressionStack = gcnew Stack<String^>();
-				obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
+				obScriptParsing::LineTokenizer^ LocalParser = gcnew obScriptParsing::LineTokenizer();
 
 				LocalParser->Tokenize(PostFixExpression, true);
 
@@ -879,7 +879,7 @@ namespace cse
 		this->Type = DirectiveType::If;
 		this->Encoding = EncodingType::MultiLine;
 
-		obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
+		obScriptParsing::LineTokenizer^ LocalParser = gcnew obScriptParsing::LineTokenizer();
 
 		try
 		{
@@ -1009,7 +1009,7 @@ namespace cse
 		{
 			LinkedList<CSEPreprocessorToken^>^ TokenList = gcnew LinkedList<CSEPreprocessorToken^>();
 			LineTrackingStringReader^ TextReader = gcnew LineTrackingStringReader(Source);
-			obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
+			obScriptParsing::LineTokenizer^ LocalParser = gcnew obScriptParsing::LineTokenizer();
 
 			for (String^ ReadLine = TextReader->ReadLine(); ReadLine != nullptr; ReadLine = TextReader->ReadLine())
 			{
@@ -1146,13 +1146,13 @@ namespace cse
 					}
 					catch (Exception^ E)
 					{
-						DebugPrint("Couldn't read from standard preprocessor directives file '" + Itr->Name + "'!\n\tException: " + E->Message);
+						ErrorOutput(0, "Couldn't read from standard preprocessor directives file '" + Itr->Name + "'!\n\tException: " + E->Message);
 					}
 				}
 			}
 		}
 		else
-			DebugPrint("Standard preprocessor directives folder not found!");
+			ErrorOutput(0, "Standard preprocessor directives folder not found!");
 	}
 
 	bool Preprocessor::GetImportFilePath( String^ Source, String^% Result, ScriptEditorPreprocessorData^ Data )

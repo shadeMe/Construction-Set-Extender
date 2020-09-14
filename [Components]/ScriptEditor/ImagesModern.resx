@@ -196,9 +196,6 @@
   <data name="IntelliSenseItemQuest" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Delegate_540.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="IntelliSenseItemRemoteVar" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\field_16xMD.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="IntelliSenseItemSnippet" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\snippet_16xMD.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -283,9 +280,6 @@
   <data name="ToolBarRefactorMenuContentsRenameVariables" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Rename_6779.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ToolBarSanitizeScriptText" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\ReformatSelection_8260.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="ToolBarSaveAll" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Saveall_6518.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -324,5 +318,53 @@
   </data>
   <data name="OutlineViewVariables" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\list_16xLG.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ScriptListDialogFlagSyncing" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\arrow_Sync_16xLG.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ToolBarScriptSyncToDisk" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\SyncContents_5706.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ScriptSyncStatusFailure" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Critical_16xLG_color.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ScriptSyncStatusSuccess" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Complete_and_ok_16xLG_color.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ScriptListDialogCompleteSelection" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Select.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PreferencesDialogCategoryAppearance" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\AppearanceEditor\AppearanceEditor_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PreferencesDialogCategoryBackup" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ListTime\ListTime_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PreferencesDialogCategoryFind-Replace" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\FindInFile\FindInFile_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PreferencesDialogCategoryGeneral" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ApplicationBehaviorSettings\ApplicationBehaviorSettings_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PreferencesDialogCategoryIntelliSense" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\IntelliSenseDatabase\IntelliSenseDatabase_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PreferencesDialogCategoryPreprocessor" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\type_16xLG.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PreferencesDialogCategoryValidator" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ValidateDocument\ValidateDocument_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="AvalonEditIconMarginErrorColor" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Critical_16xMD_color.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ToolBarSanitizeScriptText" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\BrushTool_207.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PreferencesDialogCategorySanitizer" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\BrushTool_207.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ScriptSyncStatusEmpty" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\transparent_161.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

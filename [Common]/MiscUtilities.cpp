@@ -3,7 +3,7 @@
 
 namespace cse
 {
-	CString::CString(System::String^% Source)
+	CString::CString(System::String^ Source)
 	{
 		P = Marshal::StringToHGlobalAnsi(Source);
 	}
@@ -11,12 +11,6 @@ namespace cse
 	CString::~CString()
 	{
 		this->Free();
-	}
-
-	void DebugDump(UInt8 Source, String^% Message)
-	{
-		CString CStr(Message);
-		nativeWrapper::g_CSEInterfaceTable->EditorAPI.DebugPrint(Source, CStr.c_str());
 	}
 
 	void ToggleFlag(UInt32* Flag, UInt32 Mask, bool State)
@@ -79,60 +73,5 @@ namespace cse
 			*(Buffer + i) = '\0';
 		else
 			Buffer[Size - 1] = '\0';
-	}
-
-
-	namespace log
-	{
-		namespace scriptEditor
-		{
-			void DebugPrint(String^ Message, bool Achtung)
-			{
-				if (Achtung)
-					Media::SystemSounds::Hand->Play();
-
-				DebugDump(e_SE, Message);
-			}
-		}
-		namespace useInfoList
-		{
-			void DebugPrint(String^ Message, bool Achtung)
-			{
-				if (Achtung)
-					Media::SystemSounds::Hand->Play();
-
-				DebugDump(e_UL, Message);
-			}
-		}
-		namespace batchEditor
-		{
-			void DebugPrint(String^ Message, bool Achtung)
-			{
-				if (Achtung)
-					Media::SystemSounds::Hand->Play();
-
-				DebugDump(e_BE, Message);
-			}
-		}
-		namespace bsaViewer
-		{
-			void DebugPrint(String^ Message, bool Achtung)
-			{
-				if (Achtung)
-					Media::SystemSounds::Hand->Play();
-
-				DebugDump(e_BSA, Message);
-			}
-		}
-		namespace tagBrowser
-		{
-			void DebugPrint(String^ Message, bool Achtung)
-			{
-				if (Achtung)
-					Media::SystemSounds::Hand->Play();
-
-				DebugDump(e_TAG, Message);
-			}
-		}
 	}
 }

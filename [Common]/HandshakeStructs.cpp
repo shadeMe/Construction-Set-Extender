@@ -50,9 +50,17 @@ namespace componentDLLInterface
 		TypeID = Form->formType;
 		Flags = Form->formFlags;
 		ParentForm = Form;
+		ObjectReference = Form->IsReference();
+
+		if (ObjectReference)
+			BaseFormEditorID = (CS_CAST(Form, TESForm, TESObjectREFR))->baseForm->editorID.c_str();
+
+		auto ParentFile = Form->GetOverrideFile(-1);
+		if (ParentFile)
+			ParentPluginName = ParentFile->fileName;
 	}
 
-	FormData::FormData() : EditorID(0), FormID(0), TypeID(0), Flags(0), ParentForm(0)
+	FormData::FormData() : EditorID(nullptr), FormID(0), TypeID(0), Flags(0), ParentForm(nullptr), ParentPluginName(nullptr), ObjectReference(false), BaseFormEditorID(nullptr)
 	{
 		kHandShakeStructCounters[kCounter_FormData]++;
 	}
@@ -123,28 +131,47 @@ namespace componentDLLInterface
 		kHandShakeStructCounters[kCounter_ScriptData]--;
 	}
 
-	void VariableData::FillVariableData(const char* VariableName)
+	void VariableData::FillVariableData(GameSetting* GMST)
 	{
+		const char* VariableName = GMST->editorID.c_str();
 		if (*VariableName == 's' || *VariableName == 'S')
+		{
 			Type = kType_String;
-		else if (*VariableName == 'i' || *VariableName == 'u')
+			Value.s = GMST->value.s;
+		}
+		else if (*VariableName == 'i')
+		{
 			Type = kType_Int;
-		else
+			Value.i = GMST->value.i;
+		}
+		else if (*VariableName == 'f')
+		{
 			Type = kType_Float;
+			Value.f = GMST->value.f;
+		}
+		else
+			throw std::runtime_error("Unknown value type for GMST " + std::string(VariableName));
 	}
 
 	void VariableData::FillVariableData(TESGlobal* Global)
 	{
 		if (Global->globalType == TESGlobal::kGlobalType_Float)
+		{
 			Type = kType_Float;
+			Value.f = Global->value;
+		}
 		else
+		{
 			Type = kType_Int;
+			Value.i = static_cast<int>(Global->value);
+		}
 	}
 
 	VariableData::VariableData() : FormData()
 	{
 		kHandShakeStructCounters[kCounter_VarData]++;
-		Type = 0;
+		Type = kType_Int;
+		Value.i = 0;
 	}
 
 	VariableData::~VariableData()
@@ -207,8 +234,8 @@ namespace componentDLLInterface
 		GMSTListHead = 0;
 		GMSTCount = 0;
 
-		EditorIDListHead = 0;
-		EditorIDCount = 0;
+		MiscFormListHead = 0;
+		MiscFormListCount = 0;
 	}
 
 	IntelliSenseUpdateData::~IntelliSenseUpdateData()
@@ -219,7 +246,7 @@ namespace componentDLLInterface
 		delete[] QuestListHead;
 		delete[] GlobalListHead;
 		delete[] GMSTListHead;
-		delete[] EditorIDListHead;
+		delete[] MiscFormListHead;
 	}
 
 	ScriptVarListData::ScriptVarListData()
@@ -262,6 +289,21 @@ namespace componentDLLInterface
 		SME_ASSERT(kHandShakeStructCounters[kCounter_ScriptVarRenameData] > 0);
 		kHandShakeStructCounters[kCounter_ScriptVarRenameData]--;
 		delete[] ScriptVarListHead;
+	}
+
+	CommandTableData::CommandTableData()
+	{
+		CommandTableStart = nullptr;
+		CommandTableEnd = nullptr;
+		GetCommandReturnType = nullptr;
+		GetParentPlugin = nullptr;
+		GetRequiredOBSEVersion = nullptr;
+		DeveloperURLDataListHead = nullptr;
+	}
+
+	CommandTableData::~CommandTableData()
+	{
+		delete[] DeveloperURLDataListHead;
 	}
 
 	UseInfoListCellItemData::UseInfoListCellItemData() : FormData()
