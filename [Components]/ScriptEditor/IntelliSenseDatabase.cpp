@@ -503,6 +503,61 @@ namespace cse
 			return FormData && FormData->IsValid();
 		}
 
+		generic <typename T> where T: IntelliSenseItem
+		void AddIndentifierToCollection(Dictionary<String^, T>^ Source, ICollection<String^>^% Target)
+		{
+			for each (auto% Itr in Source)
+				Target->Add(Itr.Key);
+		}
+
+		System::Collections::Generic::HashSet<String^>^ IntelliSenseBackend::CreateIndentifierSnapshot(DatabaseLookupFilter Categories)
+		{
+			auto Out = gcnew HashSet<String^>(StringComparer::CurrentCultureIgnoreCase);
+
+			if (Categories.HasFlag(DatabaseLookupFilter::Command))
+				AddIndentifierToCollection(ScriptCommands, Out);
+
+			if (Categories.HasFlag(DatabaseLookupFilter::GlobalVariable))
+				AddIndentifierToCollection(GlobalVariables, Out);
+
+			if (Categories.HasFlag(DatabaseLookupFilter::Quest))
+				AddIndentifierToCollection(Quests, Out);
+
+			if (Categories.HasFlag(DatabaseLookupFilter::Script))
+				AddIndentifierToCollection(Scripts, Out);
+
+			if (Categories.HasFlag(DatabaseLookupFilter::UserFunction) &&
+				Categories.HasFlag(DatabaseLookupFilter::Script) == false)
+			{
+				for each (auto% Itr in Scripts)
+				{
+					if (Itr.Value->GetItemType() == IntelliSenseItem::ItemType::UserFunction)
+						Out->Add(Itr.Key);
+				}
+			}
+
+			if (Categories.HasFlag(DatabaseLookupFilter::GameSetting))
+				AddIndentifierToCollection(GameSettings, Out);
+
+			if (Categories.HasFlag(DatabaseLookupFilter::Form))
+				AddIndentifierToCollection(Forms, Out);
+
+			if (Categories.HasFlag(DatabaseLookupFilter::ObjectReference) &&
+				Categories.HasFlag(DatabaseLookupFilter::Form) == false)
+			{
+				for each (auto % Itr in Forms)
+				{
+					if (safe_cast<IntelliSenseItemForm^>(Itr.Value)->IsObjectReference())
+						Out->Add(Itr.Key);
+				}
+			}
+
+			if (Categories.HasFlag(DatabaseLookupFilter::Snippet))
+				AddIndentifierToCollection(Snippets, Out);
+
+			return Out;
+		}
+
 		bool IntelliSenseBackend::HasAttachedScript(String^ Identifier)
 		{
 			return TryGetAttachedScriptData(Identifier, nullptr);

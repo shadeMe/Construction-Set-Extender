@@ -23,23 +23,22 @@ namespace cse
 			UpdateToCurrentLine();
 		}
 
-		void ScopeBreadcrumbManager::Parent_BackgroundAnalysisComplete(Object^ Sender, EventArgs^ E)
+		void ScopeBreadcrumbManager::Parent_BackgroundAnalysisComplete(Object^ Sender, scriptEditor::SemanticAnalysisCompleteEventArgs^ E)
 		{
 			Debug::Assert(Bound == true);
 
-			GenerateCrumbs(BoundParent->GetSemanticAnalysisCache(false, false));
+			GenerateCrumbs(E->Result->Clone());
 		}
 
 		void ScopeBreadcrumbManager::Parent_TextUpdated(Object^ Sender, EventArgs^ E)
 		{
 			Debug::Assert(Bound == true);
 
-			GenerateCrumbs(BoundParent->GetSemanticAnalysisCache(false, false));
+			ResetCrumbs();
 		}
 
 		void ScopeBreadcrumbManager::ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E)
 		{
-		//	Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
 			Root->ForeColor = Control::DefaultForeColor;
 
 			if (Bound)
@@ -113,7 +112,6 @@ namespace cse
 			NewItem->Tag = gcnew CrumbData(BoundParent, Source);
 			NewItem->Image = GetScopeIcon(Source->Type);
 
-		//	Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
 			NewItem->ForeColor = Control::DefaultForeColor;
 			NewItem->HotTrackingStyle = DotNetBar::eHotTrackingStyle::None;
 
@@ -138,6 +136,7 @@ namespace cse
 
 		ScopeBreadcrumbManager::ScopeBreadcrumbManager(DotNetBar::CrumbBar^ Bar) :
 			BoundParent(nullptr),
+			BackgroundAnalyzer(nullptr),
 			Bar(Bar),
 			DataStore(nullptr),
 			ActiveCrumbs(gcnew Dictionary<obScriptParsing::Structurizer::Node^, DotNetBar::CrumbBarItem^>)
@@ -145,12 +144,11 @@ namespace cse
 			InstanceCounter++;
 
 			Root = gcnew DotNetBar::CrumbBarItem();
-	//		Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
 			Root->ForeColor = Control::DefaultForeColor;
 			Root->Image = GetScopeIcon(obScriptParsing::Structurizer::Node::NodeType::Invalid);
 
 			ParentLineChangedHandler = gcnew EventHandler(this, &ScopeBreadcrumbManager::Parent_LineChanged);
-			ParentBGAnalysisCompleteHandler = gcnew EventHandler(this, &ScopeBreadcrumbManager::Parent_BackgroundAnalysisComplete);
+			ParentBGAnalysisCompleteHandler = gcnew scriptEditor::SemanticAnalysisCompleteEventHandler(this, &ScopeBreadcrumbManager::Parent_BackgroundAnalysisComplete);
 			ParentTextUpdatedHandler = gcnew EventHandler(this, &ScopeBreadcrumbManager::Parent_TextUpdated);
 			ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &ScopeBreadcrumbManager::ScriptEditorPreferences_Saved);
 
@@ -182,14 +180,15 @@ namespace cse
 			}
 		}
 
-		void ScopeBreadcrumbManager::Bind(IScriptTextEditor ^ Parent)
+		void ScopeBreadcrumbManager::Bind(IScriptTextEditor ^ Parent, scriptEditor::IBackgroundSemanticAnalyzer^ BackgroundAnalyzer)
 		{
 			Debug::Assert(Bound == false);
 
 			BoundParent = Parent;
+			this->BackgroundAnalyzer = BackgroundAnalyzer;
 
 			BoundParent->LineChanged += ParentLineChangedHandler;
-			BoundParent->BackgroundAnalysisComplete += ParentBGAnalysisCompleteHandler;
+			BackgroundAnalyzer->SemanticAnalysisComplete += ParentBGAnalysisCompleteHandler;
 			BoundParent->TextUpdated += ParentTextUpdatedHandler;
 
 			RefreshCrumbs();
@@ -202,10 +201,11 @@ namespace cse
 				ResetCrumbs();
 
 				BoundParent->LineChanged -= ParentLineChangedHandler;
-				BoundParent->BackgroundAnalysisComplete -= ParentBGAnalysisCompleteHandler;
+				BackgroundAnalyzer->SemanticAnalysisComplete -= ParentBGAnalysisCompleteHandler;
 				BoundParent->TextUpdated -= ParentTextUpdatedHandler;
 
 				BoundParent = nullptr;
+				BackgroundAnalyzer = nullptr;
 			}
 		}
 
@@ -216,7 +216,7 @@ namespace cse
 			if (Visible == false)
 				return;
 
-			obScriptParsing::AnalysisData^ ParsedData = BoundParent->GetSemanticAnalysisCache(true, true);
+			obScriptParsing::AnalysisData^ ParsedData = BackgroundAnalyzer->LastAnalysisResult;
 			GenerateCrumbs(ParsedData);
 		}
 

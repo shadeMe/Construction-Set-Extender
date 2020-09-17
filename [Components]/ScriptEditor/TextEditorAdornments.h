@@ -2,6 +2,7 @@
 
 #include "SemanticAnalysis.h"
 #include "ScriptTextEditorInterface.h"
+#include "BackgroundAnalysis.h"
 
 namespace cse
 {
@@ -27,6 +28,7 @@ namespace cse
 			};
 
 			IScriptTextEditor^							BoundParent;
+			scriptEditor::IBackgroundSemanticAnalyzer^	BackgroundAnalyzer;
 			DevComponents::DotNetBar::CrumbBar^			Bar;
 			obScriptParsing::Structurizer^				DataStore;
 			Dictionary<obScriptParsing::Structurizer::Node^, DevComponents::DotNetBar::CrumbBarItem^>^
@@ -34,12 +36,13 @@ namespace cse
 			DevComponents::DotNetBar::CrumbBarItem^		Root;
 
 			EventHandler^								ParentLineChangedHandler;
-			EventHandler^								ParentBGAnalysisCompleteHandler;
 			EventHandler^								ParentTextUpdatedHandler;
 			EventHandler^								ScriptEditorPreferencesSavedHandler;
+			scriptEditor::SemanticAnalysisCompleteEventHandler^
+														ParentBGAnalysisCompleteHandler;
 
 			void										Parent_LineChanged(Object^ Sender, EventArgs^ E);
-			void										Parent_BackgroundAnalysisComplete(Object^ Sender, EventArgs^ E);
+			void										Parent_BackgroundAnalysisComplete(Object^ Sender, scriptEditor::SemanticAnalysisCompleteEventArgs^ E);
 			void										Parent_TextUpdated(Object^ Sender, EventArgs^ E);
 			void										ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
 
@@ -64,7 +67,7 @@ namespace cse
 				virtual void set(bool e) { Bar->Visible = e; }
 			}
 
-			void										Bind(IScriptTextEditor^ Parent);
+			void										Bind(IScriptTextEditor^ Parent, scriptEditor::IBackgroundSemanticAnalyzer^ BackgroundAnalyzer);
 			void										Unbind();
 
 			void										RefreshCrumbs();

@@ -48,12 +48,9 @@ CSE		---->
 SE		---->
 
 	IMMEDIATE		=
-		> Background task threading issues in the editor
-			> Expose the bg analysis interval to the settings
 
 
 	BUGFIX			=
-		> Fix intellisense icons for variable subtypes, scripts, etc
 		> Bookmarks don't get added to the correct line
 			>> Open zzPiiiPzzToDo, add a couple of new lines and add a bookmark to the last line. It gets assigned to the first line instead.
 		> Editor doesn't acquire focus after switching scripts/on opening and general focus related wonkiness
@@ -62,7 +59,6 @@ SE		---->
 
 	ENHANCEMENT		=
 		> Use ObjectListView in the LineTrackingManager
-		> Ensure that the player is identified as a callable object in IntelliSense
 		> Prevent the creation of duplicate script editor IDs
 		> Fuzzy search for IntelliSense
 		> Ability to edit/compile scripts in external editors
@@ -75,9 +71,18 @@ SE		---->
 
 
 
-USE		---->
+BSA		---->
 
 	BUGFIX			=
 
 
 	ENHANCEMENT		=
+		> Use a TreeView
+		> Add support for file/folder extraction
+		> Add support for viewing arbitrary BSAs
+
+
+TAG		---->
+
+	ENHANCEMENT		=
+		> Integration into the Object Window

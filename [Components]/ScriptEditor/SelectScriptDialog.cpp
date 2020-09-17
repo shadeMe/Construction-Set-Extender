@@ -33,22 +33,7 @@ namespace cse
 
 		void SelectScriptDialog::ScriptList_SelectionChanged(Object^ Sender, EventArgs^ E)
 		{
-			ToolStripLabelSelectionCount->Text = ScriptList->SelectedObjects->Count + " selected";
-
-			if (ScriptList->SelectedObjects->Count == 1)
-			{
-				NativeScriptDataWrapper^ Data = (NativeScriptDataWrapper^)ScriptList->SelectedObject;
-				String^ ScriptText = gcnew String(Data->ScriptData->Text);
-
-				PreviewBox->Text = ScriptText->Replace("\n", "\r\n");
-			}
-			else
-				PreviewBox->Text = "";
-
-			if (ScriptList->SelectedObjects->Count > 0)
-				ButtonCompleteSelection->Enabled = true;
-			else
-				ButtonCompleteSelection->Enabled = false;
+			DeferredSelectionUpdateTimer->Start();
 		}
 
 		void SelectScriptDialog::ScriptList_KeyDown(Object^ Sender, KeyEventArgs^ E)
@@ -143,6 +128,28 @@ namespace cse
 			ScriptList_KeyDown(ScriptList, E);
 		}
 
+		void SelectScriptDialog::DeferredSelectionUpdateTimer_Tick(Object^ Sender, EventArgs^ E)
+		{
+			ToolStripLabelSelectionCount->Text = ScriptList->SelectedObjects->Count + " selected";
+
+			if (ScriptList->SelectedObjects->Count == 1)
+			{
+				NativeScriptDataWrapper^ Data = (NativeScriptDataWrapper^)ScriptList->SelectedObject;
+				String^ ScriptText = gcnew String(Data->ScriptData->Text);
+
+				PreviewBox->Text = ScriptText->Replace("\n", "\r\n");
+			}
+			else
+				PreviewBox->Text = "";
+
+			if (ScriptList->SelectedObjects->Count > 0)
+				ButtonCompleteSelection->Enabled = true;
+			else
+				ButtonCompleteSelection->Enabled = false;
+
+			DeferredSelectionUpdateTimer->Stop();
+		}
+
 		void SelectScriptDialog::Dialog_Cancel(Object^ Sender, CancelEventArgs^ E)
 		{
 			SaveBoundsToINI();
@@ -165,6 +172,7 @@ namespace cse
 			this->UncompiledScriptsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->ToolStripLabelSelectionCount = (gcnew System::Windows::Forms::ToolStripLabel());
 			this->ButtonCompleteSelection = (gcnew System::Windows::Forms::Button());
+			this->DeferredSelectionUpdateTimer = (gcnew System::Windows::Forms::Timer());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ScriptList))->BeginInit();
 			this->BottomToolStrip->SuspendLayout();
 			this->SuspendLayout();
@@ -200,7 +208,6 @@ namespace cse
 			});
 			this->ScriptList->Cursor = System::Windows::Forms::Cursors::Default;
 			this->ScriptList->FullRowSelect = true;
-			this->ScriptList->HideSelection = false;
 			this->ScriptList->Location = System::Drawing::Point(12, 13);
 			this->ScriptList->Name = L"ScriptList";
 			this->ScriptList->ShowGroups = false;
@@ -327,6 +334,11 @@ namespace cse
 			this->ButtonCompleteSelection->Text = L"OK";
 			this->ButtonCompleteSelection->UseVisualStyleBackColor = true;
 			this->ButtonCompleteSelection->Image = Globals::ScriptEditorImageResourceManager->CreateImage("ScriptListDialogCompleteSelection");
+			//
+			// DeferredSelectionUpdateTimer
+			//
+			this->DeferredSelectionUpdateTimer->Enabled = false;
+			this->DeferredSelectionUpdateTimer->Interval = 50;
 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
@@ -350,6 +362,9 @@ namespace cse
 			// ### This breaks event handling for this event when the idle loop isn't active (which are usually active when thread-modal dialog is being shown)
 			// ### We need to use SelectedIndexChanged instead.
 			ScriptList->SelectedIndexChanged += gcnew EventHandler(this, &SelectScriptDialog::ScriptList_SelectionChanged);
+			// ### The SelectedIndexChanged event does not update the SelectedObjects collection when the Shift-key selection triggers the event
+			// ### We need to workaround this by deferring the original handler by using a timer
+			DeferredSelectionUpdateTimer->Tick += gcnew EventHandler(this, &SelectScriptDialog::DeferredSelectionUpdateTimer_Tick);
 			ScriptList->KeyDown += gcnew KeyEventHandler(this, &SelectScriptDialog::ScriptList_KeyDown);
 			ScriptList->KeyPress += gcnew KeyPressEventHandler(this, &SelectScriptDialog::ScriptList_KeyPress);
 			ScriptList->ItemActivate += gcnew EventHandler(this, &SelectScriptDialog::ScriptList_ItemActivate);

@@ -28,12 +28,14 @@ namespace cse
 			AutoSaveTimer = gcnew Timer();
 			AutoSaveTimer->Interval = preferences::SettingsHolder::Get()->Backup->AutoRecoveryInterval * 1000 * 60;
 
+			BackgroundAnalysis = gcnew ScriptBackgroundAnalysis(this);
+
 			Font^ CustomFont = safe_cast<Font^>(preferences::SettingsHolder::Get()->Appearance->TextFont->Clone());
 			int TabSize = preferences::SettingsHolder::Get()->Appearance->TabSize;
 
 			TextEditor = gcnew textEditors::avalonEditor::AvalonEditTextEditor(this,
 																			   gcnew textEditors::avalonEditor::JumpToScriptHandler(this, &ConcreteWorkspaceModel::JumpToScript),
-																			   CustomFont, TabSize);
+																			   BackgroundAnalysis, CustomFont, TabSize);
 			IntelliSenseModel = gcnew intellisense::IntelliSenseInterfaceModel(TextEditor);
 
 
@@ -79,6 +81,7 @@ namespace cse
 			SAFEDELETE_CLR(AutoSaveTimerTickHandler);
 
 			SAFEDELETE_CLR(AutoSaveTimer);
+			SAFEDELETE_CLR(BackgroundAnalysis);
 			SAFEDELETE_CLR(IntelliSenseModel);
 			SAFEDELETE_CLR(TextEditor);
 
@@ -97,10 +100,10 @@ namespace cse
 			case Keys::Space:
 				if (E->Control && E->Alt)
 				{
-					obScriptParsing::AnalysisData^ CurrentData = TextEditor->GetSemanticAnalysisCache(false, false);
+					obScriptParsing::AnalysisData^ CurrentData = BackgroundAnalysis->LastAnalysisResult->Clone();
 					obScriptParsing::Structurizer^ Parser = gcnew obScriptParsing::Structurizer(CurrentData,
-																								gcnew obScriptParsing::Structurizer::GetLineText(this, &ConcreteWorkspaceModel::GetLineText),
-																								TextEditor->CurrentLine);
+						gcnew obScriptParsing::Structurizer::GetLineText(this, &ConcreteWorkspaceModel::GetLineText),
+						TextEditor->CurrentLine);
 
 					if (Parser->Valid)
 						BoundParent->Controller->ShowOutline(BoundParent, Parser, this);
@@ -323,8 +326,9 @@ namespace cse
 							 BoundParent->ListViewBookmarks,
 							 BoundParent->ListViewFindResults);
 
-			BoundParent->BreadcrumbManager->Bind(TextEditor);
+			BoundParent->BreadcrumbManager->Bind(TextEditor, BackgroundAnalysis);
 			IntelliSenseModel->Bind(BoundParent->IntelliSenseInterfaceView);
+			BackgroundAnalysis->Resume();
 
 			TextEditor->FocusTextArea();
 			TextEditor->ScrollToCaret();
@@ -334,6 +338,7 @@ namespace cse
 		{
 			if (Bound)
 			{
+				BackgroundAnalysis->Pause();
 				IntelliSenseModel->Unbind();
 				BoundParent->BreadcrumbManager->Unbind();
 				TextEditor->Unbind();

@@ -81,7 +81,6 @@
     <ClCompile Include="ScriptSync.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="ScriptTextEditorInterface.cpp" />
     <ClCompile Include="SelectScriptDialog.cpp">
       <Filter>Components</Filter>
     </ClCompile>
@@ -97,6 +96,11 @@
     <ClCompile Include="Preferences.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="ScriptTextEditorInterface.cpp">
+      <Filter>Components\TextEditors</Filter>
+    </ClCompile>
+    <ClCompile Include="WorkspaceModelComponents.cpp" />
+    <ClCompile Include="BackgroundAnalysis.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h">
@@ -187,6 +191,8 @@
     <ClInclude Include="Preferences.h">
       <Filter>Components</Filter>
     </ClInclude>
+    <ClInclude Include="WorkspaceModelComponents.h" />
+    <ClInclude Include="BackgroundAnalysis.h" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ImagesModern.resx">

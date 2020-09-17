@@ -195,7 +195,6 @@ namespace cse
 			void						PopulateDataStore();
 			generic <typename T> where T : IntelliSenseItem
 			void						EnumerateIntelliSenseItems(IEnumerable<T>^ Items, StringMatchType MatchType);
-			void						PickSelection();
 
 			IntelliSenseItemScriptVariable^
 										LookupLocalVariable(String^ Identifier);

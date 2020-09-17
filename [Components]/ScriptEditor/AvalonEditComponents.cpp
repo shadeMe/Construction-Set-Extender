@@ -2,6 +2,7 @@
 #include "AvalonEditTextEditor.h"
 #include "Preferences.h"
 #include "Globals.h"
+#include "WorkspaceModelComponents.h"
 
 namespace cse
 {
@@ -39,7 +40,7 @@ namespace cse
 	void WPFFocusHelper::ThreadCallback(Object^ Element)
 	{
 		Windows::UIElement^ UIE = (Windows::UIElement^)Element;
-		UIE->Dispatcher->Invoke(System::Windows::Threading::DispatcherPriority::Normal, gcnew InvokeDelegate(&DispatcherCallback), UIE);
+		UIE->Dispatcher->Invoke(System::Windows::Threading::DispatcherPriority::ContextIdle, gcnew InvokeDelegate(&DispatcherCallback), UIE);
 	}
 
 	void WPFFocusHelper::Focus(Windows::UIElement^ Element)
@@ -968,14 +969,14 @@ namespace cse
 				return Count;
 			}
 
-			List<cse::textEditors::ScriptTextMetadata::Bookmark^>^ LineTrackingManager::GetAllBookmarks()
+			List<cse::scriptEditor::ScriptTextMetadata::Bookmark^>^ LineTrackingManager::GetAllBookmarks()
 			{
-				List<ScriptTextMetadata::Bookmark^>^ Out = gcnew List<ScriptTextMetadata::Bookmark ^>;
+				auto Out = gcnew List<scriptEditor::ScriptTextMetadata::Bookmark ^>;
 
 				for each (ScriptBookmark ^ Itr in Bookmarks)
 				{
 					if (Itr->Deleted() == false)
-						Out->Add(gcnew ScriptTextMetadata::Bookmark(Itr->Line(), Itr->Message()));
+						Out->Add(gcnew scriptEditor::ScriptTextMetadata::Bookmark(Itr->Line(), Itr->Message()));
 				}
 
 				return Out;
@@ -1194,43 +1195,20 @@ namespace cse
 
 			void ObScriptIndentStrategy::IndentLine(AvalonEdit::Document::TextDocument^ document, AvalonEdit::Document::DocumentLine^ line)
 			{
-				obScriptParsing::AnalysisData^ Data = Parent->GetSemanticAnalysisCache(false, true);
-				UInt32 CurrIndent = Data->GetLineIndentLevel(line->LineNumber);
+				UInt32 CurrentIndents = 0, PreviousIndents = 0;
+				CalculateIndentsTillCurrentLine(document, line, CurrentIndents, PreviousIndents);
 
 				AvalonEdit::Document::DocumentLine^ previousLine = line->PreviousLine;
-				ScriptParser^ Parser = gcnew ScriptParser();
-
-				Parser->Tokenize(document->GetText(previousLine), false);
-				if (CullEmptyLines)
+				if (CullEmptyLines && document->GetText(previousLine)->TrimStart()->TrimEnd()->Length == 0)
+					document->Replace(previousLine, "");
+				else
 				{
-					if (!Parser->Valid && document->GetText(previousLine)->Replace("\t", "")->Length == 0)
-					{
-						AvalonEdit::Document::ISegment^ Leading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(document, previousLine);
-						document->Replace(Leading, "");
-					}
+					auto LeadingWhitespace = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(document, previousLine);
+					document->Replace(LeadingWhitespace, gcnew String('\t', PreviousIndents));
 				}
 
-				if (Parser->Valid)
-				{
-					AvalonEdit::Document::ISegment^ Leading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(document, previousLine);
-
-					if (Parser->GetFirstTokenType() == obScriptParsing::ScriptTokenType::ElseIf ||
-						Parser->GetFirstTokenType() == obScriptParsing::ScriptTokenType::Else)
-					{
-						if (CurrIndent)
-							document->Replace(Leading, gcnew String('\t', CurrIndent - 1));
-					}
-					else if	(Parser->GetFirstTokenType() == obScriptParsing::ScriptTokenType::EndIf ||
-							Parser->GetFirstTokenType() == obScriptParsing::ScriptTokenType::End ||
-							Parser->GetFirstTokenType() == obScriptParsing::ScriptTokenType::Loop)
-					{
-						document->Replace(Leading, gcnew String('\t', CurrIndent));
-					}
-				}
-
-				AvalonEdit::Document::ISegment^ Indentation = AvalonEdit::Document::TextUtilities::GetWhitespaceAfter(document, line->Offset);
-				document->Replace(Indentation, gcnew String('\t', CurrIndent));
-				document->Replace(AvalonEdit::Document::TextUtilities::GetWhitespaceBefore(document, line->Offset), "");
+				auto CurrentWhitespace = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(document, line);
+				document->Replace(CurrentWhitespace, gcnew String('\t', CurrentIndents));
 			}
 
 			ObScriptIndentStrategy::~ObScriptIndentStrategy()
@@ -1246,6 +1224,59 @@ namespace cse
 				;//
 			}
 
+			void ObScriptIndentStrategy::CalculateIndentsTillCurrentLine(AvalonEdit::Document::TextDocument^ Document, AvalonEdit::Document::DocumentLine^ CurrentLine,
+																		UInt32% OutCurrentLineIndents, UInt32% OutPreviousLineIndents)
+			{
+				auto Text = Document->GetText(0, CurrentLine->EndOffset)->TrimEnd();
+				auto Parser = gcnew obScriptParsing::LineTokenizer();
+				LineTrackingStringReader^ Reader = gcnew LineTrackingStringReader(Text);
+
+				int RunningIndentCount = 0, CurrentLineIndents = 0, PreviousLineIndents = 0;
+				for (String^ ReadLine = Reader->ReadLine(); ReadLine != nullptr; ReadLine = Reader->ReadLine())
+				{
+					PreviousLineIndents = CurrentLineIndents;
+					CurrentLineIndents = RunningIndentCount;
+
+					if (Parser->Tokenize(ReadLine, false))
+					{
+						switch (Parser->GetFirstTokenType())
+						{
+						case obScriptParsing::ScriptTokenType::Begin:
+						case obScriptParsing::ScriptTokenType::If:
+						case obScriptParsing::ScriptTokenType::ForEach:
+						case obScriptParsing::ScriptTokenType::While:
+							++RunningIndentCount;
+							break;
+						case obScriptParsing::ScriptTokenType::ElseIf:
+						case obScriptParsing::ScriptTokenType::Else:
+							--CurrentLineIndents;
+							break;
+						case obScriptParsing::ScriptTokenType::End:
+						case obScriptParsing::ScriptTokenType::EndIf:
+						case obScriptParsing::ScriptTokenType::Loop:
+							--RunningIndentCount;
+							--CurrentLineIndents;
+							break;
+						}
+					}
+				}
+
+				PreviousLineIndents = CurrentLineIndents;
+				CurrentLineIndents = RunningIndentCount;
+
+				if (RunningIndentCount < 0)
+					RunningIndentCount = 0;
+
+				if (CurrentLineIndents < 0)
+					CurrentLineIndents = 0;
+
+				if (PreviousLineIndents < 0)
+					PreviousLineIndents = 0;
+
+				OutCurrentLineIndents = CurrentLineIndents;
+				OutPreviousLineIndents = PreviousLineIndents;
+			}
+
 			int ObScriptCodeFoldingStrategy::FoldingSorter::Compare( AvalonEdit::Folding::NewFolding^ X, AvalonEdit::Folding::NewFolding^ Y )
 			{
 				return X->StartOffset.CompareTo(Y->StartOffset);
@@ -1257,7 +1288,7 @@ namespace cse
 
 				List<AvalonEdit::Folding::NewFolding^>^ Foldings = gcnew List<AvalonEdit::Folding::NewFolding^>();
 
-				obScriptParsing::AnalysisData^ Data = Parent->GetSemanticAnalysisCache(false, false);
+				obScriptParsing::AnalysisData^ Data = Parent->SemanticAnalysisData;
 				for each (obScriptParsing::ControlBlock^ Itr in Data->ControlBlocks)
 				{
 					if (Itr->IsMalformed() == false &&
@@ -1393,7 +1424,7 @@ namespace cse
 			{
 				DocumentLine^ CurrentLine = CurrentContext->Document->GetLineByOffset(startOffset);
 
-				if (ParentEditor->GetSemanticAnalysisCache(false, false)->GetBlockEndingAt(CurrentLine->LineNumber))
+				if (ParentEditor->SemanticAnalysisData->GetBlockEndingAt(CurrentLine->LineNumber))
 					return startOffset + CurrentLine->Length;
 				else
 					return -1;
@@ -1402,7 +1433,7 @@ namespace cse
 			VisualLineElement^ StructureVisualizerRenderer::ConstructElement(Int32 offset)
 			{
 				DocumentLine^ CurrentLine = CurrentContext->Document->GetLineByOffset(offset);
-				obScriptParsing::ControlBlock^ Block = ParentEditor->GetSemanticAnalysisCache(false, false)->GetBlockEndingAt(CurrentLine->LineNumber);
+				obScriptParsing::ControlBlock^ Block = ParentEditor->SemanticAnalysisData->GetBlockEndingAt(CurrentLine->LineNumber);
 
 				if (Block)
 				{

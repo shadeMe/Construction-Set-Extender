@@ -2,6 +2,7 @@
 
 #include "WorkspaceModelInterface.h"
 #include "WorkspaceViewInterface.h"
+#include "BackgroundAnalysis.h"
 #include "AvalonEditTextEditor.h"
 
 #define NEWSCRIPTID					"New Script"
@@ -107,6 +108,7 @@ namespace cse
 		public:
 			textEditors::IScriptTextEditor^					TextEditor;
 			intellisense::IIntelliSenseInterfaceModel^		IntelliSenseModel;
+			ScriptBackgroundAnalysis^						BackgroundAnalysis;
 			Timer^											AutoSaveTimer;
 
 			void*									CurrentScript;

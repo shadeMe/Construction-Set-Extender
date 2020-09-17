@@ -204,6 +204,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="AvalonEditComponents.cpp" />
     <ClCompile Include="AvalonEditTextEditor.cpp" />
     <ClCompile Include="AvalonEditXSHD.cpp" />
+    <ClCompile Include="BackgroundAnalysis.cpp" />
     <ClCompile Include="FindReplaceDialog.cpp" />
     <ClCompile Include="IntelliSenseDatabase.cpp" />
     <ClCompile Include="IntelliSenseInterfaceModel.cpp" />
@@ -220,6 +221,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="SnippetManager.cpp" />
     <ClCompile Include="TextEditorAdornments.cpp" />
     <ClCompile Include="WorkspaceModel.cpp" />
+    <ClCompile Include="WorkspaceModelComponents.cpp" />
     <ClCompile Include="WorkspaceView.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -228,6 +230,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="..\..\[Common]\CustomInputBox.h" />
     <ClInclude Include="..\..\[Common]\NativeWrapper.h" />
     <ClInclude Include="AvalonEditComponents.h" />
+    <ClInclude Include="BackgroundAnalysis.h" />
     <ClInclude Include="FindReplaceDialog.h" />
     <ClInclude Include="IIntelliSenseInterface.h" />
     <ClInclude Include="IntelliSenseDatabase.h" />
@@ -254,6 +257,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="SnippetManager.h" />
     <ClInclude Include="TextEditorAdornments.h" />
     <ClInclude Include="WorkspaceModel.h" />
+    <ClInclude Include="WorkspaceModelComponents.h" />
     <ClInclude Include="WorkspaceModelInterface.h" />
     <ClInclude Include="WorkspaceView.h" />
     <ClInclude Include="WorkspaceViewInterface.h" />

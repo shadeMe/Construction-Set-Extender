@@ -642,8 +642,14 @@ namespace cse
 		AnalysisMessages->Clear();
 	}
 
-	void obScriptParsing::AnalysisData::PerformAnalysis(String^ ScriptText, ScriptType Type, Operation Operations, CheckVariableNameCollision^ Delegate)
+	void obScriptParsing::AnalysisData::PerformAnalysis(Params^ Parameters)
 	{
+		auto ScriptText = Parameters->ScriptText;
+		auto Type = Parameters->Type;
+		auto Operations = Parameters->Ops;
+		auto ScriptCommandIdentifiers = Parameters->ScriptCommandIdentifiers;
+		auto FormIdentifiers = Parameters->FormIdentifiers;
+
 		LineTokenizer^ Parser = gcnew LineTokenizer();
 		LineTrackingStringReader^ Reader = gcnew LineTrackingStringReader(ScriptText);
 		Stack<ControlBlock::ControlBlockType>^ StructureStack = gcnew Stack<ControlBlock::ControlBlockType>();
@@ -743,14 +749,10 @@ namespace cse
 							if (Existing != nullptr)
 								LogCriticalAnalysisMessage(CurrentLine, "Variable redeclaration. Previous declaration was at line " + Existing->Line), EncounteredProblem = true;
 
-							bool CommandCollision = false, FormCollision = false;
-							if (Delegate)
-								Delegate(SecondToken, CommandCollision, FormCollision);
-
-							if (Operations.HasFlag(Operation::CheckVariableNameFormCollisions) && FormCollision)
+							if (Operations.HasFlag(Operation::CheckVariableNameFormCollisions) && FormIdentifiers->Contains(SecondToken))
 								LogCriticalAnalysisMessage(CurrentLine, "The identifier " + SecondToken + " has already been assigned to a record."), EncounteredProblem = true;
 
-							if (Operations.HasFlag(Operation::CheckVariableNameCommandCollisions) && CommandCollision)
+							if (Operations.HasFlag(Operation::CheckVariableNameCommandCollisions) && ScriptCommandIdentifiers->Contains(SecondToken))
 								LogCriticalAnalysisMessage(CurrentLine, "The identifier " + SecondToken + " is reserved for a script command."), EncounteredProblem = true;
 						}
 
@@ -1129,6 +1131,7 @@ namespace cse
 		Copy->UDF = this->UDF;
 		Copy->UDFResult = this->UDFResult;
 		Copy->UDFAmbiguousResult = this->UDFAmbiguousResult;
+		Copy->AnalysisMessages = gcnew List<UserMessage ^>(this->AnalysisMessages);
 
 		return Copy;
 	}
@@ -1226,7 +1229,11 @@ namespace cse
 		Data(gcnew AnalysisData()),
 		SanitizedText("")
 	{
-		Data->PerformAnalysis(InputText, ScriptType::None, AnalysisData::Operation::FillControlBlocks, nullptr);
+		auto Params = gcnew AnalysisData::Params;
+		Params->ScriptText = InputText;
+		Params->Ops = AnalysisData::Operation::FillControlBlocks;
+
+		Data->PerformAnalysis(Params);
 	}
 
 	bool obScriptParsing::Sanitizer::SanitizeScriptText(Operation Operations, GetSanitizedIdentifier^ Delegate)

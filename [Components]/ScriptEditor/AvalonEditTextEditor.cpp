@@ -3,6 +3,7 @@
 #include "Preferences.h"
 #include "IntelliSenseDatabase.h"
 #include "IntelliSenseItem.h"
+#include "WorkspaceModelComponents.h"
 #include "[Common]/CustomInputBox.h"
 #include "RefactorTools.h"
 
@@ -261,12 +262,12 @@ namespace cse
 				return Result;
 			}
 
-			void AvalonEditTextEditor::SetPreventTextChangedFlag(TextChangeEventPropagation State)
+			void AvalonEditTextEditor::SetIntelliSenseTextChangeEventHandlingMode(IntelliSenseTextChangeEventHandling State)
 			{
-				if (State == TextChangeEventPropagation::SuppressOnce && PreventTextChangedEventFlag == TextChangeEventPropagation::SuppressAlways)
+				if (State == IntelliSenseTextChangeEventHandling::SuppressOnce && IntelliSenseTextChangeEventHandlingMode == IntelliSenseTextChangeEventHandling::SuppressAlways)
 					return;
 
-				PreventTextChangedEventFlag = State;
+				IntelliSenseTextChangeEventHandlingMode = State;
 			}
 
 			void AvalonEditTextEditor::HandleKeyEventForKey(System::Windows::Input::Key Key)
@@ -303,14 +304,14 @@ namespace cse
 			{
 				Modified = true;
 
-				switch (PreventTextChangedEventFlag)
+				switch (IntelliSenseTextChangeEventHandlingMode)
 				{
-				case TextChangeEventPropagation::Propagate:
+				case IntelliSenseTextChangeEventHandling::Propagate:
 					break;
-				case TextChangeEventPropagation::SuppressOnce:
-					PreventTextChangedEventFlag = TextChangeEventPropagation::Propagate;
+				case IntelliSenseTextChangeEventHandling::SuppressOnce:
+					IntelliSenseTextChangeEventHandlingMode = IntelliSenseTextChangeEventHandling::Propagate;
 					return;
-				case TextChangeEventPropagation::SuppressAlways:
+				case IntelliSenseTextChangeEventHandling::SuppressAlways:
 					return;
 				}
 
@@ -636,7 +637,7 @@ namespace cse
 					Index = GetTextLength();
 
 				if (PreventTextChangedEventHandling)
-					SetPreventTextChangedFlag(TextChangeEventPropagation::SuppressOnce);
+					SetIntelliSenseTextChangeEventHandlingMode(IntelliSenseTextChangeEventHandling::SuppressOnce);
 
 				TextField->Document->Insert(Index, Text);
 			}
@@ -805,148 +806,6 @@ namespace cse
 					BookmarkDesc = Result->Text;
 
 				LineTracker->AddBookmark(LineNo, BookmarkDesc);
-			}
-
-			void CheckVariableNameCollision(String^ VarName, bool% HasCommandCollision, bool% HasFormCollision)
-			{
-				HasCommandCollision = intellisense::IntelliSenseBackend::Get()->IsScriptCommand(VarName, false);
-				HasFormCollision = intellisense::IntelliSenseBackend::Get()->IsForm(VarName);
-			}
-
-			void AvalonEditTextEditor::QueueBackgroundTask()
-			{
-				if (CompilationInProgress)
-					return;
-
-				if (BackgroundTask)
-				{
-					// skip if the previous task is still executing
-					if (BackgroundTask->Status == TaskStatus::Running ||
-						BackgroundTask->Status == TaskStatus::WaitingForActivation ||
-						BackgroundTask->Status == TaskStatus::WaitingToRun)
-					{
-						return;
-					}
-					else if (BackgroundTask->Status == TaskStatus::WaitingForChildrenToComplete)
-						BackgroundTask->Wait();
-					else if (BackgroundTask->Status == TaskStatus::RanToCompletion)
-					{
-						;//
-					}
-					else
-						throw gcnew InvalidOperationException("Background task state = " + BackgroundTask->Status.ToString());
-
-					Debug::Assert(BackgroundTask->IsCompleted == true);
-				}
-
-
-				BackgroundTaskInput^ DataIn = gcnew BackgroundTaskInput();
-				DataIn->ScriptText = TextField->Document->CreateSnapshot();
-				DataIn->ScriptType = ParentModel->Type;
-				DataIn->CheckVarNameCollisionCommands = preferences::SettingsHolder::Get()->Validator->CheckVarCommandNameCollisions;
-				DataIn->CheckVarNameCollisionForms = preferences::SettingsHolder::Get()->Validator->CheckVarFormNameCollisions;
-				DataIn->CountVarReferences = preferences::SettingsHolder::Get()->Validator->CountVariableRefs;
-				DataIn->SkipVarRefCountsForQuests = preferences::SettingsHolder::Get()->Validator->NoQuestVariableRefCounting;
-
-				System::Func<Object^, BackgroundTaskOutput^>^ TaskDelegate = gcnew System::Func<Object^, BackgroundTaskOutput^>(&AvalonEditTextEditor::PerformBackgroundTask);
-				System::Action<Task<BackgroundTaskOutput^>^>^ ContinueDelegate = gcnew System::Action<Task<BackgroundTaskOutput^>^>(this, &AvalonEditTextEditor::ProcessBackgroundTaskOutput);
-
-				BackgroundTask = Task<BackgroundTaskOutput^>::Factory->StartNew(TaskDelegate, DataIn);
-				// the completion task must be executed in the UI thread, so we need to use its task scheduler
-				BackgroundTask->ContinueWith(ContinueDelegate,
-											 //Threading::Tasks::TaskScheduler::FromCurrentSynchronizationContext());
-											 Globals::MainThreadTaskScheduler);
-			}
-
-			BackgroundTaskOutput^ AvalonEditTextEditor::PerformBackgroundTask(Object^ Input)
-			{
-				BackgroundTaskInput^ Data = (BackgroundTaskInput^)Input;
-				Debug::Assert(Data != nullptr);
-
-				obScriptParsing::AnalysisData::Operation AnalysisOps = obScriptParsing::AnalysisData::Operation::None;
-				obScriptParsing::ScriptType Type = obScriptParsing::ScriptType::Object;
-
-				AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::FillVariables;
-				AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::FillControlBlocks;
-				AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::PerformBasicValidation;
-
-				if (Data->CheckVarNameCollisionCommands)
-					AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::CheckVariableNameCommandCollisions;
-
-				if (Data->CheckVarNameCollisionForms)
-					AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::CheckVariableNameFormCollisions;
-
-				if (Data->CountVarReferences)
-					AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::CountVariableReferences;
-
-				if (Data->SkipVarRefCountsForQuests)
-					AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::SuppressQuestVariableRefCount;
-
-				if (Data->ScriptType == scriptEditor::IWorkspaceModel::ScriptType::MagicEffect)
-					Type = obScriptParsing::ScriptType::MagicEffect;
-				else if (Data->ScriptType == scriptEditor::IWorkspaceModel::ScriptType::Quest)
-					Type = obScriptParsing::ScriptType::Quest;
-
-				BackgroundTaskOutput^ Out = gcnew BackgroundTaskOutput;
-				Out->AnalysisOutput = gcnew obScriptParsing::AnalysisData;
-				// ### ISDB is not thread-safe, so no var name collision checking
-				Out->AnalysisOutput->PerformAnalysis(Data->ScriptText->Text, Type, AnalysisOps, nullptr);
-
-				return Out;
-			}
-
-			void AvalonEditTextEditor::ProcessBackgroundTaskOutput(Task<BackgroundTaskOutput^>^ Completed)
-			{
-				Debug::Assert(Completed->IsCompleted == true);
-				Debug::Assert(Completed->IsCanceled == false);
-
-				if (Completed->Status == TaskStatus::RanToCompletion)
-				{
-					if (Threading::Thread::CurrentThread->ManagedThreadId == OwnerThreadID)
-					{
-						if (SemanticAnalysisCache)
-							SAFEDELETE_CLR(SemanticAnalysisCache);
-
-						SemanticAnalysisCache = (obScriptParsing::AnalysisData^)Completed->Result->AnalysisOutput;
-
-						LineTracker->Cleanup();
-						UpdateCodeFoldings();
-						UpdateSyntaxHighlighting(false);
-
-						LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
-						LineTracker->ClearMessages(textEditors::IScriptTextEditor::ScriptMessageSource::Validator,
-												   textEditors::IScriptTextEditor::ScriptMessageType::None);
-
-						for each (obScriptParsing::AnalysisData::UserMessage^ Itr in SemanticAnalysisCache->AnalysisMessages)
-						{
-							LineTracker->TrackMessage(Itr->Line,
-													  (Itr->Critical == false ? textEditors::IScriptTextEditor::ScriptMessageType::Warning : textEditors::IScriptTextEditor::ScriptMessageType::Error),
-													  textEditors::IScriptTextEditor::ScriptMessageSource::Validator, Itr->Message);
-						}
-
-						LineTracker->EndUpdate(false);
-
-						OnBackgroundAnalysisComplete();
-					}
-					else
-					{
-						// why the heck is this happening?
-						DebugPrint("Background processing completion task " + Completed->Id + " called in a worker thread!", true);
-						Debugger::Log(1, "Error", "Background processing completion task " + Completed->Id + " called in a worker thread");
-						//Debugger::Break();
-						return;
-					}
-				}
-				else
-					DebugPrint("BackgroundTask " + Completed->Id + " failed to complete successfully. Error Message - " + Completed->Exception->ToString());
-			}
-
-			void AvalonEditTextEditor::WaitForBackgroundTask()
-			{
-				if (BackgroundTask)
-				{
-					BackgroundTask->Wait();
-				}
 			}
 
 			void AvalonEditTextEditor::RoutePreprocessorMessages(int Line, String^ Message)
@@ -1134,7 +993,7 @@ namespace cse
 					E->CurrentLineInsideViewport = GetLineVisible(CurrentLine, true);
 
 				if (Type == intellisense::IntelliSenseContextChangeEventArgs::Event::SemanticAnalysisCompleted)
-					E->SemanticAnalysisData = GetSemanticAnalysisCache(false, false);
+					E->SemanticAnalysisData = SemanticAnalysisCache;
 
 				auto DisplayScreenCoords = PointToScreen(GetPositionFromCharIndex(Caret, true));
 				DisplayScreenCoords.X += 5;
@@ -1202,11 +1061,6 @@ namespace cse
 			void AvalonEditTextEditor::OnLineChanged()
 			{
 				LineChanged(this, EventArgs::Empty);
-			}
-
-			void AvalonEditTextEditor::OnBackgroundAnalysisComplete()
-			{
-				BackgroundAnalysisComplete(this, EventArgs::Empty);
 			}
 
 			void AvalonEditTextEditor::OnTextUpdated()
@@ -1325,11 +1179,11 @@ namespace cse
 					case System::Windows::Input::Key::Up:
 						if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 						{
-							SetPreventTextChangedFlag(TextChangeEventPropagation::SuppressAlways);
+							SetIntelliSenseTextChangeEventHandlingMode(IntelliSenseTextChangeEventHandling::SuppressAlways);
 
 							MoveTextSegment(TextField->Document->GetLineByOffset(Caret), MoveSegmentDirection::Up);
 
-							SetPreventTextChangedFlag(TextChangeEventPropagation::Propagate);
+							SetIntelliSenseTextChangeEventHandlingMode(IntelliSenseTextChangeEventHandling::Propagate);
 
 							HandleKeyEventForKey(E->Key);
 							E->Handled = true;
@@ -1339,11 +1193,11 @@ namespace cse
 					case System::Windows::Input::Key::Down:
 						if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 						{
-							SetPreventTextChangedFlag(TextChangeEventPropagation::SuppressAlways);
+							SetIntelliSenseTextChangeEventHandlingMode(IntelliSenseTextChangeEventHandling::SuppressAlways);
 
 							MoveTextSegment(TextField->Document->GetLineByOffset(Caret), MoveSegmentDirection::Down);
 
-							SetPreventTextChangedFlag(TextChangeEventPropagation::Propagate);
+							SetIntelliSenseTextChangeEventHandlingMode(IntelliSenseTextChangeEventHandling::Propagate);
 
 							HandleKeyEventForKey(E->Key);
 							E->Handled = true;
@@ -1353,7 +1207,7 @@ namespace cse
 					case System::Windows::Input::Key::Z:
 					case System::Windows::Input::Key::Y:
 						if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
-							SetPreventTextChangedFlag(TextChangeEventPropagation::SuppressOnce);
+							SetIntelliSenseTextChangeEventHandlingMode(IntelliSenseTextChangeEventHandling::SuppressOnce);
 
 						break;
 					case System::Windows::Input::Key::PageUp:
@@ -1514,16 +1368,6 @@ namespace cse
 				SynchronizeExternalScrollBars();
 			}
 
-			void AvalonEditTextEditor::SemanticAnalysisTimer_Tick( Object^ Sender, EventArgs^ E )
-			{
-				if (IsFocused == false)
-					return;
-				else if (GetTextLength() == 0)
-					return;
-
-				QueueBackgroundTask();
-			}
-
 			void AvalonEditTextEditor::ExternalScrollBar_ValueChanged( Object^ Sender, EventArgs^ E )
 			{
 				if (SynchronizingExternalScrollBars == false)
@@ -1631,6 +1475,36 @@ namespace cse
 				InlineSearchPanel->MarkerBrush = gcnew Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B));
 
 				RefreshTextView();
+			}
+
+			void AvalonEditTextEditor::BackgroundAnalysis_AnalysisComplete(Object^ Sender, scriptEditor::SemanticAnalysisCompleteEventArgs^ E)
+			{
+				if (CompilationInProgress)
+					return;
+
+				if (SemanticAnalysisCache)
+					SAFEDELETE_CLR(SemanticAnalysisCache);
+
+				SemanticAnalysisCache = E->Result->Clone();
+
+				LineTracker->Cleanup();
+				UpdateCodeFoldings();
+				UpdateSyntaxHighlighting(false);
+
+				LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
+				LineTracker->ClearMessages(textEditors::IScriptTextEditor::ScriptMessageSource::Validator,
+					textEditors::IScriptTextEditor::ScriptMessageType::None);
+
+				for each (obScriptParsing::AnalysisData::UserMessage ^ Itr in SemanticAnalysisCache->AnalysisMessages)
+				{
+					LineTracker->TrackMessage(Itr->Line,
+						(Itr->Critical == false ? textEditors::IScriptTextEditor::ScriptMessageType::Warning : textEditors::IScriptTextEditor::ScriptMessageType::Error),
+						textEditors::IScriptTextEditor::ScriptMessageSource::Validator, Itr->Message);
+				}
+
+				LineTracker->EndUpdate(false);
+
+				RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::Event::SemanticAnalysisCompleted);
 			}
 
 			void AvalonEditTextEditor::TextField_VisualLineConstructionStarting(Object^ Sender, VisualLineConstructionStartEventArgs^ E)
@@ -1745,7 +1619,7 @@ namespace cse
 
 			void AvalonEditTextEditor::ContextMenuToggleComment_Click(Object^ Sender, EventArgs^ E)
 			{
-				SetPreventTextChangedFlag(TextChangeEventPropagation::SuppressOnce);
+				SetIntelliSenseTextChangeEventHandlingMode(IntelliSenseTextChangeEventHandling::SuppressOnce);
 				ToggleComment(TextField->TextArea->Document->GetLineByOffset(GetLastKnownMouseClickOffset())->LineNumber,
 							  ToggleCommentOperation::Toggle);
 			}
@@ -1823,14 +1697,14 @@ namespace cse
 			}
 #pragma endregion
 
-			AvalonEditTextEditor::AvalonEditTextEditor(scriptEditor::IWorkspaceModel^ ParentModel, JumpToScriptHandler^ JumpScriptDelegate, Font^ Font, int TabSize)
+			AvalonEditTextEditor::AvalonEditTextEditor(scriptEditor::IWorkspaceModel^ ParentModel,
+													JumpToScriptHandler^ JumpScriptDelegate,
+													scriptEditor::IBackgroundSemanticAnalyzer^ BackgroundAnalysis,
+													Font^ Font, int TabSize)
 			{
 				Debug::Assert(ParentModel != nullptr);
 				this->ParentModel = ParentModel;
 				this->JumpScriptDelegate = JumpScriptDelegate;
-
-				OwnerThreadID = Threading::Thread::CurrentThread->ManagedThreadId;
-				Debug::Assert(Globals::MainThreadID == OwnerThreadID);
 
 				WinFormsContainer = gcnew Panel();
 				WPFHost = gcnew ElementHost();
@@ -1847,7 +1721,11 @@ namespace cse
 				ExternalVerticalScrollBar = gcnew VScrollBar();
 				ExternalHorizontalScrollBar = gcnew HScrollBar();
 				ScrollBarSyncTimer = gcnew Timer();
-				SemanticAnalysisTimer = gcnew Timer();
+
+				BackgroundAnalyzer = BackgroundAnalysis;
+				BackgroundAnalyzerAnalysisCompleteHandler = gcnew scriptEditor::SemanticAnalysisCompleteEventHandler(this,
+																&AvalonEditTextEditor::BackgroundAnalysis_AnalysisComplete);
+				BackgroundAnalyzer->SemanticAnalysisComplete += BackgroundAnalyzerAnalysisCompleteHandler;
 
 				TextFieldTextChangedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::TextField_TextChanged);
 				TextFieldCaretPositionChangedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::TextField_CaretPositionChanged);
@@ -1866,7 +1744,6 @@ namespace cse
 				TextFieldMiddleMouseScrollDownHandler = gcnew System::Windows::Input::MouseButtonEventHandler(this, &AvalonEditTextEditor::TextField_MiddleMouseScrollDown);
 				MiddleMouseScrollTimerTickHandler = gcnew EventHandler(this, &AvalonEditTextEditor::MiddleMouseScrollTimer_Tick);
 				ScrollBarSyncTimerTickHandler = gcnew EventHandler(this, &AvalonEditTextEditor::ScrollBarSyncTimer_Tick);
-				SemanticAnalysisTimerTickHandler = gcnew EventHandler(this, &AvalonEditTextEditor::SemanticAnalysisTimer_Tick);
 				ExternalScrollBarValueChangedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::ExternalScrollBar_ValueChanged);
 				SetTextAnimationCompletedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::SetTextAnimation_Completed);
 				ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::ScriptEditorPreferences_Saved);
@@ -1934,7 +1811,7 @@ namespace cse
 
 				InitializingFlag = false;
 				ModifiedFlag = false;
-				PreventTextChangedEventFlag = TextChangeEventPropagation::Propagate;
+				IntelliSenseTextChangeEventHandlingMode = IntelliSenseTextChangeEventHandling::Propagate;
 				KeyToPreventHandling = System::Windows::Input::Key::None;
 				LastKeyThatWentDown = System::Windows::Input::Key::None;
 				IsMiddleMouseScrolling = false;
@@ -1962,8 +1839,6 @@ namespace cse
 				SetTextAnimating = false;
 				SetTextPrologAnimationCache = nullptr;
 
-				SemanticAnalysisTimer->Interval = 5000;
-
 				TextFieldInUpdateFlag = false;
 				PreviousLineBuffer = -1;
 				SemanticAnalysisCache = gcnew obScriptParsing::AnalysisData();
@@ -1978,8 +1853,6 @@ namespace cse
 					TextField->TextArea->TextView->ElementGenerators->Add(StructureVisualizer);
 
 				CompilationInProgress = false;
-
-				BackgroundTask = nullptr;
 
 				TextEditorContextMenu = gcnew ContextMenuStrip();
 				ContextMenuCopy = gcnew ToolStripMenuItem();
@@ -2122,7 +1995,6 @@ namespace cse
 				ScrollBarSyncTimer->Tick += ScrollBarSyncTimerTickHandler;
 				ExternalVerticalScrollBar->ValueChanged += ExternalScrollBarValueChangedHandler;
 				ExternalHorizontalScrollBar->ValueChanged += ExternalScrollBarValueChangedHandler;
-				SemanticAnalysisTimer->Tick += SemanticAnalysisTimerTickHandler;
 				preferences::SettingsHolder::Get()->SavedToDisk += ScriptEditorPreferencesSavedHandler;
 				TextField->TextArea->TextView->VisualLineConstructionStarting += TextFieldVisualLineConstructionStartingHandler;
 
@@ -2143,29 +2015,18 @@ namespace cse
 				ContextMenuRefactorAddVariableString->Click += ContextMenuRefactorAddVariableClickHandler;
 				ContextMenuRefactorAddVariableArray->Click += ContextMenuRefactorAddVariableClickHandler;
 				AvalonEditTextEditorSubscribeClickEvent(ContextMenuRefactorCreateUDFImplementation);
-
-#if 0
-				System::Windows::PresentationSource^ src = System::Windows::PresentationSource::FromVisual(TextField);
-				if (src)
-				{
-					double dpix = 96.0 * src->CompositionTarget->TransformToDevice.M11;
-					double dpiy = 96.0 * src->CompositionTarget->TransformToDevice.M22;
-					DebugPrint("WPF DPI (X|Y) = " + dpix + "|" + dpiy);
-
-				}
-#endif // 0
 			}
 
 			AvalonEditTextEditor::~AvalonEditTextEditor()
 			{
-				WaitForBackgroundTask();
-
 				ParentModel = nullptr;
+
+				BackgroundAnalyzer->SemanticAnalysisComplete -= BackgroundAnalyzerAnalysisCompleteHandler;
+				BackgroundAnalyzer = nullptr;
 
 				TextField->Clear();
 				MiddleMouseScrollTimer->Stop();
 				ScrollBarSyncTimer->Stop();
-				SemanticAnalysisTimer->Stop();
 				CodeFoldingManager->Clear();
 				AvalonEdit::Folding::FoldingManager::Uninstall(CodeFoldingManager);
 				InlineSearchPanel->Uninstall();
@@ -2198,7 +2059,6 @@ namespace cse
 				ScrollBarSyncTimer->Tick -= ScrollBarSyncTimerTickHandler;
 				ExternalVerticalScrollBar->ValueChanged -= ExternalScrollBarValueChangedHandler;
 				ExternalHorizontalScrollBar->ValueChanged -= ExternalScrollBarValueChangedHandler;
-				SemanticAnalysisTimer->Tick -= SemanticAnalysisTimerTickHandler;
 				preferences::SettingsHolder::Get()->SavedToDisk -= ScriptEditorPreferencesSavedHandler;
 				TextField->TextArea->TextView->VisualLineConstructionStarting -= TextFieldVisualLineConstructionStartingHandler;
 				InlineSearchPanel->SearchOptionsChanged -= SearchPanelSearchOptionsChangedHandler;
@@ -2301,45 +2161,10 @@ namespace cse
 				SAFEDELETE_CLR(CodeFoldingManager);
 				SAFEDELETE_CLR(CodeFoldingStrategy);
 				SAFEDELETE_CLR(ScrollBarSyncTimer);
-				SAFEDELETE_CLR(SemanticAnalysisTimer);
 				SAFEDELETE_CLR(ExternalVerticalScrollBar);
 				SAFEDELETE_CLR(ExternalHorizontalScrollBar);
 				SAFEDELETE_CLR(SemanticAnalysisCache);
 				SAFEDELETE_CLR(TextField);
-			}
-
-			void AvalonEditTextEditor::UpdateSemanticAnalysisCache(bool FillVariables, bool FillControlBlocks, bool Validate)
-			{
-				obScriptParsing::AnalysisData::Operation AnalysisOps = obScriptParsing::AnalysisData::Operation::None;
-				obScriptParsing::ScriptType Type = obScriptParsing::ScriptType::Object;
-
-				if (FillVariables)
-					AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::FillVariables;
-
-				if (FillControlBlocks)
-					AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::FillControlBlocks;
-
-				if (Validate)
-				{
-					AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::PerformBasicValidation;
-
-					if (preferences::SettingsHolder::Get()->Validator->CheckVarCommandNameCollisions)
-						AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::CheckVariableNameCommandCollisions;
-					if (preferences::SettingsHolder::Get()->Validator->CheckVarFormNameCollisions)
-						AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::CheckVariableNameFormCollisions;
-					if (preferences::SettingsHolder::Get()->Validator->CountVariableRefs)
-						AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::CountVariableReferences;
-					if (preferences::SettingsHolder::Get()->Validator->NoQuestVariableRefCounting)
-						AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::SuppressQuestVariableRefCount;
-				}
-
-				if (ParentModel->Type == scriptEditor::IWorkspaceModel::ScriptType::MagicEffect)
-					Type = obScriptParsing::ScriptType::MagicEffect;
-				else if (ParentModel->Type == scriptEditor::IWorkspaceModel::ScriptType::Quest)
-					Type = obScriptParsing::ScriptType::Quest;
-
-				SemanticAnalysisCache->PerformAnalysis(GetText(), Type, AnalysisOps,
-													   gcnew obScriptParsing::AnalysisData::CheckVariableNameCollision(CheckVariableNameCollision));
 			}
 
 			void AvalonEditTextEditor::UpdateSyntaxHighlighting(bool Regenerate)
@@ -2352,7 +2177,6 @@ namespace cse
 			void AvalonEditTextEditor::Bind(ListView^ MessageList, ListView^ BookmarkList, ListView^ FindResultList)
 			{
 				IsFocused = true;
-				SemanticAnalysisTimer->Start();
 				ScrollBarSyncTimer->Start();
 
 				LineTracker->Bind(MessageList, BookmarkList, FindResultList);
@@ -2361,10 +2185,7 @@ namespace cse
 
 			void AvalonEditTextEditor::Unbind()
 			{
-				WaitForBackgroundTask();
-
 				IsFocused = false;
-				SemanticAnalysisTimer->Stop();
 				ScrollBarSyncTimer->Stop();
 
 				LineTracker->Unbind();
@@ -2418,11 +2239,9 @@ namespace cse
 
 			void AvalonEditTextEditor::SetText(String^ Text, bool ResetUndoStack)
 			{
-				WaitForBackgroundTask();
-
 				Text = SanitizeUnicodeString(Text);
 
-				SetPreventTextChangedFlag(TextChangeEventPropagation::SuppressOnce);
+				SetIntelliSenseTextChangeEventHandlingMode(IntelliSenseTextChangeEventHandling::SuppressOnce);
 				RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::Event::Reset);
 
 				if (SetTextAnimating == false)
@@ -2460,11 +2279,10 @@ namespace cse
 					SetSelectionLength(0);
 				}
 
-				UpdateSemanticAnalysisCache(true, true, false);
+				SemanticAnalysisCache = BackgroundAnalyzer->DoSynchronousAnalysis();
 				UpdateCodeFoldings();
 				UpdateSyntaxHighlighting(false);
 				OnTextUpdated();
-
 			}
 
 			String^ AvalonEditTextEditor::GetSelectedText(void)
@@ -2474,7 +2292,7 @@ namespace cse
 
 			void AvalonEditTextEditor::SetSelectedText(String^ Text)
 			{
-				SetPreventTextChangedFlag(TextChangeEventPropagation::SuppressOnce);
+				SetIntelliSenseTextChangeEventHandlingMode(IntelliSenseTextChangeEventHandling::SuppressOnce);
 
 				TextField->SelectedText = Text;
 			}
@@ -2545,17 +2363,17 @@ namespace cse
 			{
 				try
 				{
-					SetPreventTextChangedFlag(TextChangeEventPropagation::SuppressAlways);
+					SetIntelliSenseTextChangeEventHandlingMode(IntelliSenseTextChangeEventHandling::SuppressAlways);
 					StreamReader^ Reader = gcnew StreamReader(Path);
 					String^ FileText = Reader->ReadToEnd();
 					SetText(FileText, false);
 					Reader->Close();
-					SetPreventTextChangedFlag(TextChangeEventPropagation::Propagate);
+					SetIntelliSenseTextChangeEventHandlingMode(IntelliSenseTextChangeEventHandling::Propagate);
 				}
 				catch (Exception^ E)
 				{
 					DebugPrint("Error encountered when opening file for read operation!\n\tError Message: " + E->Message);
-					SetPreventTextChangedFlag(TextChangeEventPropagation::Propagate);
+					SetIntelliSenseTextChangeEventHandlingMode(IntelliSenseTextChangeEventHandling::Propagate);
 				}
 			}
 
@@ -2696,7 +2514,7 @@ namespace cse
 				TextFieldInUpdateFlag = true;
 				TextField->Document->BeginUpdate();
 
-				SetPreventTextChangedFlag(TextChangeEventPropagation::SuppressAlways);
+				SetIntelliSenseTextChangeEventHandlingMode(IntelliSenseTextChangeEventHandling::SuppressAlways);
 			}
 
 			void AvalonEditTextEditor::EndUpdate(bool FlagModification)
@@ -2707,7 +2525,7 @@ namespace cse
 				TextField->Document->EndUpdate();
 				TextFieldInUpdateFlag = false;
 
-				SetPreventTextChangedFlag(TextChangeEventPropagation::Propagate);
+				SetIntelliSenseTextChangeEventHandlingMode(IntelliSenseTextChangeEventHandling::Propagate);
 
 				if (FlagModification)
 					Modified = true;
@@ -2715,17 +2533,11 @@ namespace cse
 
 			UInt32 AvalonEditTextEditor::GetIndentLevel(UInt32 LineNumber)
 			{
-				if (Modified)
-					UpdateSemanticAnalysisCache(false, true, false);
-
 				return SemanticAnalysisCache->GetLineIndentLevel(LineNumber);
 			}
 
 			void AvalonEditTextEditor::InsertVariable(String^ VariableName, obScriptParsing::Variable::DataType VariableType)
 			{
-				if (Modified)
-					UpdateSemanticAnalysisCache(true, false, false);
-
 				String^ Declaration = obScriptParsing::Variable::GetVariableDataTypeToken(VariableType) + " " + VariableName + "\n";
 				UInt32 InsertionLine = SemanticAnalysisCache->NextVariableLine;
 				if (InsertionLine == 0)
@@ -2744,20 +2556,10 @@ namespace cse
 				}
 			}
 
-			obScriptParsing::AnalysisData^ AvalonEditTextEditor::GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks)
-			{
-				if (UpdateVars || UpdateControlBlocks)
-					UpdateSemanticAnalysisCache(UpdateVars, UpdateControlBlocks, false);
-
-				return SemanticAnalysisCache;
-			}
-
 			CompilationData^ AvalonEditTextEditor::BeginScriptCompilation()
 			{
 				Debug::Assert(CompilationInProgress == false);
 				CompilationInProgress = true;
-
-				WaitForBackgroundTask();
 
 				CompilationData^ Result = gcnew CompilationData;
 
@@ -2772,7 +2574,7 @@ namespace cse
 
 				LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
 
-				UpdateSemanticAnalysisCache(true, true, true);
+				SemanticAnalysisCache = BackgroundAnalyzer->DoSynchronousAnalysis();
 				LineTracker->ClearMessages(textEditors::IScriptTextEditor::ScriptMessageSource::Validator,
 										   textEditors::IScriptTextEditor::ScriptMessageType::None);
 
@@ -2799,12 +2601,12 @@ namespace cse
 						Result->UnpreprocessedScriptText = GetText();
 						Result->HasDirectives = Data->ContainsDirectives;
 
-						ScriptTextMetadata^ Metadata = gcnew ScriptTextMetadata;
+						auto Metadata = gcnew scriptEditor::ScriptTextMetadata;
 						Metadata->CaretPos = Caret;
 						Metadata->HasPreprocessorDirectives = Result->HasDirectives;
 						Metadata->Bookmarks = LineTracker->GetAllBookmarks();
 
-						Result->SerializedMetadata = ScriptTextMetadataHelper::SerializeMetadata(Metadata);
+						Result->SerializedMetadata = scriptEditor::ScriptTextMetadataHelper::SerializeMetadata(Metadata);
 
 						LineTracker->ClearMessages(textEditors::IScriptTextEditor::ScriptMessageSource::Compiler,
 												   textEditors::IScriptTextEditor::ScriptMessageType::None);
@@ -2842,10 +2644,13 @@ namespace cse
 				LineTracker->EndUpdate(true);
 			}
 
+			cse::textEditors::IScriptTextEditor::ILineAnchor^ AvalonEditTextEditor::CreateAnchor(UInt32 Line)
+			{
+				throw gcnew InvalidOperationException("Not implemented yet");
+			}
+
 			void AvalonEditTextEditor::InitializeState(String^ RawScriptText)
 			{
-				WaitForBackgroundTask();
-
 				LineTracker->ClearMessages(textEditors::IScriptTextEditor::ScriptMessageSource::None, textEditors::IScriptTextEditor::ScriptMessageType::None);
 				LineTracker->ClearBookmarks();
 				LineTracker->ClearFindResults(false);
@@ -2853,9 +2658,9 @@ namespace cse
 				ResetExternalScrollBars();
 
 				String^ ExtractedScriptText = "";
-				ScriptTextMetadata^ ExtractedMetadata = gcnew ScriptTextMetadata();
+				auto ExtractedMetadata = gcnew scriptEditor::ScriptTextMetadata();
 
-				ScriptTextMetadataHelper::DeserializeRawScriptText(RawScriptText, ExtractedScriptText, ExtractedMetadata);
+				scriptEditor::ScriptTextMetadataHelper::DeserializeRawScriptText(RawScriptText, ExtractedScriptText, ExtractedMetadata);
 				SetText(ExtractedScriptText, true);
 
 				if (ExtractedMetadata->CaretPos)
@@ -2870,7 +2675,7 @@ namespace cse
 				LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Bookmarks);
 				{
 					LineTracker->ClearBookmarks();
-					for each (ScriptTextMetadata::Bookmark^ Itr in ExtractedMetadata->Bookmarks)
+					for each (scriptEditor::ScriptTextMetadata::Bookmark^ Itr in ExtractedMetadata->Bookmarks)
 					{
 						if (Itr->Line > 0 && Itr->Line <= TextField->LineCount)
 							LineTracker->AddBookmark(Itr->Line, Itr->Message);

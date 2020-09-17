@@ -4,6 +4,7 @@
 #include "[Common]\NativeWrapper.h"
 #include "Preferences.h"
 #include "IntelliSenseDatabase.h"
+#include "WorkspaceModelComponents.h"
 
 namespace cse
 {
@@ -171,10 +172,10 @@ namespace cse
 				(nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(EID.c_str()));
 				Debug::Assert(NativeScript);
 
-				textEditors::ScriptTextMetadata^ EmbeddedMetadata = gcnew textEditors::ScriptTextMetadata();
+				ScriptTextMetadata^ EmbeddedMetadata = gcnew ScriptTextMetadata();
 				String^ ScriptText = "";
 
-				textEditors::ScriptTextMetadataHelper::DeserializeRawScriptText(gcnew String(NativeScript->Text),
+				ScriptTextMetadataHelper::DeserializeRawScriptText(gcnew String(NativeScript->Text),
 					ScriptText, EmbeddedMetadata);
 
 				return SyncedScript->WriteFileContents(ScriptText, false);
@@ -196,13 +197,6 @@ namespace cse
 					return gcnew scriptPreprocessor::StandardOutputError(this, &PreprocessorErrorCapture::OnError);
 				}
 			};
-
-			void CheckVariableNameCollision(String^ VarName, bool% HasCommandCollision, bool% HasFormCollision)
-			{
-				HasCommandCollision = intellisense::IntelliSenseBackend::Get()->IsScriptCommand(VarName, false);
-				HasFormCollision = intellisense::IntelliSenseBackend::Get()->IsForm(VarName);
-			}
-
 
 			bool DiskSync::DoPreprocessingAndAnalysis(componentDLLInterface::ScriptData* Script,
 													String^ ImportedScriptText,
@@ -232,30 +226,36 @@ namespace cse
 
 				OutHasDirectives = PreprocessorData->ContainsDirectives;
 
-
-				obScriptParsing::AnalysisData::Operation AnalysisOps = obScriptParsing::AnalysisData::Operation::None;
-				AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::FillVariables;
-				AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::FillControlBlocks;
-				AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::PerformBasicValidation;
+				auto AnalysisParams = gcnew obScriptParsing::AnalysisData::Params;
+				AnalysisParams->Ops = obScriptParsing::AnalysisData::Operation::FillVariables
+									| obScriptParsing::AnalysisData::Operation::FillControlBlocks
+									| obScriptParsing::AnalysisData::Operation::PerformBasicValidation;
 
 				if (preferences::SettingsHolder::Get()->Validator->CheckVarCommandNameCollisions)
-					AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::CheckVariableNameCommandCollisions;
+					AnalysisParams->Ops = AnalysisParams->Ops | obScriptParsing::AnalysisData::Operation::CheckVariableNameCommandCollisions;
 				if (preferences::SettingsHolder::Get()->Validator->CheckVarFormNameCollisions)
-					AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::CheckVariableNameFormCollisions;
+					AnalysisParams->Ops = AnalysisParams->Ops | obScriptParsing::AnalysisData::Operation::CheckVariableNameFormCollisions;
 				if (preferences::SettingsHolder::Get()->Validator->CountVariableRefs)
-					AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::CountVariableReferences;
+					AnalysisParams->Ops = AnalysisParams->Ops | obScriptParsing::AnalysisData::Operation::CountVariableReferences;
 				if (preferences::SettingsHolder::Get()->Validator->NoQuestVariableRefCounting)
-					AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::SuppressQuestVariableRefCount;
+					AnalysisParams->Ops = AnalysisParams->Ops | obScriptParsing::AnalysisData::Operation::SuppressQuestVariableRefCount;
 
-				obScriptParsing::ScriptType ScriptType = obScriptParsing::ScriptType::Object;
+				AnalysisParams->Type = obScriptParsing::ScriptType::Object;
 				if (Script->Type == componentDLLInterface::ScriptData::kScriptType_Magic)
-					ScriptType = obScriptParsing::ScriptType::MagicEffect;
+					AnalysisParams->Type = obScriptParsing::ScriptType::MagicEffect;
 				else if (Script->Type == componentDLLInterface::ScriptData::kScriptType_Quest)
-					ScriptType = obScriptParsing::ScriptType::Quest;
+					AnalysisParams->Type = obScriptParsing::ScriptType::Quest;
+
+				AnalysisParams->ScriptText = OutPreprocessedText;
+				AnalysisParams->ScriptCommandIdentifiers = intellisense::IntelliSenseBackend::Get()->CreateIndentifierSnapshot(
+					intellisense::DatabaseLookupFilter::Command);
+
+				auto Filter = intellisense::DatabaseLookupFilter::All & ~intellisense::DatabaseLookupFilter::Snippet;
+				Filter = Filter & ~intellisense::DatabaseLookupFilter::Command;
+				AnalysisParams->FormIdentifiers = intellisense::IntelliSenseBackend::Get()->CreateIndentifierSnapshot(Filter);
 
 				obScriptParsing::AnalysisData^ AnalysisResults = gcnew obScriptParsing::AnalysisData();
-				AnalysisResults->PerformAnalysis(OutPreprocessedText, ScriptType, AnalysisOps,
-					gcnew obScriptParsing::AnalysisData::CheckVariableNameCollision(CheckVariableNameCollision));
+				AnalysisResults->PerformAnalysis(AnalysisParams);
 
 				for each (obScriptParsing::AnalysisData::UserMessage^ Msg in AnalysisResults->AnalysisMessages)
 					OutMessages->Add(FormatLogMessage(Msg->Line, Msg->Message, Msg->Critical));
@@ -298,9 +298,9 @@ namespace cse
 				CompilationData->HasDirectives = ContainsPreprocessorDirectives;
 				CompilationData->CanCompile = true;
 
-				textEditors::ScriptTextMetadata^ Metadata = gcnew textEditors::ScriptTextMetadata;
+				auto Metadata = gcnew ScriptTextMetadata;
 				Metadata->HasPreprocessorDirectives = ContainsPreprocessorDirectives;
-				CompilationData->SerializedMetadata = textEditors::ScriptTextMetadataHelper::SerializeMetadata(Metadata);
+				CompilationData->SerializedMetadata = ScriptTextMetadataHelper::SerializeMetadata(Metadata);
 
 
 				DisposibleDataAutoPtr<componentDLLInterface::ScriptCompileData> CompilationResult(

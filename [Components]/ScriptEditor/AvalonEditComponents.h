@@ -2,6 +2,7 @@
 
 #include "[Common]/ListViewUtilities.h"
 #include "ScriptTextEditorInterface.h"
+#include "WorkspaceModelComponents.h"
 
 using namespace ICSharpCode;
 using namespace ICSharpCode::AvalonEdit::Rendering;
@@ -366,7 +367,8 @@ namespace cse
 
 				void										AddBookmark(UInt32 Line, String^ Description);
 				UInt32										GetBookmarks(UInt32 Line, List<ScriptBookmark^>^% Out);
-				List<ScriptTextMetadata::Bookmark^>^		GetAllBookmarks();
+				List<scriptEditor::ScriptTextMetadata::Bookmark^>^
+															GetAllBookmarks();
 				void										ClearBookmarks();
 
 				void										TrackFindResult(UInt32 Start, UInt32 End, String^ Text);
@@ -402,9 +404,12 @@ namespace cse
 
 			ref class ObScriptIndentStrategy : public AvalonEdit::Indentation::IIndentationStrategy
 			{
-				AvalonEditTextEditor^						Parent;
-				bool										TrimTrailingWhitespace;
-				bool										CullEmptyLines;
+				AvalonEditTextEditor^	Parent;
+				bool					TrimTrailingWhitespace;
+				bool					CullEmptyLines;
+
+				void					CalculateIndentsTillCurrentLine(AvalonEdit::Document::TextDocument^ Document, AvalonEdit::Document::DocumentLine^ CurrentLine,
+																		UInt32% OutCurrentLineIndents, UInt32% OutPreviousLineIndents);
 			public:
 				virtual ~ObScriptIndentStrategy();
 

@@ -149,6 +149,15 @@ namespace cse
 				DatabaseUpdateInterval = Old->DatabaseUpdateInterval;
 			}
 
+			const UInt32 kMinBackgroundAnalysisInterval = 2, kMaxBackgroundAnalysisInterval = 60;
+			if (BackgroundAnalysisInterval < kMinBackgroundAnalysisInterval || BackgroundAnalysisInterval > kMaxBackgroundAnalysisInterval)
+			{
+				Success = false;
+				Errors += "BackgroundAnalysisInterval must be between " + kMinBackgroundAnalysisInterval + " and " + kMaxBackgroundAnalysisInterval;
+				Errors += "\n";
+				BackgroundAnalysisInterval = Old->BackgroundAnalysisInterval;
+			}
+
 			OutMessage = Errors;
 			return Success;
 		}

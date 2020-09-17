@@ -2653,8 +2653,7 @@ namespace cse
 							FileParser->Close();
 
 							obScriptParsing::AnalysisData^ Data = gcnew obScriptParsing::AnalysisData;
-							Data->PerformAnalysis(Contents, obScriptParsing::ScriptType::None,
-												  obScriptParsing::AnalysisData::Operation::None, nullptr);
+							Data->PerformAnalysis(gcnew obScriptParsing::AnalysisData::Params);
 
 							if (Data->Name != "")
 							{

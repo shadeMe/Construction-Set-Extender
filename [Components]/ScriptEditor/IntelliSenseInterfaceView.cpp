@@ -11,7 +11,7 @@ namespace cse
 		{
 			BoundModel = nullptr;
 
-			Form = gcnew NonActivatingImmovableAnimatedForm();
+			Form = gcnew AnimatedForm(0.1);
 			ListView = gcnew BrightIdeasSoftware::FastObjectListView;
 
 			ListViewSelectionChangedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceView::ListView_SelectionChanged);
@@ -35,6 +35,7 @@ namespace cse
 			Form->ShowIcon = false;
 			Form->ControlBox = false;
 			Form->Controls->Add(ListView);
+			//Form->PreventActivation = true;
 
 			ListView->View = View::Details;
 			ListView->Dock = DockStyle::Fill;
@@ -66,25 +67,27 @@ namespace cse
 			ListView->AllColumns->Add(Column);
 			ListView->Columns->Add(Column);
 
-			ListViewPopup = gcnew ToolTip;
-			ListViewPopup->AutoPopDelay = 500;
-			ListViewPopup->InitialDelay = 500;
+			ListViewPopup = gcnew ModalToolTip;
+			ListViewPopup->AutoPopDelay = 0;
+			ListViewPopup->InitialDelay = 0;
 			ListViewPopup->ReshowDelay = 0;
 			ListViewPopup->ToolTipIcon = ToolTipIcon::None;
 			ListViewPopup->Tag = nullptr;
+			ListViewPopup->ShowAlways = true;
+			//ListViewPopup->UseAnimation = false;
+			//ListViewPopup->UseFading = false;
 
 			InsightPopup = gcnew ToolTip;
-			InsightPopup->InitialDelay = 1;
+			InsightPopup->InitialDelay = 0;
 			InsightPopup->ReshowDelay = 0;
 			InsightPopup->ToolTipIcon = ToolTipIcon::None;
 			InsightPopup->Tag = nullptr;
 
 			MaximumVisibleItemCount = preferences::SettingsHolder::Get()->IntelliSense->MaxSuggestionsToDisplay;
-			PreventActivation = preferences::SettingsHolder::Get()->IntelliSense->PreventSuggestionPopupFocus;
 			InsightPopupDisplayDuration = preferences::SettingsHolder::Get()->IntelliSense->InsightToolTipDisplayDuration;
 
 			Form->SetSize(Size(0, 0));
-			Form->ShowForm(Point(0, 0), Form->Handle, false);
+			Form->Show(Point(0, 0), Form->Handle, false);
 			Form->Hide();
 		}
 
@@ -121,7 +124,6 @@ namespace cse
 		void IntelliSenseInterfaceView::ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E)
 		{
 			MaximumVisibleItemCount = preferences::SettingsHolder::Get()->IntelliSense->MaxSuggestionsToDisplay;
-			PreventActivation = preferences::SettingsHolder::Get()->IntelliSense->PreventSuggestionPopupFocus;
 			InsightPopupDisplayDuration = preferences::SettingsHolder::Get()->IntelliSense->InsightToolTipDisplayDuration;
 		}
 
@@ -184,6 +186,9 @@ namespace cse
 				E->Item->ForeColor = E->Item->BackColor;
 				E->Item->BackColor = Temp;
 
+				E->Item->SelectedForeColor = E->Item->ForeColor;
+				E->Item->SelectedBackColor = E->Item->BackColor;
+
 				//E->Item->Font = gcnew Font(E->Item->Font->FontFamily, E->Item->Font->Size, E->Item->Font->Style | FontStyle::Bold);
 			}
 		}
@@ -214,13 +219,6 @@ namespace cse
 				return nullptr;
 		}
 
-		void IntelliSenseInterfaceView::ShowListViewToolTip(String^ Title, String^ Message, Point Location, IntPtr ParentHandle, UInt32 Duration)
-		{
-			ListViewPopup->Tag = ParentHandle;
-			ListViewPopup->ToolTipTitle = Title;
-			ListViewPopup->Show(Message, Control::FromHandle(ParentHandle), Location, Duration);
-		}
-
 		void IntelliSenseInterfaceView::ShowListViewToolTip(IntelliSenseItem^ Item)
 		{
 			const UInt32 kDefaultDisplayDuration = 30 * 1000;
@@ -228,15 +226,13 @@ namespace cse
 			ListViewPopup->Tag = Form->Handle;
 			ListViewPopup->ToolTipTitle = Item->GetItemTypeName();
 			ListViewPopup->Show(Item->Describe(), Control::FromHandle(Form->Handle), Point(ListView->Size.Width + 17, 0), kDefaultDisplayDuration);
+			//ListViewPopup->StopHideTimer();
 		}
 
 		void IntelliSenseInterfaceView::HideListViewToolTip()
 		{
-			if (ListViewPopup->Tag)
-			{
-				ListViewPopup->Hide(Control::FromHandle((IntPtr)ListViewPopup->Tag));
-				ListViewPopup->Tag = nullptr;
-			}
+			ListViewPopup->Hide(Control::FromHandle(Form->Handle));
+			ListViewPopup->Tag = nullptr;
 		}
 
 		void IntelliSenseInterfaceView::Bind(IIntelliSenseInterfaceModel^ To)
@@ -342,26 +338,29 @@ namespace cse
 				// yields a different result than when the setting's disabled
 				Size DisplaySize = Size(240, (MaximumVisibleItemCount * ItemHeight + ItemHeight) - ((MaximumVisibleItemCount - ItemCount) * ItemHeight));
 
-				array<Object^>^ Params = gcnew array < Object^ > { this, Form, DisplaySize };
-				Form->BeginInvoke(gcnew UIInvokeDelegate_FormSetSize(&IntelliSenseInterfaceView::UIInvoke_FormSetSize), Params);
+				UIInvoke_FormSetSize(this, Form, DisplaySize);
+				//Form->BeginInvoke(gcnew UIInvokeDelegate_FormSetSize(&IntelliSenseInterfaceView::UIInvoke_FormSetSize), gcnew array < Object^ > { this, Form, DisplaySize });
 			}
 		}
 
 		void IntelliSenseInterfaceView::Show(Point Location, IntPtr Parent)
 		{
-			array<Object^>^ Params = gcnew array < Object^ > { this, Form, Location, Parent };
-			Form->BeginInvoke(gcnew UIInvokeDelegate_FormShow(&IntelliSenseInterfaceView::UIInvoke_FormShow), Params);
+			UIInvoke_FormShow(this, Form, Location, Parent);
+			//Form->BeginInvoke(gcnew UIInvokeDelegate_FormShow(&IntelliSenseInterfaceView::UIInvoke_FormShow), gcnew array < Object^ > { this, Form, Location, Parent });
 		}
 
 		void IntelliSenseInterfaceView::Hide()
 		{
+			ListView->ClearObjects();
+
 			if (Form->Visible)
 			{
-				array<Object^>^ Params = gcnew array < Object^ > { this, Form };
-				Form->BeginInvoke(gcnew UIInvokeDelegate_FormHide(&IntelliSenseInterfaceView::UIInvoke_FormHide), Params);
-
 				HideListViewToolTip();
+
+				UIInvoke_FormHide(this, Form);
+				//Form->BeginInvoke(gcnew UIInvokeDelegate_FormHide(&IntelliSenseInterfaceView::UIInvoke_FormHide), gcnew array < Object^ > { this, Form });
 			}
+
 		}
 
 		// HACK!
@@ -370,10 +369,10 @@ namespace cse
 		// Delegating it to the UI thread through BeginInvoke seems to help apparently, but we still need to wrap it in an exception handler
 
 		void IntelliSenseInterfaceView::UIInvoke_FormShow(IntelliSenseInterfaceView^ Sender,
-			NonActivatingImmovableAnimatedForm^ ToInvoke, Point Location, IntPtr Parent)
+			AnimatedForm^ ToInvoke, Point Location, IntPtr Parent)
 		{
 			try {
-				ToInvoke->ShowForm(Location, Parent, (ToInvoke->Visible == false));
+				ToInvoke->Show(Location, Parent, (ToInvoke->Visible == false));
 				Sender->HideListViewToolTip();
 
 				if (Sender->BoundModel->DataStore->Count)
@@ -396,7 +395,7 @@ namespace cse
 		}
 
 		void IntelliSenseInterfaceView::UIInvoke_FormSetSize(IntelliSenseInterfaceView^ Sender,
-			NonActivatingImmovableAnimatedForm^ ToInvoke, Size ToSet)
+			AnimatedForm^ ToInvoke, Size ToSet)
 		{
 			try {
 				ToInvoke->SetSize(ToSet);
@@ -409,10 +408,10 @@ namespace cse
 			}
 		}
 
-		void IntelliSenseInterfaceView::UIInvoke_FormHide(IntelliSenseInterfaceView^ Sender, NonActivatingImmovableAnimatedForm^ ToInvoke)
+		void IntelliSenseInterfaceView::UIInvoke_FormHide(IntelliSenseInterfaceView^ Sender, AnimatedForm^ ToInvoke)
 		{
 			try {
-				ToInvoke->HideForm(true);
+				ToInvoke->Hide();
 			}
 			catch (Exception^ E) {
 #ifndef NDEBUG

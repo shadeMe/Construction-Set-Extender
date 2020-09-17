@@ -342,12 +342,15 @@ namespace cse
 
 			VarList = gcnew List<IntelliSenseItemScriptVariable^>;
 			InitialAnalysisData = gcnew obScriptParsing::AnalysisData();
+			auto AnalysisParams = gcnew obScriptParsing::AnalysisData::Params;
 
-			InitialAnalysisData->PerformAnalysis(gcnew String(ScriptData->Text), obScriptParsing::ScriptType::None,
-				obScriptParsing::AnalysisData::Operation::FillVariables |
-				obScriptParsing::AnalysisData::Operation::FillControlBlocks |
-				obScriptParsing::AnalysisData::Operation::FillUDFData,
-				nullptr);
+			AnalysisParams->ScriptText = gcnew String(ScriptData->Text);
+			AnalysisParams->Ops = obScriptParsing::AnalysisData::Operation::FillVariables |
+								obScriptParsing::AnalysisData::Operation::FillControlBlocks |
+								obScriptParsing::AnalysisData::Operation::FillUDFData;
+
+
+			InitialAnalysisData->PerformAnalysis(AnalysisParams);
 
 			for each (obScriptParsing::Variable ^ Itr in InitialAnalysisData->Variables)
 				VarList->Add(gcnew IntelliSenseItemScriptVariable(Itr->Name, Itr->Comment, Itr->Type, EditorID));

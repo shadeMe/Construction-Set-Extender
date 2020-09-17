@@ -139,6 +139,8 @@ namespace cse
 			bool		IsScriptCommand(String^ Identifier, bool CheckCommandShorthand);
 			bool		IsForm(String^ Identifier);
 
+			HashSet<String^>^			CreateIndentifierSnapshot(DatabaseLookupFilter Categories);
+
 			bool						HasAttachedScript(String^ Identifier);
 			IntelliSenseItemScript^		GetAttachedScript(String^ Identifier);
 			IntelliSenseItemScript^		GetAttachedScript(IntelliSenseItem^ Item);

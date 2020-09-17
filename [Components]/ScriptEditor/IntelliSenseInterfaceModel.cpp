@@ -116,7 +116,8 @@ namespace cse
 
 		void IntelliSenseInterfaceModel::ParentEditor_ContextChangeEventHandler(Object^ Sender, IntelliSenseContextChangeEventArgs^ E)
 		{
-			Debug::Assert(E->Type == IntelliSenseContextChangeEventArgs::Event::SemanticAnalysisCompleted || Bound == true);
+			if (!Bound)
+				return;
 
 			if (ContextChangeHandlingMode == ContextChangeEventHandlingMode::CacheAndIgnore)
 			{
@@ -240,17 +241,21 @@ namespace cse
 			// flurry of context change events, most of which are superfluous
 			SetContextChangeEventHandlingMode(ContextChangeEventHandlingMode::CacheAndIgnore);
 			{
+				// Cache the selection before hiding the view as it resets the selection
+				auto Selection = BoundView->Selection;
+
 				HidePopup(PopupHideReason::SelectionComplete);
 
-				if (BoundView->Selection)
-					BoundView->Selection->Insert(ParentEditor);
+				if (Selection)
+					Selection->Insert(ParentEditor);
 
 				ParentEditor->FocusTextArea();
 			}
 			SetContextChangeEventHandlingMode(ContextChangeEventHandlingMode::Handle);
 
 			// Update the context with the last CaretPosChanged event args
-			OnCaretPosChanged(CachedContextChangeEventArgs[IntelliSenseContextChangeEventArgs::Event::CaretPosChanged]);
+			if (CachedContextChangeEventArgs->ContainsKey(IntelliSenseContextChangeEventArgs::Event::CaretPosChanged))
+				OnCaretPosChanged(CachedContextChangeEventArgs[IntelliSenseContextChangeEventArgs::Event::CaretPosChanged]);
 		}
 
 		void IntelliSenseInterfaceModel::OnScrollOffsetChanged(IntelliSenseContextChangeEventArgs^ E)
@@ -628,6 +633,8 @@ namespace cse
 		void IntelliSenseInterfaceModel::HidePopup(PopupHideReason Reason)
 		{
 			BoundView->Hide();
+			EnumeratedItems->Clear();
+
 			HideReason = Reason;
 			ShowReason = PopupShowReason::None;
 		}
@@ -717,16 +724,6 @@ namespace cse
 				if (Context->FilterString->Length == 0 || Itr->MatchesToken(Context->FilterString, MatchType))
 					EnumeratedItems->Add(Itr);
 			}
-		}
-
-		void IntelliSenseInterfaceModel::PickSelection()
-		{
-			Debug::Assert(Bound == true);
-
-			if (BoundView->Selection)
-				BoundView->Selection->Insert(ParentEditor);
-
-			ParentEditor->FocusTextArea();
 		}
 
 		IntelliSenseItemScriptVariable^ IntelliSenseInterfaceModel::LookupLocalVariable(String^ Identifier)

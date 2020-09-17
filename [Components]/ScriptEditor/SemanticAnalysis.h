@@ -250,12 +250,30 @@ namespace cse
 				CheckVariableNameFormCollisions = 1 << 7,
 			};
 
+			ref struct Params
+			{
+				property String^			ScriptText;
+				property ScriptType			Type;
+				property Operation			Ops;
+				property System::Collections::Generic::HashSet<String^>^
+											ScriptCommandIdentifiers;
+				property System::Collections::Generic::HashSet<String^>^
+											FormIdentifiers;
+
+				Params()
+				{
+					ScriptText = "";
+					Type = ScriptType::None;
+					Ops = Operation::None;
+					ScriptCommandIdentifiers = gcnew System::Collections::Generic::HashSet<String^>;
+					FormIdentifiers = gcnew System::Collections::Generic::HashSet<String^>;
+				}
+			};
+
 			AnalysisData();
 			~AnalysisData();
 
-			delegate void		CheckVariableNameCollision(String^ VarName, bool% HasCommandCollision, bool% HasFormCollision);
-
-			void				PerformAnalysis(String^ ScriptText, ScriptType Type, Operation Operations, CheckVariableNameCollision^ Delegate);
+			void				PerformAnalysis(Params^ Parameters);
 
 			ControlBlock^		GetBlockStartingAt(UInt32 Line);
 			ControlBlock^		GetBlockEndingAt(UInt32 Line);

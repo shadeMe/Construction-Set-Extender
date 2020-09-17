@@ -67,6 +67,8 @@ namespace UIComponents {
 
 	private: System::Windows::Forms::ToolStripLabel^ ToolStripLabelSelectionCount;
 	private: System::Windows::Forms::Button^ ButtonCompleteSelection;
+	private: System::Windows::Forms::Timer^ DeferredSelectionUpdateTimer;
+	private: System::ComponentModel::IContainer^ components;
 
 
 
@@ -118,7 +120,7 @@ namespace UIComponents {
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
-		System::ComponentModel::Container ^components;
+
 
 #pragma region Windows Form Designer generated code
 		/// <summary>
@@ -127,6 +129,7 @@ namespace UIComponents {
 		/// </summary>
 		void InitializeComponent(void)
 		{
+			this->components = (gcnew System::ComponentModel::Container());
 			this->PreviewBox = (gcnew System::Windows::Forms::TextBox());
 			this->ScriptList = (gcnew BrightIdeasSoftware::FastObjectListView());
 			this->ScriptListCFlags = (gcnew BrightIdeasSoftware::OLVColumn());
@@ -142,6 +145,7 @@ namespace UIComponents {
 			this->UncompiledScriptsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->ToolStripLabelSelectionCount = (gcnew System::Windows::Forms::ToolStripLabel());
 			this->ButtonCompleteSelection = (gcnew System::Windows::Forms::Button());
+			this->DeferredSelectionUpdateTimer = (gcnew System::Windows::Forms::Timer(this->components));
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ScriptList))->BeginInit();
 			this->BottomToolStrip->SuspendLayout();
 			this->SuspendLayout();
@@ -259,7 +263,7 @@ namespace UIComponents {
 			// 
 			this->ActiveScriptsToolStripMenuItem->DisplayStyle = System::Windows::Forms::ToolStripItemDisplayStyle::Text;
 			this->ActiveScriptsToolStripMenuItem->Name = L"ActiveScriptsToolStripMenuItem";
-			this->ActiveScriptsToolStripMenuItem->Size = System::Drawing::Size(180, 22);
+			this->ActiveScriptsToolStripMenuItem->Size = System::Drawing::Size(177, 22);
 			this->ActiveScriptsToolStripMenuItem->Text = L"Active Scripts";
 			this->ActiveScriptsToolStripMenuItem->TextImageRelation = System::Windows::Forms::TextImageRelation::TextAboveImage;
 			// 
@@ -267,7 +271,7 @@ namespace UIComponents {
 			// 
 			this->UncompiledScriptsToolStripMenuItem->DisplayStyle = System::Windows::Forms::ToolStripItemDisplayStyle::Text;
 			this->UncompiledScriptsToolStripMenuItem->Name = L"UncompiledScriptsToolStripMenuItem";
-			this->UncompiledScriptsToolStripMenuItem->Size = System::Drawing::Size(180, 22);
+			this->UncompiledScriptsToolStripMenuItem->Size = System::Drawing::Size(177, 22);
 			this->UncompiledScriptsToolStripMenuItem->Text = L"Uncompiled Scripts";
 			// 
 			// ToolStripLabelSelectionCount
@@ -287,6 +291,10 @@ namespace UIComponents {
 			this->ButtonCompleteSelection->TabIndex = 5;
 			this->ButtonCompleteSelection->Text = L"OK";
 			this->ButtonCompleteSelection->UseVisualStyleBackColor = true;
+			// 
+			// DeferredSelectionUpdateTimer
+			// 
+			this->DeferredSelectionUpdateTimer->Enabled = true;
 			// 
 			// Form1
 			// 

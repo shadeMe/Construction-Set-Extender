@@ -48,49 +48,14 @@ namespace cse
 								CanCompile(false), HasDirectives(false), HasWarnings(false), CompileResult(nullptr) {}
 		};
 
-		ref struct ScriptTextMetadata
-		{
-			ref struct Bookmark
-			{
-				property UInt32		Line;
-				property String^ Message;
-
-				Bookmark(UInt32 Line, String^ Message)
-				{
-					this->Line = Line;
-					this->Message = Message;
-				}
-			};
-
-			using CaretPosition = int;
-
-
-			property CaretPosition		CaretPos;
-			property List<Bookmark^>^	Bookmarks;
-			property bool				HasPreprocessorDirectives;
-
-			ScriptTextMetadata()
-			{
-				this->CaretPos = -1;
-				this->Bookmarks = gcnew List<Bookmark^>();
-				this->HasPreprocessorDirectives = false;
-			}
-		};
-
-		ref class ScriptTextMetadataHelper
-		{
-			static String^	kMetadataBlockMarker = "CSEBlock";
-			static String^	kMetadataSigilCaret = "CSECaretPos";
-			static String^	kMetadataSigilBookmark = "CSEBookmark";
-
-			static void		SeparateScriptTextFromMetadataBlock(String^ RawScriptText, String^% OutScriptText, String^% OutMetadata);
-		public:
-			static void		DeserializeRawScriptText(String^ RawScriptText, String^% OutScriptText, ScriptTextMetadata^% OutMetadata);
-			static String^	SerializeMetadata(ScriptTextMetadata^ Metadata);
-		};
-
 		interface class IScriptTextEditor : public intellisense::IIntelliSenseInterfaceConsumer
 		{
+			interface class ILineAnchor
+			{
+				property UInt32	Line;
+				property bool	Valid;
+			};
+
 			static enum class ScriptMessageType
 			{
 				None = -1,
@@ -159,13 +124,15 @@ namespace cse
 				}
 			};
 
+			event intellisense::IntelliSenseInputEventHandler^			IntelliSenseInput;
+			event intellisense::IntelliSenseInsightHoverEventHandler^	IntelliSenseInsightHover;
+			event intellisense::IntelliSenseContextChangeEventHandler^	IntelliSenseContextChange;
 
 			event TextEditorScriptModifiedEventHandler^
 														ScriptModified;
 			event KeyEventHandler^						KeyDown;
 			event TextEditorMouseClickEventHandler^		MouseClick;
 			event EventHandler^							LineChanged;					// raised when the current line changes
-			event EventHandler^							BackgroundAnalysisComplete;		// raised after a background semantic analysis task is successfully completed
 			event EventHandler^							TextUpdated;					// raised after the editor's entire text has been updated
 
 			property Control^							Container;
@@ -211,11 +178,11 @@ namespace cse
 
 			UInt32										GetIndentLevel(UInt32 LineNumber);
 			void										InsertVariable(String^ VariableName, obScriptParsing::Variable::DataType VariableType);
-			obScriptParsing::AnalysisData^				GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
 
 			void										InitializeState(String^ RawScriptText);			// clears tracked data and deserializes any metadata found in the script text
 			CompilationData^							BeginScriptCompilation();
 			void										EndScriptCompilation(CompilationData^ Data);
+			ILineAnchor^								CreateAnchor(UInt32 Line);
 		};
 	}
 }

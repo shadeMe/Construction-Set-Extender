@@ -77,10 +77,6 @@ namespace cse
 			property bool InsertSuggestionsWithEnterKey;
 
 			[Category("Suggestions")]
-			[Description("Prevent suggestion pop-up from acquiring focus")]
-			property bool PreventSuggestionPopupFocus;
-
-			[Category("Suggestions")]
 			[Description("Filter suggestions using substring search")]
 			property bool UseSubstringSearch;
 
@@ -104,18 +100,23 @@ namespace cse
 			[Description("IntelliSense database update interval in Earth minutes")]
 			property UInt32 DatabaseUpdateInterval;
 
+			[Category("Background Analysis")]
+			[Description("Background semantic analysis interval in Earth seconds. "
+						 "This settings affects the latency/accuracy of multiple script editor features")]
+			property UInt32 BackgroundAnalysisInterval;
+
 			IntelliSenseSettings()
 			{
 				ShowSuggestions = true;
 				SuggestionCharThreshold = 5;
 				InsertSuggestionsWithEnterKey = true;
-				PreventSuggestionPopupFocus = false;
 				UseSubstringSearch = false;
 				MaxSuggestionsToDisplay = 7;
 				ShowInsightToolTip = true;
 				InsightToolTipDisplayDuration = 8;
 				ShowErrorsInInsightToolTip = true;
 				DatabaseUpdateInterval = 5;
+				BackgroundAnalysisInterval = 5;
 			}
 
 			virtual bool Validate(SettingsGroup^ OldValue, String^% OutMessage) override;

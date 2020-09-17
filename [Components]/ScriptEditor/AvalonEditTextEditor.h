@@ -3,6 +3,7 @@
 #include "AvalonEditXSHD.h"
 #include "AvalonEditComponents.h"
 #include "WorkspaceModelInterface.h"
+#include "BackgroundAnalysis.h"
 
 #define AvalonEditTextEditorDeclareClickHandler(Name)				EventHandler^ Name##ClickHandler; \
 																	void AvalonEditTextEditor::##Name##_Click(Object^ Sender, EventArgs^ E)
@@ -26,21 +27,6 @@ namespace cse
 
 			delegate void JumpToScriptHandler(String^ TargetEditorID);
 
-			ref struct BackgroundTaskInput
-			{
-				ITextSource^										ScriptText;
-				scriptEditor::IWorkspaceModel::ScriptType			ScriptType;
-				bool												CheckVarNameCollisionCommands;
-				bool												CheckVarNameCollisionForms;
-				bool												CountVarReferences;
-				bool												SkipVarRefCountsForQuests;
-			};
-
-			ref struct BackgroundTaskOutput
-			{
-				obScriptParsing::AnalysisData^			AnalysisOutput;
-			};
-
 
 			ref class AvalonEditTextEditor : public IScriptTextEditor
 			{
@@ -48,7 +34,7 @@ namespace cse
 
 				static AvalonEditXSHDManager^						SyntaxHighlightingManager = gcnew AvalonEditXSHDManager();
 			protected:
-				static enum class									TextChangeEventPropagation
+				static enum class									IntelliSenseTextChangeEventHandling
 				{
 					Propagate,
 					SuppressOnce,
@@ -73,10 +59,11 @@ namespace cse
 
 				bool												InitializingFlag;
 				bool												ModifiedFlag;
-				TextChangeEventPropagation							PreventTextChangedEventFlag;
+				IntelliSenseTextChangeEventHandling					IntelliSenseTextChangeEventHandlingMode;
 				System::Windows::Input::Key							KeyToPreventHandling;
 				int													LastKnownMouseClickOffset;
 				System::Windows::Input::Key							LastKeyThatWentDown;
+				int													PreviousLineBuffer;
 
 				System::Windows::Point								MiddleMouseScrollStartPoint;
 				System::Windows::Vector								MiddleMouseCurrentScrollOffset;
@@ -95,11 +82,8 @@ namespace cse
 				bool												SetTextAnimating;
 				System::Windows::Media::Animation::DoubleAnimation^	SetTextPrologAnimationCache;
 
-				Timer^												SemanticAnalysisTimer;
 				bool												TextFieldInUpdateFlag;
-
-				int													PreviousLineBuffer;
-				obScriptParsing::AnalysisData^						SemanticAnalysisCache;
+				bool												CompilationInProgress;
 
 				scriptEditor::IWorkspaceModel^						ParentModel;
 				LineTrackingManager^								LineTracker;
@@ -107,11 +91,8 @@ namespace cse
 				DefaultIconMargin^									IconBarMargin;
 				StructureVisualizerRenderer^						StructureVisualizer;
 				AvalonEdit::Search::SearchPanel^					InlineSearchPanel;
-
-				bool												CompilationInProgress;
-
-				Task<BackgroundTaskOutput^>^						BackgroundTask;
-				int													OwnerThreadID;
+				scriptEditor::IBackgroundSemanticAnalyzer^			BackgroundAnalyzer;
+				obScriptParsing::AnalysisData^						SemanticAnalysisCache;
 
 				EventHandler^										TextFieldTextChangedHandler;
 				EventHandler^										TextFieldCaretPositionChangedHandler;
@@ -136,6 +117,8 @@ namespace cse
 				AvalonEditTextEventHandler^							TextFieldTextCopiedHandler;
 				EventHandler<VisualLineConstructionStartEventArgs^>^	TextFieldVisualLineConstructionStartingHandler;
 				EventHandler<AvalonEdit::Search::SearchOptionsChangedEventArgs^>^	SearchPanelSearchOptionsChangedHandler;
+
+				scriptEditor::SemanticAnalysisCompleteEventHandler^	BackgroundAnalyzerAnalysisCompleteHandler;
 
 				ContextMenuStrip^									TextEditorContextMenu;
 				ToolStripMenuItem^									ContextMenuCopy;
@@ -181,7 +164,6 @@ namespace cse
 				bool										OnKeyDown(System::Windows::Input::KeyEventArgs^ E);			// returns true if handled
 				void										OnMouseClick(System::Windows::Input::MouseButtonEventArgs^ E);
 				void										OnLineChanged();
-				void										OnBackgroundAnalysisComplete();
 				void										OnTextUpdated();
 
 				void										TextField_TextChanged(Object^ Sender, EventArgs^ E);
@@ -209,18 +191,15 @@ namespace cse
 
 				void										MiddleMouseScrollTimer_Tick(Object^ Sender, EventArgs^ E);
 				void										ScrollBarSyncTimer_Tick(Object^ Sender, EventArgs^ E);
-				void										SemanticAnalysisTimer_Tick(Object^ Sender, EventArgs^ E);
 
 				void										ExternalScrollBar_ValueChanged(Object^ Sender, EventArgs^ E);
 				void										SetTextAnimation_Completed(Object^ Sender, EventArgs^ E);
 				void										ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
+				void										BackgroundAnalysis_AnalysisComplete(Object^ Sender,
+																	scriptEditor::SemanticAnalysisCompleteEventArgs^ E);
 
 				void										RoutePreprocessorMessages(int Line, String^ Message);
 
-				void										QueueBackgroundTask();
-				static BackgroundTaskOutput^				PerformBackgroundTask(Object^ Input);
-				void										ProcessBackgroundTaskOutput(Task<BackgroundTaskOutput^>^ Completed);
-				void										WaitForBackgroundTask();
 
 				String^										GetTokenAtIndex(int Index, bool SelectText,
 																			int% OutStartIndex, int% OutEndIndex,
@@ -234,7 +213,7 @@ namespace cse
 
 				bool										GetCharIndexInsideStringSegment(int Index);
 
-				void										SetPreventTextChangedFlag(TextChangeEventPropagation State);
+				void										SetIntelliSenseTextChangeEventHandlingMode(IntelliSenseTextChangeEventHandling State);
 				void										HandleKeyEventForKey(System::Windows::Input::Key Key);
 
 				void										HandleTextChangeEvent();
@@ -250,9 +229,6 @@ namespace cse
 				void										StartMiddleMouseScroll(System::Windows::Input::MouseButtonEventArgs^ E);
 				void										StopMiddleMouseScroll();
 
-				void										UpdateSemanticAnalysisCache(bool FillVariables,
-																						bool FillControlBlocks,
-																						bool Validate);
 				void										UpdateCodeFoldings();
 				void										UpdateSyntaxHighlighting(bool Regenerate);
 				void										SynchronizeExternalScrollBars();
@@ -302,7 +278,9 @@ namespace cse
 				void										ToggleSearchPanel(bool State);
 				String^										GetCurrentLineText(bool ClipAtCaretPos);
 			public:
-				AvalonEditTextEditor(scriptEditor::IWorkspaceModel^ ParentModel, JumpToScriptHandler^ JumpScriptDelegate, Font^ Font, int TabSize);
+				AvalonEditTextEditor(scriptEditor::IWorkspaceModel^ ParentModel,
+									JumpToScriptHandler^ JumpScriptDelegate, scriptEditor::IBackgroundSemanticAnalyzer^ BackgroundAnalysis,
+									Font^ Font, int TabSize);
 				~AvalonEditTextEditor();
 
 				property UInt32								FirstVisibleLine
@@ -319,7 +297,6 @@ namespace cse
 				virtual event KeyEventHandler^								KeyDown;
 				virtual event TextEditorMouseClickEventHandler^				MouseClick;
 				virtual event EventHandler^									LineChanged;
-				virtual event EventHandler^									BackgroundAnalysisComplete;
 				virtual event EventHandler^									TextUpdated;
 
 				property Control^							Container
@@ -373,6 +350,10 @@ namespace cse
 						OnScriptModified(Modified);
 					}
 				}
+				property obScriptParsing::AnalysisData^ SemanticAnalysisData
+				{
+					obScriptParsing::AnalysisData^ get() { return SemanticAnalysisCache; }
+				}
 
 				virtual void								Bind(ListView^ MessageList,
 																 ListView^ BookmarkList,
@@ -408,11 +389,11 @@ namespace cse
 
 				virtual UInt32								GetIndentLevel(UInt32 LineNumber);
 				virtual void								InsertVariable(String^ VariableName, obScriptParsing::Variable::DataType VariableType);
-				virtual obScriptParsing::AnalysisData^		GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
 
 				virtual void								InitializeState(String^ RawScriptText);
 				virtual CompilationData^					BeginScriptCompilation();
 				virtual void								EndScriptCompilation(CompilationData^ Data);
+				virtual IScriptTextEditor::ILineAnchor^		CreateAnchor(UInt32 Line);
 #pragma endregion
 			};
 		}

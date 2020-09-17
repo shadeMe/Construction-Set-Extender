@@ -78,7 +78,7 @@ namespace cse
 			System::Windows::Forms::ToolStripLabel^				ToolStripLabelSelectionCount;
 
 			System::Windows::Forms::Button^						ButtonCompleteSelection;
-
+			System::Windows::Forms::Timer^						DeferredSelectionUpdateTimer;
 
 
 			void						ScriptList_SelectionChanged(Object^ Sender, EventArgs^ E);
@@ -92,6 +92,7 @@ namespace cse
 			void						ToolStripFilterTextBox_TextChanged(Object^ Sender, EventArgs^ E);
 			void						ToolStripFilterTextBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
 
+			void						DeferredSelectionUpdateTimer_Tick(Object^ Sender, EventArgs^ E);
 			void						Dialog_Cancel(Object^ Sender, CancelEventArgs^ E);
 
 			void						InitializeComponent();

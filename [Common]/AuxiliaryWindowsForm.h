@@ -7,8 +7,15 @@ namespace cse
 	protected:
 		virtual property bool DoubleBuffered
 		{
-			bool get() override { return true; }
+			virtual bool get() override { return true; }
 		}
+
+		virtual property bool ShowWithoutActivation
+		{
+			virtual bool get() override { return true; }
+		}
+
+		virtual void WndProc(Message% m) override;
 
 		static enum class					FadeOperationType
 		{
@@ -29,54 +36,25 @@ namespace cse
 		AnimatedForm(double FadeDuration);
 		~AnimatedForm();
 
-		void												Show();
-		void												Show(IWin32Window^ Parent);
-		System::Windows::Forms::DialogResult				ShowDialog();
-		void												Hide();
-		void												Close();
-		virtual void										ForceClose();
-	};
+		property bool AllowMove;
+		property bool PreventActivation;
 
-	ref class NonActivatingImmovableAnimatedForm : public Form
-	{
-	protected:
-		virtual property bool DoubleBuffered
+		property bool IsFadingIn
 		{
-			bool get() override { return true; }
+			bool get() { return FadeOperation == FadeOperationType::FadeIn; }
+		}
+		property bool IsFadingOut
+		{
+			bool get() { return FadeOperation == FadeOperationType::FadeOut; }
 		}
 
-		property bool										ShowWithoutActivation
-		{
-			virtual bool									get() override { return true; }
-		}
-
-		virtual void										WndProc(Message% m) override;
-
-		static enum class									FadeOperationType
-		{
-			None = 0,
-			FadeIn,
-			FadeOut
-		};
-
-		bool												AllowMove;
-		FadeOperationType									FadeOperation;
-		Timer^												FadeTimer;
-		EventHandler^										FadeTimerTickHandler;
-
-		void												FadeTimer_Tick(Object^ Sender, EventArgs^ E);
-	public:
-		NonActivatingImmovableAnimatedForm();
-		~NonActivatingImmovableAnimatedForm();
-
-		property bool										PreventActivation;
-		property bool										FadingIn
-		{
-			bool get() { return FadeOperation == FadeOperationType::FadeIn;  }
-		}
-
-		void												SetSize(Drawing::Size WindowSize);
-		void												ShowForm(Drawing::Point Position, IntPtr ParentHandle, bool Animate);
-		void												HideForm(bool Animate);
+		void									SetSize(Drawing::Size WindowSize);
+		void									Show();
+		void									Show(IWin32Window^ Parent);
+		void									Show(Drawing::Point Position, IntPtr ParentHandle, bool Animate);
+		System::Windows::Forms::DialogResult	ShowDialog();
+		void									Hide();
+		void									Close();
+		virtual void							ForceClose();
 	};
 }
