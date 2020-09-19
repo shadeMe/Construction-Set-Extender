@@ -659,8 +659,9 @@ public:
 	static void								InitializeCSWindows();
 	static void								DeinitializeCSWindows();
 	static void		 						SetTitleModified(bool State);
-	static void								AutoSave();				// should probably be in TES/TESDataHandler
+	static void								AutoSave();								// should probably be in TES/TESDataHandler
 	static void								InvokeMainMenuTool(int Identifier);		// works with toolbar items too
+	static bool								ConfirmUnsavedChanges();				// returns false if the confirmation was canceled or if the save operation failed
 
 	static HINSTANCE*						Instance;
 	static HWND*							WindowHandle;
@@ -670,6 +671,7 @@ public:
 	static char**							ActivePluginNameBuffer;
 	static UInt8*							AllowAutoSaveFlag;
 	static UInt8*							ExittingCSFlag;
+	static UInt8*							UnsavedChangesFlag;
 
 	static const char*						INIFilePath;
 	static HIMAGELIST*						BoundObjectIcons;

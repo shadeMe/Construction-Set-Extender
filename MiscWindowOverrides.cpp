@@ -24,6 +24,23 @@ namespace cse
 			;//
 		}
 
+		void LoadPluginsWindowData::BuildPluginFlagCache()
+		{
+			PluginFlagsInitialState.clear();
+
+			for (auto Itr = _DATAHANDLER->fileList.Begin(); Itr.Get() && Itr.End() == false; ++Itr)
+				PluginFlagsInitialState.emplace_back(Itr.Get());
+		}
+
+
+		void LoadPluginsWindowData::UpdatePluginFlagsFromCache()
+		{
+			for (auto& Itr : PluginFlagsInitialState)
+			{
+				Itr.Plugin->SetLoaded(Itr.Loaded);
+				Itr.Plugin->SetActive(Itr.Active);
+			}
+		}
 
 #define IDC_FINDTEXT_OPENSCRIPTS				9014
 
@@ -275,6 +292,36 @@ namespace cse
 					bool LoadStartupPlugin = settings::startup::kLoadPlugin.GetData().i;
 					if (LoadStartupPlugin)
 						CheckDlgButton(hWnd, IDC_CSE_DATA_LOADSTARTUPPLUGIN, BST_CHECKED);
+
+					LoadPluginsWindowData* xData = BGSEE_GETWINDOWXDATA(LoadPluginsWindowData, ExtraData);
+					if (xData == nullptr)
+					{
+						xData = new LoadPluginsWindowData();
+						ExtraData->Add(xData);
+					}
+
+					// cache the flags of all plugins for later restoration if the active file needs to be saved
+					// necessary if the user unselects the masters of the currently active plugin
+					for (auto Itr = _DATAHANDLER->fileList.Begin(); Itr.Get() && Itr.End() == false; ++Itr)
+						xData->PluginFlagsInitialState.emplace_back(Itr.Get());
+				}
+
+				break;
+			case WM_DESTROY:
+				{
+					TESFile* ActiveFile = _DATAHANDLER->activeFile;
+
+					// required for correct ESM handling
+					if (ActiveFile)
+						ActiveFile->SetMaster(false);
+
+
+					LoadPluginsWindowData* xData = BGSEE_GETWINDOWXDATA(LoadPluginsWindowData, ExtraData);
+					if (xData)
+					{
+						ExtraData->Remove(LoadPluginsWindowData::kTypeID);
+						delete xData;
+					}
 				}
 
 				break;
@@ -487,6 +534,24 @@ namespace cse
 
 					break;
 				case TESDialog::kStandardButton_Ok:
+					if (*TESCSMain::UnsavedChangesFlag)
+					{
+						// restore the original state of plugin flags to prevent save corruption
+						LoadPluginsWindowData CurrentState;
+						CurrentState.BuildPluginFlagCache();
+
+						LoadPluginsWindowData* xData = BGSEE_GETWINDOWXDATA(LoadPluginsWindowData, ExtraData);
+						xData->UpdatePluginFlagsFromCache();
+
+						if (TESCSMain::ConfirmUnsavedChanges() == false)
+							Return = true;
+
+						CurrentState.UpdatePluginFlagsFromCache();
+
+						if (Return)
+							break;
+					}
+
 					if (cliWrapper::interfaces::SE->GetOpenEditorCount())
 					{
 						if (BGSEEUI->MsgBoxW(hWnd, MB_YESNO, "There are open script windows. Are you sure you'd like to proceed?") == IDNO)
@@ -541,15 +606,15 @@ namespace cse
 					}
 
 					break;
+				case TESDialog::kStandardButton_Cancel:
+					{
+						// revert any changes to the loaded flags of plugins that were made in the dialog
+						LoadPluginsWindowData* xData = BGSEE_GETWINDOWXDATA(LoadPluginsWindowData, ExtraData);
+						xData->UpdatePluginFlagsFromCache();
+					}
+
+					break;
 				}
-
-				break;
-			case WM_DESTROY:
-				TESFile* ActiveFile = _DATAHANDLER->activeFile;
-
-				// required for correct ESM handling
-				if (ActiveFile)
-					ActiveFile->SetMaster(false);
 
 				break;
 			}
@@ -1714,6 +1779,7 @@ namespace cse
 
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellEdit, TESObjectCELLDlgSubClassProc);
 		}
+
 
 	}
 }

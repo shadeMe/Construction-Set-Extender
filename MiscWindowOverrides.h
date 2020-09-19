@@ -24,6 +24,34 @@ namespace cse
 			UInt32				DelayTime;
 		};
 
+		class LoadPluginsWindowData : public bgsee::WindowExtraData
+		{
+		public:
+			enum { kTypeID = 'XLPG' };
+
+			struct PluginFlagCache
+			{
+				TESFile*	Plugin;
+				bool		Loaded;
+				bool		Active;
+
+				PluginFlagCache(TESFile* Plugin)
+				{
+					this->Plugin = Plugin;
+					this->Loaded = Plugin->IsLoaded();
+					this->Active = Plugin->IsActive();
+				}
+			};
+
+			std::vector<PluginFlagCache>	PluginFlagsInitialState;
+
+			LoadPluginsWindowData() : bgsee::WindowExtraData(kTypeID) {}
+			virtual ~LoadPluginsWindowData() = default;
+
+			void	BuildPluginFlagCache();
+			void	UpdatePluginFlagsFromCache();
+		};
+
 
 		LRESULT CALLBACK		FindTextDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData);
 		LRESULT CALLBACK		DataDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData);

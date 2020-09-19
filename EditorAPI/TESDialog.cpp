@@ -21,6 +21,8 @@ HMENU*						TESCSMain::MainMenuHandle = (HMENU*)0x00A0B630;
 char**						TESCSMain::ActivePluginNameBuffer = (char**)0x00A0AF00;
 UInt8*						TESCSMain::AllowAutoSaveFlag = (UInt8*)0x00A0B628;
 UInt8*						TESCSMain::ExittingCSFlag = (UInt8*)0x00A0B63C;
+UInt8*						TESCSMain::UnsavedChangesFlag = (UInt8*)0x00A0B13C;
+
 const char*					TESCSMain::INIFilePath = (const char*)0x00A0ABB8;
 HIMAGELIST*					TESCSMain::BoundObjectIcons = (HIMAGELIST*)0x00A0B158;
 char**						TESCSMain::FileSelectionBuffer = (char**)0x00A0AF00;
@@ -116,6 +118,11 @@ void TESCSMain::AutoSave()
 void TESCSMain::InvokeMainMenuTool(int Identifier)
 {
 	SendMessage(*WindowHandle, WM_COMMAND, Identifier, NULL);
+}
+
+bool TESCSMain::ConfirmUnsavedChanges()
+{
+	return cdeclCall<bool>(0x00430EB0);
 }
 
 UInt32 TESDialog::GetDialogTemplateForFormType(UInt8 FormTypeID)
