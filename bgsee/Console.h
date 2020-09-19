@@ -123,7 +123,7 @@ namespace bgsee
 
 		class MessageLogContext
 		{
-			static const UInt32		kMessageLogCharLimit = 0x8000;
+			static const UInt32		kMessageLogCharLimit = 1 * 1024 * 1024;
 		protected:
 			std::string				Name;
 			std::string				LogPath;
