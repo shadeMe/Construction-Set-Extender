@@ -241,7 +241,7 @@ namespace cse
 			BGSEEDAEMON->ExecuteInitCallbacks(bgsee::Daemon::kInitCallback_Epilog);
 		}
 
-		#define _hhName	CSInit
+#define _hhName	CSInit
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x00419265);
@@ -259,7 +259,7 @@ namespace cse
 			bgsee::Main::Deinitialize();
 		}
 
-		#define _hhName	CSExit
+#define _hhName	CSExit
 		_hhBegin()
 		{
 			__asm
@@ -281,7 +281,7 @@ namespace cse
 			MessageBeep(MB_ICONHAND);
 		}
 
-		#define _hhName	AssertOverride
+#define _hhName	AssertOverride
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x004B575E);
@@ -299,7 +299,7 @@ namespace cse
 			}
 		}
 
-		#define _hhName	TopicInfoCopyEpilog
+#define _hhName	TopicInfoCopyEpilog
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x004F1286);
@@ -332,13 +332,13 @@ namespace cse
 				(Form->formFlags & TESForm::kFormFlags_Temporary) == 0)
 			{
 				BGSEEUI->MsgBoxW(nullptr,
-								MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_OK,
-								"The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler might attempt to parse it as an integer.\nConsider beginning the editorID with an alphabet.\n\nThis warning can be disabled in the 'CSE Preferences' dialog (File menu).",
-								EditorID);
+					MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_OK,
+					"The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler might attempt to parse it as an integer.\nConsider beginning the editorID with an alphabet.\n\nThis warning can be disabled in the 'CSE Preferences' dialog (File menu).",
+					EditorID);
 			}
 		}
 
-		#define _hhName	NumericEditorID
+#define _hhName	NumericEditorID
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x00497676);
@@ -359,7 +359,7 @@ namespace cse
 			}
 		}
 
-		#define _hhName	DataHandlerConstructSpecialForms
+#define _hhName	DataHandlerConstructSpecialForms
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x0048104E);
@@ -376,7 +376,7 @@ namespace cse
 			}
 		}
 
-		#define _hhName	ResultScriptSaveForm
+#define _hhName	ResultScriptSaveForm
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x004FD260);
@@ -388,13 +388,13 @@ namespace cse
 				jz		FAIL
 
 				jmp		_hhGetVar(Retn)
-			FAIL:
+				FAIL:
 				mov		eax, 0x004FD271
-				jmp		eax
+					jmp		eax
 			}
 		}
 
-		#define _hhName	TESObjectREFRDoCopyFrom
+#define _hhName	TESObjectREFRDoCopyFrom
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x00547668);
@@ -429,7 +429,7 @@ namespace cse
 			}
 		}
 
-		#define _hhName	TESFormAddReference
+#define _hhName	TESFormAddReference
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x00496461);
@@ -458,7 +458,7 @@ namespace cse
 			}
 		}
 
-		#define _hhName	TESFormRemoveReference
+#define _hhName	TESFormRemoveReference
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x004964AE);
@@ -483,7 +483,7 @@ namespace cse
 			ReferenceList->RemoveAll();
 		}
 
-		#define _hhName	TESFormClearReferenceList
+#define _hhName	TESFormClearReferenceList
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x00496423);
@@ -498,7 +498,7 @@ namespace cse
 			}
 		}
 
-		#define _hhName	TESFormPopulateUseInfoList
+#define _hhName	TESFormPopulateUseInfoList
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x004964FB);
@@ -515,12 +515,12 @@ namespace cse
 				jz		FAIL
 
 				jmp		_hhGetVar(Retn)
-			FAIL:
+				FAIL:
 				jmp		_hhGetVar(Jump)
 			}
 		}
 
-		#define _hhName	TESFormDelete
+#define _hhName	TESFormDelete
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x00498717);
@@ -534,12 +534,12 @@ namespace cse
 
 				mov		eax, [eax]
 				jmp		_hhGetVar(Retn)
-			FAIL:
+				FAIL:
 				jmp		_hhGetVar(Jump)
 			}
 		}
 
-		#define _hhName	DataHandlerPlaceTESObjectLIGH
+#define _hhName	DataHandlerPlaceTESObjectLIGH
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x005116CF);
@@ -551,7 +551,7 @@ namespace cse
 				mov     eax, [esi]
 				mov     edx, [eax + 0x1A0]
 				jmp		_hhGetVar(Retn)
-			FIX:
+				FIX:
 				jmp		_hhGetVar(Jump)
 			}
 		}
@@ -565,7 +565,7 @@ namespace cse
 			}
 		}
 
-		#define _hhName	AchievementAddTopic
+#define _hhName	AchievementAddTopic
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x004F2ED9);
@@ -583,17 +583,15 @@ namespace cse
 			}
 		}
 
-		bool __stdcall CheckIsFormShadeMe(TESForm* Form)
+		void __stdcall DoAchievementDeleteShadeMe(TESForm* Form)
 		{
 			TESForm* shadeMe = TESForm::LookupByEditorID("shadeMe");
 
 			if (Form == shadeMe)
-				return true;
-			else
-				return false;
+				BGSEEACHIEVEMENTS->Unlock(achievements::kAntiChrist);
 		}
 
-		#define _hhName	AchievementDeleteShadeMe
+#define _hhName	AchievementDeleteShadeMe
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x004986B9);
@@ -602,16 +600,7 @@ namespace cse
 			{
 				pushad
 				push	esi
-				call	CheckIsFormShadeMe
-				test	al, al
-				jz		EXIT
-			}
-
-			BGSEEACHIEVEMENTS->Unlock(achievements::kAntiChrist);
-
-			__asm
-			{
-			EXIT:
+				call	DoAchievementDeleteShadeMe
 				popad
 
 				call	_hhGetVar(Call)
@@ -619,7 +608,15 @@ namespace cse
 			}
 		}
 
-		#define _hhName	AchievementModifyShadeMe
+		void __stdcall DoAchievementModifyShadeMe(TESForm* Form)
+		{
+			TESForm* shadeMe = TESForm::LookupByEditorID("shadeMe");
+
+			if (Form == shadeMe)
+				BGSEEACHIEVEMENTS->Unlock(achievements::kHeretic);
+		}
+
+#define _hhName	AchievementModifyShadeMe
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x00497BEF);
@@ -627,16 +624,7 @@ namespace cse
 			{
 				pushad
 				push	esi
-				call	CheckIsFormShadeMe
-				test	al, al
-				jz		EXIT
-			}
-
-			BGSEEACHIEVEMENTS->Unlock(achievements::kHeretic);
-
-			__asm
-			{
-			EXIT:
+				call	DoAchievementModifyShadeMe
 				popad
 
 				mov     eax, [esi + 0x8]
@@ -645,15 +633,13 @@ namespace cse
 			}
 		}
 
-		bool __stdcall DoAchievementCloneHallOfFameForms(TESForm* Form)
+		void __stdcall DoAchievementCloneHallOfFameForms(TESForm* Form)
 		{
 			if (BGSEEHALLOFFAME->GetIsInductee(Form->formID))
-				return true;
-			else
-				return false;
+				BGSEEACHIEVEMENTS->Unlock(achievements::kMadScientist);
 		}
 
-		#define _hhName	AchievementCloneHallOfFameForms
+#define _hhName	AchievementCloneHallOfFameForms
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x00413E54);
@@ -663,15 +649,6 @@ namespace cse
 				pushad
 				push	edi
 				call	DoAchievementCloneHallOfFameForms
-				test	al, al
-				jz		EXIT
-			}
-
-			BGSEEACHIEVEMENTS->Unlock(achievements::kMadScientist);
-
-			__asm
-			{
-			EXIT:
 				popad
 
 				call	_hhGetVar(Call)
@@ -708,7 +685,7 @@ namespace cse
 			}
 		}
 
-		#define _hhName	AchievementPluginDescription
+#define _hhName	AchievementPluginDescription
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x0040CD25);
@@ -725,38 +702,48 @@ namespace cse
 			}
 		}
 
-		#define _hhName	AchievementBuildRoads
+		void __stdcall DoAchievementBuildRoads()
+		{
+			BGSEEACHIEVEMENTS->Unlock(achievements::kBobTheBuilder);
+		}
+
+#define _hhName	AchievementBuildRoads
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x00563D04);
-			__asm	pushad
-			BGSEEACHIEVEMENTS->Unlock(achievements::kBobTheBuilder);
-			__asm	popad
-
 			__asm
 			{
+				pushad
+				call	DoAchievementBuildRoads
+				popad
+
 				call	TESCSMain::WriteToStatusBar
 				jmp		_hhGetVar(Retn)
 			}
 		}
 
-		#define _hhName	AchievementDialogResponseCreation
+		void __stdcall DoAchievementDialogResponseCreation()
+		{
+			BGSEEACHIEVEMENTS->Unlock(achievements::kLoquacious);
+		}
+
+#define _hhName	AchievementDialogResponseCreation
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x004F2CC8);
 			_hhSetVar(Call, 0x004EA510);
-			__asm	pushad
-			BGSEEACHIEVEMENTS->Unlock(achievements::kLoquacious);
-			__asm	popad
-
 			__asm
 			{
+				pushad
+				call	DoAchievementDialogResponseCreation
+				popad
+
 				call	_hhGetVar(Call)
 				jmp		_hhGetVar(Retn)
 			}
 		}
 
-		#define _hhName	ExtraTeleportInitItem
+#define _hhName	ExtraTeleportInitItem
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x0046270E);
@@ -772,12 +759,12 @@ namespace cse
 				jz		SKIP
 
 				jmp		_hhGetVar(Retn)
-			SKIP:
+				SKIP:
 				jmp		_hhGetVar(Jump)
 			}
 		}
 
-		#define _hhName	VersionControlOverride
+#define _hhName	VersionControlOverride
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x0041C901);
@@ -806,7 +793,7 @@ namespace cse
 			}
 		}
 
-		#define _hhName		TESObjectCELLGetDataFromDialog
+#define _hhName		TESObjectCELLGetDataFromDialog
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x005384D0);
@@ -838,7 +825,7 @@ namespace cse
 			}
 		}
 
-		#define _hhName		InteriorCellDuplicate
+#define _hhName		InteriorCellDuplicate
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x0053CC43);
@@ -861,7 +848,7 @@ namespace cse
 			Data->fogNear = 0.0001;
 		}
 
-		#define _hhName		InteriorCellLightingDataInit
+#define _hhName		InteriorCellLightingDataInit
 		_hhBegin()
 		{
 			__asm
@@ -878,7 +865,7 @@ namespace cse
 			}
 		}
 
-		#define _hhName		ConvertDDSToRGBA32
+#define _hhName		ConvertDDSToRGBA32
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x004AE4BB);
@@ -892,12 +879,12 @@ namespace cse
 				jz		SKIP
 
 				jmp		_hhGetVar(Retn)
-			SKIP:
+				SKIP:
 				jmp		_hhGetVar(Jump)
 			}
 		}
 
-		#define _hhName		DataHandlerGetInteriorAtIndex
+#define _hhName		DataHandlerGetInteriorAtIndex
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x0047BB1E);
@@ -913,10 +900,10 @@ namespace cse
 				jge		SKIP
 
 				jmp		_hhGetVar(Retn)
-			SKIP:
+				SKIP:
 				mov		eax, 0
-				pop		esi
-				retn	4
+					pop		esi
+					retn	4
 			}
 		}
 
@@ -937,7 +924,7 @@ namespace cse
 				kExtraDataList_InitErrorState = true;
 		}
 
-		#define _hhName		MessageHandlerShowWarning
+#define _hhName		MessageHandlerShowWarning
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x00403498);
@@ -955,12 +942,12 @@ namespace cse
 				mov		ecx, [esp + 0x4]
 				lea		eax, [esp + 0x8]
 				jmp		_hhGetVar(Retn)
-			SKIP:
+				SKIP:
 				retn
 			}
 		}
 
-		#define _hhName		NiControllerSequenceShowWarning
+#define _hhName		NiControllerSequenceShowWarning
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x00867EB6);
@@ -976,7 +963,7 @@ namespace cse
 				mov		eax, [esp + 0x8]
 				test	eax, eax
 				jmp		_hhGetVar(Retn)
-			SKIP:
+				SKIP:
 				retn
 			}
 		}
@@ -995,8 +982,8 @@ namespace cse
 				if (kExtraDataList_InitErrorState == true)
 				{
 					BGSEECONSOLE->LogWarning("CS", "ExtraData initialization encountered errors for form %08X {%s}...",
-											 LinkedForm->formID,
-											 LinkedForm->GetEditorID());
+						LinkedForm->formID,
+						LinkedForm->GetEditorID());
 				}
 
 				kExtraDataList_InitErrorState = false;
@@ -1004,7 +991,7 @@ namespace cse
 			}
 		}
 
-		#define _hhName		ExtraDataListInitForCell
+#define _hhName		ExtraDataListInitForCell
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x0053C578);
@@ -1029,7 +1016,7 @@ namespace cse
 			}
 		}
 
-		#define _hhName		ExtraDataListInitForRef
+#define _hhName		ExtraDataListInitForRef
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x005488DD);
@@ -1076,7 +1063,7 @@ namespace cse
 			}
 		}
 
-		#define _hhName		GameSettingCopyFrom
+#define _hhName		GameSettingCopyFrom
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x004FA38D);
@@ -1105,7 +1092,7 @@ namespace cse
 			}
 		}
 
-		#define _hhName		DisableSplashScreen
+#define _hhName		DisableSplashScreen
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x0041CDC8);
@@ -1145,7 +1132,7 @@ namespace cse
 			}
 		}
 
-		#define _hhName		ScriptEnumerateEffectCrossRefs
+#define _hhName		ScriptEnumerateEffectCrossRefs
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x00433AF6);
