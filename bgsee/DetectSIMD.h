@@ -10,14 +10,14 @@
   Usage: include this file in your source. Call simd_init().
   Then you can test for a simd version like this:
 
-          if( HASSSE )
-	     do something here
+		  if( HASSSE )
+		 do something here
 
   For avialable definitions see code below.
  */
 
 #ifdef __cplusplus
-    extern "C" {
+	extern "C" {
 #endif
 
 static unsigned simd = 0x0;

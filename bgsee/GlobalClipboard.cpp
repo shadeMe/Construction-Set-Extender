@@ -1,5 +1,6 @@
 #include "Main.h"
 #include "Console.h"
+#include "UIManager.h"
 #include "GlobalClipboard.h"
 
 namespace bgsee

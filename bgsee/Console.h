@@ -1,6 +1,7 @@
 #pragma once
 #include "Main.h"
-#include "UIManager.h"
+#include "GenericModelessDialog.h"
+#include "WindowSubclasser.h"
 
 // Console - Editor console implementation
 
@@ -102,8 +103,8 @@ namespace bgsee
 		typedef void				(* ConsolePrintCallback)(const char* Prefix, const char* Message);
 	protected:
 		static LRESULT CALLBACK		BaseDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
-		static LRESULT CALLBACK		MessageLogSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-		static LRESULT CALLBACK		CommandLineSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		static LRESULT CALLBACK		MessageLogSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, WindowExtraDataCollection* ExtraData);
+		static LRESULT CALLBACK		CommandLineSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, WindowExtraDataCollection* ExtraData);
 
 		static INISetting			kINI_Top;
 		static INISetting			kINI_Left;

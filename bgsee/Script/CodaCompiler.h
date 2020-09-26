@@ -1,6 +1,6 @@
 #pragma once
 #include "CodaAST.h"
-#include "WorkspaceManager.h"
+#include "..\ResourceLocation.h"
 
 namespace bgsee
 {

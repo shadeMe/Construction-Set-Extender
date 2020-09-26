@@ -1,7 +1,6 @@
 #pragma once
 #include "..\Main.h"
 #include "..\Console.h"
-#include "..\WorkspaceManager.h"
 #include "CodaCompiler.h"
 #include "CodaInterpreter.h"
 

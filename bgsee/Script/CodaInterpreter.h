@@ -1,7 +1,6 @@
 #pragma  once
 #include "CodaDataTypes.h"
 #include "CodaCompiler.h"
-#include "WorkspaceManager.h"
 
 namespace bgsee
 {

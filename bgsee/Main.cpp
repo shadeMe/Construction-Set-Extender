@@ -23,14 +23,8 @@ namespace bgsee
 
 	void Daemon::WaitForDebugger(void)
 	{
-		BGSEECONSOLE->Indent();
-		BGSEECONSOLE_MESSAGE("Waiting For Debugger...");
-
 		while (IsDebuggerPresent() == FALSE)
 			Sleep(100);
-
-		BGSEECONSOLE_MESSAGE("Debugger Attached!");
-		BGSEECONSOLE->Outdent();
 	}
 
 	Daemon* Daemon::Get()
@@ -862,18 +856,5 @@ namespace bgsee
 	const char* Main::ExtenderGetDisplayName( void ) const
 	{
 		return ExtenderDisplayName.c_str();
-	}
-
-	BOOL WINAPI DllMain(HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
-	{
-		switch (dwReason)
-		{
-		case DLL_PROCESS_ATTACH:
-			break;
-		case DLL_PROCESS_DETACH:
-			break;
-		}
-
-		return TRUE;
 	}
 }
