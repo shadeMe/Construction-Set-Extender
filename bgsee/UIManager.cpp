@@ -304,8 +304,6 @@ namespace bgsee
 			PatchDepot[kIATPatch_CreateWindowEx].Reset();
 
 			BGSEEDAEMON->ExecuteInitCallbacks(Daemon::kInitCallback_PostMainWindowInit);
-
-			SendMessage(Result, WM_INITDIALOG, NULL, NULL);
 		}
 
 		return Result;

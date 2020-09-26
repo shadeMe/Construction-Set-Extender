@@ -28,7 +28,7 @@ namespace bgsee
 		{
 			kInitCallback_Query = 0,
 			kInitCallback_Load,
-			kInitCallback_PostMainWindowInit,		// the WM_INITDIALOG msg will be dispatched to the main window after this event is handled
+			kInitCallback_PostMainWindowInit,
 			kInitCallback_Epilog,
 
 			kInitCallback__MAX

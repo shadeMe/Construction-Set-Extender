@@ -279,7 +279,11 @@ namespace bgsee
 					CreationData.CreationUserData = MessageData->lParam;
 				}
 
-				ActiveThreadDialogHandles.emplace(MessageData->hwnd, new DialogCreationData(CreationData));
+				// the WM_INITDIALOG message can be sent to an existing dialog to re-initialize it
+				// permanent dialogs like the object, cell and render windows tend to do this
+				if (ActiveThreadDialogHandles.find(MessageData->hwnd) == ActiveThreadDialogHandles.end())
+					ActiveThreadDialogHandles.emplace(MessageData->hwnd, new DialogCreationData(CreationData));
+
 
 				// we need to subclass all dialog boxes with valid creation data unconditionally
 				// so that the WM_INITDIALOG message is correctly handled by the original subclass
