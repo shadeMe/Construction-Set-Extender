@@ -132,6 +132,7 @@ namespace componentDLLInterface
 																					   UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height);
 
 		bool										(* IsDiskSyncInProgress)(void);
+		void										(* ShowDiskSyncDialog)(void);
 		void										(* CloseAllOpenEditors)(void);
 		void										(* UpdateIntelliSenseDatabase)(void);
 		UInt32										(* GetOpenEditorCount)(void);

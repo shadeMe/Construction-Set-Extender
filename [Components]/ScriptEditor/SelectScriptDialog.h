@@ -25,12 +25,14 @@ namespace cse
 			property String^	SelectedScriptEditorID;
 			property String^	FilterString;
 			property bool		ShowDeletedScripts;
+			property bool		PreventSyncedScriptSelection;
 
 			SelectScriptDialogParams()
 			{
 				this->SelectedScriptEditorID = "";
 				this->FilterString = "";
 				this->ShowDeletedScripts = true;
+				this->PreventSyncedScriptSelection = false;
 			}
 		};
 

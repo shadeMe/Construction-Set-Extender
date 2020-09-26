@@ -4,6 +4,7 @@
 #include "IntelliSenseInterfaceModel.h"
 #include "IntelliSenseDatabase.h"
 #include "RefactorTools.h"
+#include "ScriptSync.h"
 
 namespace cse
 {
@@ -22,7 +23,6 @@ namespace cse
 			CurrentScriptBytecode = 0;
 			CurrentScriptBytecodeLength = 0;
 			NewScriptFlag = false;
-			Closed = false;
 			BoundParent = nullptr;
 
 			AutoSaveTimer = gcnew Timer();
@@ -198,6 +198,16 @@ namespace cse
 			return TextEditor->GetText(Line);
 		}
 
+		void ConcreteWorkspaceModel::ShowSyncedScriptWarning()
+		{
+			if (Bound && scriptSync::DiskSync::Get()->IsScriptBeingSynced(CurrentScriptEditorID))
+			{
+				BoundParent->Controller->MessageBox("The current script is actively being synced from/to disk. Modifying it inside the script editor will cause inconsistent and unexpected behaviour.",
+					MessageBoxButtons::OK,
+					MessageBoxIcon::Exclamation);
+			}
+		}
+
 		void ConcreteWorkspaceModel::Setup(componentDLLInterface::ScriptData* Data, bool PartialUpdate, bool NewScript)
 		{
 			if (Data == nullptr)
@@ -209,7 +219,6 @@ namespace cse
 				CurrentScriptBytecode = 0;
 				CurrentScriptBytecodeLength = 0;
 				NewScriptFlag = false;
-				Closed = false;
 
 				if (Bound)
 					BoundParent->Enabled = false;
@@ -217,9 +226,9 @@ namespace cse
 				return;
 			}
 
+			String^ ScriptName = gcnew String(Data->EditorID);
 			String^ ScriptText = gcnew String(Data->Text);
 			UInt16 ScriptType = Data->Type;
-			String^ ScriptName = gcnew String(Data->EditorID);
 			UInt32 ByteCode = (UInt32)Data->ByteCode;
 			UInt32 ByteCodeLength = Data->Length;
 			UInt32 FormID = Data->FormID;
@@ -267,7 +276,10 @@ namespace cse
 				CheckAutoRecovery();
 
 			if (Bound)
+			{
 				TextEditor->FocusTextArea();
+				ShowSyncedScriptWarning();
+			}
 		}
 
 		bool ConcreteWorkspaceModel::PerformHouseKeeping()
@@ -332,6 +344,8 @@ namespace cse
 
 			TextEditor->FocusTextArea();
 			TextEditor->ScrollToCaret();
+
+			ShowSyncedScriptWarning();
 		}
 
 		void ConcreteWorkspaceModel::Unbind()
@@ -427,10 +441,7 @@ namespace cse
 		bool ConcreteWorkspaceModel::CloseScript(bool% OperationCancelled)
 		{
 			if (PerformHouseKeeping(OperationCancelled))
-			{
-				Closed = true;
 				return true;
-			}
 
 			return false;
 		}
@@ -618,6 +629,9 @@ namespace cse
 		{
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			if (!Concrete->Dirty)
+				return true;
 
 			return Concrete->SaveScript(Operation, HasWarnings);
 		}

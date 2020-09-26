@@ -393,6 +393,9 @@
     <ClCompile Include="..\OBSE\obse\NiTypes.cpp">
       <Filter>OBSE</Filter>
     </ClCompile>
+    <ClCompile Include="Render Window\RenderWindowFlyCamera.cpp">
+      <Filter>Components\Render Window</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -924,6 +927,9 @@
       <Filter>Components\IMGUI</Filter>
     </ClInclude>
     <ClInclude Include="Render Window\RenderWindowGizmos.h">
+      <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\RenderWindowFlyCamera.h">
       <Filter>Components\Render Window</Filter>
     </ClInclude>
   </ItemGroup>

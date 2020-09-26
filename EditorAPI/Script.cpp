@@ -73,6 +73,25 @@ bool Script::IsMagicScript() const
 	return info.type == kScriptType_Magic;
 }
 
+bool Script::IsUserDefinedFunctionScript() const
+{
+	if (!IsObjectScript())
+		return false;
+	else if (info.dataLength < 15)
+		return false;
+
+	// need to SEH-wrap this to be safe
+	__try
+	{
+		auto Data = (UInt8*)data;
+		if (Data && *(Data + 8) == 7)
+			return true;
+	}
+	__except(EXCEPTION_EXECUTE_HANDLER) {}
+
+	return false;
+}
+
 void TESScriptCompiler::ToggleScriptCompilation( bool State )
 {
 	if (!State)

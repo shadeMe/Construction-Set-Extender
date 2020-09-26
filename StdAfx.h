@@ -32,6 +32,7 @@
 #include <Objbase.h>
 #include <Psapi.h>
 #include <Shellapi.h>
+#include <vssym32.h>
 
 // CRT
 #include <time.h>
@@ -69,6 +70,8 @@
 #include <regex>
 #include <unordered_map>
 #include <unordered_set>
+#include <thread>
+#include <mutex>
 
 // RPC
 #include <Rpc.h>
@@ -111,8 +114,10 @@ using namespace SME::MemoryHandler;
 #include "obse\Utilities.h"
 
 // BGSEEBASE
+#include <bgsee\Main.h>
 #include <bgsee\Console.h>
 #include <bgsee\UIManager.h>
+#include <bgsee\HookUtil.h>
 
 
 // CSE

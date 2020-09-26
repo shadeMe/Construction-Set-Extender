@@ -92,8 +92,10 @@ namespace cse
 
 		void InitializeObjectWindowOverrides()
 		{
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_ObjectWindow, uiManager::ObjectWindowSubclassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_ObjectWindow, uiManager::CommonDialogExtraFittingsSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_ObjectWindow,
+				uiManager::ObjectWindowSubclassProc);
+			BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_ObjectWindow,
+				uiManager::CommonDialogExtraFittingsSubClassProc);
 
 			if (settings::dialogs::kShowMainWindowsInTaskbar.GetData().i)
 			{

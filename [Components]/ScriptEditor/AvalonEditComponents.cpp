@@ -658,8 +658,8 @@ namespace cse
 
 			TextAnchor^ LineTrackingManager::CreateAnchor(UInt32 Offset, bool AllowDeletion)
 			{
-				if (Offset >= Parent->Document->TextLength)
-					Offset = 0;
+				if (Offset > Parent->Document->TextLength)
+					Offset = Parent->Document->TextLength;
 
 				TextAnchor^ New = Parent->Document->CreateAnchor(Offset);
 				New->SurviveDeletion = AllowDeletion == false;

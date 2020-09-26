@@ -7,8 +7,8 @@ namespace cse
 		template <typename T>
 		struct InitDialogMessageParamT
 		{
-			char						Buffer[0x400];
-			T							ExtraData;
+			char	Buffer[0x400];
+			T		ExtraData;
 		};
 
 		class FilterableFormListManager
@@ -18,7 +18,7 @@ namespace cse
 		private:
 			class FilterableWindowData
 			{
-				static LRESULT CALLBACK			FormListSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+				static LRESULT CALLBACK			FormListSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData);
 
 				typedef std::map<HWND, UInt32>	WindowTimerMapT;
 				static WindowTimerMapT			FilterTimerTable;

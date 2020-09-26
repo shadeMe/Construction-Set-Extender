@@ -232,7 +232,7 @@ namespace cse
 				ModifierOverride::Instance.Activate(kModifier_Space, Space);
 				ModifierOverride::Instance.Activate(kModifier_Z, Z);
 
-				BGSEEUI->GetSubclasser()->TunnelDialogMessage(*TESRenderWindow::WindowHandle,
+				BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(*TESRenderWindow::WindowHandle,
 															  WM_KEYDOWN,
 															  KeyCode,
 															  NULL);

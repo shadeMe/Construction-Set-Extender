@@ -644,6 +644,9 @@ namespace cse
 				case IDC_MAINMENU_CODARESETSCRIPTCACHE:
 					CODAVM->GetProgramCache()->Invalidate();
 					break;
+				case IDC_MAINMENU_SYNCSCRIPTSTODISK:
+					cliWrapper::interfaces::SE->ShowDiskSyncDialog();
+					break;
 				default:
 					Return = false;
 
@@ -701,6 +704,7 @@ namespace cse
 					if (xData == nullptr)
 					{
 						xData = new MainWindowMiscData();
+						ExtraData->Add(xData);
 
 						xData->ToolbarExtras->hInstance = BGSEEMAIN->GetExtenderHandle();
 						xData->ToolbarExtras->hDialog = *TESCSMain::MainToolbarHandle;
@@ -712,7 +716,7 @@ namespace cse
 							BGSEECONSOLE_ERROR("Couldn't build main window toolbar subwindow!");
 						else
 						{
-							BGSEEUI->GetSubclasser()->RegisterRegularWindowSubclass(*TESCSMain::MainToolbarHandle, MainWindowToolbarSubClassProc);
+							BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(*TESCSMain::MainToolbarHandle, MainWindowToolbarSubClassProc);
 							SendMessage(*TESCSMain::MainToolbarHandle, WM_INITDIALOG, NULL, NULL);
 
 							HWND TODSlider = GetDlgItem(hWnd, IDC_TOOLBAR_TODSLIDER);
@@ -726,8 +730,6 @@ namespace cse
 
 							SendMessage(*TESCSMain::MainToolbarHandle, WM_MAINTOOLBAR_SETTOD, _TES->GetSkyTOD() * 4.0, NULL);
 						}
-
-						ExtraData->Add(xData);
 					}
 				}
 
@@ -871,9 +873,9 @@ namespace cse
 
 		void InitializeMainWindowOverrides()
 		{
-			BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(uiManager::MainWindowMenuInitSubclassProc);
-			BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(uiManager::MainWindowMenuSelectSubclassProc);
-			BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(uiManager::MainWindowMiscSubclassProc);
+			BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(BGSEEUI->GetMainWindow(), uiManager::MainWindowMenuInitSubclassProc);
+			BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(BGSEEUI->GetMainWindow(), uiManager::MainWindowMenuSelectSubclassProc);
+			BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(BGSEEUI->GetMainWindow(), uiManager::MainWindowMiscSubclassProc);
 		}
 
 	}

@@ -105,6 +105,8 @@ namespace cse
 		{
 #ifndef NDEBUG
 	//		_MemHdlr(TestHook1).WriteJump();
+
+			//SME::MemoryHandler::SafeWrite8(0x0047571C + 1, 2);
 #endif
 			_MemHdlr(DoorMarkerProperties).WriteJump();
 			_MemHdlr(TESObjectREFRSetupDialog).WriteJump();

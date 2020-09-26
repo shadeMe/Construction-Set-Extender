@@ -72,3 +72,4 @@ public:
 	/*A4*/ void*						unkA4;
 	/*A8*/ UInt32						unkA8;
 };
+STATIC_ASSERT(sizeof(TESClimate) == 0xAC);

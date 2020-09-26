@@ -76,6 +76,7 @@ public:
 	bool								IsObjectScript() const;
 	bool								IsQuestScript() const;
 	bool								IsMagicScript() const;
+	bool								IsUserDefinedFunctionScript() const;
 
 	bool								Compile(bool AsResultScript = false);
 	void								SetText(const char* Text);

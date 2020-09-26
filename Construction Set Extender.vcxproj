@@ -412,6 +412,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="Render Window\RenderWindowActions.cpp" />
     <ClCompile Include="Render Window\RenderWindowCellLists.cpp" />
     <ClCompile Include="Render Window\RenderWindowCommon.cpp" />
+    <ClCompile Include="Render Window\RenderWindowFlyCamera.cpp" />
     <ClCompile Include="Render Window\RenderWindowGizmos.cpp" />
     <ClCompile Include="Render Window\RenderWindowGroups.cpp" />
     <ClCompile Include="Render Window\RenderWindowInput.cpp" />
@@ -544,6 +545,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="Render Window\RenderWindowActions.h" />
     <ClInclude Include="Render Window\RenderWindowCellLists.h" />
     <ClInclude Include="Render Window\RenderWindowCommon.h" />
+    <ClInclude Include="Render Window\RenderWindowFlyCamera.h" />
     <ClInclude Include="Render Window\RenderWindowGizmos.h" />
     <ClInclude Include="Render Window\RenderWindowGroups.h" />
     <ClInclude Include="Render Window\RenderWindowInput.h" />

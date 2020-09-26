@@ -65,6 +65,8 @@ HCURSOR*							TESRenderWindow::CursorArrow = (HCURSOR*)0x00A0BABC;
 
 TESPreviewControl::PreviewControlListT*		TESPreviewControl::ActivePreviewControls = (TESPreviewControl::PreviewControlListT*)0x00A0BE90;
 BSTreeManager**						BSTreeManager::Singleton = (BSTreeManager**)0x00A25608;
+Sky**								Sky::Singleton = (Sky**)0x00A14648;
+
 
 void TESRenderWindow::Reset()
 {

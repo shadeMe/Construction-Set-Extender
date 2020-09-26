@@ -131,7 +131,7 @@ namespace cse
 				}
 				SetWindowText(hWnd, WndTitle.c_str());
 
-				BGSEEUI->GetSubclasser()->RegisterRegularWindowSubclass(hWnd, uiManager::CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(hWnd, uiManager::CommonDialogExtraFittingsSubClassProc);
 				SendMessage(hWnd, WM_OBJECTWINDOWIMPOSTER_INITIALIZEXTRA, NULL, NULL);
 				SetWindowLongPtr(FormList, GWL_USERDATA, 1);
 

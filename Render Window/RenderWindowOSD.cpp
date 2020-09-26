@@ -1,5 +1,5 @@
 ﻿#include "RenderWindowOSD.h"
-#include "Render Window\RenderWindowManager.h"
+#include "RenderWindowManager.h"
 #include "IMGUI\imgui_internal.h"
 #include "IMGUI\ImGuizmo.h"
 #include "IconFontCppHeaders\IconsMaterialDesign.h"
@@ -8,8 +8,8 @@
 #include "MouseOverTooltipOSDLayer.h"
 #include "ToolbarOSDLayer.h"
 #include "SelectionControlsOSDLayer.h"
-
-#include <bgsee\RenderWindowFlyCamera.h>
+#include "WorkspaceManager.h"
+#include "RenderWindowFlyCamera.h"
 
 #undef OSD_LOAD_ALL_FONTS
 
@@ -904,8 +904,7 @@ namespace cse
 
 		void RenderWindowOSD::Draw()
 		{
-			if (Initialized &&
-				bgsee::RenderWindowFlyCamera::IsActive() == false)
+			if (Initialized && RenderWindowFlyCamera::Instance.IsActive() == false)
 			{
 				Pipeline->NewFrame();
 				RenderLayers();
@@ -914,8 +913,7 @@ namespace cse
 
 		void RenderWindowOSD::Render()
 		{
-			if (Initialized &&
-				bgsee::RenderWindowFlyCamera::IsActive() == false )
+			if (Initialized && RenderWindowFlyCamera::Instance.IsActive() == false )
 			{
 				if (RenderingLayers == false)
 				{
@@ -1441,8 +1439,8 @@ namespace cse
 
 		void DebugOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
-			ImGui::ShowDemoWindow();
-			ImGui::ShowMetricsWindow();
+			//ImGui::ShowDemoWindow();
+			//ImGui::ShowMetricsWindow();
 		}
 
 		bool DebugOSDLayer::NeedsBackgroundUpdate()

@@ -470,7 +470,7 @@ namespace cse
 					}
 
 					// tunnel the built-in key on success
-					BGSEEUI->GetSubclasser()->TunnelDialogMessage(*TESRenderWindow::WindowHandle,
+					BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(*TESRenderWindow::WindowHandle,
 																  uMsg,
 																  BuiltInKey,
 																  NULL);
@@ -1119,6 +1119,8 @@ namespace cse
 				RegisterActionableKeyHandler("DECA2E00-6FB7-4638-8563-108326891DEA", actions::ToggleSnapToAngle, BasicKeyBinding('D', BasicKeyBinding::kModifier_Shift));
 				RegisterActionableKeyHandler("F5862ECB-7413-4C56-A5AF-E5EED401FC17", actions::FocusOnRefFilter, BasicKeyBinding('F', BasicKeyBinding::kModifier_Control));
 				RegisterActionableKeyHandler("959D48C0-43FE-47B5-BD61-9D78EEA277FC", actions::JumpToExteriorCell, BasicKeyBinding('J', BasicKeyBinding::kModifier_Control));
+				Shared.ToggleFlyCamera = RegisterActionableKeyHandler("00B540EA-40E4-4EBA-A3D9-718674BA77F9",
+																	actions::ToggleFlyCamera, BasicKeyBinding(VK_OEM_3, NULL));
 
 				Shared.MoveCameraWithSelection = RegisterHoldableHandler("5AE9F3BA-A336-450C-89B5-C278294A97C1",
 																		 "Move Camera With References",
@@ -1653,7 +1655,7 @@ namespace cse
 						if (OverrideHandler)
 							*TESRenderWindow::RefreshFlag = 0;
 
-						BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, wParam, lParam);
+						BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam);
 
 						if (OverrideHandler)
 							*TESRenderWindow::RefreshFlag = UpdateFlagBuffer;
@@ -1708,7 +1710,7 @@ namespace cse
 					}
 
 					// tunnel the message to the original proc and check if we need to allow free mouse movement
-					BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, wParam, lParam);
+					BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam);
 
 					_RENDERWIN_XSTATE.DraggingPathGridPoints = *TESRenderWindow::PathGridEditFlag &&
 																_RENDERWIN_XSTATE.CurrentMousePathGridPoint &&
@@ -1769,7 +1771,7 @@ namespace cse
 					_RENDERWIN_XSTATE.DraggingPathGridPoints = false;
 					TransformingSelection = false;
 
-					BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, wParam, lParam);
+					BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam);
 
 					// end free movement handling
 					ToggleFreeMouseMovement(hWnd, false);

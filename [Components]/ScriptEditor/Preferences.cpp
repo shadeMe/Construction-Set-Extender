@@ -84,6 +84,8 @@ namespace cse
 						NewValue = UInt32::Parse(ValueStr);
 					else if (PropertyType == bool::typeid)
 						NewValue = ValueStr == "1" ? true : false;
+					else if (PropertyType->IsEnum)
+						NewValue = Enum::Parse(PropertyType, ValueStr, true);
 					else
 						throw gcnew System::Runtime::Serialization::SerializationException
 							("Unsupported property type " + PropertyType->ToString() + "for property " + Name);
@@ -105,6 +107,42 @@ namespace cse
 		{
 			// A shallow copy is good enough for our use case
 			return safe_cast<SettingsGroup^>(this->MemberwiseClone());
+		}
+
+		System::Drawing::Design::UITypeEditorEditStyle CustomColorEditor::GetEditStyle(ITypeDescriptorContext^ context)
+		{
+			return System::Drawing::Design::UITypeEditorEditStyle::Modal;
+		}
+
+		System::Object^ CustomColorEditor::EditValue(ITypeDescriptorContext^ context, IServiceProvider^ provider, Object^ value)
+		{
+			if (value->GetType() != Color::typeid)
+				return value;
+
+			auto Picker = gcnew ColorDialog;
+			Picker->Color = (Color)value;
+			Picker->AllowFullOpen = true;
+			Picker->FullOpen = true;
+			Picker->AnyColor = true;
+
+			if (Picker->ShowDialog() == Windows::Forms::DialogResult::OK)
+				return Picker->Color;
+
+			return value;
+		}
+
+		bool CustomColorEditor::GetPaintValueSupported(ITypeDescriptorContext^ context)
+		{
+			return true;
+		}
+
+		void CustomColorEditor::PaintValue(System::Drawing::Design::PaintValueEventArgs^ e)
+		{
+			Color ColorToPaint = (Color)e->Value;
+
+			auto Brush = gcnew SolidBrush(ColorToPaint);
+			e->Graphics->FillRectangle(Brush, e->Bounds);
+			e->Graphics->DrawRectangle(Pens::Black, e->Bounds);
 		}
 
 		bool IntelliSenseSettings::Validate(SettingsGroup^ OldValue, String^% OutMessage)
@@ -213,6 +251,26 @@ namespace cse
 				Errors = "AutoRecoveryInterval must be between " + kMinAutoRecoveryInterval + " and " + kMaxAutoRecoveryInterval;
 				Errors += "\n";
 				AutoRecoveryInterval = Old->AutoRecoveryInterval;
+			}
+
+			OutMessage = Errors;
+			return Success;
+		}
+
+
+		bool ScriptSyncSettings::Validate(SettingsGroup^ OldValue, String^% OutMessage)
+		{
+			bool Success = true;
+			String^ Errors = "";
+			ScriptSyncSettings^ Old = safe_cast<ScriptSyncSettings^>(OldValue);
+
+			const UInt32 kMinAutoSyncInterval = 1, kMaxAutoSyncInterval = 120;
+			if (AutoSyncInterval < kMinAutoSyncInterval || AutoSyncInterval > kMaxAutoSyncInterval)
+			{
+				Success = false;
+				Errors = "AutoSyncInterval must be between " + kMinAutoSyncInterval + " and " + kMaxAutoSyncInterval;
+				Errors += "\n";
+				AutoSyncInterval = Old->AutoSyncInterval;
 			}
 
 			OutMessage = Errors;
@@ -446,6 +504,15 @@ namespace cse
 
 			this->Hide();
 			this->ShowDialog();
+
+			// We need to instantiate these classes explicitly as the linker
+			// will not recognize their being referenced in the custom CLR attributes
+			// and automatically remove them if optimizations are turned on
+			auto ThrowawayA = gcnew CustomColorConverter();
+			delete ThrowawayA;
+
+			auto ThrowawayB = gcnew CustomColorEditor();
+			delete ThrowawayB;
 		}
 
 		PreferencesDialog::~PreferencesDialog()

@@ -217,6 +217,9 @@ namespace cse
 				return;
 
 			obScriptParsing::AnalysisData^ ParsedData = BackgroundAnalyzer->LastAnalysisResult;
+			if (ParsedData == nullptr)
+				return;
+
 			GenerateCrumbs(ParsedData);
 		}
 

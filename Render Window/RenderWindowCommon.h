@@ -16,9 +16,9 @@ namespace cse
 			// render window modes in which the action can be executed
 			enum
 			{
-				kMode_ReferenceEdit = 1 << 0,
-				kMode_PathGridEdit = 1 << 1,
-				kMode_LandscapeEdit = 1 << 2,
+				kMode_ReferenceEdit			= 1 << 0,
+				kMode_PathGridEdit			= 1 << 1,
+				kMode_LandscapeEdit			= 1 << 2,
 
 				kMode_All = kMode_ReferenceEdit | kMode_PathGridEdit | kMode_LandscapeEdit,
 			};

@@ -506,6 +506,13 @@ namespace cse
 
 						if (strlen(XCoord) && strlen(YCoord) && _TES->currentInteriorCell == nullptr)
 						{
+							auto X = atoi(XCoord), Y = atoi(YCoord);
+							if (X > 32767 || Y > 32767 || X < -32768 || Y < -32768)
+							{
+								BGSEEUI->MsgBoxE(hWnd, MB_OK, "Cell coordinates are out-of-bounds!");
+								break;
+							}
+
 							Vector3 Coords((atoi(XCoord) << 12) + 2048.0, (atoi(YCoord) << 12) + 2048.0, 0);
 							_TES->LoadCellIntoViewPort(&Coords, nullptr);
 						}
@@ -535,8 +542,10 @@ namespace cse
 
 		void InitializeCellViewWindowOverrides()
 		{
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellView, uiManager::CellViewWindowSubclassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellView, uiManager::CommonDialogExtraFittingsSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_CellView,
+				uiManager::CellViewWindowSubclassProc);
+			BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_CellView,
+				uiManager::CommonDialogExtraFittingsSubClassProc);
 
 			if (settings::dialogs::kShowMainWindowsInTaskbar.GetData().i)
 			{

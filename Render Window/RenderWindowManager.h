@@ -6,7 +6,6 @@
 #include "RenderWindowInput.h"
 #include "RenderWindowLayers.h"
 #include "RenderWindowGizmos.h"
-#include <bgsee\RenderWindowFlyCamera.h>
 
 namespace cse
 {
@@ -136,22 +135,6 @@ namespace cse
 			static void							RemoveFromSelection(TESObjectREFR* Ref, bool RemoveSelectionBox);
 			static bool							IsSelectable(TESObjectREFR* Ref, bool PaintingSelection = false);
 			static bool							IsSelectable(TESObjectREFR* Ref, UInt32& OutReasonFlags, bool PaintingSelection = false);
-		};
-
-		class RenderWindowFlyCameraOperator : public bgsee::RenderWindowFlyCameraOperator
-		{
-			NiFrustum				ViewportFrustumBuffer;
-		public:
-			RenderWindowFlyCameraOperator(HWND ParentWindow, bgsee::ResourceTemplateT TemplateID);
-			virtual ~RenderWindowFlyCameraOperator();
-
-			virtual void			PrologCallback(void);
-			virtual void			EpilogCallback(void);
-
-			virtual void			Rotate(int XOffset, int YOffset);
-			virtual void			Move(UInt8 Direction, bool Sprinting, bool Crawling);
-
-			virtual void			RefreshRenderWindow(void);
 		};
 
 		class RenderWindowExtendedState

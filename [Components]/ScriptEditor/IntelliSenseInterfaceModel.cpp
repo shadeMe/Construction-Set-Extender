@@ -65,12 +65,14 @@ namespace cse
 
 		void IntelliSenseInterfaceModel::ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E)
 		{
-			HidePopup(PopupHideReason::None);
-			HideInsightTooltip();
-			ResetContext();
-
 			if (Bound)
+			{
+				HidePopup(PopupHideReason::None);
+				HideInsightTooltip();
 				BoundView->Hide();
+			}
+
+			ResetContext();
 
 			AutomaticallyPopup = preferences::SettingsHolder::Get()->IntelliSense->ShowSuggestions;
 			PopupThresholdLength = preferences::SettingsHolder::Get()->IntelliSense->SuggestionCharThreshold;
@@ -399,7 +401,7 @@ namespace cse
 			{
 				Context->Operation = IntelliSenseModelContext::OperationType::Dot;
 
-				IntelliSenseItemScriptVariable^ RefVar = LookupLocalVariable(CurrentToken);
+				IntelliSenseItemScriptVariable^ RefVar = LookupLocalVariable(UsingPreviousToken ? PreviousToken : CurrentToken);
 				if (RefVar && RefVar->GetDataType() == obScriptParsing::Variable::DataType::Ref)
 				{
 					Context->CallingObject = RefVar;

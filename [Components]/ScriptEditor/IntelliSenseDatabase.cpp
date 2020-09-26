@@ -44,7 +44,9 @@ namespace cse
 					String^ EditorID = gcnew String(Data->EditorID);
 					IntelliSenseItemScript^ NewItem = Data->UDF ? gcnew IntelliSenseItemUserFunction(Data) : gcnew IntelliSenseItemScript(Data);
 
-					Scripts->Add(EditorID, NewItem);
+					IntelliSenseItemScript^ Existing = nullptr;
+					if (!Scripts->TryGetValue(EditorID, Existing))
+						Scripts->Add(EditorID, NewItem);
 				}
 
 				for (int i = 0; i < DataHandlerData->QuestCount; ++i)
@@ -58,7 +60,9 @@ namespace cse
 						(nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CString(EditorID).c_str()));
 					IntelliSenseItemQuest^ NewItem = gcnew IntelliSenseItemQuest(Data, AttachedScript.get(), gcnew String(Data->FullName));
 
-					Quests->Add(EditorID, NewItem);
+					IntelliSenseItemQuest^ Existing = nullptr;
+					if (!Quests->TryGetValue(EditorID, Existing))
+						Quests->Add(EditorID, NewItem);
 				}
 
 				for (int i = 0; i < DataHandlerData->GlobalCount; ++i)
@@ -86,7 +90,10 @@ namespace cse
 					}
 
 					auto NewItem = gcnew IntelliSenseItemGlobalVariable(Data, VarType, GetVariableValueString(Data));
-					GlobalVariables->Add(EditorID, NewItem);
+
+					IntelliSenseItemGlobalVariable^ Existing = nullptr;
+					if (!GlobalVariables->TryGetValue(EditorID, Existing))
+						GlobalVariables->Add(EditorID, NewItem);
 				}
 
 				for (int i = 0; i < DataHandlerData->MiscFormListCount; ++i)
@@ -100,7 +107,10 @@ namespace cse
 						(nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CString(EditorID).c_str()));
 
 					IntelliSenseItemForm^ NewItem = gcnew IntelliSenseItemForm(Data, AttachedScript.get());
-					Forms->Add(EditorID, NewItem);
+
+					IntelliSenseItemForm^ Existing = nullptr;
+					if (!Forms->TryGetValue(EditorID, Existing))
+						Forms->Add(EditorID, NewItem);
 				}
 
 				nativeWrapper::WriteToMainWindowStatusBar(2, "IntelliSense DB updated.");
@@ -457,7 +467,10 @@ namespace cse
 				}
 
 				auto NewItem = gcnew IntelliSenseItemGameSetting(GMST, VarType, GetVariableValueString(GMST));
-				GameSettings->Add(EditorID, NewItem);
+
+				IntelliSenseItemGameSetting^ Existing = nullptr;
+				if (!GameSettings->TryGetValue(EditorID, Existing))
+					GameSettings->Add(EditorID, NewItem);
 			}
 
 			DebugPrint(String::Format("\tParsed {0} Game Settings", Data->GMSTCount));

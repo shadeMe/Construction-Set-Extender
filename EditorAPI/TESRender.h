@@ -454,3 +454,120 @@ public:
 	static BSTreeManager**			Singleton;
 };
 STATIC_ASSERT(sizeof(BSTreeManager) == 0x28);
+
+
+class Atmosphere;
+class Stars;
+class Moon;
+class Clouds;
+class Precipitation;
+
+// 08
+class SkyObject
+{
+public:
+	// members
+	//*00*/ void**					vtbl;
+	/*04*/ NiNode*					rootNode;		// smart ptr
+
+	virtual void Destroy(bool Free) = 0;
+};
+STATIC_ASSERT(sizeof(SkyObject) == 0x8);
+
+
+//28
+class Sun : public SkyObject
+{
+public:
+	// members
+	//*00*/ SkyObject
+	/*08*/ NiBillboardNode*		sunBillboard;		// smart ptr
+	/*0C*/ NiBillboardNode*		sunGlareBillboard;	// smart ptr
+	/*10*/ NiTriShape*			sunGeometry;		// smart ptr
+	/*14*/ NiTriShape*			sunGlareGeometry;	// smart ptr
+	/*18*/ TESRender::PickData*	pickData;
+	/*1C*/ NiDirectionalLight*	sunDirectionalLight;	// smart ptr
+	/*20*/ float				unk20;
+	/*24*/ UInt8				unk24;
+	/*25*/ UInt8				pad25[3];
+};
+STATIC_ASSERT(sizeof(Sun) == 0x28);
+
+// 108
+class Sky
+{
+public:
+	// 08
+	struct WeatherSelectionList
+	{
+		/*00*/ tList<TESWeather>	list;
+	};
+	STATIC_ASSERT(sizeof(WeatherSelectionList) == 0x8);
+
+	enum
+	{
+		kFlagE0_Unk0 = 0,
+		kFlagE0_Unk1 = 1,			// used with normal interiors
+		kFlagE0_Unk2 = 2,			// used with interiors that behave like exteriors
+		kFlagE0_Unk3 = 3,			// used with exteriors
+		kFlagE0_Unk4 = 4,
+	};
+
+	enum
+	{
+		kColors_SkyUpper			= 0,
+		kColors_Fog					= 1,
+		kColors_CloudsLower			= 2,
+		kColors_Ambient				= 3,
+		kColors_Sunlight			= 4,
+		kColors_Sun					= 5,
+		kColors_Stars				= 6,
+		kColors_SkyLower			= 7,
+		kColors_Horizon				= 8,
+		kColors_CloudsUpper			= 9,
+	};
+
+	// members
+	//*000*/ void**					vtbl;
+	/*004*/ NiNode*					skyNode;		// smart ptr
+	/*008*/ NiNode*					moonsRootNode;	// smart ptr
+	/*00C*/ NiAmbientLight*			unk00C;			// smart ptr
+	/*010*/ TESClimate*				climate010;
+	/*014*/ TESWeather*				weather014;
+	/*018*/ UInt32					unk018;
+	/*01C*/ TESWeather*				weather01C;
+	/*020*/ UInt32					unk020;
+	/*024*/ Atmosphere*				atmosphere;
+	/*028*/ Stars*					stars;
+	/*02C*/ Sun*					sun;
+	/*030*/ Clouds*					clouds;
+	/*034*/ Moon*					moonMasser;
+	/*038*/ Moon*					moonSecunda;
+	/*03C*/ Precipitation*			precipitation;
+	/*040*/ Vector3					colors[10];
+	/*0B8*/ Vector3					unk0B8;
+	/*0C4*/ float					unk0C4;
+	/*0C8*/ float					unk0C8;
+	/*0CC*/ float					fogNearPlane;
+	/*0D0*/ float					fogFarPlane;
+	/*0D4*/ float					timeOfDay;
+	/*0D8*/ float					unk0D8;
+	/*0DC*/ float					unk0DC;
+	/*0E0*/ UInt32					unk0E0;
+	/*0E4*/ WeatherSelectionList*	currentWeatherSelection;
+	/*0E8*/ float					unk0E8;
+	/*0EC*/ UInt32					unk0EC;
+	/*0F0*/ UInt32					unk0F0;
+	/*0F4*/ float					unk0F4;
+	/*0F8*/ float					unk0F8;
+	/*0FC*/ UInt32					pad0FC;
+	/*100*/ UInt32					flags100;
+	/*104*/ UInt8					unk104;
+	/*105*/ UInt8					pad105;
+
+
+	virtual void Destroy(bool Free) = 0;
+
+	static Sky**			Singleton;
+};
+STATIC_ASSERT(sizeof(Sky) == 0x108);

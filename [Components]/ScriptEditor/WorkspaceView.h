@@ -285,6 +285,7 @@ namespace cse
 			ConcreteWorkspaceViewDeclareClickHandler(ToolBarSanitizeScriptText);
 			ConcreteWorkspaceViewDeclareClickHandler(ToolBarBindScript);
 			ConcreteWorkspaceViewDeclareClickHandler(ToolBarSnippetManager);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarSyncScriptsToDisk);
 
 			void											ModelStateChangeHandler_Dirty(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E);
 			void											ModelStateChangeHandler_ByteCodeSize(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E);
@@ -366,6 +367,7 @@ namespace cse
 			ToolStripButton^						ToolBarSanitizeScriptText;
 			ToolStripButton^						ToolBarBindScript;
 			ToolStripButton^						ToolBarSnippetManager;
+			ToolStripButton^						ToolBarSyncScriptsToDisk;
 			ToolStripProgressBar^					ToolBarByteCodeSize;
 
 			SplitContainer^							WorkspaceSplitter;

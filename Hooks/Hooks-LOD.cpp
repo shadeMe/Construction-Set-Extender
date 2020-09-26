@@ -1,5 +1,6 @@
 #include "Hooks-LOD.h"
 #include "Render Window\AuxiliaryViewport.h"
+#include "WorkspaceManager.h"
 
 #pragma warning(push)
 #pragma warning(disable: 4005 4748)

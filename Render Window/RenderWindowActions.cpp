@@ -5,6 +5,7 @@
 #include "[Common]\CLIWrapper.h"
 #include "AuxiliaryViewport.h"
 #include "ToolbarOSDLayer.h"
+#include "RenderWindowFlyCamera.h"
 
 namespace cse
 {
@@ -895,6 +896,18 @@ namespace cse
 																	RenderModalJumpToCell,
 																	nullptr,
 																	ImGuiWindowFlags_AlwaysAutoResize);
+				}
+			});
+
+			BasicRWA ToggleFlyCamera("Toggle Fly Camera", "Enable/Disable free camera movement inside the render window.",
+				ExecutionContext::kMode_All, []() {
+
+				if (RenderWindowFlyCamera::Instance.IsActive() == false)
+					RenderWindowFlyCamera::Instance.Deactivate();
+				else
+				{
+					RenderWindowFlyCamera::Instance.Activate();
+					achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_FlyCamera);
 				}
 			});
 

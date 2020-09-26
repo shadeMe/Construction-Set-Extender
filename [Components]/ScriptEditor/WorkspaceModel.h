@@ -100,6 +100,7 @@ namespace cse
 			void									ClearAutoRecovery();
 			void									JumpToScript(String^ TargetEditorID);
 			String^									GetLineText(UInt32 Line);
+			void									ShowSyncedScriptWarning();
 
 			void									OnStateChangedDirty(bool Modified);
 			void									OnStateChangedByteCodeSize(UInt32 Size);
@@ -118,7 +119,6 @@ namespace cse
 			UInt32									CurrentScriptBytecode;
 			UInt32									CurrentScriptBytecodeLength;
 			bool									NewScriptFlag;
-			bool									Closed;
 
 			ConcreteWorkspaceModelController^		ModelController;
 			ConcreteWorkspaceModelFactory^			ModelFactory;

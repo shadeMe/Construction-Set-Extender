@@ -134,9 +134,15 @@ bool IsDiskSyncInProgress(void)
 	return scriptSync::DiskSync::Get()->InProgress;
 }
 
+void ShowDiskSyncDialog(void)
+{
+	scriptSync::DiskSyncDialog::Show();
+}
+
 void CloseAllOpenEditors(void)
 {
 	ConcreteWorkspaceViewFactory::Instance->Clear();
+	scriptSync::DiskSyncDialog::Close();
 }
 
 void UpdateIntelliSenseDatabase(void)
@@ -201,6 +207,7 @@ componentDLLInterface::ScriptEditorInterface g_InteropInterface =
 	InstantiateEditors,
 	InstantiateEditorsAndHighlight,
 	IsDiskSyncInProgress,
+	ShowDiskSyncDialog,
 	CloseAllOpenEditors,
 	UpdateIntelliSenseDatabase,
 	GetOpenEditorCount,

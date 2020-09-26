@@ -19,5 +19,6 @@ namespace cse
 		_DeclareMemHdlr(ScriptCompileCheckSyntaxInvalidRef, "fixes a bug that causes a CTD when a ref var was used as a calling reference in a compound expression, e.g. message \"object agi: %d\" someRefvar.getAV Agility");
 		_DeclareMemHdlr(ScriptCompilerWriteByteCodeCheckSetExprParentheses, "fixes a bug that causes the script compiler to skip warning the user about mismatching parentheses in set expressions");
 		_DeclareMemHdlr(ScriptCompilerParseIFExpression, "patches the compiler to throw an error when the condition expression doesn't get parsed successfully");
+		_DeclareMemHdlr(PopulateScriptComboBoxDisallowUDFs, "prevents the enumeration of user-defined function scripts when enumerating potential scripts for scriptable forms");
 	}
 }

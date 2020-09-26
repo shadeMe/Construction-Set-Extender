@@ -322,7 +322,7 @@
   <data name="ScriptListDialogFlagSyncing" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\arrow_Sync_16xLG.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ToolBarScriptSyncToDisk" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="ToolBarSyncScriptsToDisk" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\SyncContents_5706.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ScriptSyncStatusFailure" type="System.Resources.ResXFileRef, System.Windows.Forms">
@@ -365,6 +365,12 @@
     <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\BrushTool_207.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ScriptSyncStatusEmpty" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\transparent_161.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>Images\transparent_16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ScriptSyncStatusIndeterminate" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Compile_191.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PreferencesDialogCategoryScriptSync" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\SyncContents_5706.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

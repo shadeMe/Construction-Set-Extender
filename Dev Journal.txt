@@ -2,6 +2,13 @@ To-Do
 =====
 
 IMMEDIATE  >>
+	>> Ship the visual styles enabled version of the CS with the main archive
+		> Reqd. by the new subclassing code
+	>> SetWindowLong GWL_WNDPROC vanilla usage
+		> Edit control
+		> Object window splitter
+		> Preview control
+		> Region editor
 
 
 NOTE	---->
@@ -10,7 +17,6 @@ NOTE	---->
 CSE		---->
 
 	BUGFIX			=
-		> Fix the duplicate editor ID assignment
 		> Prevent the selection of refs through the cell view dialog when editing landscape/pathgrids
 		> Dirty edits?
 			>> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=25301452
@@ -19,9 +25,11 @@ CSE		---->
 
 
 	ENHANCEMENT		=
-		> Prevent UDF scripts from being attached to forms
+		> Add default form for Nukem, credit in readMe
+		> Port Nukem's dark mode
 		> Add support for TOD/sunlight lighting in exteriors
 			> Currently only works with interiors that behave like exteriors
+			>> Seems likely that the issue is dependent on modifying the fragment shaders used for lighting in exteriors
 		> Scroll cell view object list on selection change
 		> Double click on formIds/editorIds in the console
 		> Wildcard find/replace
@@ -45,14 +53,13 @@ CSE		---->
 
 
 
+
 SE		---->
 
 	IMMEDIATE		=
 
 
 	BUGFIX			=
-		> Bookmarks don't get added to the correct line
-			>> Open zzPiiiPzzToDo, add a couple of new lines and add a bookmark to the last line. It gets assigned to the first line instead.
 		> Editor doesn't acquire focus after switching scripts/on opening and general focus related wonkiness
 			>> Even with the FocusHelper, the Tab key needs to be pressed to relinquish focus to the text editor. Not sure what else to do
 
@@ -61,9 +68,7 @@ SE		---->
 		> Use ObjectListView in the LineTrackingManager
 		> Prevent the creation of duplicate script editor IDs
 		> Fuzzy search for IntelliSense
-		> Ability to edit/compile scripts in external editors
-			> Filter deleted scripts
-			> Prevent the editing of syncing scripts
+		> Language server impl for external editors
 		> Change margin
 
 

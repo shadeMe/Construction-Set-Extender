@@ -113,7 +113,7 @@ namespace cse
 
 			HideListViewToolTip();
 			HideInsightToolTip();
-			Form->Close();
+			Form->ForceClose();
 
 			delete InsightPopup;
 			delete ListViewPopup;

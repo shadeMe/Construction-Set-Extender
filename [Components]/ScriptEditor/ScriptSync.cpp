@@ -5,6 +5,9 @@
 #include "Preferences.h"
 #include "IntelliSenseDatabase.h"
 #include "WorkspaceModelComponents.h"
+#include "SelectScriptDialog.h"
+#include "Globals.h"
+#include "Preferences.h"
 
 namespace cse
 {
@@ -17,10 +20,15 @@ namespace cse
 				this->ScriptEditorID = ScriptEditorID;
 				this->DiskFilePath = Path::Combine(WorkingDir, ScriptEditorID + ScriptFileExtension);
 				this->LogFilePath = Path::Combine(WorkingDir, ScriptEditorID + LogFileExtension);
+				this->LastSyncAttemptTimestamp = DateTime::Now;
+				this->LastSyncAttemptDirection = SyncDirection::None;
 			}
 
-			System::String^ SyncedScriptData::ReadFileContents(bool UpdateSyncTimestamp)
+			System::String^ SyncedScriptData::ReadFileContents()
 			{
+				LastSyncAttemptTimestamp = DateTime::Now;
+				LastSyncAttemptDirection = SyncDirection::FromDisk;
+
 				String^ Out = nullptr;
 				if (File::Exists(DiskFilePath))
 				{
@@ -30,21 +38,20 @@ namespace cse
 					}
 				}
 
-				if (UpdateSyncTimestamp)
-					FileLastSyncAttempt = DateTime::Now;
-
 				return Out;
 			}
 
 			bool SyncedScriptData::WriteFileContents(String^ Text, bool Overwrite)
 			{
+				LastSyncAttemptTimestamp = DateTime::Now;
+				LastSyncAttemptDirection = SyncDirection::ToDisk;
+
 				if (File::Exists(DiskFilePath) && Overwrite == false)
 					return true;
 
 				try
 				{
 					File::WriteAllText(DiskFilePath, Text);
-					FileLastSyncAttempt = DateTime::Now;
 				}
 				catch (Exception^ E) {
 					DebugPrint("Couldn't write to script sync file @ " + DiskFilePath + "! Exception: " + E->ToString(), true);
@@ -57,20 +64,22 @@ namespace cse
 			System::String^ SyncedScriptData::ReadLog()
 			{
 				String^ Out = nullptr;
-				if (File::Exists(DiskFilePath))
+				if (File::Exists(LogFilePath))
 				{
 					try { Out = File::ReadAllText(LogFilePath); }
 					catch (Exception^ E) {
 						DebugPrint("Couldn't read from script sync log @ " + LogFilePath + "! Exception: " + E->ToString(), true);
 					}
 				}
+				else
+					Out = "";
 
 				return Out;
 			}
 
 			bool SyncedScriptData::WriteLog(List<String^>^ Messages)
 			{
-				try { File::WriteAllLines(DiskFilePath, Messages); }
+				try { File::WriteAllLines(LogFilePath, Messages); }
 				catch (Exception^ E) {
 					DebugPrint("Couldn't write to script sync log @ " + LogFilePath + "! Exception: " + E->ToString(), true);
 					return false;
@@ -81,13 +90,16 @@ namespace cse
 
 			void SyncedScriptData::RemoveLog()
 			{
+				if (!File::Exists(LogFilePath))
+					return;
+
 				try { File::Delete(LogFilePath); }
 				catch (Exception^ E) {
 					DebugPrint("Couldn't delete script sync log @ " + LogFilePath + "! Exception: " + E->ToString(), true);
 				}
 			}
 
-			void DiskSync::DoSync(bool Force, UInt32% OutFailedCompilations)
+			void DiskSync::DoSyncLoop(bool Force, UInt32% OutFailedCompilations)
 			{
 				Debug::Assert(SyncInProgress == true);
 
@@ -102,57 +114,12 @@ namespace cse
 
 					for each (SyncedScriptData ^ Data in SyncedScripts)
 					{
-						WriteToConsoleContext("Compiling script '" + Data->EditorID + " @ " + Data->FilePath);
-						ExportScriptToFile(Data, false);
-
-						if (Force || Data->FileLastWrite > Data->FileLastSyncAttempt)
+						SyncToDisk(Data, false);
+						if (Force || Data->LastFileWriteTime > Data->LastSyncAttemptTime)
 						{
-							String^ DiskFileContents = Data->ReadFileContents(true);
-							if (DiskFileContents == nullptr)
-							{
-								WriteToConsoleContext("\tError reading from disk file");
-								continue;
-							}
-
-							SyncPreCompileEventArgs^ PrecompileArgs = gcnew SyncPreCompileEventArgs(Data->EditorID, DiskFileContents);
-							ScriptPreCompile(this, PrecompileArgs);
-
-							SyncPostCompileEventArgs^ PostcompileArgs = gcnew SyncPostCompileEventArgs(Data->EditorID);
-							bool CompileSuccess = false;
-							List<String^>^ CompileMessages = gcnew List<String^>();
-
-							CompileTimer->Restart();
-							CompileScript(Data, DiskFileContents, CompileSuccess, CompileMessages);
-							CompileTimer->Stop();
-
-							if (CompileSuccess)
-								WriteToConsoleContext("\tCompilation succeeded! Messages:");
-							else
-							{
-								WriteToConsoleContext("\tCompilation failed! Messages:");
+							WriteToConsoleContext("Compiling script '" + Data->EditorID + " @ " + Data->FilePath);
+							if (!SyncFromDisk(Data))
 								OutFailedCompilations += 1;
-							}
-
-							for each (String ^ Message in CompileMessages)
-								WriteToConsoleContext("\t\t" + Message);
-
-							if (CompileSuccess)
-							{
-								List<String^>^ LogMessages = gcnew List<String ^>;
-								LogMessages->Add(FormatLogMessage(1, "Compiled successfully at " + DateTime::Now.ToString(), false));
-								LogMessages->Add(FormatLogMessage(1, "Elapsed Time: " + CompileTimer->Elapsed.Seconds + " seconds", false));
-								LogMessages->AddRange(CompileMessages);
-
-								CompileMessages = LogMessages;
-							}
-
-							if (Data->WriteLog(CompileMessages) == false)
-								WriteToConsoleContext("\tError writing to log file");
-
-
-							PostcompileArgs->Success = CompileSuccess;
-							PostcompileArgs->OutputMessages = CompileMessages;
-							ScriptPostCompile(this, PostcompileArgs);
 						}
 					}
 
@@ -162,10 +129,15 @@ namespace cse
 			}
 
 
-			bool DiskSync::ExportScriptToFile(SyncedScriptData^ SyncedScript, bool Overwrite)
+			bool DiskSync::SyncToDisk(SyncedScriptData^ SyncedScript, bool Overwrite)
 			{
+				auto EventArgs = gcnew SyncWriteToDiskEventArgs(SyncedScript->EditorID, DateTime::Now);
 				if (File::Exists(SyncedScript->FilePath) && Overwrite == false)
+				{
+					EventArgs->Success = true;
+					ScriptWriteToDisk(this, EventArgs);
 					return true;
+				}
 
 				CString EID(SyncedScript->EditorID);
 				DisposibleDataAutoPtr<componentDLLInterface::ScriptData> NativeScript
@@ -178,7 +150,66 @@ namespace cse
 				ScriptTextMetadataHelper::DeserializeRawScriptText(gcnew String(NativeScript->Text),
 					ScriptText, EmbeddedMetadata);
 
-				return SyncedScript->WriteFileContents(ScriptText, false);
+				EventArgs->Success = SyncedScript->WriteFileContents(ScriptText, Overwrite);
+				EventArgs->AccessTimestamp = SyncedScript->LastSyncAttemptTime;
+				ScriptWriteToDisk(this, EventArgs);
+
+				return EventArgs->Success;
+			}
+
+			bool DiskSync::SyncFromDisk(SyncedScriptData^ SyncedScript)
+			{
+				bool Failed = false;
+
+				String^ DiskFileContents = SyncedScript->ReadFileContents();
+				if (DiskFileContents == nullptr)
+				{
+					WriteToConsoleContext("\tError reading from disk file");
+					Failed = true;
+					return Failed;
+				}
+
+				SyncPreCompileEventArgs^ PrecompileArgs = gcnew SyncPreCompileEventArgs(SyncedScript->EditorID, DiskFileContents, SyncedScript->LastSyncAttemptTime);
+				ScriptPreCompile(this, PrecompileArgs);
+
+				SyncPostCompileEventArgs^ PostcompileArgs = gcnew SyncPostCompileEventArgs(SyncedScript->EditorID);
+				bool CompileSuccess = false;
+				List<String^>^ CompileMessages = gcnew List<String^>();
+
+				Stopwatch^ CompileTimer = gcnew Stopwatch;
+				CompileTimer->Restart();
+				CompileScript(SyncedScript, DiskFileContents, CompileSuccess, CompileMessages);
+				CompileTimer->Stop();
+
+				if (CompileSuccess)
+					WriteToConsoleContext("\tCompilation succeeded! Messages:");
+				else
+				{
+					WriteToConsoleContext("\tCompilation failed! Messages:");
+					Failed = true;
+				}
+
+				for each (String ^ Message in CompileMessages)
+					WriteToConsoleContext("\t\t" + Message);
+
+				if (CompileSuccess)
+				{
+					List<String^>^ LogMessages = gcnew List<String^>;
+					LogMessages->Add(FormatLogMessage(1, "Compiled successfully at " + DateTime::Now.ToString(), false));
+					LogMessages->Add(FormatLogMessage(1, "Elapsed Time: " + CompileTimer->Elapsed.Milliseconds + " milliseconds", false));
+					LogMessages->AddRange(CompileMessages);
+
+					CompileMessages = LogMessages;
+				}
+
+				if (SyncedScript->WriteLog(CompileMessages) == false)
+					WriteToConsoleContext("\tError writing to log file");
+
+				PostcompileArgs->Success = CompileSuccess;
+				PostcompileArgs->OutputMessages = CompileMessages;
+				ScriptPostCompile(this, PostcompileArgs);
+
+				return Failed;
 			}
 
 			ref struct PreprocessorErrorCapture
@@ -318,6 +349,18 @@ namespace cse
 					CString OrgScriptText(OriginalText);
 					nativeWrapper::g_CSEInterfaceTable->ScriptEditor.SetScriptText(NativeScript->ParentForm, OrgScriptText.c_str());
 				}
+				else
+				{
+					for (int i = 0; i < CompilationResult->CompileErrorData.Count; i++)
+					{
+						String^ Message = gcnew String(CompilationResult->CompileErrorData.ErrorListHead[i].Message);
+						int Line = CompilationResult->CompileErrorData.ErrorListHead[i].Line;
+						if (Line < 1)
+							Line = 1;
+
+						OutMessages->Add(FormatLogMessage(Line, Message, true));
+					}
+				}
 			}
 
 
@@ -341,7 +384,7 @@ namespace cse
 				if (SyncInProgress)
 				{
 					UInt32 Failed = 0;
-					DoSync(false, Failed);
+					DoSyncLoop(false, Failed);
 				}
 			}
 
@@ -356,9 +399,13 @@ namespace cse
 				SyncTimer = gcnew Timer;
 				SyncTimer->Interval = 3000;
 				SyncTimer->Enabled = false;
+				SyncTimer->Tick += gcnew System::EventHandler(this, &DiskSync::SyncTimer_Tick);
 
 				CString ContextName(gcnew String("Script Sync"));
 				ConsoleMessageLogContext = nativeWrapper::g_CSEInterfaceTable->EditorAPI.RegisterConsoleContext(ContextName.c_str());
+
+				AutomaticSync = preferences::SettingsHolder::Get()->ScriptSync->AutoSyncChanges;
+				AutomaticSyncIntervalSeconds = preferences::SettingsHolder::Get()->ScriptSync->AutoSyncInterval;
 			}
 
 			DiskSync::~DiskSync()
@@ -379,7 +426,7 @@ namespace cse
 
 				this->WorkingDir = WorkingDir;
 
-				List<String^>^ Existing = gcnew List<String^>;
+				List<Tuple<String^, DateTime>^>^ Existing = gcnew List<Tuple<String ^, DateTime> ^>;
 				for each (String ^ EID in SyncedScriptEditorIDs)
 				{
 
@@ -388,7 +435,7 @@ namespace cse
 					this->EditorIDsToSyncedData->Add(EID, Data);
 
 					if (File::Exists(Data->FilePath))
-						Existing->Add(EID);
+						Existing->Add(gcnew Tuple<String ^, DateTime>(EID, System::IO::File::GetLastWriteTime(Data->FilePath)));
 				}
 
 
@@ -397,11 +444,19 @@ namespace cse
 
 				SyncInProgress = true;
 
+				WriteToConsoleContext("Syncing === STARTED!");
 				for each (SyncedScriptData ^ Data in SyncedScripts)
 				{
-					ExportScriptToFile(Data,
-									StartEventArgs->ExistingFilesOnDisk[Data->EditorID]
-									== SyncStartEventArgs::ExistingFileHandlingOperation::Overwrite);
+					WriteToConsoleContext("Writing script '" + Data->EditorID + " to disk @ " + Data->FilePath);
+					bool Overwrite = StartEventArgs->ExistingFilesOnDisk->ContainsKey(Data->EditorID) &&
+									StartEventArgs->ExistingFilesOnDisk[Data->EditorID] == SyncStartEventArgs::ExistingFileHandlingOperation::Overwrite;
+
+					if (!SyncToDisk(Data, Overwrite))
+						WriteToConsoleContext("\tError writing to disk file for the first time");
+
+					auto InitLogMessages = gcnew List<String^>;
+					InitLogMessages->Add("");
+					Data->WriteLog(InitLogMessages);
 				}
 			}
 
@@ -416,7 +471,7 @@ namespace cse
 				Debug::Assert(ExecutingSyncLoop == false);
 
 				UInt32 Failed = 0;
-				DoSync(false, Failed);
+				DoSyncLoop(false, Failed);
 
 
 				SyncStopEventArgs^ StopEventArgs = gcnew SyncStopEventArgs(SyncedScripts->Count, Failed);
@@ -433,6 +488,8 @@ namespace cse
 
 				this->EditorIDsToSyncedData->Clear();
 				this->SyncedScripts->Clear();
+
+				WriteToConsoleContext("Syncing === ENDED!");
 			}
 
 			bool DiskSync::IsScriptBeingSynced(String^ ScriptEditorID)
@@ -450,6 +507,52 @@ namespace cse
 					Out = "Error reading log file. Check the console for more information.";
 
 				return Out;
+			}
+
+			void DiskSync::ForceSyncToDisk(String^ ScriptEditorID)
+			{
+				if (IsScriptBeingSynced(ScriptEditorID) == false)
+					return;
+
+				auto Data = EditorIDsToSyncedData[ScriptEditorID];
+				WriteToConsoleContext("Forcefully syncing script '" + Data->EditorID + " to disk @ " + Data->FilePath);
+
+				SyncToDisk(Data, true);
+			}
+
+			void DiskSync::ForceSyncFromDisk(String^ ScriptEditorID)
+			{
+				if (IsScriptBeingSynced(ScriptEditorID) == false)
+					return;
+
+				auto Data = EditorIDsToSyncedData[ScriptEditorID];
+				WriteToConsoleContext("Forcefully syncing script '" + Data->EditorID + " from disk @ " + Data->FilePath);
+
+				SyncFromDisk(Data);
+			}
+
+			void DiskSync::OpenLogFile(String^ ScriptEditorID)
+			{
+				if (IsScriptBeingSynced(ScriptEditorID) == false)
+					return;
+
+				auto Path = EditorIDsToSyncedData[ScriptEditorID]->LogPath;
+				try { Process::Start(Path); }
+				catch (Exception^ E) {
+					DebugPrint("Couldn't open script sync log file @" + Path + "! Exception: " + E->ToString(), true);
+				}
+			}
+
+			void DiskSync::OpenScriptFile(String^ ScriptEditorID)
+			{
+				if (IsScriptBeingSynced(ScriptEditorID) == false)
+					return;
+
+				auto Path = EditorIDsToSyncedData[ScriptEditorID]->FilePath;
+				try { Process::Start(Path); }
+				catch (Exception^ E) {
+					DebugPrint("Couldn't open script sync disk file @" + Path + "! Exception: " + E->ToString(), true);
+				}
 			}
 
 			DiskSync^ DiskSync::Get()
@@ -485,14 +588,20 @@ namespace cse
 				this->LVSyncedStripsContextMenu = (gcnew System::Windows::Forms::ContextMenuStrip(this->components));
 				this->SyncToDiskToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 				this->SyncFromDiskToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+				this->ToolStripSeparator1 = (gcnew System::Windows::Forms::ToolStripSeparator());
+				this->OpenLogToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+				this->OpenSyncedFileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 				this->TextBoxSelectedScriptLog = (gcnew System::Windows::Forms::TextBox());
 				this->LabelSelectedScriptLog = (gcnew System::Windows::Forms::Label());
+				this->ButtonOpenWorkingDir = (gcnew System::Windows::Forms::Button());
 				this->GroupSyncSettings->SuspendLayout();
 				this->GroupStartupFileHandling->SuspendLayout();
 				(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->NumericAutoSyncSeconds))->BeginInit();
 				(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewSyncedScripts))->BeginInit();
 				this->LVSyncedStripsContextMenu->SuspendLayout();
 				this->SuspendLayout();
+
+
 				//
 				// LabelWorkingDir
 				//
@@ -508,12 +617,12 @@ namespace cse
 				this->TextBoxWorkingDir->Location = System::Drawing::Point(516, 6);
 				this->TextBoxWorkingDir->Name = L"TextBoxWorkingDir";
 				this->TextBoxWorkingDir->ReadOnly = true;
-				this->TextBoxWorkingDir->Size = System::Drawing::Size(229, 20);
+				this->TextBoxWorkingDir->Size = System::Drawing::Size(179, 20);
 				this->TextBoxWorkingDir->TabIndex = 1;
 				//
 				// ButtonSelectWorkingDir
 				//
-				this->ButtonSelectWorkingDir->Location = System::Drawing::Point(752, 6);
+				this->ButtonSelectWorkingDir->Location = System::Drawing::Point(701, 6);
 				this->ButtonSelectWorkingDir->Name = L"ButtonSelectWorkingDir";
 				this->ButtonSelectWorkingDir->Size = System::Drawing::Size(67, 20);
 				this->ButtonSelectWorkingDir->TabIndex = 2;
@@ -539,7 +648,7 @@ namespace cse
 				this->CheckboxAutoDeleteLogs->AutoSize = true;
 				this->CheckboxAutoDeleteLogs->Location = System::Drawing::Point(16, 134);
 				this->CheckboxAutoDeleteLogs->Name = L"CheckboxAutoDeleteLogs";
-				this->CheckboxAutoDeleteLogs->Size = System::Drawing::Size(255, 17);
+				this->CheckboxAutoDeleteLogs->Size = System::Drawing::Size(252, 17);
 				this->CheckboxAutoDeleteLogs->TabIndex = 4;
 				this->CheckboxAutoDeleteLogs->Text = L"Automatically delete log files when syncing ends";
 				this->CheckboxAutoDeleteLogs->UseVisualStyleBackColor = true;
@@ -654,10 +763,11 @@ namespace cse
 					this->ColScriptName,
 						this->ColLastSyncTime
 				});
-				this->ListViewSyncedScripts->ContextMenuStrip = this->LVSyncedStripsContextMenu;
 				this->ListViewSyncedScripts->Cursor = System::Windows::Forms::Cursors::Default;
+				this->ListViewSyncedScripts->FullRowSelect = true;
 				this->ListViewSyncedScripts->HideSelection = false;
 				this->ListViewSyncedScripts->Location = System::Drawing::Point(15, 36);
+				this->ListViewSyncedScripts->MultiSelect = false;
 				this->ListViewSyncedScripts->Name = L"ListViewSyncedScripts";
 				this->ListViewSyncedScripts->ShowGroups = false;
 				this->ListViewSyncedScripts->Size = System::Drawing::Size(396, 331);
@@ -676,30 +786,47 @@ namespace cse
 				//
 				this->ColLastSyncTime->Sortable = false;
 				this->ColLastSyncTime->Text = L"Last Sync Attempt Time";
-				this->ColLastSyncTime->Width = 169;
+				this->ColLastSyncTime->Width = 160;
 				//
 				// LVSyncedStripsContextMenu
 				//
-				this->LVSyncedStripsContextMenu->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(4) {
+				this->LVSyncedStripsContextMenu->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(5) {
 					this->SyncToDiskToolStripMenuItem,
-						this->SyncFromDiskToolStripMenuItem
+						this->SyncFromDiskToolStripMenuItem, this->ToolStripSeparator1, this->OpenLogToolStripMenuItem, this->OpenSyncedFileToolStripMenuItem
 				});
 				this->LVSyncedStripsContextMenu->Name = L"LVSyncedStripsContextMenu";
 				this->LVSyncedStripsContextMenu->RenderMode = System::Windows::Forms::ToolStripRenderMode::System;
 				this->LVSyncedStripsContextMenu->ShowImageMargin = false;
-				this->LVSyncedStripsContextMenu->Size = System::Drawing::Size(131, 76);
+				this->LVSyncedStripsContextMenu->Size = System::Drawing::Size(141, 98);
 				//
 				// SyncToDiskToolStripMenuItem
 				//
 				this->SyncToDiskToolStripMenuItem->Name = L"SyncToDiskToolStripMenuItem";
-				this->SyncToDiskToolStripMenuItem->Size = System::Drawing::Size(130, 22);
+				this->SyncToDiskToolStripMenuItem->Size = System::Drawing::Size(140, 22);
 				this->SyncToDiskToolStripMenuItem->Text = L"Sync To Disk";
 				//
 				// SyncFromDiskToolStripMenuItem
 				//
 				this->SyncFromDiskToolStripMenuItem->Name = L"SyncFromDiskToolStripMenuItem";
-				this->SyncFromDiskToolStripMenuItem->Size = System::Drawing::Size(130, 22);
+				this->SyncFromDiskToolStripMenuItem->Size = System::Drawing::Size(140, 22);
 				this->SyncFromDiskToolStripMenuItem->Text = L"Sync From Disk";
+				//
+				// ToolStripSeparator1
+				//
+				this->ToolStripSeparator1->Name = L"ToolStripSeparator1";
+				this->ToolStripSeparator1->Size = System::Drawing::Size(137, 6);
+				//
+				// OpenLogToolStripMenuItem
+				//
+				this->OpenLogToolStripMenuItem->Name = L"OpenLogToolStripMenuItem";
+				this->OpenLogToolStripMenuItem->Size = System::Drawing::Size(140, 22);
+				this->OpenLogToolStripMenuItem->Text = L"Open Log";
+				//
+				// OpenSyncedFileToolStripMenuItem
+				//
+				this->OpenSyncedFileToolStripMenuItem->Name = L"OpenSyncedFileToolStripMenuItem";
+				this->OpenSyncedFileToolStripMenuItem->Size = System::Drawing::Size(140, 22);
+				this->OpenSyncedFileToolStripMenuItem->Text = L"Open Synced File";
 				//
 				// TextBoxSelectedScriptLog
 				//
@@ -713,17 +840,27 @@ namespace cse
 				// LabelSelectedScriptLog
 				//
 				this->LabelSelectedScriptLog->AutoSize = true;
-				this->LabelSelectedScriptLog->Location = System::Drawing::Point(418, 36);
+				this->LabelSelectedScriptLog->Location = System::Drawing::Point(418, 35);
 				this->LabelSelectedScriptLog->Name = L"LabelSelectedScriptLog";
 				this->LabelSelectedScriptLog->Size = System::Drawing::Size(25, 13);
 				this->LabelSelectedScriptLog->TabIndex = 12;
 				this->LabelSelectedScriptLog->Text = L"Log";
+				//
+				// ButtonOpenWorkingDir
+				//
+				this->ButtonOpenWorkingDir->Location = System::Drawing::Point(774, 5);
+				this->ButtonOpenWorkingDir->Name = L"ButtonOpenWorkingDir";
+				this->ButtonOpenWorkingDir->Size = System::Drawing::Size(45, 21);
+				this->ButtonOpenWorkingDir->TabIndex = 13;
+				this->ButtonOpenWorkingDir->Text = L"Open";
+				this->ButtonOpenWorkingDir->UseVisualStyleBackColor = true;
 				//
 				// SESyncUI
 				//
 				this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 				this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 				this->ClientSize = System::Drawing::Size(830, 413);
+				this->Controls->Add(this->ButtonOpenWorkingDir);
 				this->Controls->Add(this->LabelSelectedScriptLog);
 				this->Controls->Add(this->TextBoxSelectedScriptLog);
 				this->Controls->Add(this->ListViewSyncedScripts);
@@ -735,10 +872,11 @@ namespace cse
 				this->Controls->Add(this->TextBoxWorkingDir);
 				this->Controls->Add(this->LabelWorkingDir);
 				this->DoubleBuffered = true;
-				this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedToolWindow;
+				this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedDialog;
+				this->MaximizeBox = false;
 				this->Name = L"SESyncUI";
 				this->SizeGripStyle = System::Windows::Forms::SizeGripStyle::Hide;
-				this->StartPosition = System::Windows::Forms::FormStartPosition::CenterParent;
+				this->StartPosition = System::Windows::Forms::FormStartPosition::CenterScreen;
 				this->Text = L"Sync Scripts to Disk";
 				this->GroupSyncSettings->ResumeLayout(false);
 				this->GroupSyncSettings->PerformLayout();
@@ -750,42 +888,414 @@ namespace cse
 				this->ResumeLayout(false);
 				this->PerformLayout();
 
+
+				this->ListViewSyncedScripts->SmallImageList = gcnew ImageList();
+				this->ListViewSyncedScripts->SmallImageList->ImageSize = Drawing::Size(14, 14);
+				this->ListViewSyncedScripts->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ScriptSyncStatusEmpty"));
+				this->ListViewSyncedScripts->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ScriptSyncStatusIndeterminate"));
+				this->ListViewSyncedScripts->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ScriptSyncStatusSuccess"));
+				this->ListViewSyncedScripts->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ScriptSyncStatusFailure"));
+
+				this->ColScriptName->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&DiskSyncDialog::ListViewAspectScriptNameGetter);
+				this->ColScriptName->ImageGetter = gcnew BrightIdeasSoftware::ImageGetterDelegate(&DiskSyncDialog::ListViewImageScriptNameGetter);
+				this->ColLastSyncTime->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&DiskSyncDialog::ListViewAspectLastSyncTimeGetter);
+				this->ColLastSyncTime->AspectToStringConverter = gcnew BrightIdeasSoftware::AspectToStringConverterDelegate(&DiskSyncDialog::ListViewAspectToStringLastSyncTime);
+
+
+				SyncedScripts = gcnew Dictionary<String ^, SyncedScriptListViewWrapper ^>;
+
+				DiskSyncSyncStartHandler = gcnew SyncStartEventHandler(this, &DiskSyncDialog::DiskSync_SyncStart);
+				DiskSyncSyncStopHandler = gcnew SyncStopEventHandler(this, &DiskSyncDialog::DiskSync_SyncStop);
+				DiskSyncSyncWriteToDiskHandler = gcnew SyncWriteToDiskEventHandler(this, &DiskSyncDialog::DiskSync_SyncWriteToDisk);
+				DiskSyncSyncPreCompileHandler = gcnew SyncPreCompileEventHandler(this, &DiskSyncDialog::DiskSync_SyncPreCompile);
+				DiskSyncSyncPostCompileHandler = gcnew SyncPostCompileEventHandler(this, &DiskSyncDialog::DiskSync_SyncPostCompile);
+
+				ButtonSelectWorkingDir->Click += gcnew EventHandler(this, &DiskSyncDialog::ButtonSelectWorkingDir_Click);
+				ButtonOpenWorkingDir->Click += gcnew EventHandler(this, &DiskSyncDialog::ButtonOpenWorkingDir_Click);
+				ButtonSelectScripts->Click += gcnew EventHandler(this, &DiskSyncDialog::ButtonSelectScripts_Click);
+				ButtonStartStopSync->Click += gcnew EventHandler(this, &DiskSyncDialog::ButtonStartStopSync_Click);
+				SyncToDiskToolStripMenuItem->Click += gcnew EventHandler(this, &DiskSyncDialog::SyncToDiskToolStripMenuItem_Click);
+				SyncFromDiskToolStripMenuItem->Click += gcnew EventHandler(this, &DiskSyncDialog::SyncFromDiskToolStripMenuItem_Click);
+				OpenLogToolStripMenuItem->Click += gcnew EventHandler(this, &DiskSyncDialog::OpenLogToolStripMenuItem_Click);
+				OpenSyncedFileToolStripMenuItem->Click += gcnew EventHandler(this, &DiskSyncDialog::OpenSyncedFileToolStripMenuItem_Click);
+				CheckboxAutoSync->Click += gcnew EventHandler(this, &DiskSyncDialog::CheckboxAutoSync_Click);
+
+				NumericAutoSyncSeconds->ValueChanged += gcnew EventHandler(this, &DiskSyncDialog::NumericAutoSyncSeconds_ValueChanged);
+				ListViewSyncedScripts->CellRightClick += gcnew EventHandler<BrightIdeasSoftware::CellRightClickEventArgs^>(this, &DiskSyncDialog::ListViewSyncedScripts_CellRightClick);
+				ListViewSyncedScripts->SelectedIndexChanged += gcnew EventHandler(this, &DiskSyncDialog::ListViewSyncedScripts_SelectedIndexChanged);
+
+				this->Closing += gcnew CancelEventHandler(this, &DiskSyncDialog::Dialog_Cancel);
 			}
 
 
-			//System::Object^ DiskSyncDialog::ListViewAspectScriptNameGetter(Object^ RowObject)
-			//{
-			//	return nullptr;
-			//}
+			void DiskSyncDialog::ButtonSelectWorkingDir_Click(Object^ Sender, EventArgs^ E)
+			{
+				Debug::Assert(IsSyncInProgress() == false);
 
-			//System::Object^ DiskSyncDialog::ListViewImageScriptNameGetter(Object^ RowObject)
-			//{
-			//	return nullptr;
-			//}
+				auto Result = FolderDlgWorkingDir->ShowDialog();
+				if (Result == Windows::Forms::DialogResult::OK)
+					TextBoxWorkingDir->Text = FolderDlgWorkingDir->SelectedPath;
+			}
 
-			//System::Object^ DiskSyncDialog::ListViewAspectLastSyncTimeGetter(Object^ RowObject)
-			//{
-			//	return nullptr;
-			//}
 
-			//System::Object^ DiskSyncDialog::ListViewAspectToStringLastSyncTime(Object^ RowObject)
-			//{
-			//	return nullptr;
-			//}
+			void DiskSyncDialog::ButtonOpenWorkingDir_Click(Object ^ Sender, EventArgs ^ E)
+			{
+				if (TextBoxWorkingDir->Text == "")
+					return;
+
+				auto StartInfo = gcnew System::Diagnostics::ProcessStartInfo();
+				StartInfo->FileName = TextBoxWorkingDir->Text;
+				StartInfo->UseShellExecute = true;
+				StartInfo->Verb = "open";
+
+				try { Process::Start(StartInfo); }
+				catch (Exception^ E) {
+					DebugPrint("Couldn't open script sync working directory @" + TextBoxWorkingDir->Text + "! Exception: " + E->ToString(), true);
+				}
+			}
+
+			void DiskSyncDialog::ButtonSelectScripts_Click(Object^ Sender, EventArgs^ E)
+			{
+				Debug::Assert(IsSyncInProgress() == false);
+
+				SelectScriptDialogParams^ Params = gcnew SelectScriptDialogParams;
+				Params->ShowDeletedScripts = false;
+				Params->PreventSyncedScriptSelection = true;
+
+				SelectScriptDialog ScriptSelection(Params);
+				if (ScriptSelection.HasResult == false || ScriptSelection.ResultData->SelectionCount == 0)
+					return;
+
+				SyncedScripts->Clear();
+				for each (auto Itr in ScriptSelection.ResultData->SelectedScriptEditorIDs)
+					SyncedScripts[Itr] = gcnew SyncedScriptListViewWrapper(Itr);
+
+				ListViewSyncedScripts->SetObjects(SyncedScripts->Values, false);
+			}
+
+			void DiskSyncDialog::ButtonStartStopSync_Click(Object^ Sender, EventArgs^ E)
+			{
+				if (IsSyncInProgress())
+				{
+					DiskSync::Get()->Stop();
+					return;
+				}
+
+				if (SyncedScripts->Count)
+				{
+					for each (auto% Itr in SyncedScripts->Keys)
+						SyncedScripts[Itr]->Reset();
+
+					ListViewSyncedScripts->SetObjects(SyncedScripts->Values, true);
+				}
+
+				List<String^>^ SyncedEditorIDs = gcnew List<String^>;
+				for each (auto% Itr in SyncedScripts->Keys)
+					SyncedEditorIDs->Add(Itr);
+
+				if (SyncedEditorIDs->Count == 0)
+				{
+					MessageBox::Show("At least one script must to be selected to begin syncing.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Information);
+					return;
+				}
+
+				String^ WorkingDir = TextBoxWorkingDir->Text->TrimEnd();
+				if (WorkingDir == "")
+				{
+					MessageBox::Show("A working directory must be selected to begin syncing.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Information);
+					return;
+				}
+
+				DiskSync::Get()->Start(WorkingDir, SyncedEditorIDs);
+			}
+
+			void DiskSyncDialog::SyncToDiskToolStripMenuItem_Click(Object^ Sender, EventArgs^ E)
+			{
+				Debug::Assert(IsSyncInProgress());
+
+				auto Selection = safe_cast<SyncedScriptListViewWrapper^>(LVSyncedStripsContextMenu->Tag);
+				DiskSync::Get()->ForceSyncToDisk(Selection->EditorID);
+			}
+
+			void DiskSyncDialog::SyncFromDiskToolStripMenuItem_Click(Object^ Sender, EventArgs^ E)
+			{
+				Debug::Assert(IsSyncInProgress());
+
+				auto Selection = safe_cast<SyncedScriptListViewWrapper^>(LVSyncedStripsContextMenu->Tag);
+				DiskSync::Get()->ForceSyncFromDisk(Selection->EditorID);
+			}
+
+			void DiskSyncDialog::OpenLogToolStripMenuItem_Click(Object^ Sender, EventArgs^ E)
+			{
+				auto Selection = safe_cast<SyncedScriptListViewWrapper^>(LVSyncedStripsContextMenu->Tag);
+				DiskSync::Get()->OpenLogFile(Selection->EditorID);
+			}
+
+			void DiskSyncDialog::OpenSyncedFileToolStripMenuItem_Click(Object^ Sender, EventArgs^ E)
+			{
+				auto Selection = safe_cast<SyncedScriptListViewWrapper^>(LVSyncedStripsContextMenu->Tag);
+				DiskSync::Get()->OpenScriptFile(Selection->EditorID);
+			}
+
+			void DiskSyncDialog::CheckboxAutoSync_Click(Object^ Sender, EventArgs^ E)
+			{
+				DiskSync::Get()->AutomaticSync = CheckboxAutoSync->Checked;
+			}
+
+			void DiskSyncDialog::NumericAutoSyncSeconds_ValueChanged(Object^ Sender, EventArgs^ E)
+			{
+				DiskSync::Get()->AutomaticSyncIntervalSeconds = Decimal::ToUInt32(NumericAutoSyncSeconds->Value);
+			}
+
+			void DiskSyncDialog::ListViewSyncedScripts_CellRightClick(Object^ Sender, BrightIdeasSoftware::CellRightClickEventArgs^ E)
+			{
+				if (E->Model == nullptr)
+					return;
+
+				SyncFromDiskToolStripMenuItem->Enabled = true;
+				SyncToDiskToolStripMenuItem->Enabled = true;
+				OpenLogToolStripMenuItem->Enabled = true;
+				OpenSyncedFileToolStripMenuItem->Enabled = true;
+
+				if (!IsSyncInProgress())
+				{
+					SyncFromDiskToolStripMenuItem->Enabled = false;
+					SyncToDiskToolStripMenuItem->Enabled = false;
+					OpenLogToolStripMenuItem->Enabled = false;
+					OpenSyncedFileToolStripMenuItem->Enabled = false;
+				}
+
+				E->MenuStrip = LVSyncedStripsContextMenu;
+				LVSyncedStripsContextMenu->Tag = E->Model;
+			}
+
+
+			void DiskSyncDialog::ListViewSyncedScripts_SelectedIndexChanged(Object^ Sender, EventArgs^ E)
+			{
+				auto Selection = safe_cast<SyncedScriptListViewWrapper^>(ListViewSyncedScripts->SelectedObject);
+				if (Selection == nullptr)
+				{
+					LabelSelectedScriptLog->Text = "Log";
+					TextBoxSelectedScriptLog->Text = "";
+
+					return;
+				}
+
+				LabelSelectedScriptLog->Text = "Log [" + Selection->EditorID + "]";
+
+				if (!IsSyncInProgress())
+					TextBoxSelectedScriptLog->Text = "Log contents are only available during the syncing operation.";
+				else
+					TextBoxSelectedScriptLog->Text = DiskSync::Get()->GetSyncLogContents(Selection->EditorID);
+			}
+
+			void DiskSyncDialog::Dialog_Cancel(Object^ Sender, CancelEventArgs^ E)
+			{
+				if (IsSyncInProgress())
+					DiskSync::Get()->Stop();
+			}
+
+
+			void DiskSyncDialog::DiskSync_SyncStart(Object^ Sender, SyncStartEventArgs^ E)
+			{
+				ButtonSelectScripts->Enabled = false;
+				ButtonSelectWorkingDir->Enabled = false;
+
+				ButtonStartStopSync->Text = "Stop syncing";
+				bool PromptUser = RadioPromptForFileHandling->Checked;
+				auto DefaultOp = SyncStartEventArgs::ExistingFileHandlingOperation::Overwrite;
+				if (RadioUseExistingFiles->Checked)
+				{
+					DefaultOp = SyncStartEventArgs::ExistingFileHandlingOperation::Keep;
+					Debug::Assert(PromptUser == false);
+				}
+
+				int i = 0, Total = E->ExistingFilesOnDisk->Count;
+				bool ApplyToAll = false;
+				auto KeyCopy = gcnew List<String^>(E->ExistingFilesOnDisk->Keys);
+				for each (auto Itr in KeyCopy)
+				{
+					++i;
+					if (!PromptUser || ApplyToAll)
+					{
+						E->ExistingFilesOnDisk[Itr] = DefaultOp;
+						continue;
+					}
+
+					auto LastWriteTime = E->ExistingFileLastWriteTimestamps[Itr];
+					String^ Message = "[" + i + "/" + Total + "] Script '" + Itr + "' has an existing file in the working directory, dated " + LastWriteTime.ToShortDateString() + " " + LastWriteTime.ToLongTimeString() + ".";
+					Message += "\n\nWould you like to overwrite this file?\n\nHolding down the Control key while clicking on the buttons below will apply the selection to all following conflicts.";
+
+					auto Selection = MessageBox::Show(Message, SCRIPTEDITOR_TITLE, MessageBoxButtons::YesNo, MessageBoxIcon::Warning);
+					DefaultOp = Selection == Windows::Forms::DialogResult::Yes ? SyncStartEventArgs::ExistingFileHandlingOperation::Overwrite : SyncStartEventArgs::ExistingFileHandlingOperation::Keep;
+					if (Control::ModifierKeys == Keys::Control)
+						ApplyToAll = true;
+
+					E->ExistingFilesOnDisk[Itr] = DefaultOp;
+				}
+			}
+
+			void DiskSyncDialog::DiskSync_SyncStop(Object^ Sender, SyncStopEventArgs^ E)
+			{
+				E->RemoveLogFiles = CheckboxAutoDeleteLogs->Checked;
+
+				ButtonSelectScripts->Enabled = true;
+				ButtonSelectWorkingDir->Enabled = true;
+
+				ButtonStartStopSync->Text = "Start syncing";
+
+				LabelSelectedScriptLog->Text = "Log";
+				TextBoxSelectedScriptLog->Text = "";
+			}
+
+
+			void DiskSyncDialog::DiskSync_SyncWriteToDisk(Object ^ Sender, SyncWriteToDiskEventArgs ^ E)
+			{
+				auto ListViewObject = SyncedScripts[E->ScriptEditorID];
+				ListViewObject->LastSyncTime = E->AccessTimestamp;
+				if (ListViewObject->LastSyncSuccess == SyncedScriptListViewWrapper::SuccessState::None)
+					ListViewObject->LastSyncSuccess = E->Success ? SyncedScriptListViewWrapper::SuccessState::Success : SyncedScriptListViewWrapper::SuccessState::Failure;
+
+				ListViewSyncedScripts->RefreshObject(ListViewObject);
+			}
+
+			void DiskSyncDialog::DiskSync_SyncPreCompile(Object^ Sender, SyncPreCompileEventArgs^ E)
+			{
+				auto ListViewObject = SyncedScripts[E->ScriptEditorID];
+				ListViewObject->LastSyncTime = E->AccessTimestamp;
+				ListViewObject->LastSyncSuccess = SyncedScriptListViewWrapper::SuccessState::Indeterminate;
+
+				ListViewSyncedScripts->RefreshObject(ListViewObject);
+			}
+
+			void DiskSyncDialog::DiskSync_SyncPostCompile(Object^ Sender, SyncPostCompileEventArgs^ E)
+			{
+				auto ListViewObject = SyncedScripts[E->ScriptEditorID];
+				ListViewObject->LastSyncSuccess = E->Success ? SyncedScriptListViewWrapper::SuccessState::Success : SyncedScriptListViewWrapper::SuccessState::Failure;
+
+				ListViewSyncedScripts->RefreshObject(ListViewObject);
+
+				if (ListViewSyncedScripts->SelectedObject == ListViewObject)
+					TextBoxSelectedScriptLog->Text = DiskSync::Get()->GetSyncLogContents(E->ScriptEditorID);
+			}
+
+			bool DiskSyncDialog::IsSyncInProgress()
+			{
+				return DiskSync::Get()->InProgress;
+			}
+
+			System::Object^ DiskSyncDialog::ListViewAspectScriptNameGetter(Object^ RowObject)
+			{
+				auto Model = safe_cast<SyncedScriptListViewWrapper^>(RowObject);
+				if (Model == nullptr)
+					return nullptr;
+
+				return Model->EditorID;
+			}
+
+			System::Object^ DiskSyncDialog::ListViewImageScriptNameGetter(Object^ RowObject)
+			{
+				auto Model = safe_cast<SyncedScriptListViewWrapper^>(RowObject);
+				if (Model == nullptr)
+					return nullptr;
+
+				return (int)Model->LastSyncSuccess;
+			}
+
+			System::Object^ DiskSyncDialog::ListViewAspectLastSyncTimeGetter(Object^ RowObject)
+			{
+				auto Model = safe_cast<SyncedScriptListViewWrapper^>(RowObject);
+				if (Model == nullptr)
+					return nullptr;
+
+				return Model->LastSyncTime;
+			}
+
+			System::String^ DiskSyncDialog::ListViewAspectToStringLastSyncTime(Object^ RowObject)
+			{
+				auto Model = safe_cast<DateTime^>(RowObject);
+				if (Model == nullptr || Model->Equals(DateTime()))
+					return String::Empty;
+
+				return Model->ToLongTimeString() + "   " + Model->ToShortDateString();
+			}
 
 			DiskSyncDialog::DiskSyncDialog()
 			{
 
+				InitializeComponent();
+
+				DiskSync::Get()->SyncStart += DiskSyncSyncStartHandler;
+				DiskSync::Get()->SyncStop += DiskSyncSyncStopHandler;
+				DiskSync::Get()->ScriptWriteToDisk += DiskSyncSyncWriteToDiskHandler;
+				DiskSync::Get()->ScriptPreCompile += DiskSyncSyncPreCompileHandler;
+				DiskSync::Get()->ScriptPostCompile += DiskSyncSyncPostCompileHandler;
+
+				switch (preferences::SettingsHolder::Get()->ScriptSync->ExistingFileHandlingOp)
+				{
+				case SyncStartEventArgs::ExistingFileHandlingOperation::Prompt:
+					RadioPromptForFileHandling->Checked = true;
+					break;
+				case SyncStartEventArgs::ExistingFileHandlingOperation::Overwrite:
+					RadioOverwriteExistingFiles->Checked = true;
+					break;
+				case SyncStartEventArgs::ExistingFileHandlingOperation::Keep:
+					RadioUseExistingFiles->Checked = true;
+					break;
+				}
+
+				CheckboxAutoSync->Checked = preferences::SettingsHolder::Get()->ScriptSync->AutoSyncChanges;
+				CheckboxAutoDeleteLogs->Checked = preferences::SettingsHolder::Get()->ScriptSync->AutoDeleteLogs;
+				NumericAutoSyncSeconds->Value = preferences::SettingsHolder::Get()->ScriptSync->AutoSyncInterval;
+				TextBoxWorkingDir->Text = DiskSync::Get()->WorkingDirectory;
+
+				this->Form::Show();
 			}
 
 			DiskSyncDialog::~DiskSyncDialog()
 			{
+				Debug::Assert(Singleton != nullptr);
+
+				DiskSync::Get()->SyncStart -= DiskSyncSyncStartHandler;
+				DiskSync::Get()->SyncStop -= DiskSyncSyncStopHandler;
+				DiskSync::Get()->ScriptWriteToDisk -= DiskSyncSyncWriteToDiskHandler;
+				DiskSync::Get()->ScriptPreCompile -= DiskSyncSyncPreCompileHandler;
+				DiskSync::Get()->ScriptPostCompile -= DiskSyncSyncPostCompileHandler;
+
+				if (RadioPromptForFileHandling->Checked)
+					preferences::SettingsHolder::Get()->ScriptSync->ExistingFileHandlingOp = SyncStartEventArgs::ExistingFileHandlingOperation::Prompt;
+				else if (RadioOverwriteExistingFiles->Checked)
+					preferences::SettingsHolder::Get()->ScriptSync->ExistingFileHandlingOp = SyncStartEventArgs::ExistingFileHandlingOperation::Overwrite;
+				else
+					preferences::SettingsHolder::Get()->ScriptSync->ExistingFileHandlingOp = SyncStartEventArgs::ExistingFileHandlingOperation::Keep;
+
+				preferences::SettingsHolder::Get()->ScriptSync->AutoSyncChanges = CheckboxAutoSync->Checked;
+				preferences::SettingsHolder::Get()->ScriptSync->AutoDeleteLogs = CheckboxAutoDeleteLogs->Checked;
+				preferences::SettingsHolder::Get()->ScriptSync->AutoSyncInterval = Decimal::ToUInt32(NumericAutoSyncSeconds->Value);
+
 				if (components)
 				{
 					delete components;
 				}
+
+				Singleton = nullptr;
 			}
 
+
+			void DiskSyncDialog::Show()
+			{
+				if (Singleton == nullptr)
+					Singleton = gcnew DiskSyncDialog();
+
+				Singleton->BringToFront();
+				Singleton->Focus();
+			}
+
+			void DiskSyncDialog::Close()
+			{
+				if (Singleton)
+					Singleton->Form::Close();
+			}
 		}
 
 	}

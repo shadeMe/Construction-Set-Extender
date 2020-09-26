@@ -151,6 +151,7 @@ namespace cse
 
 			extern BasicRWA FocusOnRefFilter;
 			extern BasicRWA JumpToExteriorCell;
+			extern BasicRWA ToggleFlyCamera;
 
 			namespace builtIn
 			{

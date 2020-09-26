@@ -280,6 +280,7 @@ namespace cse
 				HoldableKeyOverride*	RotateCamera;
 				HoldableKeyOverride*	PanCamera;
 				HoldableKeyOverride*	ZoomCamera;
+				ActionableKeyHandler*	ToggleFlyCamera;
 			};
 
 			class RenderWindowKeyboardManager

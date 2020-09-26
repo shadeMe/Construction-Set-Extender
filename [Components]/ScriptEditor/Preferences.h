@@ -1,5 +1,6 @@
 #pragma once
 #include "[Common]\AuxiliaryWindowsForm.h"
+#include "ScriptSync.h"
 
 namespace cse
 {
@@ -17,6 +18,23 @@ namespace cse
 			SettingsGroup^	Clone();
 
 			String^			GetCategoryName();
+		};
+
+		ref class CustomColorConverter : public System::Drawing::ColorConverter
+		{
+		public:
+			virtual bool GetStandardValuesSupported(System::ComponentModel::ITypeDescriptorContext ^ context) override { return false; }
+		};
+
+		ref class CustomColorEditor : public System::Drawing::Design::UITypeEditor
+		{
+		public:
+			virtual System::Drawing::Design::UITypeEditorEditStyle
+							GetEditStyle(ITypeDescriptorContext^ context) override;
+			virtual Object^ EditValue(ITypeDescriptorContext^ context, IServiceProvider^ provider, Object^ value) override;
+
+			virtual bool	GetPaintValueSupported(ITypeDescriptorContext^ context) override;
+			virtual void	PaintValue(System::Drawing::Design::PaintValueEventArgs^ e) override;
 		};
 
 		ref struct GeneralSettings : public SettingsGroup
@@ -102,7 +120,7 @@ namespace cse
 
 			[Category("Background Analysis")]
 			[Description("Background semantic analysis interval in Earth seconds. "
-						 "This settings affects the latency/accuracy of multiple script editor features")]
+							"This settings affects the latency/accuracy of multiple script editor features")]
 			property UInt32 BackgroundAnalysisInterval;
 
 			IntelliSenseSettings()
@@ -149,10 +167,14 @@ namespace cse
 
 			[Category("General")]
 			[Description("Text foreground color")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
 			property Color ForeColor;
 
 			[Category("General")]
 			[Description("Text background color")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
 			property Color BackColor;
 
 			[Category("General")]
@@ -191,50 +213,74 @@ namespace cse
 
 			[Category("Highlighting")]
 			[Description("Syntax highlighting foreground color for script keywords")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
 			property Color ForeColorKeywords;
 
 			[Category("Highlighting")]
 			[Description("Syntax highlighting foreground color for digits")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
 			property Color ForeColorDigits;
 
 			[Category("Highlighting")]
 			[Description("Syntax highlighting color preprocessor directives")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
 			property Color ForeColorPreprocessor;
 
 			[Category("Highlighting")]
 			[Description("Syntax highlighting color script block names")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
 			property Color ForeColorScriptBlocks;
 
 			[Category("Highlighting")]
 			[Description("Syntax highlighting color string literals")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
 			property Color ForeColorStringLiterals;
 
 			[Category("Highlighting")]
 			[Description("Syntax highlighting foreground color for comments")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
 			property Color ForeColorComments;
 
 			[Category("Highlighting")]
 			[Description("Syntax highlighting foreground color for local variables")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
 			property Color ForeColorLocalVariables;
 
 			[Category("Highlighting")]
 			[Description("Highlighting background color for selected text")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
 			property Color BackColorSelection;
 
 			[Category("Highlighting")]
 			[Description("Highlighting background color for current line")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
 			property Color BackColorCurrentLine;
 
 			[Category("Highlighting")]
 			[Description("Highlighting background color for lines exceeding the character limit (512)")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
 			property Color BackColorCharLimit;
 
 			[Category("Highlighting")]
 			[Description("Highlighting color for error squigglies")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
 			property Color UnderlineColorError;
 
 			[Category("Highlighting")]
 			[Description("Highlighting color for find results")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
 			property Color BackColorFindResults;
 
 			[Category("Highlighting")]
@@ -243,8 +289,8 @@ namespace cse
 
 			AppearanceSettings()
 			{
-				ForeColor = Control::DefaultForeColor;
-				BackColor = Control::DefaultBackColor;
+				ForeColor = Color::Black;
+				BackColor = Color::White;
 				TabSize = 4;
 				TextFont = Control::DefaultFont;
 				WordWrap = false;
@@ -255,12 +301,14 @@ namespace cse
 				ShowCodeFolding = true;
 				ShowBlockVisualizer = true;
 
-				ForeColorDigits = Control::DefaultForeColor;
-				ForeColorPreprocessor = Control::DefaultForeColor;
-				ForeColorScriptBlocks = Control::DefaultForeColor;
-				ForeColorStringLiterals = Control::DefaultForeColor;
-				ForeColorComments = Control::DefaultForeColor;
-				ForeColorLocalVariables = Control::DefaultForeColor;
+				ForeColorKeywords = Color::Blue;
+				ForeColorDigits = Color::Orange;
+				ForeColorPreprocessor = Color::Brown;
+				ForeColorScriptBlocks = Color::Brown;
+				ForeColorStringLiterals = Color::OrangeRed;
+				ForeColorComments = Color::DarkGreen;
+				ForeColorLocalVariables = Color::DarkCyan;
+
 				BackColorSelection = Color::LightBlue;
 				BackColorCurrentLine = Color::LightGray;
 				BackColorCharLimit = Color::DarkMagenta;
@@ -392,6 +440,37 @@ namespace cse
 			virtual bool Validate(SettingsGroup^ OldValue, String^% OutMessage) override { return true; }
 		};
 
+		ref struct ScriptSyncSettings : public SettingsGroup
+		{
+			static String^ CategoryName = "ScriptSync";
+
+			[Category("General")]
+			[Description("Automatically sync changes")]
+			property bool AutoSyncChanges;
+
+			[Category("General")]
+			[Description("Automatic sync interval in Earth seconds")]
+			property UInt32 AutoSyncInterval;
+
+			[Category("General")]
+			[Description("Handling of existing files in the working directory at sync start")]
+			property scriptEditor::scriptSync::SyncStartEventArgs::ExistingFileHandlingOperation ExistingFileHandlingOp;
+
+			[Category("General")]
+			[Description("Automatically delete log files at sync end")]
+			property bool AutoDeleteLogs;
+
+			ScriptSyncSettings()
+			{
+				AutoSyncChanges = true;
+				AutoSyncInterval = 5;
+				ExistingFileHandlingOp = scriptEditor::scriptSync::SyncStartEventArgs::ExistingFileHandlingOperation::Prompt;
+				AutoDeleteLogs = false;
+			}
+
+			virtual bool Validate(SettingsGroup^ OldValue, String^% OutMessage) override;
+		};
+
 
 		ref class SettingsHolder
 		{
@@ -407,6 +486,7 @@ namespace cse
 				Backup = gcnew BackupSettings;
 				Validator = gcnew ValidatorSettings;
 				FindReplace = gcnew FindReplaceSettings;
+				ScriptSync = gcnew ScriptSyncSettings;
 
 				AllGroups = gcnew List<SettingsGroup^>;
 
@@ -418,6 +498,7 @@ namespace cse
 				AllGroups->Add(Backup);
 				AllGroups->Add(Validator);
 				AllGroups->Add(FindReplace);
+				AllGroups->Add(ScriptSync);
 			}
 		public:
 			GeneralSettings^		General;
@@ -428,6 +509,7 @@ namespace cse
 			BackupSettings^			Backup;
 			ValidatorSettings^		Validator;
 			FindReplaceSettings^	FindReplace;
+			ScriptSyncSettings^		ScriptSync;
 
 			property List<SettingsGroup^>^
 									AllGroups;

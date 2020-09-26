@@ -98,7 +98,6 @@ namespace cse
 			}
 		};
 
-
 		ref struct ScriptTextMetadata
 		{
 			ref struct Bookmark

@@ -109,14 +109,14 @@ namespace cse
 		void RenderWindowGizmoManager::Initialize(RenderWindowOSD* OSD)
 		{
 #ifndef NDEBUG
-			OSD->AttachLayer(&RenderLayer);
+			//OSD->AttachLayer(&RenderLayer);
 #endif
 		}
 
 		void RenderWindowGizmoManager::Deinitialize(RenderWindowOSD* OSD)
 		{
 #ifndef NDEBUG
-			OSD->DetachLayer(&RenderLayer);
+			//OSD->DetachLayer(&RenderLayer);
 #endif
 		}
 

@@ -481,7 +481,7 @@ namespace cse
 
 					NativeScriptDataWrapper^ NewItem = gcnew NativeScriptDataWrapper(ThisScript);
 					ListDataSource->Add(NewItem);
-					if (scriptSync::DiskSync::Get()->IsScriptBeingSynced(ScriptEID))
+					if (scriptSync::DiskSync::Get()->IsScriptBeingSynced(ScriptEID) && Parameters->PreventSyncedScriptSelection)
 						ScriptsInSync->Add(NewItem);
 
 					if (DefaultSelection && ScriptEID->Equals(Parameters->SelectedScriptEditorID))
@@ -490,7 +490,7 @@ namespace cse
 			}
 
 			ScriptList->SetObjects(ListDataSource);
-			//ScriptList->DisableObjects(ScriptsInSync);
+			ScriptList->DisableObjects(ScriptsInSync);
 
 			if (ScriptList->GetItemCount())
 			{

@@ -34,7 +34,8 @@ public:
 	/*024*/ TESTexture			upperLayer;
 	/*03C*/ TESTexture			lowerLayer;
 	/*054*/ TESModel			precipitationMesh;
-	/*078*/
+	/*078*/ UInt32				unk078[(0x138 - 0x78) >> 2];
 	/*138*/ SoundListT			soundList;
-	/*140*/
+	/*140*/ UInt32				unk140[(0x180 - 0x140) >> 2];
 };
+STATIC_ASSERT(sizeof(TESWeather) == 0x180);

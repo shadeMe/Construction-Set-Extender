@@ -1,4 +1,5 @@
 #include "Wrappers.h"
+#include "WorkspaceManager.h"
 
 namespace cse
 {

@@ -99,8 +99,12 @@
     <ClCompile Include="ScriptTextEditorInterface.cpp">
       <Filter>Components\TextEditors</Filter>
     </ClCompile>
-    <ClCompile Include="WorkspaceModelComponents.cpp" />
-    <ClCompile Include="BackgroundAnalysis.cpp" />
+    <ClCompile Include="BackgroundAnalysis.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="WorkspaceModelComponents.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h">
@@ -191,8 +195,12 @@
     <ClInclude Include="Preferences.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="WorkspaceModelComponents.h" />
-    <ClInclude Include="BackgroundAnalysis.h" />
+    <ClInclude Include="BackgroundAnalysis.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="WorkspaceModelComponents.h">
+      <Filter>Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ImagesModern.resx">

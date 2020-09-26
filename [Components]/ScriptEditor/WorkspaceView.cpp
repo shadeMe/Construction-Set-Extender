@@ -4,6 +4,7 @@
 #include "Preferences.h"
 #include "IntelliSenseInterfaceView.h"
 #include "[Common]/ListViewUtilities.h"
+#include "ScriptSync.h"
 
 using namespace GlobalInputMonitor;
 
@@ -37,6 +38,10 @@ namespace cse
 
 		void WorkspaceViewTabTearing::TearingEventHandler(Object^ Sender, MouseEventArgs^ E)
 		{
+			// Preemptively remove the hook to prevent re-entry
+			// for example, an event occurs before the handler returns that requires mouse input
+			HookManager::MouseUp -= TearingEventDelegate;
+
 			switch (E->Button)
 			{
 			case MouseButtons::Left:
@@ -776,6 +781,7 @@ namespace cse
 			ToolBarSanitizeScriptText = gcnew ToolStripButton();
 			ToolBarBindScript = gcnew ToolStripButton();
 			ToolBarSnippetManager = gcnew ToolStripButton();
+			ToolBarSyncScriptsToDisk = gcnew ToolStripButton();
 			ToolBarByteCodeSize = gcnew ToolStripProgressBar();
 
 			FindReplaceBox = gcnew FindReplaceDialog(this);
@@ -851,6 +857,7 @@ namespace cse
 			SetupControlImage(ToolBarSanitizeScriptText);
 			SetupControlImage(ToolBarBindScript);
 			SetupControlImage(ToolBarSnippetManager);
+			SetupControlImage(ToolBarSyncScriptsToDisk);
 
 			ConcreteWorkspaceViewDefineClickHandler(NewTabButton);
 			ConcreteWorkspaceViewDefineClickHandler(SortTabsButton);
@@ -898,6 +905,7 @@ namespace cse
 			ConcreteWorkspaceViewDefineClickHandler(ToolBarSanitizeScriptText);
 			ConcreteWorkspaceViewDefineClickHandler(ToolBarBindScript);
 			ConcreteWorkspaceViewDefineClickHandler(ToolBarSnippetManager);
+			ConcreteWorkspaceViewDefineClickHandler(ToolBarSyncScriptsToDisk);
 
 			Padding ToolBarButtonPaddingLarge = Padding(16, 0, 16, 0);
 			Padding ToolBarButtonPaddingRegular = Padding(10, 0, 10, 0);
@@ -1025,6 +1033,10 @@ namespace cse
 			ToolBarSnippetManager->AutoSize = true;
 			ToolBarSnippetManager->Margin = ToolBarButtonPaddingLarge;
 
+			ToolBarSyncScriptsToDisk->ToolTipText = "Sync Scripts To Disk";
+			ToolBarSyncScriptsToDisk->AutoSize = true;
+			ToolBarSyncScriptsToDisk->Margin = ToolBarButtonPaddingLarge;
+
 			ToolBarByteCodeSize->Minimum = 0;
 			ToolBarByteCodeSize->Maximum = 0x8000;
 			ToolBarByteCodeSize->AutoSize = false;
@@ -1099,6 +1111,7 @@ namespace cse
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarSanitizeScriptText);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarBindScript);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarSnippetManager);
+			WorkspaceSecondaryToolBar->Items->Add(ToolBarSyncScriptsToDisk);
 			WorkspaceSecondaryToolBar->Items->Add(gcnew ToolStripSeparator());
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarByteCodeSize);
 			WorkspaceSecondaryToolBar->Items->Add(gcnew ToolStripSeparator());
@@ -1216,6 +1229,7 @@ namespace cse
 			ConcreteWorkspaceViewSubscribeClickEvent(ToolBarSanitizeScriptText);
 			ConcreteWorkspaceViewSubscribeClickEvent(ToolBarBindScript);
 			ConcreteWorkspaceViewSubscribeClickEvent(ToolBarSnippetManager);
+			ConcreteWorkspaceViewSubscribeClickEvent(ToolBarSyncScriptsToDisk);
 
 			if (preferences::SettingsHolder::Get()->General->HideInTaskbar)
 			{
@@ -1349,6 +1363,7 @@ namespace cse
 			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarSanitizeScriptText);
 			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarBindScript);
 			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarSnippetManager);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarSyncScriptsToDisk);
 
 			GlobalFindList->ItemActivate -= GlobalFindListItemActivate;
 			SAFEDELETE_CLR(GlobalFindListItemActivate);
@@ -1382,6 +1397,7 @@ namespace cse
 			DisposeControlImage(ToolBarSanitizeScriptText);
 			DisposeControlImage(ToolBarBindScript);
 			DisposeControlImage(ToolBarSnippetManager);
+			DisposeControlImage(ToolBarSyncScriptsToDisk);
 
 			DisposeControlImage(ToolBarScriptTypeContentsObject);
 			DisposeControlImage(ToolBarScriptTypeContentsQuest);
@@ -1430,6 +1446,7 @@ namespace cse
 			SAFEDELETE_CLR(ToolBarSanitizeScriptText);
 			SAFEDELETE_CLR(ToolBarBindScript);
 			SAFEDELETE_CLR(ToolBarSnippetManager);
+			SAFEDELETE_CLR(ToolBarSyncScriptsToDisk);
 			SAFEDELETE_CLR(ToolBarByteCodeSize);
 
 			SAFEDELETE_CLR(OffsetTextViewer);
@@ -2054,6 +2071,11 @@ namespace cse
 		void ConcreteWorkspaceView::ToolBarSnippetManager_Click(Object^ Sender, EventArgs^ E)
 		{
 			intellisense::IntelliSenseBackend::Get()->ShowCodeSnippetManager();
+		}
+
+		void ConcreteWorkspaceView::ToolBarSyncScriptsToDisk_Click(Object^ Sender, EventArgs^ E)
+		{
+			scriptSync::DiskSyncDialog::Show();
 		}
 
 		void ConcreteWorkspaceView::ToolBarRefactorMenuContentsDocumentScript_Click(Object^ Sender, EventArgs^ E)
@@ -2816,6 +2838,9 @@ namespace cse
 
 		void ConcreteWorkspaceView::ShowMessageList()
 		{
+			if (!Enabled)
+				return;
+
 			BeginUpdate();
 
 			ToggleBookmarkList(false);
@@ -2830,6 +2855,9 @@ namespace cse
 
 		void ConcreteWorkspaceView::ShowGlobalFindResultList()
 		{
+			if (!Enabled)
+				return;
+
 			BeginUpdate();
 
 			ToggleBookmarkList(false);
@@ -2844,6 +2872,9 @@ namespace cse
 
 		void ConcreteWorkspaceView::ShowFindResultList()
 		{
+			if (!Enabled)
+				return;
+
 			BeginUpdate();
 
 			ToggleBookmarkList(false);
@@ -2858,6 +2889,9 @@ namespace cse
 
 		void ConcreteWorkspaceView::ShowBookmarkList()
 		{
+			if (!Enabled)
+				return;
+
 			BeginUpdate();
 
 			ToggleFindResultList(false);
@@ -2872,6 +2906,9 @@ namespace cse
 
 		void ConcreteWorkspaceView::HideAllLists()
 		{
+			if (!Enabled)
+				return;
+
 			BeginUpdate();
 
 			ToggleMessageList(false);

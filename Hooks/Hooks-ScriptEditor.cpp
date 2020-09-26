@@ -21,6 +21,7 @@ namespace cse
 		_DefineHookHdlr(ScriptCompileCheckSyntaxInvalidRef, 0x00500C6C);
 		_DefineHookHdlr(ScriptCompilerWriteByteCodeCheckSetExprParentheses, 0x00502EC6);
 		_DefineHookHdlr(ScriptCompilerParseIFExpression, 0x00503005);
+		_DefineHookHdlr(PopulateScriptComboBoxDisallowUDFs, 0x0044521C);
 
 		void PatchScriptEditorHooks(void)
 		{
@@ -33,6 +34,7 @@ namespace cse
 			_MemHdlr(ScriptCompileCheckSyntaxInvalidRef).WriteJump();
 			_MemHdlr(ScriptCompilerWriteByteCodeCheckSetExprParentheses).WriteJump();
 			_MemHdlr(ScriptCompilerParseIFExpression).WriteJump();
+			_MemHdlr(PopulateScriptComboBoxDisallowUDFs).WriteJump();
 
 			PatchCompilerErrorDetours();
 		}
@@ -193,6 +195,33 @@ namespace cse
 
 				mov		al, 1				// fix-up the result so that compilation continues
 				jmp		_hhGetVar(Error)
+			}
+		}
+
+		bool __stdcall DoPopulateScriptComboBoxDisallowUDFsHook(Script* Script)
+		{
+			return Script->IsUserDefinedFunctionScript();
+		}
+
+		#define _hhName		PopulateScriptComboBoxDisallowUDFs
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00445221);
+			_hhSetVar(Call, 0x00403540);
+			__asm
+			{
+				pushad
+				push	esi
+				call	DoPopulateScriptComboBoxDisallowUDFsHook
+				test	al, al
+				jnz		SKIP
+
+				popad
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
+			SKIP:
+				popad
+				jmp		_hhGetVar(Retn)
 			}
 		}
 	}

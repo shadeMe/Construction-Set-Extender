@@ -661,7 +661,7 @@ namespace cse
 			{
 				if (Index == -1 || TextField->Text->Length == 0)
 					return 1;
-				else if (Index >= TextField->Text->Length)
+				else if (Index > TextField->Text->Length)
 					Index = TextField->Text->Length - 1;
 
 				return TextField->Document->GetLocation(Index).Line;
@@ -685,20 +685,18 @@ namespace cse
 
 			String^ AvalonEditTextEditor::GetTokenAtMouseLocation()
 			{
-				return GetTokenAtLocation(LastKnownMouseClickOffset, false)->Replace("\r\n", "")->Replace("\n", "");
+				return GetTokenAtLocation(GetLastKnownMouseClickOffset(), false)->Replace("\r\n", "")->Replace("\n", "");
 			}
 
 			array<String^>^ AvalonEditTextEditor::GetTokensAtMouseLocation()
 			{
-				return GetTokenAtLocation(LastKnownMouseClickOffset);
+				return GetTokenAtLocation(GetLastKnownMouseClickOffset());
 			}
 
 			int AvalonEditTextEditor::GetLastKnownMouseClickOffset()
 			{
-				if (LastKnownMouseClickOffset == -1)
-					LastKnownMouseClickOffset = 0;
-				else if (LastKnownMouseClickOffset >= GetTextLength())
-					LastKnownMouseClickOffset = 0;
+				if (LastKnownMouseClickOffset < 0 || LastKnownMouseClickOffset > GetTextLength())
+					LastKnownMouseClickOffset = GetTextLength();
 
 				return LastKnownMouseClickOffset;
 			}
@@ -711,7 +709,8 @@ namespace cse
 				AvalonEdit::Document::DocumentLine^ LineSegment = TextField->TextArea->Document->GetLineByNumber(Line);
 				ISegment^ WhitespaceLeading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(TextField->TextArea->Document, LineSegment);
 
-				char FirstChar = TextField->TextArea->Document->GetCharAt(WhitespaceLeading->EndOffset);
+				char FirstChar = WhitespaceLeading->EndOffset >= TextField->TextArea->Document->TextLength ? Char::MinValue :
+					TextField->TextArea->Document->GetCharAt(WhitespaceLeading->EndOffset);
 
 				switch (Operation)
 				{
@@ -1267,7 +1266,10 @@ namespace cse
 				if (Location.HasValue)
 					LastKnownMouseClickOffset = TextField->Document->GetOffset(Location.Value.Line, Location.Value.Column);
 				else
+				{
 					Caret = GetTextLength();
+					LastKnownMouseClickOffset = -1;
+				}
 			}
 
 			void AvalonEditTextEditor::TextField_MouseUp(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E)
@@ -1281,7 +1283,10 @@ namespace cse
 						Caret = LastKnownMouseClickOffset;
 				}
 				else
+				{
 					Caret = GetTextLength();
+					LastKnownMouseClickOffset = -1;
+				}
 
 				OnMouseClick(E);
 			}
@@ -1626,7 +1631,7 @@ namespace cse
 
 			void AvalonEditTextEditor::ContextMenuAddBookmark_Click(Object^ Sender, EventArgs^ E)
 			{
-				AddBookmark(GetLastKnownMouseClickOffset());
+				AddBookmark(Caret);
 			}
 
 			void AvalonEditTextEditor::ContextMenuWikiLookup_Click(Object^ Sender, EventArgs^ E)
@@ -2303,7 +2308,7 @@ namespace cse
 				if (TextPos.HasValue)
 					return TextField->Document->GetOffset(TextPos.Value.Line, TextPos.Value.Column);
 				else
-					return GetTextLength() + 1;
+					return GetTextLength();
 			}
 
 			Point AvalonEditTextEditor::GetPositionFromCharIndex(int Index, bool Absolute)
@@ -2663,9 +2668,8 @@ namespace cse
 				scriptEditor::ScriptTextMetadataHelper::DeserializeRawScriptText(RawScriptText, ExtractedScriptText, ExtractedMetadata);
 				SetText(ExtractedScriptText, true);
 
-				if (ExtractedMetadata->CaretPos)
-				if (ExtractedMetadata->CaretPos >= GetTextLength())
-					ExtractedMetadata->CaretPos = GetTextLength() - 1;
+				if (ExtractedMetadata->CaretPos > GetTextLength())
+					ExtractedMetadata->CaretPos = GetTextLength();
 				else if (ExtractedMetadata->CaretPos < 0)
 					ExtractedMetadata->CaretPos = 0;
 
