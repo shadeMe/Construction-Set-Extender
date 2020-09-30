@@ -221,6 +221,7 @@ namespace cse
 			Inductees.push_back(new HallOfFameEntry("Arthmoor",						"Bollocks-Breaker",				TESForm::kFormType_SoulGem));
 			Inductees.push_back(new HallOfFameEntry("Vorians",						"Ser Nitpick",					TESForm::kFormType_Activator));
 			Inductees.push_back(new HallOfFameScript("QQuix",						"scn QQuix\n\nbegin function {}\n\tsetFunctionValue \"I was the one who brought up the idea for Coda, CSE's scripting language for the CS environment! Woohoo!!\"\nend"));
+			Inductees.push_back(new HallOfFameEntry("Nukem",						"Absolutely Hates The Creation Kit", TESForm::kFormType_SigilStone));
 
 			Inductees.push_back(new HallOfFameShadeMe());		// oh yeah!
 
