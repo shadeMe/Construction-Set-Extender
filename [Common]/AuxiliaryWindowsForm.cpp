@@ -136,9 +136,10 @@ namespace cse
 		}
 	}
 
-	AnimatedForm::AnimatedForm( double FadeDuration ) : System::Windows::Forms::Form()
+	AnimatedForm::AnimatedForm( double FadeDuration, bool ShowFormWithoutActivation ) : System::Windows::Forms::Form()
 	{
 		this->FadeDuration = FadeDuration;
+		this->ShowFormWithoutActivation = ShowFormWithoutActivation;
 		FadeOperation = FadeOperationType::None;
 		CloseOnFadeOut = false;
 		RemainingTime = 0.0;

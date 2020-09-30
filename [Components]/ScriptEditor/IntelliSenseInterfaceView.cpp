@@ -11,7 +11,7 @@ namespace cse
 		{
 			BoundModel = nullptr;
 
-			Form = gcnew AnimatedForm(0.1);
+			Form = gcnew AnimatedForm(0.1, true);
 			ListView = gcnew BrightIdeasSoftware::FastObjectListView;
 
 			ListViewSelectionChangedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceView::ListView_SelectionChanged);
@@ -339,14 +339,12 @@ namespace cse
 				Size DisplaySize = Size(240, (MaximumVisibleItemCount * ItemHeight + ItemHeight) - ((MaximumVisibleItemCount - ItemCount) * ItemHeight));
 
 				UIInvoke_FormSetSize(this, Form, DisplaySize);
-				//Form->BeginInvoke(gcnew UIInvokeDelegate_FormSetSize(&IntelliSenseInterfaceView::UIInvoke_FormSetSize), gcnew array < Object^ > { this, Form, DisplaySize });
 			}
 		}
 
 		void IntelliSenseInterfaceView::Show(Point Location, IntPtr Parent)
 		{
 			UIInvoke_FormShow(this, Form, Location, Parent);
-			//Form->BeginInvoke(gcnew UIInvokeDelegate_FormShow(&IntelliSenseInterfaceView::UIInvoke_FormShow), gcnew array < Object^ > { this, Form, Location, Parent });
 		}
 
 		void IntelliSenseInterfaceView::Hide()
@@ -358,7 +356,6 @@ namespace cse
 				HideListViewToolTip();
 
 				UIInvoke_FormHide(this, Form);
-				//Form->BeginInvoke(gcnew UIInvokeDelegate_FormHide(&IntelliSenseInterfaceView::UIInvoke_FormHide), gcnew array < Object^ > { this, Form });
 			}
 
 		}
@@ -371,54 +368,29 @@ namespace cse
 		void IntelliSenseInterfaceView::UIInvoke_FormShow(IntelliSenseInterfaceView^ Sender,
 			AnimatedForm^ ToInvoke, Point Location, IntPtr Parent)
 		{
-			try {
-				ToInvoke->Show(Location, Parent, (ToInvoke->Visible == false));
-				Sender->HideListViewToolTip();
+			ToInvoke->Show(Location, Parent, (ToInvoke->Visible == false));
+			Sender->HideListViewToolTip();
 
-				if (Sender->BoundModel->DataStore->Count)
-				{
-					auto DefaultSelection = Sender->BoundModel->DataStore[0];
-					Sender->ListView->SelectObject(DefaultSelection);
+			if (Sender->BoundModel->DataStore->Count)
+			{
+				auto DefaultSelection = Sender->BoundModel->DataStore[0];
+				Sender->ListView->SelectObject(DefaultSelection);
 
-					// The SelectionChanged event doesn't get raised consistently at this point
-					// So, we ensure that the tooltip is shown
-					Sender->ShowListViewToolTip(DefaultSelection);
-				}
-
-			}
-			catch (Exception^ E) {
-#ifndef NDEBUG
-				DebugPrint("IntelliSenseInterfaceView::UIInvoke_FormShow Exception! Message - " + E->Message);
-				Debugger::Break();
-#endif // !NDEBUG
+				// The SelectionChanged event doesn't get raised consistently at this point
+				// So, we ensure that the tooltip is shown
+				Sender->ShowListViewToolTip(DefaultSelection);
 			}
 		}
 
 		void IntelliSenseInterfaceView::UIInvoke_FormSetSize(IntelliSenseInterfaceView^ Sender,
 			AnimatedForm^ ToInvoke, Size ToSet)
 		{
-			try {
-				ToInvoke->SetSize(ToSet);
-			}
-			catch (Exception^ E) {
-#ifndef NDEBUG
-				DebugPrint("IntelliSenseInterfaceView::UIInvoke_FormSetSize Exception! Message - " + E->Message);
-				Debugger::Break();
-#endif // !NDEBUG
-			}
+			ToInvoke->SetSize(ToSet);
 		}
 
 		void IntelliSenseInterfaceView::UIInvoke_FormHide(IntelliSenseInterfaceView^ Sender, AnimatedForm^ ToInvoke)
 		{
-			try {
-				ToInvoke->Hide();
-			}
-			catch (Exception^ E) {
-#ifndef NDEBUG
-				DebugPrint("IntelliSenseInterfaceView::UIInvoke_FormHide Exception! Message - " + E->Message);
-				Debugger::Break();
-#endif // !NDEBUG
-			}
+			ToInvoke->Hide();
 		}
 	}
 }

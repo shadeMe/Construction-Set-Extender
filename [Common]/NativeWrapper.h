@@ -26,6 +26,8 @@ namespace cse
 		[DllImport("user32.dll")]
 		IntPtr											SetActiveWindow(IntPtr handle);
 		[DllImport("user32.dll")]
+		bool											BringWindowToTop(IntPtr handle);
+		[DllImport("user32.dll")]
 		IntPtr											GetActiveWindow();
 		[DllImport("user32.dll")]
 		IntPtr											GetForegroundWindow();

@@ -276,7 +276,6 @@ namespace cse
 			this->BottomToolStrip->Name = L"BottomToolStrip";
 			this->BottomToolStrip->RenderMode = System::Windows::Forms::ToolStripRenderMode::System;
 			this->BottomToolStrip->Size = System::Drawing::Size(379, 32);
-			this->BottomToolStrip->TabIndex = 0;
 			//
 			// ToolStripLabelFilter
 			//
@@ -330,7 +329,6 @@ namespace cse
 			this->ButtonCompleteSelection->Location = System::Drawing::Point(412, 532);
 			this->ButtonCompleteSelection->Name = L"ButtonCompleteSelection";
 			this->ButtonCompleteSelection->Size = System::Drawing::Size(66, 32);
-			this->ButtonCompleteSelection->TabIndex = 5;
 			this->ButtonCompleteSelection->Text = L"OK";
 			this->ButtonCompleteSelection->UseVisualStyleBackColor = true;
 			this->ButtonCompleteSelection->Image = Globals::ScriptEditorImageResourceManager->CreateImage("ScriptListDialogCompleteSelection");
@@ -591,7 +589,7 @@ namespace cse
 		}
 
 		SelectScriptDialog::SelectScriptDialog(SelectScriptDialogParams^ Params) :
-			AnimatedForm(0.125)
+			AnimatedForm(0.125, false)
 		{
 			InitializeComponent();
 

@@ -12,7 +12,7 @@ namespace cse
 
 		virtual property bool ShowWithoutActivation
 		{
-			virtual bool get() override { return true; }
+			virtual bool get() override { return ShowFormWithoutActivation; }
 		}
 
 		virtual void WndProc(Message% m) override;
@@ -30,10 +30,11 @@ namespace cse
 		bool								CloseOnFadeOut;
 		EventHandler^						FadeTimerTickHandler;
 		double								RemainingTime;
+		bool								ShowFormWithoutActivation;
 
 		void								FadeTimer_Tick(Object^ Sender, EventArgs^ E);
 	public:
-		AnimatedForm(double FadeDuration);
+		AnimatedForm(double FadeDuration, bool ShowFormWithoutActivation);
 		~AnimatedForm();
 
 		property bool AllowMove;

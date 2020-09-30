@@ -226,7 +226,7 @@ namespace cse
 
 			Parent = ParentView;
 
-			Form = gcnew AnimatedForm(0.15);
+			Form = gcnew AnimatedForm(0.15, false);
 			ListView = gcnew BrightIdeasSoftware::FastObjectListView;
 			SearchBox = gcnew TextBox;
 			FilterResults = gcnew List < DotNetBar::SuperTabItem^ > ;
@@ -431,7 +431,7 @@ namespace cse
 
 			Parent = ParentView;
 
-			Form = gcnew AnimatedForm(0.15);
+			Form = gcnew AnimatedForm(0.15, false);
 			ListView = gcnew BrightIdeasSoftware::TreeListView;
 
 			ListViewKeyDownHandler = gcnew KeyEventHandler(this, &WorkspaceViewOutlineView::ListView_KeyDown);
@@ -615,7 +615,7 @@ namespace cse
 			NavigationStackForward = gcnew Stack < IWorkspaceModel^ > ;
 			FreezeNavigationStacks = false;
 
-			EditorForm = gcnew AnimatedForm(0.1);
+			EditorForm = gcnew AnimatedForm(0.1, false);
 			EditorForm->SuspendLayout();
 
 			EditorForm->FormBorderStyle = FormBorderStyle::Sizable;
@@ -624,7 +624,6 @@ namespace cse
 			EditorForm->Size = Size(Bounds.Width, Bounds.Height);
 			EditorForm->KeyPreview = true;
 			EditorForm->TabStop = false;
-			EditorForm->Tag = nullptr;
 
 			DotNetBar::RibbonPredefinedColorSchemes::ChangeOffice2010ColorTable(EditorForm, DotNetBar::Rendering::eOffice2010ColorScheme::Black);
 
@@ -1245,12 +1244,13 @@ namespace cse
 			EditorTabStrip->ResumeLayout();
 			EditorForm->ResumeLayout();
 
+			EditorForm->Focus();
+			EditorForm->BringToFront();
+
 			try { WorkspaceSplitter->SplitterDistance = GetBounds(true).Height; }
 			catch (...) {}
 
 			AssociatedModels = gcnew ModelTabTableT;
-
-			EditorForm->Tag = int(1);			// safe to handle events
 
 			// needs to be deferred until the form has been init'ed/layout is complete
 			// otherwise the breadcrumb bar turns up above the tab control

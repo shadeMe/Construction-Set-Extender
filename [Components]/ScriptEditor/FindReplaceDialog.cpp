@@ -12,7 +12,7 @@ namespace cse
 			Closing = false;
 			ParentView = Parent;
 
-			FindReplaceBox = gcnew AnimatedForm(0.10);
+			FindReplaceBox = gcnew AnimatedForm(0.10, false);
 			this->LabelFind = (gcnew Label());
 			this->LabelReplace = (gcnew Label());
 			this->QueryBox = (gcnew ComboBox());
