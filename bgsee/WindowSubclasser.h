@@ -44,7 +44,7 @@ namespace bgsee
 	{
 	public:
 		typedef LRESULT (CALLBACK* SubclassProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												bool& Return, WindowExtraDataCollection* ExtraData);
+												bool& Return, WindowExtraDataCollection* ExtraData, WindowSubclasser* Subclasser);
 
 		typedef std::vector<SubclassProc>						SubclassProcArrayT;
 	private:
@@ -59,10 +59,7 @@ namespace bgsee
 		WindowSubclassProcCollection();
 		~WindowSubclassProcCollection();
 
-		enum
-		{
-			kPriority_Default = -1
-		};
+		enum { kPriority_Default = 0 };
 
 		bool				Add(SubclassProc SubclassProc, int Priority = kPriority_Default);
 		bool				Remove(SubclassProc SubclassProc);
@@ -122,19 +119,33 @@ namespace bgsee
 			WindowSubclassProcCollection::SubclassProcArrayT
 							Subclasses;
 			bool			QueuedForDeletion;
+			bool			DisableSubclassProcessing;
 
 			SubclassedWindowData();
 
 			bool		IsDialog() const { return Type == SubclassType::Dialog; }
-			LRESULT		ProcessSubclasses(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
-			LRESULT		SendMessageToOrgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+			LRESULT		ProcessSubclasses(WindowSubclasser* Subclasser, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
+			LRESULT		SendMessageToOrgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool PreventSubclassProcessing);
 		};
+
+		static const std::vector<std::string> BlacklistedWindowClasses;
 
 		typedef std::unordered_map<HWND, std::unique_ptr<SubclassedWindowData>> HandleToSubclassDataMapT;
 		typedef std::vector<std::unique_ptr<SubclassedWindowData>> SubclassDataArrayT;
 		typedef std::unordered_map<ResourceTemplateOrdinalT, std::unique_ptr<WindowSubclassProcCollection>> OrdinalToSubclassesMapT;
 		typedef std::unordered_map<HWND, std::unique_ptr<WindowSubclassProcCollection>> HandleToSubclassesMapT;
 		typedef std::unordered_map<HWND, std::unique_ptr<DialogCreationData>> HandleToDialogCreationDataMapT;
+		typedef std::stack<HWND> HandleStackT;
+
+		struct ProcessStackOperator
+		{
+			WindowSubclasser&	Parent;
+
+			ProcessStackOperator(WindowSubclasser& Parent, HWND hWnd) : Parent(Parent)
+				{ Parent.ProcessingHandles.push(hWnd); }
+			~ProcessStackOperator()
+				{ Parent.ProcessingHandles.pop(); }
+		};
 
 		static constexpr UINT_PTR	kDeletionTimerID = 'WSDT';
 
@@ -151,8 +162,12 @@ namespace bgsee
 					HandleSpecificSubclassProcs;
 		SubclassDataArrayT
 					DeletionQueue;
+		HandleStackT
+					ProcessingHandles;
 		UINT_PTR	DeletionTimer;
 		HHOOK		WindowsHook;
+		bool		WindowsHookActive;
+		bool		TearingDown;
 
 		util::ThunkStdCall<WindowSubclasser, LRESULT, int, WPARAM, LPARAM>
 					ThunkWindowsHookCallWndProc;
@@ -175,6 +190,8 @@ namespace bgsee
 		void		RebuildSubclassProcs(HWND hWnd, SubclassedWindowData& SubclassData) const;
 		void		RebuildAllSubclassProcs() const;
 		void		RemoveSubclass(HWND hWnd);
+
+		void		ToggleWindowsHook(bool Enabled);
 	public:
 		WindowSubclasser();
 		~WindowSubclasser();
@@ -192,8 +209,15 @@ namespace bgsee
 		void	DeregisterSubclassForDialogResourceTemplate(ResourceTemplateOrdinalT Ordinal,
 			WindowSubclassProcCollection::SubclassProc SubclassProc);
 
-		LRESULT	TunnelMessageToOrgWndProc(HWND SubclassedDialog, UINT uMsg, WPARAM wParam, LPARAM lParam) const;
+		LRESULT	TunnelMessageToOrgWndProc(HWND SubclassedDialog, UINT uMsg, WPARAM wParam, LPARAM lParam, bool SuppressSubclasses) const;
 		ResourceTemplateOrdinalT GetDialogTemplate(HWND SubclassedDialog) const;
+
+		void	SuspendHooks();
+		void	ResumeHooks();
+
+		bool	IsShuttingDown() const;
+		bool	IsWindowSubclassed(HWND hWnd) const;
+		HWND	GetMostRecentWindowHandle() const;
 	};
 
 #define WM_SUBCLASSER_INTERNAL_BEGIN			((WM_USER) + 0x100)

@@ -87,7 +87,7 @@ namespace bgsee
 	WindowSubclassProcCollection::WindowSubclassProcCollection()
 	{
 		DataStore.reserve(10);
-		NextPriority = INT_MAX - 1;
+		NextPriority = 0;
 	}
 
 	WindowSubclassProcCollection::~WindowSubclassProcCollection()
@@ -102,7 +102,7 @@ namespace bgsee
 			return false;
 
 		if (Priority == kPriority_Default)
-			Priority = NextPriority--;
+			Priority = --NextPriority;
 
 		DataStore.emplace_back(Priority, SubclassProc);
 		Resort();
@@ -123,7 +123,7 @@ namespace bgsee
 	void WindowSubclassProcCollection::Clear()
 	{
 		DataStore.clear();
-		NextPriority = INT_MAX - 1;
+		NextPriority = 0;
 	}
 
 	bgsee::WindowSubclassProcCollection::SubclassProcArrayT WindowSubclassProcCollection::GetSortedSubclasses() const
@@ -208,14 +208,17 @@ namespace bgsee
 		Type = SubclassType::Window;
 		OriginalProc.Window = nullptr;
 		QueuedForDeletion = false;
+		DisableSubclassProcessing = false;
 	}
 
-	LRESULT WindowSubclasser::SubclassedWindowData::ProcessSubclasses(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return)
+	LRESULT WindowSubclasser::SubclassedWindowData::ProcessSubclasses(WindowSubclasser* Subclasser, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return)
 	{
 		LRESULT Result = FALSE;
 		bool ReturnMark = false;
 
 		if (QueuedForDeletion)
+			return Result;
+		else if (DisableSubclassProcessing)
 			return Result;
 
 		// work on a buffer as the subclass array can change inside a callback
@@ -223,7 +226,7 @@ namespace bgsee
 		for (const auto& Itr : SubclassesCopy)
 		{
 			// break early if the window was destroyed inside a previous callback or if a shutdown is taking place
-			if (GetWindowLongPtr(hWnd, GWL_USERDATA) == 0xDEADBEEF)
+			if (Subclasser->IsShuttingDown())
 			{
 				Return = true;
 				return FALSE;
@@ -231,7 +234,7 @@ namespace bgsee
 			else if (QueuedForDeletion)
 				break;
 
-			auto CurrentResult = Itr(hWnd, uMsg, wParam, lParam, ReturnMark, &ExtraData);
+			auto CurrentResult = Itr(hWnd, uMsg, wParam, lParam, ReturnMark, &ExtraData, Subclasser);
 			if (ReturnMark && Return == false)
 			{
 				Result = CurrentResult;
@@ -242,8 +245,25 @@ namespace bgsee
 		return Result;
 	}
 
-	LRESULT WindowSubclasser::SubclassedWindowData::SendMessageToOrgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	LRESULT WindowSubclasser::SubclassedWindowData::SendMessageToOrgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool PreventSubclassProcessing)
 	{
+		if (PreventSubclassProcessing)
+		{
+			SME_ASSERT(DisableSubclassProcessing == false);
+			SME::MiscGunk::ScopedSetter<bool> GuardTunnelling(DisableSubclassProcessing, true);
+
+			if (Type == SubclassType::Window)
+			{
+				SME_ASSERT(OriginalProc.Window);
+				return CallWindowProc(OriginalProc.Window, hWnd, uMsg, wParam, lParam);
+			}
+			else
+			{
+				SME_ASSERT(OriginalProc.Dialog);
+				return CallWindowProc((WNDPROC)OriginalProc.Dialog, hWnd, uMsg, wParam, lParam);
+			}
+		}
+
 		if (Type == SubclassType::Window)
 		{
 			SME_ASSERT(OriginalProc.Window);
@@ -256,11 +276,39 @@ namespace bgsee
 		}
 	}
 
+	const std::vector<std::string> WindowSubclasser::BlacklistedWindowClasses
+	{
+		"WindowsForms",
+		"HwndWrapper"
+	};
+
 	LRESULT WindowSubclasser::WindowsHookCallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 	{
 		if (nCode == HC_ACTION)
 		{
 			auto MessageData = reinterpret_cast<CWPSTRUCT*>(lParam);
+
+			switch (MessageData->message)
+			{
+			case WM_CREATE:
+			case WM_INITDIALOG:
+				// custom dialog boxes are sent the WM_CREATE message before the WM_INITDIALOG message
+				// those messages should not be handled
+				char ClassName[256] = {};
+				GetClassName(MessageData->hwnd, ClassName, ARRAYSIZE(ClassName));
+				if (strcmp(ClassName, "#32770") == 0 && MessageData->message != WM_INITDIALOG)
+					return CallNextHookEx(nullptr, nCode, wParam, lParam);
+
+				// skip all non-native windows/dialogs, amongst others that we don't want to hook
+				std::string ClassNameWrapper(ClassName);
+				for (const auto& Itr : BlacklistedWindowClasses)
+				{
+					if (ClassNameWrapper.find(Itr) == 0)
+						return CallNextHookEx(nullptr, nCode, wParam, lParam);
+				}
+
+				break;
+			}
 
 			switch (MessageData->message)
 			{
@@ -303,8 +351,11 @@ namespace bgsee
 		return CallNextHookEx(nullptr, nCode, wParam, lParam);
 	}
 
+
 	LRESULT WindowSubclasser::BaseSubclassWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
+		ProcessStackOperator StackOperator(*this, hWnd);
+
 		bool CallbackReturn = false;
 		LRESULT ProcResult = FALSE;
 		auto SubclassedData = ActiveSubclasses.at(hWnd).get();
@@ -323,13 +374,13 @@ namespace bgsee
 			if (IsDialog)
 				FirstLParam = SubclassedData->DialogSpecific.CreationData.CreationUserData;
 
-			SubclassedData->ProcessSubclasses(hWnd, PreMessageId, wParam, FirstLParam, Throwaway);
+			SubclassedData->ProcessSubclasses(this, hWnd, PreMessageId, wParam, FirstLParam, Throwaway);
 
 			// window must not be destroyed inside the pre-init callback
 			SME_ASSERT(SubclassedData->QueuedForDeletion == false);
 
 			// execute the original proc's handler
-			ProcResult = SubclassedData->SendMessageToOrgProc(hWnd, uMsg, wParam, FirstLParam);
+			ProcResult = SubclassedData->SendMessageToOrgProc(hWnd, uMsg, wParam, FirstLParam, false);
 
 			bool SkipSubclassing = IsDialog && (SubclassedData->DialogSpecific.CreationData.IsValid() == false ||
 									SubclassedData->DialogSpecific.CreationData.SkipSubclassing ||
@@ -345,10 +396,10 @@ namespace bgsee
 			// window could have been destroyed by the original window proc
 			if (SubclassedData->QueuedForDeletion == false)
 			{
-				ProcResult = SubclassedData->ProcessSubclasses(hWnd, uMsg, wParam, FirstLParam, CallbackReturn);
+				ProcResult = SubclassedData->ProcessSubclasses(this, hWnd, uMsg, wParam, FirstLParam, CallbackReturn);
 
 				if (SubclassedData->QueuedForDeletion == false)
-					SubclassedData->ProcessSubclasses(hWnd, PostMessageId, wParam, FirstLParam, Throwaway);
+					SubclassedData->ProcessSubclasses(this, hWnd, PostMessageId, wParam, FirstLParam, Throwaway);
 			}
 
 
@@ -361,12 +412,12 @@ namespace bgsee
 			bool DoNotNotifyUserSubclasses = uMsg == WM_SUBCLASSER_INTERNAL_REMOVESUBCLASS && lParam == FALSE;
 
 			if (DoNotNotifyUserSubclasses == false)
-				SubclassedData->ProcessSubclasses(hWnd, WM_DESTROY, wParam, lParam, CallbackReturn);
+				SubclassedData->ProcessSubclasses(this, hWnd, WM_DESTROY, wParam, lParam, CallbackReturn);
 
 			// no need to invoke the original handler in case of an internal release event
 			// as we only care about our own code that might potentially handle it
 			if (uMsg != WM_SUBCLASSER_INTERNAL_REMOVESUBCLASS)
-				ProcResult = SubclassedData->SendMessageToOrgProc(hWnd, uMsg, wParam, lParam);
+				ProcResult = SubclassedData->SendMessageToOrgProc(hWnd, uMsg, wParam, lParam, false);
 
 			RemoveSubclass(hWnd);
 			return ProcResult;
@@ -374,13 +425,13 @@ namespace bgsee
 		}
 
 		// all other messages
-		ProcResult = SubclassedData->ProcessSubclasses(hWnd, uMsg, wParam, lParam, CallbackReturn);
+		ProcResult = SubclassedData->ProcessSubclasses(this, hWnd, uMsg, wParam, lParam, CallbackReturn);
 		if (CallbackReturn)
 			return ProcResult;
 
 		// message was not handled by any of the subclasses, forward to the original
 		if (SubclassedData->QueuedForDeletion == false)
-			return SubclassedData->SendMessageToOrgProc(hWnd, uMsg, wParam, lParam);
+			return SubclassedData->SendMessageToOrgProc(hWnd, uMsg, wParam, lParam, false);
 
 		return FALSE;
 	}
@@ -492,22 +543,42 @@ namespace bgsee
 		HandleSpecificSubclassProcs.erase(hWnd);
 	}
 
+	void WindowSubclasser::ToggleWindowsHook(bool Enabled)
+	{
+		SME_ASSERT(WindowsHookActive != Enabled);
+
+		if (Enabled)
+		{
+			WindowsHook = SetWindowsHookEx(WH_CALLWNDPROC, ThunkWindowsHookCallWndProc(), nullptr, OwnerThreadId);
+			SME_ASSERT(WindowsHook);
+		}
+		else
+		{
+			auto Result = UnhookWindowsHookEx(WindowsHook);
+			WindowsHook = nullptr;
+			SME_ASSERT(Result);
+		}
+
+		WindowsHookActive = WindowsHookActive == false;
+	}
+
 	WindowSubclasser::WindowSubclasser() :
 		OwnerThreadId(GetCurrentThreadId()),
 		ThunkWindowsHookCallWndProc(this, &WindowSubclasser::WindowsHookCallWndProc),
 		ThunkBaseSubclassWndProc(this, &WindowSubclasser::BaseSubclassWndProc),
-		ThunkDeletionTimerProc(this, &WindowSubclasser::DeletionTimerProc)
+		ThunkDeletionTimerProc(this, &WindowSubclasser::DeletionTimerProc),
+		WindowsHookActive(false),
+		TearingDown(false)
 	{
 		DeletionTimer = SetTimer(nullptr, kDeletionTimerID, 1000, ThunkDeletionTimerProc());
 		SME_ASSERT(DeletionTimer);
 
-		WindowsHook = SetWindowsHookEx(WH_CALLWNDPROC, ThunkWindowsHookCallWndProc(), nullptr, OwnerThreadId);
-		SME_ASSERT(WindowsHook);
+		ToggleWindowsHook(true);
 	}
 
 	WindowSubclasser::~WindowSubclasser()
 	{
-		UnhookWindowsHookEx(WindowsHook);
+		ToggleWindowsHook(false);
 		KillTimer(nullptr, DeletionTimer);
 
 		// use a buffer to prevent iterator invalidation
@@ -516,12 +587,9 @@ namespace bgsee
 			ActiveSubclassesCopy.emplace_back(Itr.first);
 
 		for (const auto& Itr : ActiveSubclassesCopy)
-		{
 			SendMessage(Itr, WM_SUBCLASSER_INTERNAL_REMOVESUBCLASS, TRUE, TRUE);
 
-			// set a special sentinel to indicate shutdown
-			SetWindowLongPtr(Itr, GWL_USERDATA, 0xDEADBEEF);
-		}
+		TearingDown = true;
 
 		DeletionQueue.clear();
 		ActiveThreadDialogHandles.clear();
@@ -644,12 +712,12 @@ namespace bgsee
 		}
 	}
 
-	LRESULT WindowSubclasser::TunnelMessageToOrgWndProc(HWND SubclassedDialog, UINT uMsg, WPARAM wParam, LPARAM lParam) const
+	LRESULT WindowSubclasser::TunnelMessageToOrgWndProc(HWND SubclassedDialog, UINT uMsg, WPARAM wParam, LPARAM lParam, bool SuppressSubclasses) const
 	{
 		auto ActiveSubclass = ActiveSubclasses.find(SubclassedDialog);
 		SME_ASSERT(ActiveSubclass != ActiveSubclasses.end());
 
-		return ActiveSubclass->second->SendMessageToOrgProc(ActiveSubclass->first, uMsg, wParam, lParam);
+		return ActiveSubclass->second->SendMessageToOrgProc(ActiveSubclass->first, uMsg, wParam, lParam, SuppressSubclasses);
 	}
 
 	ResourceTemplateOrdinalT WindowSubclasser::GetDialogTemplate(HWND SubclassedDialog) const
@@ -660,6 +728,35 @@ namespace bgsee
 		return ActiveSubclass->second->DialogSpecific.CreationData.InstantiationTemplate;
 	}
 
+
+	void WindowSubclasser::SuspendHooks()
+	{
+		ToggleWindowsHook(false);
+	}
+
+	void WindowSubclasser::ResumeHooks()
+	{
+		ToggleWindowsHook(true);
+
+	}
+
+	bool WindowSubclasser::IsShuttingDown() const
+	{
+		return TearingDown;
+	}
+
+	bool WindowSubclasser::IsWindowSubclassed(HWND hWnd) const
+	{
+		return ActiveSubclasses.find(hWnd) != ActiveSubclasses.end();
+	}
+
+	HWND WindowSubclasser::GetMostRecentWindowHandle() const
+	{
+		if (ProcessingHandles.empty())
+			return nullptr;
+
+		return ProcessingHandles.top();
+	}
 
 }
 
