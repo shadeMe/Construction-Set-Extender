@@ -6,20 +6,20 @@ namespace bgsee
 	{
 		struct IATPatchData
 		{
-			UInt8*				ModuleBase;
+			uintptr_t			ModuleBase;
 			const char*			ImportModule;
 			const char*			ImportName;
 			bool				Delayed;
 
-			void*				Location;
-			void*				OriginalFunction;
-			void*				CallbackFunction;
+			uintptr_t			Location;
+			uintptr_t			OriginalFunction;
+			uintptr_t			CallbackFunction;
 
 			IATPatchData(const char* ModuleName = nullptr);
 
 			bool				Initialize();
-			void				Replace(void);
-			void				Reset(void);
+			void				Replace() const;
+			void				Reset() const;
 		};
 
 
