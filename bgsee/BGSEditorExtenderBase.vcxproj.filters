@@ -52,12 +52,6 @@
     <ClInclude Include="Wrappers.h">
       <Filter>Modules</Filter>
     </ClInclude>
-    <ClInclude Include="RenderWindowPainter.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderWindowFlyCamera.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
     <ClInclude Include="Main.h">
       <Filter>Modules</Filter>
     </ClInclude>
@@ -235,6 +229,21 @@
     <ClInclude Include="Script\CodaVM.h">
       <Filter>Modules\Coda</Filter>
     </ClInclude>
+    <ClInclude Include="HookUtil.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowSubclasser.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="UICommon.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="GenericModelessDialog.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowColorThemer.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="StdAfx.cpp" />
@@ -245,12 +254,6 @@
       <Filter>Modules</Filter>
     </ClCompile>
     <ClCompile Include="WorkspaceManager.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderWindowPainter.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderWindowFlyCamera.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
     <ClCompile Include="Main.cpp">
@@ -403,6 +406,24 @@
     <ClCompile Include="Script\CodaVM.cpp">
       <Filter>Modules\Coda</Filter>
     </ClCompile>
+    <ClCompile Include="HookUtil.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowSubclasser.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="GenericModelessDialog.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceLocation.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="UICommon.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowColorThemer.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BGSEditorExtenderBase.rc">
@@ -421,6 +442,9 @@
     </None>
     <None Include="Script\CodaForwardDecls.inl">
       <Filter>Modules\Coda</Filter>
+    </None>
+    <None Include="ResourceLocation.h">
+      <Filter>Modules</Filter>
     </None>
   </ItemGroup>
 </Project>

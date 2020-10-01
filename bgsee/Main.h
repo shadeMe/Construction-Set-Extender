@@ -28,7 +28,7 @@ namespace bgsee
 		{
 			kInitCallback_Query = 0,
 			kInitCallback_Load,
-			kInitCallback_PostMainWindowInit,		// the WM_INITDIALOG msg will be dispatched to the main window after this event is handled
+			kInitCallback_PostMainWindowInit,
 			kInitCallback_Epilog,
 
 			kInitCallback__MAX
@@ -231,7 +231,6 @@ namespace bgsee
 		{
 			kExtenderParentEditor_Unknown	=	0,
 			kExtenderParentEditor_TES4CS	=	1,
-			kExtenderParentEditor_TES5CK	=	2,
 			kExtenderParentEditor__MAX
 		};
 
@@ -277,5 +276,3 @@ namespace bgsee
 #undef BGSEEMAIN_EXTENDERLONGNAME
 #undef BGSEEMAIN_EXTENDERSHORTNAME
 }
-
-BOOL WINAPI DllMain(HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved);

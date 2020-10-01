@@ -16,11 +16,11 @@
     <ClInclude Include="ChangeLogManager.h" />
     <ClInclude Include="Console.h" />
     <ClInclude Include="FormUndoStack.h" />
+    <ClInclude Include="GenericModelessDialog.h" />
     <ClInclude Include="GlobalClipboard.h" />
     <ClInclude Include="HallOfFame.h" />
+    <ClInclude Include="HookUtil.h" />
     <ClInclude Include="Main.h" />
-    <ClInclude Include="RenderWindowFlyCamera.h" />
-    <ClInclude Include="RenderWindowPainter.h" />
     <ClInclude Include="Script\CodaAST.h" />
     <ClInclude Include="Script\CodaCompiler.h" />
     <ClInclude Include="Script\CodaDataTypes.h" />
@@ -73,7 +73,10 @@
     <ClInclude Include="Script\MUP Implementation\CodaMUPValue.h" />
     <ClInclude Include="Script\MUP Implementation\CodaMUPVariable.h" />
     <ClInclude Include="ToolBox.h" />
+    <ClInclude Include="UICommon.h" />
     <ClInclude Include="UIManager.h" />
+    <ClInclude Include="WindowColorThemer.h" />
+    <ClInclude Include="WindowSubclasser.h" />
     <ClInclude Include="WorkspaceManager.h" />
     <ClInclude Include="Wrappers.h" />
     <ClInclude Include="DetectSIMD.h" />
@@ -85,13 +88,14 @@
     <ClCompile Include="ChangeLogManager.cpp" />
     <ClCompile Include="Console.cpp" />
     <ClCompile Include="FormUndoStack.cpp" />
+    <ClCompile Include="GenericModelessDialog.cpp" />
     <ClCompile Include="GlobalClipboard.cpp" />
     <ClCompile Include="HallOfFame.cpp" />
+    <ClCompile Include="HookUtil.cpp" />
     <ClCompile Include="Main.cpp">
       <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</PreprocessToFile>
     </ClCompile>
-    <ClCompile Include="RenderWindowFlyCamera.cpp" />
-    <ClCompile Include="RenderWindowPainter.cpp" />
+    <ClCompile Include="ResourceLocation.cpp" />
     <ClCompile Include="Script\CodaAST.cpp" />
     <ClCompile Include="Script\CodaCompiler.cpp" />
     <ClCompile Include="Script\CodaDataTypes.cpp" />
@@ -136,7 +140,10 @@
     <ClCompile Include="Script\MUP Implementation\CodaMUPValue.cpp" />
     <ClCompile Include="Script\MUP Implementation\CodaMUPVariable.cpp" />
     <ClCompile Include="ToolBox.cpp" />
+    <ClCompile Include="UICommon.cpp" />
     <ClCompile Include="UIManager.cpp" />
+    <ClCompile Include="WindowColorThemer.cpp" />
+    <ClCompile Include="WindowSubclasser.cpp" />
     <ClCompile Include="WorkspaceManager.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -150,6 +157,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="ResourceLocation.h" />
     <None Include="Script\CodaBaseInterfaces.inl" />
     <None Include="Script\CodaForwardDecls.inl" />
     <None Include="[Resources]\generic.bmp" />
@@ -232,6 +240,7 @@
       <FloatingPointModel>Precise</FloatingPointModel>
       <FloatingPointExceptions>
       </FloatingPointExceptions>
+      <LanguageStandard>Default</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -270,6 +279,7 @@
       <FloatingPointModel>Precise</FloatingPointModel>
       <FloatingPointExceptions>
       </FloatingPointExceptions>
+      <LanguageStandard>Default</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

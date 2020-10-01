@@ -15,7 +15,6 @@
 // Headers for Windows 7+
 #define WINVER			0x0601
 #define _WIN32_WINNT	0x0601
-#define DIRECTINPUT_VERSION 0x0800
 #define DPSAPI_VERSION	1
 
 // WIN32
@@ -54,6 +53,7 @@
 #include <unordered_map>
 #include <vector>
 #include <set>
+#include <unordered_set>
 #include <queue>
 #include <stack>
 #include <string>
@@ -67,6 +67,8 @@
 #include <iomanip>
 #include <numeric>
 #include <functional>
+#include <thread>
+#include <mutex>
 
 // RPC
 #include <Rpc.h>
@@ -76,7 +78,6 @@
 #include <d3d9types.h>
 #include <d3dx9.h>
 #include <d3dx9tex.h>
-#include <dinput.h>
 
 // xSE Common
 #include <ITypes.h>

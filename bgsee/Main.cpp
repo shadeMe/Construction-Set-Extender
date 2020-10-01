@@ -23,14 +23,8 @@ namespace bgsee
 
 	void Daemon::WaitForDebugger(void)
 	{
-		BGSEECONSOLE->Indent();
-		BGSEECONSOLE_MESSAGE("Waiting For Debugger...");
-
 		while (IsDebuggerPresent() == FALSE)
 			Sleep(100);
-
-		BGSEECONSOLE_MESSAGE("Debugger Attached!");
-		BGSEECONSOLE->Outdent();
 	}
 
 	Daemon* Daemon::Get()
@@ -402,8 +396,12 @@ namespace bgsee
 		char NativeProgramFilesFolder[MAX_PATH] = {0};
 		ExpandEnvironmentStrings("%ProgramW6432%", NativeProgramFilesFolder, ARRAYSIZE(NativeProgramFilesFolder));
 		const char* ProgFilesSubstring = strstr(APPPath, NativeProgramFilesFolder);
+
 		IFileStream DirectoryCheckOverrideFile;
 		bool DirectoyCheckOverride = DirectoryCheckOverrideFile.Open(std::string(APPPath + std::string("\\BGSEE_DirectoryCheckOverride")).c_str());
+
+		IFileStream ElevatedPrivilegesCheckOverrideFile;
+		bool ElevatedPrivilegesCheckOverride = ElevatedPrivilegesCheckOverrideFile.Open(std::string(APPPath + std::string("\\BGSEE_ElevatedPrivilegesCheckOverride")).c_str());
 
 		if (DirectoyCheckOverride == false &&
 			ProgFilesSubstring != nullptr && ProgFilesSubstring == APPPath &&
@@ -418,18 +416,27 @@ namespace bgsee
 				BGSEECONSOLE_MESSAGE("WARNING - Protected Directory Check was overridden!");
 
 			BOOL IsAdmin = FALSE;
-			SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
-			PSID AdministratorsGroup;
-
-			IsAdmin = AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS,
-											0, 0, 0, 0, 0, 0, &AdministratorsGroup);
-
-			if (IsAdmin)
+			if (ElevatedPrivilegesCheckOverride)
 			{
-				if (CheckTokenMembership( nullptr, AdministratorsGroup, &IsAdmin) == FALSE)
-					IsAdmin = FALSE;
+				IsAdmin = TRUE;
+				BGSEECONSOLE_MESSAGE("WARNING - Elevated Privileges Check was overridden!");
+			}
 
-				FreeSid(AdministratorsGroup);
+			if (IsAdmin == FALSE)
+			{
+				SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
+				PSID AdministratorsGroup;
+
+				IsAdmin = AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS,
+												0, 0, 0, 0, 0, 0, &AdministratorsGroup);
+
+				if (IsAdmin)
+				{
+					if (CheckTokenMembership( nullptr, AdministratorsGroup, &IsAdmin) == FALSE)
+						IsAdmin = FALSE;
+
+					FreeSid(AdministratorsGroup);
+				}
 			}
 
 			if (IsAdmin == FALSE)
@@ -862,18 +869,5 @@ namespace bgsee
 	const char* Main::ExtenderGetDisplayName( void ) const
 	{
 		return ExtenderDisplayName.c_str();
-	}
-
-	BOOL WINAPI DllMain(HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
-	{
-		switch (dwReason)
-		{
-		case DLL_PROCESS_ATTACH:
-			break;
-		case DLL_PROCESS_DETACH:
-			break;
-		}
-
-		return TRUE;
 	}
 }

@@ -1,550 +1,9 @@
 #include "UIManager.h"
 #include "Console.h"
-#include "BGSEditorExtenderBase_Resource.h"
+#include "WorkspaceManager.h"
 
 namespace bgsee
 {
-#define WM_SUBCLASSER_RELEASE		((WM_USER) + 0x100)
-
-	WindowHandleCollection::HandleCollectionT::iterator WindowHandleCollection::Find( HWND Handle )
-	{
-		for (HandleCollectionT::iterator Itr = HandleList.begin(); Itr != HandleList.end(); Itr++)
-		{
-			if (*Itr == Handle)
-				return Itr;
-		}
-
-		return HandleList.end();
-	}
-
-	bool WindowHandleCollection::Add( HWND Handle )
-	{
-		if (GetExists(Handle) == false)
-		{
-			HandleList.push_back(Handle);
-			return true;
-		}
-		else
-			return false;
-	}
-
-	bool WindowHandleCollection::Remove( HWND Handle )
-	{
-		HandleCollectionT::iterator Match = Find(Handle);
-		if (Match != HandleList.end())
-		{
-			HandleList.erase(Match);
-			return true;
-		}
-		else
-			return false;
-	}
-
-	bool WindowHandleCollection::GetExists( HWND Handle )
-	{
-		return Find(Handle) != HandleList.end();
-	}
-
-	void WindowHandleCollection::Clear( void )
-	{
-		HandleList.clear();
-	}
-
-	WindowHandleCollection::WindowHandleCollection() :
-		HandleList()
-	{
-		;//
-	}
-
-	WindowHandleCollection::~WindowHandleCollection()
-	{
-		Clear();
-	}
-
-	void WindowHandleCollection::SendMessage( UINT Msg, WPARAM wParam, LPARAM lParam )
-	{
-		// need to operate on a buffer as the handle list can be modified inside a subclass callback
-		HandleCollectionT Buffer(HandleList);
-
-		for (HandleCollectionT::iterator Itr = Buffer.begin(); Itr != Buffer.end(); Itr++)
-			::SendMessage(*Itr, Msg, wParam, lParam);
-	}
-
-	int				WindowExtraData::GIC = 0;
-
-	WindowExtraData::WindowExtraData(WindowExtraDataIDT Type) :
-		TypeID(Type)
-	{
-		GIC++;
-	}
-
-	WindowExtraData::~WindowExtraData()
-	{
-		GIC--;
-		SME_ASSERT(GIC >= 0);
-	}
-
-	const WindowExtraDataIDT WindowExtraData::GetTypeID(void) const
-	{
-		return TypeID;
-	}
-
-	WindowExtraDataCollection::WindowExtraDataCollection() :
-		DataStore()
-	{
-		;//
-	}
-
-	WindowExtraDataCollection::~WindowExtraDataCollection()
-	{
-		DataStore.clear();
-	}
-
-	bool WindowExtraDataCollection::Add( WindowExtraData* Data )
-	{
-		SME_ASSERT(Data);
-
-		if (Lookup(Data->GetTypeID()))
-			return false;
-		else
-			DataStore.insert(std::make_pair(Data->GetTypeID(), Data));
-
-		return true;
-	}
-
-	bool WindowExtraDataCollection::Remove( WindowExtraDataIDT ID )
-	{
-		if (Lookup(ID) == nullptr)
-			return false;
-		else
-			DataStore.erase(ID);
-
-		return true;
-	}
-
-	WindowExtraData* WindowExtraDataCollection::Lookup( WindowExtraDataIDT ID )
-	{
-		for (ExtraDataMapT::iterator Itr = DataStore.begin(); Itr != DataStore.end(); Itr++)
-		{
-			if (Itr->first == ID)
-				return Itr->second;
-		}
-
-		return nullptr;
-	}
-
-	WindowSubclasser::DialogSubclassData::DialogSubclassData() :
-		Original(nullptr),
-		ActiveHandles(),
-		Subclasses()
-	{
-		;//
-	}
-
-	INT_PTR WindowSubclasser::DialogSubclassData::ProcessSubclasses( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
-	{
-		INT_PTR Result = FALSE;
-		bool ReturnMark = Return;
-
-		// work on a buffer as the subclass list can change inside a callback
-		// since the number of subclasses for any dialog isn't gonna be very large at any given time, the performance hit should be negligible
-		SubclassProcArrayT SubclassBuffer(Subclasses);
-
-		for (SubclassProcArrayT::iterator Itr = SubclassBuffer.begin(); Itr != SubclassBuffer.end(); Itr++)
-		{
-			DialogSubclassUserData* UserData = (DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
-			if (UserData == nullptr)
-			{
-				// the dialog was destroyed inside a callback
-				break;
-			}
-
-			INT_PTR CurrentResult = (INT_PTR)(*Itr)(hWnd, uMsg, wParam, lParam, ReturnMark, &UserData->ExtraData);
-
-			if (ReturnMark && Return == false)
-			{
-				Result = CurrentResult;
-				Return = true;
-			}
-		}
-
-		return Result;
-	}
-
-	WindowSubclasser::WindowSubclassData::WindowSubclassData() :
-		Original(nullptr),
-		Subclasses(),
-		UserData(nullptr)
-	{
-		;//
-	}
-
-	LRESULT WindowSubclasser::WindowSubclassData::ProcessSubclasses( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
-	{
-		LRESULT Result = FALSE;
-		bool ReturnMark = Return;
-
-		// work on a buffer, same as before
-		SubclassProcArrayT SubclassBuffer(Subclasses);
-
-		for (SubclassProcArrayT::iterator Itr = SubclassBuffer.begin(); Itr != SubclassBuffer.end(); Itr++)
-		{
-			WindowSubclassUserData* UserData = (WindowSubclassUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
-			if (UserData == nullptr)
-				break;
-
-			LRESULT CurrentResult = (*Itr)(hWnd, uMsg, wParam, lParam, ReturnMark, &UserData->ExtraData);
-
-			if (ReturnMark && Return == false)
-			{
-				Result = CurrentResult;
-				Return = true;
-			}
-		}
-
-		return Result;
-	}
-
-	WindowSubclasser::DialogSubclassUserData::DialogSubclassUserData() :
-		Instance(nullptr),
-		Data(nullptr),
-		InitParam(NULL),
-		ExtraData(),
-		TemplateID(0),
-		Initialized(false)
-	{
-		;//
-	}
-
-	WindowSubclasser::WindowSubclassUserData::WindowSubclassUserData() :
-		Instance(nullptr),
-		Data(nullptr),
-		OriginalUserData(NULL),
-		ExtraData()
-	{
-		;//
-	}
-
-	INT_PTR CALLBACK WindowSubclasser::DialogSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
-	{
-		bool CallbackReturn = false;
-		INT_PTR DlgProcResult = FALSE;
-		DialogSubclassUserData* UserData = (DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
-
-		switch (uMsg)
-		{
-		case WM_INITDIALOG:
-			{
-				if (lParam)
-				{
-					SetWindowLongPtr(hWnd, DWL_USER, (LONG_PTR)lParam);
-					UserData = (DialogSubclassUserData*)lParam;
-
-					if (UserData->Initialized == false)
-					{
-						bool AddResult = UserData->Data->ActiveHandles.Add(hWnd);
-						SME_ASSERT(AddResult);
-					}
-
-					UserData->Initialized = true;
-				}
-
-				// send the pre-initdialog message first
-				UserData->Data->ProcessSubclasses(hWnd, WM_SUBCLASSER_PREDIALOGINIT, wParam, UserData->InitParam, CallbackReturn);
-
-				// make sure the dialog's not destroyed
-				UserData = (DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
-				SME_ASSERT(UserData);
-
-				// send the initdialog message to the original handler
-				DlgProcResult = UserData->Data->Original(hWnd, uMsg, wParam, UserData->InitParam);
-
-				// re-check the userdata as the dialog can get destroyed inside the original WM_INITDIALOG callback
-				UserData = (DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
-				if (UserData)
-				{
-					UserData->Data->ProcessSubclasses(hWnd, uMsg, wParam, UserData->InitParam, CallbackReturn);
-				}
-
-				return DlgProcResult;
-			}
-
-			break;
-		case WM_SUBCLASSER_RELEASE:
-		case WM_DESTROY:
-			{
-				UserData->Data->ProcessSubclasses(hWnd, WM_DESTROY, wParam, lParam, CallbackReturn);
-				if (uMsg != WM_SUBCLASSER_RELEASE)
-					DlgProcResult = UserData->Data->Original(hWnd, uMsg, wParam, lParam);
-
-				bool RemoveResult = UserData->Data->ActiveHandles.Remove(hWnd);
-				SME_ASSERT(RemoveResult);
-
-				SetWindowLongPtr(hWnd, DWL_USER, NULL);
-				SetWindowLongPtr(hWnd, GWL_WNDPROC, (LONG_PTR)UserData->Data->Original);
-
-				delete UserData;
-				return DlgProcResult;
-			}
-
-			break;
-		}
-
-		if (UserData && UserData->Initialized)
-		{
-			INT_PTR CallbackResult = UserData->Data->ProcessSubclasses(hWnd, uMsg, wParam, lParam, CallbackReturn);
-
-			if (CallbackReturn)
-				return CallbackResult;
-		}
-
-		if (UserData)
-			return UserData->Data->Original(hWnd, uMsg, wParam, lParam);
-		else
-			return DlgProcResult;
-	}
-
-	LRESULT CALLBACK WindowSubclasser::RegularWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
-	{
-		// directly accessing the subclasser singleton as we'll lose userdata b'ween CallWindowProc calls
-		WindowSubclassUserData* UserData = BGSEEUI->GetSubclasser()->RegularWindowSubclasses[hWnd].UserData;
-
-		bool CallbackReturn = false;
-		LRESULT CallbackResult = FALSE;
-
-		switch (uMsg)
-		{
-		case WM_SUBCLASSER_RELEASE:
-		case WM_DESTROY:
-			{
-				UserData->Data->ProcessSubclasses(hWnd, WM_DESTROY, wParam, lParam, CallbackReturn);
-				SetWindowLongPtr(hWnd, GWL_USERDATA, UserData->OriginalUserData);
-
-				if (uMsg == WM_DESTROY)
-				{
-					CallbackResult = CallWindowProc(UserData->Data->Original, hWnd, uMsg, wParam, lParam);
-				}
-
-				SetWindowLongPtr(hWnd, GWL_WNDPROC, (LONG_PTR)UserData->Data->Original);
-
-				delete UserData;
-				return CallbackResult;
-			}
-
-			break;
-		}
-
-		CallbackResult = UserData->Data->ProcessSubclasses(hWnd, uMsg, wParam, lParam, CallbackReturn);
-		if (CallbackReturn == false)
-		{
-			if (UserData->OriginalUserData)
-				SetWindowLongPtr(hWnd, GWL_USERDATA, UserData->OriginalUserData);
-
-			CallbackResult = CallWindowProc(UserData->Data->Original, hWnd, uMsg, wParam, lParam);
-
-			if (UserData->OriginalUserData)
-				SetWindowLongPtr(hWnd, GWL_USERDATA, (LONG_PTR)UserData);
-		}
-
-		return CallbackResult;
-	}
-
-	bool WindowSubclasser::GetShouldSubclassDialog( ResourceTemplateT TemplateID,
-												LPARAM InitParam,
-												DLGPROC OriginalProc,
-												DLGPROC& OutSubclassProc,
-												DialogSubclassUserData** OutSubclassUserData )
-	{
-		SME_ASSERT(OutSubclassUserData);
-
-		DialogSubclassMapT::iterator Match = DialogSubclasses.find(TemplateID);
-		if (Match != DialogSubclasses.end())
-		{
-			OutSubclassProc = DialogSubclassProc;
-			(*OutSubclassUserData) = new DialogSubclassUserData();
-			(*OutSubclassUserData)->Instance = this;
-			(*OutSubclassUserData)->Data = &Match->second;
-			(*OutSubclassUserData)->Data->Original = OriginalProc;
-			(*OutSubclassUserData)->InitParam = InitParam;
-			(*OutSubclassUserData)->TemplateID = TemplateID;
-
-			return true;
-		}
-		else
-			return false;
-	}
-
-	void WindowSubclasser::HandleMainWindowInit( HWND MainWindow )
-	{
-		EditorMainWindow = MainWindow;
-
-		SME_ASSERT(EditorMainWindow);
-	}
-
-	WindowSubclasser::WindowSubclasser() :
-		EditorMainWindow(nullptr),
-		DialogSubclasses(),
-		RegularWindowSubclasses()
-	{
-		;//
-	}
-
-	WindowSubclasser::~WindowSubclasser()
-	{
-		for (DialogSubclassMapT::iterator Itr = DialogSubclasses.begin(); Itr != DialogSubclasses.end(); Itr++)
-			Itr->second.ActiveHandles.SendMessage(WM_SUBCLASSER_RELEASE, NULL, NULL);
-
-		DialogSubclasses.clear();
-
-		for (WindowSubclassMapT::iterator Itr = RegularWindowSubclasses.begin(); Itr != RegularWindowSubclasses.end(); Itr++)
-			SendMessage(Itr->first, WM_SUBCLASSER_RELEASE, NULL, NULL);
-
-		RegularWindowSubclasses.clear();
-
-		bool Leakage = false;
-		if (WindowExtraData::GIC)
-		{
-			BGSEECONSOLE_MESSAGE("BGSEEWindowSubclasser::D'tor - Session leaked %d instances of BGSEEWindowExtraData!", WindowExtraData::GIC);
-			Leakage = true;
-		}
-
-		if (Leakage)
-			SHOW_LEAKAGE_MESSAGE("BGSEEWindowSubclasser");
-	}
-
-	bool WindowSubclasser::RegisterMainWindowSubclass( SubclassProc Proc )
-	{
-		return RegisterRegularWindowSubclass(EditorMainWindow, Proc);
-	}
-
-	bool WindowSubclasser::UnregisterMainWindowSubclass( SubclassProc Proc )
-	{
-		return UnregisterRegularWindowSubclass(EditorMainWindow, Proc);
-	}
-
-	bool WindowSubclasser::RegisterDialogSubclass( ResourceTemplateT TemplateID, SubclassProc Proc )
-	{
-		DialogSubclassMapT::iterator Match = DialogSubclasses.find(TemplateID);
-		if (Match != DialogSubclasses.end())
-		{
-			for (SubclassProcArrayT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
-			{
-				if (*Itr == Proc)
-					return false;
-			}
-
-			Match->second.Subclasses.push_back(Proc);
-		}
-		else
-		{
-			DialogSubclasses.insert(std::make_pair(TemplateID, DialogSubclassData()));
-			DialogSubclasses[TemplateID].Subclasses.push_back(Proc);
-		}
-
-		return true;
-	}
-
-	bool WindowSubclasser::UnregisterDialogSubclass( ResourceTemplateT TemplateID, SubclassProc Proc )
-	{
-		DialogSubclassMapT::iterator Match = DialogSubclasses.find(TemplateID);
-		if (Match != DialogSubclasses.end())
-		{
-			for (SubclassProcArrayT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
-			{
-				if (*Itr == Proc)
-				{
-					Match->second.Subclasses.erase(Itr);
-					return true;
-				}
-			}
-		}
-
-		return false;
-	}
-
-	bool WindowSubclasser::GetHasDialogSubclass( ResourceTemplateT TemplateID ) const
-	{
-		DialogSubclassMapT::const_iterator Match = DialogSubclasses.find(TemplateID);
-		if (Match != DialogSubclasses.end())
-			return true;
-		else
-			return false;
-	}
-
-	bool WindowSubclasser::RegisterRegularWindowSubclass( HWND Handle, SubclassProc Proc )
-	{
-		WindowSubclassMapT::iterator Match = RegularWindowSubclasses.find(Handle);
-		if (Match != RegularWindowSubclasses.end())
-		{
-			for (SubclassProcArrayT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
-			{
-				if (*Itr == Proc)
-					return false;
-			}
-
-			Match->second.Subclasses.push_back(Proc);
-		}
-		else
-		{
-			RegularWindowSubclasses.insert(std::make_pair(Handle, WindowSubclassData()));
-			RegularWindowSubclasses[Handle].Subclasses.push_back(Proc);
-
-			WindowSubclassUserData* UserData = new WindowSubclassUserData();
-			UserData->Instance = this;
-			UserData->Data = &RegularWindowSubclasses[Handle];
-			UserData->OriginalUserData = GetWindowLongPtr(Handle, GWL_USERDATA);
-
-			SetWindowLongPtr(Handle, GWL_USERDATA, (LONG_PTR)UserData);
-			RegularWindowSubclasses[Handle].Original = (WNDPROC)SetWindowLongPtr(Handle, GWL_WNDPROC, (LONG_PTR)RegularWindowSubclassProc);
-			RegularWindowSubclasses[Handle].UserData = UserData;
-		}
-
-		return true;
-	}
-
-	bool WindowSubclasser::UnregisterRegularWindowSubclass( HWND Handle, SubclassProc Proc )
-	{
-		bool Result = false;
-
-		WindowSubclassMapT::iterator Match = RegularWindowSubclasses.find(Handle);
-		if (Match != RegularWindowSubclasses.end())
-		{
-			for (SubclassProcArrayT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
-			{
-				if (*Itr == Proc)
-				{
-					Match->second.Subclasses.erase(Itr);
-					Result = true;
-					break;
-				}
-			}
-
-			if (Match->second.Subclasses.size() == 0)		// remove the subclass and reset the wndproc
-			{
-				SendMessage(Match->first, WM_SUBCLASSER_RELEASE, NULL, NULL);
-				RegularWindowSubclasses.erase(Match);
-			}
-		}
-
-		return Result;
-	}
-
-	ResourceTemplateT WindowSubclasser::GetDialogTemplate(HWND SubclassedDialog) const
-	{
-		DialogSubclassUserData* UserData = (DialogSubclassUserData*)GetWindowLongPtr(SubclassedDialog, DWL_USER);
-		SME_ASSERT(UserData);
-
-		return UserData->TemplateID;
-	}
-
-	INT_PTR WindowSubclasser::TunnelDialogMessage(HWND SubclassedDialog, UINT uMsg, WPARAM wParam, LPARAM lParam)
-	{
-		DialogSubclassUserData* UserData = (DialogSubclassUserData*)GetWindowLongPtr(SubclassedDialog, DWL_USER);
-		SME_ASSERT(UserData);
-
-		return UserData->Data->Original(SubclassedDialog, uMsg, wParam, lParam);
-	}
-
 	void ResourceTemplateHotSwapper::PopulateTemplateMap( void )
 	{
 		for (IDirectoryIterator Itr(SourceDepot().c_str(), "*.dll"); !Itr.Done(); Itr.Next())
@@ -560,7 +19,7 @@ namespace bgsee
 			}
 
 			int Index = FileName.rfind(".");
-			ResourceTemplateT TemplateID = 0;
+			ResourceTemplateOrdinalT TemplateID = 0;
 			SME_ASSERT(Index != -1);
 
 			TemplateID = atoi((FileName.substr(0, Index)).c_str());
@@ -581,7 +40,7 @@ namespace bgsee
 		TemplateMap.clear();
 	}
 
-	HINSTANCE ResourceTemplateHotSwapper::GetAlternateResourceInstance( ResourceTemplateT TemplateID )
+	HINSTANCE ResourceTemplateHotSwapper::GetAlternateResourceInstance( ResourceTemplateOrdinalT TemplateID )
 	{
 		TemplateResourceInstanceMapT::iterator Match = TemplateMap.find(TemplateID);
 
@@ -627,7 +86,7 @@ namespace bgsee
 		;//
 	}
 
-	bool MenuTemplateHotSwapper::RegisterTemplateReplacer( ResourceTemplateT TemplateID, HINSTANCE Replacer )
+	bool MenuTemplateHotSwapper::RegisterTemplateReplacer( ResourceTemplateOrdinalT TemplateID, HINSTANCE Replacer )
 	{
 		if (TemplateMap.count(TemplateID))
 			return false;
@@ -637,7 +96,7 @@ namespace bgsee
 		return true;
 	}
 
-	bool MenuTemplateHotSwapper::UnregisterTemplateReplacer( ResourceTemplateT TemplateID )
+	bool MenuTemplateHotSwapper::UnregisterTemplateReplacer( ResourceTemplateOrdinalT TemplateID )
 	{
 		if (TemplateMap.count(TemplateID))
 		{
@@ -648,7 +107,7 @@ namespace bgsee
 			return false;
 	}
 
-	bool WindowStyler::StyleWindow( HWND Window, ResourceTemplateT Template )
+	bool WindowStyler::StyleWindow( HWND Window, ResourceTemplateOrdinalT Template )
 	{
 		TemplateStyleMapT::iterator Match = StyleListings.find(Template);
 
@@ -723,7 +182,7 @@ namespace bgsee
 		StyleListings.clear();
 	}
 
-	bool WindowStyler::RegisterStyle( ResourceTemplateT TemplateID, StyleData& Data )
+	bool WindowStyler::RegisterStyle( ResourceTemplateOrdinalT TemplateID, StyleData& Data )
 	{
 		if (StyleListings.count(TemplateID))
 			return false;
@@ -733,7 +192,7 @@ namespace bgsee
 		return true;
 	}
 
-	bool WindowStyler::UnregisterStyle( ResourceTemplateT TemplateID )
+	bool WindowStyler::UnregisterStyle( ResourceTemplateOrdinalT TemplateID )
 	{
 		if (StyleListings.count(TemplateID))
 		{
@@ -809,142 +268,122 @@ namespace bgsee
 	}
 
 	UIManager*						UIManager::Singleton = nullptr;
-	SME::UIHelpers::CSnapWindow			UIManager::WindowEdgeSnapper;
+	SME::UIHelpers::CSnapWindow		UIManager::WindowEdgeSnapper;
 
-	UIManager::IATPatchData::IATPatchData() :
-		DLL(nullptr),
-		Import(nullptr),
-		Location(nullptr),
-		OriginalFunction(nullptr),
-		CallbackFunction(nullptr),
-		Replaced(false)
+
+
+	HWND UIManager::CallbackCreateWindowExA( DWORD dwExStyle,
+											LPCSTR lpClassName,
+											LPCSTR lpWindowName,
+											DWORD dwStyle,
+											int X, int Y,
+											int nWidth, int nHeight,
+											HWND hWndParent,
+											HMENU hMenu,
+											HINSTANCE hInstance,
+											LPVOID lpParam )
 	{
-		;//
-	}
-
-	void UIManager::IATPatchData::Replace( void )
-	{
-		if (Replaced)
-			return;
-
-		SME::MemoryHandler::SafeWrite32((UInt32)Location, (UInt32)CallbackFunction);
-		Replaced = true;
-	}
-
-	void UIManager::IATPatchData::Reset( void )
-	{
-		if (Replaced == false)
-			return;
-
-		SME::MemoryHandler::SafeWrite32((UInt32)Location, (UInt32)OriginalFunction);
-		Replaced = true;
-	}
-
-	HWND CALLBACK UIManager::CallbackCreateWindowExA( DWORD dwExStyle,
-														LPCSTR lpClassName,
-														LPCSTR lpWindowName,
-														DWORD dwStyle,
-														int X, int Y,
-														int nWidth, int nHeight,
-														HWND hWndParent,
-														HMENU hMenu,
-														HINSTANCE hInstance,
-														LPVOID lpParam )
-	{
-		SME_ASSERT(BGSEEUI->Initialized);
+		SME_ASSERT(Initialized);
 
 		bool EditorWindow = false;
-		if (!_stricmp(lpClassName, BGSEEUI->EditorWindowClassName.c_str()))
+		if (!_stricmp(lpClassName, EditorWindowClassName.c_str()))
 		{
 			EditorWindow = true;
 
-			if (BGSEEUI->EditorMainMenuReplacement)
-				hMenu = BGSEEUI->EditorMainMenuReplacement;
+			if (EditorMainMenuReplacement)
+				hMenu = EditorMainMenuReplacement;
 		}
 
-		HWND Result = ((_CallbackCreateWindowExA)(BGSEEUI->PatchDepot[kIATPatch_CreateWindowEx].OriginalFunction))
+		HWND Result = ((_CallbackCreateWindowExA)(PatchDepot[kIATPatch_CreateWindowEx].OriginalFunction))
 						(dwExStyle, lpClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
 
 		if (EditorWindow)
 		{
-			BGSEEUI->EditorWindowHandle = new HWNDGetter(Result);
-			BGSEEUI->EditorResourceInstance = new HINSTANCEGetter(hInstance);
-			BGSEEUI->Subclasser->HandleMainWindowInit(Result);
-			BGSEEUI->PatchDepot[kIATPatch_CreateWindowEx].Reset();
+			EditorWindowHandle = Result;
+			EditorResourceInstance = hInstance;
+			PatchDepot[kIATPatch_CreateWindowEx].Reset();
 
 			BGSEEDAEMON->ExecuteInitCallbacks(Daemon::kInitCallback_PostMainWindowInit);
-
-			SendMessage(Result, WM_INITDIALOG, NULL, NULL);
 		}
 
 		return Result;
 	}
 
-	HMENU CALLBACK UIManager::CallbackLoadMenuA( HINSTANCE hInstance, LPCSTR lpMenuName )
+	HMENU UIManager::CallbackLoadMenuA( HINSTANCE hInstance, LPCSTR lpMenuName )
 	{
-		SME_ASSERT(BGSEEUI->MenuHotSwapper);
+		SME_ASSERT(MenuHotSwapper);
 
-		if (hInstance != BGSEEUI->EditorResourceInstance->operator()())
-			return ((_CallbackLoadMenuA)(BGSEEUI->PatchDepot[kIATPatch_LoadMenu].OriginalFunction))(hInstance, lpMenuName);
+		if (hInstance != EditorResourceInstance)
+			return ((_CallbackLoadMenuA)(PatchDepot[kIATPatch_LoadMenu].OriginalFunction))(hInstance, lpMenuName);
 
-		HINSTANCE Alternate = BGSEEUI->MenuHotSwapper->GetAlternateResourceInstance((UInt32)lpMenuName);
+		HINSTANCE Alternate = MenuHotSwapper->GetAlternateResourceInstance((UInt32)lpMenuName);
 		if (Alternate)
 			hInstance = Alternate;
 
-		return ((_CallbackLoadMenuA)(BGSEEUI->PatchDepot[kIATPatch_LoadMenu].OriginalFunction))(hInstance, lpMenuName);
+		return ((_CallbackLoadMenuA)(PatchDepot[kIATPatch_LoadMenu].OriginalFunction))(hInstance, lpMenuName);
 	}
 
-	HWND CALLBACK UIManager::CallbackCreateDialogParamA( HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam )
+	HWND UIManager::CallbackCreateDialogParamA( HINSTANCE hInstance,
+												LPCSTR lpTemplateName,
+												HWND hWndParent,
+												DLGPROC lpDialogFunc,
+												LPARAM dwInitParam )
 	{
-		SME_ASSERT(BGSEEUI->Subclasser && BGSEEUI->DialogHotSwapper);
+		DialogCreationData CreationData;
+		CreationData.Modal = false;
+		CreationData.InstantiationTemplate = reinterpret_cast<ResourceTemplateOrdinalT>(lpTemplateName);
+		CreationData.CreationDlgProc = lpDialogFunc;
+		CreationData.CreationUserData = dwInitParam;
 
-		DLGPROC Replacement = nullptr;
-		WindowSubclasser::DialogSubclassUserData* UserData = nullptr;
-		HINSTANCE Alternate = BGSEEUI->DialogHotSwapper->GetAlternateResourceInstance((UInt32)lpTemplateName);
+		return CallbackCreateDialogParamA(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam, CreationData);
+	}
 
+	HWND UIManager::CallbackCreateDialogParamA(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam, const DialogCreationData& CreationData)
+	{
+		SME_ASSERT(DialogHotSwapper && Styler);
+
+		HINSTANCE Alternate = DialogHotSwapper->GetAlternateResourceInstance((UInt32)lpTemplateName);
 		if (Alternate)
 			hInstance = Alternate;
 
-		if (BGSEEUI->Subclasser->GetShouldSubclassDialog((UInt32)lpTemplateName, dwInitParam, lpDialogFunc, Replacement, &UserData))
-		{
-			lpDialogFunc = Replacement;
-			dwInitParam = (LPARAM)UserData;
-		}
-
-		HWND Result = ((_CallbackCreateDialogParamA)(BGSEEUI->PatchDepot[kIATPatch_CreateDialogParam].OriginalFunction))
-												(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+		HWND Result = ((_CallbackCreateDialogParamA)(PatchDepot[kIATPatch_CreateDialogParam].OriginalFunction))
+			(hInstance, lpTemplateName, hWndParent, lpDialogFunc, reinterpret_cast<LPARAM>(&CreationData));
 
 		if (Result)
-		{
-			BGSEEUI->Styler->StyleWindow(Result, (UInt32)lpTemplateName);
-		}
+			Styler->StyleWindow(Result, (UInt32)lpTemplateName);
 
 		return Result;
 	}
 
-	INT_PTR CALLBACK UIManager::CallbackDialogBoxParamA( HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam )
+	INT_PTR UIManager::CallbackDialogBoxParamA(HINSTANCE hInstance,
+														LPCSTR lpTemplateName,
+														HWND hWndParent,
+														DLGPROC lpDialogFunc,
+														LPARAM dwInitParam )
 	{
-		SME_ASSERT(BGSEEUI->Subclasser && BGSEEUI->DialogHotSwapper);
-		SME_ASSERT(hInstance == BGSEEUI->EditorResourceInstance->operator()());
+		DialogCreationData CreationData;
+		CreationData.Modal = true;
+		CreationData.InstantiationTemplate = reinterpret_cast<ResourceTemplateOrdinalT>(lpTemplateName);
+		CreationData.CreationDlgProc = lpDialogFunc;
+		CreationData.CreationUserData = dwInitParam;
 
-		DLGPROC Replacement = nullptr;
-		WindowSubclasser::DialogSubclassUserData* UserData = nullptr;
-		HINSTANCE Alternate = BGSEEUI->DialogHotSwapper->GetAlternateResourceInstance((ResourceTemplateT)lpTemplateName);
+		return CallbackDialogBoxParamA(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam, CreationData);
+	}
 
+	INT_PTR UIManager::CallbackDialogBoxParamA(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam, const DialogCreationData& CreationData)
+	{
+		SME_ASSERT(DialogHotSwapper);
+		SME_ASSERT(hInstance == EditorResourceInstance);
+
+		HINSTANCE Alternate = DialogHotSwapper->GetAlternateResourceInstance((ResourceTemplateOrdinalT)lpTemplateName);
 		if (Alternate)
 			hInstance = Alternate;
 
-		if (BGSEEUI->Subclasser->GetShouldSubclassDialog((ResourceTemplateT)lpTemplateName, dwInitParam, lpDialogFunc, Replacement, &UserData))
-		{
-			lpDialogFunc = Replacement;
-			dwInitParam = (LPARAM)UserData;
-		}
-
-		return ((_CallbackDialogBoxParamA)(BGSEEUI->PatchDepot[kIATPatch_DialogBoxParam].OriginalFunction))
-										(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+		return ((_CallbackDialogBoxParamA)(PatchDepot[kIATPatch_DialogBoxParam].OriginalFunction))
+			(hInstance, lpTemplateName, hWndParent, lpDialogFunc, reinterpret_cast<LPARAM>(&CreationData));
 	}
 
-	BOOL CALLBACK UIManager::EnumThreadWindowsCallback( HWND hwnd, LPARAM lParam )
+	BOOL CALLBACK UIManager::EnumThreadWindowsCallback(HWND hwnd, LPARAM lParam)
 	{
 		if (lParam)
 			EnableWindow(hwnd, TRUE);
@@ -977,51 +416,24 @@ namespace bgsee
 			break;
 		}
 
-		IATPatchData* Patch = &PatchDepot[PatchType];
-		Patch->DLL = DLLName;
-		Patch->Import = ImportName;
+		util::IATPatchData* Patch = &PatchDepot[PatchType];
+		Patch->ImportModule = DLLName;
+		Patch->ImportName = ImportName;
 		Patch->Location = nullptr;
-
-		UInt8* Base = (UInt8*)GetModuleHandle(nullptr);
-		IMAGE_DOS_HEADER* DOSHeader = (IMAGE_DOS_HEADER*)Base;
-		IMAGE_NT_HEADERS* NTHeader = (IMAGE_NT_HEADERS*)(Base + DOSHeader->e_lfanew);
-
-		IMAGE_IMPORT_DESCRIPTOR* IAT = (IMAGE_IMPORT_DESCRIPTOR*)(Base + NTHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
-
-		for(; IAT->Characteristics && Patch->Location == nullptr; ++IAT)
-		{
-			if(!_stricmp(DLLName, (const char*)(Base + IAT->Name)))
-			{
-				IMAGE_THUNK_DATA* ThunkData = (IMAGE_THUNK_DATA*)(Base + IAT->OriginalFirstThunk);
-				UInt32* DLLIAT = (UInt32*)(Base + IAT->FirstThunk);
-
-				for(; ThunkData->u1.Ordinal; ++ThunkData, ++DLLIAT)
-				{
-					if(!IMAGE_SNAP_BY_ORDINAL(ThunkData->u1.Ordinal))
-					{
-						IMAGE_IMPORT_BY_NAME* ImportInfo = (IMAGE_IMPORT_BY_NAME*)(Base + ThunkData->u1.AddressOfData);
-
-						if(!_stricmp((char *)ImportInfo->Name, ImportName))
-						{
-							Patch->Location = DLLIAT;
-							break;
-						}
-					}
-				}
-			}
-		}
-
-		SME_ASSERT(Patch->Location);
-
-		Patch->OriginalFunction = *((void**)Patch->Location);
 		Patch->CallbackFunction = Callback;
-		Patch->Replaced = false;
+
+		auto PatchSuccessful = Patch->Initialize();
+		SME_ASSERT(PatchSuccessful);
 
 		Patch->Replace();
 	}
 
 	UIManager::UIManager(const char* MainWindowClassName, HMENU MainMenuHandle) :
 		OwnerThreadID(0),
+		ThunkCreateWindowExA(this, &UIManager::CallbackCreateWindowExA),
+		ThunkLoadMenuA(this, &UIManager::CallbackLoadMenuA),
+		ThunkCreateDialogParamA(this, &UIManager::CallbackCreateDialogParamA),
+		ThunkDialogParamA(this, &UIManager::CallbackDialogBoxParamA),
 		EditorWindowClassName(MainWindowClassName),
 		EditorWindowHandle(nullptr),
 		EditorResourceInstance(nullptr),
@@ -1045,10 +457,10 @@ namespace bgsee
 		Styler = new WindowStyler();
 		InvalidationManager = new WindowInvalidationManager();
 
-		PatchIAT(kIATPatch_CreateWindowEx, CallbackCreateWindowExA);
-		PatchIAT(kIATPatch_CreateDialogParam, CallbackCreateDialogParamA);
-		PatchIAT(kIATPatch_DialogBoxParam, CallbackDialogBoxParamA);
-		PatchIAT(kIATPatch_LoadMenu, CallbackLoadMenuA);
+		PatchIAT(kIATPatch_CreateWindowEx, ThunkCreateWindowExA());
+		PatchIAT(kIATPatch_CreateDialogParam, ThunkCreateDialogParamA());
+		PatchIAT(kIATPatch_DialogBoxParam, ThunkDialogParamA());
+		PatchIAT(kIATPatch_LoadMenu, ThunkLoadMenuA());
 
 		Initialized = true;
 	}
@@ -1064,8 +476,6 @@ namespace bgsee
 		SAFEDELETE(Subclasser);
 		SAFEDELETE(DialogHotSwapper);
 		SAFEDELETE(MenuHotSwapper);
-		SAFEDELETE(EditorWindowHandle);
-		SAFEDELETE(EditorResourceInstance);
 		SAFEDELETE(Styler);
 		SAFEDELETE(InvalidationManager);
 
@@ -1103,7 +513,7 @@ namespace bgsee
 	HWND UIManager::GetMainWindow( void ) const
 	{
 		SME_ASSERT(EditorWindowHandle);
-		return EditorWindowHandle->operator()();
+		return EditorWindowHandle;
 	}
 
 	int UIManager::MsgBoxI( HWND Parent, UINT Flags, const char* Format, ... )
@@ -1236,28 +646,31 @@ namespace bgsee
 	{
 		SME_ASSERT(Initialized);
 
-		if (Override)
-			return CallbackCreateDialogParamA(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
-		else
-		{
-			return ((_CallbackCreateDialogParamA)(PatchDepot[kIATPatch_CreateDialogParam].OriginalFunction))
-												(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
-		}
+		DialogCreationData CreationData;
+		CreationData.Modal = false;
+		CreationData.SkipSubclassing = Override == false;
+		CreationData.InstantiationTemplate = reinterpret_cast<ResourceTemplateOrdinalT>(lpTemplateName);
+		CreationData.CreationDlgProc = lpDialogFunc;
+		CreationData.CreationUserData = dwInitParam;
+
+		return CallbackCreateDialogParamA(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam, CreationData);
 	}
 
 	INT_PTR UIManager::ModalDialog( HINSTANCE hInstance, LPSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam /*= NULL*/, bool Override )
 	{
+		SME_ASSERT(Initialized);
 		EnumThreadWindows(OwnerThreadID, EnumThreadWindowsCallback, 0);
 
 		INT_PTR Result = NULL;
 
-		if (Override)
-			Result = CallbackDialogBoxParamA(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
-		else
-		{
-			Result = ((_CallbackDialogBoxParamA)(PatchDepot[kIATPatch_DialogBoxParam].OriginalFunction))
-												(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
-		}
+		DialogCreationData CreationData;
+		CreationData.Modal = true;
+		CreationData.SkipSubclassing = Override == false;
+		CreationData.InstantiationTemplate = reinterpret_cast<ResourceTemplateOrdinalT>(lpTemplateName);
+		CreationData.CreationDlgProc = lpDialogFunc;
+		CreationData.CreationUserData = dwInitParam;
+
+		Result = CallbackDialogBoxParamA(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam, CreationData);
 
 		EnumThreadWindows(OwnerThreadID, EnumThreadWindowsCallback, 1);
 
@@ -1287,336 +700,5 @@ namespace bgsee
 	WindowInvalidationManager* UIManager::GetInvalidationManager( void )
 	{
 		return InvalidationManager;
-	}
-
-	LRESULT CALLBACK GenericModelessDialog::DefaultDlgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
-	{
-		bool SkipCallback = false;
-		bool SkipCallbackResult = false;
-		bool SkipDefaultProc = false;
-		LRESULT DlgProcResult = FALSE;
-		DlgUserData* UserData = (DlgUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
-		GenericModelessDialog* Instance = nullptr;
-
-		if (UserData)
-			 Instance = UserData->Instance;
-
-		switch (uMsg)
-		{
-		case WM_CLOSE:
-			Instance->ToggleVisibility();
-			SkipCallback = true;
-
-			break;
-		case WM_INITMENUPOPUP:
-			if (wParam == (WPARAM)Instance->ContextMenuHandle)
-			{
-				if (Instance->GetTopmost())
-					CheckMenuItem(Instance->ContextMenuHandle, IDC_BGSEE_GENERICMODELESSDLG_CONTEXTMENU_ALWAYSONTOP, MF_CHECKED);
-				else
-					CheckMenuItem(Instance->ContextMenuHandle, IDC_BGSEE_GENERICMODELESSDLG_CONTEXTMENU_ALWAYSONTOP, MF_UNCHECKED);
-
-				DlgProcResult = FALSE;
-				SkipCallbackResult = true;
-			}
-
-			break;
-		case WM_COMMAND:
-			switch (LOWORD(wParam))
-			{
-			case IDC_BGSEE_GENERICMODELESSDLG_CONTEXTMENU_HIDE:
-				Instance->ToggleVisibility();
-				SkipCallback = true;
-
-				break;
-			case IDC_BGSEE_GENERICMODELESSDLG_CONTEXTMENU_ALWAYSONTOP:
-				Instance->ToggleTopmost();
-				SkipCallback = true;
-
-				break;
-			}
-
-			break;
-		case WM_CONTEXTMENU:
-			{
-				RECT Rect;
-				POINT Point;
-
-				GetClientRect(hWnd, &Rect);
-				Point.x = GET_X_LPARAM(lParam);
-				Point.y = GET_Y_LPARAM(lParam);
-				ScreenToClient(hWnd, &Point);
-
-				if (PtInRect((LPRECT) &Rect, Point))
-				{
-					ClientToScreen(hWnd, (LPPOINT)&Point);
-					TrackPopupMenu(Instance->ContextMenuHandle, TPM_LEFTALIGN|TPM_LEFTBUTTON, Point.x, Point.y, 0, hWnd, nullptr);
-				}
-			}
-
-			break;
-		case WM_SIZING:
-			{
-				if (Instance->LockAspectRatio)
-				{
-					RECT* NewBounds = (RECT*)lParam;
-					tagRECT CurrentBounds;
-					GetClientRect(hWnd, &CurrentBounds);
-
-					switch (wParam)
-					{
-					case WMSZ_LEFT:
-					case WMSZ_RIGHT:
-						{
-							//Adjust height and vertical position
-							int TargetHeight = (int)((CurrentBounds.right - CurrentBounds.left) / Instance->AspectRatio);
-							int OriginalHeight = NewBounds->bottom - NewBounds->top;
-							int DiffHeight = OriginalHeight - TargetHeight;
-
-							NewBounds->top += (DiffHeight / 2);
-							NewBounds->bottom = NewBounds->top + TargetHeight;
-
-							break;
-						}
-					case WMSZ_TOP:
-					case WMSZ_BOTTOM:
-						{
-							//Adjust width and horizontal position
-							int TargetWidth = (int)((CurrentBounds.bottom - CurrentBounds.top) * Instance->AspectRatio);
-							int OriginalWidth = NewBounds->right - NewBounds->left;
-							int DiffWidth = OriginalWidth - TargetWidth;
-
-							NewBounds->left += (DiffWidth / 2);
-							NewBounds->right = NewBounds->left + TargetWidth;
-
-							break;
-						}
-					case WMSZ_RIGHT + WMSZ_BOTTOM:
-						//Lower-right corner
-						NewBounds->bottom = NewBounds->top + (int)((CurrentBounds.right - CurrentBounds.left) / Instance->AspectRatio);
-
-						break;
-					case WMSZ_LEFT + WMSZ_BOTTOM:
-						//Lower-left corner
-						NewBounds->bottom = NewBounds->top + (int)((CurrentBounds.right - CurrentBounds.left)  / Instance->AspectRatio);
-
-						break;
-					case WMSZ_LEFT + WMSZ_TOP:
-						//Upper-left corner
-						NewBounds->left = NewBounds->right - (int)((CurrentBounds.bottom - CurrentBounds.top) * Instance->AspectRatio);
-
-						break;
-					case WMSZ_RIGHT + WMSZ_TOP:
-						//Upper-right corner
-						NewBounds->right = NewBounds->left + (int)((CurrentBounds.bottom - CurrentBounds.top) * Instance->AspectRatio);
-
-						break;
-					}
-				}
-
-				break;
-			}
-		case WM_MOVING:
-			DlgProcResult = UIManager::WindowEdgeSnapper.OnSnapMoving(hWnd, uMsg, wParam, lParam);
-			SkipDefaultProc = true;
-
-			break;
-		case WM_ENTERSIZEMOVE:
-			DlgProcResult = UIManager::WindowEdgeSnapper.OnSnapEnterSizeMove(hWnd, uMsg, wParam, lParam);
-			SkipDefaultProc = true;
-
-			break;
-		case WM_INITDIALOG:
-			SetWindowLongPtr(hWnd, GWL_USERDATA, (LONG_PTR)lParam);
-			UserData = (DlgUserData*)lParam;
-			Instance = UserData->Instance;
-			UserData->Initialized = true;
-
-			break;
-		case WM_DESTROY:
-			Instance->CallbackDlgProc(hWnd, uMsg, wParam, lParam, SkipCallback);
-			SkipCallback = true;
-			delete UserData;
-
-			UserData = nullptr;
-			SetWindowLongPtr(hWnd, GWL_USERDATA, NULL);
-
-			break;
-		}
-
-		bool CallbackReturn = false;
-		if (SkipCallback == false && UserData && UserData->Initialized)
-		{
-			LRESULT CallbackResult = Instance->CallbackDlgProc(hWnd, uMsg, wParam, lParam, CallbackReturn);
-			if (SkipDefaultProc == false && SkipCallbackResult == false && CallbackReturn)
-				return CallbackResult;
-		}
-
-		if (SkipDefaultProc)
-			return DlgProcResult;
-		else
-			return FALSE;
-	}
-
-	void GenericModelessDialog::INILoadUIState( INISetting* Top, INISetting* Left, INISetting* Right, INISetting* Bottom, INISetting* Visible )
-	{
-		SME_ASSERT(Top && Top->GetType() == INISetting::kType_Integer);
-		SME_ASSERT(Left && Left->GetType() == INISetting::kType_Integer);
-		SME_ASSERT(Right && Right->GetType() == INISetting::kType_Integer);
-		SME_ASSERT(Bottom && Bottom->GetType() == INISetting::kType_Integer);
-		SME_ASSERT(Visible && Visible->GetType() == INISetting::kType_Integer);
-
-		SetWindowPos(DialogHandle,
-					HWND_NOTOPMOST,
-					Left->GetData().i,
-					Top->GetData().i,
-					Right->GetData().i,
-					Bottom->GetData().i,
-					SWP_SHOWWINDOW|SWP_FRAMECHANGED);
-
-		SetVisibility(Visible->GetData().i);
-	}
-
-	void GenericModelessDialog::INISaveUIState( INISetting* Top, INISetting* Left, INISetting* Right, INISetting* Bottom, INISetting* Visible )
-	{
-		SME_ASSERT(Top && Top->GetType() == INISetting::kType_Integer);
-		SME_ASSERT(Left && Left->GetType() == INISetting::kType_Integer);
-		SME_ASSERT(Right && Right->GetType() == INISetting::kType_Integer);
-		SME_ASSERT(Bottom && Bottom->GetType() == INISetting::kType_Integer);
-		SME_ASSERT(Visible && Visible->GetType() == INISetting::kType_Integer);
-
-		RECT WindowRect;
-		char Buffer[20] = {0};
-		GetWindowRect(DialogHandle, &WindowRect);
-
-		Top->SetInt(WindowRect.top);
-		Left->SetInt(WindowRect.left);
-		Right->SetInt(WindowRect.right - WindowRect.left);
-		Bottom->SetInt(WindowRect.bottom - WindowRect.top);
-		Visible->SetInt(this->Visible);
-	}
-
-	bool GenericModelessDialog::SetVisibility( bool State )
-	{
-		if (State)
-			ShowWindow(DialogHandle, SW_SHOWNA);
-		else
-			ShowWindow(DialogHandle, SW_HIDE);
-
-		Visible = State;
-		return Visible;
-	}
-
-	bool GenericModelessDialog::SetTopmost( bool State )
-	{
-		if (State)
-			SetWindowPos(DialogHandle, HWND_TOPMOST, 0, 1, 1, 1, SWP_NOMOVE|SWP_NOSIZE|SWP_SHOWWINDOW);
-		else
-			SetWindowPos(DialogHandle, HWND_NOTOPMOST, 0, 1, 1, 1, SWP_NOMOVE|SWP_NOSIZE|SWP_SHOWWINDOW);
-
-		Topmost = State;
-		return Topmost;
-	}
-
-	GenericModelessDialog::GenericModelessDialog( HWND Parent,
-															HINSTANCE Resource,
-															ResourceTemplateT DialogTemplate, ResourceTemplateT ContextMenuTemplate,
-															MessageCallback CallbackProc,
-															float AspectRatio /*= 0.0f*/ )
-	{
-		SME_ASSERT(Parent && Resource && DialogTemplate && ContextMenuTemplate && CallbackProc);
-
-		DialogHandle = nullptr;
-		ContextMenuHandle = nullptr;
-		ContextMenuParentHandle = nullptr;
-		ParentHandle = Parent;
-		ResourceInstance = Resource;
-		DialogTemplateID = DialogTemplate;
-		DialogContextMenuID = ContextMenuTemplate;
-		CallbackDlgProc = CallbackProc;
-		Visible = false;
-		Topmost = false;
-		this->AspectRatio = AspectRatio;
-
-		if (AspectRatio == 0.0f)
-			LockAspectRatio = false;
-		else
-			LockAspectRatio = true;
-	}
-
-	GenericModelessDialog::GenericModelessDialog()
-	{
-		DialogHandle = nullptr;
-		ContextMenuHandle = nullptr;
-		ContextMenuParentHandle = nullptr;
-		ParentHandle = nullptr;
-		ResourceInstance = nullptr;
-		DialogTemplateID = 0;
-		DialogContextMenuID = 0;
-		CallbackDlgProc = nullptr;
-		Visible = false;
-		Topmost = false;
-		AspectRatio = 0.0f;
-		LockAspectRatio = false;
-	}
-
-	GenericModelessDialog::~GenericModelessDialog()
-	{
-		if (DialogHandle == nullptr || ContextMenuParentHandle == nullptr)
-			return;
-
-		if (BGSEEUI)
-			BGSEEUI->GetWindowHandleCollection(UIManager::kHandleCollection_MainWindowChildren)->Remove(DialogHandle);
-
-		DestroyMenu(ContextMenuParentHandle);
-		DestroyWindow(DialogHandle);
-	}
-
-	void GenericModelessDialog::Create( LPARAM InitParam, bool Hide, bool OverrideCreation )
-	{
-		if (DialogHandle || ContextMenuParentHandle || CallbackDlgProc == nullptr)
-			return;
-
-		DlgUserData* UserData = new DlgUserData();
-		UserData->Instance = this;
-		UserData->ExtraData = InitParam;
-		DialogHandle = BGSEEUI->ModelessDialog(ResourceInstance,
-											MAKEINTRESOURCE(DialogTemplateID),
-											ParentHandle,
-											(DLGPROC)DefaultDlgProc,
-											(LPARAM)UserData,
-											OverrideCreation);
-		ContextMenuParentHandle = LoadMenu(ResourceInstance, (LPSTR)DialogContextMenuID);
-		ContextMenuHandle = GetSubMenu(ContextMenuParentHandle, 0);
-
-		SME_ASSERT(DialogHandle && ContextMenuParentHandle && ContextMenuHandle);
-
-		BGSEEUI->GetWindowHandleCollection(UIManager::kHandleCollection_MainWindowChildren)->Add(DialogHandle);
-		SetVisibility(Hide == false);
-	}
-
-	bool GenericModelessDialog::ToggleVisibility( void )
-	{
-		return SetVisibility((Visible == false));
-	}
-
-	bool GenericModelessDialog::ToggleTopmost( void )
-	{
-		return SetTopmost((Topmost == false));
-	}
-
-	bool GenericModelessDialog::IsVisible( void ) const
-	{
-		return Visible;
-	}
-
-	bool GenericModelessDialog::GetTopmost( void ) const
-	{
-		return Topmost;
-	}
-
-	bool GenericModelessDialog::GetInitialized( void ) const
-	{
-		return (DialogHandle != nullptr);
 	}
 }

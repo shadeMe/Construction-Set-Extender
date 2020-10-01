@@ -1,4 +1,5 @@
 #include "Console.h"
+#include "UIManager.h"
 #include "Script\CodaVM.h"
 #include "BGSEditorExtenderBase_Resource.h"
 
@@ -287,10 +288,11 @@ namespace bgsee
 
 #define IDC_BGSEE_CONSOLE_MESSAGELOG_REFRESHTIMER		0xC05
 
-	LRESULT CALLBACK Console::MessageLogSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
+	LRESULT CALLBACK Console::MessageLogSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, WindowExtraDataCollection* ExtraData )
 	{
 		DlgUserData* UserData = (DlgUserData*)GetWindowLongPtr(GetAncestor(hWnd, GA_PARENT), GWL_USERDATA);
 		Console* Instance = dynamic_cast<Console*>(UserData->Instance);
+		LRESULT CallbackResult = FALSE;
 
 		switch (uMsg)
 		{
@@ -323,21 +325,24 @@ namespace bgsee
 				break;
 			}
 
-			return FALSE;
+			Return = true;
+			CallbackResult = TRUE;
+			break;
 		case WM_CONTEXTMENU:
-			return SendMessage(GetAncestor(hWnd, GA_PARENT), uMsg, wParam, lParam);
-		case WM_DESTROY:
+			Return = true;
+			CallbackResult = SendMessage(GetAncestor(hWnd, GA_PARENT), uMsg, wParam, lParam);
+
 			break;
 		}
 
-		WNDPROC Original = (WNDPROC)GetWindowLongPtr(hWnd, GWL_USERDATA);
-		return CallWindowProc(Original, hWnd, uMsg, wParam, lParam);
+		return CallbackResult;
 	}
 
-	LRESULT CALLBACK Console::CommandLineSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
+	LRESULT CALLBACK Console::CommandLineSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, WindowExtraDataCollection* ExtraData )
 	{
 		DlgUserData* UserData = (DlgUserData*)GetWindowLongPtr(GetAncestor(hWnd, GA_PARENT), GWL_USERDATA);
 		Console* Instance = dynamic_cast<Console*>(UserData->Instance);
+		LRESULT CallbackResult = FALSE;
 
 		switch (uMsg)
 		{
@@ -362,10 +367,15 @@ namespace bgsee
 				break;
 			}
 
-			return TRUE;
+			CallbackResult = TRUE;
+			Return = true;
+			break;
 		case WM_CHAR:
 			if (wParam == VK_RETURN)
-				return TRUE;
+			{
+				CallbackResult = TRUE;
+				Return = true;
+			}
 
 			break;
 		case WM_KEYDOWN:
@@ -386,7 +396,9 @@ namespace bgsee
 					Edit_SetText(hWnd, nullptr);
 				}
 
-				return TRUE;
+				CallbackResult = TRUE;
+				Return = true;
+				break;
 			case VK_UP:
 				if (Instance->CommandLineHistory.empty() == false)
 				{
@@ -395,9 +407,12 @@ namespace bgsee
 					Edit_SetSel(hWnd, Command.length(), Command.length());
 					Instance->CommandLineHistory.pop();
 					Instance->CommandLineHistoryAuxiliary.push(Command);
+
+					CallbackResult = TRUE;
+					Return = true;
 				}
 
-				return TRUE;
+				break;
 			case VK_DOWN:
 				if (Instance->CommandLineHistoryAuxiliary.empty() == false)
 				{
@@ -406,18 +421,18 @@ namespace bgsee
 					Edit_SetSel(hWnd, Command.length(), Command.length());
 					Instance->CommandLineHistoryAuxiliary.pop();
 					Instance->CommandLineHistory.push(Command);
+
+					CallbackResult = TRUE;
+					Return = true;
 				}
 
-				return TRUE;
+				break;
 			}
 
 			break;
-		case WM_DESTROY:
-			break;
 		}
 
-		WNDPROC Original = (WNDPROC)GetWindowLongPtr(hWnd, GWL_USERDATA);
-		return CallWindowProc(Original, hWnd, uMsg, wParam, lParam);
+		return CallbackResult;
 	}
 
 	void Console::MessageLogContext::SetState( UInt8 NewState )
@@ -970,14 +985,6 @@ namespace bgsee
 		INISaveUIState(&kINI_Top, &kINI_Left, &kINI_Right, &kINI_Bottom, &kINI_Visible);
 		KillTimer(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), IDC_BGSEE_CONSOLE_MESSAGELOG_REFRESHTIMER);
 
-		SetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG),
-					GWL_WNDPROC,
-					GetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), GWL_USERDATA));
-
-		SetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE),
-					GWL_WNDPROC,
-					GetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE), GWL_USERDATA));
-
 		Singleton = nullptr;
 	}
 
@@ -987,14 +994,12 @@ namespace bgsee
 		ResourceInstance = Resource;
 
 		Create(NULL, false, true);
-		LONG OrgWndProc = SetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), GWL_WNDPROC, (LONG)Console::MessageLogSubclassProc);
-		SetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), GWL_USERDATA, OrgWndProc);
 
-		OrgWndProc = SetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE), GWL_WNDPROC, (LONG)Console::CommandLineSubclassProc);
-		SetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE), GWL_USERDATA, OrgWndProc);
+		BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), MessageLogSubclassProc);
+		BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE), CommandLineSubclassProc);
+
 
 		Edit_LimitText(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), sizeof(int));
-
 		SetTimer(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG),
 				IDC_BGSEE_CONSOLE_MESSAGELOG_REFRESHTIMER,
 				kINI_UpdatePeriod.GetData().i,
