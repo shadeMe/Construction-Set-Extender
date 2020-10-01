@@ -55,12 +55,13 @@ namespace cse
 		ObjectWindowImposterManager();
 		~ObjectWindowImposterManager();
 
-		void										SpawnImposter(void);
-		void										RefreshImposters(void) const;
-		void										DestroyImposters(void);
+		void	SpawnImposter(void);
+		void	RefreshImposters(void) const;
+		void	DestroyImposters(void);
+		bool	IsImposter(HWND hWnd) const;
 
-		void										HandleObjectWindowSizing(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) const;
-		void										HandleObjectWindowActivating(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) const;
+		void	HandleObjectWindowSizing(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) const;
+		void	HandleObjectWindowActivating(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) const;
 
 		static ObjectWindowImposterManager			Instance;
 	};
@@ -112,11 +113,12 @@ namespace cse
 		PreviewWindowImposterManager();
 		~PreviewWindowImposterManager();
 
-		void										SpawnImposter(TESBoundObject* Object);
-		void										DestroyImposters(void);
+		void	SpawnImposter(TESBoundObject* Object);
+		void	DestroyImposters(void);
+		bool	IsImposter(HWND hWnd) const;
 
-		bool										GetEnabled(void) const;
-		void										SetEnabled(bool State);
+		bool	GetEnabled(void) const;
+		void	SetEnabled(bool State);
 
 		static PreviewWindowImposterManager			Instance;
 	};

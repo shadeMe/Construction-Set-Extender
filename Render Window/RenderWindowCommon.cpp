@@ -235,7 +235,8 @@ namespace cse
 				BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(*TESRenderWindow::WindowHandle,
 															  WM_KEYDOWN,
 															  KeyCode,
-															  NULL);
+															  NULL,
+															  true);
 
 				ModifierOverride::Instance.Deactivate(kModifier_Control);
 				ModifierOverride::Instance.Deactivate(kModifier_Shift);

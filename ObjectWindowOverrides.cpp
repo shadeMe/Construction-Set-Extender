@@ -7,10 +7,16 @@ namespace cse
 	namespace uiManager
 	{
 		LRESULT CALLBACK ObjectWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												  bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+												  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
+
+			if (ObjectWindowImposterManager::Instance.IsImposter(hWnd))
+			{
+				// the imposter needs to handle its own messages exclusively
+				return DlgProcResult;
+			}
 
 			HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
 			HWND FormList = GetDlgItem(hWnd, TESObjectWindow::kFormListCtrlID);
@@ -18,6 +24,22 @@ namespace cse
 
 			switch (uMsg)
 			{
+			case TESObjectWindow::kWindowMessage_Reload:
+				Return = true;
+
+				// the window subclasser's windows hook has an out-sized performance penalty for
+				// insertions in tree view controls (probably also has to do with the way it's used in this dialog)
+				// so we have to temporarily suspend the hook when this code is executing
+				BGSEEUI->GetInvalidationManager()->Push(TreeList);
+				Subclasser->SuspendHooks();
+				{
+					DlgProcResult = Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
+				}
+				Subclasser->ResumeHooks();
+				BGSEEUI->GetInvalidationManager()->Pop(TreeList);
+				BGSEEUI->GetInvalidationManager()->Redraw(TreeList);
+
+				break;
 			case WM_NOTIFY:
 				{
 					bool Skip = true;

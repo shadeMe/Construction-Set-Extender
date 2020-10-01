@@ -50,7 +50,7 @@ namespace cse
 
 
 		LRESULT CALLBACK MainWindowMenuInitSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-														bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+														bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -179,10 +179,15 @@ namespace cse
 									break;
 								case IDC_MAINMENU_PATHGRIDLINKEDREFINDICATORSETTINGS_HIDELINECONNECTOR:
 									if ((settings::renderer::kPathGridLinkedRefIndicatorFlags().u &
-										 settings::renderer::kPathGridLinkedRefIndicatorFlag_HideLineConnector))
+										settings::renderer::kPathGridLinkedRefIndicatorFlag_HideLineConnector))
 									{
 										CheckItem = true;
 									}
+
+									break;
+								case IDC_MAINMENU_CUSTOMCOLORTHEMEMODE:
+									if (BGSEEUI->GetColorThemer()->IsEnabled())
+										CheckItem = true;
 
 									break;
 								default:
@@ -220,7 +225,7 @@ namespace cse
 		}
 
 		LRESULT CALLBACK MainWindowMenuSelectSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-														  bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+														  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -647,6 +652,13 @@ namespace cse
 				case IDC_MAINMENU_SYNCSCRIPTSTODISK:
 					cliWrapper::interfaces::SE->ShowDiskSyncDialog();
 					break;
+				case IDC_MAINMENU_CUSTOMCOLORTHEMEMODE:
+					if (BGSEEUI->GetColorThemer()->IsEnabled())
+						BGSEEUI->GetColorThemer()->Disable();
+					else
+						BGSEEUI->GetColorThemer()->Enable();
+
+					break;
 				default:
 					Return = false;
 
@@ -660,11 +672,9 @@ namespace cse
 		}
 
 #define ID_PATHGRIDTOOLBARBUTTION_TIMERID		0x99
-#define WM_MAINTOOLBAR_SETTOD					(WM_USER + 2004)
-		// wParam = position
 
 		LRESULT CALLBACK MainWindowMiscSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+													bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -678,7 +688,7 @@ namespace cse
 
 				Return = true;
 				break;
-			case WM_INITDIALOG:
+			case WM_MAINWINDOW_INIT_DIALOG:
 				{
 					SetTimer(hWnd, ID_PATHGRIDTOOLBARBUTTION_TIMERID, 500, nullptr);
 					Return = true;
@@ -698,7 +708,7 @@ namespace cse
 				}
 
 				break;
-			case WM_MAINWINDOW_INITEXTRADATA:
+			case WM_MAINWINDOW_INIT_EXTRADATA:
 				{
 					MainWindowMiscData* xData = BGSEE_GETWINDOWXDATA(MainWindowMiscData, ExtraData);
 					if (xData == nullptr)
@@ -716,8 +726,8 @@ namespace cse
 							BGSEECONSOLE_ERROR("Couldn't build main window toolbar subwindow!");
 						else
 						{
-							BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(*TESCSMain::MainToolbarHandle, MainWindowToolbarSubClassProc);
-							SendMessage(*TESCSMain::MainToolbarHandle, WM_INITDIALOG, NULL, NULL);
+							Subclasser->RegisterSubclassForWindow(*TESCSMain::MainToolbarHandle, MainWindowToolbarSubClassProc);
+							SendMessage(*TESCSMain::MainToolbarHandle, WM_MAINTOOLBAR_INIT, NULL, NULL);
 
 							HWND TODSlider = GetDlgItem(hWnd, IDC_TOOLBAR_TODSLIDER);
 							HWND TODEdit = GetDlgItem(hWnd, IDC_TOOLBAR_TODCURRENT);
@@ -770,7 +780,7 @@ namespace cse
 		}
 
 		LRESULT CALLBACK MainWindowToolbarSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													   bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+													   bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -780,7 +790,7 @@ namespace cse
 
 			switch (uMsg)
 			{
-			case WM_INITDIALOG:
+			case WM_MAINTOOLBAR_INIT:
 				{
 					MainWindowToolbarData* xData = BGSEE_GETWINDOWXDATA(MainWindowToolbarData, ExtraData);
 					if (xData == nullptr)
@@ -876,6 +886,8 @@ namespace cse
 			BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(BGSEEUI->GetMainWindow(), uiManager::MainWindowMenuInitSubclassProc);
 			BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(BGSEEUI->GetMainWindow(), uiManager::MainWindowMenuSelectSubclassProc);
 			BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(BGSEEUI->GetMainWindow(), uiManager::MainWindowMiscSubclassProc);
+
+			SendMessage(BGSEEUI->GetMainWindow(), WM_MAINWINDOW_INIT_DIALOG, NULL, NULL);
 		}
 
 	}

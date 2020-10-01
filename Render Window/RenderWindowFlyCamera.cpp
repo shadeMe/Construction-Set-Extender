@@ -19,6 +19,7 @@ namespace cse
 			ZeroMemory(&DIKeyboardState, sizeof(DIKeyboardState));
 			InputValid = false;
 			ZeroMemory(&ViewportFrustumBuffer, sizeof(NiFrustum));
+			KeyboardLayout = GetKeyboardLayout(GetCurrentThreadId());
 		}
 
 		void RenderWindowFlyCamera::EnterFlyCamMode()
@@ -174,8 +175,31 @@ namespace cse
 		{
 			auto ToggleKey = _RENDERWIN_MGR.GetKeyboardInputManager()->GetSharedBindings().ToggleFlyCamera;
 			const auto& Binding = ToggleKey->GetActiveBinding();
+			auto Scancode = MapVirtualKeyEx(Binding.GetKeyCode(), MAPVK_VK_TO_VSC, KeyboardLayout);
+			if (Scancode == 0)
+			{
+				BGSEECONSOLE_MESSAGE("Couldn't convert toggle fly camera hotkey binding to scan code! Exiting...");
+				return true;
+			}
 
-			return Binding.IsActivated();
+			bool Control = GetKeyPressed(DIK_LCONTROL) || GetKeyPressed(DIK_RCONTROL);
+			bool Shift = GetKeyPressed(DIK_LSHIFT) || GetKeyPressed(DIK_RSHIFT);
+			bool Alt = GetKeyPressed(DIK_LALT) || GetKeyPressed(DIK_RALT);
+			bool KeyPressed = GetKeyPressed(Scancode);
+
+			if (KeyPressed)
+			{
+				if (!Binding.HasShift() || Shift)
+				{
+					if (!Binding.HasControl() || Control)
+					{
+						if (!Binding.HasAlt() || Alt)
+							return true;
+					}
+				}
+			}
+
+			return false;
 		}
 
 		void RenderWindowFlyCamera::Rotate(int XOffset, int YOffset)
@@ -249,7 +273,7 @@ namespace cse
 		}
 
 		LRESULT RenderWindowFlyCamera::RenderWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-																bool& Return, bgsee::WindowExtraDataCollection* ExtraData )
+																bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser )
 		{
 			SME_ASSERT(Active == true);
 

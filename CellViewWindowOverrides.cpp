@@ -154,7 +154,7 @@ namespace cse
 		}
 
 		LRESULT CALLBACK CellViewWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+													bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;

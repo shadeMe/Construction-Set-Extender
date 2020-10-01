@@ -45,7 +45,7 @@ namespace cse
 #define IDC_FINDTEXT_OPENSCRIPTS				9014
 
 		LRESULT CALLBACK FindTextDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												 bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+												 bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -250,7 +250,7 @@ namespace cse
 
 
 		LRESULT CALLBACK DataDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-											 bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+											 bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -624,7 +624,7 @@ namespace cse
 
 
 		LRESULT CALLBACK ResponseDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												 bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+												 bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -820,7 +820,7 @@ namespace cse
 		}
 
 		LRESULT CALLBACK LandscapeTextureUseDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-															bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+															bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -857,7 +857,7 @@ namespace cse
 		}
 
 		LRESULT CALLBACK FilteredDialogQuestDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-															bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+															bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -866,7 +866,7 @@ namespace cse
 			{
 			case WM_INITDIALOG:
 				{
-					if (BGSEEUI->GetSubclasser()->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_Quest)
+					if (Subclasser->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_Quest)
 					{
 						LVCOLUMN ColumnData = { 0 };
 						ColumnData.mask = LVCF_WIDTH;
@@ -908,7 +908,7 @@ namespace cse
 		}
 
 		LRESULT CALLBACK AboutDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-											  bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+											  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -978,7 +978,7 @@ namespace cse
 		}
 
 		LRESULT CALLBACK RaceDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-											 bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+											 bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -1059,7 +1059,7 @@ namespace cse
 
 
 		LRESULT CALLBACK LandscapeEditDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													  bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+													  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -1095,7 +1095,7 @@ namespace cse
 		}
 
 		LRESULT CALLBACK AIPackagesDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												   bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+												   bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -1142,7 +1142,7 @@ namespace cse
 		}
 
 		LRESULT CALLBACK AIFormDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-											   bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+											   bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -1172,7 +1172,7 @@ namespace cse
 #define IDT_FACEGENPREVIEW_PREVIEWUPDATE			0x7FF
 
 		LRESULT CALLBACK FaceGenParamListSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													  bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+													  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -1203,7 +1203,7 @@ namespace cse
 		}
 
 		LRESULT CALLBACK FaceGenDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+												bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -1414,7 +1414,7 @@ namespace cse
 									if (!_stricmp("SysListView32", Buffer))
 									{
 										// right, subclass it to forward mouse wheel messages to the trackbar
-										BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(AdvancedParamsList, FaceGenParamListSubClassProc);
+										Subclasser->RegisterSubclassForWindow(AdvancedParamsList, FaceGenParamListSubClassProc);
 									}
 								}
 							}
@@ -1462,7 +1462,7 @@ namespace cse
 
 
 		LRESULT CALLBACK MagicItemFormDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													  bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+													  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -1560,7 +1560,7 @@ namespace cse
 		}
 
 		LRESULT CALLBACK LeveledItemFormDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-														bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+														bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -1598,7 +1598,7 @@ namespace cse
 		}
 
 		LRESULT CALLBACK TESObjectCELLDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													  bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+													  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -1619,14 +1619,14 @@ namespace cse
 						// this is done to prevent the dialog's controls from being disabled if the active filter string doesn't match any forms in the new worldspace
 						FilterableFormListManager::Instance.SetEnabledState(FilterEditBox, false);
 						SetWindowText(FilterEditBox, "");
-						BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam);
+						Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
 						FilterableFormListManager::Instance.SetEnabledState(FilterEditBox, true);
 					}
 					else if (lParam == NULL)
 					{
 						// filter refresh
 						// prevent filter controls from being disabled
-						BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam);
+						Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
 						EnableWindow(FilterEditBox, TRUE);
 						EnableWindow(GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL), TRUE);
 					}
@@ -1681,7 +1681,7 @@ namespace cse
 		}
 
 		LRESULT CALLBACK SelectTopicsQuestsSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-														bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+														bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -1739,7 +1739,7 @@ namespace cse
 
 			if (Return == false && FilterableFormListManager::Instance.HandleMessages(FilterEditBox, uMsg, wParam, lParam))
 			{
-				if (BGSEEUI->GetSubclasser()->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_SelectTopic)
+				if (Subclasser->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_SelectTopic)
 					(*SelectTopicWindowData::Singleton)->RefreshListView(hWnd);
 				else
 					(*SelectQuestWindowData::Singleton)->RefreshListView(hWnd);

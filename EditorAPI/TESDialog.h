@@ -708,6 +708,12 @@ public:
 class TESObjectWindow
 {
 public:
+	enum
+	{
+		kWindowMessage_Reload = 0x412,
+	};
+
+
 	// 14
 	class TreeEntryInfo
 	{

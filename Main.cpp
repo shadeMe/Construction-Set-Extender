@@ -38,7 +38,6 @@ namespace cse
 	PluginHandle								XSEPluginHandle = kPluginHandle_Invalid;
 
 	ReleaseNameTable							ReleaseNameTable::Instance;
-	bool										shadeMeMode = false;
 	bool										IsWarholAGenius = false;
 
 	ReleaseNameTable::ReleaseNameTable() :
@@ -53,7 +52,7 @@ namespace cse
 		RegisterRelease(7, 1, "Bull-buggering Bollocks");
 		RegisterRelease(8, 0, "Dead Dove");
 		RegisterRelease(8, 1, "Logical Half Nelson");
-		RegisterRelease(8, 2, "Aha!");
+		RegisterRelease(8, 2, "YYZed");
 	}
 
 	ReleaseNameTable::~ReleaseNameTable()
@@ -321,24 +320,6 @@ namespace cse
 		}
 
 		BGSEEACHIEVEMENTS->Unlock(achievements::kHappyBDayMoi, false, false, true);
-
-#ifndef NDEBUG
-		if (shadeMeMode == false)
-		{
-			BGSEECONSOLE->LogMsg("shadeMe", "This is a DEBUG build");
-			BGSEECONSOLE->LogMsg("shadeMe", "Please proceed to your local police precinct and turn yourself in for not being me");
-			BGSEECONSOLE->LogMsg("shadeMe", "Or get hold of a transmogrifier that goes BOINK!");
-			BGSEECONSOLE->Pad(1);
-			BGSEECONSOLE->Indent();
-			BGSEECONSOLE->Indent();
-			BGSEECONSOLE->Indent();
-			BGSEECONSOLE->Indent();
-			BGSEECONSOLE->LogMsg("shadeMe", "Thank you kindly");
-			BGSEECONSOLE->LogMsg("shadeMe", "The guy who wrote this message");
-			BGSEECONSOLE->OutdentAll();
-			BGSEECONSOLE->Pad(2);
-		}
-#endif
 
 		return true;
 	}
@@ -643,13 +624,6 @@ extern "C"
 
 		if (obse->isEditor == false)
 			return false;
-
-		char UsernameBuffer[0x200] = { 0 };
-		DWORD UsernameSize = sizeof(UsernameBuffer);
-		GetUserName(UsernameBuffer, &UsernameSize);
-
-		if (!_stricmp(UsernameBuffer, "shadeMe"))
-			shadeMeMode = true;
 
 		SME::MersenneTwister::init_genrand(GetTickCount());
 		if (SME::MersenneTwister::genrand_real1() < 0.05)

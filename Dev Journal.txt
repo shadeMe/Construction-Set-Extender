@@ -4,11 +4,6 @@ To-Do
 IMMEDIATE  >>
 	>> Ship the visual styles enabled version of the CS with the main archive
 		> Reqd. by the new subclassing code
-	>> SetWindowLong GWL_WNDPROC vanilla usage
-		> Edit control
-		> Object window splitter
-		> Preview control
-		> Region editor
 
 
 NOTE	---->
@@ -25,8 +20,6 @@ CSE		---->
 
 
 	ENHANCEMENT		=
-		> Add default form for Nukem, credit in readMe
-		> Port Nukem's dark mode
 		> Add support for TOD/sunlight lighting in exteriors
 			> Currently only works with interiors that behave like exteriors
 			>> Seems likely that the issue is dependent on modifying the fragment shaders used for lighting in exteriors
@@ -69,7 +62,6 @@ SE		---->
 		> Prevent the creation of duplicate script editor IDs
 		> Fuzzy search for IntelliSense
 		> Language server impl for external editors
-		> Change margin
 
 
 	MISC			=

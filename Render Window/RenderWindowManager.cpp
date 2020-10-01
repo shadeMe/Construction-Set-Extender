@@ -551,7 +551,7 @@ namespace cse
 		}
 
 		LRESULT CALLBACK RenderWindowManager::RenderWindowMenuInitSelectSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-																bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+																bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = TRUE;
 			Return = false;
@@ -879,7 +879,7 @@ namespace cse
 
 
 		LRESULT CALLBACK RenderWindowManager::RenderWindowMasterSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													  bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+													  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = TRUE;
 			Return = false;

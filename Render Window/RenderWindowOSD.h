@@ -41,7 +41,7 @@ namespace cse
 			static void						RenderDrawLists(ImDrawData* draw_data);
 
 			bool							CreateFontsTexture();
-			void							AddFontFromFile(const char* FontPath, const char* IconFontPath = nullptr, ImWchar IconRangeStart = '\0', ImWchar IconRangeEnd = '\0');
+			void							AddFontFromFile(const char* FontPath, const char* IconFontPath = nullptr, ImWchar IconRangeStart = '\0', ImWchar IconRangeEnd = '\0', float IconOffsetX = 0.f, float IconOffsetY = 0.f);
 			void							Shutdown();
 
 			bool							IsActiveItemInWhitelist(const ImGuiWidgetIDArrayT& Whitelist) const;

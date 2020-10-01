@@ -182,7 +182,7 @@ namespace cse
 			std::string MainFontPath(FontPathRoot + std::string(settings::renderWindowOSD::kFontFace().s));
 			std::string IconFontPath(FontPathRoot + std::string("MaterialIcons-Regular.ttf"));
 
-			AddFontFromFile(MainFontPath.c_str(), IconFontPath.c_str(), ICON_MIN_MD, ICON_MAX_MD);
+			AddFontFromFile(MainFontPath.c_str(), IconFontPath.c_str(), ICON_MIN_MD, ICON_MAX_MD, 0.f, 4.5f);
 #endif
 			unsigned char* pixels;
 			int width, height, bytes_per_pixel;
@@ -205,7 +205,7 @@ namespace cse
 			return true;
 		}
 
-		void ImGuiDX9::AddFontFromFile(const char* FontPath, const char* IconFontPath, ImWchar IconRangeStart, ImWchar IconRangeEnd)
+		void ImGuiDX9::AddFontFromFile(const char* FontPath, const char* IconFontPath, ImWchar IconRangeStart, ImWchar IconRangeEnd, float IconOffsetX, float IconOffsetY)
 		{
 			ImGuiIO& io = ImGui::GetIO();
 			ImFontConfig config;
@@ -224,8 +224,10 @@ namespace cse
 			icons_config.OversampleH = 2;
 			icons_config.OversampleV = 2;
 			icons_config.PixelSnapH = true;
+			icons_config.GlyphOffset.x += IconOffsetX;
+			icons_config.GlyphOffset.y += IconOffsetY;
 			if (GetFileAttributes(IconFontPath) != INVALID_FILE_ATTRIBUTES)
-				io.Fonts->AddFontFromFileTTF(IconFontPath, settings::renderWindowOSD::kFontSize().i + 2, &icons_config, icons_ranges)->DisplayOffset.y = 1;
+				io.Fonts->AddFontFromFileTTF(IconFontPath, settings::renderWindowOSD::kFontSize().i + 2, &icons_config, icons_ranges);
 		}
 
 		ImGuiDX9::ImGuiDX9() :

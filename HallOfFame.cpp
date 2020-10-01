@@ -155,7 +155,7 @@ namespace cse
 		}
 
 		HallOfFameShadeMe::HallOfFameShadeMe() :
-			HallOfFameEntry("shadeMe", "Likes Andrea Corr", TESForm::kFormType_NPC),
+			HallOfFameEntry("shadeMe", "Wants You To Send Him Money", TESForm::kFormType_NPC),
 			TheGreatEye(nullptr)
 		{
 			;//

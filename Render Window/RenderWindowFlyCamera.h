@@ -11,13 +11,14 @@ namespace cse
 			LPDIRECTINPUT8			DInput;
 			LPDIRECTINPUTDEVICE8	DIMouse;
 			LPDIRECTINPUTDEVICE8	DIKeyboard;
+			HKL						KeyboardLayout;
 			bool					InputValid;
 
 			DIMOUSESTATE			DIMouseState;
 			BYTE					DIKeyboardState[256];
 			NiFrustum				ViewportFrustumBuffer;
 
-			bgsee::util::ThunkStdCall<RenderWindowFlyCamera, LRESULT, HWND, UINT, WPARAM, LPARAM, bool&, bgsee::WindowExtraDataCollection*>
+			bgsee::util::ThunkStdCall<RenderWindowFlyCamera, LRESULT, HWND, UINT, WPARAM, LPARAM, bool&, bgsee::WindowExtraDataCollection*, bgsee::WindowSubclasser*>
 									ThunkRenderWindowSubclassProc;
 
 			enum
@@ -47,7 +48,7 @@ namespace cse
 			bool	GetToggleHotkeyPressed();
 
 			LRESULT RenderWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-											bool& Return, bgsee::WindowExtraDataCollection* ExtraData);
+											bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
 
 			RenderWindowFlyCamera();
 		public:

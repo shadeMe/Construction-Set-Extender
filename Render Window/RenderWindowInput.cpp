@@ -454,7 +454,7 @@ namespace cse
 
 				if (Result.Success)
 				{
-					// deactive modifiers for non-modifier overrides before tunneling to prevent spurious triggering of built-in key combos
+					// deactivate modifiers for non-modifier overrides before tunneling to prevent spurious triggering of built-in key combos
 					// we only want the their base state flags to be updated
 					switch (BuiltInKey)
 					{
@@ -473,7 +473,8 @@ namespace cse
 					BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(*TESRenderWindow::WindowHandle,
 																  uMsg,
 																  BuiltInKey,
-																  NULL);
+																  NULL,
+																  true);
 
 					switch (BuiltInKey)
 					{
@@ -1655,7 +1656,7 @@ namespace cse
 						if (OverrideHandler)
 							*TESRenderWindow::RefreshFlag = 0;
 
-						BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam);
+						BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
 
 						if (OverrideHandler)
 							*TESRenderWindow::RefreshFlag = UpdateFlagBuffer;
@@ -1710,7 +1711,7 @@ namespace cse
 					}
 
 					// tunnel the message to the original proc and check if we need to allow free mouse movement
-					BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam);
+					BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
 
 					_RENDERWIN_XSTATE.DraggingPathGridPoints = *TESRenderWindow::PathGridEditFlag &&
 																_RENDERWIN_XSTATE.CurrentMousePathGridPoint &&
@@ -1771,7 +1772,7 @@ namespace cse
 					_RENDERWIN_XSTATE.DraggingPathGridPoints = false;
 					TransformingSelection = false;
 
-					BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam);
+					BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
 
 					// end free movement handling
 					ToggleFreeMouseMovement(hWnd, false);

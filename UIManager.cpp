@@ -46,7 +46,7 @@ namespace cse
 		}
 
 		LRESULT CALLBACK FilterableFormListManager::FilterableWindowData::FormListSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-																								bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+																								bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser*)
 		{
 			SME_ASSERT(FormListDataTable.find(hWnd) != FormListDataTable.end());
 			FilterableWindowData* UserData = FormListDataTable[hWnd];
@@ -606,7 +606,7 @@ namespace cse
 #define ID_COMMONDLGEXTRAFITTINGS_ASSETTOOLTIPTIMERID					0x109
 
 		LRESULT CALLBACK CommonDialogExtraFittingsSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-															bool& Return, bgsee::WindowExtraDataCollection* ExtraData )
+															bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -870,7 +870,7 @@ namespace cse
 										break;
 									case kFormList_ClimateWeatherRaceHairFindTextTopics:
 										{
-											auto TemplateID = BGSEEUI->GetSubclasser()->GetDialogTemplate(hWnd);
+											auto TemplateID = Subclasser->GetDialogTemplate(hWnd);
 
 											switch (TemplateID)
 											{
@@ -1062,7 +1062,7 @@ namespace cse
 #define ID_TESFORMIDLISTVIEW_DRAGTIMER							(WM_USER + 2008)
 
 		LRESULT CALLBACK TESFormIDListViewDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-														bool& Return, bgsee::WindowExtraDataCollection* ExtraData )
+														bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser )
 		{
 			LRESULT DlgProcResult = FALSE;
 
@@ -1134,7 +1134,7 @@ namespace cse
 				break;
 			case WM_INITDIALOG:
 				{
-					if (BGSEEUI->GetSubclasser()->GetDialogTemplate(hWnd) != TESDialog::kDialogTemplate_Quest)
+					if (Subclasser->GetDialogTemplate(hWnd) != TESDialog::kDialogTemplate_Quest)
 					{
 						SetWindowText(GetDlgItem(hWnd, TESDialog::kStandardButton_Ok), "Apply");
 						SetWindowText(GetDlgItem(hWnd, TESDialog::kStandardButton_Cancel), "Close");
@@ -1190,7 +1190,7 @@ namespace cse
 				if (HIWORD(wParam))		// to keep EN_KILLFOCUS notifications from inadvertently calling the button handlers
 					break;				// ### could cause weird behaviour later on
 
-				if (BGSEEUI->GetSubclasser()->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_Quest)
+				if (Subclasser->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_Quest)
 					break;
 
 				switch (LOWORD(wParam))
@@ -1242,7 +1242,7 @@ namespace cse
 					if (NotificationData->idFrom != kFormList_TESFormIDListView)
 						break;		// only interested in the main listview control
 
-					if (BGSEEUI->GetSubclasser()->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_Quest)
+					if (Subclasser->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_Quest)
 						break;
 
 					switch (NotificationData->code)
@@ -1397,7 +1397,7 @@ namespace cse
 
 
 		LRESULT CALLBACK TESFormEditDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												bool& Return, bgsee::WindowExtraDataCollection* ExtraData )
+												bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -1464,132 +1464,112 @@ namespace cse
 		}
 
 
+		std::string GetWindowClassNameForWindowPosition(HWND hWnd, bgsee::WindowSubclasser* Subclasser)
+		{
+			auto Template = Subclasser->GetDialogTemplate(hWnd);
+
+			switch (Template)
+			{
+				// TESBoundObject/FormEdit Dialogs
+			case TESDialog::kDialogTemplate_Weapon:
+			case TESDialog::kDialogTemplate_Armor:
+			case TESDialog::kDialogTemplate_Clothing:
+			case TESDialog::kDialogTemplate_MiscItem:
+			case TESDialog::kDialogTemplate_Static:
+			case TESDialog::kDialogTemplate_Reference:
+			case TESDialog::kDialogTemplate_Apparatus:
+			case TESDialog::kDialogTemplate_Book:
+			case TESDialog::kDialogTemplate_Container:
+			case TESDialog::kDialogTemplate_Activator:
+			case TESDialog::kDialogTemplate_AIForm:
+			case TESDialog::kDialogTemplate_Light:
+			case TESDialog::kDialogTemplate_Potion:
+			case TESDialog::kDialogTemplate_Enchantment:
+			case TESDialog::kDialogTemplate_LeveledCreature:
+			case TESDialog::kDialogTemplate_Sound:
+			case TESDialog::kDialogTemplate_Door:
+			case TESDialog::kDialogTemplate_LeveledItem:
+			case TESDialog::kDialogTemplate_LandTexture:
+			case TESDialog::kDialogTemplate_SoulGem:
+			case TESDialog::kDialogTemplate_Ammo:
+			case TESDialog::kDialogTemplate_Spell:
+			case TESDialog::kDialogTemplate_Flora:
+			case TESDialog::kDialogTemplate_Tree:
+			case TESDialog::kDialogTemplate_CombatStyle:
+			case TESDialog::kDialogTemplate_Water:
+			case TESDialog::kDialogTemplate_NPC:
+			case TESDialog::kDialogTemplate_Creature:
+			case TESDialog::kDialogTemplate_Grass:
+			case TESDialog::kDialogTemplate_Furniture:
+			case TESDialog::kDialogTemplate_LoadingScreen:
+			case TESDialog::kDialogTemplate_Ingredient:
+			case TESDialog::kDialogTemplate_LeveledSpell:
+			case TESDialog::kDialogTemplate_AnimObject:
+			case TESDialog::kDialogTemplate_Subspace:
+			case TESDialog::kDialogTemplate_EffectShader:
+			case TESDialog::kDialogTemplate_SigilStone:
+				// TESFormIDListView Dialogs
+			case TESDialog::kDialogTemplate_Faction:
+			case TESDialog::kDialogTemplate_Race:
+			case TESDialog::kDialogTemplate_Class:
+			case TESDialog::kDialogTemplate_Skill:
+			case TESDialog::kDialogTemplate_EffectSetting:
+			case TESDialog::kDialogTemplate_GameSetting:
+			case TESDialog::kDialogTemplate_Globals:
+			case TESDialog::kDialogTemplate_Birthsign:
+			case TESDialog::kDialogTemplate_Climate:
+			case TESDialog::kDialogTemplate_Worldspace:
+			case TESDialog::kDialogTemplate_Hair:
+			case TESDialog::kDialogTemplate_Eyes:
+			case TESDialog::kDialogTemplate_Weather:
+			{
+				DialogExtraParam* xParam = CS_CAST(TESDialog::GetDialogExtraByType(hWnd, BSExtraData::kDialogExtra_Param),
+					BSExtraData, DialogExtraParam);
+				if (xParam)
+					return TESForm::GetFormTypeIDLongName(xParam->formType);
+			}
+			break;
+			// Misc Dialogs
+			case TESDialog::kDialogTemplate_CellEdit:
+				return "Cell Edit";
+			case TESDialog::kDialogTemplate_SearchReplace:
+				return "Search Replace";
+			case TESDialog::kDialogTemplate_LandscapeEdit:
+				return "Landscape Edit";
+			case TESDialog::kDialogTemplate_FindText:
+				return "Find Text";
+			case TESDialog::kDialogTemplate_RegionEditor:
+				return "Region Editor";
+			case TESDialog::kDialogTemplate_HeightMapEditor:
+				return "Height Map Editor";
+			case TESDialog::kDialogTemplate_IdleAnimations:
+				return "Idle Anims";
+			case TESDialog::kDialogTemplate_AIPackages:
+				return "AI Packages";
+			case TESDialog::kDialogTemplate_TextureUse:
+				return "Texture Use";
+			case TESDialog::kDialogTemplate_Package:
+				return "Package";
+			case TESDialog::kDialogTemplate_ChooseReference:
+				return "Choose Ref";
+			}
+
+			return "";
+		}
+
 		LRESULT CALLBACK WindowPosDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												  bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
+												  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
 
 			switch (uMsg)
 			{
-			case WM_WINDOWPOS_GETCLASSNAME:
-				{
-					Return = true;
-					DlgProcResult = TRUE;
-
-					auto Template = BGSEEUI->GetSubclasser()->GetDialogTemplate(hWnd);
-					std::string* OutClassName = (std::string*)wParam;
-					OutClassName->clear();
-
-					switch (Template)
-					{
-					// TESBoundObject/FormEdit Dialogs
-					case TESDialog::kDialogTemplate_Weapon:
-					case TESDialog::kDialogTemplate_Armor:
-					case TESDialog::kDialogTemplate_Clothing:
-					case TESDialog::kDialogTemplate_MiscItem:
-					case TESDialog::kDialogTemplate_Static:
-					case TESDialog::kDialogTemplate_Reference:
-					case TESDialog::kDialogTemplate_Apparatus:
-					case TESDialog::kDialogTemplate_Book:
-					case TESDialog::kDialogTemplate_Container:
-					case TESDialog::kDialogTemplate_Activator:
-					case TESDialog::kDialogTemplate_AIForm:
-					case TESDialog::kDialogTemplate_Light:
-					case TESDialog::kDialogTemplate_Potion:
-					case TESDialog::kDialogTemplate_Enchantment:
-					case TESDialog::kDialogTemplate_LeveledCreature:
-					case TESDialog::kDialogTemplate_Sound:
-					case TESDialog::kDialogTemplate_Door:
-					case TESDialog::kDialogTemplate_LeveledItem:
-					case TESDialog::kDialogTemplate_LandTexture:
-					case TESDialog::kDialogTemplate_SoulGem:
-					case TESDialog::kDialogTemplate_Ammo:
-					case TESDialog::kDialogTemplate_Spell:
-					case TESDialog::kDialogTemplate_Flora:
-					case TESDialog::kDialogTemplate_Tree:
-					case TESDialog::kDialogTemplate_CombatStyle:
-					case TESDialog::kDialogTemplate_Water:
-					case TESDialog::kDialogTemplate_NPC:
-					case TESDialog::kDialogTemplate_Creature:
-					case TESDialog::kDialogTemplate_Grass:
-					case TESDialog::kDialogTemplate_Furniture:
-					case TESDialog::kDialogTemplate_LoadingScreen:
-					case TESDialog::kDialogTemplate_Ingredient:
-					case TESDialog::kDialogTemplate_LeveledSpell:
-					case TESDialog::kDialogTemplate_AnimObject:
-					case TESDialog::kDialogTemplate_Subspace:
-					case TESDialog::kDialogTemplate_EffectShader:
-					case TESDialog::kDialogTemplate_SigilStone:
-					// TESFormIDListView Dialogs
-					case TESDialog::kDialogTemplate_Faction:
-					case TESDialog::kDialogTemplate_Race:
-					case TESDialog::kDialogTemplate_Class:
-					case TESDialog::kDialogTemplate_Skill:
-					case TESDialog::kDialogTemplate_EffectSetting:
-					case TESDialog::kDialogTemplate_GameSetting:
-					case TESDialog::kDialogTemplate_Globals:
-					case TESDialog::kDialogTemplate_Birthsign:
-					case TESDialog::kDialogTemplate_Climate:
-					case TESDialog::kDialogTemplate_Worldspace:
-					case TESDialog::kDialogTemplate_Hair:
-					case TESDialog::kDialogTemplate_Eyes:
-					case TESDialog::kDialogTemplate_Weather:
-						{
-							DialogExtraParam* xParam = CS_CAST(TESDialog::GetDialogExtraByType(hWnd, BSExtraData::kDialogExtra_Param),
-															   BSExtraData, DialogExtraParam);
-							if (xParam)
-								*OutClassName = TESForm::GetFormTypeIDLongName(xParam->formType);
-						}
-						break;
-					// Misc Dialogs
-					case TESDialog::kDialogTemplate_CellEdit:
-						*OutClassName = "Cell Edit";
-						break;
-					case TESDialog::kDialogTemplate_SearchReplace:
-						*OutClassName = "Search Replace";
-						break;
-					case TESDialog::kDialogTemplate_LandscapeEdit:
-						*OutClassName = "Landscape Edit";
-						break;
-					case TESDialog::kDialogTemplate_FindText:
-						*OutClassName = "Find Text";
-						break;
-					case TESDialog::kDialogTemplate_RegionEditor:
-						*OutClassName = "Region Editor";
-						break;
-					case TESDialog::kDialogTemplate_HeightMapEditor:
-						*OutClassName = "Height Map Editor";
-						break;
-					case TESDialog::kDialogTemplate_IdleAnimations:
-						*OutClassName = "Idle Anims";
-						break;
-					case TESDialog::kDialogTemplate_AIPackages:
-						*OutClassName = "AI Packages";
-						break;
-					case TESDialog::kDialogTemplate_TextureUse:
-						*OutClassName = "Texture Use";
-						break;
-					case TESDialog::kDialogTemplate_Package:
-						*OutClassName = "Package";
-						break;
-					case TESDialog::kDialogTemplate_ChooseReference:
-						*OutClassName = "Choose Ref";
-						break;
-					default:
-						*OutClassName = "";
-						break;
-					}
-				}
-
-				break;
 			case WM_INITDIALOG:
 				if (settings::dialogs::kPreserveEditorDialogLocations().i)
 				{
-					std::string ClassName = "";
-					SendMessage(hWnd, WM_WINDOWPOS_GETCLASSNAME, (WPARAM)&ClassName, NULL);
-
-					if (ClassName.length())
+					std::string ClassName(GetWindowClassNameForWindowPosition(hWnd, Subclasser));
+					if (!ClassName.empty())
 					{
 						RECT Bounds = { 0 };
 						if (TESDialog::ReadBoundsFromINI(ClassName.c_str(), &Bounds))
@@ -1601,10 +1581,8 @@ namespace cse
 			case WM_DESTROY:
 				if (settings::dialogs::kPreserveEditorDialogLocations().i)
 				{
-					std::string ClassName = "";
-					SendMessage(hWnd, WM_WINDOWPOS_GETCLASSNAME, (WPARAM)&ClassName, NULL);
-
-					if (ClassName.length())
+					std::string ClassName(GetWindowClassNameForWindowPosition(hWnd, Subclasser));
+					if (!ClassName.empty())
 						TESDialog::WriteBoundsToINI(hWnd, ClassName.c_str());
 				}
 
@@ -1616,7 +1594,6 @@ namespace cse
 
 		void Initialize( void )
 		{
-
 			// FormEdit subclasses
 			{
 				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_LandTexture, TESFormEditDlgSubClassProc);
@@ -1886,7 +1863,7 @@ namespace cse
 			ChangeWindowMessageFilter(WM_COPYDATA, MSGFLT_ADD);
 			ChangeWindowMessageFilter(0x0049, MSGFLT_ADD);
 
-			SendMessage(*TESCSMain::WindowHandle, WM_MAINWINDOW_INITEXTRADATA, NULL, NULL);
+			SendMessage(*TESCSMain::WindowHandle, WM_MAINWINDOW_INIT_EXTRADATA, NULL, NULL);
 		}
 	}
 }

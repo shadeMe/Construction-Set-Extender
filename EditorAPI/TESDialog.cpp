@@ -582,20 +582,26 @@ void TESObjectWindow::PerformLimitedInit(HWND ObjectWindow)
 {
 	SME_ASSERT(ObjectWindow == *WindowHandle);
 
-	cdeclCall<void>(0x00420130, *TESObjectWindow::TreeViewHandle);
-	int TreeIndex = cdeclCall<int>(0x0041FA00,
-					*TESObjectWindow::TreeViewHandle,
-					SendMessage(*TESObjectWindow::TreeViewHandle, TVM_GETNEXTITEM, 0, 0),
-					0, 0, 0);
-	SendMessage(*TESObjectWindow::TreeViewHandle, TVM_SELECTITEM, 9u, TreeIndex);
-	thisCall<void>(0x00414C90, TESObjectWindow::TreeEntryArray[0], 0);
-	SendMessage(*TESObjectWindow::FormListHandle, LVM_SORTITEMS, 1, (LPARAM)cse::hooks::ObjectWindowFormListComparator);
-	SetWindowLong(*TESObjectWindow::FormListHandle,
-				  GWL_STYLE,
-				  GetWindowLong(*TESObjectWindow::FormListHandle, GWL_STYLE) | LVS_SHAREIMAGELISTS);
-	SendMessage(*TESObjectWindow::FormListHandle, LVM_SETIMAGELIST, 1u, (LPARAM)*TESCSMain::BoundObjectIcons);
-	cdeclCall<void>(0x00404F30, *TESObjectWindow::SplitterHandle, *TESObjectWindow::TreeViewHandle, *TESObjectWindow::FormListHandle);
-	SendMessage(*TESObjectWindow::FormListHandle, LVM_SETEXTENDEDLISTVIEWSTYLE, 0x421u, 0x421u);
+	BGSEEUI->GetInvalidationManager()->Push(*TreeViewHandle);
+	BGSEEUI->GetInvalidationManager()->Push(*FormListHandle);
+	{
+		cdeclCall<void>(0x00420130, *TESObjectWindow::TreeViewHandle);
+		int TreeIndex = cdeclCall<int>(0x0041FA00,
+			*TESObjectWindow::TreeViewHandle,
+			SendMessage(*TESObjectWindow::TreeViewHandle, TVM_GETNEXTITEM, 0, 0),
+			0, 0, 0);
+		SendMessage(*TESObjectWindow::TreeViewHandle, TVM_SELECTITEM, 9u, TreeIndex);
+		thisCall<void>(0x00414C90, TESObjectWindow::TreeEntryArray[0], 0);
+		SendMessage(*TESObjectWindow::FormListHandle, LVM_SORTITEMS, 1, (LPARAM)cse::hooks::ObjectWindowFormListComparator);
+		SetWindowLong(*TESObjectWindow::FormListHandle,
+			GWL_STYLE,
+			GetWindowLong(*TESObjectWindow::FormListHandle, GWL_STYLE) | LVS_SHAREIMAGELISTS);
+		SendMessage(*TESObjectWindow::FormListHandle, LVM_SETIMAGELIST, 1u, (LPARAM)*TESCSMain::BoundObjectIcons);
+		cdeclCall<void>(0x00404F30, *TESObjectWindow::SplitterHandle, *TESObjectWindow::TreeViewHandle, *TESObjectWindow::FormListHandle);
+		SendMessage(*TESObjectWindow::FormListHandle, LVM_SETEXTENDEDLISTVIEWSTYLE, 0x421u, 0x421u);
+	}
+	BGSEEUI->GetInvalidationManager()->Pop(*FormListHandle);
+	BGSEEUI->GetInvalidationManager()->Pop(*TreeViewHandle);
 	BGSEEUI->GetInvalidationManager()->Redraw(ObjectWindow);
 }
 
@@ -621,31 +627,43 @@ void TESObjectWindow::UpdateTreeChildren(HWND ObjectWindow)
 {
 	SME_ASSERT(ObjectWindow == *WindowHandle);
 
-	for (int i = 0; i < TESObjectWindow::TreeEntryInfo::kTreeEntryCount; i++)
+	// the window subclasser's windows hook has an out-sized performance penalty for
+	// insertions in tree view controls (probably also has to do with the way it's used in this dialog)
+	// so we have to temporarily suspend the hook when this code is executing
+	BGSEEUI->GetInvalidationManager()->Push(*TreeViewHandle);
+	BGSEEUI->GetInvalidationManager()->Push(*FormListHandle);
+	BGSEEUI->GetSubclasser()->SuspendHooks();
 	{
-		TESObjectWindow::TreeEntryInfo* Info = TESObjectWindow::TreeEntryArray[i];
-		for (TESObjectWindow::TreeEntryInfo::FormListT::Iterator Itr = Info->formList.Begin();
-			 Itr.Get() && !Itr.End();
-			 ++Itr)
+		for (int i = 0; i < TESObjectWindow::TreeEntryInfo::kTreeEntryCount; i++)
 		{
-			TESForm* Form = Itr.Get();
-			cdeclCall<void>(0x00422310, Form);
+			TESObjectWindow::TreeEntryInfo* Info = TESObjectWindow::TreeEntryArray[i];
+			for (TESObjectWindow::TreeEntryInfo::FormListT::Iterator Itr = Info->formList.Begin();
+				 Itr.Get() && !Itr.End();
+				 ++Itr)
+			{
+				TESForm* Form = Itr.Get();
+				cdeclCall<void>(0x00422310, Form);
+			}
 		}
-	}
 
-	TVSORTCB SortData = { 0 };
-	SortData.hParent = nullptr;
-	SortData.lpfnCompare = TreeViewSortComparator;
-
-	TreeView_SortChildrenCB(*TESObjectWindow::TreeViewHandle, &SortData, nullptr);
-
-	for (HTREEITEM i = TreeView_GetRoot(*TESObjectWindow::TreeViewHandle); i; i = TreeView_GetNextItem(*TESObjectWindow::TreeViewHandle, i, TVGN_NEXT))
-	{
-		SortData.hParent = i;
+		TVSORTCB SortData = { 0 };
+		SortData.hParent = nullptr;
 		SortData.lpfnCompare = TreeViewSortComparator;
 
 		TreeView_SortChildrenCB(*TESObjectWindow::TreeViewHandle, &SortData, nullptr);
+
+		for (HTREEITEM i = TreeView_GetRoot(*TESObjectWindow::TreeViewHandle); i; i = TreeView_GetNextItem(*TESObjectWindow::TreeViewHandle, i, TVGN_NEXT))
+		{
+			SortData.hParent = i;
+			SortData.lpfnCompare = TreeViewSortComparator;
+
+			TreeView_SortChildrenCB(*TESObjectWindow::TreeViewHandle, &SortData, nullptr);
+		}
 	}
+	BGSEEUI->GetSubclasser()->ResumeHooks();
+	BGSEEUI->GetInvalidationManager()->Pop(*FormListHandle);
+	BGSEEUI->GetInvalidationManager()->Pop(*TreeViewHandle);
+	BGSEEUI->GetInvalidationManager()->Redraw(ObjectWindow);
 }
 
 bool TESObjectWindow::GetMinimized(void)

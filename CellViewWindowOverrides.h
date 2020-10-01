@@ -38,7 +38,8 @@ namespace cse
 			static bool RefListFilter(TESForm* Form);
 		};
 
-		LRESULT CALLBACK		CellViewWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK CellViewWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+													bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
 
 		void InitializeCellViewWindowOverrides();
 	}

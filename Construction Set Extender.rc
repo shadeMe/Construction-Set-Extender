@@ -453,6 +453,8 @@ BEGIN
     END
     POPUP "&View"
     BEGIN
+        MENUITEM "Custom Color Theme Mode",     IDC_MAINMENU_CUSTOMCOLORTHEMEMODE
+        MENUITEM SEPARATOR
         MENUITEM "&Toolbar",                    40102, CHECKED
         MENUITEM "&Statusbar",                  40026, CHECKED
         MENUITEM SEPARATOR

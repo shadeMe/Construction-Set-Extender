@@ -902,7 +902,7 @@ namespace cse
 			BasicRWA ToggleFlyCamera("Toggle Fly Camera", "Enable/Disable free camera movement inside the render window.",
 				ExecutionContext::kMode_All, []() {
 
-				if (RenderWindowFlyCamera::Instance.IsActive() == false)
+				if (RenderWindowFlyCamera::Instance.IsActive())
 					RenderWindowFlyCamera::Instance.Deactivate();
 				else
 				{

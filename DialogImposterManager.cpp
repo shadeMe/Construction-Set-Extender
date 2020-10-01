@@ -293,6 +293,11 @@ namespace cse
 		ImposterRegistry.clear();
 	}
 
+	bool ObjectWindowImposterManager::IsImposter(HWND hWnd) const
+	{
+		return ImposterRegistry.find(hWnd) != ImposterRegistry.end();
+	}
+
 	void ObjectWindowImposterManager::HandleObjectWindowSizing(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) const
 	{
 		HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
@@ -593,6 +598,11 @@ namespace cse
 		}
 
 		ImposterRegistry.clear();
+	}
+
+	bool PreviewWindowImposterManager::IsImposter(HWND hWnd) const
+	{
+		return ImposterRegistry.find(hWnd) != ImposterRegistry.end();
 	}
 
 	bool PreviewWindowImposterManager::GetEnabled(void) const
