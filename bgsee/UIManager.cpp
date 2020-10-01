@@ -373,7 +373,6 @@ namespace bgsee
 	INT_PTR UIManager::CallbackDialogBoxParamA(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam, const DialogCreationData& CreationData)
 	{
 		SME_ASSERT(DialogHotSwapper);
-		SME_ASSERT(hInstance == EditorResourceInstance);
 
 		HINSTANCE Alternate = DialogHotSwapper->GetAlternateResourceInstance((ResourceTemplateOrdinalT)lpTemplateName);
 		if (Alternate)
@@ -419,8 +418,8 @@ namespace bgsee
 		util::IATPatchData* Patch = &PatchDepot[PatchType];
 		Patch->ImportModule = DLLName;
 		Patch->ImportName = ImportName;
-		Patch->Location = nullptr;
-		Patch->CallbackFunction = Callback;
+		Patch->Location = 0;
+		Patch->CallbackFunction = reinterpret_cast<uintptr_t>(Callback);
 
 		auto PatchSuccessful = Patch->Initialize();
 		SME_ASSERT(PatchSuccessful);
@@ -455,6 +454,7 @@ namespace bgsee
 		DialogHotSwapper = new DialogTemplateHotSwapper();
 		MenuHotSwapper = new MenuTemplateHotSwapper();
 		Styler = new WindowStyler();
+		ColorThemer = new WindowColorThemer(Subclasser);
 		InvalidationManager = new WindowInvalidationManager();
 
 		PatchIAT(kIATPatch_CreateWindowEx, ThunkCreateWindowExA());
@@ -477,6 +477,7 @@ namespace bgsee
 		SAFEDELETE(DialogHotSwapper);
 		SAFEDELETE(MenuHotSwapper);
 		SAFEDELETE(Styler);
+		SAFEDELETE(ColorThemer);
 		SAFEDELETE(InvalidationManager);
 
 		Initialized = false;
@@ -510,7 +511,7 @@ namespace bgsee
 		return &HandleCollections[ID];
 	}
 
-	HWND UIManager::GetMainWindow( void ) const
+	HWND UIManager::GetMainWindow() const
 	{
 		SME_ASSERT(EditorWindowHandle);
 		return EditorWindowHandle;
@@ -677,27 +678,32 @@ namespace bgsee
 		return Result;
 	}
 
-	WindowSubclasser* UIManager::GetSubclasser( void )
+	WindowSubclasser* UIManager::GetSubclasser()
 	{
 		return Subclasser;
 	}
 
-	DialogTemplateHotSwapper* UIManager::GetDialogHotSwapper( void )
+	DialogTemplateHotSwapper* UIManager::GetDialogHotSwapper()
 	{
 		return DialogHotSwapper;
 	}
 
-	MenuTemplateHotSwapper* UIManager::GetMenuHotSwapper( void )
+	MenuTemplateHotSwapper* UIManager::GetMenuHotSwapper()
 	{
 		return MenuHotSwapper;
 	}
 
-	WindowStyler* UIManager::GetWindowStyler( void )
+	WindowStyler* UIManager::GetWindowStyler()
 	{
 		return Styler;
 	}
 
-	WindowInvalidationManager* UIManager::GetInvalidationManager( void )
+	bgsee::WindowColorThemer* UIManager::GetColorThemer()
+	{
+		return ColorThemer;
+	}
+
+	WindowInvalidationManager* UIManager::GetInvalidationManager()
 	{
 		return InvalidationManager;
 	}

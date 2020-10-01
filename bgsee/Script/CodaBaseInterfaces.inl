@@ -116,7 +116,7 @@ namespace bgsee
 														ICodaScriptExpressionByteCode* ByteCode) = 0;
 																				// return false to skip result validation
 
-			typedef std::list<ICodaScriptCommand*>		ListT;
+			typedef std::vector<ICodaScriptCommand*>		ListT;
 		};
 
 		class ICodaScriptCommandHandlerHelper

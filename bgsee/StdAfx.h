@@ -28,6 +28,7 @@
 #include <Objbase.h>
 #include <Psapi.h>
 #include <ShellAPI.h>
+#include <vssym32.h>
 
 // .NET INTEROP
 #include <MSCorEE.h>

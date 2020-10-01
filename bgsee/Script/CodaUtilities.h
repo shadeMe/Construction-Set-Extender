@@ -144,7 +144,7 @@ namespace bgsee
 			const char*							GetCategory() const;
 			const ICodaScriptCommand::ListT&	GetCommands() const;
 
-			typedef std::list<CodaScriptCommandRegistrar*>		ListT;
+			typedef std::vector<CodaScriptCommandRegistrar*>		ListT;
 		};
 
 		template<typename T>

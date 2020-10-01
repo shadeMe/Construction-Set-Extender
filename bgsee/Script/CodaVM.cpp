@@ -1102,11 +1102,7 @@ namespace bgsee
 
 			Initialized = true;
 
-			// register built-in commands first
-			ScriptCommands.push_front(commands::general::GetRegistrar());
-			ScriptCommands.push_front(commands::string::GetRegistrar());
-			ScriptCommands.push_front(commands::array::GetRegistrar());
-
+			CommandRegistry->RegisterCommands({ commands::general::GetRegistrar(), commands::string::GetRegistrar(), commands::array::GetRegistrar()});
 			CommandRegistry->RegisterCommands(ScriptCommands);
 			CommandRegistry->InitializeExpressionParser(GetParser());
 

@@ -636,6 +636,7 @@ namespace bgsee
 		script::CodaScriptBackgrounder::RegisterINISettings(Params.INISettings);
 		script::CodaScriptExecutive::RegisterINISettings(Params.INISettings);
 		Console::RegisterINISettings(Params.INISettings);
+		WindowColorThemer::RegisterINISettings(Params.INISettings);
 
 		ExtenderINIManager = new INIManager();
 		ExtenderINIManager->Initialize(ExtenderINIPath.c_str(), (void*)&Params.INISettings);
