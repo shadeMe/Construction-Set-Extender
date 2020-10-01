@@ -4,6 +4,7 @@
 #include "UICommon.h"
 #include "ResourceLocation.h"
 #include "WindowSubclasser.h"
+#include "WindowColorThemer.h"
 
 namespace bgsee
 {
@@ -150,6 +151,7 @@ namespace bgsee
 		DialogTemplateHotSwapper*	DialogHotSwapper;
 		MenuTemplateHotSwapper*		MenuHotSwapper;
 		WindowStyler*				Styler;
+		WindowColorThemer*			ColorThemer;
 		WindowInvalidationManager*	InvalidationManager;
 		WindowHandleCollection		HandleCollections[kHandleCollection__MAX];
 
@@ -214,21 +216,22 @@ namespace bgsee
 												HWND hWndParent,
 												DLGPROC lpDialogFunc,
 												LPARAM dwInitParam = NULL,
-												bool Override = false);
+												bool Override = true);
 		INT_PTR						ModalDialog(HINSTANCE hInstance,
 												LPSTR lpTemplateName,
 												HWND hWndParent,
 												DLGPROC lpDialogFunc,
 												LPARAM dwInitParam = NULL,
-												bool Override = false);
+												bool Override = true);
 
-		HWND						GetMainWindow(void) const;
+		HWND						GetMainWindow() const;
 		WindowHandleCollection*		GetWindowHandleCollection(UInt8 ID);
-		WindowSubclasser*			GetSubclasser(void);
-		DialogTemplateHotSwapper*	GetDialogHotSwapper(void);
-		MenuTemplateHotSwapper*		GetMenuHotSwapper(void);
-		WindowStyler*				GetWindowStyler(void);
-		WindowInvalidationManager*	GetInvalidationManager(void);
+		WindowSubclasser*			GetSubclasser();
+		DialogTemplateHotSwapper*	GetDialogHotSwapper();
+		MenuTemplateHotSwapper*		GetMenuHotSwapper();
+		WindowStyler*				GetWindowStyler();
+		WindowColorThemer*			GetColorThemer();
+		WindowInvalidationManager*	GetInvalidationManager();
 	};
 #define BGSEEUI									bgsee::UIManager::Get()
 }

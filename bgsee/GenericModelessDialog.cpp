@@ -160,7 +160,7 @@ namespace bgsee
 		}
 
 		bool CallbackReturn = false;
-		if (SkipCallback == false && UserData && UserData->Initialized && Instance->CallbackDlgProc)
+		if (SkipCallback == false && UserData && UserData->Initialized && Instance && Instance->CallbackDlgProc)
 		{
 			LRESULT CallbackResult = Instance->CallbackDlgProc(hWnd, uMsg, wParam, lParam, CallbackReturn);
 			if (SkipDefaultProc == false && SkipCallbackResult == false && CallbackReturn)

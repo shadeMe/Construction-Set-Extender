@@ -48,7 +48,7 @@ namespace bgsee
 #define ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_START		(WM_USER + 8001)
 #define ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_END		(WM_USER + 9000)
 
-	LRESULT CALLBACK Console::BaseDlgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+	LRESULT CALLBACK Console::BaseDlgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return)
 	{
 		LRESULT DlgProcResult = FALSE;
 		DlgUserData* UserData = (DlgUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
@@ -288,7 +288,7 @@ namespace bgsee
 
 #define IDC_BGSEE_CONSOLE_MESSAGELOG_REFRESHTIMER		0xC05
 
-	LRESULT CALLBACK Console::MessageLogSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, WindowExtraDataCollection* ExtraData )
+	LRESULT CALLBACK Console::MessageLogSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, WindowExtraDataCollection* ExtraData, WindowSubclasser* )
 	{
 		DlgUserData* UserData = (DlgUserData*)GetWindowLongPtr(GetAncestor(hWnd, GA_PARENT), GWL_USERDATA);
 		Console* Instance = dynamic_cast<Console*>(UserData->Instance);
@@ -338,7 +338,7 @@ namespace bgsee
 		return CallbackResult;
 	}
 
-	LRESULT CALLBACK Console::CommandLineSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, WindowExtraDataCollection* ExtraData )
+	LRESULT CALLBACK Console::CommandLineSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, WindowExtraDataCollection* ExtraData, WindowSubclasser* )
 	{
 		DlgUserData* UserData = (DlgUserData*)GetWindowLongPtr(GetAncestor(hWnd, GA_PARENT), GWL_USERDATA);
 		Console* Instance = dynamic_cast<Console*>(UserData->Instance);
