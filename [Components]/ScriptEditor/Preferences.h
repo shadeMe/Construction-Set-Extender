@@ -460,12 +460,17 @@ namespace cse
 			[Description("Automatically delete log files at sync end")]
 			property bool AutoDeleteLogs;
 
+			[Category("General")]
+			[Description("File extension used by synced scripts")]
+			property String^ ScriptFileExtension;
+
 			ScriptSyncSettings()
 			{
 				AutoSyncChanges = true;
 				AutoSyncInterval = 5;
 				ExistingFileHandlingOp = scriptEditor::scriptSync::SyncStartEventArgs::ExistingFileHandlingOperation::Prompt;
 				AutoDeleteLogs = false;
+				ScriptFileExtension = scriptEditor::scriptSync::SyncedScriptData::DefaultScriptFileExtension;
 			}
 
 			virtual bool Validate(SettingsGroup^ OldValue, String^% OutMessage) override;

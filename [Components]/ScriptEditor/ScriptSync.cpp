@@ -17,6 +17,9 @@ namespace cse
 		{
 			SyncedScriptData::SyncedScriptData(String^ ScriptEditorID, String^ WorkingDir)
 			{
+				auto ScriptFileExtension = preferences::SettingsHolder::Get()->ScriptSync->ScriptFileExtension;
+				Debug::Assert(ScriptFileExtension != LogFileExtension);
+
 				this->ScriptEditorID = ScriptEditorID;
 				this->DiskFilePath = Path::Combine(WorkingDir, ScriptEditorID + ScriptFileExtension);
 				this->LogFilePath = Path::Combine(WorkingDir, ScriptEditorID + LogFileExtension);
@@ -1222,7 +1225,6 @@ namespace cse
 
 			DiskSyncDialog::DiskSyncDialog()
 			{
-
 				InitializeComponent();
 
 				DiskSync::Get()->SyncStart += DiskSyncSyncStartHandler;

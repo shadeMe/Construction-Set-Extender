@@ -9,7 +9,7 @@ namespace cse
 			ref class SyncedScriptData
 			{
 			public:
-				static String^	ScriptFileExtension = ".obscript";
+				static String^	DefaultScriptFileExtension = ".obscript";
 				static String^	LogFileExtension = ".log";
 
 				static enum class SyncDirection
@@ -208,7 +208,7 @@ namespace cse
 				DiskSync();
 				~DiskSync();
 
-				static DiskSync^					Singleton = nullptr;
+				static DiskSync^	Singleton = nullptr;
 			public:
 				event SyncStartEventHandler^		SyncStart;
 				event SyncStopEventHandler^			SyncStop;
@@ -255,7 +255,7 @@ namespace cse
 				}
 
 
-				static DiskSync^					Get();
+				static DiskSync^	Get();
 			};
 
 			ref struct SyncedScriptListViewWrapper

@@ -86,9 +86,11 @@ namespace cse
 						NewValue = ValueStr == "1" ? true : false;
 					else if (PropertyType->IsEnum)
 						NewValue = Enum::Parse(PropertyType, ValueStr, true);
+					else if (PropertyType == String::typeid)
+						NewValue = ValueStr;
 					else
 						throw gcnew System::Runtime::Serialization::SerializationException
-							("Unsupported property type " + PropertyType->ToString() + "for property " + Name);
+							("Unsupported property type " + PropertyType->ToString() + " for property " + Name);
 
 					Property->SetValue(this, NewValue, nullptr);
 				}
@@ -271,6 +273,21 @@ namespace cse
 				Errors = "AutoSyncInterval must be between " + kMinAutoSyncInterval + " and " + kMaxAutoSyncInterval;
 				Errors += "\n";
 				AutoSyncInterval = Old->AutoSyncInterval;
+			}
+
+			if (ScriptFileExtension != Old->ScriptFileExtension && scriptEditor::scriptSync::DiskSync::Get()->InProgress)
+			{
+				Success = false;
+				Errors = "ScriptFileExtension cannot be modified when a syncing operation is in progress";
+				Errors += "\n";
+				ScriptFileExtension = Old->ScriptFileExtension;
+			}
+			else if (ScriptFileExtension->Length < 2 || ScriptFileExtension[0] != '.' || ScriptFileExtension == scriptEditor::scriptSync::SyncedScriptData::LogFileExtension)
+			{
+				Success = false;
+				Errors = "ScriptFileExtension must start with '.' and cannot be '" + scriptEditor::scriptSync::SyncedScriptData::LogFileExtension + "'";
+				Errors += "\n";
+				ScriptFileExtension = Old->ScriptFileExtension;
 			}
 
 			OutMessage = Errors;
