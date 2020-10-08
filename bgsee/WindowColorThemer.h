@@ -183,6 +183,7 @@ namespace bgsee
 					ThunkHookComctl32DrawThemeBackground;
 		util::IATPatchData
 					Comctl32IATPatches[kIATPatch__MAX];
+		bool		AllHooksValid;
 
 		LRESULT		ThemeOverrideSubclass(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, WindowExtraDataCollection* ExtraData, WindowSubclasser* Subclasser);
 		DWORD		HookComctl32GetSysColor(int nIndex);
@@ -190,7 +191,7 @@ namespace bgsee
 		HRESULT		HookComctl32DrawThemeText(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCWSTR pszText, int cchText, DWORD dwTextFlags, DWORD dwTextFlags2, LPCRECT pRect);
 		HRESULT		HookComctl32DrawThemeBackground(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect, LPCRECT pClipRect);
 
-		void		InitializeIATPatches();
+		bool		InitializeIATPatches();
 		void		ToggleIATPatches(bool Enabled) const;
 		void		ReloadColors();
 		void		RefreshActiveWindows() const;

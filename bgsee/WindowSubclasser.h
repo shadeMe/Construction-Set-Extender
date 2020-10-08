@@ -104,6 +104,7 @@ namespace bgsee
 			};
 
 			SubclassType	Type;
+			std::string		WindowClassName;
 			union
 			{
 				WNDPROC		Window;
@@ -176,10 +177,11 @@ namespace bgsee
 		util::ThunkStdCall<WindowSubclasser, void, HWND, UINT, UINT_PTR, DWORD>
 					ThunkDeletionTimerProc;
 
+		bool		IsWindowBlacklisted(HWND hWnd, UINT uMsg) const;
+
 		LRESULT 	WindowsHookCallWndProc(int nCode, WPARAM wParam, LPARAM lParam);
 		LRESULT		BaseSubclassWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		void		DeletionTimerProc(HWND hWnd, UINT uMsg, UINT_PTR uID, DWORD dwTickCount);
-
 
 		bool		ShouldSubclassWindowOnCreation(HWND hWnd) const;
 		bool		ShouldSubclassDialogOnCreation(HWND hWnd, const DialogCreationData& CreationData) const;

@@ -4,7 +4,7 @@ namespace bgsee
 {
 	typedef SInt32 ResourceTemplateOrdinalT;
 
-	// Actual resource templates ordinals used in the editor are always positive
+	// Actual resource template ordinals used in the editor are always positive
 	// So, we can use a negative value as a sentinel
 	static constexpr ResourceTemplateOrdinalT	kInvalidResourceTemplateOrdinal = -1;
 

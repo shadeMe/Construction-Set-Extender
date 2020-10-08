@@ -1,5 +1,6 @@
 #include "WindowColorThemer.h"
 #include "UIManager.h"
+#include "Console.h"
 
 namespace bgsee
 {
@@ -455,17 +456,105 @@ namespace bgsee
 
 			case SBP_ARROWBTN:		// Arrow button
 			{
-				switch (iStateId)
+				// Assume the perspective of the arrow pointing upward ( /\ ) in GDI coordinates. NOTE: (0, 0) is the
+				// top left corner of the screen. Awful code, but it works.
+				const int arrowWidth = std::ceil(std::abs(pRect->left - pRect->right) * 0.4f);
+				const int arrowHeight = std::ceil(std::abs(pRect->top - pRect->bottom) * 0.35f);
+
+				std::array<DWORD, 6> counts = { 2, 2, 2, 2, 2, 2 };
+				std::array<POINT, 12> verts
+				{{
+						// Left segment
+					{ 0, -0 },
+					{ (arrowWidth / 2) + 1, -arrowHeight + 2 },
+
+					{ 0, -1 },
+					{ (arrowWidth / 2) + 1, -arrowHeight + 1 },
+
+					{ 0, -2 },
+					{ (arrowWidth / 2) + 1, -arrowHeight + 0 },
+
+					// Right segment (final vertex Y adjusted to avoid a stray pixel)
+					{ arrowWidth - 1, -0 },
+					{ arrowWidth / 2, -arrowHeight + 2 },
+
+					{ arrowWidth - 1, -1 },
+					{ arrowWidth / 2, -arrowHeight + 1 },
+
+					{ arrowWidth - 1, -2 },
+					{ arrowWidth / 2, -arrowHeight + 1 },
+					}};
+
+				bool isHot = false;
+				bool isDisabled = false;
+
+				for (auto& vert : verts)
 				{
-				case ABS_UPHOT:
-				case ABS_DOWNHOT:
-				case ABS_LEFTHOT:
-				case ABS_RIGHTHOT:
-					FillRect(hdc, pRect, scrollbarFillHighlighted);
-					break;
-				default:
-					FillRect(hdc, pRect, scrollbarArrowButtonFill);
+					switch (iStateId)
+					{
+					case ABS_UPHOT:// Up
+					case ABS_UPPRESSED:
+					case ABS_UPHOVER:
+						isHot = true;
+					case ABS_UPDISABLED:
+						isDisabled = true;
+					case ABS_UPNORMAL:
+						vert.x += pRect->left + arrowHeight - 1;
+						vert.y += pRect->bottom - arrowHeight;
+						break;
+
+					case ABS_DOWNHOT:// Down
+					case ABS_DOWNPRESSED:
+					case ABS_DOWNHOVER:
+						isHot = true;
+					case ABS_DOWNDISABLED:
+						isDisabled = true;
+					case ABS_DOWNNORMAL:
+						vert.x += pRect->left + arrowHeight - 1;
+						vert.y = -vert.y + pRect->top + arrowHeight - 1;
+						break;
+
+					case ABS_LEFTHOT:// Left
+					case ABS_LEFTPRESSED:
+					case ABS_LEFTHOVER:
+						isHot = true;
+					case ABS_LEFTDISABLED:
+						isDisabled = true;
+					case ABS_LEFTNORMAL:
+						std::swap(vert.x, vert.y);
+						vert.x += pRect->right - arrowHeight;
+						vert.y += pRect->top + arrowHeight - 1;
+						break;
+
+					case ABS_RIGHTHOT:// Right
+					case ABS_RIGHTPRESSED:
+					case ABS_RIGHTHOVER:
+						isHot = true;
+					case ABS_RIGHTDISABLED:
+						isDisabled = true;
+					case ABS_RIGHTNORMAL:
+						std::swap(vert.x, vert.y);
+						vert.x = -vert.x + pRect->left + arrowHeight - 1;
+						vert.y += pRect->top + arrowHeight - 1;
+						break;
+					}
 				}
+
+				HBRUSH fillColor = scrollbarArrowButtonFill;
+				HGDIOBJ oldPen = SelectObject(hdc, GetStockObject(DC_PEN));
+
+				if (isHot)
+					fillColor = scrollbarFillHighlighted;
+				else if (isDisabled)
+					fillColor = scrollbarFill;
+
+				FillRect(hdc, pRect, fillColor);
+
+				SetDCPenColor(hdc, RGB(255, 255, 255));
+				PolyPolyline(hdc, verts.data(), counts.data(), counts.size());
+
+				SelectObject(hdc, oldPen);
+
 				return S_OK;
 
 			}
@@ -730,10 +819,11 @@ namespace bgsee
 		return DrawThemeBackground(hTheme, hdc, iPartId, iStateId, pRect, pClipRect);
 	}
 
-	void WindowColorThemer::InitializeIATPatches()
+	bool WindowColorThemer::InitializeIATPatches()
 	{
 		auto ModuleBase = reinterpret_cast<uintptr_t>(GetModuleHandle("comctl32.dll"));
 		SME_ASSERT(ModuleBase);
+		bool Success = true;
 
 		for (int i = kIATPatch__BEGIN + 1; i < kIATPatch__MAX; ++i)
 		{
@@ -776,15 +866,18 @@ namespace bgsee
 			Patch.Delayed = DelayedHook;
 			Patch.CallbackFunction = reinterpret_cast<uintptr_t>(CallbackFunction);
 
-			auto PatchSuccessful = Patch.Initialize();
-			SME_ASSERT(PatchSuccessful);
+			if (!Patch.Initialize())
+				Success = false;
 		}
+
+		return Success;
 	}
 
 	void WindowColorThemer::ToggleIATPatches(bool Enabled) const
 	{
 		// ### TODO this is potentially dangerous operation in a threaded context
 		// make writes to memory atomic
+		SME_ASSERT(AllHooksValid);
 
 		for (int i = kIATPatch__BEGIN + 1; i < kIATPatch__MAX; ++i)
 		{
@@ -864,18 +957,22 @@ namespace bgsee
 		ColorSettings[kColor_TabControlColorBorder] = &kTabControlColorBorder;
 		ColorSettings[kColor_TabControlColorFill] = &kTabControlColorFill;
 
-		InitializeIATPatches();
+		AllHooksValid = InitializeIATPatches();
+		if (!AllHooksValid)
+			BGSEECONSOLE_MESSAGE("Visual styles disabled!");
+
 		ReloadColors();
 
-		if (IsEnabled())
+		if (AllHooksValid && IsEnabled())
 			ToggleIATPatches(true);
 
-		Subclasser->RegisterGlobalSubclass(ThunkThemeOverrideSubclass(), -9999);
+		if (AllHooksValid)
+			Subclasser->RegisterGlobalSubclass(ThunkThemeOverrideSubclass(), -9999);
 	}
 
 	WindowColorThemer::~WindowColorThemer()
 	{
-		if (IsEnabled())
+		if (AllHooksValid && IsEnabled())
 			ToggleIATPatches(false);
 
 		for (const auto& Itr: Brushes)
@@ -886,7 +983,13 @@ namespace bgsee
 
 	void WindowColorThemer::Enable()
 	{
-		if (IsEnabled())
+		if (!AllHooksValid)
+		{
+			BGSEEUI->MsgBoxE("Color themes could not be enabled since the necessary functions were not found in this version of the Construction Set executable!\n\n"
+							"Please ensure that you are running the visual styles-enabled version of the Construction Set executable.");
+			return;
+		}
+		else if (IsEnabled())
 			return;
 
 		kEnabled.SetInt(1);
@@ -915,7 +1018,7 @@ namespace bgsee
 
 	bool WindowColorThemer::IsEnabled() const
 	{
-		return kEnabled().i != 0;
+		return AllHooksValid && kEnabled().i != 0;
 	}
 
 	void WindowColorThemer::RegisterINISettings(INISettingDepotT& Depot)

@@ -59,11 +59,8 @@ namespace bgsee
 
 	void WindowHandleCollection::SendMessage( UINT Msg, WPARAM wParam, LPARAM lParam )
 	{
-		// need to operate on a buffer as the handle list can be modified inside a subclass callback
-		HandleCollectionT Buffer(HandleList);
-
-		for (HandleCollectionT::iterator Itr = Buffer.begin(); Itr != Buffer.end(); Itr++)
-			::SendMessage(*Itr, Msg, wParam, lParam);
+		for (const auto& Itr : HandleList)
+			::SendMessage(Itr, Msg, wParam, lParam);
 	}
 }
 

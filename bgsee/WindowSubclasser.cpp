@@ -282,33 +282,48 @@ namespace bgsee
 		"HwndWrapper"
 	};
 
+	bool WindowSubclasser::IsWindowBlacklisted(HWND hWnd, UINT uMsg) const
+	{
+		char WindowClassName[256] = {};
+		GetClassName(hWnd, WindowClassName, ARRAYSIZE(WindowClassName));
+
+		// custom dialog boxes are sent the WM_CREATE message before the WM_INITDIALOG message
+		// those messages should not be handled
+		if (strcmp(WindowClassName, "#32770") == 0 && uMsg == WM_CREATE)
+			return true;
+
+		// skip all non-native windows/dialogs and their children, amongst others that we don't want to hook
+
+		HWND NextWindow = hWnd;
+		while (NextWindow != NULL)
+		{
+			WindowClassName[0] = '\0';
+			GetClassName(NextWindow, WindowClassName, ARRAYSIZE(WindowClassName));
+			std::string Wrapper(WindowClassName);
+
+			for (const auto& Itr : BlacklistedWindowClasses)
+			{
+				if (Wrapper.find(Itr) == 0)
+					return true;
+			}
+
+			auto NextAncestor = GetAncestor(NextWindow, GA_PARENT);
+			if (NextAncestor == NextWindow)
+				break;
+
+			NextWindow = NextAncestor;
+		}
+
+		return false;
+	}
+
 	LRESULT WindowSubclasser::WindowsHookCallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 	{
 		if (nCode == HC_ACTION)
 		{
 			auto MessageData = reinterpret_cast<CWPSTRUCT*>(lParam);
-
-			switch (MessageData->message)
-			{
-			case WM_CREATE:
-			case WM_INITDIALOG:
-				// custom dialog boxes are sent the WM_CREATE message before the WM_INITDIALOG message
-				// those messages should not be handled
-				char ClassName[256] = {};
-				GetClassName(MessageData->hwnd, ClassName, ARRAYSIZE(ClassName));
-				if (strcmp(ClassName, "#32770") == 0 && MessageData->message != WM_INITDIALOG)
-					return CallNextHookEx(nullptr, nCode, wParam, lParam);
-
-				// skip all non-native windows/dialogs, amongst others that we don't want to hook
-				std::string ClassNameWrapper(ClassName);
-				for (const auto& Itr : BlacklistedWindowClasses)
-				{
-					if (ClassNameWrapper.find(Itr) == 0)
-						return CallNextHookEx(nullptr, nCode, wParam, lParam);
-				}
-
-				break;
-			}
+			if (IsWindowBlacklisted(MessageData->hwnd, MessageData->message))
+				return CallNextHookEx(nullptr, nCode, wParam, lParam);
 
 			switch (MessageData->message)
 			{
@@ -466,12 +481,16 @@ namespace bgsee
 
 	void WindowSubclasser::ApplyWindowSubclass(HWND hWnd)
 	{
+		SME_ASSERT(IsWindowBlacklisted(hWnd, WM_NULL) == false);
 		SME_ASSERT(ActiveSubclasses.find(hWnd) == ActiveSubclasses.end());
 
 		std::unique_ptr<SubclassedWindowData> NewSubclassData(new SubclassedWindowData);
 		NewSubclassData->Type = SubclassedWindowData::SubclassType::Window;
 		NewSubclassData->OriginalProc.Window = reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWnd, GWL_WNDPROC,
 																reinterpret_cast<LONG_PTR>(ThunkBaseSubclassWndProc())));
+		char WindowClassName[256] = {};
+		GetClassName(hWnd, WindowClassName, ARRAYSIZE(WindowClassName));
+		NewSubclassData->WindowClassName = WindowClassName;
 
 		RebuildSubclassProcs(hWnd, *NewSubclassData.get());
 		ActiveSubclasses.emplace(hWnd, std::move(NewSubclassData));
@@ -479,12 +498,16 @@ namespace bgsee
 
 	void WindowSubclasser::ApplyDialogSubclass(HWND hWnd, const DialogCreationData& CreationData)
 	{
+		SME_ASSERT(IsWindowBlacklisted(hWnd, WM_NULL) == false);
 		SME_ASSERT(ActiveSubclasses.find(hWnd) == ActiveSubclasses.end());
 
 		std::unique_ptr<SubclassedWindowData> NewSubclassData(new SubclassedWindowData);
 		NewSubclassData->Type = SubclassedWindowData::SubclassType::Dialog;
 		NewSubclassData->OriginalProc.Dialog = reinterpret_cast<DLGPROC>(SetWindowLongPtr(hWnd, DWL_DLGPROC,
 																reinterpret_cast<LONG_PTR>(ThunkBaseSubclassWndProc())));
+		char WindowClassName[256] = {};
+		GetClassName(hWnd, WindowClassName, ARRAYSIZE(WindowClassName));
+		NewSubclassData->WindowClassName = WindowClassName;
 		NewSubclassData->DialogSpecific.CreationData = CreationData;
 
 		RebuildSubclassProcs(hWnd, *NewSubclassData.get());
