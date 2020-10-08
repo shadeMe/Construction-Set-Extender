@@ -35,9 +35,6 @@
     <ClCompile Include="SEOptions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BEReference.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="TagBrowser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -64,9 +61,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BEReference.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SEScriptList.h">
       <Filter>Header Files</Filter>
     </ClInclude>

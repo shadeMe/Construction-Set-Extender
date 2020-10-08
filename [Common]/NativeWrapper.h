@@ -76,7 +76,6 @@ namespace cse
 		{
 			e_CSE = 0,
 			e_CS,
-			e_BE,
 			e_UL,
 			e_SE,
 			e_BSA,
@@ -88,10 +87,6 @@ namespace cse
 			void DebugPrint(String^ Message, bool Achtung = false);
 		}
 		namespace useInfoList
-		{
-			void DebugPrint(String^ Message, bool Achtung = false);
-		}
-		namespace batchEditor
 		{
 			void DebugPrint(String^ Message, bool Achtung = false);
 		}

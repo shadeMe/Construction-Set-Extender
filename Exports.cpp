@@ -48,8 +48,7 @@ void ComponentDLLDebugPrint(UInt8 Source, const char* Message)
 
 	enum MessageSource
 	{
-		e_BE = 2,
-		e_UL,
+		e_UL = 2,
 		e_SE,
 		e_BSA,
 		e_TAG
@@ -58,9 +57,6 @@ void ComponentDLLDebugPrint(UInt8 Source, const char* Message)
 	bool InvalidPrefix = false;
 	switch (Source)
 	{
-	case e_BE:
-		Prefix = "BE";
-		break;
 	case e_UL:
 		Prefix = "UL";
 		break;
@@ -1235,73 +1231,6 @@ UseInfoListCellItemListData* GetCellRefDataForForm(const char* EditorID)
 /**** END USEINFOLIST SUBINTERFACE ****/
 #pragma endregion
 
-/**** BEGIN BATCHREFEDITOR SUBINTERFACE ****/
-#pragma region BatchRefEditor
-bool OwnershipDataSortComparator(TESForm* First, TESForm* Second)
-{
-	if (First->GetEditorID() == nullptr || Second->GetEditorID() == nullptr)
-		return false;
-
-	return _stricmp(First->GetEditorID(), Second->GetEditorID()) < 0;
-}
-
-BatchRefOwnerFormData* GetOwnershipData(void)
-{
-	BatchRefOwnerFormData* Result = new BatchRefOwnerFormData();
-	std::list<TESForm*> SortedNPCs, SortedFactions, SortedGlobals;
-
-	UInt32 TotalFormCount = 0;
-	TotalFormCount += _DATAHANDLER->factions.Count();
-	TotalFormCount += _DATAHANDLER->globals.Count();
-
-	for (tList<TESFaction>::Iterator Itr = _DATAHANDLER->factions.Begin(); !Itr.End() && Itr.Get(); ++Itr)
-		SortedFactions.push_back(Itr.Get());
-
-	for (tList<TESGlobal>::Iterator Itr = _DATAHANDLER->globals.Begin(); !Itr.End() && Itr.Get(); ++Itr)
-		SortedGlobals.push_back(Itr.Get());
-
-	for (TESObject* Itr = _DATAHANDLER->objects->first; Itr; Itr = Itr->next)
-	{
-		if (Itr->formType == TESForm::kFormType_NPC)
-		{
-			SortedNPCs.push_back(Itr);
-			TotalFormCount++;
-		}
-	}
-
-	SortedNPCs.sort(OwnershipDataSortComparator);
-	SortedFactions.sort(OwnershipDataSortComparator);
-	SortedGlobals.sort(OwnershipDataSortComparator);
-
-	Result->FormCount = TotalFormCount;
-	Result->FormListHead = new FormData[Result->FormCount];
-
-	UInt32 Index = 0;
-	for (auto Itr : SortedNPCs)
-	{
-		FormData* ThisForm = &Result->FormListHead[Index];
-		ThisForm->FillFormData(Itr);
-		Index++;
-	}
-
-	for (auto Itr : SortedFactions)
-	{
-		FormData* ThisForm = &Result->FormListHead[Index];
-		ThisForm->FillFormData(Itr);
-		Index++;
-	}
-
-	for (auto Itr : SortedGlobals)
-	{
-		FormData* ThisForm = &Result->FormListHead[Index];
-		ThisForm->FillFormData(Itr);
-		Index++;
-	}
-
-	return Result;
-}
-#pragma endregion
-/**** END USEINFOLIST SUBINTERFACE ****/
 
 /**** BEGIN TAGBROWSER SUBINTERFACE ****/
 #pragma region TagBrowser
@@ -1435,9 +1364,6 @@ componentDLLInterface::CSEInterfaceTable g_InteropInterface =
 		GetLoadedForms,
 		GetCrossRefDataForForm,
 		GetCellRefDataForForm,
-	},
-	{
-		GetOwnershipData,
 	},
 	{
 		InstantiateObjects,

@@ -92,12 +92,6 @@ namespace componentDLLInterface
 			UseInfoListCellItemListData*			(* GetCellRefDataForForm)(const char* EditorID);
 		};
 
-		class IBatchRefEditor
-		{
-		public:
-			BatchRefOwnerFormData*					(* GetOwnershipData)(void);		// typeID check performed by the caller
-		};
-
 		class ITagBrowser
 		{
 		public:
@@ -113,7 +107,6 @@ namespace componentDLLInterface
 		IEditorAPI									EditorAPI;
 		IScriptEditor								ScriptEditor;
 		IUseInfoList								UseInfoList;
-		IBatchRefEditor								BatchRefEditor;
 		ITagBrowser									TagBrowser;
 	};
 
@@ -155,14 +148,6 @@ namespace componentDLLInterface
 		void										(* InitializeComponents)(void);
 
 		void										(* ShowBSAViewerDialog)(const char* WorkingDir, const char* ExtensionFilter, char* ReturnPathOut, UInt32 BufferSize);
-	};
-
-	class BatchEditorInterface
-	{
-	public:
-		void										(* InitializeComponents)(void);
-
-		bool										(* ShowBatchRefEditorDialog)(BatchRefData* Data);
 	};
 
 	class TagBrowserInterface

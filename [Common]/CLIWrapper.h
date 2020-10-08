@@ -11,7 +11,6 @@ namespace cse
 			extern componentDLLInterface::ScriptEditorInterface*	SE;
 			extern componentDLLInterface::UseInfoListInterface*		USE;
 			extern componentDLLInterface::BSAViewerInterface*		BSA;
-			extern componentDLLInterface::BatchEditorInterface*		BE;
 			extern componentDLLInterface::TagBrowserInterface*		TAG;
 		}
 

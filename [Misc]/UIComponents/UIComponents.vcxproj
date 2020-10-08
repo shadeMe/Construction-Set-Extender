@@ -95,7 +95,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
-    <ClCompile Include="BEReference.cpp" />
     <ClCompile Include="SEFindReplace.cpp" />
     <ClCompile Include="SEOptions.cpp" />
     <ClCompile Include="SERefactorDocumentScript.cpp" />
@@ -113,9 +112,6 @@
     <ClCompile Include="UseInfoList.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BEReference.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
     <ClInclude Include="resource.h" />
     <ClInclude Include="SEFindReplace.h">
       <FileType>CppForm</FileType>
@@ -153,9 +149,6 @@
     <ResourceCompile Include="app.rc" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="BEReference.resx">
-      <DependentUpon>BEReference.h</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="SEFindReplace.resx">
       <DependentUpon>SEFindReplace.h</DependentUpon>
     </EmbeddedResource>

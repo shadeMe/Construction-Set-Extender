@@ -17,7 +17,6 @@ namespace componentDLLInterface
 		kCounter_UseInfoCellItemData,
 		kCounter_UseInfoCellItemListData,
 		kCounter_CellObjectData,
-		kCounter_BatchRefData,
 		kCounter_TagBrowserInstantiationData,
 
 		kCounter__MAX
@@ -39,7 +38,6 @@ namespace componentDLLInterface
 		"UseInfoCellItemData",
 		"UseInfoCellItemListData",
 		"CellObjectData",
-		"BatchRefData",
 		"TagBrowserInstantiationData",
 	};
 
@@ -324,22 +322,6 @@ namespace componentDLLInterface
 	{
 		SME_ASSERT(kHandShakeStructCounters[kCounter_CellObjectData] > 0);
 		kHandShakeStructCounters[kCounter_CellObjectData]--;
-	}
-
-	BatchRefData::BatchRefData()
-	{
-		kHandShakeStructCounters[kCounter_BatchRefData]++;
-
-		CellObjectListHead = 0;
-		ObjectCount = 0;
-	}
-
-	BatchRefData::~BatchRefData()
-	{
-		SME_ASSERT(kHandShakeStructCounters[kCounter_BatchRefData] > 0);
-		kHandShakeStructCounters[kCounter_BatchRefData]--;
-
-		delete[] CellObjectListHead;
 	}
 
 	ScriptCompileData::ScriptCompileData() : Script(), CompileResult(false), CompileErrorData()

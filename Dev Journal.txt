@@ -20,6 +20,11 @@ CSE		---->
 
 
 	ENHANCEMENT		=
+		> Remove the managed batch reference editor component and enchance the selection controls OSD tool
+			> Rename to 'Reference Selection Editor'
+			> Add hotkey toggles (or other OSD layers too)
+			> Mimic the vanilla ref edit dialog
+			> Show hidable object list
 		> Add support for TOD/sunlight lighting in exteriors
 			> Currently only works with interiors that behave like exteriors
 			>> Seems likely that the issue is dependent on modifying the fragment shaders used for lighting in exteriors
