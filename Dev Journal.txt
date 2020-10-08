@@ -12,6 +12,8 @@ NOTE	---->
 CSE		---->
 
 	BUGFIX			=
+		> Render window OSD does not consume (mouse) messages after a freemouse movement
+		> Render window context menu does not trigger the WM_INITMENUPOPUP message
 		> Prevent the selection of refs through the cell view dialog when editing landscape/pathgrids
 		> Dirty edits?
 			>> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=25301452

@@ -16,7 +16,7 @@ namespace cse
 		ToolbarOSDLayer				ToolbarOSDLayer::Instance;
 		constexpr int				kFilterRefsReset = -9;
 
-		int ToolbarOSDLayer::RefFilterCompletionCallback(ImGuiTextEditCallbackData* Data)
+		int ToolbarOSDLayer::RefFilterCompletionCallback(ImGuiInputTextCallbackData* Data)
 		{
 			if ((Data->EventFlag & ImGuiInputTextFlags_CallbackCompletion))
 			{
@@ -134,7 +134,7 @@ namespace cse
 				ImGui::PushItemWidth(HasFilter ? 140 : 175);
 				if (ImGui::InputText("##find_ref_textbox", RefFilter.InputBuf, sizeof(RefFilter.InputBuf),
 									 ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CallbackCompletion,
-									 [](ImGuiTextEditCallbackData* Data)->int { ToolbarOSDLayer* Parent = (ToolbarOSDLayer*)Data->UserData; return Parent->RefFilterCompletionCallback(Data); },
+									 [](ImGuiInputTextCallbackData* Data)->int { ToolbarOSDLayer* Parent = (ToolbarOSDLayer*)Data->UserData; return Parent->RefFilterCompletionCallback(Data); },
 									 this))
 				{
 					HandleRefFilterChange();

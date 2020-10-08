@@ -35,7 +35,7 @@ namespace cse
 			std::string DLLName = "";
 			void** Interface = nullptr;
 
-			for (int i = kComponentDLL__BEGIN; i < kComponentDLL__MAX; ++i)
+			for (int i = kComponentDLL__BEGIN + 1; i < kComponentDLL__MAX; ++i)
 			{
 				switch (i)
 				{
@@ -62,7 +62,7 @@ namespace cse
 				HMODULE hMod = LoadLibrary(DLLPath.c_str());
 				if (hMod == nullptr)
 				{
-					BGSEECONSOLE_ERROR("Couldn't load %s", DLLName.c_str());
+					BGSEECONSOLE_ERROR("Couldn't load %s", DLLPath.c_str());
 					return false;
 				}
 

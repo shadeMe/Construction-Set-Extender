@@ -60,9 +60,9 @@ namespace cse
 
 				float matrixTranslation[3], matrixRotation[3], matrixScale[3];
 				ImGuizmo::DecomposeMatrixToComponents(&ObjectMatrix._11, matrixTranslation, matrixRotation, matrixScale);
-				ImGui::InputFloat3("Tr", matrixTranslation, 3);
+				/*ImGui::InputFloat3("Tr", matrixTranslation, 3);
 				ImGui::InputFloat3("Rt", matrixRotation, 3);
-				ImGui::InputFloat3("Sc", matrixScale, 3);
+				ImGui::InputFloat3("Sc", matrixScale, 3);*/
 		//		ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, &ObjectMatrix._11);
 
 				if (Parent->Operation != ImGuizmo::SCALE)

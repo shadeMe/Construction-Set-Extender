@@ -11,7 +11,7 @@
 #include "WorkspaceManager.h"
 #include "RenderWindowFlyCamera.h"
 
-#undef OSD_LOAD_ALL_FONTS
+//#define OSD_LOAD_ALL_FONTS
 
 namespace cse
 {
@@ -176,7 +176,7 @@ namespace cse
 
 				std::string MainFontPath(FontPathRoot + "\\" + FileName);
 				if (FileName.find("MaterialIcons-Regular") == -1)
-					AddFontFromFile(MainFontPath.c_str(), IconFontPath.c_str(), ICON_MIN_MD, ICON_MAX_MD);
+					AddFontFromFile(MainFontPath.c_str(), IconFontPath.c_str(), ICON_MIN_MD, ICON_MAX_MD, 0.f, 4.5f);
 			}
 #else
 			std::string MainFontPath(FontPathRoot + std::string(settings::renderWindowOSD::kFontFace().s));
@@ -559,7 +559,7 @@ namespace cse
 
 					// free mouse movement needs to be turned on here as we don't want to hide the cursor until we're sure we're dragging the mouse
 					// only when hovering over a widget
-					if (ImGui::IsAnyItemHovered() && ImGui::IsMouseDragging() && io.WantTextInput == false)
+					if (ImGui::IsAnyItemHovered() && ImGui::IsMouseDragging(ImGuiMouseButton_Left) && io.WantTextInput == false)
 						ToggleFreeMouseMovement(hWnd, true);
 
 					io.MousePos.x = (signed short)(lParam);
@@ -619,7 +619,7 @@ namespace cse
 				return false;
 
 			ImGuiContext* RenderContext = ImGui::GetCurrentContext();
-			if (ImGui::IsMouseDragging() && RenderContext->MovingWindow && RenderContext->ActiveId == RenderContext->MovingWindow->RootWindow->ID)
+			if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) && RenderContext->MovingWindow && RenderContext->ActiveId == RenderContext->MovingWindow->RootWindow->ID)
 				return true;
 			else
 				return false;
@@ -628,12 +628,12 @@ namespace cse
 		bool ImGuiDX9::IsPopupHovered() const
 		{
 			ImGuiContext& g = *GImGui;
-			int popup_idx = g.CurrentPopupStack.Size - 1;
+			int popup_idx = g.BeginPopupStack.Size - 1;
 			SME_ASSERT(popup_idx >= 0);
-			if (popup_idx < 0 || popup_idx > g.OpenPopupStack.Size || g.CurrentPopupStack[popup_idx].PopupId != g.OpenPopupStack[popup_idx].PopupId)
+			if (popup_idx < 0 || popup_idx > g.OpenPopupStack.Size || g.BeginPopupStack[popup_idx].PopupId != g.OpenPopupStack[popup_idx].PopupId)
 				return false;
 
-			ImGuiPopupRef& Itr = g.OpenPopupStack[popup_idx];
+			auto& Itr = g.OpenPopupStack[popup_idx];
 			return g.HoveredWindow == Itr.Window;
 		}
 
@@ -1068,7 +1068,7 @@ namespace cse
 			else if (ImGui::IsMouseHoveringWindow() == false && Active == false)
 				return;
 
-			if (ImGui::IsMouseDragging() && ImGui::IsAnyItemActive())
+			if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) && ImGui::IsAnyItemActive())
 			{
 				if (Active == false)
 				{
@@ -1076,7 +1076,7 @@ namespace cse
 					DragBegin = true;
 				}
 			}
-			else if (ImGui::IsMouseDragging() == false)
+			else if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) == false)
 			{
 				if (Active)
 				{
@@ -1441,8 +1441,8 @@ namespace cse
 
 		void DebugOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
-			//ImGui::ShowDemoWindow();
-			//ImGui::ShowMetricsWindow();
+			ImGui::ShowDemoWindow();
+			ImGui::ShowMetricsWindow();
 		}
 
 		bool DebugOSDLayer::NeedsBackgroundUpdate()

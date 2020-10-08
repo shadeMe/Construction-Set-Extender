@@ -297,15 +297,6 @@
     <ClCompile Include="[Common]\OldCSInteropData.cpp">
       <Filter>Interop\CS 1.0</Filter>
     </ClCompile>
-    <ClCompile Include="IMGUI\imgui.cpp">
-      <Filter>Components\IMGUI</Filter>
-    </ClCompile>
-    <ClCompile Include="IMGUI\imgui_demo.cpp">
-      <Filter>Components\IMGUI</Filter>
-    </ClCompile>
-    <ClCompile Include="IMGUI\imgui_draw.cpp">
-      <Filter>Components\IMGUI</Filter>
-    </ClCompile>
     <ClCompile Include="EventSources.cpp">
       <Filter>Components</Filter>
     </ClCompile>
@@ -375,17 +366,11 @@
     <ClCompile Include="Render Window\RenderWindowCommon.cpp">
       <Filter>Components\Render Window</Filter>
     </ClCompile>
-    <ClCompile Include="IMGUI\imgui_user.cpp">
-      <Filter>Components\IMGUI</Filter>
-    </ClCompile>
     <ClCompile Include="Render Window\RenderWindowLayers.cpp">
       <Filter>Components\Render Window</Filter>
     </ClCompile>
     <ClCompile Include="Render Window\RenderWindowGroups.cpp">
       <Filter>Components\Render Window</Filter>
-    </ClCompile>
-    <ClCompile Include="IMGUI\ImGuizmo.cpp">
-      <Filter>Components\IMGUI</Filter>
     </ClCompile>
     <ClCompile Include="Render Window\RenderWindowGizmos.cpp">
       <Filter>Components\Render Window</Filter>
@@ -395,6 +380,24 @@
     </ClCompile>
     <ClCompile Include="Render Window\RenderWindowFlyCamera.cpp">
       <Filter>Components\Render Window</Filter>
+    </ClCompile>
+    <ClCompile Include="IMGUI\imgui.cpp">
+      <Filter>Components\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="IMGUI\imgui_demo.cpp">
+      <Filter>Components\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="IMGUI\imgui_draw.cpp">
+      <Filter>Components\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="IMGUI\imgui_user.cpp">
+      <Filter>Components\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="IMGUI\imgui_widgets.cpp">
+      <Filter>Components\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="IMGUI\ImGuizmo.cpp">
+      <Filter>Components\IMGUI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -818,24 +821,6 @@
     <ClInclude Include="[Common]\OldCSInteropData.h">
       <Filter>Interop\CS 1.0</Filter>
     </ClInclude>
-    <ClInclude Include="IMGUI\imconfig.h">
-      <Filter>Components\IMGUI</Filter>
-    </ClInclude>
-    <ClInclude Include="IMGUI\imgui.h">
-      <Filter>Components\IMGUI</Filter>
-    </ClInclude>
-    <ClInclude Include="IMGUI\imgui_internal.h">
-      <Filter>Components\IMGUI</Filter>
-    </ClInclude>
-    <ClInclude Include="IMGUI\stb_rect_pack.h">
-      <Filter>Components\IMGUI</Filter>
-    </ClInclude>
-    <ClInclude Include="IMGUI\stb_textedit.h">
-      <Filter>Components\IMGUI</Filter>
-    </ClInclude>
-    <ClInclude Include="IMGUI\stb_truetype.h">
-      <Filter>Components\IMGUI</Filter>
-    </ClInclude>
     <ClInclude Include="EventSources.h">
       <Filter>Components</Filter>
     </ClInclude>
@@ -911,9 +896,6 @@
     <ClInclude Include="Render Window\RenderWindowCommon.h">
       <Filter>Components\Render Window</Filter>
     </ClInclude>
-    <ClInclude Include="IMGUI\imgui_user.h">
-      <Filter>Components\IMGUI</Filter>
-    </ClInclude>
     <ClInclude Include="Render Window\RenderWindowLayers.h">
       <Filter>Components\Render Window</Filter>
     </ClInclude>
@@ -923,14 +905,38 @@
     <ClInclude Include="EditorAPI\TESLevSpell.h">
       <Filter>EditorAPI\Forms\Objects</Filter>
     </ClInclude>
-    <ClInclude Include="IMGUI\ImGuizmo.h">
-      <Filter>Components\IMGUI</Filter>
-    </ClInclude>
     <ClInclude Include="Render Window\RenderWindowGizmos.h">
       <Filter>Components\Render Window</Filter>
     </ClInclude>
     <ClInclude Include="Render Window\RenderWindowFlyCamera.h">
       <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="IMGUI\imconfig.h">
+      <Filter>Components\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="IMGUI\imgui.h">
+      <Filter>Components\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="IMGUI\imgui_internal.h">
+      <Filter>Components\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="IMGUI\imgui_user.h">
+      <Filter>Components\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="IMGUI\ImGuizmo.h">
+      <Filter>Components\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="IMGUI\imstb_rectpack.h">
+      <Filter>Components\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="IMGUI\imstb_textedit.h">
+      <Filter>Components\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="IMGUI\imstb_truetype.h">
+      <Filter>Components\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="IMGUI\stb_sprintf.h">
+      <Filter>Components\IMGUI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
