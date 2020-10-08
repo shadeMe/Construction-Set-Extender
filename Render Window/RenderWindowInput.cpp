@@ -1656,7 +1656,7 @@ namespace cse
 						if (OverrideHandler)
 							*TESRenderWindow::RefreshFlag = 0;
 
-						BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
+						BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, false);
 
 						if (OverrideHandler)
 							*TESRenderWindow::RefreshFlag = UpdateFlagBuffer;
@@ -1711,7 +1711,7 @@ namespace cse
 					}
 
 					// tunnel the message to the original proc and check if we need to allow free mouse movement
-					BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
+					BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, false);
 
 					_RENDERWIN_XSTATE.DraggingPathGridPoints = *TESRenderWindow::PathGridEditFlag &&
 																_RENDERWIN_XSTATE.CurrentMousePathGridPoint &&
@@ -1772,7 +1772,7 @@ namespace cse
 					_RENDERWIN_XSTATE.DraggingPathGridPoints = false;
 					TransformingSelection = false;
 
-					BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
+					BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, false);
 
 					// end free movement handling
 					ToggleFreeMouseMovement(hWnd, false);
