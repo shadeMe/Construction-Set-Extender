@@ -10,6 +10,8 @@ NiDX9Renderer**						TESRender::NiRendererSingleton = (NiDX9Renderer**)0x00A0F87
 TESRender::PrimaryRenderer**		TESRender::PrimaryRenderer::Singleton = (TESRender::PrimaryRenderer**)0x00A0BACC;
 TESRender::Scenegraph**				TESRender::Scenegraph::Singleton = (TESRender::Scenegraph**)0x00A0B634;
 NiNode**							TESRender::PathGridSceneRoot = (NiNode**)0x00A1358C;
+SInt32*								TESRender::CurrentRenderPassID = (SInt32*)0x00A8E6A0;
+BSShaderProperty::RenderPass**		TESRender::CurrentRenderPassData = (BSShaderProperty::RenderPass**)0x00A8E6C8;
 
 HWND*								TESRenderWindow::WindowHandle = (HWND*)0x00A0AF28;
 int*								TESRenderWindow::ScreenWidth = (int*)0x00A0F870;
@@ -372,6 +374,11 @@ NiProperty* TESRender::GetProperty(NiAVObject* In, UInt16 ID)
 	return thisCall<NiProperty*>(0x006F27C0, In, ID);
 }
 
+NiExtraData* TESRender::GetExtraData(NiAVObject* In, const char* Name)
+{
+	return thisCall<NiExtraData*>(0x006F62B0, In, Name);
+}
+
 NiProperty* TESRender::CreateProperty(UInt8 Type)
 {
 	bool InvalidType = false;
@@ -429,6 +436,11 @@ NiTexturingProperty* TESRender::CreateTexturingProperty(const char* TexturePath)
 	thisCall<void>(0x00701030, Prop, TexturePath, 0);
 	Prop->m_uiRefCount++;
 	return Prop;
+}
+
+void TESRender::SetBSShaderPPLightingPropertyDiffuseTexture(BSShaderPPLightingProperty* Property, NiTexture* Texture, UInt8 Index)
+{
+	thisCall<void>(0x00774A50, Property, Index, Texture);
 }
 
 TESPathGridPoint* TESRender::PickPathGridPointAtCoords(int X, int Y)

@@ -1530,7 +1530,7 @@ namespace cse
 										if (ReferenceSelectionManager::IsSelectable(MouseRef, SelectionReason, PaintingSelection))
 										{
 											if (_RENDERSEL->HasObject(MouseRef))
-												Icon = *TESRenderWindow::CursorMove;
+												Icon = LoadCursor(NULL, IDC_SIZEALL);
 											else
 												Icon = *TESRenderWindow::CursorSelect;
 										}
@@ -1656,7 +1656,7 @@ namespace cse
 						if (OverrideHandler)
 							*TESRenderWindow::RefreshFlag = 0;
 
-						BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, false);
+						BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
 
 						if (OverrideHandler)
 							*TESRenderWindow::RefreshFlag = UpdateFlagBuffer;

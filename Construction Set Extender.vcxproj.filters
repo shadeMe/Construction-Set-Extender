@@ -330,9 +330,6 @@
     <ClCompile Include="MiscWindowOverrides.cpp">
       <Filter>Components\UI Manager</Filter>
     </ClCompile>
-    <ClCompile Include="Render Window\DefaultOverlayOSDLayer.cpp">
-      <Filter>Components\Render Window\OSD Layers</Filter>
-    </ClCompile>
     <ClCompile Include="Render Window\MouseOverTooltipOSDLayer.cpp">
       <Filter>Components\Render Window\OSD Layers</Filter>
     </ClCompile>
@@ -398,6 +395,9 @@
     </ClCompile>
     <ClCompile Include="IMGUI\ImGuizmo.cpp">
       <Filter>Components\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Render Window\InfoOverlayOSDLayer.cpp">
+      <Filter>Components\Render Window\OSD Layers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -851,9 +851,6 @@
     <ClInclude Include="MiscWindowOverrides.h">
       <Filter>Components\UI Manager</Filter>
     </ClInclude>
-    <ClInclude Include="Render Window\DefaultOverlayOSDLayer.h">
-      <Filter>Components\Render Window\OSD Layers</Filter>
-    </ClInclude>
     <ClInclude Include="Render Window\MouseOverTooltipOSDLayer.h">
       <Filter>Components\Render Window\OSD Layers</Filter>
     </ClInclude>
@@ -937,6 +934,9 @@
     </ClInclude>
     <ClInclude Include="IMGUI\stb_sprintf.h">
       <Filter>Components\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\InfoOverlayOSDLayer.h">
+      <Filter>Components\Render Window\OSD Layers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

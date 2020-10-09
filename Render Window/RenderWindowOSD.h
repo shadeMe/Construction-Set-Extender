@@ -87,9 +87,10 @@ namespace cse
 				bool		MouseInClientArea;				// true when the mouse is inside the window
 				bool		ConsumeMouseInputEvents;		// true when the OSD wnd proc needs exclusive access to the mouse
 				bool		ConsumeKeyboardInputEvents;		// same as above but for the keyboard
-				bool		MouseHoveringOSD;				// true if the mouse is hovering over an OSD element
 
 				GUIState();
+
+				std::string ToString() const;
 			};
 
 			typedef std::vector<IRenderWindowOSDLayer*>			LayerArrayT;

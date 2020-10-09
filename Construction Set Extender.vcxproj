@@ -407,7 +407,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="ObjectPrefabManager.cpp" />
     <ClCompile Include="ObjectWindowOverrides.cpp" />
     <ClCompile Include="Render Window\AuxiliaryViewport.cpp" />
-    <ClCompile Include="Render Window\DefaultOverlayOSDLayer.cpp" />
+    <ClCompile Include="Render Window\InfoOverlayOSDLayer.cpp" />
     <ClCompile Include="Render Window\MouseOverTooltipOSDLayer.cpp" />
     <ClCompile Include="Render Window\PathGridUndoManager.cpp" />
     <ClCompile Include="Render Window\RenderWindowActions.cpp" />
@@ -541,7 +541,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="ObjectPrefabManager.h" />
     <ClInclude Include="ObjectWindowOverrides.h" />
     <ClInclude Include="Render Window\AuxiliaryViewport.h" />
-    <ClInclude Include="Render Window\DefaultOverlayOSDLayer.h" />
+    <ClInclude Include="Render Window\InfoOverlayOSDLayer.h" />
     <ClInclude Include="Render Window\MouseOverTooltipOSDLayer.h" />
     <ClInclude Include="Render Window\PathGridUndoManager.h" />
     <ClInclude Include="Render Window\RenderWindowActions.h" />

@@ -492,6 +492,9 @@ namespace cse
 				float TOD = _TES->GetSkyTOD();
 				float FOV = settings::renderer::kCameraFOV().f;
 
+				bool ShowSelectionMask = _RENDERWIN_XSTATE.ShowSelectionMask;
+				NiColor SelectionMaskColor = _RENDERWIN_XSTATE.SelectionMaskColor;
+
 				PUSH_TRANSPARENT_BUTTON_COLORS;
 				ImGui::Button(ICON_MD_ACCESS_TIME " ");
 				ImGui::SameLine(0, 2);
@@ -505,6 +508,11 @@ namespace cse
 				ImGui::DragFloat("Field-of-Vision##FOV", &FOV, 1.f, 50.f, 120.f, "%.0f");
 				ImGui::PopItemWidth();
 				POP_TRANSPARENT_BUTTON_COLORS;
+
+				if (ImGui::Checkbox("Show Selection Mask", &ShowSelectionMask))
+					_RENDERWIN_XSTATE.ShowSelectionMask = ShowSelectionMask;
+				ImGui::SameLine(0, 6);
+				ImGui::ColorEdit3("##SelectionMaskColor", &SelectionMaskColor.r, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
 
 				if (TOD < 0 || TOD > 24)
 					TOD = 10;
@@ -520,6 +528,8 @@ namespace cse
 					settings::renderer::kCameraFOV.SetFloat(FOV);
 					_RENDERWIN_MGR.RefreshFOV();
 				}
+
+				_RENDERWIN_XSTATE.SelectionMaskColor = SelectionMaskColor;
 			};
 			PopupMiscControls = BottomToolbarPopupProvider.RegisterPopup("popup_misc_controls",
 																		 MiscButton,

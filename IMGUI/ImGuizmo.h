@@ -2,19 +2,19 @@
 // v 1.61 WIP
 //
 // The MIT License(MIT)
-//
+// 
 // Copyright(c) 2016 Cedric Guillemet
-//
+// 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions :
-//
+// 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-//
+// 
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
@@ -39,9 +39,9 @@
 // - display rotation/translation/scale infos in local/world space and not only local
 // - finish local/world matrix application
 // - OPERATION as bitmask
-//
+// 
 // -------------------------------------------------------------------------------------------
-// Example
+// Example 
 #if 0
 void EditTransform(const Camera& camera, matrix_t& matrix)
 {
@@ -114,7 +114,8 @@ void EditTransform(const Camera& camera, matrix_t& matrix)
 namespace ImGuizmo
 {
 	// call inside your own window and before Manipulate() in order to draw gizmo to that window.
-	IMGUI_API void SetDrawlist();
+	// Or pass a specific ImDrawList to draw to (e.g. ImGui::GetForegroundDrawList()).
+	IMGUI_API void SetDrawlist(ImDrawList* drawlist = nullptr);
 
 	// call BeginFrame right after ImGui_XXXX_NewFrame();
 	IMGUI_API void BeginFrame();
@@ -141,19 +142,19 @@ namespace ImGuizmo
 	// ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, gizmoMatrix.m16);
 	//
 	// These functions have some numerical stability issues for now. Use with caution.
-	IMGUI_API void DecomposeMatrixToComponents(const float* matrix, float* translation, float* rotation, float* scale);
-	IMGUI_API void RecomposeMatrixFromComponents(const float* translation, const float* rotation, const float* scale, float* matrix);
+	IMGUI_API void DecomposeMatrixToComponents(const float *matrix, float *translation, float *rotation, float *scale);
+	IMGUI_API void RecomposeMatrixFromComponents(const float *translation, const float *rotation, const float *scale, float *matrix);
 
 	IMGUI_API void SetRect(float x, float y, float width, float height);
 	// default is false
 	IMGUI_API void SetOrthographic(bool isOrthographic);
 
 	// Render a cube with face color corresponding to face normal. Usefull for debug/tests
-	IMGUI_API void DrawCube(const float* view, const float* projection, const float* matrix);
-	IMGUI_API void DrawGrid(const float* view, const float* projection, const float* matrix, const float gridSize);
+	IMGUI_API void DrawCubes(const float *view, const float *projection, const float *matrices, int matrixCount);
+	IMGUI_API void DrawGrid(const float *view, const float *projection, const float *matrix, const float gridSize);
 
 	// call it when you want a gizmo
-	// Needs view and projection matrices.
+	// Needs view and projection matrices. 
 	// matrix parameter is the source matrix (where will be gizmo be drawn) and might be transformed by the function. Return deltaMatrix is optional
 	// translation is applied in world space
 	enum OPERATION
@@ -170,11 +171,17 @@ namespace ImGuizmo
 		WORLD
 	};
 
-	IMGUI_API void Manipulate(const float* view, const float* projection, OPERATION operation, MODE mode, float* matrix, float* deltaMatrix = 0, float* snap = 0, float* localBounds = NULL, float* boundsSnap = NULL);
-	//
-	// Please note that this cubeview is patented by Autodesk : https://patents.google.com/patent/US7782319B2/en
-	// It seems to be a defensive patent in the US. I don't think it will bring troubles using it as
-	// other software are using the same mechanics. But just in case, you are now warned!
-	//
-	IMGUI_API void ViewManipulate(float* view, float length, ImVec2 position, ImVec2 size, ImU32 backgroundColor);
+	IMGUI_API bool Manipulate(const float *view, const float *projection, OPERATION operation, MODE mode, float *matrix, float *deltaMatrix = NULL, float *snap = NULL, float *localBounds = NULL, float *boundsSnap = NULL);
+   //
+   // Please note that this cubeview is patented by Autodesk : https://patents.google.com/patent/US7782319B2/en
+   // It seems to be a defensive patent in the US. I don't think it will bring troubles using it as
+   // other software are using the same mechanics. But just in case, you are now warned!
+   //
+   IMGUI_API void ViewManipulate(float* view, float length, ImVec2 position, ImVec2 size, ImU32 backgroundColor);
+   
+   IMGUI_API void SetID(int id);
+   
+   // return true if the cursor is over the operation's gizmo
+   IMGUI_API bool IsOver(OPERATION op);
+	IMGUI_API void SetGizmoSizeClipSpace(float value);
 };

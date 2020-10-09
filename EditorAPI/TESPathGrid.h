@@ -36,11 +36,12 @@ public:
 	// methods
 	void						LinkPoint(TESPathGridPoint* Point);
 	void						UnlinkPoint(TESPathGridPoint* Point);
-	bool						GetIsPointLinked(TESPathGridPoint* Point);
+	bool						IsPointLinked(TESPathGridPoint* Point);
 	void						UnlinkAllPoints(void);
 	void						GenerateNiNode(UInt32 Unk01 = 1);
 	void						ShowSelectionRing(void);
 	void						HideSelectionRing(void);
+	bool						IsPointPreferred();
 
 	void						LinkToReference(TESObjectREFR* Ref);
 	void						UnlinkFromReference(void);

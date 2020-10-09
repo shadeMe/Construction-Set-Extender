@@ -221,68 +221,106 @@ namespace cse
 			CulledRefBuffer.clear();
 		}
 
-		DebugSceneGraphModifier			DebugSceneGraphModifier::Instance;
+		SelectionMaskPainter			SelectionMaskPainter::Instance;
 
-		DebugSceneGraphModifier::DebugSceneGraphModifier()
+		void SelectionMaskPainter::DelayedInit()
 		{
-			MatProp = (NiMaterialProperty*)TESRender::CreateProperty(NiMaterialProperty::kType);
-			MatProp->m_diff.r = 0;
-			MatProp->m_diff.b = 1;
-			MatProp->m_diff.g = 0;
-			MatProp->m_fAlpha = 0.3;
-
-			Stencil = (NiStencilProperty*)TESRender::CreateProperty(NiStencilProperty::kType);
-			Stencil->flags = 0;
-			Stencil->flags |= NiStencilProperty::kTestMode_Always;
-
-			SelectionMask = TESRender::CreateTexturingProperty("Textures\\Effects\\TerrainNoise.dds");
-			thisCall<void>(0x00410B50, SelectionMask, 0);
-		}
-
-		DebugSceneGraphModifier::~DebugSceneGraphModifier()
-		{
-			TESRender::DeleteNiRefObject(MatProp);
-			TESRender::DeleteNiRefObject(Stencil);
-			TESRender::DeleteNiRefObject(SelectionMask);
-		}
-
-		void DebugSceneGraphModifier::PreRender(RenderData& Data)
-		{
-			return;
-
-			for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+			if (SelectionMaskTexture == nullptr)
 			{
-				TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
-				NiNode* Node = Ref->GetNiNode();
-				bool HasProp = false;
+				SelectionMaskTexture = TESRender::CreateSourceTexture("Textures\\Effects\\TerrainNoise.dds");
+				SelectionMaskTexture->m_uiRefCount = 1;
+			}
+		}
 
-				for (NiTListBase<NiProperty>::Node* i = Node->m_propertyList.start; i && i->data; i = i->next)
+		void SelectionMaskPainter::ApplyMaskRecursive(NiNode* Node, MaskedObjectData& MaskData) const
+		{
+			for (auto i = 0; i < Node->m_children.numObjs; ++i)
+			{
+				auto Child = Node->m_children.data[i];
+				if (auto ChildNiNode = NI_CAST(Node->m_children.data[i], NiNode))
 				{
-					if (i->data->GetPropertyType() == NiTexturingProperty::kType)
+					ApplyMaskRecursive(ChildNiNode, MaskData);
+					continue;
+				}
+
+				if (auto ChildGeom = NI_CAST(Node->m_children.data[i], NiGeometry))
+				{
+					auto LightingProp =  NI_CAST(TESRender::GetProperty(ChildGeom, BSShaderPPLightingProperty::kType), BSShaderPPLightingProperty);
+					if (LightingProp)
 					{
-						HasProp = true;
-						break;
+						// update the primary diffuse texture to the mask texture
+						MaskData.CachedDiffuseMaps.emplace(LightingProp, NI_CAST(LightingProp->diffuse[0], NiSourceTexture));
+						TESRender::SetBSShaderPPLightingPropertyDiffuseTexture(LightingProp, SelectionMaskTexture, 0);
 					}
 				}
-
-				if (HasProp == false)
-				{
-					TESRender::AddProperty(Node, SelectionMask);
-					TESRender::UpdateDynamicEffectState(Node);
-					TESRender::UpdateAVObject(Node);
-					BGSEECONSOLE_MESSAGE("added sel mask to %08X", Ref->formID);
-				}
 			}
 		}
 
-		void DebugSceneGraphModifier::PostRender(RenderData& Data)
+		void SelectionMaskPainter::RemoveMask(const MaskedObjectData& MaskData) const
 		{
-			return;
+			for (const auto& Itr : MaskData.CachedDiffuseMaps)
+				TESRender::SetBSShaderPPLightingPropertyDiffuseTexture(Itr.first, Itr.second, 0);
+		}
 
-			for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+		SelectionMaskPainter::SelectionMaskPainter()
+		{
+			SelectionMaskTexture = nullptr;
+		}
+
+		SelectionMaskPainter::~SelectionMaskPainter()
+		{
+			TESRender::DeleteNiRefObject(SelectionMaskTexture);
+		}
+
+		void SelectionMaskPainter::PreRender(RenderData& Data)
+		{
+			DelayedInit();
+
+			for (auto Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 			{
 				TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
+				SelectedRefs.emplace_back(Ref);
+
+				std::unique_ptr<MaskedObjectData> NewMaskedObjData(new MaskedObjectData);
+				//ApplyMaskRecursive(Ref->GetNiNode(), *NewMaskedObjData);
+				MaskedObjects.emplace_back(std::move(NewMaskedObjData));
 			}
+		}
+
+		void SelectionMaskPainter::PostRender(RenderData& Data)
+		{
+			for (const auto& Itr : MaskedObjects)
+				RemoveMask(*Itr);
+
+			MaskedObjects.clear();
+			SelectedRefs.clear();
+		}
+
+		bool SelectionMaskPainter::IsGeometryMasked(NiAVObject* Geom) const
+		{
+			if (_RENDERSEL->selectionCount == 0)
+				return false;
+
+			NiAVObject* Parent = Geom->m_parent;
+			while (Parent)
+			{
+				auto Node = NI_CAST(Parent, NiNode);
+				if (Node)
+				{
+					auto RefProp = NI_CAST(TESRender::GetExtraData(Node, "REF"), TESObjectExtraData);
+					if (RefProp && std::find(SelectedRefs.begin(), SelectedRefs.end(), RefProp->refr) != SelectedRefs.end())
+						return true;
+				}
+
+				Parent = Parent->m_parent;
+			}
+
+			return false;
+		}
+
+		bool SelectionMaskPainter::HasMaskedObjects() const
+		{
+			return SelectedRefs.empty() == false;
 		}
 
 		bool ReferenceVisibilityManager::ShouldBeInvisible(TESObjectREFR* Ref)
@@ -295,20 +333,20 @@ namespace cse
 		{
 			OutReasonFlags = 0;
 
-			if (_RENDERWIN_XSTATE.ShowInitiallyDisabledRefs == false && Ref->GetDisabled())
+			if (_RENDERWIN_XSTATE.ShowInitiallyDisabledRefs == false && Ref->IsDisabled())
 				OutReasonFlags |= kReason_InitiallyDisabledSelf;
 
-			if (Ref->GetInvisible())
+			if (Ref->IsInvisible())
 				OutReasonFlags |= kReason_InvisibleSelf;
 
 			BSExtraData* xData = Ref->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
 			if (xData)
 			{
 				ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
-				if (xParent->parent->GetChildrenInvisible())
+				if (xParent->parent->IsChildrenInvisible())
 					OutReasonFlags |= kReason_InvisibleChild;
 
-				if (xParent->parent->GetDisabled() && _RENDERWIN_XSTATE.ShowInitiallyDisabledRefChildren == false)
+				if (xParent->parent->IsDisabled() && _RENDERWIN_XSTATE.ShowInitiallyDisabledRefChildren == false)
 					OutReasonFlags |= kReason_InitiallyDisabledChild;
 			}
 
@@ -448,6 +486,7 @@ namespace cse
 			GrassOverlayTexture = nullptr;
 			StaticCameraPivot.Scale(0);
 			DraggingPathGridPoints = false;
+			ShowSelectionMask = false;
 		}
 
 		RenderWindowExtendedState::~RenderWindowExtendedState()
@@ -467,6 +506,14 @@ namespace cse
 				GrassOverlayTexture->m_uiRefCount = 1;
 			}
 
+			ShowSelectionMask = settings::renderer::kShowSelectionMask().i;
+
+			int MaskColorR = 0, MaskColorG = 0, MaskColorB = 0;
+			SME::StringHelpers::GetRGB(settings::renderer::kSelectionMaskColor().s, MaskColorR, MaskColorG, MaskColorB);
+			SelectionMaskColor.r = MaskColorR / 255.f;
+			SelectionMaskColor.g = MaskColorG / 255.f;
+			SelectionMaskColor.b = MaskColorB / 255.f;
+
 			Initialized = true;
 		}
 
@@ -481,6 +528,11 @@ namespace cse
 				TESRender::DeleteNiRefObject(GrassOverlayTexture);
 				GrassOverlayTexture = nullptr;
 			}
+
+			settings::renderer::kSelectionMaskColor.SetString("%d,%d,%d",
+				(int)(SelectionMaskColor.r * 255),
+				(int)(SelectionMaskColor.g * 255),
+				(int)(SelectionMaskColor.b * 255));
 
 			Initialized = false;
 		}
@@ -1054,9 +1106,8 @@ namespace cse
 			ExtendedState->Initialize();
 			SceneGraphManager->AddModifier(&ReferenceParentChildIndicator::Instance);
 			SceneGraphManager->AddModifier(&ReferenceVisibilityModifier::Instance);
-#ifndef NDEBUG
-			SceneGraphManager->AddModifier(&DebugSceneGraphModifier::Instance);
-#endif
+			SceneGraphManager->AddModifier(&SelectionMaskPainter::Instance);
+
 			GizmoManager->Initialize(OSD);
 			CellLists->Initialize();
 			GroupManager->Initialize();
@@ -1118,9 +1169,8 @@ namespace cse
 			OSD->Deinitialize();
 			SceneGraphManager->RemoveModifier(&ReferenceParentChildIndicator::Instance);
 			SceneGraphManager->RemoveModifier(&ReferenceVisibilityModifier::Instance);
-#ifndef NDEBUG
-			SceneGraphManager->RemoveModifier(&DebugSceneGraphModifier::Instance);
-#endif
+			SceneGraphManager->RemoveModifier(&SelectionMaskPainter::Instance);
+
 			ExtendedState->Deinitialize();
 			Initialized = false;
 		}

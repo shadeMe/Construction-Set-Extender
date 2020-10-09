@@ -31,75 +31,250 @@ namespace cse
 
 			SME_ASSERT((void*)_RENDERWIN_XSTATE.CurrentMouseRef != (void*)_RENDERWIN_XSTATE.CurrentMousePathGridPoint);
 
-			char Buffer[0x200] = { 0 }, BaseBuffer[0x100] = { 0 };
-			if (_RENDERWIN_XSTATE.CurrentMouseRef)
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1, 2));
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(15, 15));
+			ImGui::BeginTooltip();
 			{
-				TESObjectREFR* Ref = _RENDERWIN_XSTATE.CurrentMouseRef;
-				TESForm* Base = Ref->baseForm;
-				SME_ASSERT(Base);
-
-				if (Base->GetEditorID())
-					FORMAT_STR(BaseBuffer, "Base Form: %s", Base->GetEditorID());
-				else
-					FORMAT_STR(BaseBuffer, "Base Form: %08X", Base->formID);
-
-				BSExtraData* xData = Ref->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
-				char xBuffer[0x50] = { 0 };
-				if (xData)
+				if (ImGui::BeginTable("##Tooltip Contents", 2))
 				{
-					ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
-					FORMAT_STR(xBuffer, "\n\nParent: %s%s%08X%s, Opposite: %d",
-						((xParent->parent->editorID.Size()) ? (xParent->parent->editorID.c_str()) : ("")),
-							   (xParent->parent->editorID.Size() ? "(" : ""),
-							   xParent->parent->formID,
-							   (xParent->parent->editorID.Size() ? ")" : ""),
-							   xParent->oppositeState);
+					ImGui::TableSetupColumn("First", ImGuiTableColumnFlags_WidthStretch, 100);
+					ImGui::TableSetupColumn("Second", ImGuiTableColumnFlags_WidthAlwaysAutoResize);
+
+					if (_RENDERWIN_XSTATE.CurrentMouseRef)
+					{
+						TESObjectREFR* Ref = _RENDERWIN_XSTATE.CurrentMouseRef;
+						TESForm* Base = Ref->baseForm;
+
+						ImGui::TableNextRow();
+						{
+							ImGui::TableNextColumn();
+							{
+								ImGui::Text("Object Reference:");
+							}
+							ImGui::TableNextColumn();
+							{
+								ImGui::Text("%s(%08X) %s", ((Ref->editorID.Size()) ? (Ref->editorID.c_str()) : ("")), Ref->formID, Ref->IsActive() ? "*" : "");
+							}
+						}
+						ImGui::TableNextRow();
+						{
+							ImGui::TableNextColumn();
+							{
+								ImGui::Text("Base Form:");
+							}
+							ImGui::TableNextColumn();
+							{
+								ImGui::Text("%s (%08X)\n%s", ((Base->editorID.Size()) ? (Base->editorID.c_str()) : ("")), Base->formID, TESForm::GetFormTypeIDLongName(Ref->baseForm->formType));
+							}
+						}
+
+						ImGui::TableNextRow();
+						{
+							ImGui::TableNextColumn();
+							{
+								ImGui::Text("Position:");
+							}
+							ImGui::TableNextColumn();
+							{
+								ImGui::Text("%.03f, %.03f, %.03f", Ref->position.x, Ref->position.y, Ref->position.z);
+							}
+						}
+
+						ImGui::TableNextRow();
+						{
+							ImGui::TableNextColumn();
+							{
+								ImGui::Text("Rotation:");
+							}
+							ImGui::TableNextColumn();
+							{
+								ImGui::Text("%.03f, %.03f, %.03f", Ref->rotation.x * REFR_RAD2DEG, Ref->rotation.y * REFR_RAD2DEG, Ref->rotation.z * REFR_RAD2DEG);
+							}
+						}
+
+						ImGui::TableNextRow();
+						{
+							ImGui::TableNextColumn();
+							{
+								ImGui::Text("Scale:");
+							}
+							ImGui::TableNextColumn();
+							{
+								ImGui::Text("%.03f", Ref->scale);
+							}
+						}
+
+						std::string FlagStr;
+						if (Ref->IsQuestItem())
+							FlagStr += "Persistent\n";
+						if (Ref->IsDisabled())
+							FlagStr += "Initially Disabled\n";
+						if (Ref->IsVWD())
+							FlagStr += "Visible When Distant\n";
+						if (Ref->IsInvisible())
+							FlagStr += "Invisible (Editor only)\n";
+						if (Ref->IsChildrenInvisible())
+							FlagStr += "Children Invisible (Editor only)\n";
+						if (Ref->IsFrozen())
+							FlagStr += "Frozen (Editor only)\n";
+
+						if (!FlagStr.empty())
+						{
+							FlagStr.erase(FlagStr.begin() + FlagStr.size() - 1);
+							ImGui::TableNextRow();
+							{
+								ImGui::TableNextColumn();
+								{
+									ImGui::Text("Flags:");
+								}
+								ImGui::TableNextColumn();
+								{
+									ImGui::Text("%s", FlagStr.c_str());
+								}
+							}
+						}
+
+						auto GroupID = _RENDERWIN_MGR.GetGroupManager()->GetParentGroupID(Ref);
+						if (GroupID)
+						{
+							ImGui::TableNextRow();
+							{
+								ImGui::TableNextColumn();
+								{
+									ImGui::Text("Parent Group:");
+								}
+								ImGui::TableNextColumn();
+								{
+									ImGui::Text("%s", GroupID);
+								}
+							}
+						}
+
+						BSExtraData* xData = Ref->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
+						if (xData)
+						{
+							ImGui::TableNextRow();
+							{
+								ImGui::TableNextColumn();
+								{
+									ImGui::Text("Parent Reference:");
+								}
+								ImGui::TableNextColumn();
+								{
+									ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
+									ImGui::Text("%s(%08X) %s",
+										((xParent->parent->editorID.Size()) ? (xParent->parent->editorID.c_str()) : ("")),
+										xParent->parent->formID,
+										(xParent->oppositeState ? "[X]" : ""));
+								}
+							}
+						}
+
+						if (*TESRenderWindow::ActiveCell != Ref->parentCell && !Ref->parentCell->IsInterior())
+						{
+							ImGui::TableNextRow();
+							{
+								ImGui::TableNextColumn();
+								{
+									ImGui::Text("Parent Cell:");
+								}
+								ImGui::TableNextColumn();
+								{
+									ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
+									ImGui::Text("%s(%08X) %d,%d",
+										Ref->parentCell->GetEditorID(),
+										Ref->parentCell->formID,
+										Ref->parentCell->cellData.coords->x,
+										Ref->parentCell->cellData.coords->y);
+								}
+							}
+						}
+					}
+					else if (_RENDERWIN_XSTATE.CurrentMousePathGridPoint)
+					{
+						auto GridPoint = _RENDERWIN_XSTATE.CurrentMousePathGridPoint;
+						TESObjectREFR* Ref = _RENDERWIN_XSTATE.CurrentMousePathGridPoint->linkedRef;
+						TESForm* Base = Ref ? Ref->baseForm : nullptr;
+
+						ImGui::TableNextRow();
+						{
+							ImGui::TableNextColumn();
+							{
+								ImGui::Text("Position:");
+							}
+							ImGui::TableNextColumn();
+							{
+								ImGui::Text("%.03f, %.03f, %.03f", GridPoint->position.x, GridPoint->position.y, GridPoint->position.z);
+							}
+						}
+
+						ImGui::TableNextRow();
+						{
+							ImGui::TableNextColumn();
+							{
+								ImGui::Text("Linked Points:");
+							}
+							ImGui::TableNextColumn();
+							{
+								ImGui::Text("%d", GridPoint->linkedPoints.Count());
+							}
+						}
+
+						if (Ref)
+						{
+							ImGui::TableNextRow();
+							{
+								ImGui::TableNextColumn();
+								{
+									ImGui::Text("Linked Reference:");
+								}
+								ImGui::TableNextColumn();
+								{
+									ImGui::Text("%s (%08X) %s", ((Ref->editorID.Size()) ? (Ref->editorID.c_str()) : ("")), Ref->formID, Ref->IsActive() ? "*" : "");
+								}
+							}
+
+							ImGui::TableNextRow();
+							{
+								ImGui::TableNextColumn();
+								{
+									ImGui::Text("Base Form:");
+								}
+								ImGui::TableNextColumn();
+								{
+									ImGui::Text("%s (%08X)", ((Base->editorID.Size()) ? (Base->editorID.c_str()) : ("")), Base->formID);
+								}
+							}
+						}
+
+						std::string FlagStr;
+						if (GridPoint->autoGenerated)
+							FlagStr += "Auto-generated\n";
+						if (GridPoint->IsPointPreferred())
+							FlagStr += "Preferred\n";
+
+						if (!FlagStr.empty())
+						{
+							FlagStr.erase(FlagStr.begin() + FlagStr.size() - 1);
+							ImGui::TableNextRow();
+							{
+								ImGui::TableNextColumn();
+								{
+									ImGui::Text("Flags:");
+								}
+								ImGui::TableNextColumn();
+								{
+									ImGui::Text("%s", FlagStr.c_str());
+								}
+							}
+						}
+					}
+
+					ImGui::EndTable();
 				}
-
-				char RefGroupBuffer[0x50] = { 0 };
-				const char* ParentGroup = _RENDERWIN_MGR.GetGroupManager()->GetParentGroupID(Ref);
-				if (ParentGroup)
-					FORMAT_STR(RefGroupBuffer, "\nGroup: %s", ParentGroup);
-
-				char RefLayerBuffer[0x50] = { 0 };
-				const char* ParentLayer = _RENDERWIN_MGR.GetLayerManager()->GetParentLayerName(Ref);
-				if (ParentLayer)
-					FORMAT_STR(RefLayerBuffer, "\nLayer: %s", ParentLayer);
-
-				FORMAT_STR(Buffer, "%s%s%08X%s%s %s%s%s%s",
-						(Ref->GetEditorID() ? Ref->GetEditorID() : ""),
-						   (Ref->GetEditorID() ? "(" : ""),
-						   Ref->formID,
-						   (Ref->GetEditorID() ? ")" : ""),
-						   Ref->IsActive() ? "*" : "",
-						   BaseBuffer,
-						   xBuffer,
-						   RefGroupBuffer,
-						   RefLayerBuffer);
 			}
-			else
-			{
-				TESObjectREFR* Ref = _RENDERWIN_XSTATE.CurrentMousePathGridPoint->linkedRef;
-				if (Ref == nullptr)
-					return;
-
-				TESForm* Base = Ref->baseForm;
-				SME_ASSERT(Base);
-
-				if (Base->GetEditorID())
-					FORMAT_STR(BaseBuffer, "Base Form: %s", Base->GetEditorID());
-				else
-					FORMAT_STR(BaseBuffer, "Base Form: %08X", Base->formID);
-
-				FORMAT_STR(Buffer, "Linked Reference: %s%s%08X%s %s",
-					(Ref->GetEditorID() ? Ref->GetEditorID() : ""),
-						   (Ref->GetEditorID() ? "(" : ""),
-						   Ref->formID,
-						   (Ref->GetEditorID() ? ")" : ""),
-						   BaseBuffer);
-			}
-
-			ImGui::SetTooltip("%s", Buffer);
+			ImGui::EndTooltip();
+			ImGui::PopStyleVar(2);
 		}
 
 		bool MouseOverTooltipOSDLayer::NeedsBackgroundUpdate()

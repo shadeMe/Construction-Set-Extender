@@ -4,7 +4,7 @@
 #include "IMGUI\ImGuizmo.h"
 #include "IconFontCppHeaders\IconsMaterialDesign.h"
 
-#include "DefaultOverlayOSDLayer.h"
+#include "InfoOverlayOSDLayer.h"
 #include "MouseOverTooltipOSDLayer.h"
 #include "ToolbarOSDLayer.h"
 #include "SelectionControlsOSDLayer.h"
@@ -639,7 +639,8 @@ namespace cse
 
 		bool ImGuiDX9::IsHoveringWindow() const
 		{
-			return ImGui::GetCurrentWindowRead() && ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
+			ImGuiContext& g = *GImGui;
+			return g.HoveredRootWindow || g.HoveredWindow;
 		}
 
 		bool ImGuiDX9::IsChildWindowHovering(void* RootWindow) const
@@ -706,7 +707,18 @@ namespace cse
 			RedrawSingleFrame = false;
 			MouseInClientArea = false;
 			ConsumeMouseInputEvents = ConsumeKeyboardInputEvents = false;
-			MouseHoveringOSD = false;
+		}
+
+		std::string RenderWindowOSD::GUIState::ToString() const
+		{
+			std::string Out;
+
+			Out += "RedrawSingleFrame = " + std::to_string(RedrawSingleFrame) + "\n";
+			Out += "MouseInClientArea = " + std::to_string(MouseInClientArea) + "\n";
+			Out += "ConsumeMouseInputEvents = " + std::to_string(ConsumeMouseInputEvents) + "\n";
+			Out += "ConsumeKeyboardInputEvents = " +  std::to_string(ConsumeKeyboardInputEvents);
+
+			return Out;
 		}
 
 		void RenderWindowOSD::RenderLayers()
@@ -757,7 +769,7 @@ namespace cse
 			Pipeline->Initialize(*TESRenderWindow::WindowHandle, _NIRENDERER->device);
 
 			AttachLayer(&ModalWindowProviderOSDLayer::Instance);
-			AttachLayer(&DefaultOverlayOSDLayer::Instance);
+			AttachLayer(&InfoOverlayOSDLayer::Instance);
 			AttachLayer(&MouseOverTooltipOSDLayer::Instance);
 			AttachLayer(&NotificationOSDLayer::Instance);
 			AttachLayer(&ToolbarOSDLayer::Instance);
@@ -775,7 +787,7 @@ namespace cse
 			SME_ASSERT(Initialized);
 
 			DetachLayer(&ModalWindowProviderOSDLayer::Instance);
-			DetachLayer(&DefaultOverlayOSDLayer::Instance);
+			DetachLayer(&InfoOverlayOSDLayer::Instance);
 			DetachLayer(&MouseOverTooltipOSDLayer::Instance);
 			DetachLayer(&NotificationOSDLayer::Instance);
 			DetachLayer(&ToolbarOSDLayer::Instance);
@@ -804,7 +816,6 @@ namespace cse
 			{
 				if (Pipeline->UpdateInputState(hWnd, uMsg, wParam, lParam))
 				{
-					State.MouseHoveringOSD = Pipeline->IsHoveringWindow();
 					if (GetCapture() != hWnd && GetActiveWindow() == hWnd)
 					{
 						// consume all input if we have modal windows open
@@ -825,6 +836,15 @@ namespace cse
 						}
 					}
 				}
+			}
+			else
+			{
+				// since the mouse input manager processes its messages after the OSD, the latter will have
+				// processed the mouse button down message before free movement was activated in the former
+				// and since the deactivation of free movement once again happens inside the mouse input manager's handler,
+				// the OSD will never receive the mouse button up message, leaving the input state indeterminate
+				// we reset the input state to prevent this from happening
+				Pipeline->ResetInputState(false);
 			}
 
 			switch (uMsg)
@@ -959,8 +979,6 @@ namespace cse
 		{
 			if (Initialized == false)
 				return false;
-			else if (State.MouseHoveringOSD)
-				return true;
 			else switch (uMsg)
 			{
 			case WM_LBUTTONDOWN:
@@ -986,7 +1004,7 @@ namespace cse
 
 		bool RenderWindowOSD::NeedsInput() const
 		{
-			return Initialized == false || State.MouseHoveringOSD || State.ConsumeKeyboardInputEvents || State.ConsumeMouseInputEvents;
+			return Initialized == false || State.ConsumeKeyboardInputEvents || State.ConsumeMouseInputEvents;
 		}
 
 		std::string IRenderWindowOSDLayer::Helpers::GetRefEditorID(TESObjectREFR* Ref)
@@ -1347,7 +1365,7 @@ namespace cse
 				return;
 
 			ImGui::SetNextWindowPos(ImVec2(10, *TESRenderWindow::ScreenHeight - 150));
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5);
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
@@ -1364,9 +1382,13 @@ namespace cse
 			const Notification& Current = GetNextNotification();
 			float RemainingTime = Current.GetRemainingTicks() / (float)Current.Duration;
 
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3, 3));
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(2, 2));
+			ImGui::Dummy(ImVec2(1, 5));
 			ImGui::Text("  %s  ", Current.Message.c_str());
 			ImGui::Dummy(ImVec2(10, 15));
-			ImGui::ProgressBar(RemainingTime, ImVec2(-1, 1));
+			ImGui::PopStyleVar(2);
+			ImGui::ProgressBar(RemainingTime, ImVec2(-1, 3));
 			ImGui::End();
 			ImGui::PopStyleVar(4);
 		}

@@ -3188,7 +3188,7 @@ bool ImGui::TempInputText(const ImRect& bb, ImGuiID id, const char* label, char*
     if (init)
     {
         // First frame we started displaying the InputText widget, we expect it to take the active id.
-        IM_ASSERT(g.ActiveId == id);
+        //IM_ASSERT(g.ActiveId == id);
         g.TempInputId = g.ActiveId;
     }
     return value_changed;

@@ -76,6 +76,8 @@ namespace cse
 		_DefineHookHdlr(UndoStackUndoOp3, 0x00431D98);
 		_DefineHookHdlr(UndoStackRedoOp3, 0x004328FA);
 		_DefineHookHdlr(MoveSelectionClampMul, 0x0042572C);
+		_DefineHookHdlr(ShadowLightShaderUseFullBrightLight, 0x00791D2A);
+		_DefineHookHdlr(ShadowSceneNodeUseFullBrightLight, 0x00772091);
 
 #ifndef NDEBUG
 		void __stdcall DoTestHook1()
@@ -179,11 +181,47 @@ namespace cse
 				_DefineCallHdlr(RerouteRenderWindowRefSelection, kRenderWindowRefSelectionCallSites[i], RenderWindowReferenceSelectionDetour);
 				_MemHdlr(RerouteRenderWindowRefSelection).WriteCall();
 			}
+
+			{
+				for (int i = 0; i < 9; i++)
+				{
+					static const UInt32 kShadowLightShaderSetAmbientColorShaderConstantCallSites[9] =
+					{
+						0x00791C9C, 0x0079BB8A, 0x007AAB57, 0x007ADC50, 0x007BCFB7,
+						0x00791D67, 0x007BC637, 0x007BFAAB, 0x007BAF0A
+					};
+
+					_DefineCallHdlr(RerouteShadowLightShaderSetAmbientColorShaderConstant, kShadowLightShaderSetAmbientColorShaderConstantCallSites[i], ShadowLightShaderSetAmbientColorShaderConstantDetour);
+					_MemHdlr(RerouteShadowLightShaderSetAmbientColorShaderConstant).WriteCall();
+				}
+
+				_DefinePatchHdlr(ShadowSceneNodeOverdrawOverride, 0x00772098);
+				_MemHdlr(ShadowSceneNodeOverdrawOverride).WriteUInt8(0xEB);
+			}
 		}
 
 		void __stdcall RenderWindowReferenceSelectionDetour( TESObjectREFR* Ref, bool ShowSelectionBox )
 		{
 			ReferenceSelectionManager::AddToSelection(Ref, ShowSelectionBox);
+		}
+
+		void __cdecl ShadowLightShaderSetAmbientColorShaderConstantDetour(UInt16 ConstantIndex, float R, float G, float B, float A)
+		{
+			if (ConstantIndex == 0 && _RENDERWIN_XSTATE.ShowSelectionMask)
+			{
+				auto CurrentRenderPass = *TESRender::CurrentRenderPassData;
+				if (CurrentRenderPass)
+				{
+					if (renderWindow::SelectionMaskPainter::Instance.IsGeometryMasked(CurrentRenderPass->geom))
+					{
+						cdeclCall<void>(0x0079AC60, ConstantIndex,
+										_RENDERWIN_XSTATE.SelectionMaskColor.r, _RENDERWIN_XSTATE.SelectionMaskColor.g, _RENDERWIN_XSTATE.SelectionMaskColor.b, 1.f);
+						return;
+					}
+				}
+			}
+
+			cdeclCall<void>(0x0079AC60, ConstantIndex, R, G, B, A);
 		}
 
 		#define _hhName		DoorMarkerProperties
@@ -1543,6 +1581,57 @@ namespace cse
 
 				fld		dword ptr[esp + 0x24]
 				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		bool __stdcall DoShadowLightShaderUseFullBrightLightHook(NiAVObject* Geom)
+		{
+			return *TESRenderWindow::FullBrightLightingFlag || renderWindow::SelectionMaskPainter::Instance.IsGeometryMasked(Geom);
+		}
+
+		#define _hhName		ShadowLightShaderUseFullBrightLight
+		_hhBegin()
+		{
+			_hhSetVar(Use, 0x00791D33);
+			_hhSetVar(Skip, 0x00791D6F);
+			__asm
+			{
+				pushad
+				push	ebp
+				call	DoShadowLightShaderUseFullBrightLightHook
+				test	al, al
+				jz		SKIP
+
+				popad
+				jmp		_hhGetVar(Use)
+			SKIP:
+				popad
+				jmp		_hhGetVar(Skip)
+			}
+		}
+
+		bool __stdcall DoShadowSceneNodeUseFullBrightLightHook()
+		{
+			return *TESRenderWindow::FullBrightLightingFlag;
+		}
+
+		#define _hhName		ShadowSceneNodeUseFullBrightLight
+		_hhBegin()
+		{
+			_hhSetVar(Use, 0x0077209A);
+			_hhSetVar(Skip, 0x007720BB);
+			__asm
+			{
+				pushad
+				call	DoShadowSceneNodeUseFullBrightLightHook
+				test	al, al
+				jz		SKIP
+
+				popad
+				jmp		_hhGetVar(Use)
+			SKIP:
+				popad
+				jmp		_hhGetVar(Skip)
 			}
 		}
 	}

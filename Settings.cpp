@@ -61,11 +61,11 @@ namespace cse
 			Depot.push_back(&renderer::kGrassOverlayTexturePath);
 			Depot.push_back(&renderer::kNotifyOnInvalidExecutionContext);
 			Depot.push_back(&renderer::kUnrestrictedMouseMovement);
+			Depot.push_back(&renderer::kShowSelectionMask);
+			Depot.push_back(&renderer::kSelectionMaskColor);
 
 			Depot.push_back(&renderWindowOSD::kShowMouseRef);
 			Depot.push_back(&renderWindowOSD::kMouseRefCtrlModified);
-			Depot.push_back(&renderWindowOSD::kColorSelectionStats);
-			Depot.push_back(&renderWindowOSD::kColorRAMUsage);
 
 			Depot.push_back(&renderWindowOSD::kShowInfoOverlay);
 			Depot.push_back(&renderWindowOSD::kShowSelectionControls);
@@ -182,6 +182,8 @@ namespace cse
 			INISetting		kGrassOverlayTexturePath("GrassOverlayTexturePath", RENDERER_INISECTION, "Path relative to the Textures\\Landscape folder that gets applied when the grass overlay is enabled", "CSE_GrassOverlay.dds");
 			INISetting		kNotifyOnInvalidExecutionContext("NotifyOnInvalidExecutionContext", RENDERER_INISECTION, "Display a message when an operation is invoked in the wrong edit mode", (SInt32)0);
 			INISetting		kUnrestrictedMouseMovement("UnrestrictedMouseMovement", RENDERER_INISECTION, "Unrestricted mouse movement when transforming the camera/selection", (SInt32)0);
+			INISetting		kShowSelectionMask("ShowSelectionMask", RENDERER_INISECTION, "Apply a color mask on references selected in the render window", (SInt32)1);
+			INISetting		kSelectionMaskColor("SelectionMaskColor", RENDERER_INISECTION, "Selection mask color (RGB)", "255,255,255");
 		}
 
 		namespace renderWindowOSD
@@ -196,8 +198,6 @@ namespace cse
 			INISetting		kShowToolbar("ShowToolbar", RWOSD_INISECTION, "Displays the toolbar", (SInt32)1);
 			INISetting		kShowNotifications("ShowNotifications", RWOSD_INISECTION, "Displays notifications", (SInt32)1);
 
-			INISetting		kColorSelectionStats("ColorSelectionStats", RWOSD_INISECTION, "Foreground color", "189,237,99");
-			INISetting		kColorRAMUsage("ColorRAMUsage", RWOSD_INISECTION, "Foreground color", "230,230,0");
 			INISetting		kWindowBGAlpha("WindowBGAlpha", RWOSD_INISECTION, "Window background alpha (0-1)", (float)0.7f);
 
 			INISetting		kFontSize("FontSize", RWOSD_INISECTION, "Font size", (SInt32)16);

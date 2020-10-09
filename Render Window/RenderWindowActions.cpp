@@ -540,10 +540,10 @@ namespace cse
 				{
 					TESObjectREFR* Ref = *Itr;
 
-					if (Ref->GetInvisible())
+					if (Ref->IsInvisible())
 						Ref->ToggleInvisiblity();
 
-					if (Ref->GetChildrenInvisible())
+					if (Ref->IsChildrenInvisible())
 						Ref->ToggleChildrenInvisibility();
 				}
 

@@ -166,7 +166,7 @@ const Vector3* TESObjectREFR::GetRotation() const
 
 void TESObjectREFR::ToggleInvisiblity( void )
 {
-	if (GetInvisible())
+	if (IsInvisible())
 		SME::MiscGunk::ToggleFlag(&formFlags, kSpecialFlags_3DInvisible, false);
 	else
 		SME::MiscGunk::ToggleFlag(&formFlags, kSpecialFlags_3DInvisible, true);
@@ -174,7 +174,7 @@ void TESObjectREFR::ToggleInvisiblity( void )
 
 void TESObjectREFR::ToggleChildrenInvisibility( void )
 {
-	if (GetChildrenInvisible())
+	if (IsChildrenInvisible())
 		SME::MiscGunk::ToggleFlag(&formFlags, kSpecialFlags_Children3DInvisible, false);
 	else
 		SME::MiscGunk::ToggleFlag(&formFlags, kSpecialFlags_Children3DInvisible, true);
@@ -207,12 +207,12 @@ void TESObjectREFR::SetAlpha( float Alpha /*= -1.0f*/ )
 	}
 }
 
-bool TESObjectREFR::GetInvisible( void ) const
+bool TESObjectREFR::IsInvisible( void ) const
 {
 	return (formFlags & kSpecialFlags_3DInvisible);
 }
 
-bool TESObjectREFR::GetChildrenInvisible( void ) const
+bool TESObjectREFR::IsChildrenInvisible( void ) const
 {
 	return (formFlags & kSpecialFlags_Children3DInvisible);
 }
@@ -238,11 +238,6 @@ float TESObjectREFR::GetAlpha( void )
 void TESObjectREFR::ChangeCell( TESObjectCELL* Cell )
 {
 	thisVirtualCall<void>(0x1AC, this, Cell);
-}
-
-bool TESObjectREFR::GetDisabled( void ) const
-{
-	return (formFlags & kFormFlags_Disabled);
 }
 
 void TESObjectREFR::ToggleSelectionBox( bool State )

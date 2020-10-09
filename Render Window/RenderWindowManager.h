@@ -83,19 +83,33 @@ namespace cse
 			static ReferenceVisibilityModifier			Instance;
 		};
 
-		class DebugSceneGraphModifier : public IRenderWindowSceneGraphModifier
+		class SelectionMaskPainter : public IRenderWindowSceneGraphModifier
 		{
-			NiMaterialProperty*			MatProp;
-			NiStencilProperty*			Stencil;
-			NiTexturingProperty*		SelectionMask;
+			struct MaskedObjectData
+			{
+				std::unordered_map<BSShaderPPLightingProperty*, NiSourceTexture*>
+						CachedDiffuseMaps;
+			};
+
+			NiSourceTexture*		SelectionMaskTexture;
+			TESObjectREFRArrayT		SelectedRefs;
+			std::vector<std::unique_ptr<MaskedObjectData>>
+									MaskedObjects;
+
+			void	DelayedInit();
+			void	ApplyMaskRecursive(NiNode* Node, MaskedObjectData& MaskData) const;
+			void	RemoveMask(const MaskedObjectData& MaskData) const;
 		public:
-			DebugSceneGraphModifier();
-			virtual ~DebugSceneGraphModifier();
+			SelectionMaskPainter();
+			virtual ~SelectionMaskPainter();
 
-			virtual void					PreRender(RenderData& Data);
-			virtual void					PostRender(RenderData& Data);
+			virtual void	PreRender(RenderData& Data);
+			virtual void	PostRender(RenderData& Data);
 
-			static DebugSceneGraphModifier			Instance;
+			bool			IsGeometryMasked(NiAVObject* Geom) const;
+			bool			HasMaskedObjects() const;
+
+			static SelectionMaskPainter		Instance;
 		};
 
 		class ReferenceVisibilityManager
@@ -154,6 +168,8 @@ namespace cse
 			NiSourceTexture*			GrassOverlayTexture;
 			Vector3						StaticCameraPivot;
 			bool						DraggingPathGridPoints;
+			bool						ShowSelectionMask;
+			NiColor						SelectionMaskColor;
 
 			RenderWindowExtendedState();
 			~RenderWindowExtendedState();

@@ -295,7 +295,7 @@ namespace cse
 
 					bool Persistent = ThisRef->IsQuestItem();
 					bool VWD = ThisRef->IsVWD();
-					bool Disabled = ThisRef->IsInitiallyDisabled();
+					bool Disabled = ThisRef->IsDisabled();
 					bool Changed = false;
 
 					if (ImGui::Checkbox("Persistent##flag_persistent", &Persistent))
@@ -321,7 +321,7 @@ namespace cse
 							Persistent = false;
 						if (Ref->IsVWD() == false)
 							VWD = false;
-						if (Ref->IsInitiallyDisabled() == false)
+						if (Ref->IsDisabled() == false)
 							Disabled = false;
 					}
 
