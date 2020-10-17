@@ -149,7 +149,6 @@ namespace cse
 					ImGui::TableNextColumn();
 					{
 						ImGui::Button("Scale##multi_scale", ImVec2(-FLT_MIN, 0.0f));
-						DrawDragTrail(Context);
 						ScaleSelection(TransformationMode == kTransformationMode_Local);
 					}
 				}
@@ -1482,7 +1481,8 @@ namespace cse
 			IRenderWindowOSDLayer(&settings::renderWindowOSD::kShowRefBatchEditor),
 			WindowState(),
 			RefListOnlyShowSelection(false),
-			RefListContextMenuSelection(nullptr)
+			RefListContextMenuSelection(nullptr),
+			HideRefList(false)
 		{
 			EditComponents.emplace_back(new Reference3DEditComponent);
 			EditComponents.emplace_back(new ReferenceFlagsEditComponent);
@@ -1633,7 +1633,7 @@ namespace cse
 				}
 
 				ImGui::Dummy(ImVec2(0, 5));
-				ImGui::Checkbox("Hide Unselected References", &RefListOnlyShowSelection);
+				ImGui::Checkbox("Hide unselected references", &RefListOnlyShowSelection);
 			}
 			ImGui::EndChild();
 
@@ -1717,16 +1717,20 @@ namespace cse
 
 			UpdateCurrentSelection();
 
-			if (ImGui::BeginTable("##main_content_table", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInner | ImGuiTableFlags_SizingPolicyStretchX))
+			if (ImGui::BeginTable("##main_content_table", HideRefList ? 1 : 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInner | ImGuiTableFlags_SizingPolicyStretchX ))
 			{
-				ImGui::TableSetupColumn("RefList", ImGuiTableColumnFlags_WidthStretch, 300);
+				if (!HideRefList)
+					ImGui::TableSetupColumn("RefList", ImGuiTableColumnFlags_WidthStretch, 300);
 				ImGui::TableSetupColumn("EditComponents", ImGuiTableColumnFlags_WidthStretch);
 
 				ImGui::TableNextRow();
 				{
-					ImGui::TableNextColumn();
+					if (!HideRefList)
 					{
-						BuildReferenceListChildWindow(CurrentSelection);
+						ImGui::TableNextColumn();
+						{
+							BuildReferenceListChildWindow(CurrentSelection);
+						}
 					}
 
 					ImGui::TableNextColumn();
@@ -1738,6 +1742,12 @@ namespace cse
 						ImGui::BeginChild("##edit_component_child_window", ImVec2(-5, 0), ImGuiWindowFlags_AlwaysUseWindowPadding);
 						ImGui::PopStyleVar();
 						{
+							if (ImGui::ArrowButton("##ToggleRefList", HideRefList ? ImGuiDir_Right : ImGuiDir_Left))
+								HideRefList = HideRefList == false;
+							if (ImGui::IsItemHovered())
+								ImGui::SetTooltip("%s Reference List", HideRefList ? "Show" : "Hide");
+
+							ImGui::SameLine(0, 15);
 							if (_RENDERSEL->selectionCount == 1)
 							{
 								auto ThisRef = CS_CAST(_RENDERSEL->selectionList->Data, TESForm, TESObjectREFR);
