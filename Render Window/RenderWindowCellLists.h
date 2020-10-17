@@ -59,6 +59,8 @@ namespace cse
 			GlobalEventSink*		EventSink;
 			CosaveHandler*			CosaveInterface;
 			ImGuiTextFilter			FilterHelper;
+			bool					BookmarksVisible;
+			bool					RecentsVisible;
 			bool					Initialized;
 
 			void					RenderPopupButton();

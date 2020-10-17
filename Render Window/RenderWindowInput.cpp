@@ -720,23 +720,26 @@ namespace cse
 			{
 				static ImGuiTextFilter Filter;
 
-				Filter.Draw("Filter", 350); ImGui::SameLine(0, 20);
-				ImGui::Text("Double click on a hotkey to remap it.");
+				ImGui::ShowHelpPopup("Double click on a hotkey to remap it.");
+				ImGui::SameLine(0, 5);
+				Filter.Draw("Filter", 350);
 
-				ImGui::Separator();
-				ImGui::Columns(3, "hotkey_list", false);
+				bool Closed = false;
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 2));
+				ImGui::BeginChild("##hotkey_list_child_window", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding);
+				ImGui::PopStyleVar();
 				{
-					ImGui::Text("Action"); ImGui::NextColumn();
-					ImGui::Text("Binding"); ImGui::NextColumn();
-					ImGui::Text("Description"); ImGui::NextColumn();
-					ImGui::Separator();
-				}
-				ImGui::Columns();
-
-				ImGui::BeginChild("hotkey_child_frame", ImVec2(0, 455));
-				{
-					ImGui::Columns(3, "hotkey_list", false);
+					if (ImGui::BeginTable("##hotkey_table", 3,
+						ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInner | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_Scroll,
+						ImVec2(-5, -35)))
 					{
+						ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthFixed, 230);
+						ImGui::TableSetupColumn("Binding", ImGuiTableColumnFlags_WidthFixed, 150);
+						ImGui::TableSetupColumn("Description", ImGuiTableColumnFlags_WidthFixed, 350);
+
+						ImGui::TableSetupScrollFreeze(0, 1);
+						ImGui::TableHeadersRow();
+
 						int i = 0;
 						IHotKey* Selection = nullptr;
 						for (auto& Itr : HotKeys)
@@ -752,24 +755,31 @@ namespace cse
 
 							char Buffer[0x100] = { 0 };
 							FORMAT_STR(Buffer, "%s %s-%d", Name, Desc, i);
-							bool Selected = false;
 
 							ImGui::PushID(Buffer);
 							{
-								if (ImGui::Selectable(Name, false,
-													  ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick | ImGuiSelectableFlags_DontClosePopups) &&
-									ImGui::IsMouseDoubleClicked(0))
+								ImGui::TableNextRow();
 								{
-									Selection = Itr.get();
-								}
+									ImGui::TableNextColumn();
+									{
+										if (ImGui::Selectable(Name, false,
+											ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick | ImGuiSelectableFlags_DontClosePopups) &&
+											ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+										{
+											Selection = Itr.get();
+										}
+									}
 
-								ImGui::NextColumn();
-								ImGui::Selectable(Key.c_str());
-								ImGui::NextColumn();
-								ImGui::Selectable(Desc, false, NULL, ImVec2(200, 0));
-								if (ImGui::IsItemHovered())
-									ImGui::SetTooltip(Desc);
-								ImGui::NextColumn();
+									ImGui::TableNextColumn();
+									{
+										ImGui::Selectable(Key.c_str());
+									}
+
+									ImGui::TableNextColumn();
+									{
+										ImGui::Selectable(Desc);
+									}
+								}
 							}
 							ImGui::PopID();
 
@@ -779,23 +789,23 @@ namespace cse
 						if (Selection)
 						{
 							ModalWindowProviderOSDLayer::Instance.ShowModal("Edit Binding",
-																			std::bind(&RenderWindowKeyboardManager::RenderModalBindingEditor, this,
-																					  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
-																			Selection,
-																			ImGuiWindowFlags_AlwaysAutoResize);
+								std::bind(&RenderWindowKeyboardManager::RenderModalBindingEditor, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+								Selection,
+								ImGuiWindowFlags_AlwaysAutoResize);
 						}
+
+						ImGui::EndTable();
 					}
-					ImGui::Columns();
+
+					if (ImGui::Button("Close", ImVec2(75, 0)))
+						Closed = true;
 				}
 				ImGui::EndChild();
 
-				if (ImGui::Button("Close", ImVec2(75, 0)))
-				{
+				if (Closed)
 					Filter.Clear();
-					return true;
-				}
-				else
-					return false;
+
+				return Closed;
 			}
 
 			bool RenderWindowKeyboardManager::RenderModalBindingEditor(RenderWindowOSD* OSD, ImGuiDX9* GUI, void* UserData)
@@ -922,13 +932,19 @@ namespace cse
 
 				if (HoldableKey == false)
 				{
-					ImGui::Columns(3, "modifiers", false);
+					if (ImGui::BeginTable("##modifiers", 3))
 					{
-						ImGui::Checkbox("Control", &Control); ImGui::NextColumn();
-						ImGui::Checkbox("Shift", &Shift); ImGui::NextColumn();
-						ImGui::Checkbox("Alt", &Alt); ImGui::NextColumn();
+						ImGui::TableNextRow();
+
+						ImGui::TableNextColumn();
+						ImGui::Checkbox("Control", &Control);
+						ImGui::TableNextColumn();
+						ImGui::Checkbox("Shift", &Shift);
+						ImGui::TableNextColumn();
+						ImGui::Checkbox("Alt", &Alt);
+
+						ImGui::EndTable();
 					}
-					ImGui::Columns();
 				}
 				ImGui::Separator();
 
@@ -1289,7 +1305,7 @@ namespace cse
 				ModalWindowProviderOSDLayer::Instance.ShowModal("Render Window Keyboard Bindings",
 																std::bind(&RenderWindowKeyboardManager::RenderModalHotKeyEditor, this, std::placeholders::_1, std::placeholders::_2),
 																nullptr,
-																ImGuiWindowFlags_NoResize, ImVec2(700, 600), ImGuiCond_Once);
+																0, ImVec2(750, 750), ImGuiCond_Once);
 			}
 
 			SharedBindings& RenderWindowKeyboardManager::GetSharedBindings()

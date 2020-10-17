@@ -650,7 +650,6 @@ namespace cse
 				ImGui::PushID(Form ? Form->formID : 0);
 				ImGui::TableNextRow();
 				{
-					// fake full row selection since the API doesn't support it (yet)
 					bool RowSelected = SelectionState.SelectedItem.Form == Form;
 					ImGui::TableNextColumn();
 					{
@@ -658,22 +657,15 @@ namespace cse
 						if (Form)
 							EditorID = IRenderWindowOSDLayer::Helpers::GetFormEditorID(Form);
 
-						if (ImGui::Selectable(EditorID.c_str(), &RowSelected))
+						if (ImGui::Selectable(EditorID.c_str(), &RowSelected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_DontClosePopups))
 						{
 							SelectionState.SelectedItem.Form = Form;
 							RowSelected = true;
 						}
-
-						if (ImGui::IsItemHovered())
-							ImGui::SetTooltip(EditorID.c_str());
 					}
 					ImGui::TableNextColumn();
 					{
-						if (ImGui::Selectable(FormID, &RowSelected))
-						{
-							SelectionState.SelectedItem.Form = Form;
-							RowSelected = true;
-						}
+						ImGui::Selectable(FormID, &RowSelected);
 					}
 
 					if (!SelectionMade && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
@@ -701,14 +693,11 @@ namespace cse
 						if (RankData)
 							DisplayText = RankData->maleRank.c_str();
 
-						if (ImGui::Selectable(DisplayText, &RowSelected))
+						if (ImGui::Selectable(DisplayText, &RowSelected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_DontClosePopups))
 						{
 							SelectionState.SelectedItem.Rank = Rank;
 							RowSelected = true;
 						}
-
-						if (ImGui::IsItemHovered())
-							ImGui::SetTooltip(DisplayText);
 					}
 					ImGui::TableNextColumn();
 					{
@@ -716,14 +705,7 @@ namespace cse
 						if (RankData)
 							DisplayText = RankData->femaleRank.c_str();
 
-						if (ImGui::Selectable(DisplayText, &RowSelected))
-						{
-							SelectionState.SelectedItem.Rank = Rank;
-							RowSelected = true;
-						}
-
-						if (ImGui::IsItemHovered())
-							ImGui::SetTooltip(DisplayText);
+						ImGui::Selectable(DisplayText, &RowSelected);
 					}
 
 					if (!SelectionMade && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
@@ -736,8 +718,8 @@ namespace cse
 				ImGui::PopID();
 			};
 
-			ImGui::SetNextWindowSizeConstraints(ImVec2(0,0), ImVec2(400, -1));
-			if (ImGui::BeginPopupModal(SelectionState.PopupName.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize))
+			ImGui::SetNextWindowPosCenter(ImGuiCond_Appearing);
+			if (ImGui::BeginPopupModal(SelectionState.PopupName.c_str(), nullptr))
 			{
 				SME_ASSERT(SelectionState.PopupState == SelectionPopupState::Showing);
 
@@ -746,85 +728,93 @@ namespace cse
 
 				bool RankSelection = SelectionState.Type == SelectionType::Rank;
 
-				if (ImGui::BeginTable("##selection_popup_table", 2, ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable | ImGuiTableFlags_Scroll | ImGuiTableFlags_Borders, ImVec2(0, 500)))
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 2));
+				ImGui::BeginChild("##child_window", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding);
+				ImGui::PopStyleVar();
 				{
-					ImGui::TableSetupColumn(RankSelection ? "Male Title" : "Editor ID", ImGuiTableColumnFlags_WidthFixed, 200);
-					ImGui::TableSetupColumn(RankSelection ? "Female Title" : "Form ID", ImGuiTableColumnFlags_WidthFixed, 50);
-
-					ImGui::TableSetupScrollFreeze(0, 2);
-					ImGui::TableHeadersRow();
-
-					// insert 'None' item
-					if (SelectionState.Type == SelectionType::Rank)
-						InsertRowForRank(nullptr, -1);
-					else
-						InsertRowForForm(nullptr);
-
-					switch (SelectionState.Type)
+					if (ImGui::BeginTable("##selection_popup_table", 2,
+						ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable | ImGuiTableFlags_Scroll | ImGuiTableFlags_Borders,
+						ImVec2(-5, -35)))
 					{
-					case SelectionType::NPC:
-					{
-						for (auto Itr = _DATAHANDLER->objects->first; Itr; Itr = Itr->next)
-						{
-							if (Itr->formType == TESForm::kFormType_NPC)
-								InsertRowForForm(Itr);
-						}
+						ImGui::TableSetupColumn(RankSelection ? "Male Title" : "Editor ID", ImGuiTableColumnFlags_WidthFixed, 200);
+						ImGui::TableSetupColumn(RankSelection ? "Female Title" : "Form ID", ImGuiTableColumnFlags_WidthFixed, 75);
 
-						break;
-					}
-					case SelectionType::Faction:
-					case SelectionType::Global:
-					{
-						tList<TESForm>* SourceList = nullptr;
-						if (SelectionState.Type == SelectionType::Faction)
-							SourceList = reinterpret_cast<tList<TESForm>*>(&_DATAHANDLER->factions);
+						ImGui::TableSetupScrollFreeze(0, 2);
+						ImGui::TableHeadersRow();
+
+						// insert 'None' item
+						if (SelectionState.Type == SelectionType::Rank)
+							InsertRowForRank(nullptr, -1);
 						else
-							SourceList = reinterpret_cast<tList<TESForm>*>(&_DATAHANDLER->globals);
+							InsertRowForForm(nullptr);
 
-						for (auto Itr = SourceList->Begin(); !Itr.End() && Itr.Get(); ++Itr)
-							InsertRowForForm(Itr.Get());
-
-						break;
-					}
-					case SelectionType::Rank:
-					{
-						auto Faction = CS_CAST(SelectionState.FormParam, TESForm, TESFaction);
-						SME_ASSERT(Faction);
-
-						int RankIndex = 0;
-						for (auto Itr = Faction->rankDataList.Begin(); !Itr.End() && Itr.Get(); ++Itr, ++RankIndex)
+						switch (SelectionState.Type)
 						{
-							auto RankData = Itr.Get();
-							bool NoRankTitles = RankData->maleRank.Size() == 0 && RankData->femaleRank.Size() == 0;
+						case SelectionType::NPC:
+						{
+							for (auto Itr = _DATAHANDLER->objects->first; Itr; Itr = Itr->next)
+							{
+								if (Itr->formType == TESForm::kFormType_NPC)
+									InsertRowForForm(Itr);
+							}
 
-							if (NoRankTitles)
-								continue;
+							break;
+						}
+						case SelectionType::Faction:
+						case SelectionType::Global:
+						{
+							tList<TESForm>* SourceList = nullptr;
+							if (SelectionState.Type == SelectionType::Faction)
+								SourceList = reinterpret_cast<tList<TESForm>*>(&_DATAHANDLER->factions);
+							else
+								SourceList = reinterpret_cast<tList<TESForm>*>(&_DATAHANDLER->globals);
 
-							InsertRowForRank(RankData, RankIndex);
+							for (auto Itr = SourceList->Begin(); !Itr.End() && Itr.Get(); ++Itr)
+								InsertRowForForm(Itr.Get());
+
+							break;
+						}
+						case SelectionType::Rank:
+						{
+							auto Faction = CS_CAST(SelectionState.FormParam, TESForm, TESFaction);
+							SME_ASSERT(Faction);
+
+							int RankIndex = 0;
+							for (auto Itr = Faction->rankDataList.Begin(); !Itr.End() && Itr.Get(); ++Itr, ++RankIndex)
+							{
+								auto RankData = Itr.Get();
+								bool NoRankTitles = RankData->maleRank.Size() == 0 && RankData->femaleRank.Size() == 0;
+
+								if (NoRankTitles)
+									continue;
+
+								InsertRowForRank(RankData, RankIndex);
+							}
+
+							break;
+						}
 						}
 
-						break;
+						ImGui::EndTable();
 					}
+
+					if (ImGui::Button("OK", ImVec2(75, 0)))
+					{
+						SME_ASSERT(SelectionState.PopupState == SelectionPopupState::Showing);
+						SelectionMade = true;
+						SelectionState.PopupState = SelectionPopupState::OK;
 					}
 
-					ImGui::EndTable();
-				}
+					ImGui::SameLine(0, 5);
 
-				if (ImGui::Button("OK", ImVec2(75, 0)))
-				{
-					SME_ASSERT(SelectionState.PopupState == SelectionPopupState::Showing);
-					SelectionMade = true;
-					SelectionState.PopupState = SelectionPopupState::OK;
+					if (ImGui::Button("Cancel", ImVec2(75, 0)))
+					{
+						SME_ASSERT(SelectionState.PopupState == SelectionPopupState::Showing);
+						SelectionMade = true;
+						SelectionState.PopupState = SelectionPopupState::Cancel;
+					}
 				}
-
-				ImGui::SameLine(0, 5);
-
-				if (ImGui::Button("Cancel", ImVec2(75, 0)))
-				{
-					SME_ASSERT(SelectionState.PopupState == SelectionPopupState::Showing);
-					SelectionMade = true;
-					SelectionState.PopupState = SelectionPopupState::Cancel;
-				}
+				ImGui::EndChild();
 
 				if (SelectionMade)
 					ImGui::CloseCurrentPopup();

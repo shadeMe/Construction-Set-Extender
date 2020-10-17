@@ -594,10 +594,7 @@ namespace cse
 			style.ButtonTextAlign = ImVec2(0.5, 0.5);
 
 			DarkBlueTheme();
-
 			style.Colors[ImGuiCol_ChildBg].w = 0.f;
-			style.Colors[ImGuiCol_WindowBg].w = settings::renderWindowOSD::kWindowBGAlpha().f;
-			style.Colors[ImGuiCol_PopupBg].w = settings::renderWindowOSD::kWindowBGAlpha().f;
 
 			Initialized = true;
 			return true;
@@ -692,6 +689,11 @@ namespace cse
 			io.KeyShift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
 			io.KeyAlt = (GetKeyState(VK_MENU) & 0x8000) != 0;
 			io.KeySuper = false;
+
+			// Update style from config
+			ImGuiStyle& style = ImGui::GetStyle();
+			style.Colors[ImGuiCol_WindowBg].w = settings::renderWindowOSD::kWindowBGAlpha().f;
+			style.Colors[ImGuiCol_PopupBg].w = settings::renderWindowOSD::kWindowBGAlpha().f;
 
 			// Start the frame
 			ImGui::NewFrame();

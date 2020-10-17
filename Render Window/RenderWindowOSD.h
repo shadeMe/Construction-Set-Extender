@@ -296,8 +296,8 @@ namespace cse
 			virtual void	Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI);
 			virtual bool	NeedsBackgroundUpdate();
 
-			void			ShowModal(const char* Name, ModalRenderDelegateT Delegate, void* UserData,
-									  ImGuiWindowFlags Flags, const ImVec2& Size = ImVec2(0, 0), ImGuiCond SizeCond = NULL);
+			void			ShowModal(const char* Name, ModalRenderDelegateT Delegate, void* UserData = nullptr,
+									  ImGuiWindowFlags Flags = NULL, const ImVec2& Size = ImVec2(0, 0), ImGuiCond SizeCond = NULL);
 			bool			HasOpenModals() const;
 
 			static ModalWindowProviderOSDLayer		Instance;

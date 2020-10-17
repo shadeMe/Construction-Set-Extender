@@ -138,34 +138,38 @@ namespace cse
 
 			ImGui::PushID(Label);
 			{
-				if (ImGui::Selectable(EditorID, false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(0))
-					Out.SelectCell = true;
-
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip(EditorID);
-
-				if (List == kList_Bookmark && ImGui::BeginPopupContextItem("BookmarkPopup"))
+				ImGui::TableNextRow(0, 20.f);
 				{
-					if (ImGui::Selectable("Remove Bookmark"))
-						Out.RemoveBookmark = true;
-					ImGui::EndPopup();
-				}
-				else if (List == kList_Recents && ImGui::BeginPopupContextItem("RecentsPopup"))
-				{
-					if (ImGui::Selectable("Add Bookmark"))
-						Out.AddBookmark = true;
-					ImGui::EndPopup();
-				}
+					ImGui::TableNextColumn();
+					{
+						if (ImGui::Selectable(EditorID, false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick) &&
+							ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+						{
+							Out.SelectCell = true;
+						}
 
-				ImGui::NextColumn();
-				ImGui::Selectable(Name);
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip(Name);
-				ImGui::NextColumn();
-				ImGui::Selectable(Location);
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip(Location);
-				ImGui::NextColumn();
+						if (List == kList_Bookmark && ImGui::BeginPopupContextItem("BookmarkPopup"))
+						{
+							if (ImGui::Selectable("Remove Bookmark"))
+								Out.RemoveBookmark = true;
+							ImGui::EndPopup();
+						}
+						else if (List == kList_Recents && ImGui::BeginPopupContextItem("RecentsPopup"))
+						{
+							if (ImGui::Selectable("Add Bookmark"))
+								Out.AddBookmark = true;
+							ImGui::EndPopup();
+						}
+					}
+					ImGui::TableNextColumn();
+					{
+						ImGui::Selectable(Name);
+					}
+					ImGui::TableNextColumn();
+					{
+						ImGui::Selectable(Location);
+					}
+				}
 			}
 			ImGui::PopID();
 		}
@@ -192,8 +196,10 @@ namespace cse
 			ImGui::BeginChild("contents_child_frame", ImVec2(0, 500));
 			{
 				TESObjectCELL* ToSelect = nullptr;
+
 				if (ImGui::CollapsingHeader("Bookmarks", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap))
 				{
+					BookmarksVisible = true;
 					ImGui::SameLine(0, 85);
 					if (ImGui::Button(ICON_MD_BOOKMARK "##bookmark_current_cell_btn") && _TES->GetCurrentCell())
 						AddBookmark(_TES->GetCurrentCell());
@@ -201,91 +207,89 @@ namespace cse
 					if (ImGui::IsItemHovered())
 						ImGui::SetTooltip("Bookmark Current Cell");
 
-					ImGui::Columns(3, "BookmarkList", false);
+					if (ImGui::BeginTable("##bookmark_table", 3,
+						ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Scroll,
+						ImVec2(0, RecentsVisible ? -250 : -40)))
 					{
-						ImGui::Separator();
-						ImGui::Text("EditorID"); ImGui::NextColumn();
-						ImGui::Text("Name"); ImGui::NextColumn();
-						ImGui::Text("Location"); ImGui::NextColumn();
-						ImGui::Separator();
-					}
-					ImGui::Columns();
+						ImGui::TableSetupColumn("Editor ID", ImGuiTableColumnFlags_WidthFixed, 100);
+						ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, 150);
+						ImGui::TableSetupColumn("Location", ImGuiTableColumnFlags_WidthFixed, 100);
 
-					ImGui::BeginChild("BookmarkList_child_frame", ImVec2(0, 165));
-					{
-						ImGui::Columns(3, "BookmarkList", false);
+						ImGui::TableSetupScrollFreeze(0, 1);
+						ImGui::TableHeadersRow();
+
+						TESObjectCELL* ToRemove = nullptr;
+						for (auto Itr : Bookmarks)
 						{
-							TESObjectCELL* ToRemove = nullptr;
-							for (auto Itr : Bookmarks)
+							CellListDialogResult Out;
+							AddCellToList(Itr, kList_Bookmark, Out);
+							if (Out.RemoveBookmark)
 							{
-								CellListDialogResult Out;
-								AddCellToList(Itr, kList_Bookmark, Out);
-								if (Out.RemoveBookmark)
-								{
-									ToRemove = Out.Selection;
-									break;
-								}
-								else if (Out.SelectCell)
-								{
-									ToSelect = Out.Selection;
-									break;
-								}
+								ToRemove = Out.Selection;
+								break;
 							}
-
-							if (ToRemove)
-								RemoveBookmark(ToRemove);
-
-							if (ToSelect)
-								OnSelectCell(ToSelect);
+							else if (Out.SelectCell)
+							{
+								ToSelect = Out.Selection;
+								break;
+							}
 						}
-						ImGui::Columns();
+
+						if (ToRemove)
+							RemoveBookmark(ToRemove);
+
+						if (ToSelect)
+							OnSelectCell(ToSelect);
+
+						ImGui::EndTable();
 					}
-					ImGui::EndChild();
 				}
+				else
+					BookmarksVisible = false;
 
 				if (ImGui::CollapsingHeader("Recently Visited", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					ImGui::Columns(3, "RecentsList", false);
-					{
-						ImGui::Separator();
-						ImGui::Text("EditorID"); ImGui::NextColumn();
-						ImGui::Text("Name"); ImGui::NextColumn();
-						ImGui::Text("Location"); ImGui::NextColumn();
-						ImGui::Separator();
-					}
-					ImGui::Columns();
+					RecentsVisible = true;
 
-					ImGui::BeginChild("RecentsList_child_frame", ImVec2(0, 175));
+					if (ImGui::BeginTable("##recents_table", 3,
+						ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Scroll,
+						ImVec2(0, 0)))
 					{
-						ImGui::Columns(3, "RecentsList", false);
+						ImGui::TableSetupColumn("Editor ID", ImGuiTableColumnFlags_WidthFixed, 100);
+						ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, 150);
+						ImGui::TableSetupColumn("Location", ImGuiTableColumnFlags_WidthFixed, 100);
+
+						ImGui::TableSetupScrollFreeze(0, 1);
+						ImGui::TableHeadersRow();
+
+						TESObjectCELL* ToAdd = nullptr;
+						for (auto Itr : RecentlyVisited)
 						{
-							TESObjectCELL* ToAdd = nullptr;
-							for (auto Itr : RecentlyVisited)
+							CellListDialogResult Out;
+							AddCellToList(Itr, kList_Recents, Out);
+							if (Out.AddBookmark)
 							{
-								CellListDialogResult Out;
-								AddCellToList(Itr, kList_Recents, Out);
-								if (Out.AddBookmark)
-								{
-									ToAdd = Out.Selection;
-									break;
-								}
-								else if (Out.SelectCell)
-								{
-									ToSelect = Out.Selection;
-									break;
-								}
+								ToAdd = Out.Selection;
+								break;
 							}
-
-							if (ToAdd)
-								AddBookmark(ToAdd);
-
-							if (ToSelect)
-								OnSelectCell(ToSelect);
+							else if (Out.SelectCell)
+							{
+								ToSelect = Out.Selection;
+								break;
+							}
 						}
-						ImGui::Columns();
+
+						if (ToAdd)
+							AddBookmark(ToAdd);
+
+						if (ToSelect)
+							OnSelectCell(ToSelect);
+
+						ImGui::EndTable();
 					}
-					ImGui::EndChild();
 				}
+				else
+					RecentsVisible = false;
 			}
 			ImGui::EndChild();
 		}
@@ -403,6 +407,7 @@ namespace cse
 			CosaveInterface = new CosaveHandler(this);
 
 			Bookmarks.reserve(50);
+			BookmarksVisible = RecentsVisible = true;
 			Initialized = false;
 		}
 
