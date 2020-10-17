@@ -26,4 +26,5 @@ namespace bgsee
 		void	SendMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
 	};
 
+	std::string WindowMessageToString(UINT uMsg, bool AppendHexValue = true);
 }

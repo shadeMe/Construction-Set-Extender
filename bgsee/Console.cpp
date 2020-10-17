@@ -566,9 +566,6 @@ namespace bgsee
 			Flush();
 		}
 
-		SME::StringHelpers::Replace(FormattedMessage, '\n', (char)'\r\n');
-		Addend += "\r\n";
-
 		CheckBufferLength(Addend.length());
 		BackBuffer += Addend;
 
@@ -1000,6 +997,12 @@ namespace bgsee
 
 
 		Edit_LimitText(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), sizeof(int));
+
+		// hacky workaround for proper line break support on Windows 10 RS5 or greater
+		const auto EditMsgSetExtendedStyle = ECM_FIRST + 10;	// EM_SETEXTENDEDSTYLE
+		const auto EditExtStyleLineBreak = 0x0002L;				// ES_EX_ALLOWEOL_LF
+		SendDlgItemMessage(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG, EditMsgSetExtendedStyle, EditExtStyleLineBreak, EditExtStyleLineBreak);
+
 		SetTimer(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG),
 				IDC_BGSEE_CONSOLE_MESSAGELOG_REFRESHTIMER,
 				kINI_UpdatePeriod.GetData().i,

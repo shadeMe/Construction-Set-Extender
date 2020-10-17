@@ -513,8 +513,12 @@ namespace bgsee
 			return false;
 		}
 
-		IFileStream ENBWrapper;
-		if (ENBWrapper.Open(std::string(APPPath + std::string("\\d3d9.dll")).c_str()))
+		IFileStream DirectXWrapperCheckOverrideFile;
+		IFileStream DirectXWrapper;
+		bool DirectXWrapperCheckOverride = DirectXWrapperCheckOverrideFile.Open(std::string(APPPath + std::string("\\BGSEE_DirectXWrapperCheckOverride")).c_str());
+		if (DirectXWrapperCheckOverride)
+			BGSEECONSOLE_MESSAGE("WARNING - DirectX/D3D Wrapper Check was overridden!");
+		else if (DirectXWrapper.Open(std::string(APPPath + std::string("\\d3d9.dll")).c_str()))
 		{
 			BGSEECONSOLE_MESSAGE("Unsupported ENBSeries/D3D wrapper based mod detected");
 			BGSEECONSOLE_MESSAGE("Remove the \"d3d9.dll\" file from the root Oblivion directory. Alternatively, the file can be renamed before launching the editor (it must remain renamed until the editor is closed)");
