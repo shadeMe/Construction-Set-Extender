@@ -177,6 +177,7 @@ namespace cse
 			RefSelectionArrayT		CurrentSelection;
 			bool					RefListOnlyShowSelection;
 			TESObjectREFR*			RefListContextMenuSelection;
+			bool					HideRefList;
 
 			void UpdateCurrentSelection();
 			void BuildReferenceListChildWindow(RefSelectionArrayT& References);
