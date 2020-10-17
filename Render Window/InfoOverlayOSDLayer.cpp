@@ -21,8 +21,6 @@ namespace cse
 
 		void InfoOverlayOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
-			static const float FirstColumnWidth = 130;
-
 			ImGui::SetNextWindowPos(ImVec2(10, 10));
 			ImGui::SetNextWindowSizeConstraints(ImVec2(-1, -1), ImVec2(-1, 300));
 
@@ -42,25 +40,25 @@ namespace cse
 
 			if (ImGui::BeginTable("##Info Overlay Data", 2))
 			{
-				ImGui::TableSetupColumn("First", ImGuiTableColumnFlags_WidthStretch, FirstColumnWidth);
+				ImGui::TableSetupColumn("First", ImGuiTableColumnFlags_WidthStretch, 130);
 				ImGui::TableSetupColumn("Second", ImGuiTableColumnFlags_WidthAlwaysAutoResize);
 
 				ImGui::TableNextRow();
 				{
 					ImGui::TableNextColumn();
 					{
-						PROCESS_MEMORY_COUNTERS_EX MemCounter = { 0 };
-						GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&MemCounter, sizeof(MemCounter));
-						UInt32 CurrentRAMCounter = MemCounter.WorkingSetSize / (1024 * 1024);		// in megabytes
-						ImGui::Text("RAM: %d MB", CurrentRAMCounter);
+						ImGui::Text("RAM Usage:");
 					}
 					ImGui::TableNextColumn();
 					{
-						ImGui::Text("FPS: %.0f", ImGui::GetIO().Framerate);
+						PROCESS_MEMORY_COUNTERS_EX MemCounter = { 0 };
+						GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&MemCounter, sizeof(MemCounter));
+						float CurrentRAMCounter = MemCounter.WorkingSetSize / (1024.f * 1024.f);		// in megabytes
+						ImGui::Text("%.2f MB", CurrentRAMCounter);
 					}
 				}
 
-				ImGui::Dummy(ImVec2(1, 7));
+				ImGui::Dummy(ImVec2(1, 10));
 
 				if (CurrentCell)
 				{
@@ -70,7 +68,7 @@ namespace cse
 						{
 							ImGui::Text("Current Cell: ");
 							ImGui::SameLine();
-							ImGui::TextDisabled(" (?)");
+							ImGui::TextDisabled(" " ICON_MD_HELP);
 							{
 								if (ImGui::IsItemHovered())
 								{
@@ -147,7 +145,7 @@ namespace cse
 					}
 				}
 
-				if (_RENDERSEL->selectionCount)
+				if (_RENDERSEL->selectionCount > 1)
 				{
 					ImGui::Dummy(ImVec2(1, 5));
 
@@ -166,7 +164,7 @@ namespace cse
 							{
 								ImGui::Text("%d Group%s ", GroupCount, GroupCount == 1 ? "" : "s");
 								ImGui::SameLine(0, 5);
-								ImGui::TextDisabled(" (?) ");
+								ImGui::TextDisabled(" " ICON_MD_HELP);
 								if (ImGui::IsItemHovered())
 								{
 									char CountBuffer[0x100] = { 0 };

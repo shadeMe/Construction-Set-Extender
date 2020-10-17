@@ -420,7 +420,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="Render Window\RenderWindowLayers.cpp" />
     <ClCompile Include="Render Window\RenderWindowManager.cpp" />
     <ClCompile Include="Render Window\RenderWindowOSD.cpp" />
-    <ClCompile Include="Render Window\SelectionControlsOSDLayer.cpp" />
+    <ClCompile Include="Render Window\ReferenceEditorOSDLayer.cpp" />
     <ClCompile Include="Render Window\ToolbarOSDLayer.cpp" />
     <ClCompile Include="Serialization.cpp" />
     <ClCompile Include="Settings.cpp" />
@@ -554,7 +554,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="Render Window\RenderWindowLayers.h" />
     <ClInclude Include="Render Window\RenderWindowManager.h" />
     <ClInclude Include="Render Window\RenderWindowOSD.h" />
-    <ClInclude Include="Render Window\SelectionControlsOSDLayer.h" />
+    <ClInclude Include="Render Window\ReferenceEditorOSDLayer.h" />
     <ClInclude Include="Render Window\ToolbarOSDLayer.h" />
     <ClInclude Include="Serialization.h" />
     <ClInclude Include="Settings.h" />

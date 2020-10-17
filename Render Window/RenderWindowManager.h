@@ -83,35 +83,6 @@ namespace cse
 			static ReferenceVisibilityModifier			Instance;
 		};
 
-		class SelectionMaskPainter : public IRenderWindowSceneGraphModifier
-		{
-			struct MaskedObjectData
-			{
-				std::unordered_map<BSShaderPPLightingProperty*, NiSourceTexture*>
-						CachedDiffuseMaps;
-			};
-
-			NiSourceTexture*		SelectionMaskTexture;
-			TESObjectREFRArrayT		SelectedRefs;
-			std::vector<std::unique_ptr<MaskedObjectData>>
-									MaskedObjects;
-
-			void	DelayedInit();
-			void	ApplyMaskRecursive(NiNode* Node, MaskedObjectData& MaskData) const;
-			void	RemoveMask(const MaskedObjectData& MaskData) const;
-		public:
-			SelectionMaskPainter();
-			virtual ~SelectionMaskPainter();
-
-			virtual void	PreRender(RenderData& Data);
-			virtual void	PostRender(RenderData& Data);
-
-			bool			IsGeometryMasked(NiAVObject* Geom) const;
-			bool			HasMaskedObjects() const;
-
-			static SelectionMaskPainter		Instance;
-		};
-
 		class ReferenceVisibilityManager
 		{
 		public:
@@ -194,7 +165,7 @@ namespace cse
 
 			void					HandlePostRenderWindowUpdate();
 		public:
-			void					QueueTask(DelegateT& Delegate);		// consumes the task after execution
+			void					QueueTask(DelegateT Delegate);		// consumes the task after execution
 		};
 
 		class RenderWindowManager
@@ -230,6 +201,7 @@ namespace cse
 			TESObjectREFRArrayT							ActiveRefCache;
 			bool										RenderingScene;
 			bool										Initialized;
+			bool										MouseInClientArea;
 
 			void										HandleClearData();
 			void										HandleD3DRelease();

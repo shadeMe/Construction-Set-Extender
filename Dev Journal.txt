@@ -10,7 +10,6 @@ NOTE	---->
 CSE		---->
 
 	BUGFIX			=
-		> Double-click broke in OSD
 		> Prevent the selection of refs through the cell view dialog when editing landscape/pathgrids
 		> Dirty edits?
 			>> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=25301452
@@ -21,18 +20,15 @@ CSE		---->
 	ENHANCEMENT		=
 		> Enable double-buffering on all listviews
 			> ListView_SetExtendedListViewStyleEx(hWnd, LVS_EX_DOUBLEBUFFER, LVS_EX_DOUBLEBUFFER);
-		> Remove the managed batch reference editor component and enchance the selection controls OSD tool
-			> Rename to 'Reference Selection Editor'
-			> Add hotkey toggles (or other OSD layers too)
-			> Mimic the vanilla ref edit dialog
-			> Show hidable object list
 		> OSD enhancements
+			> Add hotkey toggles (or other OSD layers too)
+			> Hidable ref list in batch editor
 			> Render window gizmos
 				> Imguizmo has issues with the CS' renderer (view matrix related) (ask Nukem)
 
 		> Add support for TOD/sunlight lighting in exteriors
 			> Currently only works with interiors that behave like exteriors
-			>> Seems likely that the issue is dependent on modifying the fragment shaders used for lighting in exteriors
+				>> Seems likely that the issue is dependent on modifying the fragment shaders used for lighting in exteriors
 		> Scroll cell view object list on selection change
 		> Double click on formIds/editorIds in the console
 		> Wildcard find/replace

@@ -107,7 +107,7 @@ namespace cse
 						std::string FlagStr;
 						if (Ref->IsQuestItem())
 							FlagStr += "Persistent\n";
-						if (Ref->IsDisabled())
+						if (Ref->IsInitiallyDisabled())
 							FlagStr += "Initially Disabled\n";
 						if (Ref->IsVWD())
 							FlagStr += "Visible When Distant\n";

@@ -76,7 +76,6 @@ namespace cse
 		_DefineHookHdlr(UndoStackUndoOp3, 0x00431D98);
 		_DefineHookHdlr(UndoStackRedoOp3, 0x004328FA);
 		_DefineHookHdlr(MoveSelectionClampMul, 0x0042572C);
-		_DefineHookHdlr(ShadowLightShaderUseFullBrightLight, 0x00791D2A);
 		_DefineHookHdlr(ShadowSceneNodeUseFullBrightLight, 0x00772091);
 
 #ifndef NDEBUG
@@ -169,6 +168,7 @@ namespace cse
 			_MemHdlr(UndoStackUndoOp3).WriteJump();
 			_MemHdlr(UndoStackRedoOp3).WriteJump();
 			_MemHdlr(MoveSelectionClampMul).WriteJump();
+			_MemHdlr(ShadowSceneNodeUseFullBrightLight).WriteJump();
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -182,21 +182,16 @@ namespace cse
 				_MemHdlr(RerouteRenderWindowRefSelection).WriteCall();
 			}
 
+			for (int i = 0; i < 9; i++)
 			{
-				for (int i = 0; i < 9; i++)
+				static const UInt32 kShadowLightShaderSetAmbientColorShaderConstantCallSites[9] =
 				{
-					static const UInt32 kShadowLightShaderSetAmbientColorShaderConstantCallSites[9] =
-					{
-						0x00791C9C, 0x0079BB8A, 0x007AAB57, 0x007ADC50, 0x007BCFB7,
-						0x00791D67, 0x007BC637, 0x007BFAAB, 0x007BAF0A
-					};
+					0x00791C9C, 0x0079BB8A, 0x007AAB57, 0x007ADC50, 0x007BCFB7,
+					0x00791D67, 0x007BC637, 0x007BFAAB, 0x007BAF0A
+				};
 
-					_DefineCallHdlr(RerouteShadowLightShaderSetAmbientColorShaderConstant, kShadowLightShaderSetAmbientColorShaderConstantCallSites[i], ShadowLightShaderSetAmbientColorShaderConstantDetour);
-					_MemHdlr(RerouteShadowLightShaderSetAmbientColorShaderConstant).WriteCall();
-				}
-
-				_DefinePatchHdlr(ShadowSceneNodeOverdrawOverride, 0x00772098);
-				_MemHdlr(ShadowSceneNodeOverdrawOverride).WriteUInt8(0xEB);
+				_DefineCallHdlr(RerouteShadowLightShaderSetAmbientColorShaderConstant, kShadowLightShaderSetAmbientColorShaderConstantCallSites[i], ShadowLightShaderSetAmbientColorShaderConstantDetour);
+				_MemHdlr(RerouteShadowLightShaderSetAmbientColorShaderConstant).WriteCall();
 			}
 		}
 
@@ -207,15 +202,43 @@ namespace cse
 
 		void __cdecl ShadowLightShaderSetAmbientColorShaderConstantDetour(UInt16 ConstantIndex, float R, float G, float B, float A)
 		{
+			auto IsGeometryMasked = [](NiAVObject* Geom) -> bool {
+				if (_RENDERSEL->selectionCount == 0)
+					return false;
+				else if (Geom->m_pcName && strstr(Geom->m_pcName, "Block") == Geom->m_pcName)
+					return false;
+
+				NiAVObject* Parent = Geom->m_parent;
+				while (Parent)
+				{
+					auto Node = NI_CAST(Parent, NiNode);
+					if (Node)
+					{
+						auto RefProp = NI_CAST(TESRender::GetExtraData(Node, "REF"), TESObjectExtraData);
+						if (RefProp && _RENDERSEL->HasObject(RefProp->refr))
+						{
+							return true;
+						}
+					}
+
+					Parent = Parent->m_parent;
+				}
+
+				return false;
+			};
+
 			if (ConstantIndex == 0 && _RENDERWIN_XSTATE.ShowSelectionMask)
 			{
 				auto CurrentRenderPass = *TESRender::CurrentRenderPassData;
 				if (CurrentRenderPass)
 				{
-					if (renderWindow::SelectionMaskPainter::Instance.IsGeometryMasked(CurrentRenderPass->geom))
+					if (IsGeometryMasked(CurrentRenderPass->geom))
 					{
 						cdeclCall<void>(0x0079AC60, ConstantIndex,
-										_RENDERWIN_XSTATE.SelectionMaskColor.r, _RENDERWIN_XSTATE.SelectionMaskColor.g, _RENDERWIN_XSTATE.SelectionMaskColor.b, 1.f);
+										_RENDERWIN_XSTATE.SelectionMaskColor.r,
+										_RENDERWIN_XSTATE.SelectionMaskColor.g,
+										_RENDERWIN_XSTATE.SelectionMaskColor.b,
+										1.f);
 						return;
 					}
 				}
@@ -1584,54 +1607,38 @@ namespace cse
 			}
 		}
 
-		bool __stdcall DoShadowLightShaderUseFullBrightLightHook(NiAVObject* Geom)
+		void __stdcall DoShadowSceneNodeUseFullBrightLightHook()
 		{
-			return *TESRenderWindow::FullBrightLightingFlag || renderWindow::SelectionMaskPainter::Instance.IsGeometryMasked(Geom);
-		}
+			bool SelectionMaskEnabled = _RENDERSEL->selectionCount && _RENDERWIN_XSTATE.ShowSelectionMask;
 
-		#define _hhName		ShadowLightShaderUseFullBrightLight
-		_hhBegin()
-		{
-			_hhSetVar(Use, 0x00791D33);
-			_hhSetVar(Skip, 0x00791D6F);
-			__asm
+			UInt32 FullBrightRenderPassFlags = TESRender::kRenderPassFlags_Texture;
+			if (SelectionMaskEnabled)
+				FullBrightRenderPassFlags |= TESRender::kRenderPassFlags_Ambient;
+
+			if (*TESRenderWindow::FullBrightLightingFlag)
 			{
-				pushad
-				push	ebp
-				call	DoShadowLightShaderUseFullBrightLightHook
-				test	al, al
-				jz		SKIP
+				if (*TESRender::GlobalRenderPassFlagsBackup == -1)
+					*TESRender::GlobalRenderPassFlagsBackup = *TESRender::GlobalRenderPassFlags;
 
-				popad
-				jmp		_hhGetVar(Use)
-			SKIP:
-				popad
-				jmp		_hhGetVar(Skip)
+				*TESRender::GlobalRenderPassFlags = FullBrightRenderPassFlags;
 			}
-		}
-
-		bool __stdcall DoShadowSceneNodeUseFullBrightLightHook()
-		{
-			return *TESRenderWindow::FullBrightLightingFlag;
+			else if (*TESRender::GlobalRenderPassFlagsBackup != -1)
+			{
+				*TESRender::GlobalRenderPassFlags = *TESRender::GlobalRenderPassFlagsBackup;
+				*TESRender::GlobalRenderPassFlagsBackup = -1;
+			}
 		}
 
 		#define _hhName		ShadowSceneNodeUseFullBrightLight
 		_hhBegin()
 		{
-			_hhSetVar(Use, 0x0077209A);
-			_hhSetVar(Skip, 0x007720BB);
+			_hhSetVar(Retn, 0x007720D4);
 			__asm
 			{
 				pushad
 				call	DoShadowSceneNodeUseFullBrightLightHook
-				test	al, al
-				jz		SKIP
-
 				popad
-				jmp		_hhGetVar(Use)
-			SKIP:
-				popad
-				jmp		_hhGetVar(Skip)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 	}

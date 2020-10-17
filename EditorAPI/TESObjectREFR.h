@@ -62,6 +62,8 @@ public:
 	void						SetRotation(const Vector3& Rot, bool Radians = false);
 	void						SetScale(float Scale);
 
+	UInt8						GetSoulLevel() const;
+	void						ModExtraCount(SInt16 Count);
 	void						ModExtraHealth(float Health);
 	void						ModExtraCharge(float Charge);
 	void						ModExtraTimeLeft(float Time);

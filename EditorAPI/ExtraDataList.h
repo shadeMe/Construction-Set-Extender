@@ -50,7 +50,7 @@ public:
 	void							ModExtraOwnership(TESForm* Owner);
 	void							ModExtraGlobal(TESGlobal* Global);
 	void							ModExtraRank(int Rank);
-	void							ModExtraCount(UInt32 Count);
+	void							ModExtraCount(SInt16 Count);
 	void							ModExtraDistantData(TESObjectLAND* Land, Vector3* Position);
 	void							ModExtraCell3D(NiNode* CellNode);
 };

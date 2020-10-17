@@ -72,6 +72,17 @@ void TESObjectREFR::SetScale( float Scale )
 	thisCall<void>(0x00542420, this, Scale);
 }
 
+UInt8 TESObjectREFR::GetSoulLevel() const
+{
+	// return type "UInt32" is intentional
+	return thisCall<UInt32>(0x0053F6B0, this);
+}
+
+void TESObjectREFR::ModExtraCount(SInt16 Count)
+{
+	extraData.ModExtraCount(Count);
+}
+
 void TESObjectREFR::SetPosition( float X, float Y, float Z )
 {
 	thisCall<TESObjectCELL*>(0x00544380, this);			// subspace related

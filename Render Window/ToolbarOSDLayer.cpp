@@ -254,7 +254,7 @@ namespace cse
 				}
 				ImGui::SameLine();
 				ImGui::PushItemWidth(40);
-				ImGui::DragInt("##gridDist", &GridVal, 1, 0, 5000);
+				ImGui::DragInt("##gridDist", &GridVal, 1, 0, 5000, "%d", ImGuiSliderFlags_AlwaysClamp);
 				ImGui::PopItemWidth();
 
 				ImGui::Separator();
@@ -268,7 +268,7 @@ namespace cse
 				}
 				ImGui::SameLine();
 				ImGui::PushItemWidth(40);
-				ImGui::DragInt("##anglVal", &AngleVal, 1, 0, 500);
+				ImGui::DragInt("##anglVal", &AngleVal, 1, 0, 360, "%d", ImGuiSliderFlags_AlwaysClamp);
 				ImGui::PopItemWidth();
 
 				ImGui::Separator();
@@ -499,17 +499,19 @@ namespace cse
 				ImGui::Button(ICON_MD_ACCESS_TIME " ");
 				ImGui::SameLine(0, 2);
 				ImGui::PushItemWidth(50);
-				ImGui::DragFloat("Time of Day##TOD", &TOD, 0.25f, 0.f, 24.f, "%.2f");
+				ImGui::DragFloat("Time of Day##TOD", &TOD, 0.25f, 0.f, 24.f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 				ImGui::PopItemWidth();
 
 				ImGui::Button(ICON_MD_PANORAMA_HORIZONTAL " ");
 				ImGui::SameLine(0, 2);
 				ImGui::PushItemWidth(50);
-				ImGui::DragFloat("Field-of-Vision##FOV", &FOV, 1.f, 50.f, 120.f, "%.0f");
+				ImGui::DragFloat("Field-of-Vision##FOV", &FOV, 1.f, 50.f, 120.f, "%.0f", ImGuiSliderFlags_AlwaysClamp);
 				ImGui::PopItemWidth();
 				POP_TRANSPARENT_BUTTON_COLORS;
 
-				if (ImGui::Checkbox("Show Selection Mask", &ShowSelectionMask))
+				ImGui::Dummy(ImVec2(0, 5));
+
+				if (ImGui::Checkbox("Show Selection Overlay##SelMask", &ShowSelectionMask))
 					_RENDERWIN_XSTATE.ShowSelectionMask = ShowSelectionMask;
 				ImGui::SameLine(0, 6);
 				ImGui::ColorEdit3("##SelectionMaskColor", &SelectionMaskColor.r, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);

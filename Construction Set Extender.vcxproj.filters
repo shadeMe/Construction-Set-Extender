@@ -333,9 +333,6 @@
     <ClCompile Include="Render Window\MouseOverTooltipOSDLayer.cpp">
       <Filter>Components\Render Window\OSD Layers</Filter>
     </ClCompile>
-    <ClCompile Include="Render Window\SelectionControlsOSDLayer.cpp">
-      <Filter>Components\Render Window\OSD Layers</Filter>
-    </ClCompile>
     <ClCompile Include="Render Window\ToolbarOSDLayer.cpp">
       <Filter>Components\Render Window\OSD Layers</Filter>
     </ClCompile>
@@ -397,6 +394,9 @@
       <Filter>Components\IMGUI</Filter>
     </ClCompile>
     <ClCompile Include="Render Window\InfoOverlayOSDLayer.cpp">
+      <Filter>Components\Render Window\OSD Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="Render Window\ReferenceEditorOSDLayer.cpp">
       <Filter>Components\Render Window\OSD Layers</Filter>
     </ClCompile>
   </ItemGroup>
@@ -854,9 +854,6 @@
     <ClInclude Include="Render Window\MouseOverTooltipOSDLayer.h">
       <Filter>Components\Render Window\OSD Layers</Filter>
     </ClInclude>
-    <ClInclude Include="Render Window\SelectionControlsOSDLayer.h">
-      <Filter>Components\Render Window\OSD Layers</Filter>
-    </ClInclude>
     <ClInclude Include="Render Window\ToolbarOSDLayer.h">
       <Filter>Components\Render Window\OSD Layers</Filter>
     </ClInclude>
@@ -936,6 +933,9 @@
       <Filter>Components\IMGUI</Filter>
     </ClInclude>
     <ClInclude Include="Render Window\InfoOverlayOSDLayer.h">
+      <Filter>Components\Render Window\OSD Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="Render Window\ReferenceEditorOSDLayer.h">
       <Filter>Components\Render Window\OSD Layers</Filter>
     </ClInclude>
   </ItemGroup>

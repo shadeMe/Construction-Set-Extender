@@ -289,6 +289,18 @@ public:
 };
 STATIC_ASSERT(sizeof(DialogExtraPopupMenu) == 0x1C);
 
+// Used in the TESObjectREFR dialog to notify it of changes to the base form
+// 14
+class DialogExtraNotifyInfo : public BSExtraData
+{
+public:
+	// members
+	//     /*00*/ BSExtraData
+	/*0C*/ HWND			notifyParentDialog;		// points to a TESObjectREFR edit dialog on the TESBoundObject edit dialog and vice-versa
+	/*10*/ TESForm*		formData;				// points to the TESObjectREFR instance whose base form is being edited, nullptr on the TESObjectREFR edit dialog
+};
+STATIC_ASSERT(sizeof(DialogExtraNotifyInfo) == 0x14);
+
 // cell and position where the current package was started?
 // 20
 class ExtraPackageStartLocation : public BSExtraData

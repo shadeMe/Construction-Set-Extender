@@ -185,7 +185,7 @@ public:
 	bool							IsDeleted() const;
 	bool							IsTemporary() const;
 	bool							IsVWD() const;
-	bool							IsDisabled() const;
+	bool							IsInitiallyDisabled() const;
 
 	bool							SetEditorID(const char* EditorID);
 	TESFile*						GetOverrideFile(int Index) const;

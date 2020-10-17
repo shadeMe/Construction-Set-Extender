@@ -318,7 +318,7 @@ bool TESForm::IsVWD() const
 	return (formFlags & kFormFlags_VisibleWhenDistant);
 }
 
-bool TESForm::IsDisabled() const
+bool TESForm::IsInitiallyDisabled() const
 {
 	return (formFlags & kFormFlags_Disabled);
 }

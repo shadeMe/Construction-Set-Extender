@@ -229,9 +229,9 @@ namespace cse
 			{
 				ImGui::Columns(2, "ref_table_header", false);
 				{
-					ImGui::TextWrapped("Active Layer: %s (?)", ActiveLayer->GetName());
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("Newly created references are added to this layer.\n\nRight click on a layer to show the context menu.\nTo remove references from a layer, add them to the Default layer.");
+					ImGui::TextWrapped("Active Layer: %s", ActiveLayer->GetName());
+					ImGui::SameLine(0, 3);
+					ImGui::ShowHelpPopup("Newly created references are added to this layer.\n\nRight click on a layer to show the context menu.\nTo remove references from a layer, add them to the Default layer.");
 
 					ImGui::NextColumn();
 

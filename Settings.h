@@ -96,7 +96,7 @@ namespace cse
 			extern INISetting					kShowMouseRef;
 			extern INISetting					kMouseRefCtrlModified;
 			extern INISetting					kShowInfoOverlay;
-			extern INISetting					kShowSelectionControls;
+			extern INISetting					kShowRefBatchEditor;
 			extern INISetting					kShowToolbar;
 			extern INISetting					kShowNotifications;
 

@@ -1122,6 +1122,7 @@ namespace cse
 				RegisterActionableKeyHandler("959D48C0-43FE-47B5-BD61-9D78EEA277FC", actions::JumpToExteriorCell, BasicKeyBinding('J', BasicKeyBinding::kModifier_Control));
 				Shared.ToggleFlyCamera = RegisterActionableKeyHandler("00B540EA-40E4-4EBA-A3D9-718674BA77F9",
 																	actions::ToggleFlyCamera, BasicKeyBinding(VK_OEM_3, NULL));
+				RegisterActionableKeyHandler("DB9EF5E3-5C89-4760-99BD-669D5456C3B4", actions::ToggleOSD, BasicKeyBinding('1', BasicKeyBinding::kModifier_Shift));
 
 				Shared.MoveCameraWithSelection = RegisterHoldableHandler("5AE9F3BA-A336-450C-89B5-C278294A97C1",
 																		 "Move Camera With References",
@@ -1413,6 +1414,8 @@ namespace cse
 
 						// update the cell view to the current renderwindow cell
 						SME_ASSERT((*TESRenderWindow::ActiveCell)->IsInterior() == false);
+						if (*TESCellViewWindow::CurrentCellSelection == *TESRenderWindow::ActiveCell)
+							return;
 
 						Vector3 PosCoord;
 						PosCoord.x = ((*TESRenderWindow::ActiveCell)->cellData.coords->x << 12) + 2048;

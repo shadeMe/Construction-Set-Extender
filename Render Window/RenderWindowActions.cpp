@@ -588,8 +588,8 @@ namespace cse
 				achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_PathGridAdditions);
 			});
 
-			BasicRWA ShowBatchEditor("Batch Editor", "Display the batch reference editor.", []() {
-
+			BasicRWA ShowBatchEditor("Toggle Reference Batch Editor", "Display the batch reference editor.", []() {
+				settings::renderWindowOSD::kShowRefBatchEditor.ToggleData();
 			});
 
 			BasicRWA ShowUseInfo("Use Info", "Display the reference's usage info.", []() {
@@ -767,6 +767,11 @@ namespace cse
 				}
 			});
 
+			BasicRWA ToggleOSD("Toggle On-Screen-Display", "Show/Hide the render window on-screen-display.",
+				ExecutionContext::kMode_All, []() {
+				_RENDERWIN_MGR.GetOSD()->ToggleRendering();
+			});
+
 
 			namespace builtIn
 			{
@@ -800,7 +805,7 @@ namespace cse
 													   ExecutionContext::kMode_ReferenceEdit, Key('R', BuiltIn::kModifier_Control | BuiltIn::kModifier_Shift | BuiltIn::kModifier_Space));
 				BuiltInKeyComboRWA LinkPathGridSelection("Link Path Grid Reference", "Link the path grid point to a reference.",
 														 ExecutionContext::kMode_PathGridEdit, Key('R'), [](Key&) {
-					// we recreate the code instead of tunnelling the key
+					// we recreate the code instead of tunneling the key
 					if (TESRenderWindow::SelectedPathGridPoints->IsEmpty())
 						return;
 
