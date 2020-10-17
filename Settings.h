@@ -80,6 +80,8 @@ namespace cse
 			extern INISetting					kGrassOverlayTexturePath;
 			extern INISetting					kNotifyOnInvalidExecutionContext;
 			extern INISetting					kUnrestrictedMouseMovement;
+			extern INISetting					kShowSelectionMask;
+			extern INISetting					kSelectionMaskColor;
 
 			enum
 			{
@@ -94,12 +96,10 @@ namespace cse
 			extern INISetting					kShowMouseRef;
 			extern INISetting					kMouseRefCtrlModified;
 			extern INISetting					kShowInfoOverlay;
-			extern INISetting					kShowSelectionControls;
+			extern INISetting					kShowRefBatchEditor;
 			extern INISetting					kShowToolbar;
 			extern INISetting					kShowNotifications;
 
-			extern INISetting					kColorSelectionStats;
-			extern INISetting					kColorRAMUsage;
 			extern INISetting					kWindowBGAlpha;
 			extern INISetting					kFontSize;
 			extern INISetting					kFontFace;

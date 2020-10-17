@@ -76,6 +76,7 @@ namespace cse
 		_DefineHookHdlr(UndoStackUndoOp3, 0x00431D98);
 		_DefineHookHdlr(UndoStackRedoOp3, 0x004328FA);
 		_DefineHookHdlr(MoveSelectionClampMul, 0x0042572C);
+		_DefineHookHdlr(ShadowSceneNodeUseFullBrightLight, 0x00772091);
 
 #ifndef NDEBUG
 		void __stdcall DoTestHook1()
@@ -167,6 +168,7 @@ namespace cse
 			_MemHdlr(UndoStackUndoOp3).WriteJump();
 			_MemHdlr(UndoStackRedoOp3).WriteJump();
 			_MemHdlr(MoveSelectionClampMul).WriteJump();
+			_MemHdlr(ShadowSceneNodeUseFullBrightLight).WriteJump();
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -179,11 +181,70 @@ namespace cse
 				_DefineCallHdlr(RerouteRenderWindowRefSelection, kRenderWindowRefSelectionCallSites[i], RenderWindowReferenceSelectionDetour);
 				_MemHdlr(RerouteRenderWindowRefSelection).WriteCall();
 			}
+
+			for (int i = 0; i < 9; i++)
+			{
+				static const UInt32 kShadowLightShaderSetAmbientColorShaderConstantCallSites[9] =
+				{
+					0x00791C9C, 0x0079BB8A, 0x007AAB57, 0x007ADC50, 0x007BCFB7,
+					0x00791D67, 0x007BC637, 0x007BFAAB, 0x007BAF0A
+				};
+
+				_DefineCallHdlr(RerouteShadowLightShaderSetAmbientColorShaderConstant, kShadowLightShaderSetAmbientColorShaderConstantCallSites[i], ShadowLightShaderSetAmbientColorShaderConstantDetour);
+				_MemHdlr(RerouteShadowLightShaderSetAmbientColorShaderConstant).WriteCall();
+			}
 		}
 
 		void __stdcall RenderWindowReferenceSelectionDetour( TESObjectREFR* Ref, bool ShowSelectionBox )
 		{
 			ReferenceSelectionManager::AddToSelection(Ref, ShowSelectionBox);
+		}
+
+		void __cdecl ShadowLightShaderSetAmbientColorShaderConstantDetour(UInt16 ConstantIndex, float R, float G, float B, float A)
+		{
+			auto IsGeometryMasked = [](NiAVObject* Geom) -> bool {
+				if (_RENDERSEL->selectionCount == 0)
+					return false;
+				else if (Geom->m_pcName && strstr(Geom->m_pcName, "Block") == Geom->m_pcName)
+					return false;
+
+				NiAVObject* Parent = Geom->m_parent;
+				while (Parent)
+				{
+					auto Node = NI_CAST(Parent, NiNode);
+					if (Node)
+					{
+						auto RefProp = NI_CAST(TESRender::GetExtraData(Node, "REF"), TESObjectExtraData);
+						if (RefProp && _RENDERSEL->HasObject(RefProp->refr))
+						{
+							return true;
+						}
+					}
+
+					Parent = Parent->m_parent;
+				}
+
+				return false;
+			};
+
+			if (ConstantIndex == 0 && _RENDERWIN_XSTATE.ShowSelectionMask)
+			{
+				auto CurrentRenderPass = *TESRender::CurrentRenderPassData;
+				if (CurrentRenderPass)
+				{
+					if (IsGeometryMasked(CurrentRenderPass->geom))
+					{
+						cdeclCall<void>(0x0079AC60, ConstantIndex,
+										_RENDERWIN_XSTATE.SelectionMaskColor.r,
+										_RENDERWIN_XSTATE.SelectionMaskColor.g,
+										_RENDERWIN_XSTATE.SelectionMaskColor.b,
+										1.f);
+						return;
+					}
+				}
+			}
+
+			cdeclCall<void>(0x0079AC60, ConstantIndex, R, G, B, A);
 		}
 
 		#define _hhName		DoorMarkerProperties
@@ -1542,6 +1603,41 @@ namespace cse
 				call	ClampMovementMulti
 
 				fld		dword ptr[esp + 0x24]
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		void __stdcall DoShadowSceneNodeUseFullBrightLightHook()
+		{
+			bool SelectionMaskEnabled = _RENDERSEL->selectionCount && _RENDERWIN_XSTATE.ShowSelectionMask;
+
+			UInt32 FullBrightRenderPassFlags = TESRender::kRenderPassFlags_Texture;
+			if (SelectionMaskEnabled)
+				FullBrightRenderPassFlags |= TESRender::kRenderPassFlags_Ambient;
+
+			if (*TESRenderWindow::FullBrightLightingFlag)
+			{
+				if (*TESRender::GlobalRenderPassFlagsBackup == -1)
+					*TESRender::GlobalRenderPassFlagsBackup = *TESRender::GlobalRenderPassFlags;
+
+				*TESRender::GlobalRenderPassFlags = FullBrightRenderPassFlags;
+			}
+			else if (*TESRender::GlobalRenderPassFlagsBackup != -1)
+			{
+				*TESRender::GlobalRenderPassFlags = *TESRender::GlobalRenderPassFlagsBackup;
+				*TESRender::GlobalRenderPassFlagsBackup = -1;
+			}
+		}
+
+		#define _hhName		ShadowSceneNodeUseFullBrightLight
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x007720D4);
+			__asm
+			{
+				pushad
+				call	DoShadowSceneNodeUseFullBrightLightHook
+				popad
 				jmp		_hhGetVar(Retn)
 			}
 		}

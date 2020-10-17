@@ -71,7 +71,9 @@ namespace cse
 		_DeclareMemHdlr(UndoStackUndoOp3, "fixes a bug that caused a CTD when trying to redo/undo an operation");
 		_DeclareMemHdlr(UndoStackRedoOp3, "");
 		_DeclareMemHdlr(MoveSelectionClampMul, "prevent refs from being moved so far that it causes a FP overflow");
+		_DeclareMemHdlr(ShadowSceneNodeUseFullBrightLight, "adds support for selection masking");
 
 		void __stdcall RenderWindowReferenceSelectionDetour(TESObjectREFR* Ref, bool ShowSelectionBox);
+		void __cdecl ShadowLightShaderSetAmbientColorShaderConstantDetour(UInt16 ConstantIndex, float R, float G, float B, float A);
 	}
 }

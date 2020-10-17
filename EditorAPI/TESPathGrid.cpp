@@ -10,7 +10,7 @@ void TESPathGridPoint::UnlinkPoint( TESPathGridPoint* Point )
 	thisCall<void>(0x00555C00, this, Point);
 }
 
-bool TESPathGridPoint::GetIsPointLinked( TESPathGridPoint* Point )
+bool TESPathGridPoint::IsPointLinked( TESPathGridPoint* Point )
 {
 	return thisCall<bool>(0x00555AD0, this, Point);
 }
@@ -47,6 +47,11 @@ void TESPathGridPoint::ShowSelectionRing( void )
 void TESPathGridPoint::HideSelectionRing( void )
 {
 	thisCall<void>(0x00555F80, this);
+}
+
+bool TESPathGridPoint::IsPointPreferred()
+{
+	return thisCall<bool>(0x005557E0, this);
 }
 
 void TESPathGridPoint::DeleteInstance( void )

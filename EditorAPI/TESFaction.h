@@ -5,7 +5,7 @@
 //	EditorAPI: TESFaction class.
 
 /*
-    ...
+	...
 */
 
 // 50
@@ -32,8 +32,9 @@ public:
 	//     /*00*/ TESForm
 	//	   /*24*/ TESFullName
 	//	   /*30*/ TESReactionForm
-	/*40*/ UInt8						factionFlags;
-	/*41*/ UInt8						factionFlagsPad41[3];
-	/*44*/ float						crimeGoldMultiplier;
-	/*48*/ RankDataListT				rankDataList;
+	/*40*/ UInt8			factionFlags;
+	/*41*/ UInt8			factionFlagsPad41[3];
+	/*44*/ float			crimeGoldMultiplier;
+	/*48*/ RankDataListT	rankDataList;
 };
+STATIC_ASSERT(sizeof(TESFaction) == 0x50);

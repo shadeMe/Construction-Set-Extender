@@ -1122,6 +1122,7 @@ namespace cse
 				RegisterActionableKeyHandler("959D48C0-43FE-47B5-BD61-9D78EEA277FC", actions::JumpToExteriorCell, BasicKeyBinding('J', BasicKeyBinding::kModifier_Control));
 				Shared.ToggleFlyCamera = RegisterActionableKeyHandler("00B540EA-40E4-4EBA-A3D9-718674BA77F9",
 																	actions::ToggleFlyCamera, BasicKeyBinding(VK_OEM_3, NULL));
+				RegisterActionableKeyHandler("DB9EF5E3-5C89-4760-99BD-669D5456C3B4", actions::ToggleOSD, BasicKeyBinding('1', BasicKeyBinding::kModifier_Shift));
 
 				Shared.MoveCameraWithSelection = RegisterHoldableHandler("5AE9F3BA-A336-450C-89B5-C278294A97C1",
 																		 "Move Camera With References",
@@ -1413,6 +1414,8 @@ namespace cse
 
 						// update the cell view to the current renderwindow cell
 						SME_ASSERT((*TESRenderWindow::ActiveCell)->IsInterior() == false);
+						if (*TESCellViewWindow::CurrentCellSelection == *TESRenderWindow::ActiveCell)
+							return;
 
 						Vector3 PosCoord;
 						PosCoord.x = ((*TESRenderWindow::ActiveCell)->cellData.coords->x << 12) + 2048;
@@ -1530,7 +1533,7 @@ namespace cse
 										if (ReferenceSelectionManager::IsSelectable(MouseRef, SelectionReason, PaintingSelection))
 										{
 											if (_RENDERSEL->HasObject(MouseRef))
-												Icon = *TESRenderWindow::CursorMove;
+												Icon = LoadCursor(NULL, IDC_SIZEALL);
 											else
 												Icon = *TESRenderWindow::CursorSelect;
 										}
@@ -1711,7 +1714,7 @@ namespace cse
 					}
 
 					// tunnel the message to the original proc and check if we need to allow free mouse movement
-					BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
+					BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, false);
 
 					_RENDERWIN_XSTATE.DraggingPathGridPoints = *TESRenderWindow::PathGridEditFlag &&
 																_RENDERWIN_XSTATE.CurrentMousePathGridPoint &&
@@ -1772,7 +1775,7 @@ namespace cse
 					_RENDERWIN_XSTATE.DraggingPathGridPoints = false;
 					TransformingSelection = false;
 
-					BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
+					BGSEEUI->GetSubclasser()->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, false);
 
 					// end free movement handling
 					ToggleFreeMouseMovement(hWnd, false);

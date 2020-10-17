@@ -545,6 +545,12 @@ namespace cse
 
 						if (TESCSMain::ConfirmUnsavedChanges() == false)
 							Return = true;
+						else
+						{
+							// reset the unsaved changes flag to prevent the prompt from showing up a second time
+							// when the original message handler is invoked
+							*TESCSMain::UnsavedChangesFlag = 0;
+						}
 
 						CurrentState.UpdatePluginFlagsFromCache();
 
@@ -1068,8 +1074,10 @@ namespace cse
 			{
 			case WM_INITDIALOG:
 				{
-					if (*TESRenderWindow::ActiveCell == nullptr)		// immediately close the dialog if you haven't got any cell loaded
-						SendMessage(hWnd, WM_COMMAND, TESDialog::kStandardButton_Cancel, NULL);		// otherwise, the editor will crash as soon as the render window acquires input focus
+					// immediately close the dialog if no exterior cell is loaded
+					// otherwise, the editor will crash as soon as the render window acquires input focus
+					if (*TESRenderWindow::ActiveCell == nullptr || (*TESRenderWindow::ActiveCell)->IsInterior())
+						SendMessage(hWnd, WM_COMMAND, TESDialog::kStandardButton_Cancel, NULL);
 					else
 						SendDlgItemMessage(hWnd, kFormList_LandTextures, LVM_SORTITEMS, 0, (LPARAM)TESDialog::LandscapeTextureSortComparator);
 				}

@@ -5,16 +5,16 @@ namespace cse
 {
 	namespace renderWindow
 	{
-		class DefaultOverlayOSDLayer : public IRenderWindowOSDLayer
+		class InfoOverlayOSDLayer : public IRenderWindowOSDLayer
 		{
 		public:
-			DefaultOverlayOSDLayer();
-			virtual ~DefaultOverlayOSDLayer();
+			InfoOverlayOSDLayer();
+			virtual ~InfoOverlayOSDLayer();
 
 			virtual void						Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI);
 			virtual bool						NeedsBackgroundUpdate();
 
-			static DefaultOverlayOSDLayer		Instance;
+			static InfoOverlayOSDLayer		Instance;
 		};
 	}
 }

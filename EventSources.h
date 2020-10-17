@@ -40,6 +40,8 @@ namespace cse
 				kType_Renderer_PreMainSceneGraphRender,				// before the main scenegraph is rendered
 				kType_Renderer_PostMainSceneGraphRender,			// after the main scenegraph is rendered
 				kType_Renderer_PostRenderWindowUpdate,				// after the render window viewport is refreshed (post-scene rendering)
+				kType_Renderer_PreBSFadeNodeDraw,					// before a BSFadeNode is accumulated for rendering
+				kType_Renderer_PostBSFadeNodeDraw,					// after a BSFadeNode is accumulated for rendering
 
 				kType_Form_Instantiation,							// when a TESForm object is instantiated
 				kType_Form_SetActive,
@@ -165,11 +167,40 @@ namespace cse
 										NiCamera* Camera, NiNode* SceneGraph, NiCullingProcess* CullingProc, BSRenderedTexture* RenderTarget);
 			};
 
+			class BSFadeNodeDrawEventSource;
+
+			struct BSFadeNodeDrawData : public SME::MiscGunk::IEventData
+			{
+				enum
+				{
+					kType_PreDraw = 0,
+					kType_PostDraw
+				};
+
+				BSFadeNode*			Node;
+				TESObjectREFR*		ParentRef;
+				UInt32				EventType;
+
+				BSFadeNodeDrawData(const BSFadeNodeDrawEventSource* Source, BSFadeNode* Node, UInt32 EventType);
+			};
+
+
+			class BSFadeNodeDrawEventSource : public TypedEventSource
+			{
+			public:
+				BSFadeNodeDrawEventSource(UInt32 EventType);
+
+				void				RaiseEvent(BSFadeNode* Node) const;
+			};
+
+
 			extern BasicEventSource						kRelease;
 			extern BasicEventSource						kRenew;
 			extern PreSceneGraphRenderEventSource		kPreSceneGraphRender;
 			extern BasicEventSource						kPostSceneGraphRender;
 			extern BasicEventSource						kPostRenderWindowUpdate;
+			extern BSFadeNodeDrawEventSource			kPreBSFadeNodeDraw;
+			extern BSFadeNodeDrawEventSource			kPostBSFadeNodeDraw;
 		}
 
 		namespace dialog

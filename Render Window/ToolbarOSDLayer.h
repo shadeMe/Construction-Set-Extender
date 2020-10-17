@@ -23,7 +23,7 @@ namespace cse
 			int										CurrentFilterRefIndex;
 			bool									SetRefFilterFocus;
 
-			int						RefFilterCompletionCallback(ImGuiTextEditCallbackData* Data);
+			int						RefFilterCompletionCallback(ImGuiInputTextCallbackData* Data);
 			void					HandleRefFilterChange();
 
 			void					RenderBottomToolbars(ImGuiDX9* GUI);

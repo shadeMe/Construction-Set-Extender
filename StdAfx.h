@@ -72,6 +72,7 @@
 #include <unordered_set>
 #include <thread>
 #include <mutex>
+#include <array>
 
 // RPC
 #include <Rpc.h>

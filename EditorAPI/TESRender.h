@@ -143,6 +143,14 @@ public:
 
 	enum
 	{
+		kRenderPassFlags_Ambient		= 1 << 0,
+		kRenderPassFlags_Diffuse		= 1 << 1,
+		kRenderPassFlags_Texture		= 1 << 2,
+		kRenderPassFlags_Specular		= 1 << 3,
+	};
+
+	enum
+	{
 		kDebugRenderPass_NoOfLights		= 1,
 		kDebugRenderPass_NoOfPasses		= 2,
 		kDebugRenderPass_Overdraw		= 4,
@@ -167,14 +175,20 @@ public:
 	static ShadowSceneNode*					GetSceneGraphRoot();
 	static void								AddProperty(NiAVObject* To, NiProperty* Property, bool InitializeState = true);
 	static NiProperty*						GetProperty(NiAVObject* In, UInt16 ID);
+	static NiExtraData*						GetExtraData(NiAVObject* In, const char* Name);
 	static NiProperty*						CreateProperty(UInt8 Type);		// increments ref count
 	static NiSourceTexture*					CreateSourceTexture(const char* FilePath);
 	static NiCamera*						CreateCamera();
 	static NiTexturingProperty*				CreateTexturingProperty(const char* TexturePath);	// increments ref count
+	static void								SetBSShaderPPLightingPropertyDiffuseTexture(BSShaderPPLightingProperty* Property, NiTexture* Texture, UInt8 Index);
 
 
 	static NiDX9Renderer**					NiRendererSingleton;
 	static NiNode**							PathGridSceneRoot;
+	static SInt32*							CurrentRenderPassID;
+	static BSShaderProperty::RenderPass**	CurrentRenderPassData;
+	static UInt32*							GlobalRenderPassFlags;
+	static UInt32*							GlobalRenderPassFlagsBackup;
 };
 
 #define _NIRENDERER				(*TESRender::NiRendererSingleton)
@@ -287,6 +301,7 @@ public:
 	static UInt8*						LandscapeEditFlag;
 	static UInt8*						DraggingSelection;
 	static UInt8*						RotatingSelection;
+	static UInt8*						CenteringCamera;
 
 	static UInt8*						KeyState_Shift;
 	static UInt8*						KeyState_Control;

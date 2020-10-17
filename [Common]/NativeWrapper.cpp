@@ -61,16 +61,6 @@ namespace cse
 				nativeWrapper::PrintToConsole(e_UL, Message);
 			}
 		}
-		namespace batchEditor
-		{
-			void DebugPrint(String^ Message, bool Achtung)
-			{
-				if (Achtung)
-					Media::SystemSounds::Hand->Play();
-
-				nativeWrapper::PrintToConsole(e_BE, Message);
-			}
-		}
 		namespace bsaViewer
 		{
 			void DebugPrint(String^ Message, bool Achtung)

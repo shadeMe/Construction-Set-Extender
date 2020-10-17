@@ -35,7 +35,7 @@ void ExtraDataList::ModExtraRank( int Rank )
 	thisCall<UInt32>(0x0045E1E0, this, Rank);
 }
 
-void ExtraDataList::ModExtraCount( UInt32 Count )
+void ExtraDataList::ModExtraCount( SInt16 Count )
 {
 	thisCall<UInt32>(0x0045E2A0, this, Count);
 }

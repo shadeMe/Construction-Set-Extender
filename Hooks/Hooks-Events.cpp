@@ -36,6 +36,7 @@ namespace cse
 			events::renderer::_MemHdlr(PreSceneGraphRender).WriteCall();
 			events::renderer::_MemHdlr(PostSceneGraphRender).WriteJump();
 			events::renderer::_MemHdlr(PostRenderWindowUpdate).WriteJump();
+			events::renderer::_MemHdlr(BSFadeNodeDraw).WriteJump();
 
 			events::dialog::_MemHdlr(CloseAll).WriteJump();
 			events::dialog::cellView::_MemHdlr(SelectCell).WriteJump();
@@ -450,6 +451,7 @@ namespace cse
 				_DefineHookHdlr(NiDX9RendererRecreateB, 0x006D7A0D);
 				_DefineHookHdlr(NiDX9RendererRecreateC, 0x006D7CFA);
 				_DefineHookHdlr(PostRenderWindowUpdate, 0x0042D42A);
+				_DefineHookHdlr(BSFadeNodeDraw, 0x004BC65D);
 
 				void __stdcall DoPostSceneGraphRender(void)
 				{
@@ -558,6 +560,38 @@ namespace cse
 						call	cse::events::BasicEventSource::RaiseEvent
 						popad
 
+						jmp		_hhGetVar(Retn)
+					}
+				}
+
+				void __stdcall DoBSFadeNodeDrawHook(bool State, BSFadeNode* Node)
+				{
+					if (State == false)
+						cse::events::renderer::kPostBSFadeNodeDraw.RaiseEvent(Node);
+					else
+						cse::events::renderer::kPreBSFadeNodeDraw.RaiseEvent(Node);
+				}
+
+				#define _hhName		BSFadeNodeDraw
+				_hhBegin()
+				{
+					_hhSetVar(Retn, 0x004BC662);
+					_hhSetVar(Call, 0x006F4AA0);
+					__asm
+					{
+						pushad
+						push	esi
+						push	1
+						call	DoBSFadeNodeDrawHook
+						popad
+
+						call	_hhGetVar(Call)
+
+						pushad
+						push	esi
+						push	0
+						call	DoBSFadeNodeDrawHook
+						popad
 						jmp		_hhGetVar(Retn)
 					}
 				}

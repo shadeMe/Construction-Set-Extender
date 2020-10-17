@@ -10,6 +10,10 @@ NiDX9Renderer**						TESRender::NiRendererSingleton = (NiDX9Renderer**)0x00A0F87
 TESRender::PrimaryRenderer**		TESRender::PrimaryRenderer::Singleton = (TESRender::PrimaryRenderer**)0x00A0BACC;
 TESRender::Scenegraph**				TESRender::Scenegraph::Singleton = (TESRender::Scenegraph**)0x00A0B634;
 NiNode**							TESRender::PathGridSceneRoot = (NiNode**)0x00A1358C;
+SInt32*								TESRender::CurrentRenderPassID = (SInt32*)0x00A8E6A0;
+BSShaderProperty::RenderPass**		TESRender::CurrentRenderPassData = (BSShaderProperty::RenderPass**)0x00A8E6C8;
+UInt32*								TESRender::GlobalRenderPassFlags = (UInt32*)0x00A8E750;
+UInt32*								TESRender::GlobalRenderPassFlagsBackup = (UInt32*)0x00A048E4;
 
 HWND*								TESRenderWindow::WindowHandle = (HWND*)0x00A0AF28;
 int*								TESRenderWindow::ScreenWidth = (int*)0x00A0F870;
@@ -37,6 +41,8 @@ TESObjectREFR**						TESRenderWindow::SnapReference = (TESObjectREFR**)0x00A0B05
 UInt8*								TESRenderWindow::LandscapeEditFlag = (UInt8*)0x00A0BC35;
 UInt8*								TESRenderWindow::DraggingSelection = (UInt8*)0x00A0BBF6;
 UInt8*								TESRenderWindow::RotatingSelection = (UInt8*)0x00A0BBF5;
+
+UInt8*								TESRenderWindow::CenteringCamera = (UInt8*)0x00A0BBF8;
 
 UInt8*								TESRenderWindow::KeyState_Shift = (UInt8*)0x00A0BC5D;
 UInt8*								TESRenderWindow::KeyState_Control = (UInt8*)0x00A0BC5E;
@@ -372,6 +378,11 @@ NiProperty* TESRender::GetProperty(NiAVObject* In, UInt16 ID)
 	return thisCall<NiProperty*>(0x006F27C0, In, ID);
 }
 
+NiExtraData* TESRender::GetExtraData(NiAVObject* In, const char* Name)
+{
+	return thisCall<NiExtraData*>(0x006F62B0, In, Name);
+}
+
 NiProperty* TESRender::CreateProperty(UInt8 Type)
 {
 	bool InvalidType = false;
@@ -429,6 +440,11 @@ NiTexturingProperty* TESRender::CreateTexturingProperty(const char* TexturePath)
 	thisCall<void>(0x00701030, Prop, TexturePath, 0);
 	Prop->m_uiRefCount++;
 	return Prop;
+}
+
+void TESRender::SetBSShaderPPLightingPropertyDiffuseTexture(BSShaderPPLightingProperty* Property, NiTexture* Texture, UInt8 Index)
+{
+	thisCall<void>(0x00774A50, Property, Index, Texture);
 }
 
 TESPathGridPoint* TESRender::PickPathGridPointAtCoords(int X, int Y)

@@ -186,11 +186,38 @@ namespace cse
 				Dispatch(&Data);
 			}
 
+
+			BSFadeNodeDrawData::BSFadeNodeDrawData(const BSFadeNodeDrawEventSource* Source, BSFadeNode* Node, UInt32 EventType) :
+				IEventData(Source),
+				Node(Node),
+				EventType(EventType)
+			{
+				auto RefProp = NI_CAST(TESRender::GetExtraData(Node, "REF"), TESObjectExtraData);
+				if (RefProp)
+					ParentRef = RefProp->refr;
+				else
+					ParentRef = nullptr;
+			}
+
+			BSFadeNodeDrawEventSource::BSFadeNodeDrawEventSource(UInt32 EventType) :
+				TypedEventSource(EventType)
+			{
+				;//
+			}
+
+			void BSFadeNodeDrawEventSource::RaiseEvent(BSFadeNode* Node) const
+			{
+				BSFadeNodeDrawData Data(this, Node, GetTypeID() == TypedEventSource::kType_Renderer_PreBSFadeNodeDraw ? BSFadeNodeDrawData::kType_PreDraw : BSFadeNodeDrawData::kType_PostDraw);
+				Dispatch(&Data);
+			}
+
 			BasicEventSource						kRelease(TypedEventSource::kType_Renderer_Release);
 			BasicEventSource						kRenew(TypedEventSource::kType_Renderer_Renew);
 			PreSceneGraphRenderEventSource			kPreSceneGraphRender;
 			BasicEventSource						kPostSceneGraphRender(TypedEventSource::kType_Renderer_PostMainSceneGraphRender);
 			BasicEventSource						kPostRenderWindowUpdate(TypedEventSource::kType_Renderer_PostRenderWindowUpdate);
+			BSFadeNodeDrawEventSource				kPreBSFadeNodeDraw(TypedEventSource::kType_Renderer_PreBSFadeNodeDraw);
+			BSFadeNodeDrawEventSource				kPostBSFadeNodeDraw(TypedEventSource::kType_Renderer_PostBSFadeNodeDraw);
 		}
 
 		namespace dialog

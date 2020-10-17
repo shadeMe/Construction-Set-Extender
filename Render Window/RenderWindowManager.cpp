@@ -221,70 +221,6 @@ namespace cse
 			CulledRefBuffer.clear();
 		}
 
-		DebugSceneGraphModifier			DebugSceneGraphModifier::Instance;
-
-		DebugSceneGraphModifier::DebugSceneGraphModifier()
-		{
-			MatProp = (NiMaterialProperty*)TESRender::CreateProperty(NiMaterialProperty::kType);
-			MatProp->m_diff.r = 0;
-			MatProp->m_diff.b = 1;
-			MatProp->m_diff.g = 0;
-			MatProp->m_fAlpha = 0.3;
-
-			Stencil = (NiStencilProperty*)TESRender::CreateProperty(NiStencilProperty::kType);
-			Stencil->flags = 0;
-			Stencil->flags |= NiStencilProperty::kTestMode_Always;
-
-			SelectionMask = TESRender::CreateTexturingProperty("Textures\\Effects\\TerrainNoise.dds");
-			thisCall<void>(0x00410B50, SelectionMask, 0);
-		}
-
-		DebugSceneGraphModifier::~DebugSceneGraphModifier()
-		{
-			TESRender::DeleteNiRefObject(MatProp);
-			TESRender::DeleteNiRefObject(Stencil);
-			TESRender::DeleteNiRefObject(SelectionMask);
-		}
-
-		void DebugSceneGraphModifier::PreRender(RenderData& Data)
-		{
-			return;
-
-			for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
-			{
-				TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
-				NiNode* Node = Ref->GetNiNode();
-				bool HasProp = false;
-
-				for (NiTListBase<NiProperty>::Node* i = Node->m_propertyList.start; i && i->data; i = i->next)
-				{
-					if (i->data->GetPropertyType() == NiTexturingProperty::kType)
-					{
-						HasProp = true;
-						break;
-					}
-				}
-
-				if (HasProp == false)
-				{
-					TESRender::AddProperty(Node, SelectionMask);
-					TESRender::UpdateDynamicEffectState(Node);
-					TESRender::UpdateAVObject(Node);
-					BGSEECONSOLE_MESSAGE("added sel mask to %08X", Ref->formID);
-				}
-			}
-		}
-
-		void DebugSceneGraphModifier::PostRender(RenderData& Data)
-		{
-			return;
-
-			for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
-			{
-				TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
-			}
-		}
-
 		bool ReferenceVisibilityManager::ShouldBeInvisible(TESObjectREFR* Ref)
 		{
 			UInt32 Throwaway = 0;
@@ -295,20 +231,20 @@ namespace cse
 		{
 			OutReasonFlags = 0;
 
-			if (_RENDERWIN_XSTATE.ShowInitiallyDisabledRefs == false && Ref->GetDisabled())
+			if (_RENDERWIN_XSTATE.ShowInitiallyDisabledRefs == false && Ref->IsInitiallyDisabled())
 				OutReasonFlags |= kReason_InitiallyDisabledSelf;
 
-			if (Ref->GetInvisible())
+			if (Ref->IsInvisible())
 				OutReasonFlags |= kReason_InvisibleSelf;
 
 			BSExtraData* xData = Ref->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
 			if (xData)
 			{
 				ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
-				if (xParent->parent->GetChildrenInvisible())
+				if (xParent->parent->IsChildrenInvisible())
 					OutReasonFlags |= kReason_InvisibleChild;
 
-				if (xParent->parent->GetDisabled() && _RENDERWIN_XSTATE.ShowInitiallyDisabledRefChildren == false)
+				if (xParent->parent->IsInitiallyDisabled() && _RENDERWIN_XSTATE.ShowInitiallyDisabledRefChildren == false)
 					OutReasonFlags |= kReason_InitiallyDisabledChild;
 			}
 
@@ -448,6 +384,7 @@ namespace cse
 			GrassOverlayTexture = nullptr;
 			StaticCameraPivot.Scale(0);
 			DraggingPathGridPoints = false;
+			ShowSelectionMask = false;
 		}
 
 		RenderWindowExtendedState::~RenderWindowExtendedState()
@@ -467,6 +404,14 @@ namespace cse
 				GrassOverlayTexture->m_uiRefCount = 1;
 			}
 
+			ShowSelectionMask = settings::renderer::kShowSelectionMask().i;
+
+			int MaskColorR = 0, MaskColorG = 0, MaskColorB = 0;
+			SME::StringHelpers::GetRGB(settings::renderer::kSelectionMaskColor().s, MaskColorR, MaskColorG, MaskColorB);
+			SelectionMaskColor.r = MaskColorR / 255.f;
+			SelectionMaskColor.g = MaskColorG / 255.f;
+			SelectionMaskColor.b = MaskColorB / 255.f;
+
 			Initialized = true;
 		}
 
@@ -481,6 +426,11 @@ namespace cse
 				TESRender::DeleteNiRefObject(GrassOverlayTexture);
 				GrassOverlayTexture = nullptr;
 			}
+
+			settings::renderer::kSelectionMaskColor.SetString("%d,%d,%d",
+				(int)(SelectionMaskColor.r * 255),
+				(int)(SelectionMaskColor.g * 255),
+				(int)(SelectionMaskColor.b * 255));
 
 			Initialized = false;
 		}
@@ -502,7 +452,7 @@ namespace cse
 			Handlers.clear();
 		}
 
-		void RenderWindowDeferredExecutor::QueueTask(DelegateT& Delegate)
+		void RenderWindowDeferredExecutor::QueueTask(DelegateT Delegate)
 		{
 			Handlers.push_back(Delegate);
 		}
@@ -621,8 +571,8 @@ namespace cse
 										CheckItem = true;
 
 									break;
-								case IDC_RENDERWINDOWCONTEXT_OSD_SELECTIONCONTROLS:
-									if (settings::renderWindowOSD::kShowSelectionControls().i)
+								case IDC_RENDERWINDOWCONTEXT_OSD_REFERENCEEDITOR:
+									if (settings::renderWindowOSD::kShowRefBatchEditor().i)
 										CheckItem = true;
 
 									break;
@@ -709,13 +659,6 @@ namespace cse
 				case IDC_RENDERWINDOWCONTEXT_INVERTSELECTION:
 					{
 						actions::InvertSelection();
-						Return = true;
-					}
-
-					break;
-				case IDC_RENDERWINDOWCONTEXT_BATCHREFERENCEEDITOR:
-					{
-						actions::ShowBatchEditor();
 						Return = true;
 					}
 
@@ -841,9 +784,9 @@ namespace cse
 					}
 
 					break;
-				case IDC_RENDERWINDOWCONTEXT_OSD_SELECTIONCONTROLS:
+				case IDC_RENDERWINDOWCONTEXT_OSD_REFERENCEEDITOR:
 					{
-						settings::renderWindowOSD::kShowSelectionControls.ToggleData();
+						actions::ShowBatchEditor();
 						Return = true;
 					}
 
@@ -921,6 +864,17 @@ namespace cse
 				Return = true;
 
 				break;
+			case WM_MOUSEMOVE:
+			case WM_NCMOUSEMOVE:
+				if (GetActiveWindow() == hWnd)
+					Instance.MouseInClientArea = true;
+
+				break;
+			case WM_MOUSELEAVE:
+			case WM_NCMOUSELEAVE:
+				Instance.MouseInClientArea = false;
+
+				break;
 			case WM_TIMER:
 				switch (wParam)
 				{
@@ -965,6 +919,11 @@ namespace cse
 						// consume the message as the previous render call isn't done yet
 						Return = true;
 					}
+					else if (Instance.MouseInClientArea || Instance.MouseInputManager->IsFreeMouseMovementActive())
+					{
+						// always render when the mouse is in the client area/in free-movement
+						TESRenderWindow::Redraw();
+					}
 
 					break;
 				}
@@ -1004,6 +963,7 @@ namespace cse
 			GizmoManager = new RenderWindowGizmoManager();
 			ActiveRefCache.reserve(500);
 			RenderingScene = false;
+			MouseInClientArea = false;
 
 			Initialized = false;
 		}
@@ -1054,9 +1014,7 @@ namespace cse
 			ExtendedState->Initialize();
 			SceneGraphManager->AddModifier(&ReferenceParentChildIndicator::Instance);
 			SceneGraphManager->AddModifier(&ReferenceVisibilityModifier::Instance);
-#ifndef NDEBUG
-			SceneGraphManager->AddModifier(&DebugSceneGraphModifier::Instance);
-#endif
+
 			GizmoManager->Initialize(OSD);
 			CellLists->Initialize();
 			GroupManager->Initialize();
@@ -1118,9 +1076,7 @@ namespace cse
 			OSD->Deinitialize();
 			SceneGraphManager->RemoveModifier(&ReferenceParentChildIndicator::Instance);
 			SceneGraphManager->RemoveModifier(&ReferenceVisibilityModifier::Instance);
-#ifndef NDEBUG
-			SceneGraphManager->RemoveModifier(&DebugSceneGraphModifier::Instance);
-#endif
+
 			ExtendedState->Deinitialize();
 			Initialized = false;
 		}
@@ -1510,15 +1466,15 @@ namespace cse
 						{
 							if (InvisibleRefs)
 							{
-								ImGui::TextWrapped("Invisible References: (?)");
-								if (ImGui::IsItemHovered())
-									ImGui::SetTooltip("Excluding references whose parent layer is hidden.\nEditorIDs with an asterisk correspond to the reference's base form.\n\nRight click on an item to display the context menu.");
+								ImGui::TextWrapped("Invisible References: ");
+								ImGui::SameLine(0, 3);
+								ImGui::ShowHelpPopup("Excluding references whose parent layer is hidden.\nEditorIDs with an asterisk correspond to the reference's base form.\n\nRight click on an item to display the context menu.");
 							}
 							else
 							{
-								ImGui::TextWrapped("Frozen References: (?)");
-								if (ImGui::IsItemHovered())
-									ImGui::SetTooltip("Excluding references whose parent layer is frozen and those that are frozen with the \"Freeze Inactive Refs\" tool.\nEditorIDs with an asterisk correspond to the reference's base form.\n\nRight click on an item to display the context menu.");
+								ImGui::TextWrapped("Frozen References: ");
+								ImGui::SameLine(0, 3);
+								ImGui::ShowHelpPopup("Excluding references whose parent layer is frozen and those that are frozen with the \"Freeze Inactive Refs\" tool.\nEditorIDs with an asterisk correspond to the reference's base form.\n\nRight click on an item to display the context menu.");
 							}
 
 							ImGui::NextColumn();
@@ -1593,7 +1549,7 @@ namespace cse
 
 							if (InvisibleRefs)
 							{
-								ImGui::Text("Reason (?)");
+								ImGui::Text("Reason " ICON_MD_HELP);
 								if (ImGui::IsItemHovered())
 									ImGui::SetTooltip("DS - Initially Disabled\nDC - Child of Initially Disabled Parent\nIS - Invisible\nIC - Child of Parent with \"Invisible Children\" Flag");
 								ImGui::NextColumn();
@@ -1619,9 +1575,9 @@ namespace cse
 					{
 						ImGui::Columns(2, "ref_table_header", false);
 						{
-							ImGui::TextWrapped("Reference Groups: (?)");
-							if (ImGui::IsItemHovered())
-								ImGui::SetTooltip("EditorIDs with an asterisk correspond to the reference's base form.\n\nDouble click on an item to select the group.\nRight click on an item to display the context menu.\nHover the cursor over the \"Count\" column to view the first 10 members of the group.");
+							ImGui::TextWrapped("Reference Groups: ");
+							ImGui::SameLine(0, 3);
+							ImGui::ShowHelpPopup("EditorIDs with an asterisk correspond to the reference's base form.\n\nDouble click on an item to select the group.\nRight click on an item to display the context menu.\nHover the cursor over the \"Count\" column to view the first 10 members of the group.");
 
 							ImGui::NextColumn();
 
@@ -1678,9 +1634,7 @@ namespace cse
 
 				ImGui::Text("Group: %s", Data->GroupName.c_str()); ImGui::NextColumn();
 				ImGui::Text("Count: %d", Count); ImGui::NextColumn();
-				ImGui::TextDisabled("(?) ");
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Right click on a reference to display the context menu.\nIf the group has only one member after removing another, it is automatically dissolved.");
+				ImGui::ShowHelpPopup("Right click on a reference to display the context menu.\nIf the group has only one member after removing another, it is automatically dissolved.");
 				ImGui::NextColumn();
 			}
 			ImGui::Columns();

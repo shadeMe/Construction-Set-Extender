@@ -20,7 +20,7 @@ namespace cse
 
 			namespace form
 			{
-				_DeclareMemHdlr(TESFormSetFromActivePlugin, "records modifictions to a form's modified flag");
+				_DeclareMemHdlr(TESFormSetFromActivePlugin, "records modifications to a form's modified flag");
 				_DeclareMemHdlr(TESFormSetDeleted, "records modifications to a form's deleted flag");
 				_DeclareMemHdlr(TESFormSetFormID, "records changes to a form's formID");
 				_DeclareMemHdlr(TESFormSetEditorID, "records changes to a form's editorID");
@@ -45,6 +45,7 @@ namespace cse
 				_DeclareMemHdlr(PreSceneGraphRender, "");
 				_DeclareMemHdlr(PostSceneGraphRender, "");
 				_DeclareMemHdlr(PostRenderWindowUpdate, "");
+				_DeclareMemHdlr(BSFadeNodeDraw, "");
 			}
 
 			namespace dialog

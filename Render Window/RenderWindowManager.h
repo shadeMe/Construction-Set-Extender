@@ -83,21 +83,6 @@ namespace cse
 			static ReferenceVisibilityModifier			Instance;
 		};
 
-		class DebugSceneGraphModifier : public IRenderWindowSceneGraphModifier
-		{
-			NiMaterialProperty*			MatProp;
-			NiStencilProperty*			Stencil;
-			NiTexturingProperty*		SelectionMask;
-		public:
-			DebugSceneGraphModifier();
-			virtual ~DebugSceneGraphModifier();
-
-			virtual void					PreRender(RenderData& Data);
-			virtual void					PostRender(RenderData& Data);
-
-			static DebugSceneGraphModifier			Instance;
-		};
-
 		class ReferenceVisibilityManager
 		{
 		public:
@@ -154,6 +139,8 @@ namespace cse
 			NiSourceTexture*			GrassOverlayTexture;
 			Vector3						StaticCameraPivot;
 			bool						DraggingPathGridPoints;
+			bool						ShowSelectionMask;
+			NiColor						SelectionMaskColor;
 
 			RenderWindowExtendedState();
 			~RenderWindowExtendedState();
@@ -178,7 +165,7 @@ namespace cse
 
 			void					HandlePostRenderWindowUpdate();
 		public:
-			void					QueueTask(DelegateT& Delegate);		// consumes the task after execution
+			void					QueueTask(DelegateT Delegate);		// consumes the task after execution
 		};
 
 		class RenderWindowManager
@@ -214,6 +201,7 @@ namespace cse
 			TESObjectREFRArrayT							ActiveRefCache;
 			bool										RenderingScene;
 			bool										Initialized;
+			bool										MouseInClientArea;
 
 			void										HandleClearData();
 			void										HandleD3DRelease();

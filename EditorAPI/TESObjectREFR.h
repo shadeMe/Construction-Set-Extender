@@ -62,6 +62,8 @@ public:
 	void						SetRotation(const Vector3& Rot, bool Radians = false);
 	void						SetScale(float Scale);
 
+	UInt8						GetSoulLevel() const;
+	void						ModExtraCount(SInt16 Count);
 	void						ModExtraHealth(float Health);
 	void						ModExtraCharge(float Charge);
 	void						ModExtraTimeLeft(float Time);
@@ -76,11 +78,10 @@ public:
 	void						SetFrozen(bool State);
 	void						SetAlpha(float Alpha = -1.0f);		// pass -1.0f to reset alpha
 
-	bool						GetInvisible(void) const;
-	bool						GetChildrenInvisible(void) const;
+	bool						IsInvisible(void) const;
+	bool						IsChildrenInvisible(void) const;
 	bool						IsFrozen(void) const;
 	float						GetAlpha(void);
-	bool						GetDisabled(void) const;
 };
 
 typedef std::vector<TESObjectREFR*>	TESObjectREFRArrayT;

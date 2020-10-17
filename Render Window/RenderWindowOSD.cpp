@@ -4,14 +4,14 @@
 #include "IMGUI\ImGuizmo.h"
 #include "IconFontCppHeaders\IconsMaterialDesign.h"
 
-#include "DefaultOverlayOSDLayer.h"
+#include "InfoOverlayOSDLayer.h"
 #include "MouseOverTooltipOSDLayer.h"
 #include "ToolbarOSDLayer.h"
-#include "SelectionControlsOSDLayer.h"
+#include "ReferenceEditorOSDLayer.h"
 #include "WorkspaceManager.h"
 #include "RenderWindowFlyCamera.h"
 
-#undef OSD_LOAD_ALL_FONTS
+//#define OSD_LOAD_ALL_FONTS
 
 namespace cse
 {
@@ -176,7 +176,7 @@ namespace cse
 
 				std::string MainFontPath(FontPathRoot + "\\" + FileName);
 				if (FileName.find("MaterialIcons-Regular") == -1)
-					AddFontFromFile(MainFontPath.c_str(), IconFontPath.c_str(), ICON_MIN_MD, ICON_MAX_MD);
+					AddFontFromFile(MainFontPath.c_str(), IconFontPath.c_str(), ICON_MIN_MD, ICON_MAX_MD, 0.f, 4.5f);
 			}
 #else
 			std::string MainFontPath(FontPathRoot + std::string(settings::renderWindowOSD::kFontFace().s));
@@ -230,9 +230,7 @@ namespace cse
 				io.Fonts->AddFontFromFileTTF(IconFontPath, settings::renderWindowOSD::kFontSize().i + 2, &icons_config, icons_ranges);
 		}
 
-		ImGuiDX9::ImGuiDX9() :
-			FreeMouseMovement(),
-			PassthroughWhitelistMouseEvents()
+		ImGuiDX9::ImGuiDX9()
 		{
 			VertexBuffer = nullptr;
 			IndexBuffer = nullptr;
@@ -243,8 +241,7 @@ namespace cse
 			TicksPerSecond = 0;
 			RenderWindowHandle = nullptr;
 			D3DDevice = nullptr;
-			PassthroughWhitelistMouseEvents.reserve(20);
-			MouseDoubleClicked[0] = MouseDoubleClicked[1] = false;
+			MouseDoubleClicked[ImGuiMouseButton_Left] = MouseDoubleClicked[ImGuiMouseButton_Right] = MouseDoubleClicked[ImGuiMouseButton_Middle] = false;
 			ConsumeNextMouseRButtonDown = false;
 			CurrentMouseCoord.x = CurrentMouseCoord.y = 0;
 			MouseDownCursorPos.x = MouseDownCursorPos.y = 0;
@@ -255,6 +252,279 @@ namespace cse
 		{
 			Shutdown();
 		}
+
+
+		// https://github.com/ocornut/imgui/issues/707#issuecomment-430613104
+		void CherryTheme()
+		{
+			// cherry colors, 3 intensities
+#define HI(v)   ImVec4(0.502f, 0.075f, 0.256f, v)
+#define MED(v)  ImVec4(0.455f, 0.198f, 0.301f, v)
+#define LOW(v)  ImVec4(0.232f, 0.201f, 0.271f, v)
+			// backgrounds (@todo: complete with BG_MED, BG_LOW)
+#define BG(v)   ImVec4(0.200f, 0.220f, 0.270f, v)
+			// text
+#define TEXT_COL(v) ImVec4(0.860f, 0.930f, 0.890f, v)
+
+			auto &style = ImGui::GetStyle();
+			style.Colors[ImGuiCol_Text]                  = TEXT_COL(0.78f);
+			style.Colors[ImGuiCol_TextDisabled]          = TEXT_COL(0.28f);
+			style.Colors[ImGuiCol_WindowBg]              = ImVec4(0.13f, 0.14f, 0.17f, 1.00f);
+			style.Colors[ImGuiCol_ChildBg]				 = BG( 0.58f);
+			style.Colors[ImGuiCol_PopupBg]               = BG( 0.9f);
+			style.Colors[ImGuiCol_Border]                = ImVec4(0.31f, 0.31f, 1.00f, 0.00f);
+			style.Colors[ImGuiCol_BorderShadow]          = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+			style.Colors[ImGuiCol_FrameBg]               = BG( 1.00f);
+			style.Colors[ImGuiCol_FrameBgHovered]        = MED( 0.78f);
+			style.Colors[ImGuiCol_FrameBgActive]         = MED( 1.00f);
+			style.Colors[ImGuiCol_TitleBg]               = LOW( 1.00f);
+			style.Colors[ImGuiCol_TitleBgActive]         = HI( 1.00f);
+			style.Colors[ImGuiCol_TitleBgCollapsed]      = BG( 0.75f);
+			style.Colors[ImGuiCol_MenuBarBg]             = BG( 0.47f);
+			style.Colors[ImGuiCol_ScrollbarBg]           = BG( 1.00f);
+			style.Colors[ImGuiCol_ScrollbarGrab]         = ImVec4(0.09f, 0.15f, 0.16f, 1.00f);
+			style.Colors[ImGuiCol_ScrollbarGrabHovered]  = MED( 0.78f);
+			style.Colors[ImGuiCol_ScrollbarGrabActive]   = MED( 1.00f);
+			style.Colors[ImGuiCol_CheckMark]             = ImVec4(0.71f, 0.22f, 0.27f, 1.00f);
+			style.Colors[ImGuiCol_SliderGrab]            = ImVec4(0.47f, 0.77f, 0.83f, 0.14f);
+			style.Colors[ImGuiCol_SliderGrabActive]      = ImVec4(0.71f, 0.22f, 0.27f, 1.00f);
+			style.Colors[ImGuiCol_Button]                = ImVec4(0.47f, 0.77f, 0.83f, 0.14f);
+			style.Colors[ImGuiCol_ButtonHovered]         = MED( 0.86f);
+			style.Colors[ImGuiCol_ButtonActive]          = MED( 1.00f);
+			style.Colors[ImGuiCol_Header]                = MED( 0.76f);
+			style.Colors[ImGuiCol_HeaderHovered]         = MED( 0.86f);
+			style.Colors[ImGuiCol_HeaderActive]          = HI( 1.00f);
+			style.Colors[ImGuiCol_Separator]             = ImVec4(0.14f, 0.16f, 0.19f, 1.00f);
+			style.Colors[ImGuiCol_SeparatorHovered]      = MED( 0.78f);
+			style.Colors[ImGuiCol_SeparatorActive]       = MED( 1.00f);
+			style.Colors[ImGuiCol_ResizeGrip]            = ImVec4(0.47f, 0.77f, 0.83f, 0.04f);
+			style.Colors[ImGuiCol_ResizeGripHovered]     = MED( 0.78f);
+			style.Colors[ImGuiCol_ResizeGripActive]      = MED( 1.00f);
+			style.Colors[ImGuiCol_PlotLines]             = TEXT_COL(0.63f);
+			style.Colors[ImGuiCol_PlotLinesHovered]      = MED( 1.00f);
+			style.Colors[ImGuiCol_PlotHistogram]         = TEXT_COL(0.63f);
+			style.Colors[ImGuiCol_PlotHistogramHovered]  = MED( 1.00f);
+			style.Colors[ImGuiCol_TextSelectedBg]        = MED( 0.43f);
+			style.Colors[ImGuiCol_ModalWindowDimBg]		 = BG( 0.73f);
+			style.Colors[ImGuiCol_Border] = ImVec4(0.539f, 0.479f, 0.255f, 0.162f);
+		}
+
+		// https://github.com/ocornut/imgui/issues/707#issuecomment-431702777
+		void DarkTheme()
+		{
+			// Setup style
+			ImVec4* colors = ImGui::GetStyle().Colors;
+			colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 0.95f);
+			colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
+			colors[ImGuiCol_WindowBg] = ImVec4(0.13f, 0.12f, 0.12f, 1.00f);
+			colors[ImGuiCol_ChildBg] = ImVec4(1.00f, 1.00f, 1.00f, 0.00f);
+			colors[ImGuiCol_PopupBg] = ImVec4(0.05f, 0.05f, 0.05f, 0.94f);
+			colors[ImGuiCol_Border] = ImVec4(0.53f, 0.53f, 0.53f, 0.46f);
+			colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+			colors[ImGuiCol_FrameBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.85f);
+			colors[ImGuiCol_FrameBgHovered] = ImVec4(0.22f, 0.22f, 0.22f, 0.40f);
+			colors[ImGuiCol_FrameBgActive] = ImVec4(0.16f, 0.16f, 0.16f, 0.53f);
+			colors[ImGuiCol_TitleBg] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
+			colors[ImGuiCol_TitleBgActive] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
+			colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
+			colors[ImGuiCol_MenuBarBg] = ImVec4(0.12f, 0.12f, 0.12f, 1.00f);
+			colors[ImGuiCol_ScrollbarBg] = ImVec4(0.02f, 0.02f, 0.02f, 0.53f);
+			colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.31f, 0.31f, 0.31f, 1.00f);
+			colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
+			colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.48f, 0.48f, 0.48f, 1.00f);
+			colors[ImGuiCol_CheckMark] = ImVec4(0.79f, 0.79f, 0.79f, 1.00f);
+			colors[ImGuiCol_SliderGrab] = ImVec4(0.48f, 0.47f, 0.47f, 0.91f);
+			colors[ImGuiCol_SliderGrabActive] = ImVec4(0.56f, 0.55f, 0.55f, 0.62f);
+			colors[ImGuiCol_Button] = ImVec4(0.50f, 0.50f, 0.50f, 0.63f);
+			colors[ImGuiCol_ButtonHovered] = ImVec4(0.67f, 0.67f, 0.68f, 0.63f);
+			colors[ImGuiCol_ButtonActive] = ImVec4(0.26f, 0.26f, 0.26f, 0.63f);
+			colors[ImGuiCol_Header] = ImVec4(0.54f, 0.54f, 0.54f, 0.58f);
+			colors[ImGuiCol_HeaderHovered] = ImVec4(0.64f, 0.65f, 0.65f, 0.80f);
+			colors[ImGuiCol_HeaderActive] = ImVec4(0.25f, 0.25f, 0.25f, 0.80f);
+			colors[ImGuiCol_Separator] = ImVec4(0.58f, 0.58f, 0.58f, 0.50f);
+			colors[ImGuiCol_SeparatorHovered] = ImVec4(0.81f, 0.81f, 0.81f, 0.64f);
+			colors[ImGuiCol_SeparatorActive] = ImVec4(0.81f, 0.81f, 0.81f, 0.64f);
+			colors[ImGuiCol_ResizeGrip] = ImVec4(0.87f, 0.87f, 0.87f, 0.53f);
+			colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.87f, 0.87f, 0.87f, 0.74f);
+			colors[ImGuiCol_ResizeGripActive] = ImVec4(0.87f, 0.87f, 0.87f, 0.74f);
+			colors[ImGuiCol_Tab] = ImVec4(0.01f, 0.01f, 0.01f, 0.86f);
+			colors[ImGuiCol_TabHovered] = ImVec4(0.29f, 0.29f, 0.29f, 1.00f);
+			colors[ImGuiCol_TabActive] = ImVec4(0.31f, 0.31f, 0.31f, 1.00f);
+			colors[ImGuiCol_TabUnfocused] = ImVec4(0.02f, 0.02f, 0.02f, 1.00f);
+			colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.19f, 0.19f, 0.19f, 1.00f);
+			colors[ImGuiCol_PlotLines] = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
+			colors[ImGuiCol_PlotLinesHovered] = ImVec4(0.68f, 0.68f, 0.68f, 1.00f);
+			colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.77f, 0.33f, 1.00f);
+			colors[ImGuiCol_PlotHistogramHovered] = ImVec4(0.87f, 0.55f, 0.08f, 1.00f);
+			colors[ImGuiCol_TextSelectedBg] = ImVec4(0.47f, 0.60f, 0.76f, 0.47f);
+			colors[ImGuiCol_DragDropTarget] = ImVec4(0.58f, 0.58f, 0.58f, 0.90f);
+			colors[ImGuiCol_NavHighlight] = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
+			colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
+			colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
+			colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
+		}
+
+		// https://github.com/ocornut/imgui/issues/707#issuecomment-468798935
+		void CorporateGreyTheme()
+		{
+			ImGuiStyle & style = ImGui::GetStyle();
+			ImVec4 * colors = style.Colors;
+
+			colors[ImGuiCol_Text]                   = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+			colors[ImGuiCol_TextDisabled]           = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
+			colors[ImGuiCol_ChildBg]                = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
+			colors[ImGuiCol_WindowBg]               = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
+			colors[ImGuiCol_PopupBg]                = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
+			colors[ImGuiCol_Border]                 = ImVec4(0.12f, 0.12f, 0.12f, 0.71f);
+			colors[ImGuiCol_BorderShadow]           = ImVec4(1.00f, 1.00f, 1.00f, 0.06f);
+			colors[ImGuiCol_FrameBg]                = ImVec4(0.42f, 0.42f, 0.42f, 0.54f);
+			colors[ImGuiCol_FrameBgHovered]         = ImVec4(0.42f, 0.42f, 0.42f, 0.40f);
+			colors[ImGuiCol_FrameBgActive]          = ImVec4(0.56f, 0.56f, 0.56f, 0.67f);
+			colors[ImGuiCol_TitleBg]                = ImVec4(0.19f, 0.19f, 0.19f, 1.00f);
+			colors[ImGuiCol_TitleBgActive]          = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
+			colors[ImGuiCol_TitleBgCollapsed]       = ImVec4(0.17f, 0.17f, 0.17f, 0.90f);
+			colors[ImGuiCol_MenuBarBg]              = ImVec4(0.335f, 0.335f, 0.335f, 1.000f);
+			colors[ImGuiCol_ScrollbarBg]            = ImVec4(0.24f, 0.24f, 0.24f, 0.53f);
+			colors[ImGuiCol_ScrollbarGrab]          = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
+			colors[ImGuiCol_ScrollbarGrabHovered]   = ImVec4(0.52f, 0.52f, 0.52f, 1.00f);
+			colors[ImGuiCol_ScrollbarGrabActive]    = ImVec4(0.76f, 0.76f, 0.76f, 1.00f);
+			colors[ImGuiCol_CheckMark]              = ImVec4(0.65f, 0.65f, 0.65f, 1.00f);
+			colors[ImGuiCol_SliderGrab]             = ImVec4(0.52f, 0.52f, 0.52f, 1.00f);
+			colors[ImGuiCol_SliderGrabActive]       = ImVec4(0.64f, 0.64f, 0.64f, 1.00f);
+			colors[ImGuiCol_Button]                 = ImVec4(0.54f, 0.54f, 0.54f, 0.35f);
+			colors[ImGuiCol_ButtonHovered]          = ImVec4(0.52f, 0.52f, 0.52f, 0.59f);
+			colors[ImGuiCol_ButtonActive]           = ImVec4(0.76f, 0.76f, 0.76f, 1.00f);
+			colors[ImGuiCol_Header]                 = ImVec4(0.38f, 0.38f, 0.38f, 1.00f);
+			colors[ImGuiCol_HeaderHovered]          = ImVec4(0.47f, 0.47f, 0.47f, 1.00f);
+			colors[ImGuiCol_HeaderActive]           = ImVec4(0.76f, 0.76f, 0.76f, 0.77f);
+			colors[ImGuiCol_Separator]              = ImVec4(0.000f, 0.000f, 0.000f, 0.137f);
+			colors[ImGuiCol_SeparatorHovered]       = ImVec4(0.700f, 0.671f, 0.600f, 0.290f);
+			colors[ImGuiCol_SeparatorActive]        = ImVec4(0.702f, 0.671f, 0.600f, 0.674f);
+			colors[ImGuiCol_ResizeGrip]             = ImVec4(0.26f, 0.59f, 0.98f, 0.25f);
+			colors[ImGuiCol_ResizeGripHovered]      = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
+			colors[ImGuiCol_ResizeGripActive]       = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
+			colors[ImGuiCol_PlotLines]              = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
+			colors[ImGuiCol_PlotLinesHovered]       = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
+			colors[ImGuiCol_PlotHistogram]          = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
+			colors[ImGuiCol_PlotHistogramHovered]   = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
+			colors[ImGuiCol_TextSelectedBg]         = ImVec4(0.73f, 0.73f, 0.73f, 0.35f);
+			colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
+			colors[ImGuiCol_DragDropTarget]         = ImVec4(1.00f, 1.00f, 0.00f, 0.90f);
+			colors[ImGuiCol_NavHighlight]           = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+			colors[ImGuiCol_NavWindowingHighlight]  = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
+			colors[ImGuiCol_NavWindowingDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
+		}
+
+		// https://github.com/ocornut/imgui/issues/707#issuecomment-512669512
+		void DarkBlueTheme()
+		{
+			ImVec4* colors = ImGui::GetStyle().Colors;
+			colors[ImGuiCol_Text] = ImVec4(0.95f, 0.96f, 0.98f, 1.00f);
+			colors[ImGuiCol_TextDisabled] = ImVec4(0.36f, 0.42f, 0.47f, 1.00f);
+			colors[ImGuiCol_WindowBg] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
+			//colors[ImGuiCol_ChildBg] = ImVec4(0.15f, 0.18f, 0.22f, 1.00f);
+			//colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 0.94f);
+			colors[ImGuiCol_ChildBg] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
+			colors[ImGuiCol_PopupBg] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
+			colors[ImGuiCol_Border] = ImVec4(0.08f, 0.10f, 0.12f, 1.00f);
+			colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+			colors[ImGuiCol_FrameBg] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
+			colors[ImGuiCol_FrameBgHovered] = ImVec4(0.12f, 0.20f, 0.28f, 1.00f);
+			colors[ImGuiCol_FrameBgActive] = ImVec4(0.09f, 0.12f, 0.14f, 1.00f);
+			colors[ImGuiCol_TitleBg] = ImVec4(0.09f, 0.12f, 0.14f, 0.65f);
+			colors[ImGuiCol_TitleBgActive] = ImVec4(0.08f, 0.10f, 0.12f, 1.00f);
+			colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
+			colors[ImGuiCol_MenuBarBg] = ImVec4(0.15f, 0.18f, 0.22f, 1.00f);
+			colors[ImGuiCol_ScrollbarBg] = ImVec4(0.02f, 0.02f, 0.02f, 0.39f);
+			colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
+			colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.18f, 0.22f, 0.25f, 1.00f);
+			colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.09f, 0.21f, 0.31f, 1.00f);
+			colors[ImGuiCol_CheckMark] = ImVec4(0.28f, 0.56f, 1.00f, 1.00f);
+			colors[ImGuiCol_SliderGrab] = ImVec4(0.28f, 0.56f, 1.00f, 1.00f);
+			colors[ImGuiCol_SliderGrabActive] = ImVec4(0.37f, 0.61f, 1.00f, 1.00f);
+			colors[ImGuiCol_Button] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
+			colors[ImGuiCol_ButtonHovered] = ImVec4(0.28f, 0.56f, 1.00f, 1.00f);
+			colors[ImGuiCol_ButtonActive] = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
+			colors[ImGuiCol_Header] = ImVec4(0.20f, 0.25f, 0.29f, 0.55f);
+			colors[ImGuiCol_HeaderHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
+			colors[ImGuiCol_HeaderActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+			colors[ImGuiCol_Separator] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
+			colors[ImGuiCol_SeparatorHovered] = ImVec4(0.10f, 0.40f, 0.75f, 0.78f);
+			colors[ImGuiCol_SeparatorActive] = ImVec4(0.10f, 0.40f, 0.75f, 1.00f);
+			colors[ImGuiCol_ResizeGrip] = ImVec4(0.26f, 0.59f, 0.98f, 0.25f);
+			colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
+			colors[ImGuiCol_ResizeGripActive] = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
+			colors[ImGuiCol_Tab] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
+			colors[ImGuiCol_TabHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
+			colors[ImGuiCol_TabActive] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
+			colors[ImGuiCol_TabUnfocused] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
+			colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
+			colors[ImGuiCol_PlotLines] = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
+			colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
+			colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
+			colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
+			colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
+			colors[ImGuiCol_DragDropTarget] = ImVec4(1.00f, 1.00f, 0.00f, 0.90f);
+			colors[ImGuiCol_NavHighlight] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+			colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
+			colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
+			colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
+		}
+
+		// https://github.com/ocornut/imgui/issues/707#issuecomment-678611331
+		void AnotherDarkTheme()
+		{
+			ImGuiStyle& style = ImGui::GetStyle();
+			style.Colors[ImGuiCol_Text]                  = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+			style.Colors[ImGuiCol_TextDisabled]          = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
+			style.Colors[ImGuiCol_WindowBg]              = ImVec4(0.13f, 0.14f, 0.15f, 1.00f);
+			style.Colors[ImGuiCol_ChildBg]               = ImVec4(0.13f, 0.14f, 0.15f, 1.00f);
+			style.Colors[ImGuiCol_PopupBg]               = ImVec4(0.13f, 0.14f, 0.15f, 1.00f);
+			style.Colors[ImGuiCol_Border]                = ImVec4(0.43f, 0.43f, 0.50f, 0.50f);
+			style.Colors[ImGuiCol_BorderShadow]          = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+			style.Colors[ImGuiCol_FrameBg]               = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
+			style.Colors[ImGuiCol_FrameBgHovered]        = ImVec4(0.38f, 0.38f, 0.38f, 1.00f);
+			style.Colors[ImGuiCol_FrameBgActive]         = ImVec4(0.67f, 0.67f, 0.67f, 0.39f);
+			style.Colors[ImGuiCol_TitleBg]               = ImVec4(0.08f, 0.08f, 0.09f, 1.00f);
+			style.Colors[ImGuiCol_TitleBgActive]         = ImVec4(0.08f, 0.08f, 0.09f, 1.00f);
+			style.Colors[ImGuiCol_TitleBgCollapsed]      = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
+			style.Colors[ImGuiCol_MenuBarBg]             = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
+			style.Colors[ImGuiCol_ScrollbarBg]           = ImVec4(0.02f, 0.02f, 0.02f, 0.53f);
+			style.Colors[ImGuiCol_ScrollbarGrab]         = ImVec4(0.31f, 0.31f, 0.31f, 1.00f);
+			style.Colors[ImGuiCol_ScrollbarGrabHovered]  = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
+			style.Colors[ImGuiCol_ScrollbarGrabActive]   = ImVec4(0.51f, 0.51f, 0.51f, 1.00f);
+			style.Colors[ImGuiCol_CheckMark]             = ImVec4(0.11f, 0.64f, 0.92f, 1.00f);
+			style.Colors[ImGuiCol_SliderGrab]            = ImVec4(0.11f, 0.64f, 0.92f, 1.00f);
+			style.Colors[ImGuiCol_SliderGrabActive]      = ImVec4(0.08f, 0.50f, 0.72f, 1.00f);
+			style.Colors[ImGuiCol_Button]                = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
+			style.Colors[ImGuiCol_ButtonHovered]         = ImVec4(0.38f, 0.38f, 0.38f, 1.00f);
+			style.Colors[ImGuiCol_ButtonActive]          = ImVec4(0.67f, 0.67f, 0.67f, 0.39f);
+			style.Colors[ImGuiCol_Header]                = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
+			style.Colors[ImGuiCol_HeaderHovered]         = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
+			style.Colors[ImGuiCol_HeaderActive]          = ImVec4(0.67f, 0.67f, 0.67f, 0.39f);
+			style.Colors[ImGuiCol_Separator]             = style.Colors[ImGuiCol_Border];
+			style.Colors[ImGuiCol_SeparatorHovered]      = ImVec4(0.41f, 0.42f, 0.44f, 1.00f);
+			style.Colors[ImGuiCol_SeparatorActive]       = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
+			style.Colors[ImGuiCol_ResizeGrip]            = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+			style.Colors[ImGuiCol_ResizeGripHovered]     = ImVec4(0.29f, 0.30f, 0.31f, 0.67f);
+			style.Colors[ImGuiCol_ResizeGripActive]      = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
+			style.Colors[ImGuiCol_Tab]                   = ImVec4(0.08f, 0.08f, 0.09f, 0.83f);
+			style.Colors[ImGuiCol_TabHovered]            = ImVec4(0.33f, 0.34f, 0.36f, 0.83f);
+			style.Colors[ImGuiCol_TabActive]             = ImVec4(0.23f, 0.23f, 0.24f, 1.00f);
+			style.Colors[ImGuiCol_TabUnfocused]          = ImVec4(0.08f, 0.08f, 0.09f, 1.00f);
+			style.Colors[ImGuiCol_TabUnfocusedActive]    = ImVec4(0.13f, 0.14f, 0.15f, 1.00f);
+			style.Colors[ImGuiCol_PlotLines]             = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
+			style.Colors[ImGuiCol_PlotLinesHovered]      = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
+			style.Colors[ImGuiCol_PlotHistogram]         = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
+			style.Colors[ImGuiCol_PlotHistogramHovered]  = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
+			style.Colors[ImGuiCol_TextSelectedBg]        = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
+			style.Colors[ImGuiCol_DragDropTarget]        = ImVec4(0.11f, 0.64f, 0.92f, 1.00f);
+			style.Colors[ImGuiCol_NavHighlight]          = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+			style.Colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
+			style.Colors[ImGuiCol_NavWindowingDimBg]     = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
+			style.Colors[ImGuiCol_ModalWindowDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
+		}
+
 
 		bool ImGuiDX9::Initialize(HWND RenderWindow, IDirect3DDevice9* Device)
 		{
@@ -295,30 +565,39 @@ namespace cse
 			// set up window styles and colors
 			ImGuiStyle& style = ImGui::GetStyle();
 
-			style.WindowPadding = ImVec2(15, 10);
-			style.WindowRounding = 5.0f;
-			style.PopupRounding = 5.0f;
-			style.ChildRounding = 5.0f;
-			style.FramePadding = ImVec2(6, 3);
-			style.FrameRounding = 2.0f;
-			style.ItemSpacing = ImVec2(12, 8);
-			style.ItemInnerSpacing = ImVec2(10, 8);
-			style.IndentSpacing = 25.0f;
-			style.ScrollbarSize = 12.0f;
-			style.ScrollbarRounding = 9.0f;
-			style.GrabRounding = 3.0f;
+			style.WindowPadding = ImVec2(10, 10);
+			style.FramePadding = ImVec2(10, 1);
+			style.CellPadding = ImVec2(5, 1);
+			style.ItemSpacing = ImVec2(5, 5);
+			style.ItemInnerSpacing = ImVec2(10, 10);
+			style.IndentSpacing = 10.0f;
+			style.ScrollbarSize = 15.0f;
+			style.GrabMinSize = 15.0f;
 
-			style.Colors[ImGuiCol_WindowBg] = ImVec4(0.00f, 0.00f, 0.00f, settings::renderWindowOSD::kWindowBGAlpha().f);
-			style.Colors[ImGuiCol_PopupBg] = ImVec4(0.00f, 0.00f, 0.00f, settings::renderWindowOSD::kWindowBGAlpha().f);
-			style.Colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.f);
-			style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.90f, 0.80f, 0.80f, 0.49f);
-			style.Colors[ImGuiCol_TitleBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.31f);
-			style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 0.20f);
-			style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.00f, 0.00f, 0.00f, 0.78f);
-			style.Colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.40f, 0.40f, 0.80f, 0.53f);
-			style.Colors[ImGuiCol_Button] = ImVec4(0.35f, 0.55f, 0.61f, 0.51f);
-			style.Colors[ImGuiCol_Header] = ImVec4(0.69f, 0.42f, 0.39f, 0.00f);
-			style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.69f, 0.42f, 0.44f, 0.44f);
+			style.WindowBorderSize = 1.0f;
+			style.ChildBorderSize = 0.0f;
+			style.PopupBorderSize = 1.0f;
+			style.FrameBorderSize = 0.0f;
+			style.TabBorderSize = 1.0f;
+
+			style.WindowRounding = 2.0f;
+			style.ChildRounding = 2.0f;
+			style.PopupRounding = 1.0f;
+			style.FrameRounding = 1.0f;
+			style.ScrollbarRounding = 1.0f;
+			style.GrabRounding = 2.0f;
+			style.TabRounding = 2.0f;
+
+			style.WindowTitleAlign = ImVec2(0.5, 0.5);
+			style.WindowMenuButtonPosition = ImGuiDir_Right;
+			style.ColorButtonPosition = ImGuiDir_Right;
+			style.ButtonTextAlign = ImVec2(0.5, 0.5);
+
+			DarkBlueTheme();
+
+			style.Colors[ImGuiCol_ChildBg].w = 0.f;
+			style.Colors[ImGuiCol_WindowBg].w = settings::renderWindowOSD::kWindowBGAlpha().f;
+			style.Colors[ImGuiCol_PopupBg].w = settings::renderWindowOSD::kWindowBGAlpha().f;
 
 			Initialized = true;
 			return true;
@@ -330,14 +609,6 @@ namespace cse
 			ImGui::DestroyContext();
 		}
 
-		bool ImGuiDX9::IsActiveItemInWhitelist(const ImGuiWidgetIDArrayT& Whitelist) const
-		{
-			ImGuiID Active = ImGui::GetCurrentContext()->ActiveId;
-			if (Active == NULL || std::find(PassthroughWhitelistMouseEvents.begin(), PassthroughWhitelistMouseEvents.end(), Active) == PassthroughWhitelistMouseEvents.end())
-				return false;
-			else
-				return true;
-		}
 
 		bool ImGuiDX9::CanAllowInputEventPassthrough(UINT uMsg, WPARAM wParam, LPARAM lParam, bool& OutNeedsMouse, bool& OutNeedsKeyboard) const
 		{
@@ -372,11 +643,10 @@ namespace cse
 			bool NeedsMouse = false, NeedsKeyboard = false, NeedsTextInput = false;
 			NeedsInput(NeedsMouse, NeedsKeyboard, NeedsTextInput);
 
-			bool MouseWhitelisted = IsActiveItemInWhitelist(PassthroughWhitelistMouseEvents);
 
 			if (MouseEvent)
 			{
-				OutNeedsMouse = NeedsMouse && MouseWhitelisted == false;
+				OutNeedsMouse = NeedsMouse;
 				return OutNeedsMouse == false;
 			}
 			else if (KeyboardEvent)
@@ -396,25 +666,6 @@ namespace cse
 			return Active != NULL;
 		}
 
-		void ImGuiDX9::ToggleFreeMouseMovement(HWND hWnd, bool State)
-		{
-			if (State)
-			{
-				if (FreeMouseMovement.IsActive() == false)
-				{
-					FreeMouseMovement.Activate(hWnd);
-					SetCapture(hWnd);
-				}
-			}
-			else
-			{
-				if (FreeMouseMovement.IsActive())
-				{
-					FreeMouseMovement.Deactivate();
-					ReleaseCapture();
-				}
-			}
-		}
 
 		void ImGuiDX9::NewFrame()
 		{
@@ -442,16 +693,20 @@ namespace cse
 			io.KeyAlt = (GetKeyState(VK_MENU) & 0x8000) != 0;
 			io.KeySuper = false;
 
-			// clear the input event whitelists every frame
-			PassthroughWhitelistMouseEvents.clear();
-
 			// Start the frame
 			ImGui::NewFrame();
 			ImGuizmo::BeginFrame();
 
 			// manually update the double click state as ImGui's default polling doesn't consistently catch the events given our conditional rendering
-			io.MouseDoubleClicked[0] = MouseDoubleClicked[0];
-			io.MouseDoubleClicked[1] = MouseDoubleClicked[1];
+			for (int i = ImGuiMouseButton_Left; i <= ImGuiMouseButton_Middle; ++i)
+			{
+				io.MouseDoubleClicked[i] = MouseDoubleClicked[i];
+				if (io.MouseDoubleClicked[i])
+				{
+					io.MouseClicked[i] = true;
+					io.MouseReleased[i] = true;
+				}
+			}
 		}
 
 		void ImGuiDX9::Render()
@@ -460,7 +715,7 @@ namespace cse
 			RenderDrawLists(ImGui::GetDrawData());
 
 			// reset mouse double click state for the next frame
-			MouseDoubleClicked[0] = MouseDoubleClicked[1] = false;
+			MouseDoubleClicked[ImGuiMouseButton_Left] = MouseDoubleClicked[ImGuiMouseButton_Right] = MouseDoubleClicked[ImGuiMouseButton_Middle] = false;
 		}
 
 		void ImGuiDX9::InvalidateDeviceObjects()
@@ -498,7 +753,7 @@ namespace cse
 			io.KeyShift = false;
 			io.KeyAlt = false;
 			io.KeySuper = false;
-			io.MouseDown[0] = io.MouseDown[1] = false;
+			io.MouseDown[ImGuiMouseButton_Left] = io.MouseDown[ImGuiMouseButton_Right] = io.MouseDown[ImGuiMouseButton_Middle] = false;
 
 			for (auto& Key : io.KeysDown)
 				Key = false;
@@ -511,61 +766,39 @@ namespace cse
 		{
 			ImGuiIO& io = ImGui::GetIO();
 
-			POINT RawMouseDelta = { 0 };
-			bool RawMouseData = FreeMouseMovement.HandleInput(hWnd, msg, wParam, lParam, RawMouseDelta);
-			if (RawMouseData)
-			{
-				// handle directly
-				io.MousePos.x += RawMouseDelta.x;
-				io.MousePos.y += RawMouseDelta.y;
-				return true;
-			}
-
 			switch (msg)
 			{
 			case WM_LBUTTONDOWN:
-				io.MouseDown[0] = true;
+				io.MouseDown[ImGuiMouseButton_Left] = true;
 
 				return true;
 			case WM_LBUTTONUP:
-				io.MouseDown[0] = false;
-				ToggleFreeMouseMovement(hWnd, false);
+				io.MouseDown[ImGuiMouseButton_Left] = false;
 
 				return true;
 			case WM_RBUTTONDOWN:
 				// ### HACK kludge to workaround the out-of-order dispatching of the button down message when opening the context menu in the render window
 				if (ConsumeNextMouseRButtonDown == false)
-					io.MouseDown[1] = true;
+					io.MouseDown[ImGuiMouseButton_Right] = true;
 				else
 					ConsumeNextMouseRButtonDown = false;
 
 				return true;
 			case WM_RBUTTONUP:
-				io.MouseDown[1] = false;
+				io.MouseDown[ImGuiMouseButton_Right] = false;
 				return true;
 			case WM_MBUTTONDOWN:
-				io.MouseDown[2] = true;
+				io.MouseDown[ImGuiMouseButton_Middle] = true;
 				return true;
 			case WM_MBUTTONUP:
-				io.MouseDown[2] = false;
+				io.MouseDown[ImGuiMouseButton_Middle] = false;
 				return true;
 			case WM_MOUSEWHEEL:
 				io.MouseWheel += GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? +1.0f : -1.0f;
 				return true;
 			case WM_MOUSEMOVE:
-				{
-					if (FreeMouseMovement.IsActive() && RawMouseData == false)
-						return false;
-
-					// free mouse movement needs to be turned on here as we don't want to hide the cursor until we're sure we're dragging the mouse
-					// only when hovering over a widget
-					if (ImGui::IsAnyItemHovered() && ImGui::IsMouseDragging() && io.WantTextInput == false)
-						ToggleFreeMouseMovement(hWnd, true);
-
-					io.MousePos.x = (signed short)(lParam);
-					io.MousePos.y = (signed short)(lParam >> 16);
-				}
-
+				io.MousePos.x = (signed short)(lParam);
+				io.MousePos.y = (signed short)(lParam >> 16);
 				return true;
 			case WM_SYSKEYDOWN:
 			case WM_KEYDOWN:
@@ -578,15 +811,17 @@ namespace cse
 					io.KeysDown[wParam] = false;
 				return true;
 			case WM_CHAR:
-				// You can also use ToAscii()+GetKeyboardState() to retrieve characters.
 				if (wParam > 0 && wParam < 0x10000)
 					io.AddInputCharacter((unsigned short)wParam);
 				return true;
 			case WM_LBUTTONDBLCLK:
-				MouseDoubleClicked[0] = true;
+				MouseDoubleClicked[ImGuiMouseButton_Left] = true;
 				return true;
 			case WM_RBUTTONDBLCLK:
-				MouseDoubleClicked[1] = true;
+				MouseDoubleClicked[ImGuiMouseButton_Right] = true;
+				return true;
+			case WM_MBUTTONDBLCLK:
+				MouseDoubleClicked[ImGuiMouseButton_Middle] = true;
 				return true;
 			}
 
@@ -601,12 +836,6 @@ namespace cse
 			OutNeedsTextInput = io.WantTextInput;
 		}
 
-		void ImGuiDX9::WhitelistItemForMouseEvents()
-		{
-			ImGuiID LastItem = ImGui::GetCurrentWindow()->DC.LastItemId;
-			if (std::find(PassthroughWhitelistMouseEvents.begin(), PassthroughWhitelistMouseEvents.end(), LastItem) == PassthroughWhitelistMouseEvents.end())
-				PassthroughWhitelistMouseEvents.push_back(LastItem);
-		}
 
 		bool ImGuiDX9::IsInitialized() const
 		{
@@ -619,7 +848,7 @@ namespace cse
 				return false;
 
 			ImGuiContext* RenderContext = ImGui::GetCurrentContext();
-			if (ImGui::IsMouseDragging() && RenderContext->MovingWindow && RenderContext->ActiveId == RenderContext->MovingWindow->RootWindow->ID)
+			if (RenderContext->MovingWindow)
 				return true;
 			else
 				return false;
@@ -628,18 +857,19 @@ namespace cse
 		bool ImGuiDX9::IsPopupHovered() const
 		{
 			ImGuiContext& g = *GImGui;
-			int popup_idx = g.CurrentPopupStack.Size - 1;
+			int popup_idx = g.BeginPopupStack.Size - 1;
 			SME_ASSERT(popup_idx >= 0);
-			if (popup_idx < 0 || popup_idx > g.OpenPopupStack.Size || g.CurrentPopupStack[popup_idx].PopupId != g.OpenPopupStack[popup_idx].PopupId)
+			if (popup_idx < 0 || popup_idx > g.OpenPopupStack.Size || g.BeginPopupStack[popup_idx].PopupId != g.OpenPopupStack[popup_idx].PopupId)
 				return false;
 
-			ImGuiPopupRef& Itr = g.OpenPopupStack[popup_idx];
+			auto& Itr = g.OpenPopupStack[popup_idx];
 			return g.HoveredWindow == Itr.Window;
 		}
 
 		bool ImGuiDX9::IsHoveringWindow() const
 		{
-			return ImGui::GetCurrentWindowRead() && ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
+			ImGuiContext& g = *GImGui;
+			return g.HoveredRootWindow || g.HoveredWindow;
 		}
 
 		bool ImGuiDX9::IsChildWindowHovering(void* RootWindow) const
@@ -706,7 +936,18 @@ namespace cse
 			RedrawSingleFrame = false;
 			MouseInClientArea = false;
 			ConsumeMouseInputEvents = ConsumeKeyboardInputEvents = false;
-			MouseHoveringOSD = false;
+		}
+
+		std::string RenderWindowOSD::GUIState::ToString() const
+		{
+			std::string Out;
+
+			Out += "RedrawSingleFrame = " + std::to_string(RedrawSingleFrame) + "\n";
+			Out += "MouseInClientArea = " + std::to_string(MouseInClientArea) + "\n";
+			Out += "ConsumeMouseInputEvents = " + std::to_string(ConsumeMouseInputEvents) + "\n";
+			Out += "ConsumeKeyboardInputEvents = " +  std::to_string(ConsumeKeyboardInputEvents);
+
+			return Out;
 		}
 
 		void RenderWindowOSD::RenderLayers()
@@ -738,6 +979,7 @@ namespace cse
 			AttachedLayers.reserve(10);
 			Initialized = false;
 			RenderingLayers = false;
+			PauseRendering = false;
 		}
 
 		RenderWindowOSD::~RenderWindowOSD()
@@ -757,11 +999,11 @@ namespace cse
 			Pipeline->Initialize(*TESRenderWindow::WindowHandle, _NIRENDERER->device);
 
 			AttachLayer(&ModalWindowProviderOSDLayer::Instance);
-			AttachLayer(&DefaultOverlayOSDLayer::Instance);
+			AttachLayer(&InfoOverlayOSDLayer::Instance);
 			AttachLayer(&MouseOverTooltipOSDLayer::Instance);
 			AttachLayer(&NotificationOSDLayer::Instance);
 			AttachLayer(&ToolbarOSDLayer::Instance);
-			AttachLayer(&SelectionControlsOSDLayer::Instance);
+			AttachLayer(&ReferenceEditorOSDLayer::Instance);
 #ifndef NDEBUG
 			AttachLayer(&DebugOSDLayer::Instance);
 #endif
@@ -775,11 +1017,11 @@ namespace cse
 			SME_ASSERT(Initialized);
 
 			DetachLayer(&ModalWindowProviderOSDLayer::Instance);
-			DetachLayer(&DefaultOverlayOSDLayer::Instance);
+			DetachLayer(&InfoOverlayOSDLayer::Instance);
 			DetachLayer(&MouseOverTooltipOSDLayer::Instance);
 			DetachLayer(&NotificationOSDLayer::Instance);
 			DetachLayer(&ToolbarOSDLayer::Instance);
-			DetachLayer(&SelectionControlsOSDLayer::Instance);
+			DetachLayer(&ReferenceEditorOSDLayer::Instance);
 #ifndef NDEBUG
 			DetachLayer(&DebugOSDLayer::Instance);
 #endif
@@ -788,15 +1030,15 @@ namespace cse
 
 		bool RenderWindowOSD::HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, RenderWindowManager* Manager)
 		{
-			if (Initialized == false)
+			if (!Initialized)
+				return false;
+
+			// do nothing if we're still rendering the previous frame or have paused rendering
+			if (RenderingLayers || PauseRendering)
 				return false;
 
 			bool Handled = false;
 			bool Update = false;
-
-			// do nothing if we're still rendering the previous frame
-			if (RenderingLayers)
-				return Handled;
 
 			// get input data and flag the viewport for update
 			// don't update input if the mouse input manager has free movement
@@ -804,8 +1046,7 @@ namespace cse
 			{
 				if (Pipeline->UpdateInputState(hWnd, uMsg, wParam, lParam))
 				{
-					State.MouseHoveringOSD = Pipeline->IsHoveringWindow();
-					if (GetCapture() != hWnd && GetActiveWindow() == hWnd)
+					if (GetCapture() != hWnd)
 					{
 						// consume all input if we have modal windows open
 						if (ModalWindowProviderOSDLayer::Instance.HasOpenModals())
@@ -825,6 +1066,15 @@ namespace cse
 						}
 					}
 				}
+			}
+			else
+			{
+				// since the mouse input manager processes its messages after the OSD, the latter will have
+				// processed the mouse button down message before free movement was activated in the former
+				// and since the deactivation of free movement once again happens inside the mouse input manager's handler,
+				// the OSD will never receive the mouse button up message, leaving the input state indeterminate
+				// we reset the input state to prevent this from happening
+				Pipeline->ResetInputState(false);
 			}
 
 			switch (uMsg)
@@ -906,23 +1156,30 @@ namespace cse
 
 		void RenderWindowOSD::Draw()
 		{
-			if (Initialized && RenderWindowFlyCamera::Instance.IsActive() == false)
-			{
-				Pipeline->NewFrame();
-				RenderLayers();
-			}
+			if (!Initialized)
+				return;
+			else if (RenderWindowFlyCamera::Instance.IsActive())
+				return;
+			else if (PauseRendering)
+				return;
+
+			Pipeline->NewFrame();
+			RenderLayers();
 		}
 
 		void RenderWindowOSD::Render()
 		{
-			if (Initialized && RenderWindowFlyCamera::Instance.IsActive() == false )
-			{
-				if (RenderingLayers == false)
-				{
-					// defer the final render call until all layers are done drawing
-					Pipeline->Render();
-				}
-			}
+			if (!Initialized)
+				return;
+			else if (RenderWindowFlyCamera::Instance.IsActive())
+				return;
+			else if (PauseRendering)
+				return;
+			else if (RenderingLayers)
+				return;
+
+			// defer the final render call until all layers are done drawing
+			Pipeline->Render();
 		}
 
 		void RenderWindowOSD::AttachLayer(IRenderWindowOSDLayer* Layer)
@@ -959,8 +1216,6 @@ namespace cse
 		{
 			if (Initialized == false)
 				return false;
-			else if (State.MouseHoveringOSD)
-				return true;
 			else switch (uMsg)
 			{
 			case WM_LBUTTONDOWN:
@@ -986,8 +1241,14 @@ namespace cse
 
 		bool RenderWindowOSD::NeedsInput() const
 		{
-			return Initialized == false || State.MouseHoveringOSD || State.ConsumeKeyboardInputEvents || State.ConsumeMouseInputEvents;
+			return Initialized == false || State.ConsumeKeyboardInputEvents || State.ConsumeMouseInputEvents;
 		}
+
+		void RenderWindowOSD::ToggleRendering()
+		{
+			PauseRendering = PauseRendering == false;
+		}
+
 
 		std::string IRenderWindowOSDLayer::Helpers::GetRefEditorID(TESObjectREFR* Ref)
 		{
@@ -995,18 +1256,22 @@ namespace cse
 
 			const char* EditorID = Ref->GetEditorID();
 			if (EditorID == nullptr)
-			{
-				EditorID = Ref->baseForm->GetEditorID();
+				return GetFormEditorID(Ref->baseForm);
 
-				if (EditorID == nullptr)
-					return "<No-EditorID>";
-				else
-					return std::string(EditorID).append("*");
-			}
-			else
-				return EditorID;
+			return EditorID;
 		}
 
+
+		std::string IRenderWindowOSDLayer::Helpers::GetFormEditorID(TESForm* Form)
+		{
+			SME_ASSERT(Form);
+
+			auto EditorID = Form->GetEditorID();
+			if (EditorID == nullptr)
+				EditorID = "<No-EditorID>";
+
+			return EditorID;
+		}
 
 		bool IRenderWindowOSDLayer::Helpers::ResolveReference(UInt32 FormID, TESObjectREFR*& OutRef)
 		{
@@ -1040,7 +1305,7 @@ namespace cse
 		{
 			GotFocus = LostFocus = false;
 
-			if (ImGui::IsMouseHoveringWindow() == false)
+			if (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows | ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) == false)
 				return;
 
 			ImGuiIO& io = ImGui::GetIO();
@@ -1063,12 +1328,15 @@ namespace cse
 		{
 			DragBegin = DragEnd = false;
 
+			auto MouseDragging = ImGui::IsMouseDragging(ImGuiMouseButton_Left);
+			auto MouseHoveringWindow = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows | ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+
 			if (GUI->IsDraggingWindow())
 				return;
-			else if (ImGui::IsMouseHoveringWindow() == false && Active == false)
+			else if (!MouseHoveringWindow && !Active)
 				return;
 
-			if (ImGui::IsMouseDragging() && ImGui::IsAnyItemActive())
+			if (MouseDragging && ImGui::IsAnyItemActive())
 			{
 				if (Active == false)
 				{
@@ -1076,7 +1344,7 @@ namespace cse
 					DragBegin = true;
 				}
 			}
-			else if (ImGui::IsMouseDragging() == false)
+			else if (!MouseDragging)
 			{
 				if (Active)
 				{
@@ -1226,7 +1494,7 @@ namespace cse
 				if (BeginHover)
 					ImGui::OpenPopup(PopupStrID);
 
-				if (ImGui::BeginPopup(PopupStrID))
+				if (ImGui::BeginPopup(PopupStrID, ImGuiWindowFlags_NoMove))
 				{
 					if (PopupData.PositionType != kPosition_Default)
 						io.MousePos = MousPosBuffer;
@@ -1347,7 +1615,7 @@ namespace cse
 				return;
 
 			ImGui::SetNextWindowPos(ImVec2(10, *TESRenderWindow::ScreenHeight - 150));
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5);
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
@@ -1364,9 +1632,13 @@ namespace cse
 			const Notification& Current = GetNextNotification();
 			float RemainingTime = Current.GetRemainingTicks() / (float)Current.Duration;
 
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3, 3));
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(2, 2));
+			ImGui::Dummy(ImVec2(1, 5));
 			ImGui::Text("  %s  ", Current.Message.c_str());
 			ImGui::Dummy(ImVec2(10, 15));
-			ImGui::ProgressBar(RemainingTime, ImVec2(-1, 1));
+			ImGui::PopStyleVar(2);
+			ImGui::ProgressBar(RemainingTime, ImVec2(-1, 3));
 			ImGui::End();
 			ImGui::PopStyleVar(4);
 		}
@@ -1441,8 +1713,7 @@ namespace cse
 
 		void DebugOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
-			//ImGui::ShowDemoWindow();
-			//ImGui::ShowMetricsWindow();
+			ImGui::ShowDemoWindow();
 		}
 
 		bool DebugOSDLayer::NeedsBackgroundUpdate()
@@ -1453,7 +1724,7 @@ namespace cse
 
 		ModalWindowProviderOSDLayer			ModalWindowProviderOSDLayer::Instance;
 
-		ModalWindowProviderOSDLayer::ModalData::ModalData(const char* Name, ModalRenderDelegateT Delegate,
+		ModalWindowProviderOSDLayer::ModalData::ModalData(const char* Name, ModalRenderDelegateT&& Delegate,
 														  void* UserData, ImGuiWindowFlags Flags, const ImVec2& Size, ImGuiCond SizeCond) :
 			WindowName(Name),
 			Delegate(Delegate),
@@ -1493,30 +1764,30 @@ namespace cse
 
 		void ModalWindowProviderOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
-			if (OpenModals.size())
+			if (OpenModals.empty())
+				return;
+
+			// only renders one modal at a time (the topmost)
+			ModalData& Top = OpenModals.top();
+			if (Top.Open == false)
 			{
-				// only renders one modal at a time (the topmost)
-				ModalData& Top = OpenModals.top();
-				if (Top.Open == false)
+				ImGui::OpenPopup(Top.WindowName.c_str());
+				Top.Open = true;
+			}
+
+			if (Top.HasCustomSize)
+				ImGui::SetNextWindowSize(Top.WindowSize, Top.SizeSetCondition);
+
+			ImGui::SetNextWindowPosCenter(ImGuiCond_Appearing);
+			if (ImGui::BeginPopupModal(Top.WindowName.c_str(), nullptr, Top.Flags | ImGuiWindowFlags_NoSavedSettings))
+			{
+				if (Top.Delegate(OSD, GUI, Top.UserData))
 				{
-					ImGui::OpenPopup(Top.WindowName.c_str());
-					Top.Open = true;
+					ImGui::CloseCurrentPopup();
+					OpenModals.pop();
 				}
 
-				if (Top.HasCustomSize)
-					ImGui::SetNextWindowSize(Top.WindowSize, Top.SizeSetCondition);
-
-				ImGui::SetNextWindowPosCenter(ImGuiCond_Appearing);
-				if (ImGui::BeginPopupModal(Top.WindowName.c_str(), nullptr, Top.Flags | ImGuiWindowFlags_NoSavedSettings))
-				{
-					if (Top.Delegate(OSD, GUI, Top.UserData))
-					{
-						ImGui::CloseCurrentPopup();
-						OpenModals.pop();
-					}
-
-					ImGui::EndPopup();
-				}
+				ImGui::EndPopup();
 			}
 		}
 
@@ -1539,8 +1810,7 @@ namespace cse
 					Top.Open = false;
 			}
 
-			ModalData NewModal(Name, Delegate, UserData, Flags, Size, SizeCond);
-			OpenModals.push(NewModal);
+			OpenModals.emplace(Name, std::move(Delegate), UserData, Flags, Size, SizeCond);
 		}
 
 		bool ModalWindowProviderOSDLayer::HasOpenModals() const

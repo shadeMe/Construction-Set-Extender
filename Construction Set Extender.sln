@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.28803.202
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Construction Set Extender", "Construction Set Extender.vcxproj", "{D4DDA734-7E93-4581-8F82-32BB738F69FE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BatchEditor", "[Components]\BatchEditor\BatchEditor.vcxproj", "{F215DC0C-0A95-477D-A336-1A5080AE04AD}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BSAViewer", "[Components]\BSAViewer\BSAViewer.vcxproj", "{41E73AFC-9E62-4535-BC6C-C4FD9956128E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LipSyncPipeClient", "[Components]\LipSyncPipeClient\LipSyncPipeClient.vcxproj", "{7DDE7310-A0DE-409C-8E55-629788E95FE3}"
@@ -47,14 +45,6 @@ Global
 		{D4DDA734-7E93-4581-8F82-32BB738F69FE}.Release - No CrashRpt, Attach Debugger|Win32.Build.0 = Release - No CrashRpt, Attach Debugger|Win32
 		{D4DDA734-7E93-4581-8F82-32BB738F69FE}.Release|Win32.ActiveCfg = Release|Win32
 		{D4DDA734-7E93-4581-8F82-32BB738F69FE}.Release|Win32.Build.0 = Release|Win32
-		{F215DC0C-0A95-477D-A336-1A5080AE04AD}.Debug - Attach Debugger|Win32.ActiveCfg = Debug|Win32
-		{F215DC0C-0A95-477D-A336-1A5080AE04AD}.Debug - Attach Debugger|Win32.Build.0 = Debug|Win32
-		{F215DC0C-0A95-477D-A336-1A5080AE04AD}.Debug|Win32.ActiveCfg = Debug|Win32
-		{F215DC0C-0A95-477D-A336-1A5080AE04AD}.Debug|Win32.Build.0 = Debug|Win32
-		{F215DC0C-0A95-477D-A336-1A5080AE04AD}.Release - No CrashRpt, Attach Debugger|Win32.ActiveCfg = Release|Win32
-		{F215DC0C-0A95-477D-A336-1A5080AE04AD}.Release - No CrashRpt, Attach Debugger|Win32.Build.0 = Release|Win32
-		{F215DC0C-0A95-477D-A336-1A5080AE04AD}.Release|Win32.ActiveCfg = Release|Win32
-		{F215DC0C-0A95-477D-A336-1A5080AE04AD}.Release|Win32.Build.0 = Release|Win32
 		{41E73AFC-9E62-4535-BC6C-C4FD9956128E}.Debug - Attach Debugger|Win32.ActiveCfg = Debug|Win32
 		{41E73AFC-9E62-4535-BC6C-C4FD9956128E}.Debug - Attach Debugger|Win32.Build.0 = Debug|Win32
 		{41E73AFC-9E62-4535-BC6C-C4FD9956128E}.Debug|Win32.ActiveCfg = Debug|Win32
@@ -112,7 +102,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{F215DC0C-0A95-477D-A336-1A5080AE04AD} = {C82E8D51-4BB3-430F-BF67-8921BEAC4375}
 		{41E73AFC-9E62-4535-BC6C-C4FD9956128E} = {C82E8D51-4BB3-430F-BF67-8921BEAC4375}
 		{7DDE7310-A0DE-409C-8E55-629788E95FE3} = {C82E8D51-4BB3-430F-BF67-8921BEAC4375}
 		{294A2A89-2979-4C16-AE16-595C50A44F11} = {C82E8D51-4BB3-430F-BF67-8921BEAC4375}

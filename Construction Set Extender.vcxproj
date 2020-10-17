@@ -398,6 +398,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="IMGUI\imgui_demo.cpp" />
     <ClCompile Include="IMGUI\imgui_draw.cpp" />
     <ClCompile Include="IMGUI\imgui_user.cpp" />
+    <ClCompile Include="IMGUI\imgui_widgets.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="DialogImposterManager.cpp" />
     <ClCompile Include="MainWindowOverrides.cpp" />
@@ -406,7 +407,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="ObjectPrefabManager.cpp" />
     <ClCompile Include="ObjectWindowOverrides.cpp" />
     <ClCompile Include="Render Window\AuxiliaryViewport.cpp" />
-    <ClCompile Include="Render Window\DefaultOverlayOSDLayer.cpp" />
+    <ClCompile Include="Render Window\InfoOverlayOSDLayer.cpp" />
     <ClCompile Include="Render Window\MouseOverTooltipOSDLayer.cpp" />
     <ClCompile Include="Render Window\PathGridUndoManager.cpp" />
     <ClCompile Include="Render Window\RenderWindowActions.cpp" />
@@ -419,7 +420,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="Render Window\RenderWindowLayers.cpp" />
     <ClCompile Include="Render Window\RenderWindowManager.cpp" />
     <ClCompile Include="Render Window\RenderWindowOSD.cpp" />
-    <ClCompile Include="Render Window\SelectionControlsOSDLayer.cpp" />
+    <ClCompile Include="Render Window\ReferenceEditorOSDLayer.cpp" />
     <ClCompile Include="Render Window\ToolbarOSDLayer.cpp" />
     <ClCompile Include="Serialization.cpp" />
     <ClCompile Include="Settings.cpp" />
@@ -528,9 +529,10 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="IMGUI\ImGuizmo.h" />
     <ClInclude Include="IMGUI\imgui_internal.h" />
     <ClInclude Include="IMGUI\imgui_user.h" />
-    <ClInclude Include="IMGUI\stb_rect_pack.h" />
-    <ClInclude Include="IMGUI\stb_textedit.h" />
-    <ClInclude Include="IMGUI\stb_truetype.h" />
+    <ClInclude Include="IMGUI\imstb_rectpack.h" />
+    <ClInclude Include="IMGUI\imstb_textedit.h" />
+    <ClInclude Include="IMGUI\imstb_truetype.h" />
+    <ClInclude Include="IMGUI\stb_sprintf.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="DialogImposterManager.h" />
     <ClInclude Include="MainWindowOverrides.h" />
@@ -539,7 +541,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="ObjectPrefabManager.h" />
     <ClInclude Include="ObjectWindowOverrides.h" />
     <ClInclude Include="Render Window\AuxiliaryViewport.h" />
-    <ClInclude Include="Render Window\DefaultOverlayOSDLayer.h" />
+    <ClInclude Include="Render Window\InfoOverlayOSDLayer.h" />
     <ClInclude Include="Render Window\MouseOverTooltipOSDLayer.h" />
     <ClInclude Include="Render Window\PathGridUndoManager.h" />
     <ClInclude Include="Render Window\RenderWindowActions.h" />
@@ -552,7 +554,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="Render Window\RenderWindowLayers.h" />
     <ClInclude Include="Render Window\RenderWindowManager.h" />
     <ClInclude Include="Render Window\RenderWindowOSD.h" />
-    <ClInclude Include="Render Window\SelectionControlsOSDLayer.h" />
+    <ClInclude Include="Render Window\ReferenceEditorOSDLayer.h" />
     <ClInclude Include="Render Window\ToolbarOSDLayer.h" />
     <ClInclude Include="Serialization.h" />
     <ClInclude Include="Settings.h" />

@@ -2,8 +2,6 @@ To-Do
 =====
 
 IMMEDIATE  >>
-	>> Ship the visual styles enabled version of the CS with the main archive
-		> Reqd. by the new subclassing code
 
 
 NOTE	---->
@@ -20,16 +18,22 @@ CSE		---->
 
 
 	ENHANCEMENT		=
+		> Enable double-buffering on all listviews
+			> ListView_SetExtendedListViewStyleEx(hWnd, LVS_EX_DOUBLEBUFFER, LVS_EX_DOUBLEBUFFER);
+		> OSD enhancements
+			> Add hotkey toggles (or other OSD layers too)
+			> Hidable ref list in batch editor
+			> Render window gizmos
+				> Imguizmo has issues with the CS' renderer (view matrix related) (ask Nukem)
+
 		> Add support for TOD/sunlight lighting in exteriors
 			> Currently only works with interiors that behave like exteriors
-			>> Seems likely that the issue is dependent on modifying the fragment shaders used for lighting in exteriors
+				>> Seems likely that the issue is dependent on modifying the fragment shaders used for lighting in exteriors
 		> Scroll cell view object list on selection change
 		> Double click on formIds/editorIds in the console
 		> Wildcard find/replace
 		> Add an option to restore a saved backup for some esp/esm, instead of manually recover it from Data/Backup folder and moving it back to Data folder.
-		> Render window gizmos
-			> Imguizmo has issues with the CS' renderer (view matrix related)
-		> Selection mask
+
 		> Show Target NPCs context menu tool
 			>> Would it be possible to have the option to view the list of NPCs, a sort of Use Info option just for NPCs who meet the conditions for speaking a response?
 		> Copy From Template tool

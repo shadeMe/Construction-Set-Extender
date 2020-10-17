@@ -463,7 +463,7 @@ public:
 		kDialogTemplate_HeightMapEditorColorData = 3201,
 		kDialogTemplate_ActorFactionData = 3203,
 		kDialogTemplate_ActorInventoryData = 3204,
-		kDialogTemplate_ActorSpellDaa = 3205,
+		kDialogTemplate_ActorSpellData = 3205,
 		kDialogTemplate_CreatureStatsData = 3208,
 		kDialogTemplate_RaceFactionReactionData = 3209,
 		kDialogTemplate_PreferencesRenderWindow = 3210,

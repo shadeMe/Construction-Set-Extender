@@ -61,14 +61,14 @@ namespace cse
 			Depot.push_back(&renderer::kGrassOverlayTexturePath);
 			Depot.push_back(&renderer::kNotifyOnInvalidExecutionContext);
 			Depot.push_back(&renderer::kUnrestrictedMouseMovement);
+			Depot.push_back(&renderer::kShowSelectionMask);
+			Depot.push_back(&renderer::kSelectionMaskColor);
 
 			Depot.push_back(&renderWindowOSD::kShowMouseRef);
 			Depot.push_back(&renderWindowOSD::kMouseRefCtrlModified);
-			Depot.push_back(&renderWindowOSD::kColorSelectionStats);
-			Depot.push_back(&renderWindowOSD::kColorRAMUsage);
 
 			Depot.push_back(&renderWindowOSD::kShowInfoOverlay);
-			Depot.push_back(&renderWindowOSD::kShowSelectionControls);
+			Depot.push_back(&renderWindowOSD::kShowRefBatchEditor);
 			Depot.push_back(&renderWindowOSD::kShowToolbar);
 			Depot.push_back(&renderWindowOSD::kShowNotifications);
 			Depot.push_back(&renderWindowOSD::kWindowBGAlpha);
@@ -182,26 +182,25 @@ namespace cse
 			INISetting		kGrassOverlayTexturePath("GrassOverlayTexturePath", RENDERER_INISECTION, "Path relative to the Textures\\Landscape folder that gets applied when the grass overlay is enabled", "CSE_GrassOverlay.dds");
 			INISetting		kNotifyOnInvalidExecutionContext("NotifyOnInvalidExecutionContext", RENDERER_INISECTION, "Display a message when an operation is invoked in the wrong edit mode", (SInt32)0);
 			INISetting		kUnrestrictedMouseMovement("UnrestrictedMouseMovement", RENDERER_INISECTION, "Unrestricted mouse movement when transforming the camera/selection", (SInt32)0);
+			INISetting		kShowSelectionMask("ShowSelectionMask", RENDERER_INISECTION, "Apply a color mask on references selected in the render window", (SInt32)1);
+			INISetting		kSelectionMaskColor("SelectionMaskColor", RENDERER_INISECTION, "Selection mask color (RGB)", "60,221,5");
 		}
 
 		namespace renderWindowOSD
 		{
 #define RWOSD_INISECTION				"RenderWindowOSD"
 
-			INISetting		kShowMouseRef("ShowMouseRef", RWOSD_INISECTION, "Displays details about the reference under the mouse pointer", (SInt32)1);
+			INISetting		kShowMouseRef("ShowMouseRef", RWOSD_INISECTION, "Displays details about the reference or path-grid point under the mouse pointer", (SInt32)1);
 			INISetting		kMouseRefCtrlModified("MouseRefCtrlModified", RWOSD_INISECTION, "The control key must be held down to display the mouse ref's details", (SInt32)0);
 
-			INISetting		kShowInfoOverlay("ShowInfoOverlay", RWOSD_INISECTION, "Displays details about the current cell, selection, etc on the top-left corner", (SInt32)1);
-			INISetting		kShowSelectionControls("ShowSelectionControls", RWOSD_INISECTION, "Displays the selection edit controls", (SInt32)1);
+			INISetting		kShowInfoOverlay("ShowInfoOverlay", RWOSD_INISECTION, "Displays details about the current cell, camera postion, etc on the top-left corner", (SInt32)1);
+			INISetting		kShowRefBatchEditor("ShowSelectionControls", RWOSD_INISECTION, "Displays the reference batch editor", (SInt32)1);
 			INISetting		kShowToolbar("ShowToolbar", RWOSD_INISECTION, "Displays the toolbar", (SInt32)1);
 			INISetting		kShowNotifications("ShowNotifications", RWOSD_INISECTION, "Displays notifications", (SInt32)1);
 
-			INISetting		kColorSelectionStats("ColorSelectionStats", RWOSD_INISECTION, "Foreground color", "189,237,99");
-			INISetting		kColorRAMUsage("ColorRAMUsage", RWOSD_INISECTION, "Foreground color", "230,230,0");
-			INISetting		kWindowBGAlpha("WindowBGAlpha", RWOSD_INISECTION, "Window background alpha (0-1)", (float)0.7f);
-
+			INISetting		kWindowBGAlpha("WindowBGAlpha", RWOSD_INISECTION, "Window background alpha (0-1)", (float)1.f);
 			INISetting		kFontSize("FontSize", RWOSD_INISECTION, "Font size", (SInt32)16);
-			INISetting		kFontFace("FontFace", RWOSD_INISECTION, "Font face. Must correspond to a TTF font file in the Data\\Font directory", "OpenSans-Bold.ttf");
+			INISetting		kFontFace("FontFace", RWOSD_INISECTION, "Font face. Must correspond to a TTF font file in the Data\\Font directory", "Ruda-Bold.ttf");
 		}
 
 		namespace renderWindowFlyCamera

@@ -72,6 +72,17 @@ void TESObjectREFR::SetScale( float Scale )
 	thisCall<void>(0x00542420, this, Scale);
 }
 
+UInt8 TESObjectREFR::GetSoulLevel() const
+{
+	// return type "UInt32" is intentional
+	return thisCall<UInt32>(0x0053F6B0, this);
+}
+
+void TESObjectREFR::ModExtraCount(SInt16 Count)
+{
+	extraData.ModExtraCount(Count);
+}
+
 void TESObjectREFR::SetPosition( float X, float Y, float Z )
 {
 	thisCall<TESObjectCELL*>(0x00544380, this);			// subspace related
@@ -166,7 +177,7 @@ const Vector3* TESObjectREFR::GetRotation() const
 
 void TESObjectREFR::ToggleInvisiblity( void )
 {
-	if (GetInvisible())
+	if (IsInvisible())
 		SME::MiscGunk::ToggleFlag(&formFlags, kSpecialFlags_3DInvisible, false);
 	else
 		SME::MiscGunk::ToggleFlag(&formFlags, kSpecialFlags_3DInvisible, true);
@@ -174,7 +185,7 @@ void TESObjectREFR::ToggleInvisiblity( void )
 
 void TESObjectREFR::ToggleChildrenInvisibility( void )
 {
-	if (GetChildrenInvisible())
+	if (IsChildrenInvisible())
 		SME::MiscGunk::ToggleFlag(&formFlags, kSpecialFlags_Children3DInvisible, false);
 	else
 		SME::MiscGunk::ToggleFlag(&formFlags, kSpecialFlags_Children3DInvisible, true);
@@ -207,12 +218,12 @@ void TESObjectREFR::SetAlpha( float Alpha /*= -1.0f*/ )
 	}
 }
 
-bool TESObjectREFR::GetInvisible( void ) const
+bool TESObjectREFR::IsInvisible( void ) const
 {
 	return (formFlags & kSpecialFlags_3DInvisible);
 }
 
-bool TESObjectREFR::GetChildrenInvisible( void ) const
+bool TESObjectREFR::IsChildrenInvisible( void ) const
 {
 	return (formFlags & kSpecialFlags_Children3DInvisible);
 }
@@ -238,11 +249,6 @@ float TESObjectREFR::GetAlpha( void )
 void TESObjectREFR::ChangeCell( TESObjectCELL* Cell )
 {
 	thisVirtualCall<void>(0x1AC, this, Cell);
-}
-
-bool TESObjectREFR::GetDisabled( void ) const
-{
-	return (formFlags & kFormFlags_Disabled);
 }
 
 void TESObjectREFR::ToggleSelectionBox( bool State )

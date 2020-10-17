@@ -540,10 +540,10 @@ namespace cse
 				{
 					TESObjectREFR* Ref = *Itr;
 
-					if (Ref->GetInvisible())
+					if (Ref->IsInvisible())
 						Ref->ToggleInvisiblity();
 
-					if (Ref->GetChildrenInvisible())
+					if (Ref->IsChildrenInvisible())
 						Ref->ToggleChildrenInvisibility();
 				}
 
@@ -588,152 +588,8 @@ namespace cse
 				achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_PathGridAdditions);
 			});
 
-			BasicRWA ShowBatchEditor("Batch Editor", "Display the batch reference editor.", []() {
-				const TESObjectREFRArrayT& Refs = _RENDERWIN_MGR.GetActiveRefs();
-				UInt32 RefCount = Refs.size();
-
-				if (RefCount > 1)
-				{
-					int i = 0;
-					componentDLLInterface::CellObjectData* RefData = new componentDLLInterface::CellObjectData[RefCount];
-					componentDLLInterface::BatchRefData* BatchData = new componentDLLInterface::BatchRefData();
-
-					for (TESObjectREFRArrayT::const_iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr, ++i)
-					{
-						TESObjectREFR* ThisRef = *Itr;
-						componentDLLInterface::CellObjectData* ThisRefData = &RefData[i];
-
-						ThisRefData->EditorID = (!ThisRef->editorID.c_str()) ? ThisRef->baseForm->editorID.c_str() : ThisRef->editorID.c_str();
-						ThisRefData->FormID = ThisRef->formID;
-						ThisRefData->TypeID = ThisRef->baseForm->formType;
-						ThisRefData->Flags = ThisRef->formFlags;
-						ThisRefData->Selected = false;
-
-						for (TESRenderSelection::SelectedObjectsEntry* j = _RENDERSEL->selectionList; j != 0; j = j->Next)
-						{
-							if (j->Data && j->Data == ThisRef)
-							{
-								ThisRefData->Selected = true;
-								break;
-							}
-						}
-
-						ThisRefData->ParentForm = ThisRef;
-					}
-
-					BatchData->CellObjectListHead = RefData;
-					BatchData->ObjectCount = RefCount;
-
-					if (cliWrapper::interfaces::BE->ShowBatchRefEditorDialog(BatchData))
-					{
-						for (UInt32 k = 0; k < RefCount; k++)
-						{
-							TESObjectREFR* ThisRef = (TESObjectREFR*)RefData[k].ParentForm;
-							componentDLLInterface::CellObjectData* ThisRefData = &RefData[k];
-							bool Modified = false;
-
-							if (ThisRefData->Selected)
-							{
-								if (BatchData->World3DData.UsePosX())	ThisRef->position.x = BatchData->World3DData.PosX, Modified = true;
-								if (BatchData->World3DData.UsePosY())	ThisRef->position.y = BatchData->World3DData.PosY, Modified = true;
-								if (BatchData->World3DData.UsePosZ())	ThisRef->position.z = BatchData->World3DData.PosZ, Modified = true;
-
-								if (BatchData->World3DData.PosChanged())
-									ThisRef->SetPosition(ThisRef->position.x, ThisRef->position.y, ThisRef->position.z);
-
-								if (BatchData->World3DData.UseRotX())	ThisRef->rotation.x = BatchData->World3DData.RotX * PI / 180, Modified = true;
-								if (BatchData->World3DData.UseRotY())	ThisRef->rotation.y = BatchData->World3DData.RotY * PI / 180, Modified = true;
-								if (BatchData->World3DData.UseRotZ())	ThisRef->rotation.z = BatchData->World3DData.RotZ * PI / 180, Modified = true;
-
-								if (BatchData->World3DData.RotChanged())
-									ThisRef->SetRotation(ThisRef->rotation.x, ThisRef->rotation.y, ThisRef->rotation.z, true);
-
-								if (BatchData->World3DData.UseScale())	ThisRef->SetScale(BatchData->World3DData.Scale), Modified = true;
-
-								if (BatchData->Flags.UsePersistent())
-									ThisRef->SetPersistent(BatchData->Flags.Persistent), Modified = true;
-
-								if (BatchData->Flags.UseDisabled())
-									ThisRef->SetInitiallyDisabled(BatchData->Flags.Disabled), Modified = true;
-
-								if (BatchData->Flags.UseVWD())
-									ThisRef->SetVWD(BatchData->Flags.VWD), Modified = true;
-
-								if (BatchData->EnableParent.UseEnableParent())
-								{
-									TESObjectREFR* Parent = (TESObjectREFR*)BatchData->EnableParent.Parent;
-									if (Parent != ThisRef)
-									{
-										ThisRef->extraData.ModExtraEnableStateParent(Parent);
-										ThisRef->SetExtraEnableStateParentOppositeState(BatchData->EnableParent.OppositeState);
-										Modified = true;
-									}
-								}
-
-								if (BatchData->Ownership.UseOwnership() &&
-									ThisRef->baseForm->formType != TESForm::kFormType_NPC &&
-									ThisRef->baseForm->formType != TESForm::kFormType_Creature)
-								{
-									ThisRef->extraData.ModExtraGlobal(nullptr);
-									ThisRef->extraData.ModExtraRank(-1);
-									ThisRef->extraData.ModExtraOwnership(nullptr);
-
-									TESForm* Owner = (TESForm*)BatchData->Ownership.Owner;
-									ThisRef->extraData.ModExtraOwnership(Owner);
-
-									if (BatchData->Ownership.UseNPCOwner())
-										ThisRef->extraData.ModExtraGlobal((TESGlobal*)BatchData->Ownership.Global);
-									else
-										ThisRef->extraData.ModExtraRank(BatchData->Ownership.Rank);
-
-									Modified = true;
-								}
-
-								if (BatchData->Extra.UseCharge())		ThisRef->ModExtraCharge((float)BatchData->Extra.Charge), Modified = true;
-								if (BatchData->Extra.UseHealth())		ThisRef->ModExtraHealth((float)BatchData->Extra.Health), Modified = true;
-								if (BatchData->Extra.UseTimeLeft())		ThisRef->ModExtraTimeLeft((float)BatchData->Extra.TimeLeft), Modified = true;
-								if (BatchData->Extra.UseSoulLevel())	ThisRef->ModExtraSoul(BatchData->Extra.SoulLevel), Modified = true;
-								if (BatchData->Extra.UseCount())
-								{
-									switch (ThisRef->baseForm->formType)
-									{
-									case TESForm::kFormType_Apparatus:
-									case TESForm::kFormType_Armor:
-									case TESForm::kFormType_Book:
-									case TESForm::kFormType_Clothing:
-									case TESForm::kFormType_Ingredient:
-									case TESForm::kFormType_Misc:
-									case TESForm::kFormType_Weapon:
-									case TESForm::kFormType_Ammo:
-									case TESForm::kFormType_SoulGem:
-									case TESForm::kFormType_Key:
-									case TESForm::kFormType_AlchemyItem:
-									case TESForm::kFormType_SigilStone:
-										ThisRef->extraData.ModExtraCount(BatchData->Extra.Count), Modified = true;
-
-										break;
-									case TESForm::kFormType_Light:
-										TESObjectLIGH* Light = CS_CAST(ThisRef->baseForm, TESForm, TESObjectLIGH);
-										if (Light)
-										{
-											if (Light->IsCarriable())
-												ThisRef->extraData.ModExtraCount(BatchData->Extra.Count), Modified = true;
-										}
-
-										break;
-									}
-								}
-							}
-
-							if (Modified)
-								ThisRef->SetFromActiveFile(true);
-
-							achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_BatchEditor);
-						}
-					}
-
-					delete BatchData;
-				}
+			BasicRWA ShowBatchEditor("Toggle Reference Batch Editor", "Display the batch reference editor.", []() {
+				settings::renderWindowOSD::kShowRefBatchEditor.ToggleData();
 			});
 
 			BasicRWA ShowUseInfo("Use Info", "Display the reference's usage info.", []() {
@@ -911,6 +767,11 @@ namespace cse
 				}
 			});
 
+			BasicRWA ToggleOSD("Toggle On-Screen-Display", "Show/Hide the render window on-screen-display.",
+				ExecutionContext::kMode_All, []() {
+				_RENDERWIN_MGR.GetOSD()->ToggleRendering();
+			});
+
 
 			namespace builtIn
 			{
@@ -944,7 +805,7 @@ namespace cse
 													   ExecutionContext::kMode_ReferenceEdit, Key('R', BuiltIn::kModifier_Control | BuiltIn::kModifier_Shift | BuiltIn::kModifier_Space));
 				BuiltInKeyComboRWA LinkPathGridSelection("Link Path Grid Reference", "Link the path grid point to a reference.",
 														 ExecutionContext::kMode_PathGridEdit, Key('R'), [](Key&) {
-					// we recreate the code instead of tunnelling the key
+					// we recreate the code instead of tunneling the key
 					if (TESRenderWindow::SelectedPathGridPoints->IsEmpty())
 						return;
 
