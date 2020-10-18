@@ -227,29 +227,23 @@ namespace cse
 
 			ImGui::BeginChild("contents_child_frame", ImVec2(0, 500));
 			{
-				ImGui::Columns(2, "ref_table_header", false);
+				if (ImGui::Button(ICON_MD_ADD_TO_PHOTOS "##newlayer_btn"))
 				{
-					ImGui::TextWrapped("Active Layer: %s", ActiveLayer->GetName());
-					ImGui::SameLine(0, 3);
-					ImGui::ShowHelpPopup("Newly created references are added to this layer.\n\nRight click on a layer to show the context menu.\nTo remove references from a layer, add them to the Default layer.");
-
-					ImGui::NextColumn();
-
-					if (ImGui::Button(ICON_MD_ADD_TO_PHOTOS "##newlayer_btn"))
-					{
-						ModalWindowProviderOSDLayer::Instance.ShowModal("New Layer",
-																		std::bind(&RenderWindowLayerManager::RenderModalNewLayer, this,
-																				  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
-																		nullptr,
-																		ImGuiWindowFlags_AlwaysAutoResize);
-					}
-
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("New Layer");
-
-					ImGui::NextColumn();
+					ModalWindowProviderOSDLayer::Instance.ShowModal("New Layer",
+						std::bind(&RenderWindowLayerManager::RenderModalNewLayer, this,
+							std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+						nullptr,
+						ImGuiWindowFlags_AlwaysAutoResize);
 				}
-				ImGui::Columns();
+
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("New Layer");
+
+				ImGui::SameLine(0, 20);
+				ImGui::TextWrapped("Active Layer: %s", ActiveLayer->GetName());
+				ImGui::SameLine(0, 3);
+				ImGui::ShowHelpPopup("Newly created references are added to this layer.\n\nRight click on a layer to show the context menu.\nTo remove references from a layer, add them to the '(Default)' layer."
+									"\n\n" ICON_MD_VISIBILITY " - Visible\t" ICON_MD_LOCK_OUTLINE " - Frozen");
 
 				// cache active layers
 				std::unordered_set<Layer*> ActiveLayers;
@@ -262,93 +256,75 @@ namespace cse
 				LayerListResult CurrentLayersResult;
 				if (ImGui::CollapsingHeader("Current Layers", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					ImGui::Separator();
-					ImGui::Columns(4, "current_layers_list", false);
-					{
-						ImGui::SetColumnOffset(1, 180);
-						ImGui::SetColumnOffset(2, 230);
-						ImGui::SetColumnOffset(3, 280);
+					CurrentLayersVisible = true;
 
-						ImGui::Text("Name"); ImGui::NextColumn();
-						ImGui::Text("Count"); ImGui::NextColumn();
-						ImGui::Text(" " ICON_MD_VISIBILITY); ImGui::NextColumn();
-						if (ImGui::IsItemHovered())
-							ImGui::SetTooltip("Visible");
-						ImGui::Text(" " ICON_MD_LOCK_OUTLINE); ImGui::NextColumn();
-						if (ImGui::IsItemHovered())
-							ImGui::SetTooltip("Frozen");
-						ImGui::Separator();
-					}
-					ImGui::Columns();
-
-					ImGui::BeginChild("current_layers_list_child_frame", ImVec2(0, 170));
+					auto NumColumns = 4;
+					if (ImGui::BeginTable("##current_layers_table", NumColumns,
+						ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Scroll | ImGuiTableFlags_NoSavedSettings,
+						ImVec2(0, OtherLayersVisible ? -250 : -40)))
 					{
-						ImGui::Columns(4, "current_layers_list", false);
+						ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 250);
+						ImGui::TableSetupColumn("Count", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 50);
+						ImGui::TableSetupColumn(" " ICON_MD_VISIBILITY, ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 25);
+						ImGui::TableSetupColumn(" " ICON_MD_LOCK_OUTLINE, ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 25);
+
+						ImGui::TableSetupScrollFreeze(0, 2);
+						ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 2));
+						ImGui::TableHeadersRow();
+						ImGui::PopStyleVar();
+
+						if (!AddLayerToOSDList(DefaultLayer, true, CurrentLayersResult))
 						{
-							ImGui::SetColumnOffset(1, 180);
-							ImGui::SetColumnOffset(2, 230);
-							ImGui::SetColumnOffset(3, 280);
-
-							if (AddLayerToOSDList(DefaultLayer, CurrentLayersResult) == false)
+							for (auto Itr : ActiveLayers)
 							{
-								for (auto Itr : ActiveLayers)
-								{
-									if (AddLayerToOSDList(Itr, CurrentLayersResult))
-										break;
-								}
+								if (AddLayerToOSDList(Itr, true, CurrentLayersResult))
+									break;
 							}
 						}
-						ImGui::Columns();
+
+						ImGui::EndTable();
 					}
-					ImGui::EndChild();
 				}
+				else
+					CurrentLayersVisible = false;
 
 				if (HandleLayerListResult(CurrentLayersResult) == false)
 				{
 					LayerListResult OtherLayersResult;
 					if (ImGui::CollapsingHeader("Other Layers", ImGuiTreeNodeFlags_DefaultOpen))
 					{
-						ImGui::Separator();
-						ImGui::Columns(4, "other_layers_list", false);
-						{
-							ImGui::SetColumnOffset(1, 180);
-							ImGui::SetColumnOffset(2, 230);
-							ImGui::SetColumnOffset(3, 280);
+						OtherLayersVisible = true;
 
-							ImGui::Text("Name"); ImGui::NextColumn();
-							ImGui::Text("Count"); ImGui::NextColumn();
-							ImGui::Text(" " ICON_MD_VISIBILITY); ImGui::NextColumn();
-							if (ImGui::IsItemHovered())
-								ImGui::SetTooltip("Visible");
-							ImGui::Text(" " ICON_MD_LOCK_OUTLINE); ImGui::NextColumn();
-							if (ImGui::IsItemHovered())
-								ImGui::SetTooltip("Frozen");
-							ImGui::Separator();
-						}
-						ImGui::Columns();
-
-						ImGui::BeginChild("other_layers_list_child_frame", ImVec2(0, 150));
+						auto NumColumns = 4;
+						if (ImGui::BeginTable("##other_layers_table", NumColumns,
+							ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Scroll | ImGuiTableFlags_NoSavedSettings,
+							ImVec2(0, 0)))
 						{
-							ImGui::Columns(4, "other_layers_list", false);
+							ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 250);
+							ImGui::TableSetupColumn("Count", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 50);
+							ImGui::TableSetupColumn(" " ICON_MD_VISIBILITY, ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 25);
+							ImGui::TableSetupColumn(" " ICON_MD_LOCK_OUTLINE, ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 25);
+
+							ImGui::TableSetupScrollFreeze(0, 1);
+							ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 2));
+							ImGui::TableHeadersRow();
+							ImGui::PopStyleVar();
+
+							for (auto& Itr : RegisteredCollections)
 							{
-								ImGui::SetColumnOffset(1, 180);
-								ImGui::SetColumnOffset(2, 230);
-								ImGui::SetColumnOffset(3, 280);
-
-								for (auto& Itr : RegisteredCollections)
+								Layer* ThisLayer = static_cast<Layer*>(Itr.get());
+								if (ActiveLayers.count(ThisLayer) == 0)
 								{
-									Layer* ThisLayer = static_cast<Layer*>(Itr.get());
-									if (ActiveLayers.count(ThisLayer) == 0)
-									{
-										if (AddLayerToOSDList(ThisLayer, OtherLayersResult))
-											break;
-									}
+									if (AddLayerToOSDList(ThisLayer, false, OtherLayersResult))
+										break;
 								}
 							}
-							ImGui::Columns();
+
+							ImGui::EndTable();
 						}
-						ImGui::EndChild();
 					}
+					else
+						OtherLayersVisible = false;
 
 					HandleLayerListResult(OtherLayersResult);
 				}
@@ -356,7 +332,7 @@ namespace cse
 			ImGui::EndChild();
 		}
 
-		bool RenderWindowLayerManager::AddLayerToOSDList(Layer* ToAdd, LayerListResult& OutResult)
+		bool RenderWindowLayerManager::AddLayerToOSDList(Layer* ToAdd, bool LayerHasActiveRefs, LayerListResult& OutResult)
 		{
 			if (FilterHelper.PassFilter(ToAdd->GetName()) == false)
 				return false;
@@ -366,55 +342,69 @@ namespace cse
 			FORMAT_STR(Buffer, "%s_current", ToAdd->GetName());
 			ImGui::PushID(Buffer);
 			{
-				if (ImGui::Selectable(ToAdd->GetName(), false, ImGuiSelectableFlags_AllowDoubleClick) &&
-					ImGui::IsMouseDoubleClicked(0))
+				ImGui::TableNextRow(0, 20.f);
 				{
-					ToAdd->ConvertToSelection(_RENDERSEL, true, true);
+					ImGui::TableNextColumn();
+					{
+						if (ImGui::Selectable(ToAdd->GetName(), false, ImGuiSelectableFlags_AllowDoubleClick) &&
+							ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+						{
+							if (LayerHasActiveRefs)
+								ToAdd->ConvertToSelection(_RENDERSEL, true, true, true);
+						}
+
+						if (ImGui::BeginPopupContextItem("layer_context_menu"))
+						{
+							if (ImGui::Selectable("Add Selection to Layer"))
+							{
+								OutResult.Selection = ToAdd;
+								OutResult.AddToLayer = true;
+								Handled = true;
+							}
+
+							if (ToAdd != DefaultLayer && ImGui::Selectable("Remove Layer"))
+							{
+								OutResult.Selection = ToAdd;
+								OutResult.RemoveLayer = true;
+								Handled = true;
+							}
+
+							if (ImGui::Selectable("Set As Active"))
+							{
+								OutResult.Selection = ToAdd;
+								OutResult.SetActive = true;
+								Handled = true;
+							}
+
+							ImGui::EndPopup();
+						}
+					}
+					ImGui::TableNextColumn();
+					{
+						if (ToAdd == DefaultLayer)
+							ImGui::Text("");
+						else
+							ImGui::Text("%d", ToAdd->GetSize());
+					}
+					ImGui::TableNextColumn();
+					{
+						bool Visible = ToAdd->IsVisible();
+						ImGui::PushStyleCompact();
+						if (ImGui::Checkbox("##visible_toggle", &Visible))
+							ToAdd->SetVisible(Visible);
+						ImGui::PopStyleCompact();
+					}
+					ImGui::TableNextColumn();
+					{
+						bool Frozen = ToAdd->IsFrozen();
+						ImGui::PushStyleCompact();
+						if (ImGui::Checkbox("##frozen_toggle", &Frozen))
+							ToAdd->SetFrozen(Frozen);
+						ImGui::PopStyleCompact();
+					}
 				}
-
-				if (ImGui::BeginPopupContextItem("layer_context_menu"))
-				{
-					if (ImGui::Selectable("Add Selection to Layer"))
-					{
-						OutResult.Selection = ToAdd;
-						OutResult.AddToLayer = true;
-						Handled = true;
-					}
-
-					if (ToAdd != DefaultLayer && ImGui::Selectable("Remove Layer"))
-					{
-						OutResult.Selection = ToAdd;
-						OutResult.RemoveLayer = true;
-						Handled = true;
-					}
-
-					if (ImGui::Selectable("Set As Active"))
-					{
-						OutResult.Selection = ToAdd;
-						OutResult.SetActive = true;
-						Handled = true;
-					}
-
-					ImGui::EndPopup();
-				}
-
-				ImGui::NextColumn();
-				if (ToAdd == DefaultLayer)
-					ImGui::Text("");
-				else
-					ImGui::Text("%d", ToAdd->GetSize());
-				ImGui::NextColumn();
-
-				bool Visible = ToAdd->IsVisible(), Frozen = ToAdd->IsFrozen();
-				if (ImGui::Checkbox("##visible_toggle", &Visible))
-					ToAdd->SetVisible(Visible);
-				ImGui::NextColumn();
-				if (ImGui::Checkbox("##frozen_toggle", &Frozen))
-					ToAdd->SetFrozen(Frozen);
-				ImGui::NextColumn();
 			}
 			ImGui::PopID();
-
 
 			return Handled;
 		}
@@ -450,8 +440,9 @@ namespace cse
 			FilterHelper()
 		{
 			EventSink = new GlobalEventSink(this);
-			DefaultLayer = new Layer("Default");
+			DefaultLayer = new Layer("(Default)");
 			ActiveLayer = DefaultLayer;
+			CurrentLayersVisible = OtherLayersVisible = true;
 		}
 
 		RenderWindowLayerManager::~RenderWindowLayerManager()

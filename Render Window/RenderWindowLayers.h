@@ -62,8 +62,8 @@ namespace cse
 			bool					RenderModalNewLayer(RenderWindowOSD*, ImGuiDX9*, void*);
 			void					RenderPopupButton();
 			void					RenderPopupContents();
-			bool					AddLayerToOSDList(Layer* ToAdd, LayerListResult& OutResult);		// returns true if handled
-			bool					HandleLayerListResult(LayerListResult& Result);						// returns true if handled
+			bool					AddLayerToOSDList(Layer* ToAdd, bool LayerHasActiveRefs, LayerListResult& OutResult);	// returns true if handled
+			bool					HandleLayerListResult(LayerListResult& Result);										// returns true if handled
 
 			void					HandlePlaceRef(TESObjectREFR* Ref);
 
@@ -71,6 +71,8 @@ namespace cse
 			Layer*					ActiveLayer;
 			Layer*					DefaultLayer;
 			ImGuiTextFilter			FilterHelper;
+			bool					CurrentLayersVisible;
+			bool					OtherLayersVisible;
 		public:
 			RenderWindowLayerManager();
 			virtual ~RenderWindowLayerManager() override;

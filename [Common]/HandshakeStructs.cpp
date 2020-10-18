@@ -16,7 +16,6 @@ namespace componentDLLInterface
 		kCounter_ScriptVarRenameData,
 		kCounter_UseInfoCellItemData,
 		kCounter_UseInfoCellItemListData,
-		kCounter_CellObjectData,
 		kCounter_TagBrowserInstantiationData,
 
 		kCounter__MAX
@@ -37,7 +36,6 @@ namespace componentDLLInterface
 		"ScriptVarRenameData",
 		"UseInfoCellItemData",
 		"UseInfoCellItemListData",
-		"CellObjectData",
 		"TagBrowserInstantiationData",
 	};
 
@@ -310,18 +308,6 @@ namespace componentDLLInterface
 		SME_ASSERT(kHandShakeStructCounters[kCounter_UseInfoCellItemListData] > 0);
 		kHandShakeStructCounters[kCounter_UseInfoCellItemListData]--;
 		delete[] UseInfoListCellItemListHead;
-	}
-
-	CellObjectData::CellObjectData() : FormData()
-	{
-		kHandShakeStructCounters[kCounter_CellObjectData]++;
-		Selected = false;
-	}
-
-	CellObjectData::~CellObjectData()
-	{
-		SME_ASSERT(kHandShakeStructCounters[kCounter_CellObjectData] > 0);
-		kHandShakeStructCounters[kCounter_CellObjectData]--;
 	}
 
 	ScriptCompileData::ScriptCompileData() : Script(), CompileResult(false), CompileErrorData()

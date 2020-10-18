@@ -628,7 +628,7 @@ namespace cse
 			SME::StringHelpers::MakeLower(Filter);
 			bool SelectDefault = false;
 
-			for (auto Itr : LoadedObjects)
+			for (const auto& Itr : LoadedObjects)
 			{
 				SME_ASSERT(Itr->BaseObject && Itr->BaseObject->GetEditorID());
 
@@ -684,7 +684,7 @@ namespace cse
 				}
 			} while (Selection != -1);
 
-			for (auto Itr : CurrentSelection)
+			for (const auto& Itr : CurrentSelection)
 				TESListView::InsertItem(SelectedObjectsList, Itr.get());
 
 			RefreshingList = false;
@@ -727,7 +727,7 @@ namespace cse
 			char Buffer[0x5] = { 0 };
 			SerializedData FileBuffer;
 
-			for (auto Itr : Objects)
+			for (const auto& Itr : Objects)
 			{
 				FORMAT_STR(Buffer, "%d", i);
 				FileBuffer += "[" + SerializedData(Buffer) + "]\n";
@@ -861,7 +861,7 @@ namespace cse
 					BGSEEUI->MsgBoxW(MainDialog, MB_OK, "Errors were encountered when loading the object palette file. Check the console for more information.\n\nThe merge operation did not complete successfully.");
 				else
 				{
-					for (auto Itr : Temp)
+					for (const auto& Itr : Temp)
 						LoadedObjects.push_back(Itr);
 
 					RefreshObjectList();
@@ -1136,7 +1136,7 @@ namespace cse
 		{
 			SME_ASSERT(Data);
 
-			for (auto Itr : LoadedObjects)
+			for (const auto& Itr : LoadedObjects)
 			{
 				if (Itr.get() == Data)
 				{

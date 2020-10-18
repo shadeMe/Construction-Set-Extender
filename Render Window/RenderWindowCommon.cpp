@@ -385,7 +385,7 @@ namespace cse
 			Members.clear();
 		}
 
-		void NamedReferenceCollection::ConvertToSelection(TESRenderSelection* Selection, bool ClearSelection /*= true*/, bool ShowSelectionBox /*= false*/)
+		void NamedReferenceCollection::ConvertToSelection(TESRenderSelection* Selection, bool ClearSelection /*= true*/, bool ShowSelectionBox /*= false*/, bool SkipRefsInInactiveCells)
 		{
 			SME_ASSERT(Selection);
 
@@ -397,8 +397,11 @@ namespace cse
 
 			for (auto Itr : Valid)
 			{
-				if (Selection->HasObject(Itr) == false)
-					Selection->AddToSelection(Itr, ShowSelectionBox);
+				if (!Selection->HasObject(Itr))
+				{
+					if (!SkipRefsInInactiveCells || TESRenderWindow::GetCellInActiveGrid(Itr->parentCell))
+						Selection->AddToSelection(Itr, ShowSelectionBox);
+				}
 			}
 		}
 
@@ -692,7 +695,11 @@ namespace cse
 
 		bool NamedReferenceCollectionManager::AddReference(TESObjectREFRSafeHandleT Ref, NamedReferenceCollection* To)
 		{
-			SME_ASSERT(Ref && To);
+			// temporary refs don't have formIDs
+			if (!Ref)
+				return false;
+
+			SME_ASSERT(To);
 
 			NamedReferenceCollection* Parent = GetParentCollection(Ref);
 			if (Parent && Parent != To)
@@ -716,7 +723,9 @@ namespace cse
 
 		void NamedReferenceCollectionManager::RemoveReference(TESObjectREFRSafeHandleT Ref)
 		{
-			SME_ASSERT(Ref);
+			// temporary refs don't have formIDs
+			if (!Ref)
+				return;
 
 			NamedReferenceCollection* Parent = GetParentCollection(Ref);
 			if (Parent)

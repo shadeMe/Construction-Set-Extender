@@ -1504,7 +1504,7 @@ namespace cse
 			ImGui::BeginChild("##reference_list_child_window", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar);
 			ImGui::PopStyleVar();
 			{
-				ImGui::ShowHelpPopup("CTRL + click on a reference below to center the camera on it");
+				ImGui::ShowHelpPopup("CTRL + click on a reference below to center the camera on it.\nRight click on a reference to show the context menu.");
 				ImGui::SameLine(0, 5);
 				RefListFilterHelper.Draw("Filter");
 				ImGui::Dummy(ImVec2(0, 5));
@@ -1554,9 +1554,9 @@ namespace cse
 										RefToShow = Ref;
 									}
 									else if (Itr.second == true)
-										_RENDERSEL->AddToSelection(Ref, true);
+										renderWindow::ReferenceSelectionManager::AddToSelection(Ref, true);
 									else
-										_RENDERSEL->RemoveFromSelection(Ref, true);
+										renderWindow::ReferenceSelectionManager::RemoveFromSelection(Ref, true);
 								}
 								if (ImGui::IsItemHovered())
 								{

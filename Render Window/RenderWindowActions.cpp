@@ -377,7 +377,7 @@ namespace cse
 						TESObjectREFR* Ref = *Itr;
 
 						if (Buffer->HasObject(Ref) == false)
-							_RENDERSEL->AddToSelection(Ref, true);
+							ReferenceSelectionManager::AddToSelection(Ref, true);
 					}
 
 					Buffer->DeleteInstance();
@@ -385,20 +385,10 @@ namespace cse
 			});
 
 			BasicRWA SelectAll("Select All", "Select all references in the active cell/grid.", []() {
-				const TESObjectREFRArrayT& Refs = _RENDERWIN_MGR.GetActiveRefs();
 				_RENDERSEL->ClearSelection(true);
 
-				for (TESObjectREFRArrayT::const_iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr)
-				{
-					TESObjectREFR* Ref = *Itr;
-
-					if (_RENDERSEL->HasObject(Ref) == false &&
-						(Ref->formFlags & TESObjectREFR::kSpecialFlags_3DInvisible) == false &&
-						(Ref->formFlags & TESObjectREFR::kSpecialFlags_Frozen) == false)
-					{
-						_RENDERSEL->AddToSelection(Ref, true);
-					}
-				}
+				for (const auto& Ref : _RENDERWIN_MGR.GetActiveRefs())
+					ReferenceSelectionManager::AddToSelection(Ref, true);
 			});
 
 			AlignReferencesRWA AlignPosition(AlignReferencesRWA::kAlign_Position, AlignReferencesRWA::kAxis_ALL);

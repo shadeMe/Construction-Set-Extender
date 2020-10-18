@@ -469,16 +469,6 @@ namespace componentDLLInterface
 		virtual ~UseInfoListCellItemListData();
 	};
 
-	struct CellObjectData : public FormData
-	{
-		bool											Selected;
-
-		bool											IsValid() { return (FormID) ? true : false; }
-
-		CellObjectData();
-		virtual ~CellObjectData();
-	};
-
 	struct TagBrowserInstantiationData : public IDisposableData
 	{
 #ifdef CSE

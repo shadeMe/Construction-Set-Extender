@@ -162,7 +162,7 @@ namespace cse
 			void					RemoveMember(TESObjectREFR* Ref);
 			void					RemoveMember(TESObjectREFRSafeHandleT Ref);
 			void					ClearMembers();
-			void					ConvertToSelection(TESRenderSelection* Selection, bool ClearSelection = true, bool ShowSelectionBox = false);
+			void					ConvertToSelection(TESRenderSelection* Selection, bool ClearSelection = true, bool ShowSelectionBox = false, bool SkipRefsInInactiveCells = false);
 
 			const char*							GetName() const;
 			const UInt32						GetSize() const;

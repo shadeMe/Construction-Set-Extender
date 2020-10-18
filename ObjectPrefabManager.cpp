@@ -70,7 +70,7 @@ namespace cse
 				UInt32 Index = 0;
 				TESListView::ClearItems(DetailsList);
 
-				for (auto Itr : Description)
+				for (const auto& Itr : Description)
 				{
 					for (int i = 0; i < 9; i++)
 					{
@@ -521,7 +521,7 @@ namespace cse
 			SME::StringHelpers::MakeLower(Filter);
 			bool SelectDefault = false;
 
-			for (auto Itr : LoadedPrefabs)
+			for (const auto& Itr : LoadedPrefabs)
 			{
 				std::string Compare(Itr->FileName);
 				SME::StringHelpers::MakeLower(Compare);
@@ -717,7 +717,7 @@ namespace cse
 
 		bool ObjectPrefabManager::GetExistingPrefab(const char* FilePath, PrefabObjectHandleT& Out)
 		{
-			for (auto Itr : LoadedPrefabs)
+			for (const auto& Itr : LoadedPrefabs)
 			{
 				if (!_stricmp(Itr->FilePath.c_str(), FilePath))
 				{

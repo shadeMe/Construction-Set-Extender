@@ -201,11 +201,8 @@ namespace cse
 				{
 					BookmarksVisible = true;
 					ImGui::SameLine(0, 85);
-					if (ImGui::Button(ICON_MD_BOOKMARK "##bookmark_current_cell_btn") && _TES->GetCurrentCell())
+					if (ImGui::Button(ICON_MD_BOOKMARK " Bookmark Current Cell##bookmark_current_cell_btn") && _TES->GetCurrentCell())
 						AddBookmark(_TES->GetCurrentCell());
-
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("Bookmark Current Cell");
 
 					if (ImGui::BeginTable("##bookmark_table", 3,
 						ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Scroll,
@@ -216,7 +213,9 @@ namespace cse
 						ImGui::TableSetupColumn("Location", ImGuiTableColumnFlags_WidthFixed, 100);
 
 						ImGui::TableSetupScrollFreeze(0, 1);
+						ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 2));
 						ImGui::TableHeadersRow();
+						ImGui::PopStyleVar();
 
 						TESObjectCELL* ToRemove = nullptr;
 						for (auto Itr : Bookmarks)
@@ -260,7 +259,9 @@ namespace cse
 						ImGui::TableSetupColumn("Location", ImGuiTableColumnFlags_WidthFixed, 100);
 
 						ImGui::TableSetupScrollFreeze(0, 1);
+						ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 2));
 						ImGui::TableHeadersRow();
+						ImGui::PopStyleVar();
 
 						TESObjectCELL* ToAdd = nullptr;
 						for (auto Itr : RecentlyVisited)

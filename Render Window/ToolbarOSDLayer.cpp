@@ -146,7 +146,7 @@ namespace cse
 				{
 					ImGui::Text(ICON_MD_FILTER_LIST " %d ", FilterRefs.size());
 					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("%d references match the filter.", FilterRefs.size());
+						ImGui::SetTooltip("%d references match the filter", FilterRefs.size());
 				}
 				else
 					ImGui::Dummy(ImVec2(5, 0));
@@ -245,7 +245,8 @@ namespace cse
 				int AngleVal = *(UInt32*)TESRenderWindow::SnapAngle;
 				TESObjectREFR* SnapRef = *TESRenderWindow::SnapReference;
 
-				if (ImGui::Checkbox("Snap Grid   ", &SnapGrid))
+				ImGui::PushStyleCompact();
+				if (ImGui::Checkbox("Snap Grid    ", &SnapGrid))
 				{
 					if (SnapGrid)
 						Flags |= TESRenderWindow::kRenderWindowState_SnapToGrid;
@@ -276,8 +277,16 @@ namespace cse
 				ImGui::Text("Snap Reference:");
 				if (SnapRef)
 				{
-					const char* SnapRefID = SnapRef->GetEditorID();
-					ImGui::TextWrapped("%s%s%08X%s", (SnapRefID ? SnapRefID : ""), (SnapRefID ? " (" : ""), SnapRef->formID, (SnapRefID ? ")" : ""));
+					auto EditorID = Helpers::GetRefEditorID(SnapRef);
+					char Buffer[150];
+					FORMAT_STR(Buffer, "%s (%08X)", EditorID.c_str(), SnapRef->formID);
+
+					if (EditorID.length() > 20)
+						EditorID = EditorID.substr(0, 20) + "...";
+
+					ImGui::Text(EditorID.c_str());
+					if (ImGui::IsItemHovered())
+						ImGui::SetTooltip(Buffer);
 				}
 				else
 					ImGui::Text("None");
@@ -291,6 +300,7 @@ namespace cse
 				ImGui::SameLine();
 				if (ImGui::Button("Clear", ImVec2(70, 25)))
 					SnapRef = nullptr;
+				ImGui::PopStyleCompact();
 
 				*(UInt32*)TESRenderWindow::SnapGridDistance = GridVal;
 				*(UInt32*)TESRenderWindow::SnapAngle = AngleVal;
@@ -302,7 +312,7 @@ namespace cse
 																		 SnapControlsButton,
 																		 SnapControlsPopup,
 																		MouseOverPopupProvider::kPosition_Relative,
-																		ImVec2(-85, -175));
+																		ImVec2(0, -20));
 
 
 			auto MovementControlsButton = []() {
@@ -333,6 +343,7 @@ namespace cse
 					RefRot = settings::renderer::kAltRefRotationSpeed().f;
 				}
 
+				ImGui::PushStyleCompact();
 				ImGui::NewLine();
 
 				ImGui::SameLine(0, 30);
@@ -421,15 +432,16 @@ namespace cse
 					*TESRenderWindow::RefRotationSpeed = RefRot;
 				}
 
-				ImGui::Dummy(ImVec2(10, 5));
+				ImGui::NewLine();
 				if (ImGui::Checkbox("Alternate Settings", &Alternate))
 					actions::ToggleAlternateMovementSettings();
+				ImGui::PopStyleCompact();
 			};
 			PopupMovementControls= BottomToolbarPopupProvider.RegisterPopup("popup_movement_controls",
 																			MovementControlsButton,
 																			MovementControlsPopup,
 																			MouseOverPopupProvider::kPosition_Relative,
-																			ImVec2(-75, -290));
+																			ImVec2(0, -25));
 
 
 			auto VisibilityButtons = []() {
@@ -466,6 +478,7 @@ namespace cse
 					};
 
 					bool Toggles[actions::ToggleVisibilityRWA::kType__MAX] = { false };
+					ImGui::PushStyleCompact();
 					for (int i = 0; i < actions::ToggleVisibilityRWA::kType__MAX; i++)
 					{
 
@@ -473,6 +486,7 @@ namespace cse
 						if (ImGui::Checkbox(kNames[i], &Toggles[i]))
 							actions::ToggleVisibility[i]();
 					}
+					ImGui::PopStyleCompact();
 				}
 				ImGui::PopID();
 			};
@@ -480,11 +494,11 @@ namespace cse
 																			  VisibilityButtons,
 																			  VisibilityPopup,
 																			  MouseOverPopupProvider::kPosition_Relative,
-																			  ImVec2(-10, -595));
+																			  ImVec2(0, -25));
 
 			auto MiscButton = []() {
 				PUSH_TRANSPARENT_BUTTON_COLORS;
-				ImGui::Button(ICON_MD_MORE_HORIZ "##popupbtn_misc_controls", TOOLBAR_BUTTON_SIZE);
+				ImGui::Button(ICON_MD_MORE_VERT "##popupbtn_misc_controls", TOOLBAR_BUTTON_SIZE);
 				POP_TRANSPARENT_BUTTON_COLORS;
 			};
 			auto MiscPopup = []() {
@@ -495,6 +509,7 @@ namespace cse
 				bool ShowSelectionMask = _RENDERWIN_XSTATE.ShowSelectionMask;
 				NiColor SelectionMaskColor = _RENDERWIN_XSTATE.SelectionMaskColor;
 
+				ImGui::PushStyleCompact();
 				PUSH_TRANSPARENT_BUTTON_COLORS;
 				ImGui::Button(ICON_MD_ACCESS_TIME " ");
 				ImGui::SameLine(0, 2);
@@ -511,10 +526,11 @@ namespace cse
 
 				ImGui::Dummy(ImVec2(0, 5));
 
-				if (ImGui::Checkbox("Show Selection Overlay##SelMask", &ShowSelectionMask))
+				if (ImGui::Checkbox("Show Selection Mask##SelMask", &ShowSelectionMask))
 					_RENDERWIN_XSTATE.ShowSelectionMask = ShowSelectionMask;
 				ImGui::SameLine(0, 6);
 				ImGui::ColorEdit3("##SelectionMaskColor", &SelectionMaskColor.r, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+				ImGui::PopStyleCompact();
 
 				if (TOD < 0 || TOD > 24)
 					TOD = 10;
@@ -537,7 +553,7 @@ namespace cse
 																		 MiscButton,
 																		 MiscPopup,
 																		 MouseOverPopupProvider::kPosition_Relative,
-																		 ImVec2(-35, -20));
+																		 ImVec2(0, -25));
 
 			FilterRefs.reserve(100);
 			CurrentFilterRefIndex = -1;
