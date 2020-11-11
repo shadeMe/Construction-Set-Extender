@@ -8,6 +8,7 @@ namespace ImGui
 	void	PopStyleCompact();
 	void	ShowHelpPopup(const char* fmt, ...);
 	bool	CheckBoxTristate(const char* label, int* v_tristate);
+	void	MoveNextWindowToSafeZone(const ImVec2& WindowPos, const ImVec2& WindowSize);
 }
 
 // ugly macros to add tooltips to widgets

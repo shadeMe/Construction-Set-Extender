@@ -137,10 +137,11 @@ namespace cse
 		interface class IIntelliSenseInterfaceModel
 		{
 		public:
-			property List<IntelliSenseItem^>^		DataStore;
+			property List<IntelliSenseItem^>^	DataStore;
 
-			void									Bind(IIntelliSenseInterfaceView^ To);
-			void									Unbind();
+			void	Bind(IIntelliSenseInterfaceView^ To);
+			void	Unbind();
+			bool	IsLocalVariable(String^ Identifier);
 		};
 
 		ref struct IntelliSenseShowInsightToolTipArgs

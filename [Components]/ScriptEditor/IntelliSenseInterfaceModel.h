@@ -210,8 +210,9 @@ namespace cse
 				virtual void set(List<IntelliSenseItem^>^) {}
 			}
 
-			virtual void				Bind(IIntelliSenseInterfaceView^ To);
-			virtual void				Unbind();
+			virtual void	Bind(IIntelliSenseInterfaceView^ To);
+			virtual void	Unbind();
+			virtual bool	IsLocalVariable(String^ Identifier);
 #pragma endregion
 		};
 	}

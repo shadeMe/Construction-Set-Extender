@@ -21,6 +21,7 @@ CSE		---->
 		> Enable double-buffering on all listviews
 			> ListView_SetExtendedListViewStyleEx(hWnd, LVS_EX_DOUBLEBUFFER, LVS_EX_DOUBLEBUFFER);
 		> OSD enhancements
+			> Expose color theme
 			> Add hotkey toggles (or other OSD layers too)
 			> Render window gizmos
 				> Imguizmo has issues with the CS' renderer (view matrix related) (ask Nukem)

@@ -1367,7 +1367,7 @@ namespace cse
 					if (HasExtraDataSoul(Ref))
 					{
 						auto& Value = SelectionValues.at(ExtraDataType::Soul);
-						auto SoulLevel = Ref->GetSoulLevel();	// soul gems will always fallback to the soul level of the base form
+						auto SoulLevel = Ref->GetSoulLevel();	// soul gems will always fall back to the soul level of the base form
 						if (Value.Type == SelectionValueType::Single)
 						{
 							if (SoulLevel != Value.Soul)
@@ -1464,6 +1464,8 @@ namespace cse
 			}
 		}
 
+#undef STRINGIZE2
+#undef STRINGIZE
 #undef INITIALIZE_EXTRADATA_VALUES
 #undef DRAW_EXTRADATA_EDIT_CONTROLS
 
@@ -1695,8 +1697,8 @@ namespace cse
 			if (NothingToSee)
 				return;
 
-			ImGui::SetNextWindowPosCenter(ImGuiCond_FirstUseEver);
 			ImGui::SetNextWindowSizeConstraints(ImVec2(300, 300), ImVec2(1280, 720));
+			ImGui::MoveNextWindowToSafeZone(LastWindowPos, LastWindowSize);
 			if (!ImGui::Begin("Reference Editor", nullptr, ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoScrollbar))
 			{
 				ImGui::End();
@@ -1704,7 +1706,6 @@ namespace cse
 			}
 
 			WindowState.Update(GUI);
-
 			UpdateCurrentSelection();
 
 			if (ImGui::BeginTable("##main_content_table", HideRefList ? 1 : 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInner | ImGuiTableFlags_SizingPolicyStretchX ))
@@ -1769,6 +1770,8 @@ namespace cse
 				ImGui::EndTable();
 			}
 
+			LastWindowPos = ImGui::GetWindowPos();
+			LastWindowSize = ImGui::GetWindowSize();
 			ImGui::End();
 		}
 
@@ -1776,7 +1779,5 @@ namespace cse
 		{
 			return false;
 		}
-
-
 	}
 }

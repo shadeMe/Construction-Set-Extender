@@ -178,6 +178,8 @@ namespace cse
 			bool					RefListOnlyShowSelection;
 			TESObjectREFR*			RefListContextMenuSelection;
 			bool					HideRefList;
+			ImVec2					LastWindowPos;
+			ImVec2					LastWindowSize;
 
 			void UpdateCurrentSelection();
 			void BuildReferenceListChildWindow(RefSelectionArrayT& References);

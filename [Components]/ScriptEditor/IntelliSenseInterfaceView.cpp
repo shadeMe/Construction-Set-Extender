@@ -180,6 +180,20 @@ namespace cse
 			if (E->Model == nullptr)
 				return;
 
+			auto Item = safe_cast<IntelliSenseItem^>(E->Model);
+			switch (Item->GetItemType())
+			{
+			case IntelliSenseItem::ItemType::ScriptVariable:
+				if (BoundModel->IsLocalVariable(Item->GetIdentifier()))
+				{
+					E->Item->ForeColor = preferences::SettingsHolder::Get()->Appearance->ForeColorLocalVariables;
+					break;
+				}
+			default:
+				E->Item->ForeColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
+			}
+			E->Item->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
+
 			if (E->Model == E->ListView->SelectedObject)
 			{
 				auto Temp = E->Item->ForeColor;
@@ -188,8 +202,6 @@ namespace cse
 
 				E->Item->SelectedForeColor = E->Item->ForeColor;
 				E->Item->SelectedBackColor = E->Item->BackColor;
-
-				//E->Item->Font = gcnew Font(E->Item->Font->FontFamily, E->Item->Font->Size, E->Item->Font->Style | FontStyle::Bold);
 			}
 		}
 

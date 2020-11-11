@@ -11,7 +11,8 @@ namespace ImGui
 
 	void SetNextWindowPosCenter(ImGuiCond cond /*= 0*/)
 	{
-		SetNextWindowPos(ImVec2(GetIO().DisplaySize.x * 0.5f, GetIO().DisplaySize.y * 0.5f), cond, ImVec2(0.5f, 0.5f));
+		const auto& DisplaySize(GetIO().DisplaySize);
+		SetNextWindowPos(ImVec2(DisplaySize.x * 0.5f, DisplaySize.y * 0.5f), cond, ImVec2(0.5f, 0.5f));
 	}
 
 	void PushStyleCompact()
@@ -66,6 +67,15 @@ namespace ImGui
 				*v_tristate = (int)b;
 		}
 		return ret;
+	}
+
+	void MoveNextWindowToSafeZone(const ImVec2& WindowPos, const ImVec2& WindowSize)
+	{
+		const ImVec2 SafeZoneMargin(30, 30);
+		if (WindowPos.x + WindowSize.x <= 0 || WindowPos.x >= *TESRenderWindow::ScreenWidth - SafeZoneMargin.x)
+			SetNextWindowPosCenter();
+		else if (WindowPos.y + WindowSize.y <= 0 || WindowPos.y >= *TESRenderWindow::ScreenHeight - SafeZoneMargin.y)
+			SetNextWindowPosCenter();
 	}
 
 }

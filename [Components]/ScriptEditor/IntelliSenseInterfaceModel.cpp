@@ -789,6 +789,9 @@ namespace cse
 			}
 		}
 
-
+		bool IntelliSenseInterfaceModel::IsLocalVariable(String^ Identifier)
+		{
+			return LookupLocalVariable(Identifier) != nullptr;
+		}
 	}
 }
