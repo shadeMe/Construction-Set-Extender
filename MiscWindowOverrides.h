@@ -70,6 +70,54 @@ namespace cse
 		LRESULT CALLBACK LeveledItemFormDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
 		LRESULT CALLBACK TESObjectCELLDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
 
+		class DialogExtraFittingsData : public bgsee::WindowExtraData
+		{
+		public:
+			POINT		LastCursorPos;
+			HWND		LastCursorPosWindow;
+			bool		QuickViewTriggered;
+
+			HWND		AssetControlToolTip;
+			TOOLINFO	AssetControlToolData;
+			HWND		LastTrackedTool;
+			bool		TrackingToolTip;
+
+			DialogExtraFittingsData();
+			virtual ~DialogExtraFittingsData();
+
+			enum { kTypeID = 'XDEF' };
+		};
+
+		class TESFormEditData : public bgsee::WindowExtraData
+		{
+		public:
+			TESForm*						Buffer;		// stores a temp copy of the form being edited
+
+			TESFormEditData();
+			virtual ~TESFormEditData();
+
+			enum { kTypeID = 'XFED' };
+
+			void							FillBuffer(TESForm* Parent);
+			bool							HasChanges(TESForm* Parent);
+		};
+
+		class TESFormIDListViewData : public bgsee::WindowExtraData
+		{
+		public:
+			bool				DisableDragHandling;
+
+			TESFormIDListViewData();
+			virtual ~TESFormIDListViewData();
+
+			enum { kTypeID = 'XFLV' };
+		};
+
+		LRESULT CALLBACK CommonDialogExtraFittingsSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
+		LRESULT CALLBACK TESFormIDListViewDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
+		LRESULT CALLBACK TESFormEditDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
+		LRESULT CALLBACK WindowPosDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
+
 		void InitializeMiscWindowOverrides();
 	}
 }

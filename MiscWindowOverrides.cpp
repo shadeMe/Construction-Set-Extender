@@ -1,11 +1,17 @@
 #include "MiscWindowOverrides.h"
 #include "Construction Set Extender_Resource.h"
+#include "Main.h"
 #include "UIManager.h"
-#include "[Common]\CLIWrapper.h"
 #include "Achievements.h"
 #include "OldCSInteropManager.h"
 #include "CustomDialogProcs.h"
 #include "Render Window\RenderWindowManager.h"
+#include "Construction Set Extender_Resource.h"
+#include "DialogImposterManager.h"
+#include "Achievements.h"
+#include "HallOfFame.h"
+#include "FormUndoStack.h"
+#include "[Common]\CLIWrapper.h"
 
 namespace cse
 {
@@ -1757,8 +1763,1267 @@ namespace cse
 		}
 
 
+		DialogExtraFittingsData::DialogExtraFittingsData() :
+			bgsee::WindowExtraData(kTypeID)
+		{
+			LastCursorPos.x = LastCursorPos.y = 0;
+			LastCursorPosWindow = nullptr;
+			QuickViewTriggered = false;
+
+			AssetControlToolTip = CreateWindowEx(NULL, TOOLTIPS_CLASS, nullptr,
+												TTS_ALWAYSTIP|TTS_NOPREFIX,
+												CW_USEDEFAULT, CW_USEDEFAULT,
+												CW_USEDEFAULT, CW_USEDEFAULT,
+												nullptr, nullptr, nullptr, nullptr);
+			ZeroMemory(&AssetControlToolData, sizeof(AssetControlToolData));
+			AssetControlToolData.cbSize = sizeof(AssetControlToolData);
+			LastTrackedTool = nullptr;
+			TrackingToolTip = false;
+		}
+
+		DialogExtraFittingsData::~DialogExtraFittingsData()
+		{
+			if (AssetControlToolTip)
+				DestroyWindow(AssetControlToolTip);
+		}
+
+		TESFormEditData::TESFormEditData() :
+			bgsee::WindowExtraData(kTypeID)
+		{
+			Buffer = nullptr;
+		}
+
+		TESFormEditData::~TESFormEditData()
+		{
+			if (Buffer)
+				Buffer->DeleteInstance();
+		}
+
+		void TESFormEditData::FillBuffer( TESForm* Parent )
+		{
+			SME_ASSERT(Buffer == nullptr);
+
+			Buffer = TESForm::CreateTemporaryCopy(Parent);
+		}
+
+		bool TESFormEditData::HasChanges( TESForm* Parent )
+		{
+			SME_ASSERT(Buffer && Buffer->formType == Parent->formType);
+
+			return Buffer->CompareTo(Parent);
+		}
+
+
+		TESFormIDListViewData::TESFormIDListViewData() :
+			bgsee::WindowExtraData(kTypeID)
+		{
+			DisableDragHandling = false;
+		}
+
+		TESFormIDListViewData::~TESFormIDListViewData()
+		{
+			;//
+		}
+
+
+#define ID_COMMONDLGEXTRAFITTINGS_QUICKVIEWTIMERID						0x108
+#define ID_COMMONDLGEXTRAFITTINGS_ASSETTOOLTIPTIMERID					0x109
+
+		BOOL CALLBACK DoubleBufferListViewControls(HWND hwnd, LPARAM lParam)
+		{
+			char Buffer[100];
+			GetClassName(hwnd, Buffer, sizeof(Buffer));
+
+			if (!strcmp("SysListView32", Buffer))
+				ListView_SetExtendedListViewStyleEx(hwnd, LVS_EX_DOUBLEBUFFER, LVS_EX_DOUBLEBUFFER);
+
+			return TRUE;
+		}
+
+
+		LRESULT CALLBACK CommonDialogExtraFittingsSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+															bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser )
+		{
+			LRESULT DlgProcResult = FALSE;
+			Return = false;
+			DialogExtraFittingsData* xData = BGSEE_GETWINDOWXDATA(DialogExtraFittingsData, ExtraData);
+
+			switch (uMsg)
+			{
+			case WM_INITDIALOG:
+			case WM_OBJECTWINDOWIMPOSTER_INITIALIZEXTRA:
+				{
+					xData = BGSEE_GETWINDOWXDATA(DialogExtraFittingsData, ExtraData);
+					if (xData == nullptr)
+					{
+						xData = new DialogExtraFittingsData();
+						ExtraData->Add(xData);
+					}
+
+					SetTimer(hWnd, ID_COMMONDLGEXTRAFITTINGS_QUICKVIEWTIMERID, 100, nullptr);
+					SetTimer(hWnd, ID_COMMONDLGEXTRAFITTINGS_ASSETTOOLTIPTIMERID, 650, nullptr);
+
+
+					EnumChildWindows(hWnd, DoubleBufferListViewControls, NULL);
+				}
+
+				break;
+			case WM_DESTROY:
+				{
+					xData = BGSEE_GETWINDOWXDATA(DialogExtraFittingsData, ExtraData);
+					if (xData)
+					{
+						ExtraData->Remove(DialogExtraFittingsData::kTypeID);
+						delete xData;
+
+						xData = nullptr;
+					}
+
+					KillTimer(hWnd, ID_COMMONDLGEXTRAFITTINGS_QUICKVIEWTIMERID);
+					KillTimer(hWnd, ID_COMMONDLGEXTRAFITTINGS_ASSETTOOLTIPTIMERID);
+				}
+
+				break;
+			case WM_TIMER:
+				switch (wParam)
+				{
+				case ID_COMMONDLGEXTRAFITTINGS_ASSETTOOLTIPTIMERID:
+					{
+						if (xData && xData->LastCursorPosWindow && xData->TrackingToolTip == false)
+						{
+							HWND WindowAtPoint = xData->LastCursorPosWindow;
+							bool Viewable = false;
+							char Buffer[0x200] = {0}, ControlText[0x200] = {0};
+
+							if (IsWindowEnabled(WindowAtPoint))
+							{
+								int CtrlID = GetDlgCtrlID(WindowAtPoint);
+								LONG_PTR WindowStyle = GetWindowLongPtr(WindowAtPoint, GWL_STYLE);
+
+								GetClassName(WindowAtPoint, Buffer, sizeof(Buffer));
+								GetWindowText(WindowAtPoint, (LPSTR)ControlText, sizeof(ControlText));
+
+								if ((!_stricmp("Button", Buffer) &&
+									CtrlID != kFaceGenControl_PreviewCtrl &&
+									(WindowStyle & BS_AUTOCHECKBOX) == false &&
+									CtrlID > 5 && strlen(ControlText) > 3) ||
+									!_stricmp("ComboBox", Buffer))
+								{
+									Viewable = true;
+								}
+							}
+
+							if (Viewable)
+							{
+								// valid control, show tooltip
+								if (strlen(ControlText))
+								{
+									ZeroMemory(&xData->AssetControlToolData, sizeof(TOOLINFO));
+									xData->AssetControlToolData.cbSize = sizeof(TOOLINFO);
+									xData->AssetControlToolData.uFlags = TTF_TRACK;
+									xData->AssetControlToolData.lpszText = ControlText;
+
+									SendMessage(xData->AssetControlToolTip, TTM_ADDTOOL, NULL, (LPARAM)&xData->AssetControlToolData);
+									SendMessage(xData->AssetControlToolTip,
+												TTM_TRACKPOSITION,
+												NULL,
+												(LPARAM)MAKELONG(xData->LastCursorPos.x + 18, xData->LastCursorPos.y));
+									SendMessage(xData->AssetControlToolTip, TTM_SETMAXTIPWIDTH, NULL, (LPARAM)355);
+									SendMessage(xData->AssetControlToolTip, TTM_SETWINDOWTHEME, NULL, (LPARAM)L"Explorer");
+									SendMessage(xData->AssetControlToolTip, TTM_TRACKACTIVATE, (WPARAM)TRUE, (LPARAM)&xData->AssetControlToolData);
+
+									xData->TrackingToolTip = true;
+									xData->LastTrackedTool = WindowAtPoint;
+								}
+							}
+						}
+
+						else if (xData && xData->TrackingToolTip && xData->LastCursorPosWindow != xData->LastTrackedTool)
+						{
+							SendMessage(xData->AssetControlToolTip, TTM_TRACKACTIVATE, (WPARAM)FALSE, (LPARAM)&xData->AssetControlToolData);
+							SendMessage(xData->AssetControlToolTip, TTM_DELTOOL, NULL, (LPARAM)&xData->AssetControlToolData);
+
+							xData->TrackingToolTip = false;
+						}
+					}
+
+					break;
+				case ID_COMMONDLGEXTRAFITTINGS_QUICKVIEWTIMERID:
+					{
+						// we need to defer the looked-up window's creation a bit to keep the source window from hogging focus
+						if (xData && xData->LastCursorPosWindow && xData->QuickViewTriggered)
+						{
+							xData->QuickViewTriggered = false;
+
+							HWND WindowAtPoint = xData->LastCursorPosWindow;
+							TESForm* Form = nullptr;
+
+							char Buffer[0x200] = {0};
+							GetClassName(WindowAtPoint, Buffer, sizeof(Buffer));
+
+							if (!_stricmp("SysListView32", Buffer))
+							{
+								POINT Coords = {0};
+								Coords.x = xData->LastCursorPos.x;
+								Coords.y = xData->LastCursorPos.y;
+
+								ScreenToClient(WindowAtPoint, &Coords);
+
+								LVHITTESTINFO HitTestData = {0};
+								HitTestData.pt.x = Coords.x;
+								HitTestData.pt.y = Coords.y;
+								HitTestData.flags = LVHT_ONITEM;
+
+								if (ListView_SubItemHitTest(WindowAtPoint, &HitTestData) != -1)
+								{
+									int Item = HitTestData.iItem;
+									int SubItem = HitTestData.iSubItem;
+
+									ZeroMemory(Buffer, sizeof(Buffer));
+									ListView_GetItemText(WindowAtPoint, Item, SubItem, Buffer, sizeof(Buffer));
+								}
+							}
+							else
+								GetWindowText(WindowAtPoint, Buffer, sizeof(Buffer));
+
+							if (strlen(Buffer) < 2)
+								break;
+
+							std::string PotentialEditorID(Buffer);
+							int StatusIndicatorOffset = -1;
+
+							if ((StatusIndicatorOffset = PotentialEditorID.find(" *")) != std::string::npos)
+								PotentialEditorID.erase(StatusIndicatorOffset, 2);
+							if ((StatusIndicatorOffset = PotentialEditorID.find(" D")) != std::string::npos)
+								PotentialEditorID.erase(StatusIndicatorOffset, 2);
+
+							Form = TESForm::LookupByEditorID(PotentialEditorID.c_str());
+							xData->LastCursorPosWindow = nullptr;
+
+							if (Form)
+							{
+								achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_QuickLookup);
+								switch (Form->formType)
+								{
+								case TESForm::kFormType_Script:
+									TESDialog::ShowScriptEditorDialog(Form);
+									break;
+								case TESForm::kFormType_REFR:
+									_TES->LoadCellIntoViewPort((CS_CAST(Form, TESForm, TESObjectREFR))->GetPosition(), CS_CAST(Form, TESForm, TESObjectREFR));
+									break;
+								default:
+									TESDialog::ShowFormEditDialog(Form);
+									break;
+								}
+
+								DlgProcResult = TRUE;
+								Return = true;
+							}
+						}
+					}
+
+					break;
+				}
+
+				break;
+			case WM_NOTIFY:
+				{
+					NMHDR* NotificationData = (NMHDR*)lParam;
+					switch (NotificationData->code)
+					{
+					case NM_CUSTOMDRAW:
+												// valid listviews
+						if (wParam == kFormList_ObjectWindowObjects ||
+							wParam == kFormList_TESPackage ||
+							wParam == kFormList_CellViewCells ||
+							wParam == kFormList_CellViewRefs ||
+							wParam == kFormList_TESFormIDListView ||
+							wParam == kFormList_DialogEditorTopics ||
+							wParam == kFormList_DialogEditorTopicInfos ||
+							wParam == kFormList_DialogEditorAddedTopics ||
+							wParam == kFormList_DialogEditorLinkedToTopics ||
+							wParam == kFormList_DialogEditorLinkedFromTopics ||
+							wParam == kFormList_Generic ||
+							wParam == kFormList_TESContainer ||
+							wParam == kFormList_TESSpellList ||
+							wParam == kFormList_ActorFactions ||
+							wParam == kFormList_TESLeveledList ||
+							wParam == kFormList_WeatherSounds ||
+							wParam == kFormList_ClimateWeatherRaceHairFindTextTopics ||
+							wParam == kFormList_RaceEyes ||
+							wParam == kFormList_TESReactionForm ||
+							wParam == kFormList_FindTextTopicInfos ||
+							wParam == kFormList_LandTextures ||
+							wParam == kFormList_CrossReferences ||
+							wParam == kFormList_CellUseList)
+						{
+							NMLVCUSTOMDRAW* DrawData = (NMLVCUSTOMDRAW*)lParam;
+
+							switch (DrawData->nmcd.dwDrawStage)
+							{
+							case CDDS_PREPAINT:
+								{
+									SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NOTIFYITEMDRAW);
+									DlgProcResult = CDRF_NOTIFYITEMDRAW;
+									Return = true;
+								}
+
+								break;
+							case CDDS_ITEMPREPAINT:
+								{
+									TESForm* Form = nullptr;
+
+									switch (wParam)
+									{
+									case kFormList_ActorFactions:
+										{
+											TESActorBase::FactionInfo* Data = (TESActorBase::FactionInfo*)DrawData->nmcd.lItemlParam;
+											SME_ASSERT(Data);
+											Form = Data->faction;
+										}
+
+										break;
+									case kFormList_TESContainer:
+										{
+											TESContainer::ContentEntry* Entry = (TESContainer::ContentEntry*)DrawData->nmcd.lItemlParam;
+											SME_ASSERT(Entry);
+											Form = Entry->form;
+										}
+
+										break;
+									case kFormList_TESLeveledList:
+										{
+											TESLeveledList::ListEntry* Entry = (TESLeveledList::ListEntry*)DrawData->nmcd.lItemlParam;
+											SME_ASSERT(Entry);
+											Form = Entry->form;
+										}
+
+										break;
+									case kFormList_WeatherSounds:
+										{
+											UInt32* FormID = (UInt32*)DrawData->nmcd.lItemlParam;
+											SME_ASSERT(FormID);
+											Form = TESForm::LookupByFormID(*FormID);
+										}
+
+										break;
+									case kFormList_ClimateWeatherRaceHairFindTextTopics:
+										{
+											auto TemplateID = Subclasser->GetDialogTemplate(hWnd);
+
+											switch (TemplateID)
+											{
+											case TESDialog::kDialogTemplate_Climate:
+												{
+													TESClimate::WeatherEntry* Entry = (TESClimate::WeatherEntry*)DrawData->nmcd.lItemlParam;
+													SME_ASSERT(Entry);
+													Form = Entry->weather;
+												}
+
+												break;
+											case TESDialog::kDialogTemplate_Race:
+												{
+													Form = (TESForm*)DrawData->nmcd.lItemlParam;
+												}
+
+												break;
+											case TESDialog::kDialogTemplate_FindText:
+												{
+													FindTextWindowData::TopicSearchResult* Data = (FindTextWindowData::TopicSearchResult*)DrawData->nmcd.lItemlParam;
+													SME_ASSERT(Data);
+													Form = Data->topic;
+												}
+
+												break;
+											}
+										}
+
+										break;
+									case kFormList_TESReactionForm:
+										{
+											TESReactionForm::ReactionInfo* Info = (TESReactionForm::ReactionInfo*)DrawData->nmcd.lItemlParam;
+											SME_ASSERT(Info);
+											Form = Info->target;
+										}
+
+										break;
+									case kFormList_CellUseList:
+										{
+											TESCellUseList::CellUseInfo* Info = (TESCellUseList::CellUseInfo*)DrawData->nmcd.lItemlParam;
+											SME_ASSERT(Info);
+											Form = Info->cell;
+										}
+
+										break;
+									default:
+										Form = (TESForm*)DrawData->nmcd.lItemlParam;
+
+										break;
+									}
+
+									bool ColorizeActiveFormsEnabled = settings::dialogs::kColorizeActiveForms.GetData().i &&
+																	FormEnumerationManager::Instance.GetVisibleUnmodifiedForms();
+
+									bool ColorizeFormOverridesEnabled = settings::dialogs::kColorizeFormOverrides.GetData().i;
+
+									if (Form && (ColorizeActiveFormsEnabled || ColorizeFormOverridesEnabled))
+									{
+										COLORREF ForeColor, BackColor;
+										bool ColorOverridden = false;
+
+										if (ColorizeFormOverridesEnabled)
+										{
+											ColorOverridden = true;
+
+											switch (Form->fileList.Count())
+											{
+											case 0:
+												ForeColor = SME::StringHelpers::GetRGB(settings::dialogs::kFormOverrideLevel0ForeColor.GetData().s);
+												BackColor = SME::StringHelpers::GetRGB(settings::dialogs::kFormOverrideLevel0BackColor.GetData().s);
+
+												break;
+											case 1:
+												ForeColor = SME::StringHelpers::GetRGB(settings::dialogs::kFormOverrideLevel1ForeColor.GetData().s);
+												BackColor = SME::StringHelpers::GetRGB(settings::dialogs::kFormOverrideLevel1BackColor.GetData().s);
+
+												break;
+											case 2:
+												ForeColor = SME::StringHelpers::GetRGB(settings::dialogs::kFormOverrideLevel2ForeColor.GetData().s);
+												BackColor = SME::StringHelpers::GetRGB(settings::dialogs::kFormOverrideLevel2BackColor.GetData().s);
+
+												break;
+											default:
+												ForeColor = SME::StringHelpers::GetRGB(settings::dialogs::kFormOverrideLevel3ForeColor.GetData().s);
+												BackColor = SME::StringHelpers::GetRGB(settings::dialogs::kFormOverrideLevel3BackColor.GetData().s);
+
+												break;
+											}
+										}
+
+										if (Form->IsActive() && ColorizeActiveFormsEnabled)
+										{
+											ColorOverridden = true;
+
+											ForeColor = SME::StringHelpers::GetRGB(settings::dialogs::kActiveFormForeColor.GetData().s);
+											BackColor = SME::StringHelpers::GetRGB(settings::dialogs::kActiveFormBackColor.GetData().s);
+										}
+
+										TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
+
+										if (Reference &&
+											Reference->GetNiNode() &&
+											(Reference->GetNiNode()->m_flags & NiAVObject::kFlag_AppCulled))
+										{
+											ColorOverridden = true;
+
+											ForeColor = RGB(255, 0, 255);
+											BackColor = RGB(255, 255, 255);
+										}
+
+										if (ColorOverridden)
+										{
+											DrawData->clrText = ForeColor;
+											DrawData->clrTextBk = BackColor;
+
+											SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NEWFONT);
+											DlgProcResult = TRUE;
+											Return = true;
+										}
+									}
+								}
+
+								break;
+							}
+						}
+
+						break;
+					}
+				}
+
+				break;
+			case WM_MOUSEACTIVATE:
+			case WM_SETCURSOR:		// the mouse move message isn't dispatched if the pointer is over a dialog control, but this one is
+			case WM_MBUTTONUP:
+				{
+					if (uMsg == WM_MOUSEACTIVATE)
+					{
+						if (HIWORD(lParam) != WM_MBUTTONDOWN &&
+							HIWORD(lParam) != WM_MBUTTONUP)
+						{
+							break;
+						}
+					}
+					else if (uMsg == WM_SETCURSOR)
+					{
+						if (HIWORD(lParam) != WM_MOUSEMOVE)
+							break;
+					}
+
+					POINT Coords = {0};
+
+					if (uMsg == WM_MOUSEACTIVATE ||
+						uMsg == WM_SETCURSOR)
+					{
+						GetCursorPos(&Coords);
+					}
+					else
+					{
+						Coords.x = GET_X_LPARAM(lParam);
+						Coords.y = GET_Y_LPARAM(lParam);
+						ClientToScreen(hWnd, &Coords);
+					}
+
+					if (xData)
+					{
+						xData->LastCursorPos.x = Coords.x;
+						xData->LastCursorPos.y = Coords.y;
+						xData->LastCursorPosWindow = WindowFromPoint(Coords);
+
+						if (uMsg == WM_MBUTTONUP ||
+							uMsg == WM_MOUSEACTIVATE)
+						{
+							xData->QuickViewTriggered = true;
+						}
+					}
+				}
+
+				break;
+			}
+
+			return DlgProcResult;
+		}
+
+
+// returns TRUE if there are changes
+#define WM_TESFORMIDLISTVIEW_HASCHANGES							(WM_USER + 2006)
+// lParam = NMLISTVIEW*
+#define WM_TESFORMIDLISTVIEW_SAVECHANGES						(WM_USER + 2007)
+#define ID_TESFORMIDLISTVIEW_DRAGTIMER							(WM_USER + 2008)
+
+		LRESULT CALLBACK TESFormIDListViewDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+														bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser )
+		{
+			LRESULT DlgProcResult = FALSE;
+
+			HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
+
+			Return = false;
+
+			switch (uMsg)
+			{
+			case WM_TESFORMIDLISTVIEW_HASCHANGES:
+				{
+					// doesn't reliably work on TESGlobal forms
+					// given their bollocks'd-up way of copying data from the dialog
+					Return = true;
+
+					if (IsWindowEnabled(GetDlgItem(hWnd, TESDialog::kStandardButton_Ok)))
+					{
+						TESForm* LocalCopy = TESDialog::GetDialogExtraLocalCopy(hWnd);
+						TESForm* WorkingCopy = TESDialog::GetDialogExtraParam(hWnd);
+
+						if (WorkingCopy)
+						{
+							LocalCopy->GetDataFromDialog(hWnd);
+
+							if (WorkingCopy->CompareTo(LocalCopy))
+								DlgProcResult = TRUE;
+						}
+					}
+
+					SetWindowLongPtr(hWnd, DWL_MSGRESULT, DlgProcResult);
+				}
+
+				break;
+			case WM_TESFORMIDLISTVIEW_SAVECHANGES:
+				{
+					if (IsWindowEnabled(GetDlgItem(hWnd, TESDialog::kStandardButton_Ok)))
+					{
+						TESForm* LocalCopy = TESDialog::GetDialogExtraLocalCopy(hWnd);
+						TESForm* WorkingCopy = TESDialog::GetDialogExtraParam(hWnd);
+						NMLISTVIEW* ChangeData = (NMLISTVIEW*)lParam;
+
+						if (WorkingCopy)
+						{
+							LocalCopy->GetDataFromDialog(hWnd);
+
+							if (WorkingCopy->CompareTo(LocalCopy))
+							{
+								// fill in a new proxy from the working copy
+								BGSEEUNDOSTACK->Record(new formUndoStack::FormUndoProxy(WorkingCopy));
+
+								if (WorkingCopy->UpdateUsageInfo())
+								{
+									WorkingCopy->SetFromActiveFile(true);
+									WorkingCopy->CopyFrom(LocalCopy);
+
+									if (WorkingCopy->formType == TESForm::kFormType_EffectSetting)
+										BGSEEACHIEVEMENTS->Unlock(achievements::kMagister);
+
+									if (ChangeData)
+										SendMessage(ChangeData->hdr.hwndFrom, LVM_REDRAWITEMS, ChangeData->iItem, ChangeData->iItem);
+								}
+							}
+						}
+					}
+
+					Return = true;
+				}
+
+				break;
+			case WM_INITDIALOG:
+				{
+					if (Subclasser->GetDialogTemplate(hWnd) != TESDialog::kDialogTemplate_Quest)
+					{
+						SetWindowText(GetDlgItem(hWnd, TESDialog::kStandardButton_Ok), "Apply");
+						SetWindowText(GetDlgItem(hWnd, TESDialog::kStandardButton_Cancel), "Close");
+					}
+
+					// ideally, we'd be changing the form listview's style to allow multiple selections
+					// unfortunately, adding/removing the LVS_SINGLESEL style post-window creation has no effect
+					// so we tuck in our tail and create replacement templates for all TESFormIDListView forms
+					// PS: Dammit!
+
+					SME_ASSERT(FilterEditBox);
+					FilterableFormListManager::Instance.Register(FilterEditBox, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL),
+																	GetDlgItem(hWnd, kFormList_TESFormIDListView), hWnd);
+
+					TESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(TESFormIDListViewData, ExtraData);
+					if (xData == nullptr)
+					{
+						xData = new TESFormIDListViewData();
+						ExtraData->Add(xData);
+					}
+				}
+
+				break;
+			case WM_DESTROY:
+				{
+					FilterableFormListManager::Instance.Unregister(FilterEditBox);
+					TESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(TESFormIDListViewData, ExtraData);
+					if (xData)
+					{
+						ExtraData->Remove(TESFormIDListViewData::kTypeID);
+						delete xData;
+					}
+				}
+
+				break;
+			case WM_TIMER:
+				switch (wParam)
+				{
+				case ID_TESFORMIDLISTVIEW_DRAGTIMER:
+					{
+						// reenable dragging after a single tick
+						KillTimer(hWnd, ID_TESFORMIDLISTVIEW_DRAGTIMER);
+						TESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(TESFormIDListViewData, ExtraData);
+						SME_ASSERT(xData);
+						xData->DisableDragHandling = false;
+					}
+
+					break;
+				}
+
+				break;
+			case WM_COMMAND:
+				if (HIWORD(wParam))		// to keep EN_KILLFOCUS notifications from inadvertently calling the button handlers
+					break;				// ### could cause weird behaviour later on
+
+				if (Subclasser->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_Quest)
+					break;
+
+				switch (LOWORD(wParam))
+				{
+				case TESDialog::kStandardButton_Ok:			// OK/Apply button
+					{
+						Return = true;
+
+						SendMessage(hWnd, WM_TESFORMIDLISTVIEW_SAVECHANGES, NULL, NULL);
+					}
+
+					break;
+				case TESDialog::kStandardButton_Cancel:			// Cancel/Close button
+					{
+						Return = true;
+						bool Cancelled = false;
+
+						if (SendMessage(hWnd, WM_TESFORMIDLISTVIEW_HASCHANGES, NULL, NULL) == TRUE)
+						{
+							int MsgResult = BGSEEUI->MsgBoxW(hWnd, MB_YESNOCANCEL, "Save changes made to the active form before closing the dialog?");
+
+							switch (MsgResult)
+							{
+							case IDCANCEL:
+								Cancelled = true;
+
+								break;
+							case IDYES:
+								SendMessage(hWnd, WM_TESFORMIDLISTVIEW_SAVECHANGES, NULL, NULL);
+
+								break;
+							}
+
+							if (Cancelled)
+								break;
+						}
+
+						DestroyWindow(hWnd);
+					}
+
+					break;
+				}
+
+				break;
+			case WM_NOTIFY:
+				{
+					NMHDR* NotificationData = (NMHDR*)lParam;
+
+					if (NotificationData->idFrom != kFormList_TESFormIDListView)
+						break;		// only interested in the main listview control
+
+					if (Subclasser->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_Quest)
+						break;
+
+					switch (NotificationData->code)
+					{
+					case LVN_BEGINLABELEDIT:
+						{
+							// prevent the modification of GMST editorIDs, they aren't meant to be modified
+							DialogExtraParam* xParam = CS_CAST(TESDialog::GetDialogExtraByType(hWnd, BSExtraData::kDialogExtra_Param), BSExtraData, DialogExtraParam);
+							SME_ASSERT(xParam);
+
+							if (xParam->formType == TESForm::kFormType_GMST)
+							{
+								Return = true;
+
+								DlgProcResult = TRUE;
+								SetWindowLongPtr(hWnd, DWL_MSGRESULT, DlgProcResult);
+							}
+						}
+
+						break;
+					case LVN_BEGINDRAG:
+						{
+							TESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(TESFormIDListViewData, ExtraData);
+							SME_ASSERT(xData);
+							if (xData->DisableDragHandling == false)
+							{
+								// override the vanilla handler to allow multiple selections
+								NMLISTVIEW* Data = (NMLISTVIEW*)lParam;
+								std::list<TESForm*> Selection;
+
+								int Index = -1;
+								while ((Index = ListView_GetNextItem(Data->hdr.hwndFrom, Index, LVNI_SELECTED)) != -1)
+								{
+									TESForm* Form = (TESForm*)TESListView::GetItemData(Data->hdr.hwndFrom, Index);
+									SME_ASSERT(Form);
+
+									Selection.push_back(Form);
+								}
+
+								if (Selection.size())
+								{
+									*TESDialog::TESFormIDListViewDragDropInProgress = 1;
+
+									_RENDERSEL->ClearSelection(true);
+									TESObjectWindow::SetSplitterEnabled(*TESObjectWindow::SplitterHandle, false);
+
+									for (std::list<TESForm*>::iterator Itr = Selection.begin(); Itr != Selection.end(); ++Itr)
+										_RENDERSEL->AddToSelection(*Itr);
+
+									SetCursor(LoadCursor(*TESCSMain::Instance, (LPCSTR)0xB8));
+									SetCapture(hWnd);
+
+									Return = true;
+								}
+							}
+							else
+								Return = true;
+						}
+
+						break;
+					case LVN_ITEMCHANGED:
+						{
+							NMLISTVIEW* ChangeData = (NMLISTVIEW*)lParam;
+
+							if ((ChangeData->uChanged & LVIF_STATE) &&
+								(ChangeData->uOldState & LVIS_FOCUSED) &&
+								(ChangeData->uNewState & LVIS_FOCUSED) == false)
+							{
+								// before the new listview item is selected
+
+								if (SendMessage(hWnd, WM_TESFORMIDLISTVIEW_HASCHANGES, NULL, NULL) == TRUE)
+								{
+									int MsgResult = BGSEEUI->MsgBoxW(hWnd, MB_YESNO, "Save changes made to the active form?");
+
+									switch (MsgResult)
+									{
+									case IDYES:
+										SendMessage(hWnd, WM_TESFORMIDLISTVIEW_SAVECHANGES, NULL, lParam);
+
+										break;
+									}
+								}
+
+								// we need to disable the listview begin drag handler for a bit to prevent it from getting triggered after the selection
+								TESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(TESFormIDListViewData, ExtraData);
+								SME_ASSERT(xData);
+								xData->DisableDragHandling = true;
+								SetTimer(hWnd, ID_TESFORMIDLISTVIEW_DRAGTIMER, 1000, nullptr);
+
+								Return = true;
+								SetWindowLongPtr(hWnd, DWL_MSGRESULT, DlgProcResult);
+							}
+							else if ((ChangeData->uChanged & LVIF_STATE) &&
+									 (ChangeData->uOldState & LVIS_FOCUSED) == false &&
+									 (ChangeData->uNewState & LVIS_FOCUSED) == false)
+							{
+								// after the new listview item is selected
+
+								int NewIndex = ChangeData->iItem;
+								HWND ListView = ChangeData->hdr.hwndFrom;
+								DialogExtraParam* xParam = CS_CAST(TESDialog::GetDialogExtraByType(hWnd, BSExtraData::kDialogExtra_Param), BSExtraData, DialogExtraParam);
+								DialogExtraLocalCopy* xLocalCopy = CS_CAST(TESDialog::GetDialogExtraByType(hWnd, BSExtraData::kDialogExtra_Param), BSExtraData, DialogExtraLocalCopy);
+								TESForm* NewSelection = nullptr;
+
+								if (xParam && xLocalCopy && NewIndex != -1 && (NewSelection = (TESForm*)TESListView::GetItemData(ListView, NewIndex)))
+								{
+									xParam->form = NewSelection;
+									xLocalCopy->localCopy->CopyFrom(NewSelection);
+									xLocalCopy->localCopy->SetFromActiveFile(true);
+									xLocalCopy->localCopy->SetDataInDialog(hWnd);
+
+									char WindowTitle[0x100] = {0};
+									if (NewSelection->editorID.Size())
+										FORMAT_STR(WindowTitle, "%s : %s", NewSelection->GetTypeIDString(), NewSelection->GetEditorID());
+									else
+										FORMAT_STR(WindowTitle, "%s : EMPTY", NewSelection->GetTypeIDString());
+
+									SetWindowText(hWnd, WindowTitle);
+									if (IsWindowEnabled(GetDlgItem(hWnd, TESDialog::kStandardButton_Ok)) == FALSE)
+									{
+										EnableWindow(GetDlgItem(hWnd, TESDialog::kStandardButton_Ok), TRUE);
+										InvalidateRect(hWnd, nullptr, TRUE);
+									}
+
+									SetFocus(ListView);
+
+									Return = true;
+									SetWindowLongPtr(hWnd, DWL_MSGRESULT, DlgProcResult);
+								}
+							}
+						}
+
+						break;
+					}
+				}
+
+				break;
+			}
+
+			if (Return == false && FilterableFormListManager::Instance.HandleMessages(FilterEditBox, uMsg, wParam, lParam))
+			{
+				TESForm* LocalCopy = TESDialog::GetDialogExtraLocalCopy(hWnd);
+				if (LocalCopy)
+				{
+					TESFormIDListView* Item = CS_CAST(LocalCopy, TESForm, TESFormIDListView);
+					Item->RefreshFormList(GetDlgItem(hWnd, kFormList_TESFormIDListView));
+				}
+			}
+
+			return DlgProcResult;
+		}
+
+
+		LRESULT CALLBACK TESFormEditDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+												bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser )
+		{
+			LRESULT DlgProcResult = FALSE;
+			Return = false;
+
+			switch (uMsg)
+			{
+			case WM_INITDIALOG:
+				{
+					TESFormEditData* xData = BGSEE_GETWINDOWXDATA(TESFormEditData, ExtraData);
+					TESForm* WorkingCopy = TESDialog::GetDialogExtraParam(hWnd);
+
+					if (xData == nullptr)
+					{
+						xData = new TESFormEditData();
+						ExtraData->Add(xData);
+
+						if (WorkingCopy)		// can be NULL when creating new forms
+							xData->FillBuffer(WorkingCopy);
+					}
+
+					if (WorkingCopy)
+					{
+						std::string Desc(WorkingCopy->GetTypeIDString());
+						if (WorkingCopy->GetEditorID())
+							Desc += " [" + std::string(WorkingCopy->GetEditorID()) + "]";
+
+						std::string WndTitle = Desc;
+
+						if (settings::general::kShowHallOfFameMembersInTitleBar().i == hallOfFame::kDisplayESMember_ObjectPreviewEdit)
+						{
+							hallOfFame::GetRandomESMember(WndTitle);
+							WndTitle += " " + Desc;
+						}
+						SetWindowText(hWnd, WndTitle.c_str());
+					}
+				}
+
+				break;
+			case WM_DESTROY:
+				{
+					TESFormEditData* xData = BGSEE_GETWINDOWXDATA(TESFormEditData, ExtraData);
+					if (xData)
+					{
+						// at this point, the working copy is already modified (if there were changes and the user confirmed them)
+						TESForm* WorkingCopy = TESDialog::GetDialogExtraParam(hWnd);
+
+						if (WorkingCopy && xData->HasChanges(WorkingCopy))
+						{
+							// create a proxy from the pre-filled buffer
+							BGSEEUNDOSTACK->Record(new formUndoStack::FormUndoProxy(WorkingCopy, xData->Buffer));
+						}
+
+						ExtraData->Remove(TESFormEditData::kTypeID);
+						delete xData;
+					}
+
+					ObjectWindowImposterManager::Instance.RefreshImposters();
+				}
+
+				break;
+			}
+
+			return DlgProcResult;
+		}
+
+
+		std::string GetWindowClassNameForWindowPosition(HWND hWnd, bgsee::WindowSubclasser* Subclasser)
+		{
+			auto Template = Subclasser->GetDialogTemplate(hWnd);
+
+			switch (Template)
+			{
+				// TESBoundObject/FormEdit Dialogs
+			case TESDialog::kDialogTemplate_Weapon:
+			case TESDialog::kDialogTemplate_Armor:
+			case TESDialog::kDialogTemplate_Clothing:
+			case TESDialog::kDialogTemplate_MiscItem:
+			case TESDialog::kDialogTemplate_Static:
+			case TESDialog::kDialogTemplate_Reference:
+			case TESDialog::kDialogTemplate_Apparatus:
+			case TESDialog::kDialogTemplate_Book:
+			case TESDialog::kDialogTemplate_Container:
+			case TESDialog::kDialogTemplate_Activator:
+			case TESDialog::kDialogTemplate_AIForm:
+			case TESDialog::kDialogTemplate_Light:
+			case TESDialog::kDialogTemplate_Potion:
+			case TESDialog::kDialogTemplate_Enchantment:
+			case TESDialog::kDialogTemplate_LeveledCreature:
+			case TESDialog::kDialogTemplate_Sound:
+			case TESDialog::kDialogTemplate_Door:
+			case TESDialog::kDialogTemplate_LeveledItem:
+			case TESDialog::kDialogTemplate_LandTexture:
+			case TESDialog::kDialogTemplate_SoulGem:
+			case TESDialog::kDialogTemplate_Ammo:
+			case TESDialog::kDialogTemplate_Spell:
+			case TESDialog::kDialogTemplate_Flora:
+			case TESDialog::kDialogTemplate_Tree:
+			case TESDialog::kDialogTemplate_CombatStyle:
+			case TESDialog::kDialogTemplate_Water:
+			case TESDialog::kDialogTemplate_NPC:
+			case TESDialog::kDialogTemplate_Creature:
+			case TESDialog::kDialogTemplate_Grass:
+			case TESDialog::kDialogTemplate_Furniture:
+			case TESDialog::kDialogTemplate_LoadingScreen:
+			case TESDialog::kDialogTemplate_Ingredient:
+			case TESDialog::kDialogTemplate_LeveledSpell:
+			case TESDialog::kDialogTemplate_AnimObject:
+			case TESDialog::kDialogTemplate_Subspace:
+			case TESDialog::kDialogTemplate_EffectShader:
+			case TESDialog::kDialogTemplate_SigilStone:
+				// TESFormIDListView Dialogs
+			case TESDialog::kDialogTemplate_Faction:
+			case TESDialog::kDialogTemplate_Race:
+			case TESDialog::kDialogTemplate_Class:
+			case TESDialog::kDialogTemplate_Skill:
+			case TESDialog::kDialogTemplate_EffectSetting:
+			case TESDialog::kDialogTemplate_GameSetting:
+			case TESDialog::kDialogTemplate_Globals:
+			case TESDialog::kDialogTemplate_Birthsign:
+			case TESDialog::kDialogTemplate_Climate:
+			case TESDialog::kDialogTemplate_Worldspace:
+			case TESDialog::kDialogTemplate_Hair:
+			case TESDialog::kDialogTemplate_Eyes:
+			case TESDialog::kDialogTemplate_Weather:
+			{
+				DialogExtraParam* xParam = CS_CAST(TESDialog::GetDialogExtraByType(hWnd, BSExtraData::kDialogExtra_Param),
+					BSExtraData, DialogExtraParam);
+				if (xParam)
+					return TESForm::GetFormTypeIDLongName(xParam->formType);
+			}
+			break;
+			// Misc Dialogs
+			case TESDialog::kDialogTemplate_CellEdit:
+				return "Cell Edit";
+			case TESDialog::kDialogTemplate_SearchReplace:
+				return "Search Replace";
+			case TESDialog::kDialogTemplate_LandscapeEdit:
+				return "Landscape Edit";
+			case TESDialog::kDialogTemplate_FindText:
+				return "Find Text";
+			case TESDialog::kDialogTemplate_RegionEditor:
+				return "Region Editor";
+			case TESDialog::kDialogTemplate_HeightMapEditor:
+				return "Height Map Editor";
+			case TESDialog::kDialogTemplate_IdleAnimations:
+				return "Idle Anims";
+			case TESDialog::kDialogTemplate_AIPackages:
+				return "AI Packages";
+			case TESDialog::kDialogTemplate_TextureUse:
+				return "Texture Use";
+			case TESDialog::kDialogTemplate_Package:
+				return "Package";
+			case TESDialog::kDialogTemplate_ChooseReference:
+				return "Choose Ref";
+			}
+
+			return "";
+		}
+
+		LRESULT CALLBACK WindowPosDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+												  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+		{
+			LRESULT DlgProcResult = FALSE;
+			Return = false;
+
+			switch (uMsg)
+			{
+			case WM_INITDIALOG:
+				if (settings::dialogs::kPreserveEditorDialogLocations().i)
+				{
+					std::string ClassName(GetWindowClassNameForWindowPosition(hWnd, Subclasser));
+					if (!ClassName.empty())
+					{
+						RECT Bounds = { 0 };
+						if (TESDialog::ReadBoundsFromINI(ClassName.c_str(), &Bounds))
+							SetWindowPos(hWnd, HWND_TOP, Bounds.left, Bounds.top, 0, 0, SWP_NOSIZE);
+					}
+				}
+
+				break;
+			case WM_DESTROY:
+				if (settings::dialogs::kPreserveEditorDialogLocations().i)
+				{
+					std::string ClassName(GetWindowClassNameForWindowPosition(hWnd, Subclasser));
+					if (!ClassName.empty())
+						TESDialog::WriteBoundsToINI(hWnd, ClassName.c_str());
+				}
+
+				break;
+			}
+
+			return DlgProcResult;
+		}
+
+
 		void InitializeMiscWindowOverrides()
 		{
+			// FormEdit subclasses
+			{
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_LandTexture, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Enchantment, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Spell, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Sound, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Activator, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Apparatus, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Armor, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Book, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Clothing, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Container, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Door, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Ingredient, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Light, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_MiscItem, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Static, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Grass, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Tree, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Flora, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Furniture, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Weapon, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Ammo, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_NPC, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Creature, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_LeveledCreature, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_SoulGem, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Potion, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Subspace, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_SigilStone, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_LeveledItem, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Package, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_CombatStyle, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_LoadingScreen, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_LeveledSpell, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_AnimObject, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Water, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_EffectShader, TESFormEditDlgSubClassProc);
+			}
+
+			// FormIDListView subclasses
+			{
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Faction, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Race, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Class, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Skill, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_EffectSetting, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_GameSetting, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Globals, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Birthsign, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Climate, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Worldspace, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Hair, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Eyes, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Weather, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Quest, TESFormIDListViewDlgSubClassProc);
+			}
+
+			// Generic extra fittings subclasses
+			{
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_CellEdit, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Data, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_SearchReplace, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_LandscapeEdit, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_FindText, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_IdleAnimations, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_AIPackages, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_FilteredDialog, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Weapon, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Armor, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Clothing, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_MiscItem, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Static, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Reference, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Apparatus, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Book, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Container, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Activator, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_AIForm, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Light, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Potion, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Enchantment, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_LeveledCreature, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Sound, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Door, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_LeveledItem, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_LandTexture, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_SoulGem, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Ammo, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Spell, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Flora, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Tree, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_CombatStyle, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Water, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_NPC, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Creature, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Grass, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Furniture, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_LoadingScreen, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Ingredient, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_LeveledSpell, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_AnimObject, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Subspace, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_EffectShader, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_SigilStone, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Faction, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Race, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Class, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Skill, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_EffectSetting, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_GameSetting, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Globals, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Birthsign, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Climate, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Worldspace, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Hair, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Quest, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Eyes, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Weather, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_SelectTopic, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_SelectQuests, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_UseReport, CommonDialogExtraFittingsSubClassProc);
+			}
+
+			// Window position-saver subclasses
+			{
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_LandTexture, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Enchantment, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Spell, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Sound, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Activator, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Apparatus, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Armor, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Book, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Clothing, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Container, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Door, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Ingredient, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Light, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_MiscItem, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Static, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Grass, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Tree, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Flora, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Furniture, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Weapon, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Ammo, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_NPC, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Creature, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_LeveledCreature, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_SoulGem, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Potion, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Subspace, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_SigilStone, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_LeveledItem, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Package, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_CombatStyle, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_LoadingScreen, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_LeveledSpell, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_AnimObject, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Water, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_EffectShader, WindowPosDlgSubClassProc);
+
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Faction, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Race, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Class, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Skill, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_EffectSetting, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_GameSetting, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Globals, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Birthsign, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Climate, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Worldspace, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Hair, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Eyes, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Weather, WindowPosDlgSubClassProc);
+
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_CellEdit, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_SearchReplace, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_LandscapeEdit, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_FindText, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_RegionEditor, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_HeightMapEditor, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_IdleAnimations, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_AIPackages, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_TextureUse, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Package, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_ChooseReference, WindowPosDlgSubClassProc);
+			}
+
 			BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_FindText, FindTextDlgSubclassProc);
 			BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Data, DataDlgSubclassProc);
 			BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_ResponseEditor, ResponseDlgSubclassProc);

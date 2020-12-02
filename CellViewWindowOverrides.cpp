@@ -1,4 +1,5 @@
 #include "CellViewWindowOverrides.h"
+#include "MiscWindowOverrides.h"
 #include "Construction Set Extender_Resource.h"
 #include "Render Window\RenderWindowManager.h"
 #include "UIManager.h"
@@ -153,6 +154,9 @@ namespace cse
 				return true;
 		}
 
+#define ID_CELLVIEW_HOUSEKEEPINGTIMERID							(WM_USER + 6500)
+
+
 		LRESULT CALLBACK CellViewWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 													bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
@@ -207,6 +211,8 @@ namespace cse
 						ExtraData->Remove(CellViewExtraData::kTypeID);
 						delete xData;
 					}
+
+					KillTimer(hWnd, ID_CELLVIEW_HOUSEKEEPINGTIMERID);
 				}
 			case TESDialog::kWindowMessage_Destroy:
 				FilterableFormListManager::Instance.Unregister(RefFilterEditBox);
@@ -271,6 +277,31 @@ namespace cse
 					ColumnData.pszText = "Count";
 					ColumnData.iSubItem = CellViewExtraData::kExtraRefListColumn_Count;
 					ListView_InsertColumn(RefList, ColumnData.iSubItem, &ColumnData);
+
+					SetTimer(hWnd, ID_CELLVIEW_HOUSEKEEPINGTIMERID, 500, nullptr);
+				}
+
+				break;
+			case WM_TIMER:
+				switch (wParam)
+				{
+				case ID_CELLVIEW_HOUSEKEEPINGTIMERID:
+					// prevent activation of the ref list when editing landscape or pathgrids
+					if (*TESRenderWindow::LandscapeEditFlag || *TESRenderWindow::PathGridEditFlag)
+					{
+						if (IsWindowEnabled(RefList))
+							EnableWindow(RefList, FALSE);
+					}
+					else
+					{
+						if (!IsWindowEnabled(RefList))
+							EnableWindow(RefList, TRUE);
+					}
+
+					DlgProcResult = TRUE;
+					Return = true;
+
+					break;
 				}
 
 				break;

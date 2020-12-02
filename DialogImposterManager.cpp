@@ -1,4 +1,5 @@
 #include "DialogImposterManager.h"
+#include "MiscWindowOverrides.h"
 #include "UIManager.h"
 #include "HallOfFame.h"
 
