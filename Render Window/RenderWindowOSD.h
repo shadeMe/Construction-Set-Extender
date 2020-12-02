@@ -81,17 +81,26 @@ namespace cse
 				std::string ToString() const;
 			};
 
-			typedef std::vector<IRenderWindowOSDLayer*>			LayerArrayT;
+			typedef std::vector<IRenderWindowOSDLayer*> LayerArrayT;
+			typedef std::vector<INISetting*> SettingsArrayT;
 
 			ImGuiDX9*		Pipeline;
 			GUIState		State;
 			LayerArrayT		AttachedLayers;
+			SettingsArrayT	ColorSettings;
 			bool			Initialized;
 			bool			RenderingLayers;
 			bool			PauseRendering;
 
 			void			RenderLayers();
 			bool			NeedsBackgroundUpdate() const;
+
+			void			LoadColorsFromINI() const;
+			void			SaveColorsToINI() const;
+			bool			StringToColor(const char* ColorString, ImVec4& OutColor) const;
+			std::string		ColorToString(const ImVec4& Color) const;
+
+			static bool		RenderModalEditColors(RenderWindowOSD* OSD, ImGuiDX9* ImGui, void* UserData);
 		public:
 			RenderWindowOSD();
 			~RenderWindowOSD();
@@ -113,6 +122,8 @@ namespace cse
 			bool	NeedsInput() const;
 
 			void	ToggleRendering();
+
+			static void	ShowColorThemeEditor();
 		};
 
 		// queues ImGui drawcalls

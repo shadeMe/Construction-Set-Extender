@@ -812,6 +812,13 @@ namespace cse
 					}
 
 					break;
+				case IDC_RENDERWINDOWCONTEXT_OSD_EDITCOLORTHEME:
+					{
+						RenderWindowOSD::ShowColorThemeEditor();
+						Return = true;
+					}
+
+					break;
 				}
 
 				break;

@@ -666,13 +666,15 @@ BEGIN
         BEGIN
             MENUITEM "Info Overlay",                IDC_RENDERWINDOWCONTEXT_OSD_INFOOVERLAY
             MENUITEM "Toolbars",                    IDC_RENDERWINDOWCONTEXT_OSD_TOOLBARS
-            MENUITEM "Reference Batch Editor",          IDC_RENDERWINDOWCONTEXT_OSD_REFERENCEEDITOR
+            MENUITEM "Reference Batch Editor",      IDC_RENDERWINDOWCONTEXT_OSD_REFERENCEEDITOR
             POPUP "Mouse Tooltip"
             BEGIN
                 MENUITEM "Enabled",                     IDC_RENDERWINDOWCONTEXT_OSD_MOUSEREF
                 MENUITEM SEPARATOR
                 MENUITEM "Hold CTRL Key to Show",       IDC_RENDERWINDOWCONTEXT_OSD_MOUSEREF_CTRLMODIFIED
             END
+            MENUITEM SEPARATOR
+            MENUITEM "Edit Color Theme...",         IDC_RENDERWINDOWCONTEXT_OSD_EDITCOLORTHEME
         END
         MENUITEM "Render Window Properties...", 293
         MENUITEM "Render Window Key Bindings...", IDC_RENDERWINDOWCONTEXT_RENDERWINDOWHOTKEYS

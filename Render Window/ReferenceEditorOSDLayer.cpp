@@ -1693,7 +1693,7 @@ namespace cse
 
 		void ReferenceEditorOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
-			bool NothingToSee = *TESRenderWindow::ActiveCell == nullptr;
+			bool NothingToSee = *TESRenderWindow::ActiveCell == nullptr || *TESRenderWindow::LandscapeEditFlag || *TESRenderWindow::PathGridEditFlag;
 			if (NothingToSee)
 				return;
 

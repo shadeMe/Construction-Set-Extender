@@ -422,8 +422,6 @@ namespace cse
 			colors[ImGuiCol_Text] = ImVec4(0.95f, 0.96f, 0.98f, 1.00f);
 			colors[ImGuiCol_TextDisabled] = ImVec4(0.36f, 0.42f, 0.47f, 1.00f);
 			colors[ImGuiCol_WindowBg] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
-			//colors[ImGuiCol_ChildBg] = ImVec4(0.15f, 0.18f, 0.22f, 1.00f);
-			//colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 0.94f);
 			colors[ImGuiCol_ChildBg] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
 			colors[ImGuiCol_PopupBg] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
 			colors[ImGuiCol_Border] = ImVec4(0.08f, 0.10f, 0.12f, 1.00f);
@@ -593,8 +591,6 @@ namespace cse
 			style.ColorButtonPosition = ImGuiDir_Right;
 			style.ButtonTextAlign = ImVec2(0.5, 0.5);
 
-			DarkBlueTheme();
-			style.Colors[ImGuiCol_ChildBg].w = 0.f;
 
 			Initialized = true;
 			return true;
@@ -973,15 +969,152 @@ namespace cse
 			return false;
 		}
 
-		RenderWindowOSD::RenderWindowOSD() :
-			State(),
-			AttachedLayers()
+		void RenderWindowOSD::LoadColorsFromINI() const
+		{
+			ImGuiStyle& Style = ImGui::GetStyle();
+			for (int i = 0; i < ColorSettings.size(); ++i)
+			{
+				if (!StringToColor(ColorSettings[i]->GetData().s, Style.Colors[i]))
+					BGSEECONSOLE_MESSAGE("Couldn't load OSD color parameter '%s' from INI", ColorSettings[i]->GetKey());
+			}
+		}
+
+		void RenderWindowOSD::SaveColorsToINI() const
+		{
+			ImGuiStyle& Style = ImGui::GetStyle();
+			for (int i = 0; i < ImGuiCol_COUNT; ++i)
+			{
+				auto& ColorValue = Style.Colors[i];
+				ColorSettings[i]->SetString("%s", ColorToString(ColorValue).c_str());
+
+			}
+		}
+
+		bool RenderWindowOSD::StringToColor(const char* ColorString, ImVec4& OutColor) const
+		{
+			ImVec4 Buffer;
+			auto Result = sscanf_s(ColorString, "%f,%f,%f,%f", &Buffer.x, &Buffer.y, &Buffer.z, &Buffer.w);
+			if (Result != 4)
+			{
+				BGSEECONSOLE_MESSAGE("Invalid OSD color parameter string '%s'", ColorString);
+				return false;
+			}
+
+			OutColor = Buffer;
+			return true;
+		}
+
+		std::string RenderWindowOSD::ColorToString(const ImVec4& Color) const
+		{
+			char Buffer[100];
+			FORMAT_STR(Buffer, "%.2f,%.2f,%.2f,%.2f", Color.x, Color.y, Color.z, Color.w);
+			return Buffer;
+		}
+
+		bool RenderWindowOSD::RenderModalEditColors(RenderWindowOSD*, ImGuiDX9*, void*)
+		{
+			static ImGuiTextFilter Filter;
+
+			ImGui::ShowHelpPopup("In the color list:\n"
+				"Left-click on colored square to open color picker,\n"
+				"Right-click to open edit options menu.");
+			ImGui::SameLine(0, 5);
+			Filter.Draw("Filter", 350);
+
+			bool Closed = false;
+			ImGuiStyle& Style = ImGui::GetStyle();
+
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 2));
+			ImGui::BeginChild("##color_list_child_window", ImVec2(0, -25), true, ImGuiWindowFlags_AlwaysUseWindowPadding);
+			ImGui::PopStyleVar();
+			{
+				for (int i = 0; i < ImGuiCol_COUNT; i++)
+				{
+					auto ColorName = ImGui::GetStyleColorName(i);
+					auto& ColorValue = Style.Colors[i];
+					if (!Filter.PassFilter(ColorName))
+						continue;
+
+					ImGui::PushID(i);
+					ImGui::ColorEdit4("##color", reinterpret_cast<float*>(&ColorValue), ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf);
+					ImGui::SameLine(0.0f, Style.ItemInnerSpacing.x);
+					ImGui::TextUnformatted(ColorName);
+					ImGui::PopID();
+				}
+			}
+			ImGui::EndChild();
+
+			if (ImGui::Button("Close", ImVec2(75, 0)))
+				Closed = true;
+
+			if (Closed)
+				Filter.Clear();
+
+			return Closed;
+		}
+
+		RenderWindowOSD::RenderWindowOSD()
 		{
 			Pipeline = new ImGuiDX9();
 			AttachedLayers.reserve(10);
 			Initialized = false;
 			RenderingLayers = false;
 			PauseRendering = false;
+
+			// must have the same order as ImGuiColor
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorText);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorTextDisabled);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorWindowBg);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorChildBg);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorPopupBg);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorBorder);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorBorderShadow);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorFrameBg);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorFrameBgHovered);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorFrameBgActive);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorTitleBg);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorTitleBgActive);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorTitleBgCollapsed);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorMenuBarBg);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorScrollbarBg);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorScrollbarGrab);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorScrollbarGrabHovered);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorScrollbarGrabActive);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorCheckMark);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorSliderGrab);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorSliderGrabActive);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorButton);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorButtonHovered);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorButtonActive);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorHeader);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorHeaderHovered);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorHeaderActive);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorSeparator);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorSeparatorHovered);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorSeparatorActive);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorResizeGrip);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorResizeGripHovered);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorResizeGripActive);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorTab);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorTabHovered);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorTabActive);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorTabUnfocused);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorTabUnfocusedActive);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorPlotLines);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorPlotLinesHovered);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorPlotHistogram);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorPlotHistogramHovered);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorTableHeaderBg);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorTableBorderStrong);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorTableBorderLight);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorTableRowBg);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorTableRowBgAlt);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorTextSelectedBg);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorDragDropTarget);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorNavHighlight);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorNavWindowingHighlight);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorNavWindowingDimBg);
+			ColorSettings.push_back(&settings::renderWindowOSD::kColorModalWindowDimBg);
 		}
 
 		RenderWindowOSD::~RenderWindowOSD()
@@ -1009,6 +1142,9 @@ namespace cse
 #ifndef NDEBUG
 			AttachLayer(&DebugOSDLayer::Instance);
 #endif
+
+			LoadColorsFromINI();
+
 			Initialized = true;
 
 			return Initialized;
@@ -1027,6 +1163,9 @@ namespace cse
 #ifndef NDEBUG
 			DetachLayer(&DebugOSDLayer::Instance);
 #endif
+
+			SaveColorsToINI();
+
 			Initialized = false;
 		}
 
@@ -1249,6 +1388,14 @@ namespace cse
 		void RenderWindowOSD::ToggleRendering()
 		{
 			PauseRendering = PauseRendering == false;
+		}
+
+		void RenderWindowOSD::ShowColorThemeEditor()
+		{
+			ModalWindowProviderOSDLayer::Instance.ShowModal("Render Window OSD Color Theme Editor",
+															&RenderWindowOSD::RenderModalEditColors,
+															nullptr,
+															0, ImVec2(450, 500), ImGuiCond_Once);
 		}
 
 

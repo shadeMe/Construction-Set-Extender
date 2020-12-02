@@ -9,8 +9,8 @@
 #define STRINGIZE2(s) #s
 #define STRINGIZE(s) STRINGIZE2(s)
 
-#define VERSION_MAJOR               8
-#define VERSION_MINOR               2
+#define VERSION_MAJOR               10
+#define VERSION_MINOR               0
 
 #define VER_COMPANYNAME_STR				"Imitation Camel"
 
@@ -32,8 +32,6 @@
 	#define VER_PRODUCTNAME_STR         "Construction Set Extender Script Editor"
 #elif defined(CSE_SEPREPROC)
 	#define VER_PRODUCTNAME_STR         "Construction Set Extender Script Editor Preprocessor"
-#elif defined(CSE_BATCHEDITOR)
-	#define VER_PRODUCTNAME_STR         "Construction Set Extender Batch Reference Editor"
 #elif defined(CSE_BSAVIEWER)
 	#define VER_PRODUCTNAME_STR         "Construction Set Extender BSA Viewer"
 #elif defined(CSE_LIPSYNC)
@@ -55,8 +53,6 @@
 	#define VER_ORIGINAL_FILENAME       "ScriptEditor"
 #elif defined(CSE_SEPREPROC)
 	#define VER_ORIGINAL_FILENAME       "ScriptEditor.Preprocessor"
-#elif defined(CSE_BATCHEDITOR)
-	#define VER_ORIGINAL_FILENAME       "BatchEditor"
 #elif defined(CSE_BSAVIEWER)
 	#define VER_ORIGINAL_FILENAME       "BSAViewer"
 #elif defined(CSE_LIPSYNC)

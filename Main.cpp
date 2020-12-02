@@ -52,7 +52,7 @@ namespace cse
 		RegisterRelease(7, 1, "Bull-buggering Bollocks");
 		RegisterRelease(8, 0, "Dead Dove");
 		RegisterRelease(8, 1, "Logical Half Nelson");
-		RegisterRelease(8, 2, "Y-Y-Zed");
+		RegisterRelease(10, 0, "Y-Y-Zed");
 	}
 
 	ReleaseNameTable::~ReleaseNameTable()

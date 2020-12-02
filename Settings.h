@@ -103,6 +103,60 @@ namespace cse
 			extern INISetting					kWindowBGAlpha;
 			extern INISetting					kFontSize;
 			extern INISetting					kFontFace;
+
+			extern INISetting					kColorText;
+			extern INISetting					kColorTextDisabled;
+			extern INISetting					kColorWindowBg;              // Background of normal windows
+			extern INISetting					kColorChildBg;               // Background of child windows
+			extern INISetting					kColorPopupBg;               // Background of popups; menus; tooltips windows
+			extern INISetting					kColorBorder;
+			extern INISetting					kColorBorderShadow;
+			extern INISetting					kColorFrameBg;               // Background of checkbox; radio button; plot; slider; text input
+			extern INISetting					kColorFrameBgHovered;
+			extern INISetting					kColorFrameBgActive;
+			extern INISetting					kColorTitleBg;
+			extern INISetting					kColorTitleBgActive;
+			extern INISetting					kColorTitleBgCollapsed;
+			extern INISetting					kColorMenuBarBg;
+			extern INISetting					kColorScrollbarBg;
+			extern INISetting					kColorScrollbarGrab;
+			extern INISetting					kColorScrollbarGrabHovered;
+			extern INISetting					kColorScrollbarGrabActive;
+			extern INISetting					kColorCheckMark;
+			extern INISetting					kColorSliderGrab;
+			extern INISetting					kColorSliderGrabActive;
+			extern INISetting					kColorButton;
+			extern INISetting					kColorButtonHovered;
+			extern INISetting					kColorButtonActive;
+			extern INISetting					kColorHeader;                // Header* colors are used for CollapsingHeader; TreeNode; Selectable; MenuItem
+			extern INISetting					kColorHeaderHovered;
+			extern INISetting					kColorHeaderActive;
+			extern INISetting					kColorSeparator;
+			extern INISetting					kColorSeparatorHovered;
+			extern INISetting					kColorSeparatorActive;
+			extern INISetting					kColorResizeGrip;
+			extern INISetting					kColorResizeGripHovered;
+			extern INISetting					kColorResizeGripActive;
+			extern INISetting					kColorTab;
+			extern INISetting					kColorTabHovered;
+			extern INISetting					kColorTabActive;
+			extern INISetting					kColorTabUnfocused;
+			extern INISetting					kColorTabUnfocusedActive;
+			extern INISetting					kColorPlotLines;
+			extern INISetting					kColorPlotLinesHovered;
+			extern INISetting					kColorPlotHistogram;
+			extern INISetting					kColorPlotHistogramHovered;
+			extern INISetting					kColorTableHeaderBg;         // Table header background
+			extern INISetting					kColorTableBorderStrong;     // Table outer and header borders (prefer using Alpha=1.0 here)
+			extern INISetting					kColorTableBorderLight;      // Table inner borders (prefer using Alpha=1.0 here)
+			extern INISetting					kColorTableRowBg;            // Table row background (even rows)
+			extern INISetting					kColorTableRowBgAlt;         // Table row background (odd rows)
+			extern INISetting					kColorTextSelectedBg;
+			extern INISetting					kColorDragDropTarget;
+			extern INISetting					kColorNavHighlight;          // Gamepad/keyboard: current highlighted item
+			extern INISetting					kColorNavWindowingHighlight; // Highlight window when using CTRL+TAB
+			extern INISetting					kColorNavWindowingDimBg;     // Darken/colorize entire screen behind the CTRL+TAB window list; when active
+			extern INISetting					kColorModalWindowDimBg;
 		}
 
 		namespace renderWindowFlyCamera
