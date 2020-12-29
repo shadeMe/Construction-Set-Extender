@@ -71,7 +71,6 @@ namespace cse
 			Depot.push_back(&renderWindowOSD::kShowRefBatchEditor);
 			Depot.push_back(&renderWindowOSD::kShowToolbar);
 			Depot.push_back(&renderWindowOSD::kShowNotifications);
-			Depot.push_back(&renderWindowOSD::kWindowBGAlpha);
 			Depot.push_back(&renderWindowOSD::kFontSize);
 			Depot.push_back(&renderWindowOSD::kFontFace);
 
@@ -191,7 +190,7 @@ namespace cse
 			INISetting		kFaceGenPreviewResponseWindow("FaceGenPreviewResponseWindow", GENERAL_INISECTION, "Preview voice/lip file playback in NPC dialogs", (SInt32)0);
 			INISetting		kFaceGenPreviewVoiceDelay("FaceGenPreviewVoiceDelay", GENERAL_INISECTION, "Delay, in milliseconds, between voice file and lip sync file playback during previews", (SInt32)50);
 			INISetting		kDisableSplashScreen("DisableSplashScreen", GENERAL_INISECTION, "Disables the startup splash screen", (SInt32)0);
-			INISetting		kShowHallOfFameMembersInTitleBar("ShowHallOfFameMembersInTitleBar", GENERAL_INISECTION, "Displays names of various ES Modding community members in dialog title bars. 0 - Disable | 1 - Object Windows + Preview Windows | 2 - Object Windows + Preview Windows + Edit Dialogs", (SInt32)1);
+			INISetting		kShowHallOfFameMembersInTitleBar("ShowHallOfFameMembersInTitleBar", GENERAL_INISECTION, "Displays names of various ES modding community members in dialog title bars. 0 - Disable | 1 - Object Windows + Preview Windows | 2 - Object Windows + Preview Windows + Edit Dialogs", (SInt32)1);
 		}
 
 		namespace lod
@@ -223,7 +222,7 @@ namespace cse
 			INISetting		kAltCamPanSpeed("AltCamPanSpeed", RENDERER_INISECTION, "Alternate render window camera pan speed", (float)5.0);
 			INISetting		kCoplanarRefDrops("CoplanarRefDrops", RENDERER_INISECTION, "Place new references co-planar with the object at the cursor location", (SInt32)1);
 			INISetting		kFixedCameraPivot("FixedCameraPivot", RENDERER_INISECTION, "Use a static pivot when rotating the viewport camera", (SInt32)0);
-			INISetting		kFixedCameraPivotMul("FixedCameraPivotMul", RENDERER_INISECTION, "Distance multiplier between the fixed pivot and the camera positon", (float)750.f);
+			INISetting		kFixedCameraPivotMul("FixedCameraPivotMul", RENDERER_INISECTION, "Distance multiplier between the fixed pivot and the camera position", (float)750.f);
 			INISetting		kCameraFOV("CameraFOV", RENDERER_INISECTION, "Default camera field of vision", (float)90);
 			INISetting		kExteriorSnapshotResolution("ExteriorSnapshotResolution", RENDERER_INISECTION, "Resolution of the exterior cell snapshot texture. Size must be a power of 2", (SInt32)1024);
 			INISetting		kZOffsetDuplicatedRefs("ZOffsetDuplicatedRefs", RENDERER_INISECTION, "Moves duplicated refs slightly in the positive Z axis after creation", (SInt32)0);
@@ -246,12 +245,11 @@ namespace cse
 			INISetting		kShowMouseRef("ShowMouseRef", RWOSD_INISECTION, "Displays details about the reference or path-grid point under the mouse pointer", (SInt32)1);
 			INISetting		kMouseRefCtrlModified("MouseRefCtrlModified", RWOSD_INISECTION, "The control key must be held down to display the mouse ref's details", (SInt32)0);
 
-			INISetting		kShowInfoOverlay("ShowInfoOverlay", RWOSD_INISECTION, "Displays details about the current cell, camera postion, etc on the top-left corner", (SInt32)1);
+			INISetting		kShowInfoOverlay("ShowInfoOverlay", RWOSD_INISECTION, "Displays details about the current cell, camera position, etc on the top-left corner", (SInt32)1);
 			INISetting		kShowRefBatchEditor("ShowSelectionControls", RWOSD_INISECTION, "Displays the reference batch editor", (SInt32)1);
 			INISetting		kShowToolbar("ShowToolbar", RWOSD_INISECTION, "Displays the toolbar", (SInt32)1);
 			INISetting		kShowNotifications("ShowNotifications", RWOSD_INISECTION, "Displays notifications", (SInt32)1);
 
-			INISetting		kWindowBGAlpha("WindowBGAlpha", RWOSD_INISECTION, "Window background alpha (0-1)", (float)1.f);
 			INISetting		kFontSize("FontSize", RWOSD_INISECTION, "Font size", (SInt32)16);
 			INISetting		kFontFace("FontFace", RWOSD_INISECTION, "Font face. Must correspond to a TTF font file in the Data\\Font directory", "Ruda-Bold.ttf");
 

@@ -312,6 +312,7 @@ namespace componentDLLInterface
 
 	ScriptCompileData::ScriptCompileData() : Script(), CompileResult(false), CompileErrorData()
 	{
+		PrintErrorsToConsole = true;
 		kHandShakeStructCounters[kCounter_ScriptCompileData]++;
 	}
 

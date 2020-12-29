@@ -666,7 +666,7 @@ BEGIN
         BEGIN
             MENUITEM "Info Overlay",                IDC_RENDERWINDOWCONTEXT_OSD_INFOOVERLAY
             MENUITEM "Toolbars",                    IDC_RENDERWINDOWCONTEXT_OSD_TOOLBARS
-            MENUITEM "Reference Batch Editor",      IDC_RENDERWINDOWCONTEXT_OSD_REFERENCEEDITOR
+            MENUITEM "Reference Editor",      IDC_RENDERWINDOWCONTEXT_OSD_REFERENCEEDITOR
             POPUP "Mouse Tooltip"
             BEGIN
                 MENUITEM "Enabled",                     IDC_RENDERWINDOWCONTEXT_OSD_MOUSEREF

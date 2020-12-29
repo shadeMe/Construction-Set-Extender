@@ -187,23 +187,23 @@ namespace cse
 				componentDLLInterface::CSEInterfaceTable::IEditorAPI::ConsoleContextObjectPtr
 													ConsoleMessageLogContext;
 
-				void								DoSyncLoop(bool Force, UInt32% OutFailedCompilations);
-				bool								SyncToDisk(SyncedScriptData^ SyncedScript, bool Overwrite);
-				bool								SyncFromDisk(SyncedScriptData^ SyncedScript);
-				bool								DoPreprocessingAndAnalysis(componentDLLInterface::ScriptData* Script,
-																			String^ ImportedScriptText,
-																			String^% OutPreprocessedText,
-																			bool% OutHasDirectives,
-																			List<String^>^% OutMessages);
-				void								CompileScript(SyncedScriptData^ SyncedScript,
-																String^ ImportedScriptText,
-																bool% OutSuccess,
-																List<String^>^% OutMessages);
-				void								WriteToConsoleContext(String^ Message);
-				String^								FormatLogMessage(int Line, String^ Message, bool Critical);
+				void		DoSyncFromDiskLoop(bool Force, UInt32% OutFailedCompilations);
+				bool		SyncToDisk(SyncedScriptData^ SyncedScript, bool Overwrite);
+				bool		SyncFromDisk(SyncedScriptData^ SyncedScript);
+				bool		DoPreprocessingAndAnalysis(componentDLLInterface::ScriptData* Script,
+													String^ ImportedScriptText,
+													String^% OutPreprocessedText,
+													bool% OutHasDirectives,
+													List<String^>^% OutMessages);
+				void		CompileScript(SyncedScriptData^ SyncedScript,
+										String^ ImportedScriptText,
+										bool% OutSuccess,
+										List<String^>^% OutMessages);
+				void		WriteToConsoleContext(String^ Message);
+				String^		FormatLogMessage(int Line, String^ Message, bool Critical);
 
 
-				void								SyncTimer_Tick(Object^ Sender, EventArgs^ E);
+				void		SyncTimer_Tick(Object^ Sender, EventArgs^ E);
 
 				DiskSync();
 				~DiskSync();
@@ -271,10 +271,12 @@ namespace cse
 				property String^		EditorID;
 				property DateTime		LastSyncTime;
 				property SuccessState	LastSyncSuccess;
+				property List<String^>^	LastOutputMessages;
 
 				SyncedScriptListViewWrapper(String^ EditorID)
 				{
 					this->EditorID = EditorID;
+					this->LastOutputMessages = gcnew List<String^>;
 					Reset();
 				}
 
@@ -282,6 +284,7 @@ namespace cse
 				{
 					LastSyncTime = DateTime();
 					LastSyncSuccess = SuccessState::None;
+					LastOutputMessages->Clear();
 				}
 			};
 
@@ -326,50 +329,54 @@ namespace cse
 				TextBox^					TextBoxSelectedScriptLog;
 				Label^						LabelSelectedScriptLog;
 
-				SyncStartEventHandler^			DiskSyncSyncStartHandler;
-				SyncStopEventHandler^			DiskSyncSyncStopHandler;
-				SyncWriteToDiskEventHandler^	DiskSyncSyncWriteToDiskHandler;
-				SyncPreCompileEventHandler^		DiskSyncSyncPreCompileHandler;
-				SyncPostCompileEventHandler^	DiskSyncSyncPostCompileHandler;
+				SyncStartEventHandler^		DiskSyncSyncStartHandler;
+				SyncStopEventHandler^		DiskSyncSyncStopHandler;
+				SyncWriteToDiskEventHandler^
+											DiskSyncSyncWriteToDiskHandler;
+				SyncPreCompileEventHandler^
+											DiskSyncSyncPreCompileHandler;
+				SyncPostCompileEventHandler^
+											DiskSyncSyncPostCompileHandler;
 
 				Dictionary<String^, SyncedScriptListViewWrapper^>^
 											SyncedScripts;
 
-				void						InitializeComponent();
+				void			InitializeComponent();
 
-				void						ButtonSelectWorkingDir_Click(Object^ Sender, EventArgs^ E);
-				void						ButtonOpenWorkingDir_Click(Object^ Sender, EventArgs^ E);
-				void						ButtonSelectScripts_Click(Object^ Sender, EventArgs^ E);
-				void						ButtonStartStopSync_Click(Object^ Sender, EventArgs^ E);
-				void						SyncToDiskToolStripMenuItem_Click(Object^ Sender, EventArgs^ E);
-				void						SyncFromDiskToolStripMenuItem_Click(Object^ Sender, EventArgs^ E);
-				void						OpenLogToolStripMenuItem_Click(Object^ Sender, EventArgs^ E);
-				void						OpenSyncedFileToolStripMenuItem_Click(Object^ Sender, EventArgs^ E);
-				void						CheckboxAutoSync_Click(Object^ Sender, EventArgs^ E);
-				void						NumericAutoSyncSeconds_ValueChanged(Object^ Sender, EventArgs^ E);
-				void						ListViewSyncedScripts_CellRightClick(Object^ Sender, BrightIdeasSoftware::CellRightClickEventArgs^ E);
-				void						ListViewSyncedScripts_SelectedIndexChanged(Object^ Sender, EventArgs^ E);
+				void			ButtonSelectWorkingDir_Click(Object^ Sender, EventArgs^ E);
+				void			ButtonOpenWorkingDir_Click(Object^ Sender, EventArgs^ E);
+				void			ButtonSelectScripts_Click(Object^ Sender, EventArgs^ E);
+				void			ButtonStartStopSync_Click(Object^ Sender, EventArgs^ E);
+				void			SyncToDiskToolStripMenuItem_Click(Object^ Sender, EventArgs^ E);
+				void			SyncFromDiskToolStripMenuItem_Click(Object^ Sender, EventArgs^ E);
+				void			OpenLogToolStripMenuItem_Click(Object^ Sender, EventArgs^ E);
+				void			OpenSyncedFileToolStripMenuItem_Click(Object^ Sender, EventArgs^ E);
+				void			CheckboxAutoSync_Click(Object^ Sender, EventArgs^ E);
+				void			NumericAutoSyncSeconds_ValueChanged(Object^ Sender, EventArgs^ E);
+				void			ListViewSyncedScripts_CellRightClick(Object^ Sender, BrightIdeasSoftware::CellRightClickEventArgs^ E);
+				void			ListViewSyncedScripts_SelectedIndexChanged(Object^ Sender, EventArgs^ E);
 
-				void						Dialog_Cancel(Object^ Sender, CancelEventArgs^ E);
+				void			Dialog_Cancel(Object^ Sender, CancelEventArgs^ E);
 
-				void						DiskSync_SyncStart(Object^ Sender, SyncStartEventArgs^ E);
-				void						DiskSync_SyncStop(Object^ Sender, SyncStopEventArgs^ E);
-				void						DiskSync_SyncWriteToDisk(Object^ Sender, SyncWriteToDiskEventArgs^ E);
-				void						DiskSync_SyncPreCompile(Object^ Sender, SyncPreCompileEventArgs^ E);
-				void						DiskSync_SyncPostCompile(Object^ Sender, SyncPostCompileEventArgs^ E);
+				void			DiskSync_SyncStart(Object^ Sender, SyncStartEventArgs^ E);
+				void			DiskSync_SyncStop(Object^ Sender, SyncStopEventArgs^ E);
+				void			DiskSync_SyncWriteToDisk(Object^ Sender, SyncWriteToDiskEventArgs^ E);
+				void			DiskSync_SyncPreCompile(Object^ Sender, SyncPreCompileEventArgs^ E);
+				void			DiskSync_SyncPostCompile(Object^ Sender, SyncPostCompileEventArgs^ E);
 
-				bool						IsSyncInProgress();
+				bool			IsSyncInProgress();
+				String^			GetOutputMessagesForScript(String^ EditorID);
 
-				static Object^				ListViewAspectScriptNameGetter(Object^ RowObject);
-				static Object^				ListViewImageScriptNameGetter(Object^ RowObject);
-				static Object^				ListViewAspectLastSyncTimeGetter(Object^ RowObject);
-				static String^				ListViewAspectToStringLastSyncTime(Object^ RowObject);
+				static Object^	ListViewAspectScriptNameGetter(Object^ RowObject);
+				static Object^	ListViewImageScriptNameGetter(Object^ RowObject);
+				static Object^	ListViewAspectLastSyncTimeGetter(Object^ RowObject);
+				static String^	ListViewAspectToStringLastSyncTime(Object^ RowObject);
 
 				DiskSyncDialog();
 				~DiskSyncDialog();
 			public:
-				static void					Show();
-				static void					Close();
+				static void		Show();
+				static void		Close();
 			};
 		}
 	};

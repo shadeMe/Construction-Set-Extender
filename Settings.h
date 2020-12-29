@@ -100,7 +100,6 @@ namespace cse
 			extern INISetting					kShowToolbar;
 			extern INISetting					kShowNotifications;
 
-			extern INISetting					kWindowBGAlpha;
 			extern INISetting					kFontSize;
 			extern INISetting					kFontFace;
 

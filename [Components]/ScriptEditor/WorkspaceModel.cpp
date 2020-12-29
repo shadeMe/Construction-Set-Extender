@@ -404,6 +404,7 @@ namespace cse
 						CompileData->Script.Text = ScriptText.c_str();
 						CompileData->Script.Type = (int)Type;
 						CompileData->Script.ParentForm = (TESForm*)CurrentScript;
+						CompileData->PrintErrorsToConsole = false;
 
 						if (nativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileScript(CompileData))
 						{

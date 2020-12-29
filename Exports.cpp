@@ -302,7 +302,14 @@ bool CompileScript(ScriptCompileData* Data)
 		ScriptForm->UpdateUsageInfo();
 		ScriptForm->SetText(Data->Script.Text);
 		ScriptForm->SetFromActiveFile(true);
+
+		SME_ASSERT(TESScriptCompiler::PrintErrorsToConsole == true);
+		if (!Data->PrintErrorsToConsole)
+			TESScriptCompiler::PrintErrorsToConsole = false;
+
 		ScriptForm->compileResult = Data->CompileResult = ScriptForm->Compile();
+		TESScriptCompiler::PrintErrorsToConsole = true;
+
 		if (ScriptForm->compileResult)
 		{
 			_DATAHANDLER->SortScripts();

@@ -19,6 +19,9 @@ namespace cse
 		_DefineHookHdlr(CheckLineLengthLineCount, 0x0050013B);
 		_DefineHookHdlr(ResultScriptErrorNotification, 0x005035EE);
 		_DefineHookHdlr(MaxScriptSizeExceeded, 0x005031DB);
+		_DefineHookHdlr(PrintCompilerErrorToConsoleOverride, 0x00500001 + 5);	// NOTE: since OBSE actually fixes a bug at this location by moving the entire block of code starting at that address
+																				// by 5 bytes (the extra bytes eats into the alignment bytes immediately following the function, so there is no other displacement to RVAs that follow)
+																				// so, we need to account for this change in our hook
 
 		// ERROR HANDLERS
 																		//  f_ScriptBuffer__ConstructLineBuffers
@@ -58,6 +61,7 @@ namespace cse
 			_MemHdlr(CheckLineLengthLineCount).WriteJump();
 			_MemHdlr(ResultScriptErrorNotification).WriteJump();
 			_MemHdlr(MaxScriptSizeExceeded).WriteJump();
+			_MemHdlr(PrintCompilerErrorToConsoleOverride).WriteJump();
 
 			GetErrorMemHdlr(0x00502781).WriteJump();
 			GetErrorMemHdlr(0x00502813).WriteJump();
@@ -228,6 +232,21 @@ namespace cse
 			{
 				mov		MaxScriptSizeExceeded, 1
 				push	0x0094AD6C
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		#define _hhName		PrintCompilerErrorToConsoleOverride
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00500006 + 5);
+			_hhSetVar(Call, 0x00403490);
+			__asm
+			{
+				test	TESScriptCompiler::PrintErrorsToConsole, 1
+				jz		SKIP
+				call	_hhGetVar(Call)
+			SKIP:
 				jmp		_hhGetVar(Retn)
 			}
 		}

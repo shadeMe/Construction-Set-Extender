@@ -102,7 +102,7 @@ namespace cse
 				}
 			}
 
-			void DiskSync::DoSyncLoop(bool Force, UInt32% OutFailedCompilations)
+			void DiskSync::DoSyncFromDiskLoop(bool Force, UInt32% OutFailedCompilations)
 			{
 				Debug::Assert(SyncInProgress == true);
 
@@ -344,6 +344,7 @@ namespace cse
 				CompilationResult->Script.Text = ScriptTextToCompile.c_str();
 				CompilationResult->Script.Type = NativeScript->Type;
 				CompilationResult->Script.ParentForm = NativeScript->ParentForm;
+				CompilationResult->PrintErrorsToConsole = false;
 
 				OutSuccess = nativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileScript(CompilationResult.get());
 				if (OutSuccess)
@@ -387,7 +388,7 @@ namespace cse
 				if (SyncInProgress)
 				{
 					UInt32 Failed = 0;
-					DoSyncLoop(false, Failed);
+					DoSyncFromDiskLoop(false, Failed);
 				}
 			}
 
@@ -474,8 +475,7 @@ namespace cse
 				Debug::Assert(ExecutingSyncLoop == false);
 
 				UInt32 Failed = 0;
-				DoSyncLoop(false, Failed);
-
+				DoSyncFromDiskLoop(false, Failed);
 
 				SyncStopEventArgs^ StopEventArgs = gcnew SyncStopEventArgs(SyncedScripts->Count, Failed);
 				SyncStop(this, StopEventArgs);
@@ -770,7 +770,7 @@ namespace cse
 				this->ListViewSyncedScripts->FullRowSelect = true;
 				this->ListViewSyncedScripts->HideSelection = false;
 				this->ListViewSyncedScripts->Location = System::Drawing::Point(15, 36);
-				this->ListViewSyncedScripts->MultiSelect = false;
+				this->ListViewSyncedScripts->MultiSelect = true;
 				this->ListViewSyncedScripts->Name = L"ListViewSyncedScripts";
 				this->ListViewSyncedScripts->ShowGroups = false;
 				this->ListViewSyncedScripts->Size = System::Drawing::Size(396, 331);
@@ -835,6 +835,8 @@ namespace cse
 				//
 				this->TextBoxSelectedScriptLog->Location = System::Drawing::Point(418, 52);
 				this->TextBoxSelectedScriptLog->Multiline = true;
+				this->TextBoxSelectedScriptLog->WordWrap = false;
+				this->TextBoxSelectedScriptLog->ScrollBars = ScrollBars::Both;
 				this->TextBoxSelectedScriptLog->Name = L"TextBoxSelectedScriptLog";
 				this->TextBoxSelectedScriptLog->ReadOnly = true;
 				this->TextBoxSelectedScriptLog->Size = System::Drawing::Size(401, 184);
@@ -1016,16 +1018,22 @@ namespace cse
 			{
 				Debug::Assert(IsSyncInProgress());
 
-				auto Selection = safe_cast<SyncedScriptListViewWrapper^>(LVSyncedStripsContextMenu->Tag);
-				DiskSync::Get()->ForceSyncToDisk(Selection->EditorID);
+				for each (auto Itr in ListViewSyncedScripts->SelectedObjects)
+				{
+					auto Selection = safe_cast<SyncedScriptListViewWrapper^>(Itr);
+					DiskSync::Get()->ForceSyncToDisk(Selection->EditorID);
+				}
 			}
 
 			void DiskSyncDialog::SyncFromDiskToolStripMenuItem_Click(Object^ Sender, EventArgs^ E)
 			{
 				Debug::Assert(IsSyncInProgress());
 
-				auto Selection = safe_cast<SyncedScriptListViewWrapper^>(LVSyncedStripsContextMenu->Tag);
-				DiskSync::Get()->ForceSyncFromDisk(Selection->EditorID);
+				for each (auto Itr in ListViewSyncedScripts->SelectedObjects)
+				{
+					auto Selection = safe_cast<SyncedScriptListViewWrapper^>(Itr);
+					DiskSync::Get()->ForceSyncFromDisk(Selection->EditorID);
+				}
 			}
 
 			void DiskSyncDialog::OpenLogToolStripMenuItem_Click(Object^ Sender, EventArgs^ E)
@@ -1067,6 +1075,11 @@ namespace cse
 					OpenLogToolStripMenuItem->Enabled = false;
 					OpenSyncedFileToolStripMenuItem->Enabled = false;
 				}
+				else if (ListViewSyncedScripts->SelectedObjects->Count > 1)
+				{
+					OpenLogToolStripMenuItem->Enabled = false;
+					OpenSyncedFileToolStripMenuItem->Enabled = false;
+				}
 
 				E->MenuStrip = LVSyncedStripsContextMenu;
 				LVSyncedStripsContextMenu->Tag = E->Model;
@@ -1085,11 +1098,7 @@ namespace cse
 				}
 
 				LabelSelectedScriptLog->Text = "Log [" + Selection->EditorID + "]";
-
-				if (!IsSyncInProgress())
-					TextBoxSelectedScriptLog->Text = "Log contents are only available during the syncing operation.";
-				else
-					TextBoxSelectedScriptLog->Text = DiskSync::Get()->GetSyncLogContents(Selection->EditorID);
+				TextBoxSelectedScriptLog->Text = GetOutputMessagesForScript(Selection->EditorID);
 			}
 
 			void DiskSyncDialog::Dialog_Cancel(Object^ Sender, CancelEventArgs^ E)
@@ -1105,6 +1114,9 @@ namespace cse
 				ButtonSelectWorkingDir->Enabled = false;
 
 				ButtonStartStopSync->Text = "Stop syncing";
+				LabelSelectedScriptLog->Text = "Log";
+				TextBoxSelectedScriptLog->Text = "";
+
 				bool PromptUser = RadioPromptForFileHandling->Checked;
 				auto DefaultOp = SyncStartEventArgs::ExistingFileHandlingOperation::Overwrite;
 				if (RadioUseExistingFiles->Checked)
@@ -1175,16 +1187,32 @@ namespace cse
 			{
 				auto ListViewObject = SyncedScripts[E->ScriptEditorID];
 				ListViewObject->LastSyncSuccess = E->Success ? SyncedScriptListViewWrapper::SuccessState::Success : SyncedScriptListViewWrapper::SuccessState::Failure;
+				ListViewObject->LastOutputMessages->Clear();
+				ListViewObject->LastOutputMessages->AddRange(E->OutputMessages);
 
 				ListViewSyncedScripts->RefreshObject(ListViewObject);
 
 				if (ListViewSyncedScripts->SelectedObject == ListViewObject)
-					TextBoxSelectedScriptLog->Text = DiskSync::Get()->GetSyncLogContents(E->ScriptEditorID);
+					TextBoxSelectedScriptLog->Text = GetOutputMessagesForScript(E->ScriptEditorID);
 			}
 
 			bool DiskSyncDialog::IsSyncInProgress()
 			{
 				return DiskSync::Get()->InProgress;
+			}
+
+			System::String^ DiskSyncDialog::GetOutputMessagesForScript(String ^ EditorID)
+			{
+				if (!SyncedScripts->ContainsKey(EditorID))
+					return "";
+
+				auto Selection = SyncedScripts[EditorID];
+				String^ Out = "";
+
+				for each (auto Message in Selection->LastOutputMessages)
+					Out += Message + "\r\n";
+
+				return Out;
 			}
 
 			System::Object^ DiskSyncDialog::ListViewAspectScriptNameGetter(Object^ RowObject)

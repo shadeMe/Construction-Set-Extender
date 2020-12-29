@@ -139,7 +139,5 @@ namespace cse
 			static String^	SerializeMetadata(ScriptTextMetadata^ Metadata);
 		};
 
-
-		// defer if there are no changes since last analysis
 	}
 }

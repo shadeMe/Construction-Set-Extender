@@ -177,10 +177,11 @@ namespace componentDLLInterface
 
 	struct ScriptCompileData : public IDisposableData
 	{
-		ScriptData										Script;			// callee updates the member after a successful compile op
+		ScriptData				Script;			// callee updates the member after a successful compile op
+		bool					PrintErrorsToConsole;
 
-		bool											CompileResult;
-		ScriptErrorListData								CompileErrorData;
+		bool					CompileResult;
+		ScriptErrorListData		CompileErrorData;
 
 		ScriptCompileData();
 		virtual ~ScriptCompileData();

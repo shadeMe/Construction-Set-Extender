@@ -22,14 +22,14 @@ namespace cse
 		{
 			ref class BracketSearchData
 			{
-				Char									Symbol;
-				int										StartOffset;
+				Char	Symbol;
+				int		StartOffset;
 			public:
-				property int							EndOffset;
-				property bool							Mismatching;
+				property int	EndOffset;
+				property bool	Mismatching;
 
-				static String^							ValidOpeningBrackets = "([{";
-				static String^							ValidClosingBrackets = ")]}";
+				static String^	ValidOpeningBrackets = "([{";
+				static String^	ValidClosingBrackets = ")]}";
 
 				static enum class						BracketType
 				{

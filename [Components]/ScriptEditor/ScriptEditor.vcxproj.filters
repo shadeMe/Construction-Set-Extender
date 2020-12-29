@@ -67,8 +67,6 @@
     <ClCompile Include="SemanticAnalysis.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="WorkspaceView.cpp" />
-    <ClCompile Include="WorkspaceModel.cpp" />
     <ClCompile Include="IntelliSenseDatabase.cpp">
       <Filter>Components\IntelliSense</Filter>
     </ClCompile>
@@ -103,6 +101,12 @@
       <Filter>Components</Filter>
     </ClCompile>
     <ClCompile Include="WorkspaceModelComponents.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="WorkspaceModel.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="WorkspaceView.cpp">
       <Filter>Components</Filter>
     </ClCompile>
   </ItemGroup>
@@ -161,10 +165,6 @@
     <ClInclude Include="SemanticAnalysis.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="WorkspaceViewInterface.h" />
-    <ClInclude Include="WorkspaceModelInterface.h" />
-    <ClInclude Include="WorkspaceView.h" />
-    <ClInclude Include="WorkspaceModel.h" />
     <ClInclude Include="IntelliSenseDatabase.h">
       <Filter>Components\IntelliSense</Filter>
     </ClInclude>
@@ -199,6 +199,18 @@
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="WorkspaceModelComponents.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="WorkspaceModel.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="WorkspaceModelInterface.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="WorkspaceView.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="WorkspaceViewInterface.h">
       <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>

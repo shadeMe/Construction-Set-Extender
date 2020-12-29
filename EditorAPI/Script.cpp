@@ -5,6 +5,7 @@ using namespace cse;
 
 TESScriptCompiler::_ShowMessage			TESScriptCompiler::ShowMessage = (TESScriptCompiler::_ShowMessage)0x004FFF40;
 bool									TESScriptCompiler::PreventErrorDetours = false;
+bool									TESScriptCompiler::PrintErrorsToConsole = true;
 TESScriptCompiler::CompilerErrorArrayT	TESScriptCompiler::AuxiliaryErrorDepot;
 
 Script::VariableInfo* Script::LookupVariableInfoByName(const char* Name)

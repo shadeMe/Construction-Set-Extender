@@ -403,7 +403,7 @@ namespace cse
 			for each (obScriptParsing::Variable ^ Itr in InitialAnalysisData->Variables)
 			{
 				if (Itr->UDFParameter && Itr->ParameterIndex < 10)
-					ParameterIndices[VarIdx] = (int)Itr->ParameterIndex;
+					ParameterIndices[Itr->ParameterIndex] = VarIdx;
 
 				if (InitialAnalysisData->UDFResult == Itr)
 					ReturnVarIndex = VarIdx;

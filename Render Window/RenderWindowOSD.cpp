@@ -686,11 +686,6 @@ namespace cse
 			io.KeyAlt = (GetKeyState(VK_MENU) & 0x8000) != 0;
 			io.KeySuper = false;
 
-			// Update style from config
-			ImGuiStyle& style = ImGui::GetStyle();
-			style.Colors[ImGuiCol_WindowBg].w = settings::renderWindowOSD::kWindowBGAlpha().f;
-			style.Colors[ImGuiCol_PopupBg].w = settings::renderWindowOSD::kWindowBGAlpha().f;
-
 			// Start the frame
 			ImGui::NewFrame();
 			ImGuizmo::BeginFrame();

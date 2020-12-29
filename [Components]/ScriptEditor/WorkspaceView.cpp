@@ -1055,6 +1055,7 @@ namespace cse
 			ToolBarScriptTypeContents->Items->Add(ToolBarScriptTypeContentsMagicEffect);
 			ToolBarScriptType->DropDown = ToolBarScriptTypeContents;
 			ToolBarScriptType->Alignment = ToolStripItemAlignment::Right;
+			ToolBarScriptType->Overflow = ToolStripItemOverflow::Never;
 		//	ToolBarScriptType->Padding = ToolBarButtonPaddingLarge;
 
 			UpdateScriptTypeControls(IWorkspaceModel::ScriptType::Object);
@@ -1069,6 +1070,7 @@ namespace cse
 			ToolBarEditMenu->DropDown = ToolBarEditMenuContents;
 			ToolBarEditMenu->Padding = Padding(0);
 			ToolBarEditMenu->Alignment = ToolStripItemAlignment::Right;
+			ToolBarEditMenu->Overflow = ToolStripItemOverflow::Never;
 
 			ToolBarRefactorMenuContentsDocumentScript->Text = "Document Script";
 			ToolBarRefactorMenuContentsRenameVariables->Text = "Rename Variables";
@@ -1080,6 +1082,7 @@ namespace cse
 			ToolBarRefactorMenu->DropDown = ToolBarRefactorMenuContents;
 			ToolBarRefactorMenu->Margin = Padding(20, 0, 3, 0);
 			ToolBarRefactorMenu->Alignment = ToolStripItemAlignment::Right;
+			ToolBarRefactorMenu->Overflow = ToolStripItemOverflow::Never;
 
 			WorkspaceMainToolBar->Dock = DockStyle::Top;
 			WorkspaceMainToolBar->Items->Add(ToolBarNewScript);

@@ -144,35 +144,35 @@ namespace UIComponents {
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewSyncedScripts))->BeginInit();
 			this->LVSyncedStripsContextMenu->SuspendLayout();
 			this->SuspendLayout();
-			// 
+			//
 			// LabelWorkingDir
-			// 
+			//
 			this->LabelWorkingDir->AutoSize = true;
 			this->LabelWorkingDir->Location = System::Drawing::Point(418, 9);
 			this->LabelWorkingDir->Name = L"LabelWorkingDir";
 			this->LabelWorkingDir->Size = System::Drawing::Size(92, 13);
 			this->LabelWorkingDir->TabIndex = 0;
 			this->LabelWorkingDir->Text = L"Working Directory";
-			// 
+			//
 			// TextBoxWorkingDir
-			// 
+			//
 			this->TextBoxWorkingDir->Location = System::Drawing::Point(516, 6);
 			this->TextBoxWorkingDir->Name = L"TextBoxWorkingDir";
 			this->TextBoxWorkingDir->ReadOnly = true;
 			this->TextBoxWorkingDir->Size = System::Drawing::Size(179, 20);
 			this->TextBoxWorkingDir->TabIndex = 1;
-			// 
+			//
 			// ButtonSelectWorkingDir
-			// 
+			//
 			this->ButtonSelectWorkingDir->Location = System::Drawing::Point(701, 6);
 			this->ButtonSelectWorkingDir->Name = L"ButtonSelectWorkingDir";
 			this->ButtonSelectWorkingDir->Size = System::Drawing::Size(67, 20);
 			this->ButtonSelectWorkingDir->TabIndex = 2;
 			this->ButtonSelectWorkingDir->Text = L"Browse...";
 			this->ButtonSelectWorkingDir->UseVisualStyleBackColor = true;
-			// 
+			//
 			// GroupSyncSettings
-			// 
+			//
 			this->GroupSyncSettings->Controls->Add(this->CheckboxAutoDeleteLogs);
 			this->GroupSyncSettings->Controls->Add(this->GroupStartupFileHandling);
 			this->GroupSyncSettings->Controls->Add(this->LabelSeconds);
@@ -184,9 +184,9 @@ namespace UIComponents {
 			this->GroupSyncSettings->TabIndex = 3;
 			this->GroupSyncSettings->TabStop = false;
 			this->GroupSyncSettings->Text = L"Sync Settings";
-			// 
+			//
 			// CheckboxAutoDeleteLogs
-			// 
+			//
 			this->CheckboxAutoDeleteLogs->AutoSize = true;
 			this->CheckboxAutoDeleteLogs->Location = System::Drawing::Point(16, 134);
 			this->CheckboxAutoDeleteLogs->Name = L"CheckboxAutoDeleteLogs";
@@ -194,9 +194,9 @@ namespace UIComponents {
 			this->CheckboxAutoDeleteLogs->TabIndex = 4;
 			this->CheckboxAutoDeleteLogs->Text = L"Automatically delete log files when syncing ends";
 			this->CheckboxAutoDeleteLogs->UseVisualStyleBackColor = true;
-			// 
+			//
 			// GroupStartupFileHandling
-			// 
+			//
 			this->GroupStartupFileHandling->Controls->Add(this->RadioPromptForFileHandling);
 			this->GroupStartupFileHandling->Controls->Add(this->RadioUseExistingFiles);
 			this->GroupStartupFileHandling->Controls->Add(this->RadioOverwriteExistingFiles);
@@ -206,9 +206,9 @@ namespace UIComponents {
 			this->GroupStartupFileHandling->TabIndex = 3;
 			this->GroupStartupFileHandling->TabStop = false;
 			this->GroupStartupFileHandling->Text = L"Existing File Handling During Startup";
-			// 
+			//
 			// RadioPromptForFileHandling
-			// 
+			//
 			this->RadioPromptForFileHandling->AutoSize = true;
 			this->RadioPromptForFileHandling->Location = System::Drawing::Point(6, 42);
 			this->RadioPromptForFileHandling->Name = L"RadioPromptForFileHandling";
@@ -217,9 +217,9 @@ namespace UIComponents {
 			this->RadioPromptForFileHandling->TabStop = true;
 			this->RadioPromptForFileHandling->Text = L"Prompt for each file";
 			this->RadioPromptForFileHandling->UseVisualStyleBackColor = true;
-			// 
+			//
 			// RadioUseExistingFiles
-			// 
+			//
 			this->RadioUseExistingFiles->AutoSize = true;
 			this->RadioUseExistingFiles->Location = System::Drawing::Point(211, 19);
 			this->RadioUseExistingFiles->Name = L"RadioUseExistingFiles";
@@ -228,9 +228,9 @@ namespace UIComponents {
 			this->RadioUseExistingFiles->TabStop = true;
 			this->RadioUseExistingFiles->Text = L"Use without modifications";
 			this->RadioUseExistingFiles->UseVisualStyleBackColor = true;
-			// 
+			//
 			// RadioOverwriteExistingFiles
-			// 
+			//
 			this->RadioOverwriteExistingFiles->AutoSize = true;
 			this->RadioOverwriteExistingFiles->Location = System::Drawing::Point(6, 19);
 			this->RadioOverwriteExistingFiles->Name = L"RadioOverwriteExistingFiles";
@@ -239,18 +239,18 @@ namespace UIComponents {
 			this->RadioOverwriteExistingFiles->TabStop = true;
 			this->RadioOverwriteExistingFiles->Text = L"Overwrite with plugin script text";
 			this->RadioOverwriteExistingFiles->UseVisualStyleBackColor = true;
-			// 
+			//
 			// LabelSeconds
-			// 
+			//
 			this->LabelSeconds->AutoSize = true;
 			this->LabelSeconds->Location = System::Drawing::Point(271, 20);
 			this->LabelSeconds->Name = L"LabelSeconds";
 			this->LabelSeconds->Size = System::Drawing::Size(47, 13);
 			this->LabelSeconds->TabIndex = 2;
 			this->LabelSeconds->Text = L"seconds";
-			// 
+			//
 			// NumericAutoSyncSeconds
-			// 
+			//
 			this->NumericAutoSyncSeconds->Location = System::Drawing::Point(208, 18);
 			this->NumericAutoSyncSeconds->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 60, 0, 0, 0 });
 			this->NumericAutoSyncSeconds->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 1, 0, 0, 0 });
@@ -258,9 +258,9 @@ namespace UIComponents {
 			this->NumericAutoSyncSeconds->Size = System::Drawing::Size(57, 20);
 			this->NumericAutoSyncSeconds->TabIndex = 1;
 			this->NumericAutoSyncSeconds->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) { 1, 0, 0, 0 });
-			// 
+			//
 			// CheckboxAutoSync
-			// 
+			//
 			this->CheckboxAutoSync->AutoSize = true;
 			this->CheckboxAutoSync->Location = System::Drawing::Point(16, 19);
 			this->CheckboxAutoSync->Name = L"CheckboxAutoSync";
@@ -268,36 +268,36 @@ namespace UIComponents {
 			this->CheckboxAutoSync->TabIndex = 0;
 			this->CheckboxAutoSync->Text = L"Automatically sync changes every";
 			this->CheckboxAutoSync->UseVisualStyleBackColor = true;
-			// 
+			//
 			// ButtonStartStopSync
-			// 
+			//
 			this->ButtonStartStopSync->Location = System::Drawing::Point(15, 373);
 			this->ButtonStartStopSync->Name = L"ButtonStartStopSync";
 			this->ButtonStartStopSync->Size = System::Drawing::Size(396, 32);
 			this->ButtonStartStopSync->TabIndex = 4;
 			this->ButtonStartStopSync->Text = L"Start Syncing";
 			this->ButtonStartStopSync->UseVisualStyleBackColor = true;
-			// 
+			//
 			// LabelScriptsToSync
-			// 
+			//
 			this->LabelScriptsToSync->AutoSize = true;
 			this->LabelScriptsToSync->Location = System::Drawing::Point(12, 9);
 			this->LabelScriptsToSync->Name = L"LabelScriptsToSync";
 			this->LabelScriptsToSync->Size = System::Drawing::Size(78, 13);
 			this->LabelScriptsToSync->TabIndex = 6;
 			this->LabelScriptsToSync->Text = L"Synced Scripts";
-			// 
+			//
 			// ButtonSelectScripts
-			// 
+			//
 			this->ButtonSelectScripts->Location = System::Drawing::Point(345, 5);
 			this->ButtonSelectScripts->Name = L"ButtonSelectScripts";
 			this->ButtonSelectScripts->Size = System::Drawing::Size(67, 21);
 			this->ButtonSelectScripts->TabIndex = 7;
 			this->ButtonSelectScripts->Text = L"Select...";
 			this->ButtonSelectScripts->UseVisualStyleBackColor = true;
-			// 
+			//
 			// ListViewSyncedScripts
-			// 
+			//
 			this->ListViewSyncedScripts->AllColumns->Add(this->ColScriptName);
 			this->ListViewSyncedScripts->AllColumns->Add(this->ColLastSyncTime);
 			this->ListViewSyncedScripts->CellEditUseWholeCell = false;
@@ -309,7 +309,7 @@ namespace UIComponents {
 			this->ListViewSyncedScripts->FullRowSelect = true;
 			this->ListViewSyncedScripts->HideSelection = false;
 			this->ListViewSyncedScripts->Location = System::Drawing::Point(15, 36);
-			this->ListViewSyncedScripts->MultiSelect = false;
+			this->ListViewSyncedScripts->MultiSelect = true;
 			this->ListViewSyncedScripts->Name = L"ListViewSyncedScripts";
 			this->ListViewSyncedScripts->ShowGroups = false;
 			this->ListViewSyncedScripts->Size = System::Drawing::Size(396, 331);
@@ -317,21 +317,21 @@ namespace UIComponents {
 			this->ListViewSyncedScripts->UseCompatibleStateImageBehavior = false;
 			this->ListViewSyncedScripts->View = System::Windows::Forms::View::Details;
 			this->ListViewSyncedScripts->VirtualMode = true;
-			// 
+			//
 			// ColScriptName
-			// 
+			//
 			this->ColScriptName->Sortable = false;
 			this->ColScriptName->Text = L"EditorID";
 			this->ColScriptName->Width = 211;
-			// 
+			//
 			// ColLastSyncTime
-			// 
+			//
 			this->ColLastSyncTime->Sortable = false;
 			this->ColLastSyncTime->Text = L"Last Sync Attempt Time";
 			this->ColLastSyncTime->Width = 160;
-			// 
+			//
 			// LVSyncedStripsContextMenu
-			// 
+			//
 			this->LVSyncedStripsContextMenu->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(5) {
 				this->SyncToDiskToolStripMenuItem,
 					this->SyncFromDiskToolStripMenuItem, this->ToolStripSeparator1, this->OpenLogToolStripMenuItem, this->OpenSyncedFileToolStripMenuItem
@@ -340,65 +340,67 @@ namespace UIComponents {
 			this->LVSyncedStripsContextMenu->RenderMode = System::Windows::Forms::ToolStripRenderMode::System;
 			this->LVSyncedStripsContextMenu->ShowImageMargin = false;
 			this->LVSyncedStripsContextMenu->Size = System::Drawing::Size(141, 98);
-			// 
+			//
 			// SyncToDiskToolStripMenuItem
-			// 
+			//
 			this->SyncToDiskToolStripMenuItem->Name = L"SyncToDiskToolStripMenuItem";
 			this->SyncToDiskToolStripMenuItem->Size = System::Drawing::Size(140, 22);
 			this->SyncToDiskToolStripMenuItem->Text = L"Sync To Disk";
-			// 
+			//
 			// SyncFromDiskToolStripMenuItem
-			// 
+			//
 			this->SyncFromDiskToolStripMenuItem->Name = L"SyncFromDiskToolStripMenuItem";
 			this->SyncFromDiskToolStripMenuItem->Size = System::Drawing::Size(140, 22);
 			this->SyncFromDiskToolStripMenuItem->Text = L"Sync From Disk";
-			// 
+			//
 			// ToolStripSeparator1
-			// 
+			//
 			this->ToolStripSeparator1->Name = L"ToolStripSeparator1";
 			this->ToolStripSeparator1->Size = System::Drawing::Size(137, 6);
-			// 
+			//
 			// OpenLogToolStripMenuItem
-			// 
+			//
 			this->OpenLogToolStripMenuItem->Name = L"OpenLogToolStripMenuItem";
 			this->OpenLogToolStripMenuItem->Size = System::Drawing::Size(140, 22);
 			this->OpenLogToolStripMenuItem->Text = L"Open Log";
-			// 
+			//
 			// OpenSyncedFileToolStripMenuItem
-			// 
+			//
 			this->OpenSyncedFileToolStripMenuItem->Name = L"OpenSyncedFileToolStripMenuItem";
 			this->OpenSyncedFileToolStripMenuItem->Size = System::Drawing::Size(140, 22);
 			this->OpenSyncedFileToolStripMenuItem->Text = L"Open Synced File";
-			// 
+			//
 			// TextBoxSelectedScriptLog
-			// 
+			//
 			this->TextBoxSelectedScriptLog->Location = System::Drawing::Point(418, 52);
 			this->TextBoxSelectedScriptLog->Multiline = true;
+			this->TextBoxSelectedScriptLog->WordWrap = false;
+			this->TextBoxSelectedScriptLog->ScrollBars = ScrollBars::Both;
 			this->TextBoxSelectedScriptLog->Name = L"TextBoxSelectedScriptLog";
 			this->TextBoxSelectedScriptLog->ReadOnly = true;
 			this->TextBoxSelectedScriptLog->Size = System::Drawing::Size(401, 184);
 			this->TextBoxSelectedScriptLog->TabIndex = 11;
-			// 
+			//
 			// LabelSelectedScriptLog
-			// 
+			//
 			this->LabelSelectedScriptLog->AutoSize = true;
 			this->LabelSelectedScriptLog->Location = System::Drawing::Point(418, 35);
 			this->LabelSelectedScriptLog->Name = L"LabelSelectedScriptLog";
 			this->LabelSelectedScriptLog->Size = System::Drawing::Size(25, 13);
 			this->LabelSelectedScriptLog->TabIndex = 12;
 			this->LabelSelectedScriptLog->Text = L"Log";
-			// 
+			//
 			// ButtonOpenWorkingDir
-			// 
+			//
 			this->ButtonOpenWorkingDir->Location = System::Drawing::Point(774, 5);
 			this->ButtonOpenWorkingDir->Name = L"ButtonOpenWorkingDir";
 			this->ButtonOpenWorkingDir->Size = System::Drawing::Size(45, 21);
 			this->ButtonOpenWorkingDir->TabIndex = 13;
 			this->ButtonOpenWorkingDir->Text = L"Open";
 			this->ButtonOpenWorkingDir->UseVisualStyleBackColor = true;
-			// 
+			//
 			// SESyncUI
-			// 
+			//
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(830, 413);
