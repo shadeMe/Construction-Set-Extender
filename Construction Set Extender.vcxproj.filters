@@ -399,6 +399,9 @@
     <ClCompile Include="Render Window\ReferenceEditorOSDLayer.cpp">
       <Filter>Components\Render Window\OSD Layers</Filter>
     </ClCompile>
+    <ClCompile Include="IMGUI\imgui_tables.cpp">
+      <Filter>Components\IMGUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">

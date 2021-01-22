@@ -38,7 +38,7 @@ namespace cse
 				if (ImGui::BeginTable("##Tooltip Contents", 2))
 				{
 					ImGui::TableSetupColumn("First", ImGuiTableColumnFlags_WidthStretch, 100);
-					ImGui::TableSetupColumn("Second", ImGuiTableColumnFlags_WidthAlwaysAutoResize);
+					ImGui::TableSetupColumn("Second", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize);
 
 					if (_RENDERWIN_XSTATE.CurrentMouseRef)
 					{

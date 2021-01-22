@@ -260,7 +260,7 @@ namespace cse
 
 					auto NumColumns = 4;
 					if (ImGui::BeginTable("##current_layers_table", NumColumns,
-						ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Scroll | ImGuiTableFlags_NoSavedSettings,
+						ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_NoSavedSettings,
 						ImVec2(0, OtherLayersVisible ? -250 : -40)))
 					{
 						ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 250);
@@ -297,7 +297,7 @@ namespace cse
 
 						auto NumColumns = 4;
 						if (ImGui::BeginTable("##other_layers_table", NumColumns,
-							ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Scroll | ImGuiTableFlags_NoSavedSettings,
+							ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_NoSavedSettings,
 							ImVec2(0, 0)))
 						{
 							ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 250);

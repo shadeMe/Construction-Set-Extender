@@ -205,7 +205,7 @@ namespace cse
 						AddBookmark(_TES->GetCurrentCell());
 
 					if (ImGui::BeginTable("##bookmark_table", 3,
-						ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Scroll,
+						ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY,
 						ImVec2(0, RecentsVisible ? -250 : -40)))
 					{
 						ImGui::TableSetupColumn("Editor ID", ImGuiTableColumnFlags_WidthFixed, 100);
@@ -251,7 +251,7 @@ namespace cse
 					RecentsVisible = true;
 
 					if (ImGui::BeginTable("##recents_table", 3,
-						ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Scroll,
+						ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY,
 						ImVec2(0, 0)))
 					{
 						ImGui::TableSetupColumn("Editor ID", ImGuiTableColumnFlags_WidthFixed, 100);

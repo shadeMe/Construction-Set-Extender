@@ -730,7 +730,7 @@ namespace cse
 				ImGui::PopStyleVar();
 				{
 					if (ImGui::BeginTable("##hotkey_table", 3,
-						ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInner | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_Scroll,
+						ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInner | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY,
 						ImVec2(-5, -35)))
 					{
 						ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthFixed, 230);

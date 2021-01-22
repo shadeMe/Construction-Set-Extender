@@ -9,6 +9,10 @@ namespace ImGui
 	void	ShowHelpPopup(const char* fmt, ...);
 	bool	CheckBoxTristate(const char* label, int* v_tristate);
 	void	MoveNextWindowToSafeZone(const ImVec2& WindowPos, const ImVec2& WindowSize);
+
+
+	int		TableGetHoveredColumn();	// Expose IMGUI-internal function
+	bool	TableGetColumnIsVisible();
 }
 
 // ugly macros to add tooltips to widgets

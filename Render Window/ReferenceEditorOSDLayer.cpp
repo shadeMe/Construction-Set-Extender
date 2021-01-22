@@ -142,7 +142,7 @@ namespace cse
 				ImGui::EndTable();
 			}
 
-			if (ImGui::BeginTable("##scale_table", 1, ImGuiTableFlags_SizingPolicyStretchX | ImGuiTableFlags_NoSavedSettings))
+			if (ImGui::BeginTable("##scale_table", 1, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_NoSavedSettings))
 			{
 				ImGui::TableNextRow();
 				{
@@ -424,7 +424,7 @@ namespace cse
 
 			if (ImGui::BeginTabItem("Enable Parent"))
 			{
-				if (ImGui::BeginTable("##enable_parent_table", 2, ImGuiTableFlags_NoSavedSettings))
+				if (ImGui::BeginTable("##enable_parent_table", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_NoSavedSettings))
 				{
 					constexpr auto FirstColumnWidth = 75, SecondColumnWidth = 150;
 					ImGui::TableSetupColumn("First", ImGuiTableColumnFlags_NoResize, FirstColumnWidth);
@@ -733,7 +733,7 @@ namespace cse
 				ImGui::PopStyleVar();
 				{
 					if (ImGui::BeginTable("##selection_popup_table", 2,
-						ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable | ImGuiTableFlags_Scroll | ImGuiTableFlags_Borders,
+						ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders,
 						ImVec2(-5, -35)))
 					{
 						ImGui::TableSetupColumn(RankSelection ? "Male Title" : "Editor ID", ImGuiTableColumnFlags_WidthFixed, 200);
@@ -1019,7 +1019,7 @@ namespace cse
 				{
 					constexpr auto FirstColumnWidth = 75, SecondColumnWidth = 200;
 					ImGui::TableSetupColumn("First", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, FirstColumnWidth);
-					ImGui::TableSetupColumn("Second", ImGuiTableColumnFlags_WidthAlwaysAutoResize | ImGuiTableColumnFlags_NoResize, SecondColumnWidth);
+					ImGui::TableSetupColumn("Second", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, SecondColumnWidth);
 
 					ImGui::TableNextRow();
 					{
@@ -1387,7 +1387,7 @@ namespace cse
 				{
 					constexpr auto FirstColumnWidth = 75, SecondColumnWidth = 150, ThirdColumnWidth = 50;
 					ImGui::TableSetupColumn("First", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, FirstColumnWidth);
-					ImGui::TableSetupColumn("Second", ImGuiTableColumnFlags_WidthAlwaysAutoResize | ImGuiTableColumnFlags_NoResize, SecondColumnWidth);
+					ImGui::TableSetupColumn("Second", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, SecondColumnWidth);
 					ImGui::TableSetupColumn("Third", ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_NoResize, ThirdColumnWidth);
 
 					DRAW_EXTRADATA_INPUT_EDIT_CONTROLS(Count, Count, "%.0f", 1, 65535);
@@ -1513,7 +1513,7 @@ namespace cse
 
 				constexpr auto NumColumns = 3;
 				if (ImGui::BeginTable("##references_table", NumColumns,
-					ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInner | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_Hideable | ImGuiTableFlags_Scroll,
+					ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInner | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_Hideable | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY,
 					ImVec2(-5, -35)))
 				{
 					ImGui::TableSetupColumn("Reference", ImGuiTableColumnFlags_WidthStretch, 225);
@@ -1708,7 +1708,7 @@ namespace cse
 			WindowState.Update(GUI);
 			UpdateCurrentSelection();
 
-			if (ImGui::BeginTable("##main_content_table", HideRefList ? 1 : 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInner | ImGuiTableFlags_SizingPolicyStretchX ))
+			if (ImGui::BeginTable("##main_content_table", HideRefList ? 1 : 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV))
 			{
 				if (!HideRefList)
 					ImGui::TableSetupColumn("RefList", ImGuiTableColumnFlags_WidthStretch, 300);

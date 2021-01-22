@@ -41,7 +41,7 @@ namespace cse
 			if (ImGui::BeginTable("##Info Overlay Data", 2))
 			{
 				ImGui::TableSetupColumn("First", ImGuiTableColumnFlags_WidthStretch, 130);
-				ImGui::TableSetupColumn("Second", ImGuiTableColumnFlags_WidthAlwaysAutoResize);
+				ImGui::TableSetupColumn("Second", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize);
 
 				ImGui::TableNextRow();
 				{

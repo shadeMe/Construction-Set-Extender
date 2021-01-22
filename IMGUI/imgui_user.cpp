@@ -78,4 +78,9 @@ namespace ImGui
 			SetNextWindowPosCenter();
 	}
 
+	bool TableGetColumnIsVisible()
+	{
+		return TableGetColumnFlags() & ImGuiTableColumnFlags_IsVisible;
+	}
+
 }

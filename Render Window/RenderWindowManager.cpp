@@ -1537,7 +1537,7 @@ namespace cse
 				}
 
 				if (ImGui::BeginTable(TableName, NumColumns,
-					ImGuiTableFlags_Resizable | ImGuiTableFlags_Hideable | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Scroll,
+					ImGuiTableFlags_Resizable | ImGuiTableFlags_Hideable | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY,
 					ImVec2(0, 0)))
 				{
 					switch (Type)
@@ -1598,13 +1598,13 @@ namespace cse
 				else
 				{
 					if (ImGui::BeginTable("##group_member_table", 4,
-						ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable | ImGuiTableFlags_Scroll | ImGuiTableFlags_Borders,
+						ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders,
 						ImVec2(0, -35)))
 					{
 						ImGui::TableSetupColumn("Editor ID", ImGuiTableColumnFlags_WidthFixed, 200);
 						ImGui::TableSetupColumn("Form ID", ImGuiTableColumnFlags_WidthFixed, 75);
 						ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, 85);
-						ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthAlwaysAutoResize | ImGuiTableColumnFlags_NoResize, 85);
+						ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 85);
 
 						ImGui::TableSetupScrollFreeze(0, 1);
 						ImGui::TableHeadersRow();
