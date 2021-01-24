@@ -19,3 +19,8 @@ void TESBoundObject::CalculateBounds(NiNode* Object3D)
 {
 	thisCall<void>(0x00513A80, this, Object3D);
 }
+
+NiNode* TESObject::GenerateNiNode(TESObjectREFR* Ref, bool Unk01)
+{
+	return thisVirtualCall<NiNode*>(0x134, this, Ref, Unk01);
+}

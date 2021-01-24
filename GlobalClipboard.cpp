@@ -53,7 +53,7 @@ namespace cse
 			bgsee::GlobalClipboardOperator()
 		{
 			DefaultFormSerializer = new DefaultFormCollectionSerializer;
-			ObjectRefSerializer = new ObjectRefCollectionSerializer(true);
+			ObjectRefSerializer = new ObjectRefCollectionSerializer(false);
 		}
 
 		GlobalClipboardOperator::~GlobalClipboardOperator()
@@ -189,9 +189,9 @@ namespace cse
 			;//
 		}
 
-		void GlobalClipboardOperator::PostCopyCallback(bool Successful)
+		bool GlobalClipboardOperator::PostCopyCallback(bool SerializationSuccessful)
 		{
-			;//
+			return SerializationSuccessful;
 		}
 
 		void GlobalClipboardOperator::PrePasteCallback(bgsee::PluginFileWrapper* File)
@@ -199,8 +199,10 @@ namespace cse
 			;//
 		}
 
-		void GlobalClipboardOperator::PostPasteCallback(bool Successful, bgsee::FormCollectionSerializer* Deserializer)
+		bool GlobalClipboardOperator::PostPasteCallback(bool Successful, bgsee::FormCollectionSerializer* Deserializer)
 		{
+			bool Result = false;
+
 			if (Successful)
 			{
 				IFormCollectionSerializer* CSESerializer = dynamic_cast<IFormCollectionSerializer*>(Deserializer);
@@ -212,13 +214,15 @@ namespace cse
 				switch (CSESerializer->GetType())
 				{
 				case IFormCollectionSerializer::kSerializer_DefaultForm:
-					DefaultInit.Instantiate(CSESerializer);
+					Result = DefaultInit.Instantiate(CSESerializer);
 					break;
 				case IFormCollectionSerializer::kSerializer_ObjectRef:
-					ObjRefInit.Instantiate(CSESerializer);
+					Result = ObjRefInit.Instantiate(CSESerializer);
 					break;
 				}
 			}
+
+			return Result;
 		}
 
 		void Initialize( void )

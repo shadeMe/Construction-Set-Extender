@@ -203,6 +203,8 @@ namespace cse
 			if (!LastContextUpdateDiff->CaretPosChanged && !LastContextUpdateDiff->LineChanged)
 				return;
 
+			HideInsightTooltip();
+
 			if (LastContextUpdateDiff->LineChanged && Visible)
 				HidePopup(PopupHideReason::ContextChanged);
 
@@ -279,6 +281,8 @@ namespace cse
 		void IntelliSenseInterfaceModel::OnTextChanged(IntelliSenseContextChangeEventArgs^ E)
 		{
 			UpdateContext(E);
+
+			HideInsightTooltip();
 
 			if (!Visible)
 			{

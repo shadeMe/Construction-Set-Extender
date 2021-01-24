@@ -34,9 +34,9 @@ namespace cse
 
 			virtual void								PreCopyCallback(bgsee::FormListT& CopyForms,
 																		bgsee::PluginFileWrapper* File);
-			virtual void								PostCopyCallback(bool Successful);
+			virtual bool								PostCopyCallback(bool SerializationSuccessful);
 			virtual void								PrePasteCallback(bgsee::PluginFileWrapper* File);
-			virtual void								PostPasteCallback(bool Successful, bgsee::FormCollectionSerializer* Deserializer);
+			virtual bool								PostPasteCallback(bool DeserializationSuccessful, bgsee::FormCollectionSerializer* Deserializer);
 		};
 
 		void Initialize();

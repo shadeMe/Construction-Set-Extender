@@ -71,7 +71,7 @@ UInt8 TESFile::GetRecordType()
 
 bool TESFile::GetNextRecord( bool SkipIgnoredRecords )
 {
-	return thisCall<bool>(0x004890A0, this);
+	return thisCall<bool>(0x004890A0, this, SkipIgnoredRecords);
 }
 
 bool TESFile::InitializeBSFile( UInt32 Arg1 /*= 0*/, bool Arg2 /*= false*/ )

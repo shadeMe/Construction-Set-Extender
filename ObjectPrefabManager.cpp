@@ -349,6 +349,9 @@ namespace cse
 						break;
 					case LVN_ITEMCHANGED:
 						{
+							if (Instance.RefreshingList)
+								break;
+
 							NMLISTVIEW* ChangeData = (NMLISTVIEW*)lParam;
 
 							if ((ChangeData->uChanged & LVIF_STATE) &&
@@ -555,11 +558,12 @@ namespace cse
 					std::string FilePath(Itr.GetFullPath());
 					if (FilePath.rfind(kPrefabFileExtension) == FilePath.length() - strlen(kPrefabFileExtension))
 					{
-						PrefabObjectHandleT Prefab(new PrefabObject(FilePath.c_str(), kRepositoryPath().c_str(), false));
+						std::unique_ptr<PrefabObject> Prefab(new PrefabObject(FilePath.c_str(), kRepositoryPath().c_str(), false));
+
 						if (Prefab->DeserializationState == PrefabObject::kState_Bad || Prefab->Deserialize() == PrefabObject::kState_Bad)
 							BGSEECONSOLE_MESSAGE("Couldn't load prefab collection at %s", FilePath.c_str());
 						else
-							LoadedPrefabs.push_back(Prefab);
+							LoadedPrefabs.emplace_back(std::move(Prefab));
 					}
 				}
 			}
@@ -608,12 +612,12 @@ namespace cse
 
 				if (Result)
 				{
-					PrefabObjectHandleT ExistingPrefab;
-					PrefabObjectHandleT NewPrefab;
+					PrefabObject* ExistingPrefab = nullptr;
+					std::unique_ptr<PrefabObject> NewPrefab;
 					bool PrefabExists = false;
 
-					if ((PrefabExists = GetExistingPrefab(FilePath.c_str(), ExistingPrefab)) == false)
-						NewPrefab = PrefabObjectHandleT(new PrefabObject(FilePath.c_str(), kRepositoryPath().c_str(), false));
+					if ((PrefabExists = GetExistingPrefab(FilePath.c_str(), &ExistingPrefab)) == false)
+						NewPrefab.reset(new PrefabObject(FilePath.c_str(), kRepositoryPath().c_str(), false));
 					else
 					{
 						// create a temp file to check if the serialization works out
@@ -622,7 +626,7 @@ namespace cse
 						TempFilePath += "TempPrefab.";
 						TempFilePath += kPrefabFileExtension;
 
-						NewPrefab = PrefabObjectHandleT(new PrefabObject(TempFilePath.c_str(), kRepositoryPath().c_str(), true));
+						NewPrefab.reset(new PrefabObject(TempFilePath.c_str(), kRepositoryPath().c_str(), true));
 					}
 
 					if (NewPrefab->Serialize(Selection, true) == PrefabObject::kState_Good)
@@ -637,7 +641,7 @@ namespace cse
 							SME_ASSERT(ExistingPrefab->DeserializationState == PrefabObject::kState_Good);
 						}
 						else
-							LoadedPrefabs.push_back(NewPrefab);
+							LoadedPrefabs.emplace_back(std::move(NewPrefab));
 
 						RefreshPrefabList();
 					}
@@ -715,13 +719,13 @@ namespace cse
 				return false;
 		}
 
-		bool ObjectPrefabManager::GetExistingPrefab(const char* FilePath, PrefabObjectHandleT& Out)
+		bool ObjectPrefabManager::GetExistingPrefab(const char* FilePath, PrefabObject** Out)
 		{
 			for (const auto& Itr : LoadedPrefabs)
 			{
 				if (!_stricmp(Itr->FilePath.c_str(), FilePath))
 				{
-					Out = Itr;
+					*Out = Itr.get();
 					return true;
 				}
 			}

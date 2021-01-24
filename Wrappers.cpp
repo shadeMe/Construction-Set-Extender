@@ -661,7 +661,8 @@ namespace cse
 					{
 						BGSEECONSOLE_MESSAGE("Couldn't instantiate reference %08X '%s' - Unresolved base form", TempForm->formID, TempForm->GetEditorID());
 						Result = false;
-						continue;
+						RefEditorIDMap.clear();
+						break;
 					}
 
 					RefEditorIDMap[Ref] = TempForm->GetEditorID();
@@ -702,7 +703,9 @@ namespace cse
 						Vector3 NewRotation(TempRef->rotation);
 						NewPosition += NewOrigin;
 
-						TESObjectREFR* NewRef = CS_CAST(TESForm::CreateInstance(TESForm::kFormType_REFR), TESForm, TESObjectREFR);
+
+						auto BlankForm = TESForm::CreateInstance(TESForm::kFormType_REFR);
+						TESObjectREFR* NewRef = CS_CAST(BlankForm, TESForm, TESObjectREFR);
 						if (NewRef == nullptr)
 						{
 							BGSEECONSOLE_MESSAGE("Couldn't create reference @ %0.3f, %0.3f, %0.3f, Cell = %08X, Worldspace = %08X",
@@ -723,10 +726,32 @@ namespace cse
 								Result = false;
 							}
 
+
+							// extra shenanigans for tree references - we need to generate their 3D and fixup their base form/scale before we perform the copy
+							// otherwise the code path taken by the CopyFrom() call leads to the deferencing of the new ref's (non-existent) NiNode
+							// not sure if this is a vanilla bug.
+							if (Base->formType == TESForm::kFormType_Tree)
+							{
+								NewRef->SetBaseForm(TempRef->baseForm);
+								NewRef->scale = TempRef->scale;
+								auto New3D = (CS_CAST(TempRef->baseForm, TESForm, TESObject))->GenerateNiNode(NewRef, false);
+								NewRef->SetNiNode(New3D);
+							}
+
 							NewRef->CopyFrom(TempRef);
 							NewRef->SetFromActiveFile(true);
+
 							if (NewBaseForm)
 								NewRef->SetBaseForm(Base);
+
+							// after the copy operation is complete, we need to regenerate the tree ref's 3D
+							// to correctly fill its REF extradata (will cause picking issues in the render window otherwise)
+							if (Base->formType == TESForm::kFormType_Tree)
+							{
+								NewRef->SetNiNode(nullptr);
+								NewRef->SetNiNode(NewRef->GenerateNiNode());
+							}
+
 
 							_DATAHANDLER->PlaceObjectRef(Base, &NewPosition, &NewRotation, Interior, Worldspace, NewRef);
 

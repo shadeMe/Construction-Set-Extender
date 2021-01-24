@@ -1298,19 +1298,38 @@ namespace cse
 
 			void AvalonEditTextEditor::TextField_MouseHover(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
 			{
+				RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::Event::HoverStop,
+											-1, Windows::Point(0, 0));
+
 				Nullable<AvalonEdit::TextViewPosition> ViewLocation = TextField->GetPositionFromPoint(E->GetPosition(TextField));
 				if (ViewLocation.HasValue)
 				{
-					int Offset = TextField->Document->GetOffset(ViewLocation.Value.Line, ViewLocation.Value.Column);
+					LastMouseHoverOffset = TextField->Document->GetOffset(ViewLocation.Value.Line, ViewLocation.Value.Column);
 					RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::Event::HoverStart,
-												Offset, TransformToPixels(E->GetPosition(TextField)));
+												LastMouseHoverOffset, TransformToPixels(E->GetPosition(TextField)));
 				}
+				else
+					LastMouseHoverOffset = -1;
 			}
 
 			void AvalonEditTextEditor::TextField_MouseHoverStopped(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
 			{
+				// hacky workaround to prevent the insight tooltip from appearing and disappearing in rapid succession
+				// this can happen if the intellisense tooltip appears right under the cursor, triggering the hover stop event right away
+				if (LastMouseHoverOffset == OffsetAtCurrentMousePos)
+					return;
+
 				RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::Event::HoverStop,
 											-1, Windows::Point(0, 0));
+			}
+
+			void AvalonEditTextEditor::TextField_MouseMove(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
+			{
+				Nullable<AvalonEdit::TextViewPosition> ViewLocation = TextField->GetPositionFromPoint(E->GetPosition(TextField));
+				if (ViewLocation.HasValue)
+					OffsetAtCurrentMousePos = TextField->Document->GetOffset(ViewLocation.Value.Line, ViewLocation.Value.Column);
+				else
+					OffsetAtCurrentMousePos = -1;
 			}
 
 			void AvalonEditTextEditor::TextField_SelectionChanged(Object^ Sender, EventArgs^ E)
@@ -1743,6 +1762,7 @@ namespace cse
 				TextFieldMouseWheelHandler = gcnew System::Windows::Input::MouseWheelEventHandler(this, &AvalonEditTextEditor::TextField_MouseWheel);
 				TextFieldMouseHoverHandler = gcnew System::Windows::Input::MouseEventHandler(this, &AvalonEditTextEditor::TextField_MouseHover);
 				TextFieldMouseHoverStoppedHandler = gcnew System::Windows::Input::MouseEventHandler(this, &AvalonEditTextEditor::TextField_MouseHoverStopped);
+				TextFieldMouseMoveHandler = gcnew System::Windows::Input::MouseEventHandler(this, &AvalonEditTextEditor::TextField_MouseMove);
 				TextFieldSelectionChangedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::TextField_SelectionChanged);
 				TextFieldLostFocusHandler = gcnew System::Windows::RoutedEventHandler(this, &AvalonEditTextEditor::TextField_LostFocus);
 				TextFieldMiddleMouseScrollMoveHandler = gcnew System::Windows::Input::MouseEventHandler(this, &AvalonEditTextEditor::TextField_MiddleMouseScrollMove);
@@ -1826,6 +1846,8 @@ namespace cse
 				IsFocused = false;
 
 				LastKnownMouseClickOffset = 0;
+				OffsetAtCurrentMousePos = -1;
+				LastMouseHoverOffset = -1;
 
 				ScrollBarSyncTimer->Interval = 200;
 
@@ -1996,6 +2018,8 @@ namespace cse
 				TextField->PreviewMouseHoverStopped += TextFieldMouseHoverStoppedHandler;
 				TextField->PreviewMouseMove += TextFieldMiddleMouseScrollMoveHandler;
 				TextField->PreviewMouseDown += TextFieldMiddleMouseScrollDownHandler;
+				TextField->PreviewMouseMove += TextFieldMouseMoveHandler;
+
 				MiddleMouseScrollTimer->Tick += MiddleMouseScrollTimerTickHandler;
 				ScrollBarSyncTimer->Tick += ScrollBarSyncTimerTickHandler;
 				ExternalVerticalScrollBar->ValueChanged += ExternalScrollBarValueChangedHandler;
@@ -2060,6 +2084,7 @@ namespace cse
 				TextField->PreviewMouseHoverStopped -= TextFieldMouseHoverStoppedHandler;
 				TextField->PreviewMouseMove -= TextFieldMiddleMouseScrollMoveHandler;
 				TextField->PreviewMouseDown -= TextFieldMiddleMouseScrollDownHandler;
+				TextField->PreviewMouseMove -= TextFieldMouseMoveHandler;
 				MiddleMouseScrollTimer->Tick -= MiddleMouseScrollTimerTickHandler;
 				ScrollBarSyncTimer->Tick -= ScrollBarSyncTimerTickHandler;
 				ExternalVerticalScrollBar->ValueChanged -= ExternalScrollBarValueChangedHandler;
@@ -2081,6 +2106,7 @@ namespace cse
 				SAFEDELETE_CLR(TextFieldMouseWheelHandler);
 				SAFEDELETE_CLR(TextFieldMouseHoverHandler);
 				SAFEDELETE_CLR(TextFieldMouseHoverStoppedHandler);
+				SAFEDELETE_CLR(TextFieldMouseMoveHandler);
 				SAFEDELETE_CLR(TextFieldMiddleMouseScrollMoveHandler);
 				SAFEDELETE_CLR(TextFieldMiddleMouseScrollDownHandler);
 				SAFEDELETE_CLR(MiddleMouseScrollTimerTickHandler);

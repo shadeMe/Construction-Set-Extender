@@ -69,6 +69,8 @@ namespace cse
 				System::Windows::Vector								MiddleMouseCurrentScrollOffset;
 				bool												IsMiddleMouseScrolling;
 				Timer^												MiddleMouseScrollTimer;
+				int													OffsetAtCurrentMousePos;
+				int													LastMouseHoverOffset;
 
 				bool												IsFocused;
 
@@ -104,6 +106,7 @@ namespace cse
 				System::Windows::Input::MouseWheelEventHandler^		TextFieldMouseWheelHandler;
 				System::Windows::Input::MouseEventHandler^			TextFieldMouseHoverHandler;
 				System::Windows::Input::MouseEventHandler^			TextFieldMouseHoverStoppedHandler;
+				System::Windows::Input::MouseEventHandler^			TextFieldMouseMoveHandler;
 				EventHandler^										TextFieldSelectionChangedHandler;
 				System::Windows::RoutedEventHandler^				TextFieldLostFocusHandler;
 				System::Windows::Input::MouseEventHandler^			TextFieldMiddleMouseScrollMoveHandler;
@@ -115,8 +118,10 @@ namespace cse
 				EventHandler^										SetTextAnimationCompletedHandler;
 				EventHandler^										ScriptEditorPreferencesSavedHandler;
 				AvalonEditTextEventHandler^							TextFieldTextCopiedHandler;
-				EventHandler<VisualLineConstructionStartEventArgs^>^	TextFieldVisualLineConstructionStartingHandler;
-				EventHandler<AvalonEdit::Search::SearchOptionsChangedEventArgs^>^	SearchPanelSearchOptionsChangedHandler;
+				EventHandler<VisualLineConstructionStartEventArgs^>^	
+																	TextFieldVisualLineConstructionStartingHandler;
+				EventHandler<AvalonEdit::Search::SearchOptionsChangedEventArgs^>^	
+																	SearchPanelSearchOptionsChangedHandler;
 
 				scriptEditor::SemanticAnalysisCompleteEventHandler^	BackgroundAnalyzerAnalysisCompleteHandler;
 
@@ -179,6 +184,7 @@ namespace cse
 
 				void										TextField_MouseHover(Object^ Sender, System::Windows::Input::MouseEventArgs^ E);
 				void										TextField_MouseHoverStopped(Object^ Sender, System::Windows::Input::MouseEventArgs^ E);
+				void										TextField_MouseMove(Object^ Sender, System::Windows::Input::MouseEventArgs^ E);
 
 				void										TextField_SelectionChanged(Object^ Sender, EventArgs^ E);
 				void										TextField_LostFocus(Object^ Sender, System::Windows::RoutedEventArgs^ E);

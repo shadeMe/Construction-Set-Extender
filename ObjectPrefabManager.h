@@ -55,14 +55,13 @@ namespace cse
 			bool										Instantiate();
 		};
 
-		typedef std::shared_ptr<PrefabObject>			PrefabObjectHandleT;
 
 		class ObjectPrefabManager
 		{
 			static INT_PTR CALLBACK				DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 			static int CALLBACK					SortComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 
-			typedef std::vector<PrefabObjectHandleT>	PrefabObjectArrayT;
+			typedef std::vector<std::unique_ptr<PrefabObject>>	PrefabObjectArrayT;
 
 			static const bgsee::ResourceLocation		kRepositoryPath;
 			static const char*							kPrefabFileExtension;
@@ -90,7 +89,7 @@ namespace cse
 			void						RemoveSelection();
 
 			bool						ShowFileDialog(bool Save, std::string& OutPath, std::string& OutName);
-			bool						GetExistingPrefab(const char* FilePath, PrefabObjectHandleT& Out);
+			bool						GetExistingPrefab(const char* FilePath, PrefabObject** Out);
 			bool						RemoveLoadedPrefab(PrefabObject* Data);
 		public:
 			ObjectPrefabManager();

@@ -10,6 +10,9 @@ NOTE	---->
 CSE		---->
 
 	BUGFIX			=
+		> Cell use list is broken
+			> Forms instantiated with our custom serializers don't correctly update the cell count leading to negative values
+			> Deleting a ref from the render window doesn't update its baseform's cell use counts (vanilla bug)
 		> Prevent the selection of refs through the cell view dialog when editing landscape/pathgrids
 		> Dirty edits?
 			>> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=25301452

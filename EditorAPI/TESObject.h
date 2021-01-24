@@ -44,6 +44,9 @@ public:
 													// struct {void* reflist; UInt32 modelUseCount?; BSSimpleList<UInt32> unk; ...?}
 	/*2C*/ TESObject*			prev;
 	/*30*/ TESObject*			next;
+
+	// methods
+	NiNode*						GenerateNiNode(TESObjectREFR* Ref, bool Unk01 = false);
 };
 STATIC_ASSERT(sizeof(TESObject) == 0x34);
 
