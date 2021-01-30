@@ -20,9 +20,9 @@ namespace bgsee
 		virtual FormCollectionSerializer*			GetDeserializer(PluginFileWrapper* File) = 0;
 
 		virtual void								PreCopyCallback(FormListT& CopyForms, PluginFileWrapper* File) = 0;		// before serialization begins
-		virtual void								PostCopyCallback(bool Successful) = 0;	// after serialization is complete
+		virtual bool								PostCopyCallback(bool SerializationSuccessful) = 0;	// after serialization is complete
 		virtual void								PrePasteCallback(PluginFileWrapper* File) = 0;	// before deserialization begins
-		virtual void								PostPasteCallback(bool Successful, FormCollectionSerializer* Deserializer) = 0;	// after deserialization is complete
+		virtual bool								PostPasteCallback(bool DeserializationSuccessful, FormCollectionSerializer* Deserializer) = 0;	// after deserialization is complete
 	};
 
 	class GlobalClipboard

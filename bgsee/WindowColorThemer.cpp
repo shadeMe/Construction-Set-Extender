@@ -241,6 +241,9 @@ namespace bgsee
 			}
 
 			CallbackResult = reinterpret_cast<INT_PTR>(Brushes[kColor_DefaultColorBackground]);
+			if (Subclasser->IsWindowADialog(hWnd))
+				SetWindowLongPtr(hWnd, DWL_MSGRESULT, CallbackResult);
+
 			break;
 		}
 		case LVM_SETEXTENDEDLISTVIEWSTYLE:

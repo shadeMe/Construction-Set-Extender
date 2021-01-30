@@ -20,7 +20,7 @@ namespace bgsee
 
 		this->Operator = Operator;
 		this->Buffer = PluginWrapper;
-		Initialized = Buffer->Construct(kClipboardBufferPath, true);
+		Initialized = Buffer->Construct(kClipboardBufferPath, false);
 	}
 
 	GlobalClipboard::~GlobalClipboard()
@@ -80,7 +80,7 @@ namespace bgsee
 				{
 					Operator->PreCopyCallback(Forms, Buffer);
 					Result = Serializer->Serialize(Forms, Buffer);
-					Operator->PostCopyCallback(Result);
+					Result = Operator->PostCopyCallback(Result);
 				}
 
 				if (Result)
@@ -116,7 +116,7 @@ namespace bgsee
 			int Count = 0;
 			Operator->PrePasteCallback(Buffer);
 			Result = Deserializer->Deserialize(Buffer, Count);
-			Operator->PostPasteCallback(Result, Deserializer);
+			Result = Operator->PostPasteCallback(Result, Deserializer);
 
 			if (Result)
 				BGSEECONSOLE_MESSAGE("Pasted %d forms", Count);

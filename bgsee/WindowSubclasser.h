@@ -219,6 +219,7 @@ namespace bgsee
 
 		bool	IsShuttingDown() const;
 		bool	IsWindowSubclassed(HWND hWnd) const;
+		bool	IsWindowADialog(HWND SubclassedWindow) const;
 		HWND	GetMostRecentWindowHandle() const;
 	};
 

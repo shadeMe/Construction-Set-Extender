@@ -773,6 +773,14 @@ namespace bgsee
 		return ActiveSubclasses.find(hWnd) != ActiveSubclasses.end();
 	}
 
+	bool WindowSubclasser::IsWindowADialog(HWND SubclassedWindow) const
+	{
+		auto ActiveSubclass = ActiveSubclasses.find(SubclassedWindow);
+		SME_ASSERT(ActiveSubclass != ActiveSubclasses.end());
+
+		return ActiveSubclass->second->IsDialog();
+	}
+
 	HWND WindowSubclasser::GetMostRecentWindowHandle() const
 	{
 		if (ProcessingHandles.empty())

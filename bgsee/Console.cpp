@@ -1063,7 +1063,7 @@ namespace bgsee
 					(LPTSTR)&ErrorMsg,
 					0,
 					nullptr);
-		FORMAT_STR(Buffer, "Error Message: %s", ErrorMsg);
+		FORMAT_STR(Buffer, "Error Message: %s", reinterpret_cast<const char*>(ErrorMsg));
 		LocalFree(ErrorMsg);
 
 		Indent();
