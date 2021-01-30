@@ -122,6 +122,47 @@ namespace cse
 			static bool							IsSelectable(TESObjectREFR* Ref, UInt32& OutReasonFlags, bool PaintingSelection = false);
 		};
 
+		class ReferenceColorMaskManager
+		{
+		public:
+			enum : int
+			{
+				kMask__BEGIN = -1,
+
+				kMask_Selection = 0,
+				kMask_MouseOver,
+
+				kMask__MAX
+			};
+		private:
+			struct MaskData
+			{
+				bool		Enabled = false;
+				NiColor		Color;
+
+				SME::INI::INISetting*
+							ToggleSetting = nullptr;
+				SME::INI::INISetting*
+							ColorSetting = nullptr;
+			};
+
+			std::array<MaskData, kMask__MAX> Masks;
+		public:
+			ReferenceColorMaskManager();
+
+			void			Initialize();
+			void			Deinitialize();
+
+			bool			IsAnyMaskEnabled() const;
+			bool			GetMaskEnabled(UInt8 Mask) const;
+			void			SetMaskEnabled(UInt8 Mask, bool Enabled);
+
+			const NiColor&	GetMaskColor(UInt8 Mask) const;
+			void			SetMaskColor(UInt8 Mask, const NiColor& Color);
+
+			bool			GetActiveMaskForRef(TESObjectREFR* Ref, NiColor* OutColor) const;	// returns false if no mask is active
+		};
+
 		class RenderWindowExtendedState
 		{
 			bool						Initialized;
@@ -139,8 +180,6 @@ namespace cse
 			NiSourceTexture*			GrassOverlayTexture;
 			Vector3						StaticCameraPivot;
 			bool						DraggingPathGridPoints;
-			bool						ShowSelectionMask;
-			NiColor						SelectionMaskColor;
 
 			RenderWindowExtendedState();
 			~RenderWindowExtendedState();
@@ -196,6 +235,7 @@ namespace cse
 			input::RenderWindowKeyboardManager*			KeyboardInputManager;
 			input::RenderWindowMouseManager*			MouseInputManager;
 			RenderWindowDeferredExecutor*				DeferredExecutor;
+			ReferenceColorMaskManager*					ColorMaskManager;
 			RenderWindowGizmoManager*					GizmoManager;
 			GlobalEventSink*							EventSink;
 			TESObjectREFRArrayT							ActiveRefCache;
@@ -249,6 +289,7 @@ namespace cse
 			RenderWindowOSD*							GetOSD() const;
 			RenderWindowLayerManager*					GetLayerManager() const;
 			RenderWindowDeferredExecutor*				GetDeferredExecutor() const;
+			ReferenceColorMaskManager*					GetColorMaskManager() const;
 
 			const TESObjectREFRArrayT&					GetActiveRefs() const;
 

@@ -220,6 +220,12 @@ namespace cse
 					_RENDERWIN_XSTATE.ShowInitiallyDisabledRefChildren = _RENDERWIN_XSTATE.ShowInitiallyDisabledRefChildren == false;
 					break;
 				case kType_GrassOverlay:
+					if (_RENDERWIN_XSTATE.GrassOverlayTexture == nullptr)
+					{
+						NotificationOSDLayer::Instance.ShowNotification("A valid grass overlay texture needs to be set in CSE's preferences.");
+						break;
+					}
+
 					_RENDERWIN_XSTATE.UseGrassTextureOverlay = _RENDERWIN_XSTATE.UseGrassTextureOverlay == false;
 					_TES->ReloadLandscapeTextures();
 					break;

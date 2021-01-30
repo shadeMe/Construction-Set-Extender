@@ -1015,6 +1015,7 @@ namespace cse
 					{
 						TESObjectREFR* NewRef = CurrentSelection.at(Index)->Instantiate(Position, false);
 						NewRef->SetFromActiveFile(true);
+						Position = NewRef->position;
 						Rotation = NewRef->rotation;
 
 						_DATAHANDLER->PlaceObjectRef((TESObject*)NewRef->baseForm,

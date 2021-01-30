@@ -506,8 +506,11 @@ namespace cse
 				float TOD = _TES->GetSkyTOD();
 				float FOV = settings::renderer::kCameraFOV().f;
 
-				bool ShowSelectionMask = _RENDERWIN_XSTATE.ShowSelectionMask;
-				NiColor SelectionMaskColor = _RENDERWIN_XSTATE.SelectionMaskColor;
+				bool ShowSelectionMask = _RENDERWIN_MGR.GetColorMaskManager()->GetMaskEnabled(ReferenceColorMaskManager::kMask_Selection);
+				NiColor SelectionMaskColor = _RENDERWIN_MGR.GetColorMaskManager()->GetMaskColor(ReferenceColorMaskManager::kMask_Selection);
+
+				bool ShowMouseOverMask = _RENDERWIN_MGR.GetColorMaskManager()->GetMaskEnabled(ReferenceColorMaskManager::kMask_MouseOver);
+				NiColor MouseOverMaskColor = _RENDERWIN_MGR.GetColorMaskManager()->GetMaskColor(ReferenceColorMaskManager::kMask_MouseOver);
 
 				ImGui::PushStyleCompact();
 				PUSH_TRANSPARENT_BUTTON_COLORS;
@@ -524,12 +527,42 @@ namespace cse
 				ImGui::PopItemWidth();
 				POP_TRANSPARENT_BUTTON_COLORS;
 
-				ImGui::Dummy(ImVec2(0, 5));
+				ImGui::Dummy(ImVec2(0, 10));
 
-				if (ImGui::Checkbox("Show Selection Mask##SelMask", &ShowSelectionMask))
-					_RENDERWIN_XSTATE.ShowSelectionMask = ShowSelectionMask;
-				ImGui::SameLine(0, 6);
-				ImGui::ColorEdit3("##SelectionMaskColor", &SelectionMaskColor.r, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+				if (ImGui::BeginTable("##colormasks", 2, ImGuiTableFlags_NoSavedSettings))
+				{
+					ImGui::TableSetupColumn("First", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 175);
+					ImGui::TableSetupColumn("Second", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 20);
+
+					ImGui::TableNextRow();
+					{
+						ImGui::TableNextColumn();
+						{
+							if (ImGui::Checkbox("Show Selection Mask##SelMask", &ShowSelectionMask))
+								_RENDERWIN_MGR.GetColorMaskManager()->SetMaskEnabled(ReferenceColorMaskManager::kMask_Selection, ShowSelectionMask);
+						}
+						ImGui::TableNextColumn();
+						{
+							ImGui::ColorEdit3("##SelectionMaskColor", &SelectionMaskColor.r, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+						}
+					}
+
+					ImGui::TableNextRow();
+					{
+						ImGui::TableNextColumn();
+						{
+							if (ImGui::Checkbox("Show Mouse-over Mask##MouseOverMask", &ShowMouseOverMask))
+								_RENDERWIN_MGR.GetColorMaskManager()->SetMaskEnabled(ReferenceColorMaskManager::kMask_MouseOver, ShowMouseOverMask);
+						}
+						ImGui::TableNextColumn();
+						{
+							ImGui::ColorEdit3("##MouseOverMaskColor", &MouseOverMaskColor.r, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+						}
+					}
+
+					ImGui::EndTable();
+				}
+
 				ImGui::PopStyleCompact();
 
 				if (TOD < 0 || TOD > 24)
@@ -547,7 +580,8 @@ namespace cse
 					_RENDERWIN_MGR.RefreshFOV();
 				}
 
-				_RENDERWIN_XSTATE.SelectionMaskColor = SelectionMaskColor;
+				_RENDERWIN_MGR.GetColorMaskManager()->SetMaskColor(ReferenceColorMaskManager::kMask_Selection, SelectionMaskColor);
+				_RENDERWIN_MGR.GetColorMaskManager()->SetMaskColor(ReferenceColorMaskManager::kMask_MouseOver, MouseOverMaskColor);
 			};
 			PopupMiscControls = BottomToolbarPopupProvider.RegisterPopup("popup_misc_controls",
 																		 MiscButton,

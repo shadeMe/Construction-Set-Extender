@@ -1482,6 +1482,8 @@ namespace cse
 			EditComponents.emplace_back(new ReferenceOwnershipEditComponent);
 			EditComponents.emplace_back(new ReferenceExtraDataEditComponent);
 			CurrentSelection.reserve(0x100);
+
+			LastWindowSize.x = LastWindowSize.y = -1;
 		}
 
 		ReferenceEditorOSDLayer::~ReferenceEditorOSDLayer()
@@ -1698,7 +1700,11 @@ namespace cse
 				return;
 
 			ImGui::SetNextWindowSizeConstraints(ImVec2(300, 300), ImVec2(1280, 720));
-			ImGui::MoveNextWindowToSafeZone(LastWindowPos, LastWindowSize);
+
+			// ### needs better logic - causes inconsistent behaviour when the render window was maximized on exit
+			//if (LastWindowSize.x != -1)
+			//	ImGui::MoveNextWindowToSafeZone(LastWindowPos, LastWindowSize);
+
 			if (!ImGui::Begin("Reference Editor", nullptr, ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoScrollbar))
 			{
 				ImGui::End();

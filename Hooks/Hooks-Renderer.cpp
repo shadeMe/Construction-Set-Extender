@@ -202,10 +202,8 @@ namespace cse
 
 		void __cdecl ShadowLightShaderSetAmbientColorShaderConstantDetour(UInt16 ConstantIndex, float R, float G, float B, float A)
 		{
-			auto IsGeometryMasked = [](NiAVObject* Geom) -> bool {
-				if (_RENDERSEL->selectionCount == 0)
-					return false;
-				else if (Geom->m_pcName && strstr(Geom->m_pcName, "Block") == Geom->m_pcName)
+			auto IsGeometryMasked = [](NiAVObject* Geom, NiColor* OutMaskColor) -> bool {
+				if (Geom->m_pcName && strstr(Geom->m_pcName, "Block") == Geom->m_pcName)
 					return false;
 
 				NiAVObject* Parent = Geom->m_parent;
@@ -215,9 +213,11 @@ namespace cse
 					if (Node)
 					{
 						auto RefProp = NI_CAST(TESRender::GetExtraData(Node, "REF"), TESObjectExtraData);
-						if (RefProp && _RENDERSEL->HasObject(RefProp->refr))
+						if (RefProp)
 						{
-							return true;
+							auto HasMask = _RENDERWIN_MGR.GetColorMaskManager()->GetActiveMaskForRef(RefProp->refr, OutMaskColor);
+							if (HasMask)
+								return true;
 						}
 					}
 
@@ -227,17 +227,20 @@ namespace cse
 				return false;
 			};
 
-			if (ConstantIndex == 0 && _RENDERWIN_XSTATE.ShowSelectionMask)
+			// modify the ambient color according to the active mask
+			if (ConstantIndex == 0 && _RENDERWIN_MGR.GetColorMaskManager()->IsAnyMaskEnabled())
 			{
 				auto CurrentRenderPass = *TESRender::CurrentRenderPassData;
 				if (CurrentRenderPass)
 				{
-					if (IsGeometryMasked(CurrentRenderPass->geom))
+					NiColor MaskColor;
+					if (IsGeometryMasked(CurrentRenderPass->geom, &MaskColor))
 					{
-						cdeclCall<void>(0x0079AC60, ConstantIndex,
-										_RENDERWIN_XSTATE.SelectionMaskColor.r,
-										_RENDERWIN_XSTATE.SelectionMaskColor.g,
-										_RENDERWIN_XSTATE.SelectionMaskColor.b,
+						cdeclCall<void>(0x0079AC60,
+										ConstantIndex,
+										MaskColor.r,
+										MaskColor.g,
+										MaskColor.b,
 										1.f);
 						return;
 					}
@@ -1609,10 +1612,8 @@ namespace cse
 
 		void __stdcall DoShadowSceneNodeUseFullBrightLightHook()
 		{
-			bool SelectionMaskEnabled = _RENDERSEL->selectionCount && _RENDERWIN_XSTATE.ShowSelectionMask;
-
 			UInt32 FullBrightRenderPassFlags = TESRender::kRenderPassFlags_Texture;
-			if (SelectionMaskEnabled)
+			if (_RENDERWIN_MGR.GetColorMaskManager()->IsAnyMaskEnabled())
 				FullBrightRenderPassFlags |= TESRender::kRenderPassFlags_Ambient;
 
 			if (*TESRenderWindow::FullBrightLightingFlag)

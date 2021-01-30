@@ -28,6 +28,8 @@ namespace cse
 				return;
 			else if (GetCapture() == *TESRenderWindow::WindowHandle && _RENDERWIN_MGR.GetMouseInputManager()->IsPaintingSelection() == false)
 				return;
+			else if (GetForegroundWindow() != *TESRenderWindow::WindowHandle)
+				return;
 
 			SME_ASSERT((void*)_RENDERWIN_XSTATE.CurrentMouseRef != (void*)_RENDERWIN_XSTATE.CurrentMousePathGridPoint);
 

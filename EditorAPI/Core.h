@@ -346,7 +346,7 @@ public:
 	// methods
 	virtual void				VFn00(void* Unk01) = 0;
 
-	UInt8						FindFile(const char* Path, UInt32 Unk02 = 0, UInt32 Unk03 = 0, int Unk04 = -1);
+	UInt8						FindFile(const char* Path, char* OutResolvedPath = 0, UInt32 Unk03 = 0, int Unk04 = -1);
 	NiBinaryStream*				GetFileStream(const char* Path, bool WriteAccess = false, UInt32 BufferSize = 0x8000);
 	void						AddSearchPath(const char* Path);
 

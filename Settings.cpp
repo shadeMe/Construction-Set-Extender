@@ -63,6 +63,8 @@ namespace cse
 			Depot.push_back(&renderer::kUnrestrictedMouseMovement);
 			Depot.push_back(&renderer::kShowSelectionMask);
 			Depot.push_back(&renderer::kSelectionMaskColor);
+			Depot.push_back(&renderer::kShowMouseOverMask);
+			Depot.push_back(&renderer::kMouseOverMaskColor);
 
 			Depot.push_back(&renderWindowOSD::kShowMouseRef);
 			Depot.push_back(&renderWindowOSD::kMouseRefCtrlModified);
@@ -236,6 +238,8 @@ namespace cse
 			INISetting		kUnrestrictedMouseMovement("UnrestrictedMouseMovement", RENDERER_INISECTION, "Unrestricted mouse movement when transforming the camera/selection", (SInt32)0);
 			INISetting		kShowSelectionMask("ShowSelectionMask", RENDERER_INISECTION, "Apply a color mask on references selected in the render window", (SInt32)1);
 			INISetting		kSelectionMaskColor("SelectionMaskColor", RENDERER_INISECTION, "Selection mask color (RGB)", "60,221,5");
+			INISetting		kShowMouseOverMask("ShowMouseOverMask", RENDERER_INISECTION, "Apply a color mask on the reference under the mouse cursor in the render window", (SInt32)0);
+			INISetting		kMouseOverMaskColor("MouseOverMaskColor", RENDERER_INISECTION, "Mouse over mask color (RGB)", "160,221,5");
 		}
 
 		namespace renderWindowOSD

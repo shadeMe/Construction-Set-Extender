@@ -368,6 +368,119 @@ namespace cse
 			return IsSelectable(Ref, PaintingSelection, Throwaway, OutReasonFlags);
 		}
 
+		ReferenceColorMaskManager::ReferenceColorMaskManager()
+		{
+			Masks[kMask_Selection].ToggleSetting = &settings::renderer::kShowSelectionMask;
+			Masks[kMask_Selection].ColorSetting = &settings::renderer::kSelectionMaskColor;
+
+			Masks[kMask_MouseOver].ToggleSetting = &settings::renderer::kShowMouseOverMask;
+			Masks[kMask_MouseOver].ColorSetting = &settings::renderer::kMouseOverMaskColor;
+		}
+
+
+		void ReferenceColorMaskManager::Initialize()
+		{
+			for (auto& Mask : Masks)
+			{
+				Mask.Enabled = Mask.ToggleSetting->GetData().i;
+
+				int MaskColorR = 0, MaskColorG = 0, MaskColorB = 0;
+				SME::StringHelpers::GetRGB(Mask.ColorSetting->GetData().s, MaskColorR, MaskColorG, MaskColorB);
+				Mask.Color.r = MaskColorR / 255.f;
+				Mask.Color.g = MaskColorG / 255.f;
+				Mask.Color.b = MaskColorB / 255.f;
+			}
+		}
+
+		void ReferenceColorMaskManager::Deinitialize()
+		{
+			for (auto& Mask : Masks)
+			{
+				Mask.ToggleSetting->SetInt(Mask.Enabled);
+
+				Mask.ColorSetting->SetString("%d,%d,%d",
+					static_cast<int>(Mask.Color.r * 255),
+					static_cast<int>(Mask.Color.g * 255),
+					static_cast<int>(Mask.Color.b * 255));
+			}
+		}
+
+		bool ReferenceColorMaskManager::IsAnyMaskEnabled() const
+		{
+			for (const auto& Mask : Masks)
+			{
+				if (Mask.Enabled)
+					return true;
+			}
+
+			return false;
+		}
+
+		bool ReferenceColorMaskManager::GetMaskEnabled(UInt8 Mask) const
+		{
+			SME_ASSERT(Mask < kMask__MAX);
+
+			for (auto i = kMask__BEGIN + 1; i < kMask__MAX; ++i)
+			{
+				const auto& ThisMask = Masks[i];
+				if (Mask == i)
+					return ThisMask.Enabled;
+			}
+
+			return false;
+
+		}
+
+		void ReferenceColorMaskManager::SetMaskEnabled(UInt8 Mask, bool Enabled)
+		{
+			SME_ASSERT(Mask < kMask__MAX);
+
+			Masks[Mask].Enabled = Enabled;
+		}
+
+		const NiColor& ReferenceColorMaskManager::GetMaskColor(UInt8 Mask) const
+		{
+			SME_ASSERT(Mask < kMask__MAX);
+
+			return Masks[Mask].Color;
+		}
+
+		void ReferenceColorMaskManager::SetMaskColor(UInt8 Mask, const NiColor& Color)
+		{
+			SME_ASSERT(Mask < kMask__MAX);
+
+			Masks[Mask].Color.r = Color.r;
+			Masks[Mask].Color.g = Color.g;
+			Masks[Mask].Color.b = Color.b;
+		}
+
+		bool ReferenceColorMaskManager::GetActiveMaskForRef(TESObjectREFR* Ref, NiColor* OutColor) const
+		{
+			SME_ASSERT(Ref);
+
+			const auto& MouseOverMask = Masks[kMask_MouseOver];
+			if (MouseOverMask.Enabled && _RENDERWIN_XSTATE.CurrentMouseRef == Ref)
+			{
+				OutColor->r = MouseOverMask.Color.r;
+				OutColor->g = MouseOverMask.Color.g;
+				OutColor->b = MouseOverMask.Color.b;
+
+				return true;
+			}
+
+			const auto& SelectionMask = Masks[kMask_Selection];
+			if (SelectionMask.Enabled && _RENDERSEL->HasObject(Ref))
+			{
+				OutColor->r = SelectionMask.Color.r;
+				OutColor->g = SelectionMask.Color.g;
+				OutColor->b = SelectionMask.Color.b;
+
+				return true;
+			}
+
+			return false;
+		}
+
 		const float RenderWindowExtendedState::MaxLandscapeEditBrushRadius = 25.f;
 
 		RenderWindowExtendedState::RenderWindowExtendedState() :
@@ -384,7 +497,6 @@ namespace cse
 			GrassOverlayTexture = nullptr;
 			StaticCameraPivot.Scale(0);
 			DraggingPathGridPoints = false;
-			ShowSelectionMask = false;
 		}
 
 		RenderWindowExtendedState::~RenderWindowExtendedState()
@@ -404,14 +516,6 @@ namespace cse
 				GrassOverlayTexture->m_uiRefCount = 1;
 			}
 
-			ShowSelectionMask = settings::renderer::kShowSelectionMask().i;
-
-			int MaskColorR = 0, MaskColorG = 0, MaskColorB = 0;
-			SME::StringHelpers::GetRGB(settings::renderer::kSelectionMaskColor().s, MaskColorR, MaskColorG, MaskColorB);
-			SelectionMaskColor.r = MaskColorR / 255.f;
-			SelectionMaskColor.g = MaskColorG / 255.f;
-			SelectionMaskColor.b = MaskColorB / 255.f;
-
 			Initialized = true;
 		}
 
@@ -426,11 +530,6 @@ namespace cse
 				TESRender::DeleteNiRefObject(GrassOverlayTexture);
 				GrassOverlayTexture = nullptr;
 			}
-
-			settings::renderer::kSelectionMaskColor.SetString("%d,%d,%d",
-				(int)(SelectionMaskColor.r * 255),
-				(int)(SelectionMaskColor.g * 255),
-				(int)(SelectionMaskColor.b * 255));
 
 			Initialized = false;
 		}
@@ -967,6 +1066,7 @@ namespace cse
 			KeyboardInputManager = new input::RenderWindowKeyboardManager();
 			MouseInputManager = new input::RenderWindowMouseManager();
 			DeferredExecutor = new RenderWindowDeferredExecutor();
+			ColorMaskManager = new ReferenceColorMaskManager();
 			GizmoManager = new RenderWindowGizmoManager();
 			ActiveRefCache.reserve(500);
 			RenderingScene = false;
@@ -989,6 +1089,7 @@ namespace cse
 			SAFEDELETE(KeyboardInputManager);
 			SAFEDELETE(MouseInputManager);
 			SAFEDELETE(DeferredExecutor);
+			SAFEDELETE(ColorMaskManager);
 			SAFEDELETE(GizmoManager);
 
 			Initialized = false;
@@ -1018,7 +1119,6 @@ namespace cse
 			events::renderer::kPostSceneGraphRender.AddSink(EventSink);
 			events::renderer::kPostRenderWindowUpdate.AddSink(EventSink);
 
-			ExtendedState->Initialize();
 			SceneGraphManager->AddModifier(&ReferenceParentChildIndicator::Instance);
 			SceneGraphManager->AddModifier(&ReferenceVisibilityModifier::Instance);
 
@@ -1028,6 +1128,7 @@ namespace cse
 			LayerManager->Initialize();
 			KeyboardInputManager->Initialize();
 			MouseInputManager->Initialize(KeyboardInputManager->GetSharedBindings());
+			ColorMaskManager->Initialize();
 
 			// register active ref collection popups
 			ToolbarOSDLayer::Instance.RegisterTopToolbarButton("activerefcol_invisible_interface",
@@ -1074,6 +1175,7 @@ namespace cse
 			events::renderer::kPostSceneGraphRender.RemoveSink(EventSink);
 			events::renderer::kPostRenderWindowUpdate.RemoveSink(EventSink);
 
+			ColorMaskManager->Deinitialize();
 			MouseInputManager->Deinitialize();
 			KeyboardInputManager->Deinitialize();
 			LayerManager->Deinitialize();
@@ -1134,6 +1236,12 @@ namespace cse
 		{
 			SME_ASSERT(Initialized);
 			return DeferredExecutor;
+		}
+
+		ReferenceColorMaskManager* RenderWindowManager::GetColorMaskManager() const
+		{
+			SME_ASSERT(Initialized);
+			return ColorMaskManager;
 		}
 
 		void RenderWindowManager::RefreshFOV()
@@ -1746,6 +1854,7 @@ namespace cse
 			bool ComponentInitialized = _RENDERWIN_MGR.InitializeOSD();
 			SME_ASSERT(ComponentInitialized);
 
+			_RENDERWIN_XSTATE.Initialize();
 			_RENDERWIN_MGR.RefreshFOV();
 		}
 
@@ -1753,5 +1862,6 @@ namespace cse
 		{
 			_RENDERWIN_MGR.Deinitialize();
 		}
+
 	}
 }

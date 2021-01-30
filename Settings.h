@@ -82,6 +82,8 @@ namespace cse
 			extern INISetting					kUnrestrictedMouseMovement;
 			extern INISetting					kShowSelectionMask;
 			extern INISetting					kSelectionMaskColor;
+			extern INISetting					kShowMouseOverMask;
+			extern INISetting					kMouseOverMaskColor;
 
 			enum
 			{

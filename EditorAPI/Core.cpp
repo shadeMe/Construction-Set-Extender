@@ -384,9 +384,9 @@ bhkWorldM* TES::GetHavokWorld() const
 		return *((bhkWorldM**)0x00A1316C);
 }
 
-UInt8 FileFinder::FindFile(const char* Path, UInt32 Unk02, UInt32 Unk03, int Unk04)
+UInt8 FileFinder::FindFile(const char* Path, char* OutResolvedPath, UInt32 Unk03, int Unk04)
 {
-	return thisVirtualCall<UInt8>(0x4, this, Path, Unk02, Unk03, Unk04);
+	return thisVirtualCall<UInt8>(0x4, this, Path, OutResolvedPath, Unk03, Unk04);
 }
 
 void FileFinder::AddSearchPath(const char* Path)
