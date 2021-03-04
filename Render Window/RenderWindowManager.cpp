@@ -481,7 +481,7 @@ namespace cse
 			return false;
 		}
 
-		const float RenderWindowExtendedState::MaxLandscapeEditBrushRadius = 25.f;
+		const float RenderWindowExtendedState::kMaxLandscapeEditBrushRadius = 25.f;
 
 		RenderWindowExtendedState::RenderWindowExtendedState() :
 			Initialized(false)
@@ -497,6 +497,7 @@ namespace cse
 			GrassOverlayTexture = nullptr;
 			StaticCameraPivot.Scale(0);
 			DraggingPathGridPoints = false;
+			MeasureBaseRuler = MeasureBaseCircle = nullptr;
 		}
 
 		RenderWindowExtendedState::~RenderWindowExtendedState()
@@ -575,6 +576,9 @@ namespace cse
 				break;
 			case events::TypedEventSource::kType_Plugin_ClearData:
 				Parent->HandleClearData();
+				break;
+			case events::TypedEventSource::kType_Plugin_ConstructSpecialForms:
+				Parent->HandleConstructSpecialForms();
 				break;
 			case events::TypedEventSource::kType_Renderer_Release:
 				Parent->HandleD3DRelease();
@@ -1118,6 +1122,9 @@ namespace cse
 			events::renderer::kPreSceneGraphRender.AddSink(EventSink);
 			events::renderer::kPostSceneGraphRender.AddSink(EventSink);
 			events::renderer::kPostRenderWindowUpdate.AddSink(EventSink);
+			events::dialog::cellView::kSelectCell.AddSink(EventSink);
+			events::plugin::kClearData.AddSink(EventSink);
+			events::plugin::kConstructSpecialForms.AddSink(EventSink);
 
 			SceneGraphManager->AddModifier(&ReferenceParentChildIndicator::Instance);
 			SceneGraphManager->AddModifier(&ReferenceVisibilityModifier::Instance);
@@ -1174,6 +1181,9 @@ namespace cse
 			events::renderer::kPreSceneGraphRender.RemoveSink(EventSink);
 			events::renderer::kPostSceneGraphRender.RemoveSink(EventSink);
 			events::renderer::kPostRenderWindowUpdate.RemoveSink(EventSink);
+			events::dialog::cellView::kSelectCell.RemoveSink(EventSink);
+			events::plugin::kClearData.RemoveSink(EventSink);
+			events::plugin::kConstructSpecialForms.RemoveSink(EventSink);
 
 			ColorMaskManager->Deinitialize();
 			MouseInputManager->Deinitialize();
@@ -1803,6 +1813,32 @@ namespace cse
 		void RenderWindowManager::HandleClearData()
 		{
 			ActiveRefCache.clear();
+
+			ExtendedState->MeasureBaseRuler = nullptr;
+			ExtendedState->MeasureBaseCircle = nullptr;
+		}
+
+		void RenderWindowManager::HandleConstructSpecialForms()
+		{
+			SME_ASSERT(ExtendedState->MeasureBaseRuler == nullptr);
+			SME_ASSERT(ExtendedState->MeasureBaseCircle == nullptr);
+
+			ExtendedState->MeasureBaseRuler = CS_CAST(TESForm::CreateInstance(TESForm::kFormType_Static), TESForm, TESObjectSTAT);
+			ExtendedState->MeasureBaseRuler->SetFormID(0x200);
+			ExtendedState->MeasureBaseRuler->SetEditorID("zzCSEMeasureRuler");
+			ExtendedState->MeasureBaseRuler->modelPath.Set("Meshes\\CSE\\MeasureRuler.nif");
+			_DATAHANDLER->AddTESObject(ExtendedState->MeasureBaseRuler);
+			ExtendedState->MeasureBaseRuler->SetFromActiveFile(false);
+			ExtendedState->MeasureBaseRuler->MarkAsTemporary();
+
+
+			ExtendedState->MeasureBaseCircle = CS_CAST(TESForm::CreateInstance(TESForm::kFormType_Static), TESForm, TESObjectSTAT);
+			ExtendedState->MeasureBaseCircle->SetFormID(0x201);
+			ExtendedState->MeasureBaseCircle->SetEditorID("zzCSEMeasureCircle");
+			ExtendedState->MeasureBaseCircle->modelPath.Set("Meshes\\CSE\\MeasureCircle.nif");
+			_DATAHANDLER->AddTESObject(ExtendedState->MeasureBaseCircle);
+			ExtendedState->MeasureBaseCircle->SetFromActiveFile(false);
+			ExtendedState->MeasureBaseCircle->MarkAsTemporary();
 		}
 
 		void RenderWindowManager::HandleD3DRelease()

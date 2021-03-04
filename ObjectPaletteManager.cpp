@@ -965,102 +965,55 @@ namespace cse
 			if (MainDialog == nullptr)
 				return false;
 
-			if (CurrentSelection.size())
+			if (CurrentSelection.empty())
+				return false;
+
+			if ((*TESRenderWindow::ActiveCell == nullptr && _TES->currentInteriorCell == nullptr) ||
+				*TESRenderWindow::PathGridEditFlag ||
+				*TESRenderWindow::LandscapeEditFlag)
 			{
-				if ((*TESRenderWindow::ActiveCell == nullptr && _TES->currentInteriorCell == nullptr) ||
-					*TESRenderWindow::PathGridEditFlag ||
-					*TESRenderWindow::LandscapeEditFlag)
-				{
-					BGSEEUI->MsgBoxE(*TESRenderWindow::WindowHandle,
-									 MB_OK,
-									 "Cannot place object! Possible reasons: No cell loaded in the render window, pathgrid/landscape edit mode enabled");
-					return false;
-				}
-
-				TESObjectCELL* Interior = _TES->currentInteriorCell;
-				TESWorldSpace* Worldspace = _TES->currentWorldSpace;
-				if (Interior)
-					Worldspace = nullptr;
-
-				if (Interior || Worldspace)
-				{
-					NiCamera* MainCamera = _PRIMARYRENDERER->primaryCamera;
-					Vector3 Position, Rotation;
-
-					// get initial click position and rotation
-					thisCall<bool>(0x006FF1A0, MainCamera, X, Y, &Position, &Rotation);
-
-					// PickData stuff, see TESRenderWindow
-					thisCall<void>(0x00417C40, 0x00A0BC64, _TES->sceneGraphObjectRoot);
-					if (thisCall<bool>(0x005E6030, 0x00A0BC64, &Position, &Rotation, 0))
-					{
-						float*** NewPosition = (float***)0x00A0BC80;
-						Position.x = *(float*)((UInt32)**NewPosition + 0x8);
-						Position.y = *(float*)((UInt32)**NewPosition + 0xC);
-						Position.z = *(float*)((UInt32)**NewPosition + 0x10);
-					}
-
-					// sanity check to ensure exterior coords are valid
-					if (_TES->currentInteriorCell == nullptr)
-					{
-						TESWorldSpace* CurrentWorldspace = _TES->currentWorldSpace;
-						if (CurrentWorldspace == nullptr || _DATAHANDLER->GetExteriorCell(Position.x, Position.y, CurrentWorldspace) == nullptr)
-							thisCall<bool>(0x006FF1A0, MainCamera, X, Y, &Position, &Rotation);
-					}
-
-					// randomly pick one from the selection list
-					SME::MersenneTwister::init_genrand(GetTickCount());
-					int Index = SME::MersenneTwister::genrand_real2() * (CurrentSelection.size() - 1);
-					if (Index < CurrentSelection.size())
-					{
-						TESObjectREFR* NewRef = CurrentSelection.at(Index)->Instantiate(Position, false);
-						NewRef->SetFromActiveFile(true);
-						Position = NewRef->position;
-						Rotation = NewRef->rotation;
-
-						_DATAHANDLER->PlaceObjectRef((TESObject*)NewRef->baseForm,
-													 &Position,
-													 &Rotation,
-													 Interior,
-													 Worldspace,
-													 NewRef);
-
-						_RENDERSEL->ClearSelection(true);
-						_RENDERSEL->AddToSelection(NewRef, true);
-
-						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_ObjectPalette);
-						TESRenderWindow::Redraw();
-
-						events::dialog::renderWindow::kPlaceRef.HandlePlaceRef(NewRef);
-						return true;
-					}
-				}
+				BGSEEUI->MsgBoxE(*TESRenderWindow::WindowHandle,
+					MB_OK,
+					"Cannot place object! Possible reasons: No cell loaded in the render window, pathgrid/landscape edit mode enabled");
+				return false;
 			}
 
-			return false;
+			// randomly pick one from the selection list
+			SME::MersenneTwister::init_genrand(GetTickCount());
+			int Index = SME::MersenneTwister::genrand_real2() * (CurrentSelection.size() - 1);
+			if (Index >=CurrentSelection.size())
+				return false;
+
+			TESObjectREFR* NewRef = CurrentSelection.at(Index)->Instantiate(Vector3(0, 0, 0), false);
+			NewRef->SetFromActiveFile(true);
+
+			TESRenderWindow::PlaceRefAtMousePos(NewRef, X, Y, NewRef->position, NewRef->rotation);
+			achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_ObjectPalette);
+			return true;
 		}
 
 		void ObjectPaletteManager::Show()
 		{
 			if (MainDialog)
-				SetForegroundWindow(MainDialog);
-			else
 			{
-				HWND Dialog = BGSEEUI->ModelessDialog(BGSEEMAIN->GetExtenderHandle(),
-										MAKEINTRESOURCE(IDD_OBJECTPALETTE),
-										*TESCSMain::WindowHandle,
-										DlgProc,
-										NULL);
-				SME_ASSERT(Dialog);
+				SetForegroundWindow(MainDialog);
+				return;
+			}
 
-				if (settings::dialogs::kShowMainWindowsInTaskbar.GetData().i)
-				{
-					bgsee::WindowStyler::StyleData RegularAppWindow = { 0 };
-					RegularAppWindow.Extended = WS_EX_APPWINDOW;
-					RegularAppWindow.ExtendedOp = bgsee::WindowStyler::StyleData::kOperation_OR;
+			HWND Dialog = BGSEEUI->ModelessDialog(BGSEEMAIN->GetExtenderHandle(),
+									MAKEINTRESOURCE(IDD_OBJECTPALETTE),
+									*TESCSMain::WindowHandle,
+									DlgProc,
+									NULL);
+			SME_ASSERT(Dialog);
 
-					BGSEEUI->GetWindowStyler()->StyleWindow(Dialog, RegularAppWindow);
-				}
+			if (settings::dialogs::kShowMainWindowsInTaskbar.GetData().i)
+			{
+				bgsee::WindowStyler::StyleData RegularAppWindow = { 0 };
+				RegularAppWindow.Extended = WS_EX_APPWINDOW;
+				RegularAppWindow.ExtendedOp = bgsee::WindowStyler::StyleData::kOperation_OR;
+
+				BGSEEUI->GetWindowStyler()->StyleWindow(Dialog, RegularAppWindow);
 			}
 		}
 

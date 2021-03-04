@@ -16,6 +16,7 @@ namespace cse
 				_DeclareMemHdlr(PostSave, "");
 				_DeclareMemHdlr(PrePostLoad, "");
 				_DeclareMemHdlr(ClearData, "");
+				_DeclareMemHdlr(ConstructSpecialForms, "");
 			}
 
 			namespace form

@@ -13,6 +13,7 @@ namespace cse
 			events::plugin::_MemHdlr(PostSave).WriteJump();
 			events::plugin::_MemHdlr(PrePostLoad).WriteJump();
 			events::plugin::_MemHdlr(ClearData).WriteJump();
+			events::plugin::_MemHdlr(ConstructSpecialForms).WriteJump();
 
 			events::form::_MemHdlr(TESFormSetFromActivePlugin).WriteJump();
 			events::form::_MemHdlr(TESFormSetDeleted).WriteJump();
@@ -51,6 +52,7 @@ namespace cse
 				_DefineHookHdlr(PostSave, 0x0047F12A);
 				_DefineHookHdlr(PrePostLoad, 0x0041BD98);
 				_DefineHookHdlr(ClearData, 0x0047AE76);
+				_DefineHookHdlr(ConstructSpecialForms, 0x00481049);
 
 				void __stdcall DoPrePostLoad(bool State)
 				{
@@ -141,6 +143,24 @@ namespace cse
 						mov     ecx, edi
 						pushad
 						lea		ecx, cse::events::plugin::kClearData
+						call	cse::events::BasicEventSource::RaiseEvent
+						popad
+
+						jmp		_hhGetVar(Retn)
+					}
+				}
+
+				#define _hhName	ConstructSpecialForms
+				_hhBegin()
+				{
+					_hhSetVar(Retn, 0x0048104E);
+					_hhSetVar(Call, 0x00505070);
+					__asm
+					{
+						call	_hhGetVar(Call)
+
+						pushad
+						lea		ecx, cse::events::plugin::kConstructSpecialForms
 						call	cse::events::BasicEventSource::RaiseEvent
 						popad
 

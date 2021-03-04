@@ -204,6 +204,66 @@ Vector3* TESRenderWindow::CalculatePathGridPointPositionVectorSum(Vector3& OutPo
 	return &OutPosVecSum;
 }
 
+void TESRenderWindow::PlaceRefAtMousePos(TESObjectREFR* Ref, int X, int Y, bool ResetCurrentSelection /*= true*/)
+{
+	const Vector3 PositionOffset(0, 0, 0), Rotation(0, 0, 0);
+	PlaceRefAtMousePos(Ref, X, Y, PositionOffset, Rotation, ResetCurrentSelection);
+}
+
+void TESRenderWindow::PlaceRefAtMousePos(TESObjectREFR* Ref, int X, int Y, const Vector3& PositionOffset, const Vector3& Rotation, bool ResetCurrentSelection /*= true*/)
+{
+	SME_ASSERT(*TESRenderWindow::ActiveCell || _TES->currentInteriorCell);
+	SME_ASSERT(*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0);
+
+	TESObjectCELL* Interior = _TES->currentInteriorCell;
+	TESWorldSpace* Worldspace = _TES->currentWorldSpace;
+	if (Interior)
+		Worldspace = nullptr;
+
+	SME_ASSERT(Interior || Worldspace);
+
+	Vector3 RayOrigin(0, 0, 0), RayDir(0, 0, 0), Position(0, 0, 0);
+	TESRender::WindowPointToRay(X, Y, &RayOrigin, &RayDir);
+
+	TESRenderWindow::PickBuffer->SetRoot(_TES->sceneGraphObjectRoot);
+	if (TESRenderWindow::PickBuffer->PerformPick(&RayOrigin, &RayDir))
+	{
+		if (TESRenderWindow::PickBuffer->pickRecords.numObjs > 0)
+		{
+			const auto& IntersectionPoint = TESRenderWindow::PickBuffer->pickRecords.data[0]->intersectionPoint;
+			Position = IntersectionPoint;
+		}
+	}
+
+	Position += PositionOffset;
+	if (_TES->currentInteriorCell == nullptr)
+	{
+		auto ValidExteriorCell = _DATAHANDLER->GetExteriorCell(Position.x, Position.y, Worldspace);
+		if (ValidExteriorCell == nullptr)
+		{
+			ValidExteriorCell = _DATAHANDLER->GetExteriorCell(Position.x - PositionOffset.x, Position.y - PositionOffset.y, Worldspace);
+			if (ValidExteriorCell == nullptr)
+				Position.Scale(0);		// reset to origin if the calculated pos is invalid
+		}
+	}
+
+	_DATAHANDLER->PlaceObjectRef(CS_CAST(Ref->baseForm, TESForm, TESObject), &Position, &Rotation, Interior, Worldspace, Ref);
+
+	if (ResetCurrentSelection)
+	{
+		_RENDERSEL->ClearSelection(true);
+		_RENDERSEL->AddToSelection(Ref, true);
+	}
+
+	TESRenderWindow::Redraw();
+	events::dialog::renderWindow::kPlaceRef.HandlePlaceRef(Ref);
+}
+
+void TESRenderWindow::MoveRefToNextZCollisionPlane(TESObjectREFR* Ref)
+{
+	cdeclCall<void>(0x00426E50, PickBuffer, Ref);
+}
+
 void TESRenderWindow::UndoStack::RecordReference(UInt32 Operation, TESRenderSelection::SelectedObjectsEntry* Selection)
 {
 	thisCall<UInt32>(0x00432D40, this, Operation, Selection);
@@ -447,17 +507,28 @@ void TESRender::SetBSShaderPPLightingPropertyDiffuseTexture(BSShaderPPLightingPr
 	thisCall<void>(0x00774A50, Property, Index, Texture);
 }
 
+bool TESRender::WindowPointToRay(int X, int Y, Vector3* OutOrigin, Vector3* OutDirection)
+{
+	return thisCall<bool>(0x006FF1A0, _PRIMARYRENDERER->primaryCamera, X, Y, OutOrigin, OutDirection);
+}
+
+bool TESRender::WindowPointToRay(NiCamera* Camera, int X, int Y, Vector3* OutOrigin, Vector3* OutDirection)
+{
+	return thisCall<bool>(0x006FF1A0, Camera, X, Y, OutOrigin, OutDirection);
+}
+
 TESPathGridPoint* TESRender::PickPathGridPointAtCoords(int X, int Y)
 {
 	if (*TESRenderWindow::PathGridEditFlag == 0 || *PathGridSceneRoot == nullptr)
 		return nullptr;
 
 	TESPathGridPoint* Result = nullptr;
-	Vector3 Arg1(0, 0, 0), Arg2(Arg1);
+	Vector3 RayOrigin(0, 0, 0), RayDir(RayOrigin);
 
 	TESRenderWindow::PickBuffer->SetRoot(*PathGridSceneRoot);
-	thisCall<void>(0x006FF1A0, _PRIMARYRENDERER->primaryCamera, X, Y, &Arg1, &Arg2);
-	if (TESRenderWindow::PickBuffer->PerformPick(&Arg1, &Arg2))
+	WindowPointToRay(X, Y, &RayOrigin, &RayDir);
+
+	if (TESRenderWindow::PickBuffer->PerformPick(&RayOrigin, &RayDir))
 	{
 		if (TESRenderWindow::PickBuffer->pickRecords.numObjs > 0)
 		{
@@ -512,8 +583,8 @@ void TESRender::PickData::SetRoot(NiNode* To)
 	thisCall<void>(0x00417C40, this, To);
 }
 
-bool TESRender::PickData::PerformPick(Vector3* Arg1, Vector3* Arg2, bool KeepExisting /*= false*/)
+bool TESRender::PickData::PerformPick(Vector3* RayOrigin, Vector3* RayDir, bool KeepExisting /*= false*/)
 {
-	return thisCall<bool>(0x005E6030, this, Arg1, Arg2, KeepExisting);
+	return thisCall<bool>(0x005E6030, this, RayOrigin, RayDir, KeepExisting);
 }
 

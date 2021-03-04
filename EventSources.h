@@ -1,7 +1,7 @@
 #pragma once
 
 // quite clunky and can be done better with templates
-// if only I had thought of that earlier...
+// too late to change it now, hooray for technical debt!
 namespace cse
 {
 	namespace events
@@ -34,6 +34,7 @@ namespace cse
 				kType_Plugin_PreSave,								// right before the save file's header is updated
 				kType_Plugin_PostSave,								// after the post-save cleanup is performed
 				kType_Plugin_ClearData,								// when the data handler clears its data
+				kType_Plugin_ConstructSpecialForms,					// after the data handler constructs the special forms
 
 				kType_Renderer_Release,								// before the renderer is released
 				kType_Renderer_Renew,								// after the renderer is recreated/renewed
@@ -113,7 +114,7 @@ namespace cse
 				kType_SetActive,
 				kType_SetDeleted,
 				kType_SetFormID,
-				kType_SetEditorID
+				kType_SetEditorID,
 			};
 
 			TESForm*			Form;
@@ -141,6 +142,7 @@ namespace cse
 			extern BasicTESFileEventSource			kPreSave;
 			extern BasicEventSource					kPostSave;
 			extern BasicEventSource					kClearData;
+			extern BasicEventSource					kConstructSpecialForms;
 		}
 
 		namespace renderer
@@ -269,6 +271,8 @@ namespace cse
 			extern BasicTESFormEventSource			kSetDeleted;
 			extern BasicTESFormEventSource			kSetFormID;
 			extern BasicTESFormEventSource			kSetEditorID;
+			extern BasicTESFormEventSource			kSetEditorID;
+			extern BasicTESFormEventSource			kDataHandlerConstructSpecialForms;
 		}
 
 

@@ -91,13 +91,14 @@ public:
 	struct PickData
 	{
 		// actually NiPick::Record
-		// 14+?
+		// 44
 		struct Record
 		{
 			// members
 			/*00*/ NiAVObject*				picked;
-			/*04*/ UInt32					unk04;
-			/*08*/ Vector3					unk08;
+			/*04*/ NiRefObject*				unk04;
+			/*08*/ Vector3					intersectionPoint;
+			/*14*/ UInt32					unk14[(0x44 - 0x14) >> 2];
 		};
 
 		// members
@@ -106,7 +107,7 @@ public:
 		/*08*/ UInt32						unk08;				// init to 1
 		/*0C*/ UInt32						unk0C;				// init to 1
 		/*10*/ UInt8						unk10;				// init to 1
-		/*11*/ UInt8						unk11;
+		/*11*/ UInt8						ignoreCulled;
 		/*12*/ UInt16						pad12;
 		/*14*/ NiNode*						root;				// smart ptr, picking is done on its children
 		/*18*/ NiTArray<Record*>			pickRecords;		// NiTArray<NiPick::Record*>
@@ -118,10 +119,10 @@ public:
 
 		// methods
 		void								SetRoot(NiNode* To);
-		bool								PerformPick(Vector3* Arg1, Vector3* Arg2, bool KeepExisting = false);
+		bool								PerformPick(Vector3* RayOrigin, Vector3* RayDir, bool KeepExisting = false);
 	};
 	STATIC_ASSERT(sizeof(PickData) == 0x30);
-	STATIC_ASSERT(sizeof(PickData::Record) == 0x14);
+	STATIC_ASSERT(sizeof(PickData::Record) == 0x44);
 
 	// 20
 	struct Scenegraph
@@ -181,6 +182,8 @@ public:
 	static NiCamera*						CreateCamera();
 	static NiTexturingProperty*				CreateTexturingProperty(const char* TexturePath);	// increments ref count
 	static void								SetBSShaderPPLightingPropertyDiffuseTexture(BSShaderPPLightingProperty* Property, NiTexture* Texture, UInt8 Index);
+	static bool								WindowPointToRay(int X, int Y, Vector3* OutOrigin, Vector3* OutDirection);
+	static bool								WindowPointToRay(NiCamera* Camera, int X, int Y, Vector3* OutOrigin, Vector3* OutDirection);
 
 
 	static NiDX9Renderer**					NiRendererSingleton;
@@ -279,6 +282,9 @@ public:
 	static bool							GetCellInActiveGrid(TESObjectCELL* Cell);	// returns true if the cell is loaded/visible in the render window
 	static std::string					GetCellGeomDescription(TESObjectCELL* Cell);
 	static Vector3*						CalculatePathGridPointPositionVectorSum(Vector3& OutPosVecSum);
+	static void							PlaceRefAtMousePos(TESObjectREFR* Ref, int X, int Y, bool ResetCurrentSelection = true);
+	static void							PlaceRefAtMousePos(TESObjectREFR* Ref, int X, int Y, const Vector3& PositionOffset, const Vector3& Rotation, bool ResetCurrentSelection = true);
+	static void							MoveRefToNextZCollisionPlane(TESObjectREFR* Ref);
 
 	static HWND*						WindowHandle;
 	static int*							ScreenWidth;

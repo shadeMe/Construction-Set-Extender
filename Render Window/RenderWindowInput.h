@@ -173,6 +173,7 @@ namespace cse
 				IHotKey(const char* GUID, bool Editable, const ExecutionContext& Context);
 				virtual ~IHotKey() = 0;
 
+				const char*						GetGUID() const;
 				virtual const ExecutionContext&	GetExecutionContext() const override;
 
 				virtual const char*				GetName() const = 0;

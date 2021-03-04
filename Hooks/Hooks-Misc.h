@@ -19,7 +19,6 @@ namespace cse
 		_DeclareMemHdlr(TopicInfoCopyEpilog, "fixes the bug that causes the wrong topic info to be flagged as active when using the copy popup menu option");
 		_DeclareMemHdlr(TopicInfoCopyProlog, "");
 		_DeclareMemHdlr(NumericEditorID, "displays a warning when editorIDs start with an integer");
-		_DeclareMemHdlr(DataHandlerConstructSpecialForms, "initializes easter egg forms");
 		_DeclareMemHdlr(ResultScriptSaveForm, "prevents a crash that occurs when a result script has local variable declarations");
 		_DeclareMemHdlr(TESObjectREFRDoCopyFrom, "patches the TESObjectREFR::Copy handler to fully duplicate extradata from the source");
 		_DeclareMemHdlr(TESFormAddReference, "patches the CS form referencing code to take into account multiple references of a form by another");

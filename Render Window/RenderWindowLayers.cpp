@@ -455,6 +455,7 @@ namespace cse
 		{
 			NamedReferenceCollectionManager::Initialize();
 
+			events::plugin::kClearData.AddSink(EventSink);
 			events::dialog::renderWindow::kPlaceRef.AddSink(EventSink);
 
 			ToolbarOSDLayer::Instance.RegisterTopToolbarButton("##popup_reference_layers",
@@ -464,6 +465,7 @@ namespace cse
 
 		void RenderWindowLayerManager::Deinitialize()
 		{
+			events::plugin::kClearData.RemoveSink(EventSink);
 			events::dialog::renderWindow::kPlaceRef.RemoveSink(EventSink);
 
 			NamedReferenceCollectionManager::Deinitialize();

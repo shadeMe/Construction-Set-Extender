@@ -167,7 +167,7 @@ namespace cse
 		{
 			bool						Initialized;
 		public:
-			static const float			MaxLandscapeEditBrushRadius;
+			static const float			kMaxLandscapeEditBrushRadius;
 
 			bool						FreezeInactiveRefs;
 			bool						UseAlternateMovementSettings;
@@ -180,6 +180,8 @@ namespace cse
 			NiSourceTexture*			GrassOverlayTexture;
 			Vector3						StaticCameraPivot;
 			bool						DraggingPathGridPoints;
+			TESObjectSTAT*				MeasureBaseRuler;
+			TESObjectSTAT*				MeasureBaseCircle;
 
 			RenderWindowExtendedState();
 			~RenderWindowExtendedState();
@@ -244,6 +246,7 @@ namespace cse
 			bool										MouseInClientArea;
 
 			void										HandleClearData();
+			void										HandleConstructSpecialForms();
 			void										HandleD3DRelease();
 			void										HandleD3DRenew();
 			void										HandlePreSceneGraphRender(NiCamera* Camera,

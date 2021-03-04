@@ -78,37 +78,9 @@ namespace cse
 		_DefineHookHdlr(MoveSelectionClampMul, 0x0042572C);
 		_DefineHookHdlr(ShadowSceneNodeUseFullBrightLight, 0x00772091);
 
-#ifndef NDEBUG
-		void __stdcall DoTestHook1()
-		{
-			BGSEECONSOLE_MESSAGE("MOVE CALL!");
-		}
-
-		#define _hhName		TestHook1
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x00425676);
-			__asm
-			{
-				pushad
-				call	DoTestHook1
-				popad
-
-				sub     esp, 114h
-				jmp		_hhGetVar(Retn)
-			}
-		}
-	//	_DefineJumpHdlr(TestHook1, 0x004262BF, 0x004262D3);
-		_DefineHookHdlr(TestHook1, 0x00425670);
-#endif
 
 		void PatchRendererHooks(void)
 		{
-#ifndef NDEBUG
-	//		_MemHdlr(TestHook1).WriteJump();
-
-			//SME::MemoryHandler::SafeWrite8(0x0047571C + 1, 2);
-#endif
 			_MemHdlr(DoorMarkerProperties).WriteJump();
 			_MemHdlr(TESObjectREFRSetupDialog).WriteJump();
 			_MemHdlr(TESObjectREFRCleanDialog).WriteJump();
@@ -141,7 +113,7 @@ namespace cse
 			_MemHdlr(TESPathGridShowMultipleSelectionRing).WriteJump();
 			_MemHdlr(TESPathGridDtor).WriteUInt8(0xEB);
 			_MemHdlr(InitialCellLoadCameraPosition).WriteJump();
-			_MemHdlr(LandscapeEditBrushRadius).WriteUInt32((UInt32)&RenderWindowExtendedState::MaxLandscapeEditBrushRadius);
+			_MemHdlr(LandscapeEditBrushRadius).WriteUInt32((UInt32)&RenderWindowExtendedState::kMaxLandscapeEditBrushRadius);
 			_MemHdlr(DuplicateReferences).WriteJump();
 			_MemHdlr(TESRenderControlPerformRelativeScale).WriteJump();
 			_MemHdlr(DataHandlerClosePlugins).WriteUInt8(0xEB);
@@ -192,6 +164,15 @@ namespace cse
 
 				_DefineCallHdlr(RerouteShadowLightShaderSetAmbientColorShaderConstant, kShadowLightShaderSetAmbientColorShaderConstantCallSites[i], ShadowLightShaderSetAmbientColorShaderConstantDetour);
 				_MemHdlr(RerouteShadowLightShaderSetAmbientColorShaderConstant).WriteCall();
+			}
+
+			{
+				// prevent the removal of temporary references from the render window selection when translating/scaling
+				SME::MemoryHandler::WriteRelJump(0x00512A69, 0x00512A73);
+				SME::MemoryHandler::WriteRelJump(0x00512B0A, 0x00512B12);
+
+				// fix for the CS bug that caused temporary references (door/travel markers) to disappear if they were moved outside the loaded cell grid
+				SME::MemoryHandler::WriteRelJump(0x00539345, 0x00539351);
 			}
 		}
 
@@ -1088,39 +1069,37 @@ namespace cse
 
 		bool __stdcall DoCoplanarRefDropHook(NiCamera* Camera, int XCoord, int YCoord, Vector3* OutPosition, Vector3* OutRotation)
 		{
-			bool Result = true;
+			// replaced call
+			TESRender::WindowPointToRay(XCoord, YCoord, OutPosition, OutRotation);
 
-			thisCall<bool>(0x006FF1A0, Camera, XCoord, YCoord, OutPosition, OutRotation);
-			Vector3 PosBuf(*OutPosition), RotBuf(*OutRotation);
+			bool UseOriginalPos = true;
+			if (!settings::renderer::kCoplanarRefDrops.GetData().i)
+				return UseOriginalPos;
 
-			if (settings::renderer::kCoplanarRefDrops.GetData().i)
+			TESRenderWindow::PickBuffer->SetRoot(_TES->sceneGraphObjectRoot);
+			if (TESRenderWindow::PickBuffer->PerformPick(OutPosition, OutRotation))
 			{
-				// perform the necessary (nose)picking nonsense
-				thisCall<void>(0x00417C40, 0x00A0BC64, _TES->sceneGraphObjectRoot);
-				if (thisCall<bool>(0x005E6030, 0x00A0BC64, OutPosition, OutRotation, 0))
+				if (TESRenderWindow::PickBuffer->pickRecords.numObjs > 0)
 				{
-					// sacrilege! SACRILEGE!!
-					float*** NewPosition = (float***)0x00A0BC80;
-					OutPosition->x = *(float*)((UInt32)**NewPosition + 0x8);
-					OutPosition->y = *(float*)((UInt32)**NewPosition + 0xC);
-					OutPosition->z = *(float*)((UInt32)**NewPosition + 0x10);
-					OutRotation->Scale(0.0f);
-
-					Result = false;
-				}
-
-				if (_TES->currentInteriorCell == nullptr)
-				{
-					TESWorldSpace* CurrentWorldspace = _TES->currentWorldSpace;
-					if (CurrentWorldspace == nullptr || _DATAHANDLER->GetExteriorCell(OutPosition->x, OutPosition->y, CurrentWorldspace) == nullptr)
+					const auto& IntersectionPoint = TESRenderWindow::PickBuffer->pickRecords.data[0]->intersectionPoint;
+					if (_TES->currentInteriorCell == nullptr)
 					{
-						*OutPosition = PosBuf;
-						*OutRotation = RotBuf;
+						TESWorldSpace* CurrentWorldspace = _TES->currentWorldSpace;
+						if (CurrentWorldspace == nullptr || _DATAHANDLER->GetExteriorCell(OutPosition->x, OutPosition->y, CurrentWorldspace) == nullptr)
+						{
+							// invalid cell coords, use the original position
+							UseOriginalPos = true;
+							return UseOriginalPos;
+						}
 					}
+
+					*OutPosition = IntersectionPoint;
+					OutRotation->Scale(0.f);
+					UseOriginalPos = false;
 				}
 			}
 
-			return Result;
+			return UseOriginalPos;
 		}
 
 		#define _hhName		CoplanarRefDrop

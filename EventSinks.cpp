@@ -49,6 +49,12 @@ namespace cse
 			cliWrapper::interfaces::SE->UpdateIntelliSenseDatabase();
 		}
 
+		DEFINE_BASIC_EVENT_SINK(DataHandlerConstructSpecialForms);
+		DEFINE_BASIC_EVENT_SINK_HANDLER(DataHandlerConstructSpecialForms)
+		{
+			hallOfFame::Initialize();
+		}
+
 		void InitializeSinks()
 		{
 			ADD_BASIC_SINK_TO_SOURCE(DestroyCustomDialogs, dialog::kCloseAll);
@@ -56,6 +62,7 @@ namespace cse
 			ADD_BASIC_SINK_TO_SOURCE(PostPluginSaveTasks, plugin::kPostSave);
 			ADD_BASIC_SINK_TO_SOURCE(PrePluginLoadTasks, plugin::kPreLoad);
 			ADD_BASIC_SINK_TO_SOURCE(PostPluginLoadTasks, plugin::kPostLoad);
+			ADD_BASIC_SINK_TO_SOURCE(DataHandlerConstructSpecialForms, plugin::kConstructSpecialForms);
 		}
 
 		void DeinitializeSinks()
@@ -65,6 +72,7 @@ namespace cse
 			REMOVE_BASIC_SINK_FROM_SOURCE(PostPluginSaveTasks, plugin::kPostSave);
 			REMOVE_BASIC_SINK_FROM_SOURCE(PrePluginLoadTasks, plugin::kPreLoad);
 			REMOVE_BASIC_SINK_FROM_SOURCE(PostPluginLoadTasks, plugin::kPostLoad);
+			REMOVE_BASIC_SINK_FROM_SOURCE(DataHandlerConstructSpecialForms, plugin::kConstructSpecialForms);
 		}
 
 	}

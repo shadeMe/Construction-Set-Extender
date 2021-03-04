@@ -768,6 +768,30 @@ namespace cse
 				_RENDERWIN_MGR.GetOSD()->ToggleRendering();
 			});
 
+			void __declspec(naked) StubRet4(void) {
+				__asm retn 4
+			}
+
+			BasicRWA CreateMeasureRuler("Create Ruler Measure", "Create a temporary ruler measure reference at the location of the cursor.",
+				ExecutionContext::kMode_ReferenceEdit, []() {
+				auto NewRef = CS_CAST(TESForm::CreateInstance(TESForm::kFormType_REFR), TESForm, TESObjectREFR);
+				NewRef->SetBaseForm(_RENDERWIN_XSTATE.MeasureBaseRuler);
+				NewRef->MarkAsTemporary();
+
+				TESRenderWindow::PlaceRefAtMousePos(NewRef, TESRenderWindow::LastMouseCoords->x, TESRenderWindow::LastMouseCoords->y);
+				NotificationOSDLayer::Instance.ShowNotification("Create new ruler measure");
+			});
+
+			BasicRWA CreateMeasureCircle("Create Circle Measure", "Create a temporary circle measure reference at the location of the cursor.",
+				ExecutionContext::kMode_ReferenceEdit, []() {
+				auto NewRef = CS_CAST(TESForm::CreateInstance(TESForm::kFormType_REFR), TESForm, TESObjectREFR);
+				NewRef->SetBaseForm(_RENDERWIN_XSTATE.MeasureBaseCircle);
+				NewRef->MarkAsTemporary();
+
+				TESRenderWindow::PlaceRefAtMousePos(NewRef, TESRenderWindow::LastMouseCoords->x, TESRenderWindow::LastMouseCoords->y);
+				NotificationOSDLayer::Instance.ShowNotification("Create new circle measure");
+			});
+
 
 			namespace builtIn
 			{

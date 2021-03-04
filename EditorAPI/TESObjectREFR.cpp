@@ -268,7 +268,7 @@ void TESObjectREFR::SetNiNode(NiNode* Node)
 
 void TESObjectREFR::Floor()
 {
-	cdeclCall<void>(0x00426E50, 0x00A0BC64, this);
+	TESRenderWindow::MoveRefToNextZCollisionPlane(this);
 }
 
 void TESObjectREFR::Delete()

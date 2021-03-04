@@ -216,6 +216,11 @@ namespace cse
 
 			IHotKey::~IHotKey() = default;
 
+			const char* IHotKey::GetGUID() const
+			{
+				return GUID.c_str();
+			}
+
 			const BasicKeyBinding& IHotKey::GetActiveBinding() const
 			{
 				return ActiveBinding;
@@ -505,7 +510,9 @@ namespace cse
 				EventResult Result;
 				switch (uMsg)
 				{
+				case WM_SYSKEYDOWN:
 				case WM_KEYDOWN:
+				case WM_SYSKEYUP:
 				case WM_KEYUP:
 					if (wParam == BuiltInKey)
 						Result.Triggered = Result.Success = true;
@@ -609,7 +616,7 @@ namespace cse
 			{
 				EventResult Result;
 
-				if (uMsg == WM_KEYDOWN)
+				if (uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN)
 				{
 					if (IsActiveBindingTriggered(wParam))
 					{
@@ -949,7 +956,15 @@ namespace cse
 				ImGui::Separator();
 
 				bool Close = false;
-				if (ImGui::Button("OK", ImVec2(120, 0)))
+				if (KeyConflict || NewBinding.IsValid() == false)
+				{
+					ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0 / 7.0f, 0.6f, 0.6f));
+					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0 / 7.0f, 0.7f, 0.7f));
+					ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0 / 7.0f, 0.8f, 0.8f));
+					ImGui::Button("OK", ImVec2(120, 0));
+					ImGui::PopStyleColor(3);
+				}
+				else if (ImGui::Button("OK", ImVec2(120, 0)))
 				{
 					if (KeyConflict == false)
 					{
@@ -1139,6 +1154,8 @@ namespace cse
 				Shared.ToggleFlyCamera = RegisterActionableKeyHandler("00B540EA-40E4-4EBA-A3D9-718674BA77F9",
 																	actions::ToggleFlyCamera, BasicKeyBinding(VK_OEM_3, NULL));
 				RegisterActionableKeyHandler("DB9EF5E3-5C89-4760-99BD-669D5456C3B4", actions::ToggleOSD, BasicKeyBinding('1', BasicKeyBinding::kModifier_Shift));
+				RegisterActionableKeyHandler("4464EDD7-D279-4B57-9C49-5D4BF2113795", actions::CreateMeasureRuler, BasicKeyBinding('R', BasicKeyBinding::kModifier_SHIFT_ALT));
+				RegisterActionableKeyHandler("422DD033-8CBC-4FAC-AD88-FB2B72A4A1DD", actions::CreateMeasureCircle, BasicKeyBinding('F', BasicKeyBinding::kModifier_SHIFT_ALT));
 
 				Shared.MoveCameraWithSelection = RegisterHoldableHandler("5AE9F3BA-A336-450C-89B5-C278294A97C1",
 																		 "Move Camera With References",
@@ -1205,7 +1222,7 @@ namespace cse
 														 Itr->GetName(),
 														 Itr->GetActiveBinding().GetDescription().c_str());
 #endif
-									// activation implictly means success
+									// activation implicitly means success
 									SME_ASSERT(Output.Success);
 									ConsumeMessage = true;
 									break;

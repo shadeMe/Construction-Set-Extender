@@ -24,6 +24,7 @@ namespace cse
 		DECLARE_BASIC_EVENT_SINK(PostPluginSaveTasks);
 		DECLARE_BASIC_EVENT_SINK(PrePluginLoadTasks);
 		DECLARE_BASIC_EVENT_SINK(PostPluginLoadTasks);
+		DECLARE_BASIC_EVENT_SINK(DataHandlerConstructSpecialForms);
 
 		void InitializeSinks();
 		void DeinitializeSinks();

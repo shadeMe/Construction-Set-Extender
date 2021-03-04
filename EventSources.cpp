@@ -160,6 +160,7 @@ namespace cse
 			BasicTESFileEventSource				kPreSave(TypedEventSource::kType_Plugin_PreSave);
 			BasicEventSource					kPostSave(TypedEventSource::kType_Plugin_PostSave);
 			BasicEventSource					kClearData(TypedEventSource::kType_Plugin_ClearData);
+			BasicEventSource					kConstructSpecialForms(TypedEventSource::kType_Plugin_ConstructSpecialForms);
 		}
 
 		namespace renderer

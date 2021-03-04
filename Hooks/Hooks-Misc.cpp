@@ -27,7 +27,6 @@ namespace cse
 		_DefineJumpHdlr(TopicInfoCopyProlog, 0x004F0738, 0x004F07C4);
 		_DefineHookHdlr(TopicInfoCopyEpilog, 0x004F1280);
 		_DefineHookHdlr(NumericEditorID, 0x00497670);
-		_DefineHookHdlr(DataHandlerConstructSpecialForms, 0x00481049);
 		_DefineHookHdlr(ResultScriptSaveForm, 0x004FD258);
 		_DefineHookHdlr(TESObjectREFRDoCopyFrom, 0x0054763D);
 		_DefineHookHdlr(TESFormAddReference, 0x0049644B);
@@ -76,7 +75,6 @@ namespace cse
 			_MemHdlr(TopicInfoCopyProlog).WriteJump();
 			_MemHdlr(TopicInfoCopyEpilog).WriteJump();
 			_MemHdlr(NumericEditorID).WriteJump();
-			_MemHdlr(DataHandlerConstructSpecialForms).WriteJump();
 			_MemHdlr(ResultScriptSaveForm).WriteJump();
 			_MemHdlr(TESObjectREFRDoCopyFrom).WriteJump();
 			_MemHdlr(TESFormAddReference).WriteJump();
@@ -355,23 +353,6 @@ namespace cse
 				push	ebp
 				mov		ebp, esp
 				sub		esp, 0x10
-				jmp		_hhGetVar(Retn)
-			}
-		}
-
-#define _hhName	DataHandlerConstructSpecialForms
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x0048104E);
-			_hhSetVar(Call, 0x00505070);
-			__asm
-			{
-				call	_hhGetVar(Call)
-
-				pushad
-				call	hallOfFame::Initialize
-				popad
-
 				jmp		_hhGetVar(Retn)
 			}
 		}

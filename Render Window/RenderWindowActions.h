@@ -154,6 +154,9 @@ namespace cse
 			extern BasicRWA ToggleFlyCamera;
 			extern BasicRWA ToggleOSD;
 
+			extern BasicRWA CreateMeasureRuler;
+			extern BasicRWA CreateMeasureCircle;
+
 			namespace builtIn
 			{
 				extern BuiltInKeyComboRWA ReloadAllPathGrids;
