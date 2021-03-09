@@ -774,6 +774,9 @@ namespace cse
 
 			BasicRWA CreateMeasureRuler("Create Ruler Measure", "Create a temporary ruler measure reference at the location of the cursor.",
 				ExecutionContext::kMode_ReferenceEdit, []() {
+				if (TESRenderWindow::IsAnyCellLoaded() == false)
+					return;
+
 				auto NewRef = CS_CAST(TESForm::CreateInstance(TESForm::kFormType_REFR), TESForm, TESObjectREFR);
 				NewRef->SetBaseForm(_RENDERWIN_XSTATE.MeasureBaseRuler);
 				NewRef->MarkAsTemporary();
@@ -784,6 +787,9 @@ namespace cse
 
 			BasicRWA CreateMeasureCircle("Create Circle Measure", "Create a temporary circle measure reference at the location of the cursor.",
 				ExecutionContext::kMode_ReferenceEdit, []() {
+				if (TESRenderWindow::IsAnyCellLoaded() == false)
+					return;
+
 				auto NewRef = CS_CAST(TESForm::CreateInstance(TESForm::kFormType_REFR), TESForm, TESObjectREFR);
 				NewRef->SetBaseForm(_RENDERWIN_XSTATE.MeasureBaseCircle);
 				NewRef->MarkAsTemporary();

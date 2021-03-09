@@ -114,6 +114,11 @@ void TESRenderWindow::TogglePathGridEditMode()
 	cdeclCall<void>(0x00550660);
 }
 
+bool TESRenderWindow::IsAnyCellLoaded()
+{
+	return *TESRenderWindow::ActiveCell || _TES->currentInteriorCell;
+}
+
 void TESRenderWindow::Refresh3D(bool Immediate)
 {
 	if (Immediate)
@@ -131,7 +136,7 @@ UInt32 TESRenderWindow::GetActiveCellObjects(TESObjectREFRArrayT& OutList, CellO
 		for (TESObjectCELL::ObjectREFRList::Iterator Itr = _TES->currentInteriorCell->objectList.Begin(); !Itr.End(); ++Itr)
 		{
 			TESObjectREFR* Ref = Itr.Get();
-			if (Ref && Ref->IsTemporary() == false)
+			if (Ref)
 			{
 				if (!Visitor || Visitor(Ref) == true)
 					OutList.push_back(Ref);
@@ -152,7 +157,7 @@ UInt32 TESRenderWindow::GetActiveCellObjects(TESObjectREFRArrayT& OutList, CellO
 					for (TESObjectCELL::ObjectREFRList::Iterator Itr = Data->cell->objectList.Begin(); !Itr.End(); ++Itr)
 					{
 						TESObjectREFR* Ref = Itr.Get();
-						if (Ref && Ref->IsTemporary() == false)
+						if (Ref)
 						{
 							if (!Visitor || Visitor(Ref) == true)
 								OutList.push_back(Ref);
@@ -233,6 +238,13 @@ void TESRenderWindow::PlaceRefAtMousePos(TESObjectREFR* Ref, int X, int Y, const
 			const auto& IntersectionPoint = TESRenderWindow::PickBuffer->pickRecords.data[0]->intersectionPoint;
 			Position = IntersectionPoint;
 		}
+	}
+	else
+	{
+		auto CameraPos = _PRIMARYRENDERER->GetCameraWorldTranslate();
+		Position.x = CameraPos->x;
+		Position.y = CameraPos->y;
+		Position.z = CameraPos->z;
 	}
 
 	Position += PositionOffset;

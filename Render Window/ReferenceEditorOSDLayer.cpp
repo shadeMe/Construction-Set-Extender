@@ -1701,7 +1701,7 @@ namespace cse
 
 			ImGui::SetNextWindowSizeConstraints(ImVec2(300, 300), ImVec2(1280, 720));
 
-			// ### needs better logic - causes inconsistent behaviour when the render window was maximized on exit
+			// ### needs better logic - causes inconsistent behaviour on startup if the render window was maximized on exit
 			//if (LastWindowSize.x != -1)
 			//	ImGui::MoveNextWindowToSafeZone(LastWindowPos, LastWindowSize);
 
@@ -1714,10 +1714,13 @@ namespace cse
 			WindowState.Update(GUI);
 			UpdateCurrentSelection();
 
-			if (ImGui::BeginTable("##main_content_table", HideRefList ? 1 : 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV))
+			// use a different ID if the ref list is hidden; otherwise, its column width will be reset if its hidden on exit
+			if (ImGui::BeginTable(HideRefList ? "##main_content_table_no-ref-list" : "##main_content_table",
+								HideRefList ? 1 : 2,
+								ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV))
 			{
 				if (!HideRefList)
-					ImGui::TableSetupColumn("RefList", ImGuiTableColumnFlags_WidthStretch, 300);
+					ImGui::TableSetupColumn("RefList", ImGuiTableColumnFlags_WidthFixed, 300);
 				ImGui::TableSetupColumn("EditComponents", ImGuiTableColumnFlags_WidthStretch);
 
 				ImGui::TableNextRow();
@@ -1757,17 +1760,13 @@ namespace cse
 									ThisRef->baseForm->editorID.Size() ? ThisRef->baseForm->editorID.c_str() : "<no_editor_id>");
 							}
 							else if (_RENDERSEL->selectionCount > 1)
-							{
 								ImGui::Text("%d references selected", _RENDERSEL->selectionCount);
-							}
 							else
 								ImGui::NewLine();
 
 
 							if (!BuildEditComponentTabs(CurrentSelection, OSD, GUI))
-							{
 								ImGui::Text("No references selected...");
-							}
 						}
 						ImGui::EndChild();
 					}

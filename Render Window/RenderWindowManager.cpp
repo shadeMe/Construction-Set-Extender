@@ -87,17 +87,35 @@ namespace cse
 				return false;
 		}
 
-		ReferenceParentChildIndicator::ReferenceParentChildIndicator()
+		void ReferenceParentChildIndicator::LazyInitialize()
 		{
+			// these need lazy initialization as the dynamic initializer for the static instance will
+			// get called even when the plugin is loaded in an non-editor context
+			if (Initialized)
+				return;
+
 			VertexColor = (NiVertexColorProperty*)TESRender::CreateProperty(NiVertexColorProperty::kType);
 			VertexColor->flags |= NiVertexColorProperty::kSrcMode_Emissive;
 
 			Wireframe = (NiWireframeProperty*)TESRender::CreateProperty(NiWireframeProperty::kType);
 			Wireframe->m_bWireframe = 1;
+
+			Initialized = true;
+		}
+
+		ReferenceParentChildIndicator::ReferenceParentChildIndicator()
+		{
+			Initialized = false;
+
+			VertexColor = nullptr;
+			Wireframe = nullptr;
 		}
 
 		ReferenceParentChildIndicator::~ReferenceParentChildIndicator()
 		{
+			if (!Initialized)
+				return;
+
 			SME_ASSERT(Wireframe->m_uiRefCount == 1);
 			TESRender::DeleteNiRefObject(Wireframe);
 
@@ -107,6 +125,8 @@ namespace cse
 
 		void ReferenceParentChildIndicator::PreRender(RenderData& Data)
 		{
+			LazyInitialize();
+
 			if (settings::renderer::kParentChildVisualIndicator().i &&
 				*TESRenderWindow::PathGridEditFlag == 0 &&
 				*TESRenderWindow::LandscapeEditFlag == 0)
@@ -200,7 +220,7 @@ namespace cse
 			for (auto Itr : Data.LoadedRefs)
 			{
 				UInt32 Reason = 0;
-				if (Itr->IsTemporary() == false && ReferenceVisibilityManager::ShouldBeInvisible(Itr, Reason))
+				if (ReferenceVisibilityManager::ShouldBeInvisible(Itr, Reason))
 				{
 					if (ReferenceVisibilityManager::IsCulled(Itr) == false)
 					{
@@ -922,6 +942,20 @@ namespace cse
 					}
 
 					break;
+				case IDC_RENDERWINDOWCONTEXT_SPAWNRULERMEASURE:
+					{
+						actions::CreateMeasureRuler();
+						Return = true;
+					}
+
+					break;
+				case IDC_RENDERWINDOWCONTEXT_SPAWNCIRCLEMEASURE:
+					{
+						actions::CreateMeasureCircle();
+						Return = true;
+					}
+
+					break;
 				}
 
 				break;
@@ -1288,7 +1322,7 @@ namespace cse
 
 		void RenderWindowManager::RenderActiveRefCollectionRefTable(UInt8 Type, ImGuiTextFilter& FilterHelper)
 		{
-			const TESObjectREFRArrayT& ActiveRefs = ActiveRefCache;
+			const TESObjectREFRArrayT& ActiveRefs = GetActiveRefs();
 			std::unordered_set<std::string> ActiveGroups;
 
 			char FilterBuffer[0x200] = { 0 };

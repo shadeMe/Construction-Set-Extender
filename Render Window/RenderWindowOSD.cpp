@@ -598,6 +598,9 @@ namespace cse
 
 		void ImGuiDX9::Shutdown()
 		{
+			if (!Initialized)
+				return;
+
 			InvalidateDeviceObjects();
 			ImGui::DestroyContext();
 		}

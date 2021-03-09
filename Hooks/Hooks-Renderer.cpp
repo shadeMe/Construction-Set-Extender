@@ -77,6 +77,7 @@ namespace cse
 		_DefineHookHdlr(UndoStackRedoOp3, 0x004328FA);
 		_DefineHookHdlr(MoveSelectionClampMul, 0x0042572C);
 		_DefineHookHdlr(ShadowSceneNodeUseFullBrightLight, 0x00772091);
+		_DefineHookHdlr(UpdateUsageInfoForTempRefs, 0x00540010);
 
 
 		void PatchRendererHooks(void)
@@ -141,6 +142,7 @@ namespace cse
 			_MemHdlr(UndoStackRedoOp3).WriteJump();
 			_MemHdlr(MoveSelectionClampMul).WriteJump();
 			_MemHdlr(ShadowSceneNodeUseFullBrightLight).WriteJump();
+			_MemHdlr(UpdateUsageInfoForTempRefs).WriteJump();
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -1618,6 +1620,35 @@ namespace cse
 				pushad
 				call	DoShadowSceneNodeUseFullBrightLightHook
 				popad
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		bool __stdcall DoUpdateUsageInfoForTempRefs(TESObjectREFR* Ref)
+		{
+			return Ref->IsTemporary() && (Ref->baseForm == _RENDERWIN_XSTATE.MeasureBaseRuler || Ref->baseForm == _RENDERWIN_XSTATE.MeasureBaseCircle);
+		}
+
+		#define _hhName		UpdateUsageInfoForTempRefs
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00540016);
+			__asm
+			{
+				pushad
+				push	ecx
+				call	DoUpdateUsageInfoForTempRefs
+				test	al, al
+				jz		FALLBACK
+				popad
+
+				mov		al, 1
+				retn
+			FALLBACK:
+				popad
+				push    esi
+				mov     esi, ecx
+				mov     eax, [esi+8]
 				jmp		_hhGetVar(Retn)
 			}
 		}

@@ -276,6 +276,7 @@ public:
 	static void							Redraw(bool RefreshPathGrid = false);
 	static void							Refresh3D(bool Immediate);
 	static void							TogglePathGridEditMode();
+	static bool							IsAnyCellLoaded();
 
 	typedef std::function<bool(TESObjectREFR*)>		CellObjectListVisitorT;
 	static UInt32						GetActiveCellObjects(TESObjectREFRArrayT& OutList, CellObjectListVisitorT Visitor);		// enumerates refs in the current interior/exterior grid and returns the count

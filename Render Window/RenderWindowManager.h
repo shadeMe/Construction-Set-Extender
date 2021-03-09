@@ -23,7 +23,7 @@ namespace cse
 			{
 				NiNode*							SceneGraph;
 				NiNode*							ExtraNode;			// default root node new geom can be added to
-				const TESObjectREFRArrayT&		LoadedRefs;			// all the references in the current cell(grid)
+				const TESObjectREFRArrayT&		LoadedRefs;			// all the references in the current cell(grid), including temporaries
 
 				RenderData(NiNode* SceneGraph, NiNode* ExtraNode);
 			};
@@ -54,10 +54,12 @@ namespace cse
 
 		class ReferenceParentChildIndicator : public IRenderWindowSceneGraphModifier
 		{
-			NiVertexColorProperty*			VertexColor;
-			NiWireframeProperty*			Wireframe;
+			NiVertexColorProperty*		VertexColor;
+			NiWireframeProperty*		Wireframe;
+			bool						Initialized;
 
-			static bool						EnableParentIndicatorVisitor(TESObjectREFR* Ref);
+			static bool					EnableParentIndicatorVisitor(TESObjectREFR* Ref);
+			void						LazyInitialize();
 		public:
 			ReferenceParentChildIndicator();
 			virtual ~ReferenceParentChildIndicator();
@@ -240,7 +242,7 @@ namespace cse
 			ReferenceColorMaskManager*					ColorMaskManager;
 			RenderWindowGizmoManager*					GizmoManager;
 			GlobalEventSink*							EventSink;
-			TESObjectREFRArrayT							ActiveRefCache;
+			TESObjectREFRArrayT							ActiveRefCache;		// include temporary refs
 			bool										RenderingScene;
 			bool										Initialized;
 			bool										MouseInClientArea;
