@@ -44,7 +44,7 @@ namespace UIComponents {
 	private: System::Windows::Forms::TextBox^ TextBoxFilter;
 	protected:
 
-	protected: 
+	protected:
 
 
 
@@ -101,7 +101,7 @@ namespace UIComponents {
 
 
 
-	protected: 
+	protected:
 
 
 
@@ -150,17 +150,17 @@ namespace UIComponents {
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewObjectUsage))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewCellUsage))->BeginInit();
 			this->SuspendLayout();
-			// 
+			//
 			// TextBoxFilter
-			// 
+			//
 			this->TextBoxFilter->Location = System::Drawing::Point(44, 665);
 			this->TextBoxFilter->MaxLength = 100;
 			this->TextBoxFilter->Name = L"TextBoxFilter";
 			this->TextBoxFilter->Size = System::Drawing::Size(396, 20);
 			this->TextBoxFilter->TabIndex = 0;
-			// 
+			//
 			// ListViewForms
-			// 
+			//
 			this->ListViewForms->AllColumns->Add(this->LVFormCType);
 			this->ListViewForms->AllColumns->Add(this->LVFormCEditorID);
 			this->ListViewForms->AllColumns->Add(this->LVFormCFormID);
@@ -182,56 +182,56 @@ namespace UIComponents {
 			this->ListViewForms->UseCompatibleStateImageBehavior = false;
 			this->ListViewForms->View = System::Windows::Forms::View::Details;
 			this->ListViewForms->VirtualMode = true;
-			// 
+			//
 			// LVFormCType
-			// 
+			//
 			this->LVFormCType->Text = L"Type";
 			this->LVFormCType->Width = 65;
-			// 
+			//
 			// LVFormCEditorID
-			// 
+			//
 			this->LVFormCEditorID->Text = L"Editor ID";
 			this->LVFormCEditorID->Width = 165;
-			// 
+			//
 			// LVFormCFormID
-			// 
+			//
 			this->LVFormCFormID->Text = L"Form ID";
 			this->LVFormCFormID->Width = 70;
-			// 
+			//
 			// LVFormCPlugin
-			// 
+			//
 			this->LVFormCPlugin->Text = L"Parent Plugin";
 			this->LVFormCPlugin->Width = 140;
-			// 
+			//
 			// LabelFilter
-			// 
+			//
 			this->LabelFilter->AutoSize = true;
 			this->LabelFilter->Location = System::Drawing::Point(12, 668);
 			this->LabelFilter->Name = L"LabelFilter";
 			this->LabelFilter->Size = System::Drawing::Size(29, 13);
 			this->LabelFilter->TabIndex = 6;
 			this->LabelFilter->Text = L"Filter";
-			// 
+			//
 			// LabelObjects
-			// 
+			//
 			this->LabelObjects->AutoSize = true;
 			this->LabelObjects->Location = System::Drawing::Point(443, 14);
 			this->LabelObjects->Name = L"LabelObjects";
 			this->LabelObjects->Size = System::Drawing::Size(119, 13);
 			this->LabelObjects->TabIndex = 7;
 			this->LabelObjects->Text = L"Used By These Objects";
-			// 
+			//
 			// LabelCells
-			// 
+			//
 			this->LabelCells->AutoSize = true;
 			this->LabelCells->Location = System::Drawing::Point(443, 354);
 			this->LabelCells->Name = L"LabelCells";
 			this->LabelCells->Size = System::Drawing::Size(102, 13);
 			this->LabelCells->TabIndex = 8;
 			this->LabelCells->Text = L"Used In These Cells";
-			// 
+			//
 			// ListViewObjectUsage
-			// 
+			//
 			this->ListViewObjectUsage->AllColumns->Add(this->LVObjectsCType);
 			this->ListViewObjectUsage->AllColumns->Add(this->LVObjectsCEditorID);
 			this->ListViewObjectUsage->AllColumns->Add(this->LVObjectsCFormID);
@@ -253,29 +253,29 @@ namespace UIComponents {
 			this->ListViewObjectUsage->UseCompatibleStateImageBehavior = false;
 			this->ListViewObjectUsage->View = System::Windows::Forms::View::Details;
 			this->ListViewObjectUsage->VirtualMode = true;
-			// 
+			//
 			// LVObjectsCType
-			// 
+			//
 			this->LVObjectsCType->Text = L"Type";
 			this->LVObjectsCType->Width = 65;
-			// 
+			//
 			// LVObjectsCEditorID
-			// 
+			//
 			this->LVObjectsCEditorID->Text = L"Editor ID";
 			this->LVObjectsCEditorID->Width = 165;
-			// 
+			//
 			// LVObjectsCFormID
-			// 
+			//
 			this->LVObjectsCFormID->Text = L"Form ID";
 			this->LVObjectsCFormID->Width = 65;
-			// 
+			//
 			// LVObjectsCPlugin
-			// 
+			//
 			this->LVObjectsCPlugin->Text = L"Parent Plugin";
 			this->LVObjectsCPlugin->Width = 165;
-			// 
+			//
 			// ListViewCellUsage
-			// 
+			//
 			this->ListViewCellUsage->AllColumns->Add(this->LVCellsCWorldEditorID);
 			this->ListViewCellUsage->AllColumns->Add(this->LVCellsCCellEditorID);
 			this->ListViewCellUsage->AllColumns->Add(this->LVCellsCGrid);
@@ -298,34 +298,34 @@ namespace UIComponents {
 			this->ListViewCellUsage->UseCompatibleStateImageBehavior = false;
 			this->ListViewCellUsage->View = System::Windows::Forms::View::Details;
 			this->ListViewCellUsage->VirtualMode = true;
-			// 
+			//
 			// LVCellsCWorldEditorID
-			// 
+			//
 			this->LVCellsCWorldEditorID->Text = L"World";
 			this->LVCellsCWorldEditorID->Width = 100;
-			// 
+			//
 			// LVCellsCCellEditorID
-			// 
+			//
 			this->LVCellsCCellEditorID->Text = L"Cell";
 			this->LVCellsCCellEditorID->Width = 150;
-			// 
+			//
 			// LVCellsCGrid
-			// 
+			//
 			this->LVCellsCGrid->Text = L"Grid";
 			this->LVCellsCGrid->Width = 50;
-			// 
+			//
 			// LVCellsCUseCount
-			// 
+			//
 			this->LVCellsCUseCount->Text = L"Use Count";
 			this->LVCellsCUseCount->Width = 70;
-			// 
+			//
 			// LVCellsCRef
-			// 
+			//
 			this->LVCellsCRef->Text = L"First Reference";
 			this->LVCellsCRef->Width = 165;
-			// 
+			//
 			// UseInfoList
-			// 
+			//
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(1007, 700);
@@ -341,7 +341,7 @@ namespace UIComponents {
 			this->MaximizeBox = false;
 			this->Name = L"UseInfoList";
 			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterParent;
-			this->Text = L"Centeralized Use Info Listing";
+			this->Text = L"Centralised Use Info Listing";
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewForms))->EndInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewObjectUsage))->EndInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewCellUsage))->EndInit();

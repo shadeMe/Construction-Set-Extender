@@ -342,7 +342,7 @@ namespace cse
 		this->MaximizeBox = false;
 		this->Name = L"UseInfoList";
 		this->StartPosition = System::Windows::Forms::FormStartPosition::CenterParent;
-		this->Text = L"Centeralized Use Info Listing";
+		this->Text = L"Centralised Use Info Listing";
 		(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewForms))->EndInit();
 		(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewObjectUsage))->EndInit();
 		(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewCellUsage))->EndInit();

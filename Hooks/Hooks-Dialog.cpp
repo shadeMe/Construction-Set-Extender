@@ -28,7 +28,7 @@ namespace cse
 		_DefineHookHdlr(CellViewPopulateObjectList, 0x004087C0);
 		_DefineHookHdlr(CellObjectListShadeMeRefAppend, 0x00445128);
 		_DefinePatchHdlr(DeathToTheCloseOpenDialogsMessage, 0x0041BAA7);
-		_DefineHookHdlr(TESDialogPopupMenu, 0x004435A6);
+		_DefineHookHdlr(TESDialogPopupMenu, 0x004435BD);
 		_DefineJumpHdlr(ResponseWindowLipButtonPatch, 0x004EC0E7, 0x004EC0F7);
 		_DefineJumpHdlr(DataDlgZOrder, 0x0040C530, 0x0040C552);
 		_DefineHookHdlr(FormIDListViewSelectItem, 0x00403B3D);
@@ -943,9 +943,7 @@ namespace cse
 							{
 								TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandle, Selection);
 								if (Form)
-								{
 									Buffer.Add(Form);
-								}
 							}
 						}
 						while (Selection != -1);
@@ -1003,47 +1001,58 @@ namespace cse
 				achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_GlobalClipboard);
 
 				break;
+			case IDC_CSE_POPUP_SPAWNNEWOBJECTWINDOW:
+				ObjectWindowImposterManager::Instance.SpawnImposter();
+
+				break;
 			}
 
 			BGSEEUI->GetInvalidationManager()->Redraw(hWnd);
 		}
 
-		void __stdcall InsertFormListPopupMenuItems(HMENU Menu, TESForm* SelectedForm)
+		void __stdcall InsertFormListPopupMenuItems(HMENU Menu, TESForm* SelectedForm, HWND Parent)
 		{
-			SME_ASSERT(SelectedForm);
-
-			InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
-			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_SETFORMID, "Set FormID");
-			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_MARKUNMODIFIED, "Mark As Unmodified");
-			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_UNDELETE, "Undelete");
-			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_SHOWOVERRIDES, "Show Override List");
-			InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
-			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_JUMPTOUSEINFOLIST, "Jump To Central Use Info List");
-			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_ADDTOTAG, "Add to Active Tag");
-
-			if (SelectedForm->IsReference())
+			if (SelectedForm)
 			{
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
-				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_EDITBASEFORM, "Edit Base Form");
-				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_REPLACEBASEFORM, "Replace Base Form");
-				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_TOGGLEVISIBILITY, "Toggle Visibility");
-				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_TOGGLECHILDRENVISIBILITY, "Toggle Children Visibility");
-			}
-			else if (CS_CAST(SelectedForm, TESForm, TESBoundObject))
-			{
+				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_SETFORMID, "Set FormID");
+				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_MARKUNMODIFIED, "Mark As Unmodified");
+				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_UNDELETE, "Undelete");
+				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_SHOWOVERRIDES, "Show Override List");
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
-				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_PREVIEW, "Preview");
+				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_JUMPTOUSEINFOLIST, "Jump To Central Use Info List");
+				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_ADDTOTAG, "Add to Active Tag");
 
-				if (SelectedForm->formType == TESForm::kFormType_NPC)
+				if (SelectedForm->IsReference())
 				{
 					InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
-					InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_EXPORTFACETEXTURES, "Export FaceGen Textures");
+					InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_EDITBASEFORM, "Edit Base Form");
+					InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_REPLACEBASEFORM, "Replace Base Form");
+					InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_TOGGLEVISIBILITY, "Toggle Visibility");
+					InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_TOGGLECHILDRENVISIBILITY, "Toggle Children Visibility");
 				}
+				else if (CS_CAST(SelectedForm, TESForm, TESBoundObject))
+				{
+					InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
+					InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_PREVIEW, "Preview");
+
+					if (SelectedForm->formType == TESForm::kFormType_NPC)
+					{
+						InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
+						InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_EXPORTFACETEXTURES, "Export FaceGen Textures");
+					}
+				}
+
+				InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
+				InsertMenu(Menu, -1, MF_BYPOSITION | MF_STRING, IDC_CSE_POPUP_GLOBALCOPY, "Copy To Global Clipboard");
+				InsertMenu(Menu, -1, MF_BYPOSITION | MF_STRING, IDC_CSE_POPUP_GLOBALPASTE, "Paste From Global Clipboard");
 			}
 
-			InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
-			InsertMenu(Menu, -1, MF_BYPOSITION | MF_STRING, IDC_CSE_POPUP_GLOBALCOPY, "Copy To Global Clipboard");
-			InsertMenu(Menu, -1, MF_BYPOSITION | MF_STRING, IDC_CSE_POPUP_GLOBALPASTE, "Paste From Global Clipboard");
+			if (Parent == *TESObjectWindow::WindowHandle)
+			{
+				InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
+				InsertMenu(Menu, -1, MF_BYPOSITION | MF_STRING, IDC_CSE_POPUP_SPAWNNEWOBJECTWINDOW, "Spawn New Object Window");
+			}
 		}
 
 		void __stdcall HandleHookedPopup(HWND Parent, int MenuIdentifier, TESForm* SelectedObject)
@@ -1064,6 +1073,9 @@ namespace cse
 			case IDC_CSE_POPUP_EXPORTFACETEXTURES:
 			case IDC_CSE_POPUP_GLOBALCOPY:
 			case IDC_CSE_POPUP_GLOBALPASTE:
+				if (SelectedObject == nullptr)
+					break;
+			case IDC_CSE_POPUP_SPAWNNEWOBJECTWINDOW:
 				EvaluatePopupMenuItems(Parent, MenuIdentifier, SelectedObject);
 				break;
 			default:
@@ -1088,12 +1100,26 @@ namespace cse
 			DeleteMenu(Menu, IDC_CSE_POPUP_EXPORTFACETEXTURES, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_GLOBALCOPY, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_GLOBALPASTE, MF_BYCOMMAND);
+			DeleteMenu(Menu, IDC_CSE_POPUP_SPAWNNEWOBJECTWINDOW, MF_BYCOMMAND);
 
-			for (int i = 0; i < 6; i++)
+			for (int i = 0; i < 7; ++i)
 			{
 				if (GetMenuItemID(Menu, GetMenuItemCount(Menu) - 1) == 0)		// make sure it's a separator
 					DeleteMenu(Menu, GetMenuItemCount(Menu) - 1, MF_BYPOSITION);
 			}
+		}
+
+		BOOL __stdcall DoTESDialogPopupMenuHook(TESForm* Selection, HMENU hMenu, UINT uFlags, int x, int y, int nReserved, HWND hWnd, const RECT* prcRect)
+		{
+			InsertFormListPopupMenuItems(hMenu, Selection, hWnd);
+			uFlags |= TPM_RETURNCMD;		// handle the menu selection right away
+
+			auto MenuID = TrackPopupMenu(hMenu, uFlags, x, y, nReserved, hWnd, prcRect);
+
+			HandleHookedPopup(hWnd, MenuID, Selection);
+			RemoveFormListPopupMenuItems(hMenu);
+
+			return MenuID;
 		}
 
 		#define _hhName		TESDialogPopupMenu
@@ -1102,49 +1128,8 @@ namespace cse
 			_hhSetVar(Retn, 0x004435C3);
 			__asm
 			{
-				pushad
-				call	IATCacheTrackPopupMenuAddress
-				popad
-
-				mov		eax, [esp + 0x18]
-				push	0
-				push	eax
-				mov		eax, [esp + 0x1C]
-				mov		ecx, [eax + 4]
-				mov		edx, [eax]
-				push	0
-				push	ecx
-				push	edx
-
-				test	ebx, ebx
-				jz		SKIP
-
-				pushad
 				push	ebx
-				push	esi
-				call	InsertFormListPopupMenuItems
-				popad
-
-				push	0x102
-				push	esi
-				call	IATProcBuffer
-
-				pushad
-				push	esi
-				call	RemoveFormListPopupMenuItems
-				popad
-
-				mov		ecx, [esp + 0x18]		// window handle
-				push	ebx
-				push	eax
-				push	ecx
-				call	HandleHookedPopup
-				jmp		_hhGetVar(Retn)
-			SKIP:
-				push	2
-				push	esi
-				call	IATProcBuffer
-
+				call	DoTESDialogPopupMenuHook
 				jmp		_hhGetVar(Retn)
 			}
 		}

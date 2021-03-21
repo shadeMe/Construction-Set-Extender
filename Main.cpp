@@ -498,7 +498,7 @@ namespace cse
 
 			std::string Jingle = "The editor has encountered a critical error! ";
 			if (PanicSaved)
-				Jingle += "Unsaved changes were saved to the panic file. ";
+				Jingle += "Unsaved changes were saved to the panic save file. ";
 
 			Jingle += "An error report will be generated shortly.\n\n";
 
