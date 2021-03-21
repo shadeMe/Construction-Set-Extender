@@ -73,6 +73,7 @@ namespace cse
 							{
 								bool UpdateItem = true;
 								bool CheckItem = false;
+								bool DisableItem = false;
 
 								switch (CurrentItem.wID)
 								{
@@ -94,6 +95,16 @@ namespace cse
 								case IDC_MAINMENU_SAVEOPTIONS_CREATEBACKUPBEFORESAVING:
 									if (settings::versionControl::kBackupOnSave.GetData().i)
 										CheckItem = true;
+
+									break;
+								case IDC_MAINMENU_GLOBALUNDO:
+									if (BGSEEUNDOSTACK->IsUndoStackEmpty())
+										DisableItem = true;
+
+									break;
+								case IDC_MAINMENU_GLOBALREDO:
+									if (BGSEEUNDOSTACK->IsRedoStackEmpty())
+										DisableItem = true;
 
 									break;
 								case IDC_MAINMENU_CONSOLE:
@@ -206,6 +217,17 @@ namespace cse
 									{
 										CurrentItem.fState &= ~MFS_CHECKED;
 										CurrentItem.fState |= MFS_UNCHECKED;
+									}
+
+									if (DisableItem)
+									{
+										CurrentItem.fState &= ~MFS_ENABLED;
+										CurrentItem.fState |= MFS_DISABLED;
+									}
+									else
+									{
+										CurrentItem.fState &= ~MFS_DISABLED;
+										CurrentItem.fState |= MFS_ENABLED;
 									}
 
 									CurrentItem.fMask = MIIM_STATE;

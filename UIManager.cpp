@@ -539,6 +539,229 @@ namespace cse
 		}
 
 
+		DeferredComboBoxController DeferredComboBoxController::Instance;
+
+
+		LRESULT DeferredComboBoxController::ComboBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+																bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+		{
+			LRESULT Result = NULL;
+
+			switch (uMsg)
+			{
+			case WM_CREATE:
+				RegisterComboBox(hWnd);
+
+				break;
+			case WM_DESTROY:
+				DeregisterComboBox(hWnd);
+
+				break;
+			default:
+				switch (uMsg)
+				{
+				case CustomMessageAddItem:
+					Return = true;
+					QueueMessage(hWnd, uMsg, wParam, lParam);
+					break;
+				case CB_ADDSTRING:
+					Return = true;
+					Result = AddStringMarkerResult;
+					QueueMessage(hWnd, uMsg, wParam, lParam);
+					break;
+				case CB_SETITEMDATA:
+					if (wParam != AddStringMarkerResult)
+					{
+						// attempting to set the data of an item whose insertion wasn't tracked by us
+						// so, flush the queued messages and break early
+						FlushQueuedMessages(hWnd, Subclasser);
+						break;
+					}
+
+					Return = true;
+					QueueMessage(hWnd, uMsg, wParam, lParam);
+					break;
+				default:
+					if (uMsg < CB_GETEDITSEL || uMsg >= CB_MSGMAX)
+					{
+						// not a combo box message, return early
+						break;
+					}
+
+					// all other messages will trigger the flushing of queued messages
+					// then, pass through the message to the default handler
+					FlushQueuedMessages(hWnd, Subclasser);
+				}
+			}
+
+			return Result;
+		}
+
+		void DeferredComboBoxController::RegisterComboBox(HWND hWnd)
+		{
+			const auto Existing = ActiveComboBoxes.find(hWnd);
+			SME_ASSERT(Existing == ActiveComboBoxes.cend());
+
+			ActiveComboBoxes.emplace(std::make_pair(hWnd, TrackedData()));
+		}
+
+		void DeferredComboBoxController::DeregisterComboBox(HWND hWnd)
+		{
+			const auto Existing = ActiveComboBoxes.find(hWnd);
+			SME_ASSERT(Existing != ActiveComboBoxes.cend());
+
+			ActiveComboBoxes.erase(hWnd);
+		}
+
+		void DeferredComboBoxController::FlushQueuedMessages(HWND hWnd, bgsee::WindowSubclasser* Subclasser)
+		{
+			const auto Data = ActiveComboBoxes.find(hWnd);
+			SME_ASSERT(Data != ActiveComboBoxes.cend());
+
+			if (Data->second.PendingMessages.empty())
+				return;
+
+
+			std::vector<std::pair<std::string, LPARAM>> ItemsToInsert;
+			UINT PreviousMsg = WM_NULL;
+			for (const auto& Msg : Data->second.PendingMessages)
+			{
+				switch (Msg.uMsg)
+				{
+				case CustomMessageAddItem:
+					ItemsToInsert.emplace_back(Msg.StringPayload, Msg.lParam);
+					break;
+				case CB_ADDSTRING:
+					ItemsToInsert.emplace_back(Msg.StringPayload, NULL);
+					break;
+				case CB_SETITEMDATA:
+					SME_ASSERT(Msg.wParam == AddStringMarkerResult);
+					SME_ASSERT(PreviousMsg == CB_ADDSTRING);
+
+					ItemsToInsert.back().second = Msg.lParam;
+					break;
+				}
+
+				PreviousMsg = Msg.uMsg;
+			}
+
+			Data->second.PendingMessages.clear();
+
+			bool SortedStyle = GetWindowLongPtr(hWnd, GWL_STYLE) & CBS_SORT;
+			if (SortedStyle)
+			{
+				std::sort(ItemsToInsert.begin(), ItemsToInsert.end(), [](const auto& a, const auto& b) -> bool {
+					return _stricmp(a.first.c_str(), b.first.c_str()) > 0;
+				});
+			}
+
+			Subclasser->TunnelMessageToOrgWndProc(hWnd, CB_INITSTORAGE,
+				ItemsToInsert.size(), Data->second.TotalStringLength * sizeof(char),
+				true);
+			SuspendComboBoxUpdates(hWnd, Subclasser, true);
+			{
+				for (const auto& Itr : ItemsToInsert)
+				{
+					auto Index = Subclasser->TunnelMessageToOrgWndProc(hWnd, CB_ADDSTRING, NULL,
+						reinterpret_cast<LPARAM>(Itr.first.c_str()), true);
+
+					if (Index != CB_ERR && Index != CB_ERRSPACE && Itr.second)
+						Subclasser->TunnelMessageToOrgWndProc(hWnd, CB_SETITEMDATA, Index, Itr.second, true);
+				}
+
+				auto DC = GetDC(hWnd);
+				if (DC)
+				{
+					SIZE Extents;
+
+					// lazy text width calculation
+					if (GetTextExtentPoint32A(DC, std::string(Data->second.LongestStringLength, 'M').c_str(),
+						Data->second.LongestStringLength, &Extents))
+					{
+						auto CurrentWidth = Subclasser->TunnelMessageToOrgWndProc(hWnd, CB_GETDROPPEDWIDTH, NULL, NULL, true);
+						if (CurrentWidth < Extents.cx)
+							Subclasser->TunnelMessageToOrgWndProc(hWnd, CB_SETDROPPEDWIDTH, Extents.cx, NULL, true);
+					}
+					ReleaseDC(hWnd, DC);
+				}
+			}
+			SuspendComboBoxUpdates(hWnd, Subclasser, false);
+		}
+
+		void DeferredComboBoxController::QueueMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+		{
+			const auto Data = ActiveComboBoxes.find(hWnd);
+			SME_ASSERT(Data != ActiveComboBoxes.cend());
+
+			Data->second.PendingMessages.emplace_back(uMsg, wParam, lParam);
+			const auto& NewMsg = Data->second.PendingMessages.back();
+
+			Data->second.TotalStringLength += NewMsg.StringPayload.size();
+			if (NewMsg.StringPayload.size() > Data->second.LongestStringLength)
+				Data->second.LongestStringLength = NewMsg.StringPayload.size();
+		}
+
+		void DeferredComboBoxController::SuspendComboBoxUpdates(HWND hWnd, bgsee::WindowSubclasser* Subclasser, bool Suspend) const
+		{
+			COMBOBOXINFO Info;
+			Info.cbSize = sizeof(COMBOBOXINFO);
+
+			if (!Subclasser->TunnelMessageToOrgWndProc(hWnd, CB_GETCOMBOBOXINFO, NULL, reinterpret_cast<LPARAM>(&Info), true))
+				return;
+
+			if (!Suspend)
+			{
+				SendMessage(Info.hwndList, WM_SETREDRAW, TRUE, 0);
+				Subclasser->TunnelMessageToOrgWndProc(hWnd, CB_SETMINVISIBLE, 30, 0, true);
+				Subclasser->TunnelMessageToOrgWndProc(hWnd, WM_SETREDRAW, TRUE, 0, true);
+			}
+			else
+			{
+				Subclasser->TunnelMessageToOrgWndProc(hWnd, WM_SETREDRAW, FALSE, 0, true);	// Prevent repainting until finished
+				Subclasser->TunnelMessageToOrgWndProc(hWnd, CB_SETMINVISIBLE, 1, 0, true);	// Possible optimization for older libraries (source: MSDN forums)
+				SendMessage(Info.hwndList, WM_SETREDRAW, FALSE, 0);
+			}
+		}
+
+		DeferredComboBoxController::DeferredComboBoxController() :
+			ThunkComboBoxSubclassProc(this, &DeferredComboBoxController::ComboBoxSubclassProc)
+		{
+			Initialized = false;
+		}
+
+
+		DeferredComboBoxController::~DeferredComboBoxController()
+		{
+			if (Initialized)
+				Deinitialize();
+		}
+
+		void DeferredComboBoxController::Initialize()
+		{
+			SME_ASSERT(Initialized == false);
+
+			auto ComboBoxSubclassPredicate = [](HWND hWnd) -> bool {
+				char ClassName[100];
+				GetClassName(hWnd, ClassName, ARRAYSIZE(ClassName));
+
+				return strcmp(ClassName, "ComboBox") == 0;
+			};
+
+			BGSEEUI->GetSubclasser()->RegisterGlobalSubclass(ThunkComboBoxSubclassProc(),
+															bgsee::WindowSubclassProcCollection::kPriority_Default,
+															ComboBoxSubclassPredicate);
+			Initialized = true;
+		}
+
+		void DeferredComboBoxController::Deinitialize()
+		{
+			SME_ASSERT(Initialized);
+
+			BGSEEUI->GetSubclasser()->DeregisterGlobalSubclass(ThunkComboBoxSubclassProc());
+			Initialized = false;
+		}
+
+
 		void Initialize( void )
 		{
 			InitializeMiscWindowOverrides();

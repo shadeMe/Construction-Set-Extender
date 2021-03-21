@@ -8,6 +8,7 @@
 #include "ObjectPrefabManager.h"
 #include "CustomDialogProcs.h"
 #include "CellViewWindowOverrides.h"
+#include <bgsee/FormUndoStack.h>
 
 #pragma warning(push)
 #pragma warning(disable: 4005 4748)
@@ -23,7 +24,6 @@ namespace cse
 		_DefineHookHdlr(CustomCSWindow, 0x004311E5);
 		_DefinePatchHdlr(RaceDescriptionDirtyEdit, 0x0049405C);
 		_DefineHookHdlr(AddListViewItem, 0x004038F0);
-		_DefineHookHdlr(AddComboBoxItem, 0x00403540);
 		_DefineHookHdlr(ObjectListPopulateListViewItems, 0x00413980);
 		_DefineHookHdlr(CellViewPopulateObjectList, 0x004087C0);
 		_DefineHookHdlr(CellObjectListShadeMeRefAppend, 0x00445128);
@@ -75,6 +75,7 @@ namespace cse
 		_DefineHookHdlr(TESObjectCELLWndProcBeginDrag, 0x0053AA0C);
 		_DefineHookHdlr(TESObjectCELLWndProcEndDrag, 0x0053B501);
 		_DefineHookHdlr(ObjectWindowSplitterWndProcDisable, 0x00404502);
+		_DefineHookHdlr(TESComboBoxAddItem, 0x00403540);
 
 		void PatchDialogHooks(void)
 		{
@@ -315,6 +316,7 @@ namespace cse
 			_MemHdlr(TESObjectCELLWndProcBeginDrag).WriteJump();
 			_MemHdlr(TESObjectCELLWndProcEndDrag).WriteJump();
 			_MemHdlr(ObjectWindowSplitterWndProcDisable).WriteJump();
+			_MemHdlr(TESComboBoxAddItem).WriteJump();
 		}
 
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex)
@@ -538,31 +540,6 @@ namespace cse
 
 				mov		ecx, [esp + 0x10]
 				or		edx, 0x0FFFFFFFF
-				jmp		_hhGetVar(Retn)
-			EXIT:
-				popad
-				jmp		_hhGetVar(Exit)
-			}
-		}
-
-		#define _hhName		AddComboBoxItem
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x00403548);
-			_hhSetVar(Exit, 0x004035F4);
-			__asm
-			{
-				pushad
-				push	[esp + 0xC]
-				lea		ecx, uiManager::FormEnumerationManager::Instance
-				call	uiManager::FormEnumerationManager::GetShouldEnumerate
-				test	al, al
-				jz		EXIT
-				popad
-
-				sub		esp, 8
-				push	esi
-				mov		esi, [esp + 0x10]
 				jmp		_hhGetVar(Retn)
 			EXIT:
 				popad
@@ -1005,6 +982,14 @@ namespace cse
 				ObjectWindowImposterManager::Instance.SpawnImposter();
 
 				break;
+			case IDC_CSE_POPUP_GLOBALUNDO:
+				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, IDC_MAINMENU_GLOBALUNDO, NULL);
+
+				break;
+			case IDC_CSE_POPUP_GLOBALREDO:
+				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, IDC_MAINMENU_GLOBALREDO, NULL);
+
+				break;
 			}
 
 			BGSEEUI->GetInvalidationManager()->Redraw(hWnd);
@@ -1048,6 +1033,11 @@ namespace cse
 				InsertMenu(Menu, -1, MF_BYPOSITION | MF_STRING, IDC_CSE_POPUP_GLOBALPASTE, "Paste From Global Clipboard");
 			}
 
+
+			InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
+			InsertMenu(Menu, -1, MF_BYPOSITION | MF_STRING | (BGSEEUNDOSTACK->IsUndoStackEmpty() ? MF_GRAYED : 0), IDC_CSE_POPUP_GLOBALUNDO, "Global Undo");
+			InsertMenu(Menu, -1, MF_BYPOSITION | MF_STRING | (BGSEEUNDOSTACK->IsRedoStackEmpty() ? MF_GRAYED : 0), IDC_CSE_POPUP_GLOBALREDO, "Global Redo");
+
 			if (Parent == *TESObjectWindow::WindowHandle)
 			{
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
@@ -1075,6 +1065,8 @@ namespace cse
 			case IDC_CSE_POPUP_GLOBALPASTE:
 				if (SelectedObject == nullptr)
 					break;
+			case IDC_CSE_POPUP_GLOBALUNDO:
+			case IDC_CSE_POPUP_GLOBALREDO:
 			case IDC_CSE_POPUP_SPAWNNEWOBJECTWINDOW:
 				EvaluatePopupMenuItems(Parent, MenuIdentifier, SelectedObject);
 				break;
@@ -1100,9 +1092,11 @@ namespace cse
 			DeleteMenu(Menu, IDC_CSE_POPUP_EXPORTFACETEXTURES, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_GLOBALCOPY, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_GLOBALPASTE, MF_BYCOMMAND);
+			DeleteMenu(Menu, IDC_CSE_POPUP_GLOBALUNDO, MF_BYCOMMAND);
+			DeleteMenu(Menu, IDC_CSE_POPUP_GLOBALREDO, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_SPAWNNEWOBJECTWINDOW, MF_BYCOMMAND);
 
-			for (int i = 0; i < 7; ++i)
+			for (int i = 0; i < 8; ++i)
 			{
 				if (GetMenuItemID(Menu, GetMenuItemCount(Menu) - 1) == 0)		// make sure it's a separator
 					DeleteMenu(Menu, GetMenuItemCount(Menu) - 1, MF_BYPOSITION);
@@ -1887,6 +1881,31 @@ namespace cse
 			SKIP:
 				popad
 				jmp		_hhGetVar(Skip)
+			}
+		}
+
+		#define _hhName		TESComboBoxAddItem
+		_hhBegin()
+		{
+			__asm
+			{
+				push	esi
+				push	ebx
+
+				mov		esi, [esp + 0x8 + 0x4]
+				mov		ebx, [esp + 0x8 + 0x8]
+				mov		eax, [esp + 0x8 + 0xC]
+
+				// send a custom message to the combo box that'll be handled by our subclass proc
+				push	eax
+				push	ebx
+				push	uiManager::DeferredComboBoxController::CustomMessageAddItem
+				push	esi
+				call	SendMessageA
+
+				pop		ebx
+				pop		esi
+				retn
 			}
 		}
 	}

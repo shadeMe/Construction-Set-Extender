@@ -15,7 +15,6 @@ namespace cse
 		_DeclareMemHdlr(CustomCSWindow, "keeps custom child windows of the CS main window from being closed on plugin load");
 		_DeclareMemHdlr(RaceDescriptionDirtyEdit, "prevent dirty edits occuring when you edit a race's text description and click directly to another race without switching tabs first, if the spellchecker pops up (which it will), the description for the race you were previously working on gets copied into the one you just selected.");
 		_DeclareMemHdlr(AddListViewItem, "patches various routines to check for the 'Hide UnModified/Deleted Forms' flag before populating controls with forms");
-		_DeclareMemHdlr(AddComboBoxItem, "");
 		_DeclareMemHdlr(ObjectListPopulateListViewItems, "");
 		_DeclareMemHdlr(CellViewPopulateObjectList, "");
 		_DeclareMemHdlr(CellObjectListShadeMeRefAppend, "");
@@ -67,6 +66,7 @@ namespace cse
 		_DeclareMemHdlr(TESObjectCELLWndProcBeginDrag, "");
 		_DeclareMemHdlr(TESObjectCELLWndProcEndDrag, "");
 		_DeclareMemHdlr(ObjectWindowSplitterWndProcDisable, "disables the splitter when a drag-drop op is in progress, regardless of its enabled state");
+		_DeclareMemHdlr(TESComboBoxAddItem, "adds support for batch-adding items to combo boxes");
 
 		bool __cdecl TESDialogBuildSubwindowDetour(UInt16 TemplateID, Subwindow* DialogSubwindow);
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex);

@@ -317,7 +317,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <ForcedIncludeFiles>StdAfx.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>

@@ -163,6 +163,7 @@ namespace cse
 		uiManager::InitializeMainWindowOverrides();
 		uiManager::InitializeObjectWindowOverrides();
 		uiManager::InitializeCellViewWindowOverrides();
+		uiManager::DeferredComboBoxController::Instance.Initialize();
 
 		BGSEECONSOLE_MESSAGE("Initializing Render Window Manager");
 		BGSEECONSOLE->Indent();

@@ -75,7 +75,7 @@ namespace cse
 
 			typedef std::vector<FilterableWindowData*>	FilterDataArrayT;
 
-			FilterDataArrayT				ActiveFilters;
+			FilterDataArrayT			ActiveFilters;
 
 			FilterableWindowData*		Lookup(HWND FilterEdit);
 		public:
@@ -113,6 +113,63 @@ namespace cse
 			static FormEnumerationManager				Instance;
 		};
 
+
+		class DeferredComboBoxController
+		{
+		public:
+			// custom message passed to the combo box by our detour
+			// wParam = const char* string, lParam = LPARAM data
+			static constexpr UINT		CustomMessageAddItem = WM_USER + 3000;
+			static constexpr LRESULT	AddStringMarkerResult = CB_ERRSPACE - 2;
+		private:
+			struct Message
+			{
+				UINT			uMsg;
+				WPARAM			wParam;
+				LPARAM			lParam;
+				std::string		StringPayload;
+
+				Message(UINT uMsg = WM_NULL, WPARAM wParam = NULL, LPARAM lParam = NULL)
+					: uMsg(uMsg), wParam(wParam), lParam(lParam)
+				{
+					if (uMsg == CustomMessageAddItem)
+						StringPayload = reinterpret_cast<const char*>(wParam);
+					else if (uMsg == CB_ADDSTRING || uMsg == CB_INSERTSTRING)
+						StringPayload = reinterpret_cast<const char*>(lParam);
+				}
+			};
+
+			struct TrackedData
+			{
+				std::vector<Message> PendingMessages;
+				UInt32 TotalStringLength = 0;
+				UInt32 LongestStringLength = 0;
+			};
+
+
+			std::unordered_map<HWND, TrackedData>	ActiveComboBoxes;
+			bgsee::util::ThunkStdCall<DeferredComboBoxController, LRESULT, HWND, UINT, WPARAM, LPARAM, bool&, bgsee::WindowExtraDataCollection*, bgsee::WindowSubclasser*>
+													ThunkComboBoxSubclassProc;
+			bool		Initialized;
+
+			LRESULT		ComboBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+											bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
+			void		RegisterComboBox(HWND hWnd);
+			void		DeregisterComboBox(HWND hWnd);
+			void		FlushQueuedMessages(HWND hWnd, bgsee::WindowSubclasser* Subclasser);
+			void		QueueMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+			void		SuspendComboBoxUpdates(HWND hWnd, bgsee::WindowSubclasser* Subclasser, bool Suspend) const;
+
+			DeferredComboBoxController();
+			~DeferredComboBoxController();
+		public:
+			void		Initialize();
+			void		Deinitialize();
+
+			static DeferredComboBoxController Instance;
+		};
+
+
 		void Initialize(void);
 	}
 }
@@ -137,3 +194,5 @@ namespace cse
 #define IDC_CSE_POPUP_REPLACEBASEFORM			9929
 #define IDC_CSE_POPUP_GLOBALPASTE				9930
 #define IDC_CSE_POPUP_SPAWNNEWOBJECTWINDOW		9931
+#define IDC_CSE_POPUP_GLOBALUNDO				9932
+#define IDC_CSE_POPUP_GLOBALREDO				9933
