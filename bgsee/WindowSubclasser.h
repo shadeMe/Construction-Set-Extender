@@ -25,16 +25,17 @@ namespace bgsee
 
 	class WindowExtraDataCollection
 	{
-		typedef std::unordered_map<WindowExtraData::Type, WindowExtraData*>		ExtraDataMapT;
+		typedef std::unordered_map<WindowExtraData::Type, WindowExtraData*>
+							ExtraDataMapT;
 
-		ExtraDataMapT			DataStore;
+		ExtraDataMapT		DataStore;
 	public:
 		WindowExtraDataCollection();
 		~WindowExtraDataCollection();
 
-		bool					Add(WindowExtraData* Data);		// caller retains the ownership of the pointer
-		bool					Remove(WindowExtraData::Type ID);
-		WindowExtraData*		Lookup(WindowExtraData::Type ID);
+		bool				Add(WindowExtraData* Data);		// caller retains the ownership of the pointer
+		bool				Remove(WindowExtraData::Type ID);
+		WindowExtraData*	Lookup(WindowExtraData::Type ID);
 	};
 
 // For quick 'n dirty lookup
@@ -46,27 +47,42 @@ namespace bgsee
 		typedef LRESULT (CALLBACK* SubclassProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 												bool& Return, WindowExtraDataCollection* ExtraData, WindowSubclasser* Subclasser);
 
-		typedef std::vector<SubclassProc>						SubclassProcArrayT;
+		typedef std::vector<SubclassProc>
+							SubclassProcArrayT;
+		typedef std::function<bool(HWND)>
+							SubclassPredicateT;
+
+		enum { kPriority_Default = 0 };
 	private:
-		typedef std::vector<std::pair<int, SubclassProc>>		PrioritySubclassProcArrayT;
+		struct Data
+		{
+			int					Priority;
+			SubclassProc		Subclass;
+			SubclassPredicateT	Predicate;
 
-		PrioritySubclassProcArrayT	DataStore;
-		int							NextPriority;
+			Data(int Priority, SubclassProc Subclass, const SubclassPredicateT& Predicate)
+				: Priority(Priority), Subclass(Subclass), Predicate(Predicate) {}
+		};
 
-		PrioritySubclassProcArrayT::iterator	Find(SubclassProc Proc);
-		void									Resort();
+		typedef std::vector<Data>
+							SubclassDataArrayT;
+
+		SubclassDataArrayT	DataStore;
+		int					NextPriority;
+
+		SubclassDataArrayT::iterator
+							Find(SubclassProc Proc);
+		void				Resort();
 	public:
 		WindowSubclassProcCollection();
 		~WindowSubclassProcCollection();
 
-		enum { kPriority_Default = 0 };
-
-		bool				Add(SubclassProc SubclassProc, int Priority = kPriority_Default);
+		bool				Add(SubclassProc SubclassProc, int Priority = kPriority_Default, const SubclassPredicateT& Predicate = nullptr);
 		bool				Remove(SubclassProc SubclassProc);
 		void				Clear();
-		SubclassProcArrayT	GetSortedSubclasses() const;
 		void				Merge(const WindowSubclassProcCollection& Source);
 		UInt32				Size() const { return DataStore.size(); }
+		SubclassProcArrayT	GetSubclasses(HWND PredicateArgument = NULL) const;
 	};
 
 
@@ -199,7 +215,8 @@ namespace bgsee
 		~WindowSubclasser();
 
 		void	RegisterGlobalSubclass(WindowSubclassProcCollection::SubclassProc SubclassProc,
-									int Priority = WindowSubclassProcCollection::kPriority_Default);
+									int Priority = WindowSubclassProcCollection::kPriority_Default,
+									const WindowSubclassProcCollection::SubclassPredicateT& Predicate = nullptr);
 		void	DeregisterGlobalSubclass(WindowSubclassProcCollection::SubclassProc SubclassProc);
 
 		void	RegisterSubclassForWindow(HWND hWnd, WindowSubclassProcCollection::SubclassProc SubclassProc,
@@ -207,11 +224,13 @@ namespace bgsee
 		void	DeregisterSubclassForWindow(HWND hWnd, WindowSubclassProcCollection::SubclassProc SubclassProc);
 
 		void	RegisterSubclassForDialogResourceTemplate(ResourceTemplateOrdinalT Ordinal,
-			WindowSubclassProcCollection::SubclassProc SubclassProc, int Priority = WindowSubclassProcCollection::kPriority_Default);
+														WindowSubclassProcCollection::SubclassProc SubclassProc,
+														int Priority = WindowSubclassProcCollection::kPriority_Default,
+														const WindowSubclassProcCollection::SubclassPredicateT& Predicate = nullptr);
 		void	DeregisterSubclassForDialogResourceTemplate(ResourceTemplateOrdinalT Ordinal,
 			WindowSubclassProcCollection::SubclassProc SubclassProc);
 
-		LRESULT	TunnelMessageToOrgWndProc(HWND SubclassedDialog, UINT uMsg, WPARAM wParam, LPARAM lParam, bool SuppressSubclasses) const;
+		LRESULT	TunnelMessageToOrgWndProc(HWND SubclassedWindow, UINT uMsg, WPARAM wParam, LPARAM lParam, bool SuppressSubclasses) const;
 		ResourceTemplateOrdinalT GetDialogTemplate(HWND SubclassedDialog) const;
 
 		void	SuspendHooks();

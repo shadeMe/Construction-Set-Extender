@@ -184,7 +184,17 @@ namespace bgsee
 		WalkUndoStack(kOperation_Redo, RedoStack, UndoStack);
 	}
 
-	void FormUndoStack::Reset( void )
+	bool FormUndoStack::IsUndoStackEmpty() const
+	{
+		return UndoStack.empty();
+	}
+
+	bool FormUndoStack::IsRedoStackEmpty() const
+	{
+		return RedoStack.empty();
+	}
+
+	void FormUndoStack::Reset(void)
 	{
 		if (WalkingStacks)
 		{

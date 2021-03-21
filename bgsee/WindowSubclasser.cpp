@@ -66,11 +66,11 @@ namespace bgsee
 		return nullptr;
 	}
 
-	bgsee::WindowSubclassProcCollection::PrioritySubclassProcArrayT::iterator WindowSubclassProcCollection::Find(SubclassProc Proc)
+	bgsee::WindowSubclassProcCollection::SubclassDataArrayT::iterator WindowSubclassProcCollection::Find(SubclassProc Proc)
 	{
 		for (auto Itr = DataStore.begin(); Itr != DataStore.end(); ++Itr)
 		{
-			if (Itr->second == Proc)
+			if (Itr->Subclass == Proc)
 				return Itr;
 		}
 
@@ -80,7 +80,7 @@ namespace bgsee
 	void WindowSubclassProcCollection::Resort()
 	{
 		std::stable_sort(DataStore.begin(), DataStore.end(), [](const auto& a, const auto& b) -> bool {
-			return a.first > b.first;
+			return a.Priority > b.Priority;
 		});
 	}
 
@@ -95,7 +95,7 @@ namespace bgsee
 		DataStore.clear();
 	}
 
-	bool WindowSubclassProcCollection::Add(SubclassProc SubclassProc, int Priority /*= kPriority_Default*/)
+	bool WindowSubclassProcCollection::Add(SubclassProc SubclassProc, int Priority, const SubclassPredicateT& Predicate)
 	{
 		auto Match = Find(SubclassProc);
 		if (Match != DataStore.end())
@@ -104,7 +104,7 @@ namespace bgsee
 		if (Priority == kPriority_Default)
 			Priority = --NextPriority;
 
-		DataStore.emplace_back(Priority, SubclassProc);
+		DataStore.emplace_back(Priority, SubclassProc, Predicate);
 		Resort();
 		return true;
 	}
@@ -126,30 +126,33 @@ namespace bgsee
 		NextPriority = 0;
 	}
 
-	bgsee::WindowSubclassProcCollection::SubclassProcArrayT WindowSubclassProcCollection::GetSortedSubclasses() const
-	{
-		SubclassProcArrayT Out;
-
-		for (const auto& Itr : DataStore)
-			Out.emplace_back(Itr.second);
-
-		return Out;
-	}
-
 	void WindowSubclassProcCollection::Merge(const WindowSubclassProcCollection& Source)
 	{
 		std::unordered_set<SubclassProc> ProcSet;
 
 		for (const auto& Itr : DataStore)
-			ProcSet.emplace(Itr.second);
+			ProcSet.emplace(Itr.Subclass);
 
 		for (const auto& Itr : Source.DataStore)
 		{
-			if (ProcSet.find(Itr.second) == ProcSet.end())
-				DataStore.emplace_back(Itr.first, Itr.second);
+			if (ProcSet.find(Itr.Subclass) == ProcSet.end())
+				DataStore.emplace_back(Itr.Priority, Itr.Subclass, Itr.Predicate);
 		}
 
 		Resort();
+	}
+
+	bgsee::WindowSubclassProcCollection::SubclassProcArrayT WindowSubclassProcCollection::GetSubclasses(HWND PredicateArgument) const
+	{
+		SubclassProcArrayT Out;
+
+		for (const auto& Itr : DataStore)
+		{
+			if (Itr.Predicate == nullptr || Itr.Predicate(PredicateArgument))
+				Out.emplace_back(Itr.Subclass);
+		}
+
+		return Out;
 	}
 
 	DialogCreationData::DialogCreationData() :
@@ -533,7 +536,7 @@ namespace bgsee
 		if (Match != HandleSpecificSubclassProcs.end())
 			ProcCollection.Merge(*Match->second);
 
-		auto SortedProcs(ProcCollection.GetSortedSubclasses());
+		auto SortedProcs(ProcCollection.GetSubclasses(hWnd));
 		SubclassData.Subclasses.swap(SortedProcs);
 	}
 
@@ -624,9 +627,10 @@ namespace bgsee
 		}
 	}
 
-	void WindowSubclasser::RegisterGlobalSubclass(WindowSubclassProcCollection::SubclassProc SubclassProc, int Priority)
+	void WindowSubclasser::RegisterGlobalSubclass(WindowSubclassProcCollection::SubclassProc SubclassProc, int Priority,
+												const WindowSubclassProcCollection::SubclassPredicateT& Predicate)
 	{
-		if (GlobalSubclassProcs.Add(SubclassProc, Priority))
+		if (GlobalSubclassProcs.Add(SubclassProc, Priority, Predicate))
 			RebuildAllSubclassProcs();
 	}
 
@@ -684,13 +688,14 @@ namespace bgsee
 	}
 
 	void WindowSubclasser::RegisterSubclassForDialogResourceTemplate(ResourceTemplateOrdinalT Ordinal,
-																	WindowSubclassProcCollection::SubclassProc SubclassProc, int Priority)
+																	WindowSubclassProcCollection::SubclassProc SubclassProc, int Priority,
+																	const WindowSubclassProcCollection::SubclassPredicateT& Predicate)
 	{
 		auto Match = ResourceTemplateSpecificSubclassProcs.find(Ordinal);
 		if (Match == ResourceTemplateSpecificSubclassProcs.end())
 			Match = ResourceTemplateSpecificSubclassProcs.emplace(Ordinal, new WindowSubclassProcCollection).first;
 
-		if (Match->second->Add(SubclassProc, Priority) == false)
+		if (Match->second->Add(SubclassProc, Priority, Predicate) == false)
 		{
 			if (Match->second->Size() == 0)
 			{
@@ -735,9 +740,9 @@ namespace bgsee
 		}
 	}
 
-	LRESULT WindowSubclasser::TunnelMessageToOrgWndProc(HWND SubclassedDialog, UINT uMsg, WPARAM wParam, LPARAM lParam, bool SuppressSubclasses) const
+	LRESULT WindowSubclasser::TunnelMessageToOrgWndProc(HWND SubclassedWindow, UINT uMsg, WPARAM wParam, LPARAM lParam, bool SuppressSubclasses) const
 	{
-		auto ActiveSubclass = ActiveSubclasses.find(SubclassedDialog);
+		auto ActiveSubclass = ActiveSubclasses.find(SubclassedWindow);
 		SME_ASSERT(ActiveSubclass != ActiveSubclasses.end());
 
 		return ActiveSubclass->second->SendMessageToOrgProc(ActiveSubclass->first, uMsg, wParam, lParam, SuppressSubclasses);
