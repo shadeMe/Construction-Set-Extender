@@ -732,8 +732,7 @@ namespace cse
 
 		DeferredComboBoxController::~DeferredComboBoxController()
 		{
-			if (Initialized)
-				Deinitialize();
+			;//
 		}
 
 		void DeferredComboBoxController::Initialize()
@@ -751,14 +750,6 @@ namespace cse
 															bgsee::WindowSubclassProcCollection::kPriority_Default,
 															ComboBoxSubclassPredicate);
 			Initialized = true;
-		}
-
-		void DeferredComboBoxController::Deinitialize()
-		{
-			SME_ASSERT(Initialized);
-
-			BGSEEUI->GetSubclasser()->DeregisterGlobalSubclass(ThunkComboBoxSubclassProc());
-			Initialized = false;
 		}
 
 

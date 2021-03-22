@@ -164,7 +164,6 @@ namespace cse
 			~DeferredComboBoxController();
 		public:
 			void		Initialize();
-			void		Deinitialize();
 
 			static DeferredComboBoxController Instance;
 		};
