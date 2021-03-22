@@ -161,6 +161,7 @@ namespace cse
 					_MemHdlr(InvalidateDialogueControls).WriteCall();
 				}
 
+
 				for (int i = 0; i < 4; i++)
 				{
 					static const UInt32 kTESDialogEnableTopicControlsCallSites[4] =
@@ -198,6 +199,27 @@ namespace cse
 
 					_DefineCallHdlr(InvalidateDialogueControls, kTESTopicInfoSetInDialogCallSites[i], TESTopicInfoSetInDialogDetour);
 					_MemHdlr(InvalidateDialogueControls).WriteCall();
+				}
+
+				{
+					const std::map<UInt32, UInt32> kSuperflousInvalidateRectUpdateWindowCalls = {
+						{ 0x00404F10, 0x00404F25 },
+						{ 0x004EE7F2, 0x004EE80B },
+						{ 0x004E977C, 0x004E9787 },
+						{ 0x00423A33, 0x00423A3E },
+						{ 0x0045156F, 0x00451581 },
+						{ 0x004CDF71, 0x004CDF83 },
+						{ 0x004DB582, 0x004DB594 },
+						{ 0x004DC5F9, 0x004DC60B },
+						{ 0x004E8B1E, 0x004E8B30 },
+						{ 0x004E977C, 0x004E9787 },
+						//{ 0x00538142, 0x00538154 },
+						{ 0x0054C1F5, 0x0054C207 },
+						{ 0x0055D288, 0x0055D29A },
+					};
+
+					for (const auto& Loc : kSuperflousInvalidateRectUpdateWindowCalls)
+						SME::MemoryHandler::WriteRelJump(Loc.first, Loc.second);
 				}
 
 				for (int i = 0; i < 5; i++)
@@ -1616,7 +1638,14 @@ namespace cse
 
 			BGSEEUI->GetInvalidationManager()->Push(ParentDialog);
 			bool Result = DialogSubwindow->Build(TemplateID);
+
+			/*if (Result)
+			{
+				for (auto Itr = DialogSubwindow->controls.Begin(); !Itr.End() && Itr.Get(); ++Itr)
+					BGSEEUI->GetInvalidationManager()->Redraw(reinterpret_cast<HWND>(Itr.Get()));
+			}*/
 			BGSEEUI->GetInvalidationManager()->Pop(ParentDialog);
+
 			return Result;
 		}
 

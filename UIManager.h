@@ -14,28 +14,25 @@ namespace cse
 		class FilterableFormListManager
 		{
 		public:
-			typedef std::function<bool(TESForm*)>			SecondaryFilterT;			// returns true if the form is to be added
+			typedef std::function<bool(TESForm*)>
+												SecondaryFilterT;			// returns true if the form is to be added
 		private:
 			class FilterableWindowData
 			{
-				static LRESULT CALLBACK			FormListSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-																	bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
-
-				typedef std::map<HWND, UInt32>	WindowTimerMapT;
-				static WindowTimerMapT			FilterTimerTable;
-
-				typedef std::map<HWND, FilterableWindowData*>	FormListFilterDataMapT;
-				static FormListFilterDataMapT	FormListDataTable;
+				bgsee::SubclassProcThunk<FilterableWindowData>
+										ThunkFormListSubclassProc;
+				bgsee::SubclassProcThunk<FilterableWindowData>
+										ThunkFilterEditBoxSubclassProc;
 
 				HWND					ParentWindow;
 				HWND					FilterEditBox;
 				HWND					FormListView;
-				WNDPROC					FormListWndProc;
 				HWND					FilterLabel;
 
 				std::string				FilterString;
-				int						TimerPeriod;
-				int						TimeCounter;
+				std::regex				FilterRegEx;
+				UInt32					InputTimeoutThreshold;
+				ULONGLONG				TimeCounter;
 				UInt8					Flags;
 				SecondaryFilterT		SecondFilter;
 				bool					Enabled;
@@ -49,68 +46,67 @@ namespace cse
 					kFlags_SearchFormID			= 1 << 4,
 				};
 
-				bool					HasRegEx(void) const { return Flags & kFlags_RegEx; }
-				bool					HasEditorID(void) const { return Flags & kFlags_SearchEditorID; }
-				bool					HasName(void) const { return Flags & kFlags_SearchName; }
-				bool					HasDescription(void) const { return Flags & kFlags_SearchDescription; }
-				bool					HasFormID(void) const { return Flags & kFlags_SearchFormID; }
+				LRESULT FormListSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+											bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
+				LRESULT	FilterEditBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+											bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
 
-				bool					FilterForm(TESForm* Form);		// returns true if the form matches the active filter
-				void					HandlePopupMenu(HWND Parent, int X, int Y);
+				bool	HasRegEx(void) const { return Flags & kFlags_RegEx; }
+				bool	HasEditorID(void) const { return Flags & kFlags_SearchEditorID; }
+				bool	HasName(void) const { return Flags & kFlags_SearchName; }
+				bool	HasDescription(void) const { return Flags & kFlags_SearchDescription; }
+				bool	HasFormID(void) const { return Flags & kFlags_SearchFormID; }
 
-				void					CreateTimer(void) const;
-				void					DestroyTimer(void) const;
-
-				void					HookFormList(void);
-				void					UnhookFormList(void);
+				bool	FilterForm(TESForm* Form);		// returns true if the form matches the active filter
+				void	HandlePopupMenu(HWND Parent, int X, int Y);
 			public:
-				FilterableWindowData(HWND Parent, HWND EditBox, HWND FormList, HWND Label, int TimerPeriod, SecondaryFilterT UserFilter = nullptr);
+				FilterableWindowData(HWND Parent, HWND EditBox, HWND FormList, HWND Label, int InputTimeoutThreshold, SecondaryFilterT UserFilter);
 				~FilterableWindowData();
 
-				bool					HandleMessages(UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true on timeout
-				void					SetEnabledState(bool State);
+				bool	HandleMessages(UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true on timeout
+				void	SetEnabled(bool State);
 
-				bool					operator==(HWND FilterEditBox);
+				bool	operator==(HWND FilterEditBox);
 			};
 
 			typedef std::vector<FilterableWindowData*>	FilterDataArrayT;
 
-			FilterDataArrayT			ActiveFilters;
+			FilterDataArrayT		ActiveFilters;
 
-			FilterableWindowData*		Lookup(HWND FilterEdit);
+			FilterableWindowData*	Lookup(HWND FilterEdit);
 		public:
 			FilterableFormListManager();
 			~FilterableFormListManager();
 
-			bool						Register(HWND FilterEdit, HWND FilterLabel, HWND FormList, HWND ParentWindow, int TimePeriod = 250, SecondaryFilterT UserFilter = nullptr);
-			void						Unregister(HWND FilterEdit);
+			bool	Register(HWND FilterEdit, HWND FilterLabel, HWND FormList, HWND ParentWindow, const SecondaryFilterT& UserFilter = nullptr, int InputTimeoutThreshold = 500);
+			void	Unregister(HWND FilterEdit);
 
-			bool						HandleMessages(HWND FilterEdit, UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true to request a refresh of the form list
-			void						SetEnabledState(HWND FilterEdit, bool State);
+			bool	HandleMessages(HWND FilterEdit, UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true to request a refresh of the form list
+			void	SetEnabled(HWND FilterEdit, bool State);
 
-			static FilterableFormListManager				Instance;
+			static FilterableFormListManager Instance;
 		};
 
 		class FormEnumerationManager
 		{
-			bool						VisibilityDeletedForms;
-			bool						VisibilityUnmodifiedForms;
+			bool	VisibilityDeletedForms;
+			bool	VisibilityUnmodifiedForms;
 		public:
 			FormEnumerationManager();
 			~FormEnumerationManager();
 
-			bool						GetVisibleDeletedForms(void) const;
-			bool						GetVisibleUnmodifiedForms(void) const;
+			bool	GetVisibleDeletedForms(void) const;
+			bool	GetVisibleUnmodifiedForms(void) const;
 
-			bool						ToggleVisibilityDeletedForms(void);
-			bool						ToggleVisibilityUnmodifiedForms(void);
+			bool	ToggleVisibilityDeletedForms(void);
+			bool	ToggleVisibilityUnmodifiedForms(void);
 
-			bool						GetShouldEnumerate(TESForm* Form);
-			void						ResetVisibility(void);
+			bool	GetShouldEnumerate(TESForm* Form);
+			void	ResetVisibility(void);
 
-			int							CompareActiveForms(TESForm* FormA, TESForm* FormB, int OriginalResult);
+			int		CompareActiveForms(TESForm* FormA, TESForm* FormB, int OriginalResult);
 
-			static FormEnumerationManager				Instance;
+			static FormEnumerationManager Instance;
 		};
 
 
@@ -129,14 +125,7 @@ namespace cse
 				LPARAM			lParam;
 				std::string		StringPayload;
 
-				Message(UINT uMsg = WM_NULL, WPARAM wParam = NULL, LPARAM lParam = NULL)
-					: uMsg(uMsg), wParam(wParam), lParam(lParam)
-				{
-					if (uMsg == CustomMessageAddItem)
-						StringPayload = reinterpret_cast<const char*>(wParam);
-					else if (uMsg == CB_ADDSTRING || uMsg == CB_INSERTSTRING)
-						StringPayload = reinterpret_cast<const char*>(lParam);
-				}
+				Message(UINT uMsg = WM_NULL, WPARAM wParam = NULL, LPARAM lParam = NULL);
 			};
 
 			struct TrackedData
@@ -147,9 +136,10 @@ namespace cse
 			};
 
 
-			std::unordered_map<HWND, TrackedData>	ActiveComboBoxes;
-			bgsee::util::ThunkStdCall<DeferredComboBoxController, LRESULT, HWND, UINT, WPARAM, LPARAM, bool&, bgsee::WindowExtraDataCollection*, bgsee::WindowSubclasser*>
-													ThunkComboBoxSubclassProc;
+			std::unordered_map<HWND, TrackedData>
+						ActiveComboBoxes;
+			bgsee::SubclassProcThunk<DeferredComboBoxController>
+						ThunkComboBoxSubclassProc;
 			bool		Initialized;
 
 			LRESULT		ComboBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,

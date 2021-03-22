@@ -1136,6 +1136,30 @@ namespace cse
 				}
 
 				break;
+			case WM_NOTIFY:
+				{
+					NMHDR* NotificationData = (NMHDR*)lParam;
+					HWND PackageListView = GetDlgItem(hWnd, kFormList_TESPackage);
+
+					switch (NotificationData->code)
+					{
+					case LVN_KEYDOWN:
+						if (NotificationData->hwndFrom == PackageListView)
+						{
+							NMLVKEYDOWN* KeyData = (NMLVKEYDOWN*)lParam;
+							if (KeyData->wVKey == VK_F1)
+							{
+								auto SelectedPackage = TESListView::GetSelectedItemData(PackageListView);
+								if (SelectedPackage)
+									TESDialog::ShowUseReportDialog(reinterpret_cast<TESForm*>(SelectedPackage));
+							}
+						}
+
+						break;
+					}
+
+					break;
+				}
 			case WM_COMMAND:
 				if (LOWORD(wParam) == TESDialog::kStandardButton_Cancel)		// prevents the dialog from closing itself on renaming an AI package
 				{
@@ -1631,10 +1655,10 @@ namespace cse
 					{
 						// we didn't send this message, so clear the filter string
 						// this is done to prevent the dialog's controls from being disabled if the active filter string doesn't match any forms in the new worldspace
-						FilterableFormListManager::Instance.SetEnabledState(FilterEditBox, false);
+						FilterableFormListManager::Instance.SetEnabled(FilterEditBox, false);
 						SetWindowText(FilterEditBox, "");
 						Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
-						FilterableFormListManager::Instance.SetEnabledState(FilterEditBox, true);
+						FilterableFormListManager::Instance.SetEnabled(FilterEditBox, true);
 					}
 					else if (lParam == NULL)
 					{

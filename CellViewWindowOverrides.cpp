@@ -246,7 +246,7 @@ namespace cse
 						SetWindowPos(hWnd, NULL, Bounds.left, Bounds.top, Bounds.right, Bounds.bottom, SWP_NOZORDER);
 					}
 
-					FilterableFormListManager::Instance.Register(RefFilterEditBox, RefFilterLabel, RefList, hWnd, 500, CellViewExtraData::RefListFilter);
+					FilterableFormListManager::Instance.Register(RefFilterEditBox, RefFilterLabel, RefList, hWnd, CellViewExtraData::RefListFilter);
 					FilterableFormListManager::Instance.Register(CellFilterEditBox, CellFilterLabel, CellList, hWnd);
 
 					LVCOLUMN ColumnData = { 0 };

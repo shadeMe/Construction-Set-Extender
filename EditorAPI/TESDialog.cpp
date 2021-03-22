@@ -127,7 +127,14 @@ bool TESCSMain::ConfirmUnsavedChanges()
 
 UInt32 TESDialog::GetDialogTemplateForFormType(UInt8 FormTypeID)
 {
-	return cdeclCall<UInt32>(0x00442050, FormTypeID);
+	// handle types unaccounted for in the vanilla function
+	switch (FormTypeID)
+	{
+	case TESForm::kFormType_Package:
+		return kDialogTemplate_Package;
+	default:
+		return cdeclCall<UInt32>(0x00442050, FormTypeID);
+	}
 }
 
 BSExtraData* TESDialog::GetDialogExtraByType(HWND Dialog, UInt16 Type)
@@ -241,6 +248,7 @@ DLGPROC TESDialog::GetFormEditDlgProc(TESForm* Form, bool& FormIDListViewForm)
 	case TESForm::kFormType_AlchemyItem:
 	case TESForm::kFormType_LeveledItem:
 	case TESForm::kFormType_LeveledSpell:
+	case TESForm::kFormType_Package:
 	case TESForm::kFormType_Sound:
 	case TESForm::kFormType_LandTexture:
 	case TESForm::kFormType_CombatStyle:
@@ -274,7 +282,7 @@ DLGPROC TESDialog::GetFormEditDlgProc(TESForm* Form, bool& FormIDListViewForm)
 
 HWND TESDialog::ShowUseReportDialog(TESForm* Form)
 {
-	return BGSEEUI->ModelessDialog(*TESCSMain::Instance, (LPSTR)TESDialog::kDialogTemplate_UseReport, nullptr, (DLGPROC)0x00433FE0, (LPARAM)Form, true);
+	return BGSEEUI->ModelessDialog(*TESCSMain::Instance, (LPSTR)TESDialog::kDialogTemplate_UseReport, *TESCSMain::WindowHandle, (DLGPROC)0x00433FE0, (LPARAM)Form, true);
 }
 
 void TESDialog::ResetFormListControls()
