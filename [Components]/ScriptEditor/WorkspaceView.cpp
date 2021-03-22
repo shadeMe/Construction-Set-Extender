@@ -1708,6 +1708,13 @@ namespace cse
 
 		void ConcreteWorkspaceView::ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E)
 		{
+			if (AssociatedModels->Count == 0)
+			{
+				// this can happen if the editor shuts down whilst the view is being/about to be disposed
+				Debug::Assert(AllowDisposal == true);
+				return;
+			}
+
 			Color ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
 			Color BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
 			Font^ CustomFont = safe_cast<Font^>(preferences::SettingsHolder::Get()->Appearance->TextFont->Clone());
