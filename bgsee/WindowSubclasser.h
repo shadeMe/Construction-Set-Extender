@@ -85,6 +85,9 @@ namespace bgsee
 		SubclassProcArrayT	GetSubclasses(HWND PredicateArgument = NULL) const;
 	};
 
+	template <typename Class>
+	using SubclassProcThunk = util::ThunkStdCall<Class, LRESULT, HWND, UINT, WPARAM, LPARAM, bool&, bgsee::WindowExtraDataCollection*, bgsee::WindowSubclasser*>;
+
 
 	// Used by the UIManager to communicate extra information
 	// about a newly created dialog to the subclasser

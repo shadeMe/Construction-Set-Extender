@@ -212,7 +212,7 @@ namespace bgsee
 	WindowInvalidationManager::~WindowInvalidationManager()
 	{
 		for (InvalidationMapT::iterator Itr = ActiveInvalidatedWindows.begin(); Itr != ActiveInvalidatedWindows.end(); Itr++)
-			Invalidate(Itr->first, false);
+			Invalidate(Itr->first, false, true);
 
 		ActiveInvalidatedWindows.clear();
 	}
@@ -224,13 +224,13 @@ namespace bgsee
 		if (ActiveInvalidatedWindows.count(Window) == 0)
 		{
 			ActiveInvalidatedWindows.insert(std::make_pair(Window, 1));
-			Invalidate(Window, true);
+			Invalidate(Window, true, false);
 		}
 		else
 			ActiveInvalidatedWindows[Window] += 1;
 	}
 
-	void WindowInvalidationManager::Pop( HWND Window )
+	void WindowInvalidationManager::Pop( HWND Window, bool SuppressRedraw )
 	{
 		SME_ASSERT(Window);
 		SME_ASSERT(ActiveInvalidatedWindows.count(Window));
@@ -240,14 +240,14 @@ namespace bgsee
 
 		if (RefCount == 1)
 		{
-			Invalidate(Window, false);
+			Invalidate(Window, false, SuppressRedraw);
 			ActiveInvalidatedWindows.erase(Window);
 		}
 		else
 			ActiveInvalidatedWindows[Window] -= 1;
 	}
 
-	void WindowInvalidationManager::Invalidate( HWND Window, bool State )
+	void WindowInvalidationManager::Invalidate( HWND Window, bool State, bool SuppressRedraw )
 	{
 		SME_ASSERT(Window);
 
@@ -258,13 +258,14 @@ namespace bgsee
 		else
 		{
 			SendMessage(Window, WM_SETREDRAW, TRUE, NULL);
-			Redraw(Window);
+			if (!SuppressRedraw)
+				Redraw(Window);
 		}
 	}
 
 	void WindowInvalidationManager::Redraw(HWND Window)
 	{
-		RedrawWindow(Window, nullptr, nullptr, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+		RedrawWindow(Window, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
 	}
 
 	UIManager*						UIManager::Singleton = nullptr;

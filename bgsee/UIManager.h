@@ -87,13 +87,13 @@ namespace bgsee
 
 		InvalidationMapT	ActiveInvalidatedWindows;
 
-		void				Invalidate(HWND Window, bool State);
+		void				Invalidate(HWND Window, bool State, bool SuppressRedraw);
 	public:
 		WindowInvalidationManager();
 		~WindowInvalidationManager();
 
 		void	Push(HWND Window);
-		void	Pop(HWND Window);
+		void	Pop(HWND Window, bool SuppressRedraw = false);
 		void	Redraw(HWND Window);
 	};
 
