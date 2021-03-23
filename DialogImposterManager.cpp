@@ -133,7 +133,7 @@ namespace cse
 				SetWindowText(hWnd, WndTitle.c_str());
 
 				BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(hWnd, uiManager::CommonDialogExtraFittingsSubClassProc);
-				SendMessage(hWnd, WM_OBJECTWINDOWIMPOSTER_INITIALIZEXTRA, NULL, NULL);
+				SendMessage(hWnd, WM_OBJECTWINDOWIMPOSTER_INITIALIZEEXTRA, NULL, NULL);
 				SetWindowLongPtr(FormList, GWL_USERDATA, 1);
 
 				TreeView_SelectItem(TreeList, TreeView_GetFirstVisible(TreeList));

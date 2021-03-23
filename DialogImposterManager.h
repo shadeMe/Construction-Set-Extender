@@ -10,14 +10,14 @@ namespace cse
 #define WM_OBJECTWINDOWIMPOSTER_INITIALIZE			(WM_USER + 2402)
 // initializes the extra fittings subclass, works around the delayed subclassing
 // handled elsewhere by the subclass
-#define WM_OBJECTWINDOWIMPOSTER_INITIALIZEXTRA		(WM_USER + 2403)
+#define WM_OBJECTWINDOWIMPOSTER_INITIALIZEEXTRA		(WM_USER + 2403)
 
 	// this implementation isn't without its share of bugs
 	// most of them are related to form creation, control updates, i.e., failed sorting
 	// hence we pick up the slack whenever necessary
 	class ObjectWindowImposterManager
 	{
-		static INT_PTR CALLBACK						ImposterDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		static INT_PTR CALLBACK	ImposterDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 		struct ImposterData
 		{
@@ -32,25 +32,26 @@ namespace cse
 		// limitations: the addition of newly created forms will not be propagated immediately through all instances
 		class CacheOperator
 		{
-			HWND				MainWindow;
-			HWND				FormList;
-			HWND				TreeView;
-			HWND				Splitter;
+			HWND			MainWindow;
+			HWND			FormList;
+			HWND			TreeView;
+			HWND			Splitter;
 
-			ImposterData*		ParentData;
-			UInt32				TreeSelection;
-			int					SortColumns[TESObjectWindow::TreeEntryInfo::kTreeEntryCount];
+			ImposterData*	ParentData;
+			UInt32			TreeSelection;
+			int				SortColumns[TESObjectWindow::TreeEntryInfo::kTreeEntryCount];
 		public:
 			CacheOperator(HWND Imposter);
 			~CacheOperator();
 		};
 
-		typedef std::map<HWND, ImposterData*>		ImposterTableT;
+		typedef std::map<HWND, ImposterData*>
+						ImposterTableT;
 
-		ImposterTableT								ImposterRegistry;
+		ImposterTableT	ImposterRegistry;
 
-		void										DisposeImposter(HWND Imposter);
-		ImposterData*								GetImposterData(HWND Imposter) const;
+		void			DisposeImposter(HWND Imposter);
+		ImposterData*	GetImposterData(HWND Imposter) const;
 	public:
 		ObjectWindowImposterManager();
 		~ObjectWindowImposterManager();
@@ -75,13 +76,13 @@ namespace cse
 
 		struct ImposterData
 		{
-			DWORD						InitTickCount;
-			TESObjectREFR*				PreviewRef;
-			TESObjectSTAT*				PreviewGround;
-			TESPreviewControl*			Renderer;
-			RECT						Bounds;
-			TESBoundObject*				PreviewSource;
-			BaseExtraList*				DialogExtraList;
+			DWORD				InitTickCount;
+			TESObjectREFR*		PreviewRef;
+			TESObjectSTAT*		PreviewGround;
+			TESPreviewControl*	Renderer;
+			RECT				Bounds;
+			TESBoundObject*		PreviewSource;
+			BaseExtraList*		DialogExtraList;
 
 			ImposterData();
 			~ImposterData();
@@ -89,26 +90,27 @@ namespace cse
 
 		class CacheOperator
 		{
-			HWND					MainWindow;
-			HWND					AnimationList;
-			DWORD					InitTicks;
-			TESObjectREFR*			PreviewRef;
-			TESObjectSTAT*			PreviewGround;
-			TESPreviewControl*		Renderer;
+			HWND				MainWindow;
+			HWND				AnimationList;
+			DWORD				InitTicks;
+			TESObjectREFR*		PreviewRef;
+			TESObjectSTAT*		PreviewGround;
+			TESPreviewControl*	Renderer;
 
-			ImposterData*			ParentData;
+			ImposterData*		ParentData;
 		public:
 			CacheOperator(HWND Imposter);
 			~CacheOperator();
 		};
 
-		typedef std::map<HWND, ImposterData*>		ImposterTableT;
+		typedef std::map<HWND, ImposterData*>
+						ImposterTableT;
 
-		ImposterTableT								ImposterRegistry;
-		bool										Enabled;
+		ImposterTableT	ImposterRegistry;
+		bool			Enabled;
 
-		void										DisposeImposter(HWND Imposter);
-		ImposterData*								GetImposterData(HWND Imposter) const;
+		void			DisposeImposter(HWND Imposter);
+		ImposterData*	GetImposterData(HWND Imposter) const;
 	public:
 		PreviewWindowImposterManager();
 		~PreviewWindowImposterManager();

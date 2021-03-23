@@ -1875,7 +1875,7 @@ namespace cse
 			switch (uMsg)
 			{
 			case WM_INITDIALOG:
-			case WM_OBJECTWINDOWIMPOSTER_INITIALIZEXTRA:
+			case WM_OBJECTWINDOWIMPOSTER_INITIALIZEEXTRA:
 				{
 					xData = BGSEE_GETWINDOWXDATA(DialogExtraFittingsData, ExtraData);
 					if (xData == nullptr)

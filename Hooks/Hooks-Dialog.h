@@ -67,6 +67,8 @@ namespace cse
 		_DeclareMemHdlr(TESObjectCELLWndProcEndDrag, "");
 		_DeclareMemHdlr(ObjectWindowSplitterWndProcDisable, "disables the splitter when a drag-drop op is in progress, regardless of its enabled state");
 		_DeclareMemHdlr(TESComboBoxAddItem, "adds support for batch-adding items to combo boxes");
+		_DeclareMemHdlr(ObjectWindowWndProcNopSizingCodeA, "nop out parts of the WM_INITDIALOG handler to make way for our own sizing code");
+		_DeclareMemHdlr(ObjectWindowWndProcNopSizingCodeB, "");
 
 		bool __cdecl TESDialogBuildSubwindowDetour(UInt16 TemplateID, Subwindow* DialogSubwindow);
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex);

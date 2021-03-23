@@ -679,6 +679,11 @@ bool TESObjectWindow::GetMinimized(void)
 	return (GetMenuState(*TESCSMain::MainMenuHandle, 40199, MF_BYCOMMAND) & MF_CHECKED) == false;
 }
 
+void TESObjectWindow::InitializeSplitter(HWND Splitter, HWND TreeView, HWND ListView)
+{
+	cdeclCall<void>(0x00404F30, Splitter, TreeView, ListView);
+}
+
 void* TESTreeView::GetItemData(HWND hWnd, HTREEITEM Item)
 {
 	return cdeclCall<void*>(0x0041F990, hWnd, Item);

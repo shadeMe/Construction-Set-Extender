@@ -76,6 +76,8 @@ namespace cse
 		_DefineHookHdlr(TESObjectCELLWndProcEndDrag, 0x0053B501);
 		_DefineHookHdlr(ObjectWindowSplitterWndProcDisable, 0x00404502);
 		_DefineHookHdlr(TESComboBoxAddItem, 0x00403540);
+		_DefineJumpHdlr(ObjectWindowWndProcNopSizingCodeA, 0x004218F8, 0x004219EC);
+		_DefineJumpHdlr(ObjectWindowWndProcNopSizingCodeB, 0x00421A3F, 0x00421A44);
 
 		void PatchDialogHooks(void)
 		{
@@ -339,6 +341,8 @@ namespace cse
 			_MemHdlr(TESObjectCELLWndProcEndDrag).WriteJump();
 			_MemHdlr(ObjectWindowSplitterWndProcDisable).WriteJump();
 			_MemHdlr(TESComboBoxAddItem).WriteJump();
+			_MemHdlr(ObjectWindowWndProcNopSizingCodeA).WriteJump();
+			_MemHdlr(ObjectWindowWndProcNopSizingCodeB).WriteJump();
 		}
 
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex)
