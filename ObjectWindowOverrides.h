@@ -1,7 +1,7 @@
 #pragma once
 #include "UIManager.h"
 
-#define IDC_CSE_OBJECTWINDOW_HORIZONTAL_SPLITTER		10002
+#define IDC_CSE_OBJECTWINDOW_VERTICAL_SPLITTER		10002
 #define IDC_CSE_OBJECTWINDOW_CUSTOM_TAGS_TREEVIEW		10000
 #define IDC_CSE_OBJECTWINDOW_CUSTOM_TAGS_LISTVIEW		10001
 #define IDC_CSE_OBJECTWINDOW_CUSTOM_TAGS_SPLITTER		10003
@@ -14,7 +14,8 @@ namespace cse
 	{
 		class ObjectWindowExtraState : public bgsee::WindowExtraData
 		{
-			static constexpr float kMinWHRatio = 0.1, kMaxWHRatio = 1 - kMinWHRatio;
+			static constexpr auto kMinHorizontalSplitterWidth = 65;
+			static constexpr auto kMinVerticalSplitterHeight = 65;
 		public:
 			enum ControlID : UInt32
 			{
@@ -28,7 +29,7 @@ namespace cse
 				kTag_ListView = IDC_CSE_OBJECTWINDOW_CUSTOM_TAGS_LISTVIEW,
 				kTag_TreeView = IDC_CSE_OBJECTWINDOW_CUSTOM_TAGS_TREEVIEW,
 				kTag_Splitter = IDC_CSE_OBJECTWINDOW_CUSTOM_TAGS_SPLITTER,
-				kHorizontalSplitter = IDC_CSE_OBJECTWINDOW_HORIZONTAL_SPLITTER,
+				kVerticalSplitter = IDC_CSE_OBJECTWINDOW_VERTICAL_SPLITTER,
 			};
 
 			struct SplitterState
@@ -50,13 +51,11 @@ namespace cse
 		public:
 			HWND						Parent;
 			std::map<ControlID, HWND>	Handles;
-			std::map<ControlID, RECT>	InitRects;
 			std::map<ControlID, RECT>	CurrentRects;
-			POINT						Margin;
 			POINT						CurrentDialogSize;
 			SplitterState				FormViewSplitterState;
 			SplitterState				TagViewSplitterState;
-			SplitterState				HorizontalSplitterState;
+			SplitterState				VerticalSplitterState;
 
 			bgsee::SubclassProcThunk<ObjectWindowExtraState>
 										ThunkSplitterSubclassProc;

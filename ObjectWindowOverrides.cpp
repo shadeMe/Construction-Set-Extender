@@ -12,7 +12,7 @@ namespace cse
 			auto NewCursor = LoadCursor(NULL, IDC_ARROW);
 			if (MouseOver)
 			{
-				if (ID == kHorizontalSplitter)
+				if (ID == kVerticalSplitter)
 					NewCursor = LoadCursor(NULL, IDC_SIZENS);
 				else
 					NewCursor = LoadCursor(NULL, IDC_SIZEWE);
@@ -125,15 +125,11 @@ namespace cse
 
 				switch (SplitterData->ID)
 				{
-				case kHorizontalSplitter:
+				case kVerticalSplitter:
 				{
-					auto NewSplitterYPos = CurrentRects.at(ObjectWindowExtraState::kHorizontalSplitter).top + Delta.y;
-					auto MinYPos = static_cast<LONG>(CurrentDialogSize.y * kMinWHRatio);
-					auto MaxYPos = static_cast<LONG>(CurrentDialogSize.y * kMaxWHRatio);
+					auto NewSplitterYPos = CurrentRects.at(ObjectWindowExtraState::kVerticalSplitter).top + Delta.y;
 
-					if (Delta.y < 0 && NewSplitterYPos <= MinYPos)
-						break;
-					else if (Delta.y > 0 && NewSplitterYPos >= MaxYPos)
+					if (NewSplitterYPos <= kMinVerticalSplitterHeight || NewSplitterYPos >= (CurrentDialogSize.y - kMinVerticalSplitterHeight))
 						break;
 
 					// form tree view - new height
@@ -169,9 +165,9 @@ namespace cse
 							CurrentRect->bottom - CurrentRect->top + Delta.y,
 							TRUE);
 
-					// horizontal splitter - new y pos
-					CurrentHandle = Handles.at(ObjectWindowExtraState::kHorizontalSplitter);
-					CurrentRect = &CurrentRects.at(ObjectWindowExtraState::kHorizontalSplitter);
+					// vertical splitter - new y pos
+					CurrentHandle = Handles.at(ObjectWindowExtraState::kVerticalSplitter);
+					CurrentRect = &CurrentRects.at(ObjectWindowExtraState::kVerticalSplitter);
 
 					MoveWindow(CurrentHandle,
 							CurrentRect->left,
@@ -240,14 +236,9 @@ namespace cse
 				case kForm_Splitter:
 				{
 					auto NewSplitterXPos = CurrentRects.at(ObjectWindowExtraState::kForm_Splitter).left + Delta.x;
-					auto MinYPos = static_cast<LONG>(CurrentDialogSize.x * kMinWHRatio);
-					auto MaxYPos = static_cast<LONG>(CurrentDialogSize.x * kMaxWHRatio);
 
-					if (Delta.x < 0 && NewSplitterXPos <= MinYPos)
+					if (NewSplitterXPos <= kMinHorizontalSplitterWidth || NewSplitterXPos >= (CurrentDialogSize.x - kMinHorizontalSplitterWidth ))
 						break;
-					else if (Delta.x > 0 && NewSplitterXPos >= MaxYPos)
-						break;
-
 
 					// form filter edit - new width
 					CurrentHandle = Handles.at(ObjectWindowExtraState::kForm_FilterEdit);
@@ -298,12 +289,8 @@ namespace cse
 				case kTag_Splitter:
 				{
 					auto NewSplitterXPos = CurrentRects.at(ObjectWindowExtraState::kTag_Splitter).left + Delta.x;
-					auto MinYPos = static_cast<LONG>(CurrentDialogSize.x * kMinWHRatio);
-					auto MaxYPos = static_cast<LONG>(CurrentDialogSize.x * kMaxWHRatio);
 
-					if (Delta.x < 0 && NewSplitterXPos <= MinYPos)
-						break;
-					else if (Delta.x > 0 && NewSplitterXPos >= MaxYPos)
+					if (NewSplitterXPos <= kMinHorizontalSplitterWidth || NewSplitterXPos >= (CurrentDialogSize.x - kMinHorizontalSplitterWidth ))
 						break;
 
 
@@ -389,13 +376,13 @@ namespace cse
 			{
 			case kForm_Splitter:
 				TagViewSplitterState.Enabled = ActiveState == false;
-				HorizontalSplitterState.Enabled = ActiveState == false;
+				VerticalSplitterState.Enabled = ActiveState == false;
 				break;
 			case kTag_Splitter:
 				FormViewSplitterState.Enabled = ActiveState == false;
-				HorizontalSplitterState.Enabled = ActiveState == false;
+				VerticalSplitterState.Enabled = ActiveState == false;
 				break;
-			case kHorizontalSplitter:
+			case kVerticalSplitter:
 				FormViewSplitterState.Enabled = ActiveState == false;
 				TagViewSplitterState.Enabled = ActiveState == false;
 				break;
@@ -417,7 +404,7 @@ namespace cse
 			Handles.emplace(kTag_ListView, GetDlgItem(Parent, kTag_ListView));
 			Handles.emplace(kTag_TreeView, GetDlgItem(Parent, kTag_TreeView));
 			Handles.emplace(kTag_Splitter, GetDlgItem(Parent, kTag_Splitter));
-			Handles.emplace(kHorizontalSplitter, GetDlgItem(Parent, kHorizontalSplitter));
+			Handles.emplace(kVerticalSplitter, GetDlgItem(Parent, kVerticalSplitter));
 
 			for (const auto& Itr : Handles)
 				SME_ASSERT(Itr.second != NULL && "Invalid handle for object window control");
@@ -427,7 +414,7 @@ namespace cse
 
 			FormViewSplitterState.ID = kForm_Splitter;
 			TagViewSplitterState.ID = kTag_Splitter;
-			HorizontalSplitterState.ID = kHorizontalSplitter;
+			VerticalSplitterState.ID = kVerticalSplitter;
 
 			BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(Handles.at(kForm_Splitter), ThunkSplitterSubclassProc());
 			SetWindowLongPtr(Handles.at(kForm_Splitter), GWL_USERDATA, reinterpret_cast<LONG_PTR>(&FormViewSplitterState));
@@ -435,8 +422,8 @@ namespace cse
 			BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(Handles.at(kTag_Splitter), ThunkSplitterSubclassProc());
 			SetWindowLongPtr(Handles.at(kTag_Splitter), GWL_USERDATA, reinterpret_cast<LONG_PTR>(&TagViewSplitterState));
 
-			BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(Handles.at(kHorizontalSplitter), ThunkSplitterSubclassProc());
-			SetWindowLongPtr(Handles.at(kHorizontalSplitter), GWL_USERDATA, reinterpret_cast<LONG_PTR>(&HorizontalSplitterState));
+			BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(Handles.at(kVerticalSplitter), ThunkSplitterSubclassProc());
+			SetWindowLongPtr(Handles.at(kVerticalSplitter), GWL_USERDATA, reinterpret_cast<LONG_PTR>(&VerticalSplitterState));
 		}
 
 		ObjectWindowExtraState::~ObjectWindowExtraState()
@@ -447,8 +434,8 @@ namespace cse
 			BGSEEUI->GetSubclasser()->DeregisterSubclassForWindow(Handles.at(kTag_Splitter), ThunkSplitterSubclassProc());
 			SetWindowLongPtr(Handles.at(kTag_Splitter), GWL_USERDATA, NULL);
 
-			BGSEEUI->GetSubclasser()->DeregisterSubclassForWindow(Handles.at(kHorizontalSplitter), ThunkSplitterSubclassProc());
-			SetWindowLongPtr(Handles.at(kHorizontalSplitter), GWL_USERDATA, NULL);
+			BGSEEUI->GetSubclasser()->DeregisterSubclassForWindow(Handles.at(kVerticalSplitter), ThunkSplitterSubclassProc());
+			SetWindowLongPtr(Handles.at(kVerticalSplitter), GWL_USERDATA, NULL);
 		}
 
 		void ObjectWindowExtraState::UpdateRects()
@@ -468,7 +455,7 @@ namespace cse
 			GetRelativeCoords(Handles.at(kTag_ListView), &CurrentRects[kTag_ListView]);
 			GetRelativeCoords(Handles.at(kTag_TreeView), &CurrentRects[kTag_TreeView]);
 			GetRelativeCoords(Handles.at(kTag_Splitter), &CurrentRects[kTag_Splitter]);
-			GetRelativeCoords(Handles.at(kHorizontalSplitter), &CurrentRects[kHorizontalSplitter]);
+			GetRelativeCoords(Handles.at(kVerticalSplitter), &CurrentRects[kVerticalSplitter]);
 		}
 
 		void ObjectWindowExtraState::UpdateDialogSize(POINT* Delta /*= nullptr*/)
@@ -509,25 +496,20 @@ namespace cse
 			if (PosParams->cy < kMinHeight)
 				PosParams->cy = kMinHeight;
 
-			const auto& HorizontalSplitterRect = CurrentRects.at(kHorizontalSplitter);
-			const auto& FormSplitterRect = CurrentRects.at(kForm_Splitter);
-			const auto& TagSplitterRect = CurrentRects.at(kTag_Splitter);
-
-			POINT Delta = { PosParams->cx - CurrentDialogSize.x, PosParams->cy - CurrentDialogSize.y };
-
-			auto MinXPos = static_cast<LONG>(PosParams->cx * kMinWHRatio);
-			auto MinYPos = static_cast<LONG>(PosParams->cy * kMinWHRatio);
-
-			auto NewHorizontalSplitterY = HorizontalSplitterRect.bottom + Delta.y ;
-			auto NewFormSplitterX = FormSplitterRect.right + Delta.x;
-			auto NewTagSplitterX = TagSplitterRect.right + Delta.x;
 
 			// ### HACK! doesn't work consistently in both axes
-			if (NewHorizontalSplitterY <= MinYPos && Delta.y < 0)
+			POINT Delta = { PosParams->cx - CurrentDialogSize.x, PosParams->cy - CurrentDialogSize.y };
+			auto NewSplitterYPos = CurrentRects.at(ObjectWindowExtraState::kVerticalSplitter).top + Delta.y;
+
+			if (NewSplitterYPos <= kMinVerticalSplitterHeight || NewSplitterYPos >= (PosParams->cy - kMinVerticalSplitterHeight))
 				return false;
-			//else if (NewFormSplitterX <= MinXPos && Delta.x < 0)
+
+			//auto NewSplitterXPos = CurrentRects.at(ObjectWindowExtraState::kForm_Splitter).left + Delta.x;
+			//if (NewSplitterXPos <= kMinHorizontalSplitterWidth || NewSplitterXPos >= (PosParams->cx - kMinHorizontalSplitterWidth))
 			//	return false;
-			//else if (NewTagSplitterX <= MinXPos && Delta.x < 0)
+
+			//NewSplitterXPos = CurrentRects.at(ObjectWindowExtraState::kTag_Splitter).left + Delta.x;
+			//if (NewSplitterXPos <= kMinHorizontalSplitterWidth || NewSplitterXPos >= (PosParams->cx - kMinHorizontalSplitterWidth))
 			//	return false;
 
 			return true;
@@ -640,9 +622,9 @@ namespace cse
 				CurrentRect->bottom - CurrentRect->top + SizeDelta.y,
 				TRUE);
 
-			// horizontal splitter - new vertical pos, same horizontal pos, new width, same height
-			CurrentHandle = xData->Handles.at(ObjectWindowExtraState::kHorizontalSplitter);
-			CurrentRect = &xData->CurrentRects.at(ObjectWindowExtraState::kHorizontalSplitter);
+			// vertical splitter - new vertical pos, same horizontal pos, new width, same height
+			CurrentHandle = xData->Handles.at(ObjectWindowExtraState::kVerticalSplitter);
+			CurrentRect = &xData->CurrentRects.at(ObjectWindowExtraState::kVerticalSplitter);
 
 			MoveWindow(CurrentHandle,
 				CurrentRect->left,
