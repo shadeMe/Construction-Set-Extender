@@ -560,6 +560,11 @@ TESPathGridPoint* TESRender::PickPathGridPointAtCoords(int X, int Y)
 	return Result;
 }
 
+NiAVObject* TESRender::CastRay(PickData* PickBuffer, NiCamera* Camera, int ScreenCoordX, int ScreenCoordY, Vector3* IntersectionPoint, bool ReturnGeometry)
+{
+	return cdeclCall<NiAVObject*>(0x00426670, PickBuffer, Camera, ScreenCoordX, ScreenCoordY, IntersectionPoint, ReturnGeometry);
+}
+
 TESSceneNodeDebugData* TESSceneNodeDebugData::Initialize(HINSTANCE Instance,
 																	HWND Parent,
 																	NiNode* Node,

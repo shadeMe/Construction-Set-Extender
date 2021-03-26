@@ -511,6 +511,7 @@ namespace cse
 			CameraFrustumBuffer = { 0 };
 			CurrentMouseRef = nullptr;
 			CurrentMousePathGridPoint = nullptr;
+			CurrentMouseExteriorCell = nullptr;
 			ShowInitiallyDisabledRefs = true;
 			ShowInitiallyDisabledRefChildren = true;
 			UseGrassTextureOverlay = false;
@@ -593,6 +594,7 @@ namespace cse
 			case events::TypedEventSource::kType_CellView_SelectCell:
 				Parent->GetState().CurrentMouseRef = nullptr;
 				Parent->GetState().CurrentMousePathGridPoint = nullptr;
+				Parent->GetState().CurrentMouseExteriorCell = nullptr;
 				break;
 			case events::TypedEventSource::kType_Plugin_ClearData:
 				Parent->HandleClearData();

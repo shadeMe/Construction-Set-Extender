@@ -139,4 +139,5 @@ public:
 	TESLandTexture*				GetLandTextureAt(Vector3* Coords);
 
 	static HWND*				WindowHandle;
+	static TESLandTexture**		DefaultLandTexture;
 };

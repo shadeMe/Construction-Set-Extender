@@ -139,8 +139,8 @@ public:
 	bool											SavePlugin(const char* FileName = nullptr, bool AsESM = false);
 													// if AsESM is set to true, all loaded records will be dumped to the save file regardless of their modified status
 
-	TESObjectCELL*									GetExteriorCell(float XCoord, float YCoord, float ZCoord, bool* Create = nullptr, TESWorldSpace* Worldspace = nullptr);
-	TESObjectCELL*									GetExteriorCell(float XCoord, float YCoord, TESWorldSpace* Worldspace, bool Create = false);
+	TESObjectCELL*									GetExteriorCell(float XWorldCoord, float YWorldCoord, float ZWorldCoord, bool* Create = nullptr, TESWorldSpace* Worldspace = nullptr);
+	TESObjectCELL*									GetExteriorCell(float XWorldCoord, float YWorldCoord, TESWorldSpace* Worldspace, bool Create = false);
 													// if Create is set to true, an exterior cell will be created at the input coords and returned
 
 	bool											AddForm(TESForm* Form);

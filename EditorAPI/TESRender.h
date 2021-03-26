@@ -165,6 +165,7 @@ public:
 	static void								SetCameraFOV(NiCamera* Camera, float FOV, float Width = -1, float Height = -1);		// horizontal FOV
 	static TESObjectREFR*					PickRefAtCoords(int X, int Y);
 	static TESPathGridPoint*				PickPathGridPointAtCoords(int X, int Y);
+	static NiAVObject*						CastRay(PickData* PickBuffer, NiCamera* Camera, int ScreenCoordX, int ScreenCoordY, Vector3* IntersectionPoint, bool ReturnGeometry);
 
 	// misc methods that belong elsewhere
 	static void								UpdateAVObject(NiAVObject* Object);		// NiAVObject method

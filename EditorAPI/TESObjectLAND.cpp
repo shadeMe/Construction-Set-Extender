@@ -1,6 +1,7 @@
 #include "TESObjectLAND.h"
 
-HWND*		TESObjectLAND::WindowHandle = (HWND*)0x00A0AF54;
+HWND*				TESObjectLAND::WindowHandle = (HWND*)0x00A0AF54;
+TESLandTexture**	TESObjectLAND::DefaultLandTexture = (TESLandTexture**)0x00A13010;
 
 const TESObjectLAND::LandHeightLimit* TESObjectLAND::GetHeightLimits( LandHeightLimit* Out )
 {

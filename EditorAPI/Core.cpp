@@ -204,14 +204,14 @@ bool TESDataHandler::SavePlugin( const char* FileName /*= NULL*/, bool AsESM /*=
 	return thisCall<bool>(0x0047E9B0, this, FileName, AsESM);
 }
 
-TESObjectCELL* TESDataHandler::GetExteriorCell( float XCoord, float YCoord, TESWorldSpace* Worldspace, bool Create /*= false*/ )
+TESObjectCELL* TESDataHandler::GetExteriorCell( float XWorldCoord, float YWorldCoord, TESWorldSpace* Worldspace, bool Create /*= false*/ )
 {
-	return thisCall<TESObjectCELL*>(0x0047E480, this, XCoord, YCoord, Worldspace, Create);
+	return thisCall<TESObjectCELL*>(0x0047E480, this, XWorldCoord, YWorldCoord, Worldspace, Create);
 }
 
-TESObjectCELL* TESDataHandler::GetExteriorCell( float XCoord, float YCoord, float ZCoord, bool* Create, TESWorldSpace* Worldspace )
+TESObjectCELL* TESDataHandler::GetExteriorCell( float XWorldCoord, float YWorldCoord, float ZWorldCoord, bool* Create, TESWorldSpace* Worldspace )
 {
-	return thisCall<TESObjectCELL*>(0x0047C7D0, this, XCoord, YCoord, ZCoord, Create, Worldspace);
+	return thisCall<TESObjectCELL*>(0x0047C7D0, this, XWorldCoord, YWorldCoord, ZWorldCoord, Create, Worldspace);
 }
 
 bool TESDataHandler::MoveReference( TESObjectCELL* Cell, TESObjectREFR* Reference )

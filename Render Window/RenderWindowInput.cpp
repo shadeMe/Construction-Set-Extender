@@ -1604,6 +1604,7 @@ namespace cse
 				case WM_NCMOUSELEAVE:
 					_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
 					_RENDERWIN_XSTATE.CurrentMousePathGridPoint = nullptr;
+					_RENDERWIN_XSTATE.CurrentMouseExteriorCell = nullptr;
 
 					break;
 				case WM_MOUSEMOVE:
@@ -1616,9 +1617,17 @@ namespace cse
 
 						_RENDERWIN_XSTATE.CurrentMouseRef = nullptr;
 						_RENDERWIN_XSTATE.CurrentMousePathGridPoint = nullptr;
-						POINT MousePos{ GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+						_RENDERWIN_XSTATE.CurrentMouseExteriorCell = nullptr;
+						_RENDERWIN_XSTATE.CurrentMouseWorldIntersection.Set(FLT_MAX, FLT_MAX, FLT_MAX);
 
-						if (FreeMouseMovement.IsActive() == false)
+						POINT MousePos{ GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+						TESRender::CastRay((*TESRender::Scenegraph::Singleton)->pickData2,
+										_PRIMARYRENDERER->primaryCamera,
+										MousePos.x, MousePos.y,
+										&_RENDERWIN_XSTATE.CurrentMouseWorldIntersection,
+										false);
+
+						if (!FreeMouseMovement.IsActive())
 						{
 							if (*TESRenderWindow::LandscapeEditFlag == 0)
 							{
@@ -1637,8 +1646,20 @@ namespace cse
 								else
 								{
 									_RENDERWIN_XSTATE.CurrentMousePathGridPoint = TESRender::PickPathGridPointAtCoords(MousePos.x,
-																													   MousePos.y);
+										MousePos.y);
 								}
+							}
+
+							if (_TES->currentInteriorCell == nullptr)
+							{
+								float XCellCoord = _RENDERWIN_XSTATE.CurrentMouseWorldIntersection.x / 4096.f;
+								float YCellCoord = _RENDERWIN_XSTATE.CurrentMouseWorldIntersection.y / 4096.f;
+								if (XCellCoord > 32767 || YCellCoord > 32767 || XCellCoord < -32768 || YCellCoord < -32768)
+									;// invalid coords
+								else
+									_RENDERWIN_XSTATE.CurrentMouseExteriorCell = _DATAHANDLER->GetExteriorCell(_RENDERWIN_XSTATE.CurrentMouseWorldIntersection.x,
+																											_RENDERWIN_XSTATE.CurrentMouseWorldIntersection.y,
+																											_TES->currentWorldSpace);
 							}
 
 							if (PaintingSelection)

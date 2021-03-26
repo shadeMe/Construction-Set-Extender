@@ -176,6 +176,8 @@ namespace cse
 			NiFrustum					CameraFrustumBuffer;
 			TESObjectREFR*				CurrentMouseRef;
 			TESPathGridPoint*			CurrentMousePathGridPoint;
+			TESObjectCELL*				CurrentMouseExteriorCell;
+			Vector3						CurrentMouseWorldIntersection;
 			bool						ShowInitiallyDisabledRefs;
 			bool						ShowInitiallyDisabledRefChildren;
 			bool						UseGrassTextureOverlay;

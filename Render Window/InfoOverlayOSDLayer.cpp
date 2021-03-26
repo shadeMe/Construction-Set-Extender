@@ -211,6 +211,62 @@ namespace cse
 					}
 				}
 
+				if (*TESRenderWindow::LandscapeEditFlag)
+				{
+					ImGui::Dummy(ImVec2(1, 5));
+
+					ImGui::TableNextRow();
+					{
+						ImGui::TableNextColumn();
+						{
+							ImGui::Text("Landscape Texture:");
+						}
+						ImGui::TableNextColumn();
+						{
+							ImGui::Text(ICON_MD_PALETTE);
+							if (ImGui::IsItemHovered())
+								ImGui::SetTooltip("Active Landscape Texture");
+							ImGui::SameLine(0, 15);
+
+							if (*TESRenderWindow::ActiveLandscapeTexture == nullptr)
+								ImGui::Text("None");
+							else if (*TESRenderWindow::ActiveLandscapeTexture == *TESObjectLAND::DefaultLandTexture)
+								ImGui::Text("Default");
+							else
+								ImGui::Text("%s", Helpers::GetFormEditorID(*TESRenderWindow::ActiveLandscapeTexture).c_str());
+						}
+					}
+
+					if (_RENDERWIN_XSTATE.CurrentMouseExteriorCell)
+					{
+						TESLandTexture* LandscapeTexUnderMouse = nullptr;
+						Vector3& MouseTranslate = _RENDERWIN_XSTATE.CurrentMouseWorldIntersection;
+						auto Land = _RENDERWIN_XSTATE.CurrentMouseExteriorCell->GetLand();
+						if (Land)
+							LandscapeTexUnderMouse = Land->GetLandTextureAt(&MouseTranslate);
+
+						if (LandscapeTexUnderMouse)
+						{
+							ImGui::TableNextRow();
+							{
+								ImGui::TableNextColumn();
+								ImGui::TableNextColumn();
+								{
+									ImGui::Text(ICON_MD_MOUSE);
+									if (ImGui::IsItemHovered())
+										ImGui::SetTooltip("Landscape Texture Under Mouse Cursor");
+									ImGui::SameLine(0, 15);
+
+									if (LandscapeTexUnderMouse == *TESObjectLAND::DefaultLandTexture)
+										ImGui::Text("Default");
+									else
+										ImGui::Text("%s", Helpers::GetFormEditorID(LandscapeTexUnderMouse).c_str());
+								}
+							}
+						}
+					}
+				}
+
 				ImGui::EndTable();
 			}
 
