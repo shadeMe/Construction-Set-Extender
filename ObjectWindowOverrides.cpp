@@ -7,7 +7,39 @@ namespace cse
 {
 	namespace uiManager
 	{
-		void ObjectWindowExtraState::SplitterState::UpdateCursor() const
+		void GetRelativeBounds(HWND hWnd, RECT* Rect)
+		{
+			GetWindowRect(hWnd, Rect);
+			MapWindowPoints(HWND_DESKTOP, GetParent(hWnd), reinterpret_cast<LPPOINT>(Rect), 2);
+		}
+
+		SplitterState::SplitterState(ObjectWindowExtraState* WindowState, ObjectWindowControlID ID)
+			: WindowState(WindowState), Enabled(true), MouseOver(false), Dragging(false), DragOrigin{ 0 }, ID(ID)
+		{
+			SplitterHandle = WindowState->Handles.at(ID);
+			SplitterBounds = &WindowState->CurrentRects.at(ID);
+		}
+
+		bool SplitterState::IsMouseOver() const
+		{
+			POINT CursorLoc;
+			GetCursorPos(&CursorLoc);
+
+			auto WindowUnderCursor = WindowFromPoint(CursorLoc);
+			if (WindowUnderCursor == SplitterHandle)
+				return true;
+
+			if (WindowUnderCursor == WindowState->Parent)
+			{
+				ScreenToClient(WindowState->Parent, &CursorLoc);
+				WindowUnderCursor = ChildWindowFromPoint(WindowState->Parent, CursorLoc);
+				return WindowUnderCursor == SplitterHandle;
+			}
+
+			return false;
+		}
+
+		void SplitterState::UpdateCursor() const
 		{
 			auto NewCursor = LoadCursor(NULL, IDC_ARROW);
 			if (MouseOver)
@@ -19,6 +51,406 @@ namespace cse
 			}
 
 			SetCursor(NewCursor);
+		}
+
+		HorizontalSplitter::HorizontalSplitter(ObjectWindowExtraState* WindowState, ObjectWindowControlID ID)
+			: SplitterState(WindowState, ID)
+		{
+			SME_ASSERT(ID == ObjectWindowControlID::kForm_Splitter || ID == ObjectWindowControlID::kTag_Splitter);
+
+			if (ID == ObjectWindowControlID::kForm_Splitter)
+			{
+				FilterLabel = ObjectWindowControlID::kForm_FilterLabel;
+				FilterEdit = ObjectWindowControlID::kForm_FilterEdit;
+				TreeView = ObjectWindowControlID::kForm_TreeView;
+				ListView = ObjectWindowControlID::kForm_ListView;
+			}
+			else
+			{
+				FilterLabel = ObjectWindowControlID::kTag_FilterLabel;
+				FilterEdit = ObjectWindowControlID::kTag_FilterEdit;
+				TreeView = ObjectWindowControlID::kTag_TreeView;
+				ListView = ObjectWindowControlID::kTag_ListView;
+			}
+		}
+
+		void HorizontalSplitter::Move(LONG Delta)
+		{
+			auto CurrentSplitterPos = SplitterBounds->left;
+			auto NewSplitterPos = CurrentSplitterPos + Delta;
+
+			const auto SafeZoneOffset = 75;
+			// do nothing if the new splitter position is outside the safe-zone
+			if ((NewSplitterPos <= SafeZoneOffset && Delta < 0) || (NewSplitterPos >= (WindowState->CurrentDialogSize.x - SafeZoneOffset) && Delta > 0))
+				return;
+
+			// update the splitter's position first
+			{
+				RECT NewBounds{
+					SplitterBounds->left + Delta,
+					SplitterBounds->top,
+					SplitterBounds->right - SplitterBounds->left,
+					SplitterBounds->bottom - SplitterBounds->top,
+				};
+
+				MoveWindow(SplitterHandle,
+					NewBounds.left,
+					NewBounds.top,
+					NewBounds.right,
+					NewBounds.bottom,
+					TRUE);
+
+				GetRelativeBounds(SplitterHandle, SplitterBounds);
+			}
+
+			HWND CurrentHandle = NULL;
+			RECT* CurrentRect = nullptr;
+
+			// form filter edit - new width
+			{
+				CurrentHandle = WindowState->Handles.at(FilterEdit);
+				CurrentRect = &WindowState->CurrentRects.at(FilterEdit);
+
+				RECT NewBounds{
+					CurrentRect->left,
+					CurrentRect->top,
+					CurrentRect->right - CurrentRect->left + Delta,
+					CurrentRect->bottom - CurrentRect->top,
+				};
+
+				MoveWindow(CurrentHandle,
+					NewBounds.left,
+					NewBounds.top,
+					NewBounds.right,
+					NewBounds.bottom,
+					TRUE);
+
+				GetRelativeBounds(CurrentHandle, CurrentRect);
+			}
+
+			// form tree view - new width
+			{
+				CurrentHandle = WindowState->Handles.at(TreeView);
+				CurrentRect = &WindowState->CurrentRects.at(TreeView);
+
+				RECT NewBounds{
+					CurrentRect->left,
+					CurrentRect->top,
+					CurrentRect->right - CurrentRect->left + Delta,
+					CurrentRect->bottom - CurrentRect->top,
+				};
+
+				MoveWindow(CurrentHandle,
+					NewBounds.left,
+					NewBounds.top,
+					NewBounds.right,
+					NewBounds.bottom,
+					TRUE);
+
+				GetRelativeBounds(CurrentHandle, CurrentRect);
+			}
+
+			// form list view - new x pos, new width
+			{
+				CurrentHandle = WindowState->Handles.at(ListView);
+				CurrentRect = &WindowState->CurrentRects.at(ListView);
+
+				RECT NewBounds{
+					CurrentRect->left + Delta,
+					CurrentRect->top,
+					CurrentRect->right - CurrentRect->left + (-Delta),
+					CurrentRect->bottom - CurrentRect->top,
+				};
+
+				MoveWindow(CurrentHandle,
+					NewBounds.left,
+					NewBounds.top,
+					NewBounds.right,
+					NewBounds.bottom,
+					TRUE);
+
+				GetRelativeBounds(CurrentHandle, CurrentRect);
+			}
+		}
+
+		LPCSTR HorizontalSplitter::GetSizingCursor() const
+		{
+			return IDC_SIZEWE;
+		}
+
+		void VerticalSplitter::ResizeControl(ObjectWindowControlID Control, LONG Delta) const
+		{
+			BGSEECONSOLE_MESSAGE("Vert splitter resizing control: %d | Delta: %d", Control, Delta);
+
+			HWND CurrentHandle = NULL;
+			RECT* CurrentRect = nullptr;
+			RECT NewBounds { 0 };
+
+			switch (Control)
+			{
+			case ObjectWindowControlID::kForm_TreeView:
+				// form tree view - new height
+				CurrentHandle = WindowState->Handles.at(ObjectWindowControlID::kForm_TreeView);
+				CurrentRect = &WindowState->CurrentRects.at(ObjectWindowControlID::kForm_TreeView);
+
+				NewBounds.left = CurrentRect->left;
+				NewBounds.top = CurrentRect->top;
+				NewBounds.right = CurrentRect->right - CurrentRect->left;
+				NewBounds.bottom = CurrentRect->bottom - CurrentRect->top + Delta;
+
+				break;
+			case ObjectWindowControlID::kForm_ListView:
+				// form list view - new height
+				CurrentHandle = WindowState->Handles.at(ObjectWindowControlID::kForm_ListView);
+				CurrentRect = &WindowState->CurrentRects.at(ObjectWindowControlID::kForm_ListView);
+
+				NewBounds.left = CurrentRect->left;
+				NewBounds.top = CurrentRect->top;
+				NewBounds.right = CurrentRect->right - CurrentRect->left;
+				NewBounds.bottom = CurrentRect->bottom - CurrentRect->top + Delta;
+
+				break;
+			case ObjectWindowControlID::kForm_Splitter:
+				// form splitter - new height
+				CurrentHandle = WindowState->Handles.at(ObjectWindowControlID::kForm_Splitter);
+				CurrentRect = &WindowState->CurrentRects.at(ObjectWindowControlID::kForm_Splitter);
+
+				NewBounds.left = CurrentRect->left;
+				NewBounds.top = CurrentRect->top;
+				NewBounds.right = CurrentRect->right - CurrentRect->left;
+				NewBounds.bottom = CurrentRect->bottom - CurrentRect->top + Delta;
+
+				break;
+			case ObjectWindowControlID::kTag_FilterLabel:
+				// tag filter label - new y pos
+
+				CurrentHandle = WindowState->Handles.at(ObjectWindowControlID::kTag_FilterLabel);
+				CurrentRect = &WindowState->CurrentRects.at(ObjectWindowControlID::kTag_FilterLabel);
+
+				NewBounds.left = CurrentRect->left;
+				NewBounds.top = CurrentRect->top + Delta;
+				NewBounds.right = CurrentRect->right - CurrentRect->left;
+				NewBounds.bottom = CurrentRect->bottom - CurrentRect->top;
+
+				break;
+			case ObjectWindowControlID::kTag_FilterEdit:
+				// tag filter edit - new y pos
+				CurrentHandle = WindowState->Handles.at(ObjectWindowControlID::kTag_FilterEdit);
+				CurrentRect = &WindowState->CurrentRects.at(ObjectWindowControlID::kTag_FilterEdit);
+
+				NewBounds.left = CurrentRect->left;
+				NewBounds.top = CurrentRect->top + Delta;
+				NewBounds.right = CurrentRect->right - CurrentRect->left;
+				NewBounds.bottom = CurrentRect->bottom - CurrentRect->top;
+
+				break;
+			case ObjectWindowControlID::kTag_ListView:
+				// tag list view - new y pos, new height
+
+				CurrentHandle = WindowState->Handles.at(ObjectWindowControlID::kTag_ListView);
+				CurrentRect = &WindowState->CurrentRects.at(ObjectWindowControlID::kTag_ListView);
+
+				NewBounds.left = CurrentRect->left;
+				NewBounds.top = CurrentRect->top + Delta;
+				NewBounds.right = CurrentRect->right - CurrentRect->left;
+				NewBounds.bottom = CurrentRect->bottom - CurrentRect->top + (-Delta);
+
+				break;
+			case ObjectWindowControlID::kTag_TreeView:
+				// tag tree view - new y pos, new height
+
+				CurrentHandle = WindowState->Handles.at(ObjectWindowControlID::kTag_TreeView);
+				CurrentRect = &WindowState->CurrentRects.at(ObjectWindowControlID::kTag_TreeView);
+
+				NewBounds.left = CurrentRect->left;
+				NewBounds.top = CurrentRect->top + Delta;
+				NewBounds.right = CurrentRect->right - CurrentRect->left;
+				NewBounds.bottom = CurrentRect->bottom - CurrentRect->top + (-Delta);
+
+				break;
+			case ObjectWindowControlID::kTag_Splitter:
+				// tag splitter - new y pos, new height
+
+				CurrentHandle = WindowState->Handles.at(ObjectWindowControlID::kTag_Splitter);
+				CurrentRect = &WindowState->CurrentRects.at(ObjectWindowControlID::kTag_Splitter);
+
+				NewBounds.left = CurrentRect->left;
+				NewBounds.top = CurrentRect->top + Delta;
+				NewBounds.right = CurrentRect->right - CurrentRect->left;
+				NewBounds.bottom = CurrentRect->bottom - CurrentRect->top + (-Delta);
+
+				break;
+			default:
+				// no other controls need to be handled here
+				return;
+			}
+
+			MoveWindow(CurrentHandle,
+				NewBounds.left,
+				NewBounds.top,
+				NewBounds.right,
+				NewBounds.bottom,
+				TRUE);
+
+			GetRelativeBounds(CurrentHandle, CurrentRect);
+		}
+
+		VerticalSplitter::VerticalSplitter(ObjectWindowExtraState* WindowState)
+			: SplitterState(WindowState, ObjectWindowControlID::kVerticalSplitter), TopHidden(false), BottomHidden(false)
+		{
+			;//
+		}
+
+		void VerticalSplitter::Move(LONG Delta)
+		{
+			const auto SafeZoneOffset = 7;
+
+			//if (SplitterBounds->top + Delta <= SafeZoneOffset && Delta < 0)
+			//	Delta = SafeZoneOffset - SplitterBounds->top;
+			//else if (SplitterBounds->bottom + Delta >= (WindowState->CurrentDialogSize.y - SafeZoneOffset) && Delta > 0)
+			//	Delta = (WindowState->CurrentDialogSize.y - SafeZoneOffset) - SplitterBounds->bottom;
+
+			//if (Delta == 0)
+			//	return;
+
+			// do nothing if the new splitter position is outside the safe-zone
+			if ((SplitterBounds->top + Delta <= SafeZoneOffset && Delta < 0) || (SplitterBounds->bottom + Delta >= (WindowState->CurrentDialogSize.y - SafeZoneOffset) && Delta > 0))
+				return;
+
+
+			HWND CurrentHandle = NULL;
+			RECT* CurrentRect = nullptr;
+
+			enum Mode
+			{
+				Resize,
+				HideTop,
+				HideBottom,
+			};
+
+			// hide the top or bottom panel if the new splitter position is outside of the "visible zone"
+			auto Action = Mode::Resize;
+			if (SplitterBounds->top + Delta <= kHidePanelMinOffset)
+				Action = Mode::HideTop;
+			else if (SplitterBounds->bottom + Delta >= WindowState->CurrentDialogSize.y - kHidePanelMaxOffset)
+				Action = Mode::HideBottom;
+
+			auto SetHidden = [](HWND hWnd, bool Hide) -> void {
+				if (Hide)
+				{
+					EnableWindow(hWnd, FALSE);
+					ShowWindow(hWnd, SW_HIDE);
+				}
+				else if (!Hide)
+				{
+					EnableWindow(hWnd, TRUE);
+					ShowWindow(hWnd, SW_SHOWNA);
+				}
+			};
+
+			const auto TopControls = {
+				ObjectWindowControlID::kForm_FilterLabel,
+				ObjectWindowControlID::kForm_FilterEdit,
+				ObjectWindowControlID::kForm_ListView,
+				ObjectWindowControlID::kForm_TreeView,
+				ObjectWindowControlID::kForm_Splitter,
+			};
+
+			const auto BottomControls = {
+				ObjectWindowControlID::kTag_FilterLabel,
+				ObjectWindowControlID::kTag_FilterEdit,
+				ObjectWindowControlID::kTag_ListView,
+				ObjectWindowControlID::kTag_TreeView,
+				ObjectWindowControlID::kTag_Splitter,
+			};
+
+			// before performing the new action, reset any previously hidden controls
+			switch (Action)
+			{
+			case Mode::HideTop:
+			case Mode::HideBottom:
+			{
+				auto Toggle = Action == Mode::HideTop ? &TopHidden : &BottomHidden;
+				auto OtherToggle = Action == Mode::HideTop ? &BottomHidden : &TopHidden;
+
+				if (*OtherToggle)
+				{
+					*OtherToggle = false;
+
+					auto NewSplitterPos = Delta < 0 ? SplitterBounds->top + Delta : SplitterBounds->bottom + Delta;
+					auto NewDelta = NewSplitterPos - (Action == Mode::HideTop ? kHidePanelMaxOffset : kHidePanelMinOffset);
+					for (const auto& Itr : Action == Mode::HideTop ? BottomControls : TopControls)
+					{
+						SetHidden(WindowState->Handles.at(Itr), false);
+						ResizeControl(Itr, NewDelta);
+					}
+				}
+
+				*Toggle = true;
+
+				for (const auto& Itr : Action == Mode::HideTop ? TopControls : BottomControls)
+					SetHidden(WindowState->Handles.at(Itr), true);
+
+				for (const auto& Itr : Action == Mode::HideTop ? BottomControls : TopControls)
+					ResizeControl(Itr, Delta);
+
+				break;
+			}
+			case Mode::Resize:
+			{
+				if (TopHidden || BottomHidden)
+				{
+					SME_ASSERT(TopHidden != BottomHidden);
+
+					for (const auto& Itr : TopHidden ? TopControls : BottomControls)
+						SetHidden(WindowState->Handles.at(Itr), false);
+				}
+
+				if (!TopHidden)
+				{
+					for (const auto& Itr : TopControls)
+						ResizeControl(Itr, Delta);
+				}
+
+				if (!BottomHidden)
+				{
+					for (const auto& Itr : BottomControls)
+						ResizeControl(Itr, Delta);
+				}
+
+
+				if (TopHidden)
+					TopHidden = false;
+				else
+					BottomHidden = false;
+
+				break;
+			}
+			}
+
+			// update the splitter's position
+			{
+				RECT NewBounds{
+					SplitterBounds->left,
+					SplitterBounds->top + Delta,
+					SplitterBounds->right - SplitterBounds->left,
+					SplitterBounds->bottom - SplitterBounds->top,
+				};
+
+				MoveWindow(SplitterHandle,
+					NewBounds.left,
+					NewBounds.top,
+					NewBounds.right,
+					NewBounds.bottom,
+					TRUE);
+
+				GetRelativeBounds(SplitterHandle, SplitterBounds);
+			}
+		}
+
+		LPCSTR VerticalSplitter::GetSizingCursor() const
+		{
+			return IDC_SIZENS;
 		}
 
 		LRESULT ObjectWindowExtraState::SplitterSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
@@ -85,7 +517,7 @@ namespace cse
 				}
 
 				SplitterData->Dragging = false;
-				SplitterData->MouseOver = IsMouseOverSplitter(hWnd);
+				SplitterData->MouseOver = SplitterData->IsMouseOver();
 				SplitterData->UpdateCursor();
 				if (!SplitterData->MouseOver)
 				{
@@ -102,7 +534,7 @@ namespace cse
 
 				if (!SplitterData->Dragging)
 				{
-					SplitterData->MouseOver = IsMouseOverSplitter(hWnd);
+					SplitterData->MouseOver = SplitterData->IsMouseOver();
 					SplitterData->UpdateCursor();
 					if (!SplitterData->MouseOver)
 					{
@@ -120,229 +552,20 @@ namespace cse
 				SplitterData->DragOrigin.x = CurrentCursorPos.x;
 				SplitterData->DragOrigin.y = CurrentCursorPos.y;
 
-				HWND CurrentHandle = NULL;
-				RECT* CurrentRect = nullptr;
+				//constexpr auto kMaxDeltaAbsolute = 5;
+				//if (Delta.x < -kMaxDeltaAbsolute)
+				//	Delta.x = -kMaxDeltaAbsolute;
+				//else if (Delta.x > kMaxDeltaAbsolute)
+				//	Delta.x = kMaxDeltaAbsolute;
 
-				switch (SplitterData->ID)
-				{
-				case kVerticalSplitter:
-				{
-					auto NewSplitterYPos = CurrentRects.at(ObjectWindowExtraState::kVerticalSplitter).top + Delta.y;
+				//if (Delta.y < -kMaxDeltaAbsolute)
+				//	Delta.y = -kMaxDeltaAbsolute;
+				//else if (Delta.y > kMaxDeltaAbsolute)
+				//	Delta.y = kMaxDeltaAbsolute;
 
-					if (NewSplitterYPos <= kMinVerticalSplitterHeight || NewSplitterYPos >= (CurrentDialogSize.y - kMinVerticalSplitterHeight))
-						break;
-
-					// form tree view - new height
-					CurrentHandle = Handles.at(ObjectWindowExtraState::kForm_TreeView);
-					CurrentRect = &CurrentRects.at(ObjectWindowExtraState::kForm_TreeView);
-
-					MoveWindow(CurrentHandle,
-							CurrentRect->left,
-							CurrentRect->top,
-							CurrentRect->right - CurrentRect->left,
-							CurrentRect->bottom - CurrentRect->top + Delta.y,
-							TRUE);
-
-					// form splitter - new height
-					CurrentHandle = Handles.at(ObjectWindowExtraState::kForm_Splitter);
-					CurrentRect = &CurrentRects.at(ObjectWindowExtraState::kForm_Splitter);
-
-					MoveWindow(CurrentHandle,
-							CurrentRect->left,
-							CurrentRect->top,
-							CurrentRect->right - CurrentRect->left,
-							CurrentRect->bottom - CurrentRect->top + Delta.y,
-							TRUE);
-
-					// form list view - new height
-					CurrentHandle = Handles.at(ObjectWindowExtraState::kForm_ListView);
-					CurrentRect = &CurrentRects.at(ObjectWindowExtraState::kForm_ListView);
-
-					MoveWindow(CurrentHandle,
-							CurrentRect->left,
-							CurrentRect->top,
-							CurrentRect->right - CurrentRect->left,
-							CurrentRect->bottom - CurrentRect->top + Delta.y,
-							TRUE);
-
-					// vertical splitter - new y pos
-					CurrentHandle = Handles.at(ObjectWindowExtraState::kVerticalSplitter);
-					CurrentRect = &CurrentRects.at(ObjectWindowExtraState::kVerticalSplitter);
-
-					MoveWindow(CurrentHandle,
-							CurrentRect->left,
-							CurrentRect->top + Delta.y,
-							CurrentRect->right - CurrentRect->left,
-							CurrentRect->bottom - CurrentRect->top,
-							TRUE);
-
-					// tag filter label - new y pos
-					CurrentHandle = Handles.at(ObjectWindowExtraState::kTag_FilterLabel);
-					CurrentRect = &CurrentRects.at(ObjectWindowExtraState::kTag_FilterLabel);
-
-					MoveWindow(CurrentHandle,
-							CurrentRect->left,
-							CurrentRect->top + Delta.y,
-							CurrentRect->right - CurrentRect->left,
-							CurrentRect->bottom - CurrentRect->top,
-							TRUE);
-
-					// tag filter edit - new y pos
-					CurrentHandle = Handles.at(ObjectWindowExtraState::kTag_FilterEdit);
-					CurrentRect = &CurrentRects.at(ObjectWindowExtraState::kTag_FilterEdit);
-
-					MoveWindow(CurrentHandle,
-							CurrentRect->left,
-							CurrentRect->top + Delta.y,
-							CurrentRect->right - CurrentRect->left,
-							CurrentRect->bottom - CurrentRect->top,
-							TRUE);
-
-					// tag tree view - new y pos, new height
-					CurrentHandle = Handles.at(ObjectWindowExtraState::kTag_TreeView);
-					CurrentRect = &CurrentRects.at(ObjectWindowExtraState::kTag_TreeView);
-
-					MoveWindow(CurrentHandle,
-							CurrentRect->left,
-							CurrentRect->top + Delta.y,
-							CurrentRect->right - CurrentRect->left,
-							CurrentRect->bottom - CurrentRect->top + (-Delta.y),
-							TRUE);
-
-					// tag splitter - new y pos, new height
-					CurrentHandle = Handles.at(ObjectWindowExtraState::kTag_Splitter);
-					CurrentRect = &CurrentRects.at(ObjectWindowExtraState::kTag_Splitter);
-
-					MoveWindow(CurrentHandle,
-							CurrentRect->left,
-							CurrentRect->top + Delta.y,
-							CurrentRect->right - CurrentRect->left,
-							CurrentRect->bottom - CurrentRect->top + (-Delta.y),
-							TRUE);
-
-					// tag list view - new y pos, new height
-					CurrentHandle = Handles.at(ObjectWindowExtraState::kTag_ListView);
-					CurrentRect = &CurrentRects.at(ObjectWindowExtraState::kTag_ListView);
-
-					MoveWindow(CurrentHandle,
-							CurrentRect->left,
-							CurrentRect->top + Delta.y,
-							CurrentRect->right - CurrentRect->left,
-							CurrentRect->bottom - CurrentRect->top + (-Delta.y),
-							TRUE);
-
-					break;
-				}
-				case kForm_Splitter:
-				{
-					auto NewSplitterXPos = CurrentRects.at(ObjectWindowExtraState::kForm_Splitter).left + Delta.x;
-
-					if (NewSplitterXPos <= kMinHorizontalSplitterWidth || NewSplitterXPos >= (CurrentDialogSize.x - kMinHorizontalSplitterWidth ))
-						break;
-
-					// form filter edit - new width
-					CurrentHandle = Handles.at(ObjectWindowExtraState::kForm_FilterEdit);
-					CurrentRect = &CurrentRects.at(ObjectWindowExtraState::kForm_FilterEdit);
-
-					MoveWindow(CurrentHandle,
-							CurrentRect->left,
-							CurrentRect->top,
-							CurrentRect->right - CurrentRect->left + Delta.x,
-							CurrentRect->bottom - CurrentRect->top,
-							TRUE);
-
-					// form tree view - new width
-					CurrentHandle = Handles.at(ObjectWindowExtraState::kForm_TreeView);
-					CurrentRect = &CurrentRects.at(ObjectWindowExtraState::kForm_TreeView);
-
-					MoveWindow(CurrentHandle,
-							CurrentRect->left,
-							CurrentRect->top,
-							CurrentRect->right - CurrentRect->left + Delta.x,
-							CurrentRect->bottom - CurrentRect->top,
-							TRUE);
-
-					// form splitter - new x pos
-					CurrentHandle = Handles.at(ObjectWindowExtraState::kForm_Splitter);
-					CurrentRect = &CurrentRects.at(ObjectWindowExtraState::kForm_Splitter);
-
-					MoveWindow(CurrentHandle,
-							CurrentRect->left + Delta.x,
-							CurrentRect->top,
-							CurrentRect->right - CurrentRect->left,
-							CurrentRect->bottom - CurrentRect->top,
-							TRUE);
-
-					// form list view - new x pos, new width
-					CurrentHandle = Handles.at(ObjectWindowExtraState::kForm_ListView);
-					CurrentRect = &CurrentRects.at(ObjectWindowExtraState::kForm_ListView);
-
-					MoveWindow(CurrentHandle,
-							CurrentRect->left + Delta.x,
-							CurrentRect->top,
-							CurrentRect->right - CurrentRect->left + (-Delta.x),
-							CurrentRect->bottom - CurrentRect->top,
-							TRUE);
-
-					break;
-				}
-				case kTag_Splitter:
-				{
-					auto NewSplitterXPos = CurrentRects.at(ObjectWindowExtraState::kTag_Splitter).left + Delta.x;
-
-					if (NewSplitterXPos <= kMinHorizontalSplitterWidth || NewSplitterXPos >= (CurrentDialogSize.x - kMinHorizontalSplitterWidth ))
-						break;
-
-
-					// tag filter edit - new width
-					CurrentHandle = Handles.at(ObjectWindowExtraState::kTag_FilterEdit);
-					CurrentRect = &CurrentRects.at(ObjectWindowExtraState::kTag_FilterEdit);
-
-					MoveWindow(CurrentHandle,
-							CurrentRect->left,
-							CurrentRect->top,
-							CurrentRect->right - CurrentRect->left + Delta.x,
-							CurrentRect->bottom - CurrentRect->top,
-							TRUE);
-
-					// tag tree view - new width
-					CurrentHandle = Handles.at(ObjectWindowExtraState::kTag_TreeView);
-					CurrentRect = &CurrentRects.at(ObjectWindowExtraState::kTag_TreeView);
-
-					MoveWindow(CurrentHandle,
-						CurrentRect->left,
-						CurrentRect->top,
-						CurrentRect->right - CurrentRect->left + Delta.x,
-						CurrentRect->bottom - CurrentRect->top,
-						TRUE);
-
-					// tag splitter - new x pos
-					CurrentHandle = Handles.at(ObjectWindowExtraState::kTag_Splitter);
-					CurrentRect = &CurrentRects.at(ObjectWindowExtraState::kTag_Splitter);
-
-					MoveWindow(CurrentHandle,
-						CurrentRect->left + Delta.x,
-						CurrentRect->top,
-						CurrentRect->right - CurrentRect->left,
-						CurrentRect->bottom - CurrentRect->top,
-						TRUE);
-
-					// tag list view - new x pos, new width
-					CurrentHandle = Handles.at(ObjectWindowExtraState::kTag_ListView);
-					CurrentRect = &CurrentRects.at(ObjectWindowExtraState::kTag_ListView);
-
-					MoveWindow(CurrentHandle,
-						CurrentRect->left + Delta.x,
-						CurrentRect->top,
-						CurrentRect->right - CurrentRect->left + (-Delta.x),
-						CurrentRect->bottom - CurrentRect->top,
-						TRUE);
-
-					break;
-				}
-				}
-
-				UpdateRects();
+				const auto SplitterDelta = SplitterData->ID == kVerticalSplitter ? Delta.y : Delta.x;
+				if (SplitterDelta != 0)
+					SplitterData->Move(SplitterDelta);
 
 				break;
 			}
@@ -351,40 +574,21 @@ namespace cse
 			return ProcResult;
 		}
 
-		bool ObjectWindowExtraState::IsMouseOverSplitter(HWND hWnd) const
-		{
-			POINT CursorLoc;
-			GetCursorPos(&CursorLoc);
-
-			auto WindowUnderCursor = WindowFromPoint(CursorLoc);
-			if (WindowUnderCursor == hWnd)
-				return true;
-
-			if (WindowUnderCursor == Parent)
-			{
-				ScreenToClient(Parent, &CursorLoc);
-				WindowUnderCursor = ChildWindowFromPoint(Parent, CursorLoc);
-				return WindowUnderCursor == hWnd;
-			}
-
-			return false;
-		}
-
-		void ObjectWindowExtraState::SetActiveSplitter(ControlID Splitter, bool ActiveState)
+		void ObjectWindowExtraState::SetActiveSplitter(ObjectWindowControlID Splitter, bool ActiveState)
 		{
 			switch (Splitter)
 			{
 			case kForm_Splitter:
-				TagViewSplitterState.Enabled = ActiveState == false;
-				VerticalSplitterState.Enabled = ActiveState == false;
+				TagViewSplitter->Enabled = ActiveState == false;
+				VerticalSplitter->Enabled = ActiveState == false;
 				break;
 			case kTag_Splitter:
-				FormViewSplitterState.Enabled = ActiveState == false;
-				VerticalSplitterState.Enabled = ActiveState == false;
+				FormViewSplitter->Enabled = ActiveState == false;
+				VerticalSplitter->Enabled = ActiveState == false;
 				break;
 			case kVerticalSplitter:
-				FormViewSplitterState.Enabled = ActiveState == false;
-				TagViewSplitterState.Enabled = ActiveState == false;
+				FormViewSplitter->Enabled = ActiveState == false;
+				TagViewSplitter->Enabled = ActiveState == false;
 				break;
 			default:
 				SME_ASSERT(!"Invalid splitter control ID");
@@ -412,18 +616,18 @@ namespace cse
 			UpdateRects();
 			UpdateDialogSize();
 
-			FormViewSplitterState.ID = kForm_Splitter;
-			TagViewSplitterState.ID = kTag_Splitter;
-			VerticalSplitterState.ID = kVerticalSplitter;
+			FormViewSplitter.reset(new HorizontalSplitter(this, kForm_Splitter));
+			TagViewSplitter.reset(new HorizontalSplitter(this, kTag_Splitter));
+			VerticalSplitter.reset(new uiManager::VerticalSplitter(this));
 
 			BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(Handles.at(kForm_Splitter), ThunkSplitterSubclassProc());
-			SetWindowLongPtr(Handles.at(kForm_Splitter), GWL_USERDATA, reinterpret_cast<LONG_PTR>(&FormViewSplitterState));
+			SetWindowLongPtr(Handles.at(kForm_Splitter), GWL_USERDATA, reinterpret_cast<LONG_PTR>(FormViewSplitter.get()));
 
 			BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(Handles.at(kTag_Splitter), ThunkSplitterSubclassProc());
-			SetWindowLongPtr(Handles.at(kTag_Splitter), GWL_USERDATA, reinterpret_cast<LONG_PTR>(&TagViewSplitterState));
+			SetWindowLongPtr(Handles.at(kTag_Splitter), GWL_USERDATA, reinterpret_cast<LONG_PTR>(TagViewSplitter.get()));
 
 			BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(Handles.at(kVerticalSplitter), ThunkSplitterSubclassProc());
-			SetWindowLongPtr(Handles.at(kVerticalSplitter), GWL_USERDATA, reinterpret_cast<LONG_PTR>(&VerticalSplitterState));
+			SetWindowLongPtr(Handles.at(kVerticalSplitter), GWL_USERDATA, reinterpret_cast<LONG_PTR>(VerticalSplitter.get()));
 		}
 
 		ObjectWindowExtraState::~ObjectWindowExtraState()
@@ -438,6 +642,11 @@ namespace cse
 			SetWindowLongPtr(Handles.at(kVerticalSplitter), GWL_USERDATA, NULL);
 		}
 
+		void ObjectWindowExtraState::UpdateRect(ObjectWindowControlID Control)
+		{
+			GetRelativeBounds(Handles.at(Control), &CurrentRects[Control]);
+		}
+
 		void ObjectWindowExtraState::UpdateRects()
 		{
 			auto GetRelativeCoords = [](HWND hWnd, RECT* Rect) -> void {
@@ -445,17 +654,17 @@ namespace cse
 				MapWindowPoints(HWND_DESKTOP, GetParent(hWnd), reinterpret_cast<LPPOINT>(Rect), 2);
 			};
 
-			GetRelativeCoords(Handles.at(kForm_FilterLabel), &CurrentRects[kForm_FilterLabel]);
-			GetRelativeCoords(Handles.at(kForm_FilterEdit), &CurrentRects[kForm_FilterEdit]);
-			GetRelativeCoords(Handles.at(kForm_ListView), &CurrentRects[kForm_ListView]);
-			GetRelativeCoords(Handles.at(kForm_TreeView), &CurrentRects[kForm_TreeView]);
-			GetRelativeCoords(Handles.at(kForm_Splitter), &CurrentRects[kForm_Splitter]);
-			GetRelativeCoords(Handles.at(kTag_FilterLabel), &CurrentRects[kTag_FilterLabel]);
-			GetRelativeCoords(Handles.at(kTag_FilterEdit), &CurrentRects[kTag_FilterEdit]);
-			GetRelativeCoords(Handles.at(kTag_ListView), &CurrentRects[kTag_ListView]);
-			GetRelativeCoords(Handles.at(kTag_TreeView), &CurrentRects[kTag_TreeView]);
-			GetRelativeCoords(Handles.at(kTag_Splitter), &CurrentRects[kTag_Splitter]);
-			GetRelativeCoords(Handles.at(kVerticalSplitter), &CurrentRects[kVerticalSplitter]);
+			UpdateRect(kForm_FilterLabel);
+			UpdateRect(kForm_FilterEdit);
+			UpdateRect(kForm_ListView);
+			UpdateRect(kForm_TreeView);
+			UpdateRect(kForm_Splitter);
+			UpdateRect(kTag_FilterLabel);
+			UpdateRect(kTag_FilterEdit);
+			UpdateRect(kTag_ListView);
+			UpdateRect(kTag_TreeView);
+			UpdateRect(kTag_Splitter);
+			UpdateRect(kVerticalSplitter);
 		}
 
 		void ObjectWindowExtraState::UpdateDialogSize(POINT* Delta /*= nullptr*/)
@@ -473,18 +682,6 @@ namespace cse
 			CurrentDialogSize.y = ClientRect.bottom;
 		}
 
-
-		RECT ObjectWindowExtraState::GetRelativeBounds(ControlID Control) const
-		{
-			RECT Rect;
-
-			auto Handle = Handles.at(Control);
-			GetWindowRect(Handle, &Rect);
-			MapWindowPoints(HWND_DESKTOP, Parent, reinterpret_cast<LPPOINT>(&Rect), 2);
-
-			return Rect;
-		}
-
 		bool ObjectWindowExtraState::OnWindowPosChanging(WINDOWPOS* PosParams) const
 		{
 			static constexpr auto kMinWidth = 400;
@@ -496,45 +693,30 @@ namespace cse
 			if (PosParams->cy < kMinHeight)
 				PosParams->cy = kMinHeight;
 
-
-			// ### HACK! doesn't work consistently in both axes
-			POINT Delta = { PosParams->cx - CurrentDialogSize.x, PosParams->cy - CurrentDialogSize.y };
-			auto NewSplitterYPos = CurrentRects.at(ObjectWindowExtraState::kVerticalSplitter).top + Delta.y;
-
-			if (NewSplitterYPos <= kMinVerticalSplitterHeight || NewSplitterYPos >= (PosParams->cy - kMinVerticalSplitterHeight))
-				return false;
-
-			//auto NewSplitterXPos = CurrentRects.at(ObjectWindowExtraState::kForm_Splitter).left + Delta.x;
-			//if (NewSplitterXPos <= kMinHorizontalSplitterWidth || NewSplitterXPos >= (PosParams->cx - kMinHorizontalSplitterWidth))
-			//	return false;
-
-			//NewSplitterXPos = CurrentRects.at(ObjectWindowExtraState::kTag_Splitter).left + Delta.x;
-			//if (NewSplitterXPos <= kMinHorizontalSplitterWidth || NewSplitterXPos >= (PosParams->cx - kMinHorizontalSplitterWidth))
-			//	return false;
-
 			return true;
 		}
 
 		void ObjectWindowStateManager::OnInit(HWND hWnd, bgsee::WindowExtraDataCollection* ExtraData)
 		{
 			auto xData = BGSEE_GETWINDOWXDATA(ObjectWindowExtraState, ExtraData);
-			SME_ASSERT(xData == nullptr);
-
-			xData = new ObjectWindowExtraState(hWnd);
-			ExtraData->Add(xData);
+			if (xData == nullptr)
+			{
+				xData = new ObjectWindowExtraState(hWnd);
+				ExtraData->Add(xData);
+			}
 
 			RECT Bounds = { 0 };
 			if (TESDialog::ReadBoundsFromINI("Object Window", &Bounds))
-				SetWindowPos(hWnd, HWND_TOP, Bounds.left, Bounds.top, Bounds.right - Bounds.left, Bounds.bottom - Bounds.top, NULL);
+				SetWindowPos(hWnd, HWND_TOP, Bounds.left, Bounds.top, Bounds.right, Bounds.bottom, NULL);
 
-			FilterableFormListManager::Instance.Register(xData->Handles.at(ObjectWindowExtraState::kForm_FilterEdit),
-														xData->Handles.at(ObjectWindowExtraState::kForm_FilterLabel),
-														xData->Handles.at(ObjectWindowExtraState::kForm_ListView),
+			FilterableFormListManager::Instance.Register(xData->Handles.at(ObjectWindowControlID::kForm_FilterEdit),
+														xData->Handles.at(ObjectWindowControlID::kForm_FilterLabel),
+														xData->Handles.at(ObjectWindowControlID::kForm_ListView),
 														hWnd);
 
-			FilterableFormListManager::Instance.Register(xData->Handles.at(ObjectWindowExtraState::kTag_FilterEdit),
-														xData->Handles.at(ObjectWindowExtraState::kTag_FilterLabel),
-														xData->Handles.at(ObjectWindowExtraState::kTag_ListView),
+			FilterableFormListManager::Instance.Register(xData->Handles.at(ObjectWindowControlID::kTag_FilterEdit),
+														xData->Handles.at(ObjectWindowControlID::kTag_FilterLabel),
+														xData->Handles.at(ObjectWindowControlID::kTag_ListView),
 														hWnd);
 
 			std::string WndTitle = "Object Window";
@@ -546,17 +728,21 @@ namespace cse
 			SetWindowText(hWnd, WndTitle.c_str());
 		}
 
-		void ObjectWindowStateManager::OnDestroy(HWND hWnd, bgsee::WindowExtraDataCollection* ExtraData)
+		void ObjectWindowStateManager::OnDestroy(HWND hWnd, UINT uMsg, bgsee::WindowExtraDataCollection* ExtraData)
 		{
 			auto xData = BGSEE_GETWINDOWXDATA(ObjectWindowExtraState, ExtraData);
 			if (xData == nullptr)
 				return;
 
-			FilterableFormListManager::Instance.Unregister(xData->Handles.at(ObjectWindowExtraState::kForm_FilterEdit));
-			FilterableFormListManager::Instance.Unregister(xData->Handles.at(ObjectWindowExtraState::kTag_FilterEdit));
+			FilterableFormListManager::Instance.Unregister(xData->Handles.at(ObjectWindowControlID::kForm_FilterEdit));
+			FilterableFormListManager::Instance.Unregister(xData->Handles.at(ObjectWindowControlID::kTag_FilterEdit));
 
-			ExtraData->Remove(ObjectWindowExtraState::kTypeID);
-			delete xData;
+			// only remove extra data on true destruction
+			if (uMsg == WM_DESTROY)
+			{
+				ExtraData->Remove(ObjectWindowExtraState::kTypeID);
+				delete xData;
+			}
 		}
 
 		void ObjectWindowStateManager::OnWindowPosChanging(HWND hWnd, WPARAM wParam, LPARAM lParam, bgsee::WindowExtraDataCollection* ExtraData)
@@ -590,8 +776,8 @@ namespace cse
 			RECT* CurrentRect = nullptr;
 
 			// form tree view - same width, new height
-			CurrentHandle = xData->Handles.at(ObjectWindowExtraState::kForm_TreeView);
-			CurrentRect = &xData->CurrentRects.at(ObjectWindowExtraState::kForm_TreeView);
+			CurrentHandle = xData->Handles.at(ObjectWindowControlID::kForm_TreeView);
+			CurrentRect = &xData->CurrentRects.at(ObjectWindowControlID::kForm_TreeView);
 
 			MoveWindow(CurrentHandle,
 					CurrentRect->left,
@@ -601,8 +787,8 @@ namespace cse
 					TRUE);
 
 			// form splitter - same width, new height
-			CurrentHandle = xData->Handles.at(ObjectWindowExtraState::kForm_Splitter);
-			CurrentRect = &xData->CurrentRects.at(ObjectWindowExtraState::kForm_Splitter);
+			CurrentHandle = xData->Handles.at(ObjectWindowControlID::kForm_Splitter);
+			CurrentRect = &xData->CurrentRects.at(ObjectWindowControlID::kForm_Splitter);
 
 			MoveWindow(CurrentHandle,
 				CurrentRect->left,
@@ -612,8 +798,8 @@ namespace cse
 				TRUE);
 
 			// form list view - new width, new height
-			CurrentHandle = xData->Handles.at(ObjectWindowExtraState::kForm_ListView);
-			CurrentRect = &xData->CurrentRects.at(ObjectWindowExtraState::kForm_ListView);
+			CurrentHandle = xData->Handles.at(ObjectWindowControlID::kForm_ListView);
+			CurrentRect = &xData->CurrentRects.at(ObjectWindowControlID::kForm_ListView);
 
 			MoveWindow(CurrentHandle,
 				CurrentRect->left,
@@ -623,8 +809,8 @@ namespace cse
 				TRUE);
 
 			// vertical splitter - new vertical pos, same horizontal pos, new width, same height
-			CurrentHandle = xData->Handles.at(ObjectWindowExtraState::kVerticalSplitter);
-			CurrentRect = &xData->CurrentRects.at(ObjectWindowExtraState::kVerticalSplitter);
+			CurrentHandle = xData->Handles.at(ObjectWindowControlID::kVerticalSplitter);
+			CurrentRect = &xData->CurrentRects.at(ObjectWindowControlID::kVerticalSplitter);
 
 			MoveWindow(CurrentHandle,
 				CurrentRect->left,
@@ -634,8 +820,8 @@ namespace cse
 				TRUE);
 
 			// tag filter label - new vertical pos, same horizontal pos, same width/height
-			CurrentHandle = xData->Handles.at(ObjectWindowExtraState::kTag_FilterLabel);
-			CurrentRect = &xData->CurrentRects.at(ObjectWindowExtraState::kTag_FilterLabel);
+			CurrentHandle = xData->Handles.at(ObjectWindowControlID::kTag_FilterLabel);
+			CurrentRect = &xData->CurrentRects.at(ObjectWindowControlID::kTag_FilterLabel);
 
 			MoveWindow(CurrentHandle,
 				CurrentRect->left,
@@ -645,8 +831,8 @@ namespace cse
 				TRUE);
 
 			// tag filter edit - new vertical pos, same horizontal pos, same width/height
-			CurrentHandle = xData->Handles.at(ObjectWindowExtraState::kTag_FilterEdit);
-			CurrentRect = &xData->CurrentRects.at(ObjectWindowExtraState::kTag_FilterEdit);
+			CurrentHandle = xData->Handles.at(ObjectWindowControlID::kTag_FilterEdit);
+			CurrentRect = &xData->CurrentRects.at(ObjectWindowControlID::kTag_FilterEdit);
 
 			MoveWindow(CurrentHandle,
 				CurrentRect->left,
@@ -656,8 +842,8 @@ namespace cse
 				TRUE);
 
 			// tag tree view - new vertical pos, same horizontal pos, same width/height
-			CurrentHandle = xData->Handles.at(ObjectWindowExtraState::kTag_TreeView);
-			CurrentRect = &xData->CurrentRects.at(ObjectWindowExtraState::kTag_TreeView);
+			CurrentHandle = xData->Handles.at(ObjectWindowControlID::kTag_TreeView);
+			CurrentRect = &xData->CurrentRects.at(ObjectWindowControlID::kTag_TreeView);
 
 			MoveWindow(CurrentHandle,
 				CurrentRect->left,
@@ -667,8 +853,8 @@ namespace cse
 				TRUE);
 
 			// tag splitter - new vertical pos, same horizontal pos, same width/height
-			CurrentHandle = xData->Handles.at(ObjectWindowExtraState::kTag_Splitter);
-			CurrentRect = &xData->CurrentRects.at(ObjectWindowExtraState::kTag_Splitter);
+			CurrentHandle = xData->Handles.at(ObjectWindowControlID::kTag_Splitter);
+			CurrentRect = &xData->CurrentRects.at(ObjectWindowControlID::kTag_Splitter);
 
 			MoveWindow(CurrentHandle,
 				CurrentRect->left,
@@ -678,8 +864,8 @@ namespace cse
 				TRUE);
 
 			// tag list view - new vertical pos, same horizontal pos, new width, same height
-			CurrentHandle = xData->Handles.at(ObjectWindowExtraState::kTag_ListView);
-			CurrentRect = &xData->CurrentRects.at(ObjectWindowExtraState::kTag_ListView);
+			CurrentHandle = xData->Handles.at(ObjectWindowControlID::kTag_ListView);
+			CurrentRect = &xData->CurrentRects.at(ObjectWindowControlID::kTag_ListView);
 
 			MoveWindow(CurrentHandle,
 				CurrentRect->left,
@@ -720,13 +906,13 @@ namespace cse
 			if (xData == nullptr)
 				return;
 
-			if (FilterableFormListManager::Instance.HandleMessages(xData->Handles.at(ObjectWindowExtraState::kForm_FilterEdit),
+			if (FilterableFormListManager::Instance.HandleMessages(xData->Handles.at(ObjectWindowControlID::kForm_FilterEdit),
 																uMsg, wParam, lParam))
-				RefreshFormList(xData->Handles.at(ObjectWindowExtraState::kForm_TreeView));
+				RefreshFormList(xData->Handles.at(ObjectWindowControlID::kForm_TreeView));
 
-			if (FilterableFormListManager::Instance.HandleMessages(xData->Handles.at(ObjectWindowExtraState::kTag_FilterEdit),
+			if (FilterableFormListManager::Instance.HandleMessages(xData->Handles.at(ObjectWindowControlID::kTag_FilterEdit),
 																uMsg, wParam, lParam))
-				RefreshFormList(xData->Handles.at(ObjectWindowExtraState::kTag_TreeView));
+				RefreshFormList(xData->Handles.at(ObjectWindowControlID::kTag_TreeView));
 		}
 
 
@@ -755,13 +941,13 @@ namespace cse
 				// so we have to temporarily suspend the hook when this code is executing
 				Return = true;
 
-				BGSEEUI->GetInvalidationManager()->Push(xData->Handles.at(ObjectWindowExtraState::kForm_TreeView));
+				BGSEEUI->GetInvalidationManager()->Push(xData->Handles.at(ObjectWindowControlID::kForm_TreeView));
 				Subclasser->SuspendHooks();
 				{
 					DlgProcResult = Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
 				}
 				Subclasser->ResumeHooks();
-				BGSEEUI->GetInvalidationManager()->Pop(xData->Handles.at(ObjectWindowExtraState::kForm_TreeView));
+				BGSEEUI->GetInvalidationManager()->Pop(xData->Handles.at(ObjectWindowControlID::kForm_TreeView));
 
 				break;
 			}
@@ -797,7 +983,7 @@ namespace cse
 				break;
 			case TESDialog::kWindowMessage_Destroy:
 			case WM_DESTROY:
-				ObjectWindowStateManager::OnDestroy(hWnd, ExtraData);
+				ObjectWindowStateManager::OnDestroy(hWnd, uMsg, ExtraData);
 
 				ObjectWindowImposterManager::Instance.DestroyImposters();
 				TESObjectWindow::PrimaryObjectWindowHandle = nullptr;
@@ -841,6 +1027,7 @@ namespace cse
 				BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_ObjectWindow, RegularAppWindow);
 			}
 		}
+
 
 
 	}
