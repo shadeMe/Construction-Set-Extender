@@ -650,15 +650,26 @@ namespace bgsee
 
 			case BP_CHECKBOX:
 			{
-				if (iStateId == CBS_UNCHECKEDDISABLED ||
-					iStateId == CBS_CHECKEDDISABLED ||
-					iStateId == CBS_MIXEDDISABLED ||
-					iStateId == CBS_IMPLICITDISABLED ||
-					iStateId == CBS_EXCLUDEDDISABLED)
+				// hacky fallback as I don't want to draw the checkmark myself
+
+				auto Result = DrawThemeBackground(hTheme, hdc, iPartId, iStateId, pRect, pClipRect);
+
+				HBRUSH frameColor = buttonBorder;
+				HBRUSH fillColor = buttonFill;
+
+				switch (iStateId)
 				{
-					FrameRect(hdc, pRect, buttonBorder);
-					return S_OK;
+				case CBS_UNCHECKEDHOT:
+				case CBS_CHECKEDHOT:
+				case CBS_MIXEDHOT:
+				case CBS_IMPLICITHOT:
+				case CBS_EXCLUDEDHOT:
+					frameColor = buttonBorderHighlighted;
+					break;
 				}
+
+				FrameRect(hdc, pRect, frameColor);
+				return Result;
 			}
 			break;
 			}
