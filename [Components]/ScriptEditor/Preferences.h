@@ -37,6 +37,14 @@ namespace cse
 			virtual void	PaintValue(System::Drawing::Design::PaintValueEventArgs^ e) override;
 		};
 
+		ref class CustomFontEditor : public System::Drawing::Design::UITypeEditor
+		{
+		public:
+			virtual System::Drawing::Design::UITypeEditorEditStyle
+							GetEditStyle(ITypeDescriptorContext^ context) override;
+			virtual Object^ EditValue(ITypeDescriptorContext^ context, IServiceProvider^ provider, Object^ value) override;
+		};
+
 		ref struct GeneralSettings : public SettingsGroup
 		{
 			static String^ CategoryName = "General";
@@ -183,6 +191,7 @@ namespace cse
 
 			[Category("General")]
 			[Description("Default text font")]
+			[Editor(CustomFontEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
 			property Font^ TextFont;
 
 			[Category("General")]
@@ -289,8 +298,8 @@ namespace cse
 
 			AppearanceSettings()
 			{
-				ForeColor = Color::Black;
-				BackColor = Color::White;
+				ForeColor = Color::FromArgb(253, 244, 193);
+				BackColor = Color::FromArgb(29, 32, 33);
 				TabSize = 4;
 				TextFont = Control::DefaultFont;
 				WordWrap = false;
@@ -301,19 +310,19 @@ namespace cse
 				ShowCodeFolding = true;
 				ShowBlockVisualizer = true;
 
-				ForeColorKeywords = Color::Blue;
-				ForeColorDigits = Color::Orange;
-				ForeColorPreprocessor = Color::Brown;
-				ForeColorScriptBlocks = Color::Brown;
-				ForeColorStringLiterals = Color::OrangeRed;
-				ForeColorComments = Color::DarkGreen;
-				ForeColorLocalVariables = Color::DarkCyan;
+				ForeColorKeywords = Color::FromArgb(252, 128, 114);
+				ForeColorDigits = Color::FromArgb(255, 165, 0);
+				ForeColorPreprocessor = Color::FromArgb(165, 42, 42);
+				ForeColorScriptBlocks = Color::FromArgb(250, 30, 5);
+				ForeColorStringLiterals = Color::FromArgb(149, 192, 133);
+				ForeColorComments = Color::FromArgb(168, 153, 132);
+				ForeColorLocalVariables = Color::FromArgb(20, 153, 182);
 
-				BackColorSelection = Color::LightBlue;
-				BackColorCurrentLine = Color::LightGray;
-				BackColorCharLimit = Color::DarkMagenta;
-				UnderlineColorError = Color::Red;
-				BackColorFindResults = Color::LightYellow;
+				BackColorSelection = Color::FromArgb(143, 70, 115);
+				BackColorCurrentLine = Color::FromArgb(102, 92, 84);
+				BackColorCharLimit = Color::FromArgb(139, 0, 139);
+				UnderlineColorError = Color::FromArgb(255, 0, 0);
+				BackColorFindResults = Color::FromArgb(255, 255, 224);
 				BoldFaceHighlightedText = false;
 			}
 

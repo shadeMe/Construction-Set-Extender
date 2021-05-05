@@ -147,6 +147,33 @@ namespace cse
 			e->Graphics->DrawRectangle(Pens::Black, e->Bounds);
 		}
 
+		System::Drawing::Design::UITypeEditorEditStyle CustomFontEditor::GetEditStyle(ITypeDescriptorContext^ context)
+		{
+			return System::Drawing::Design::UITypeEditorEditStyle::Modal;
+		}
+
+		System::Object^ CustomFontEditor::EditValue(ITypeDescriptorContext^ context, IServiceProvider^ provider, Object^ value)
+		{
+			auto FontDlg = gcnew FontDialog;
+			FontDlg->MaxSize = 10;
+			FontDlg->MinSize = 32;
+			FontDlg->AllowScriptChange = false;
+			FontDlg->FontMustExist = true;
+			FontDlg->ShowApply = false;
+			FontDlg->ShowColor = false;
+			FontDlg->ShowHelp = false;
+			FontDlg->ScriptsOnly = false;
+
+			auto Font = safe_cast<System::Drawing::Font^>(value);
+			if (Font != nullptr)
+				FontDlg->Font = Font;
+
+			if (FontDlg->ShowDialog() == DialogResult::OK)
+				return FontDlg->Font;
+
+			return System::Drawing::Design::UITypeEditor::EditValue(context, provider, value);
+		}
+
 		bool IntelliSenseSettings::Validate(SettingsGroup^ OldValue, String^% OutMessage)
 		{
 			bool Success = true;
@@ -530,6 +557,9 @@ namespace cse
 
 			auto ThrowawayB = gcnew CustomColorEditor();
 			delete ThrowawayB;
+
+			auto ThrowAwayC = gcnew CustomFontEditor();
+			delete ThrowAwayC;
 		}
 
 		PreferencesDialog::~PreferencesDialog()
@@ -539,5 +569,8 @@ namespace cse
 				delete components;
 			}
 		}
+
+
+
 	}
 }
