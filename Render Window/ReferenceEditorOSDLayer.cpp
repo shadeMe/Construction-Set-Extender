@@ -51,7 +51,7 @@ namespace cse
 			Rotation.Scale(REFR_RAD2DEG);
 
 			bool PositionChanged = ImGui::DragFloat3("Position##single_pos", &Position.x, 1.f, 0, 0, "%.2f", ImGuiSliderFlags_AlwaysClamp);
-			bool RotationChanged = ImGui::DragFloat3("Rotation##single_rot", &Rotation.x, 0.5f, 0, 360.f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+			bool RotationChanged = ImGui::DragFloat3("Rotation##single_rot", &Rotation.x, 0.5f, -360.f, 360.f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 			bool ScaleChanged = ImGui::SliderFloat("Scale##single_scale", &Scale, 0.01f, 10.f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
 			ImGui::NewLine();
 
@@ -1753,11 +1753,27 @@ namespace cse
 								auto ThisRef = CS_CAST(_RENDERSEL->selectionList->Data, TESForm, TESObjectREFR);
 								char FormIdStr[100];
 								FORMAT_STR(FormIdStr, "%08X", ThisRef->formID);
-								ImGui::TextWrapped("%s - %s%s (%s)",
-									TESForm::GetFormTypeIDLongName(ThisRef->baseForm->formType),
+
+								ImGui::Text("Reference: %s%s",
 									ThisRef->editorID.Size() ? ThisRef->editorID.c_str() : FormIdStr,
-									ThisRef->IsActive() ? "*" : "",
-									ThisRef->baseForm->editorID.Size() ? ThisRef->baseForm->editorID.c_str() : "<no_editor_id>");
+									ThisRef->IsActive() ? "*" : "");
+								ImGui::SameLine(0, 5);
+								if (ImGui::Button(ICON_MD_EDIT"##edit_ref_dlg"))
+									TESDialog::ShowFormEditDialog(ThisRef);
+								if (ImGui::IsItemHovered())
+									ImGui::SetTooltip("Show Reference Edit Dialog");
+
+
+								ImGui::SameLine(0, 15);
+
+								ImGui::Text("Base: %s (%s)",
+									ThisRef->baseForm->editorID.Size() ? ThisRef->baseForm->editorID.c_str() : "<no_editor_id>",
+									TESForm::GetFormTypeIDLongName(ThisRef->baseForm->formType));
+								ImGui::SameLine(0, 5);
+								if (ImGui::Button(ICON_MD_EDIT"##edit_base_dlg"))
+									TESDialog::ShowFormEditDialog(ThisRef->baseForm);
+								if (ImGui::IsItemHovered())
+									ImGui::SetTooltip("Show Base Form Edit Dialog");
 							}
 							else if (_RENDERSEL->selectionCount > 1)
 								ImGui::Text("%d references selected", _RENDERSEL->selectionCount);
