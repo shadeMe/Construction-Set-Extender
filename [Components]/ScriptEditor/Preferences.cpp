@@ -7,6 +7,71 @@ namespace cse
 {
 	namespace preferences
 	{
+		System::Drawing::Design::UITypeEditorEditStyle CustomColorEditor::GetEditStyle(ITypeDescriptorContext^ context)
+		{
+			return System::Drawing::Design::UITypeEditorEditStyle::Modal;
+		}
+
+		System::Object^ CustomColorEditor::EditValue(ITypeDescriptorContext^ context, IServiceProvider^ provider, Object^ value)
+		{
+			if (value->GetType() != Color::typeid)
+				return value;
+
+			auto Picker = gcnew ColorDialog;
+			Picker->Color = (Color)value;
+			Picker->AllowFullOpen = true;
+			Picker->FullOpen = true;
+			Picker->AnyColor = true;
+
+			auto ParentWindowHandle = PreferencesDialog::GetActiveInstance()->Handle;
+			if (Picker->ShowDialog(gcnew WindowHandleWrapper(ParentWindowHandle)) == Windows::Forms::DialogResult::OK)
+				return Picker->Color;
+
+			return value;
+		}
+
+		bool CustomColorEditor::GetPaintValueSupported(ITypeDescriptorContext^ context)
+		{
+			return true;
+		}
+
+		void CustomColorEditor::PaintValue(System::Drawing::Design::PaintValueEventArgs^ e)
+		{
+			Color ColorToPaint = (Color)e->Value;
+
+			auto Brush = gcnew SolidBrush(ColorToPaint);
+			e->Graphics->FillRectangle(Brush, e->Bounds);
+			e->Graphics->DrawRectangle(Pens::Black, e->Bounds);
+		}
+
+		System::Drawing::Design::UITypeEditorEditStyle CustomFontEditor::GetEditStyle(ITypeDescriptorContext^ context)
+		{
+			return System::Drawing::Design::UITypeEditorEditStyle::Modal;
+		}
+
+		System::Object^ CustomFontEditor::EditValue(ITypeDescriptorContext^ context, IServiceProvider^ provider, Object^ value)
+		{
+			auto FontDlg = gcnew FontDialog;
+			FontDlg->MinSize = 10;
+			FontDlg->MaxSize = 32;
+			FontDlg->ShowApply = false;
+			FontDlg->ShowColor = false;
+			FontDlg->ShowHelp = false;
+			FontDlg->FontMustExist = false;
+			//FontDlg->ScriptsOnly = false;
+			//FontDlg->AllowScriptChange = false;
+
+			//auto Font = safe_cast<System::Drawing::Font^>(value);
+			//if (Font != nullptr)
+			//	FontDlg->Font = Font;
+
+			auto ParentWindowHandle = PreferencesDialog::GetActiveInstance()->Handle;
+			if (FontDlg->ShowDialog(gcnew WindowHandleWrapper(ParentWindowHandle)) == DialogResult::OK)
+				return FontDlg->Font;
+
+			return value;
+		}
+
 		System::String^ SettingsGroup::GetCategoryName()
 		{
 			return safe_cast<String^>(this->GetType()->GetField("CategoryName")->GetValue(this));
@@ -38,7 +103,7 @@ namespace cse
 						ValueStr = Value->ToString();
 
 					nativeWrapper::g_CSEInterfaceTable->EditorAPI.WriteToINI(CString(Name).c_str(),
-							CString(SectionPrefix + CategoryName).c_str(), CString(ValueStr).c_str());
+						CString(SectionPrefix + CategoryName).c_str(), CString(ValueStr).c_str());
 				}
 			}
 			catch (Exception^ E)
@@ -90,7 +155,7 @@ namespace cse
 						NewValue = ValueStr;
 					else
 						throw gcnew System::Runtime::Serialization::SerializationException
-							("Unsupported property type " + PropertyType->ToString() + " for property " + Name);
+						("Unsupported property type " + PropertyType->ToString() + " for property " + Name);
 
 					Property->SetValue(this, NewValue, nullptr);
 				}
@@ -111,68 +176,6 @@ namespace cse
 			return safe_cast<SettingsGroup^>(this->MemberwiseClone());
 		}
 
-		System::Drawing::Design::UITypeEditorEditStyle CustomColorEditor::GetEditStyle(ITypeDescriptorContext^ context)
-		{
-			return System::Drawing::Design::UITypeEditorEditStyle::Modal;
-		}
-
-		System::Object^ CustomColorEditor::EditValue(ITypeDescriptorContext^ context, IServiceProvider^ provider, Object^ value)
-		{
-			if (value->GetType() != Color::typeid)
-				return value;
-
-			auto Picker = gcnew ColorDialog;
-			Picker->Color = (Color)value;
-			Picker->AllowFullOpen = true;
-			Picker->FullOpen = true;
-			Picker->AnyColor = true;
-
-			if (Picker->ShowDialog() == Windows::Forms::DialogResult::OK)
-				return Picker->Color;
-
-			return value;
-		}
-
-		bool CustomColorEditor::GetPaintValueSupported(ITypeDescriptorContext^ context)
-		{
-			return true;
-		}
-
-		void CustomColorEditor::PaintValue(System::Drawing::Design::PaintValueEventArgs^ e)
-		{
-			Color ColorToPaint = (Color)e->Value;
-
-			auto Brush = gcnew SolidBrush(ColorToPaint);
-			e->Graphics->FillRectangle(Brush, e->Bounds);
-			e->Graphics->DrawRectangle(Pens::Black, e->Bounds);
-		}
-
-		System::Drawing::Design::UITypeEditorEditStyle CustomFontEditor::GetEditStyle(ITypeDescriptorContext^ context)
-		{
-			return System::Drawing::Design::UITypeEditorEditStyle::Modal;
-		}
-
-		System::Object^ CustomFontEditor::EditValue(ITypeDescriptorContext^ context, IServiceProvider^ provider, Object^ value)
-		{
-			auto FontDlg = gcnew FontDialog;
-			FontDlg->MaxSize = 10;
-			FontDlg->MinSize = 32;
-			FontDlg->AllowScriptChange = false;
-			FontDlg->FontMustExist = true;
-			FontDlg->ShowApply = false;
-			FontDlg->ShowColor = false;
-			FontDlg->ShowHelp = false;
-			FontDlg->ScriptsOnly = false;
-
-			auto Font = safe_cast<System::Drawing::Font^>(value);
-			if (Font != nullptr)
-				FontDlg->Font = Font;
-
-			if (FontDlg->ShowDialog() == DialogResult::OK)
-				return FontDlg->Font;
-
-			return System::Drawing::Design::UITypeEditor::EditValue(context, provider, value);
-		}
 
 		bool IntelliSenseSettings::Validate(SettingsGroup^ OldValue, String^% OutMessage)
 		{
@@ -546,6 +549,17 @@ namespace cse
 			Enumerator.MoveNext();
 			SwitchCategory(Enumerator.Current);
 
+			// ### HACK! In order to correctly blacklist the font and color common dialogs from being
+			// affected by the custom editor color theme, we'll need to ensure that they are instantiated
+			// as child windows of a Winforms dialog (which they aren't by default)
+			// So, we need the handle of the parent form in order to pass it to their respective
+			// ShowDialog() calls. Since this can't be accessed directly through the custom service provider API,
+			// we'll need to cache the handle elsewhere. This means we can only have one active preferences dialog,
+			// which is fine as long as we show it as an application-wide modal dialog
+
+			Debug::Assert(ActiveDialog == nullptr);
+			ActiveDialog = this;
+
 			this->Hide();
 			this->ShowDialog();
 
@@ -564,6 +578,9 @@ namespace cse
 
 		PreferencesDialog::~PreferencesDialog()
 		{
+			Debug::Assert(ActiveDialog == this);
+			ActiveDialog = nullptr;
+
 			if (components)
 			{
 				delete components;

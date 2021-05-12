@@ -8,18 +8,6 @@ namespace cse
 	{
 		using namespace System::ComponentModel;
 
-		ref class SettingsGroup abstract
-		{
-			static String^	SectionPrefix = "ScriptEditor::";
-		public:
-			virtual bool	Validate(SettingsGroup^ OldValue, String^% OutMessage) abstract;
-			void			Save();
-			bool			Load();
-			SettingsGroup^	Clone();
-
-			String^			GetCategoryName();
-		};
-
 		ref class CustomColorConverter : public System::Drawing::ColorConverter
 		{
 		public:
@@ -43,6 +31,18 @@ namespace cse
 			virtual System::Drawing::Design::UITypeEditorEditStyle
 							GetEditStyle(ITypeDescriptorContext^ context) override;
 			virtual Object^ EditValue(ITypeDescriptorContext^ context, IServiceProvider^ provider, Object^ value) override;
+		};
+
+		ref class SettingsGroup abstract
+		{
+			static String^	SectionPrefix = "ScriptEditor::";
+		public:
+			virtual bool	Validate(SettingsGroup^ OldValue, String^% OutMessage) abstract;
+			void			Save();
+			bool			Load();
+			SettingsGroup^	Clone();
+
+			String^			GetCategoryName();
 		};
 
 		ref struct GeneralSettings : public SettingsGroup
@@ -301,7 +301,7 @@ namespace cse
 				ForeColor = Color::FromArgb(253, 244, 193);
 				BackColor = Color::FromArgb(29, 32, 33);
 				TabSize = 4;
-				TextFont = Control::DefaultFont;
+				TextFont = gcnew Font("Segoe UI", 12);
 				WordWrap = false;
 				ShowTabs = false;
 				ShowSpaces = false;
@@ -538,6 +538,9 @@ namespace cse
 
 		ref class PreferencesDialog : public System::Windows::Forms::Form
 		{
+			static PreferencesDialog^	ActiveDialog = nullptr;
+
+
 			System::ComponentModel::Container^		components;
 
 			PropertyGrid^			PropertyGrid;
@@ -559,6 +562,8 @@ namespace cse
 		public:
 			PreferencesDialog();
 			~PreferencesDialog();
+
+			static PreferencesDialog^	GetActiveInstance() { return ActiveDialog; }
 		};
 	}
 }
