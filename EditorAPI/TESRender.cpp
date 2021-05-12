@@ -29,8 +29,8 @@ PathGridPointListT*					TESRenderWindow::SelectedPathGridPoints = (PathGridPoint
 float*								TESRenderWindow::CameraPanSpeed = (float*)0x00A0B090;
 float*								TESRenderWindow::CameraZoomSpeed = (float*)0x00A0B088;
 float*								TESRenderWindow::CameraRotationSpeed = (float*)0x00A0B080;
-float*								TESRenderWindow::SnapGridDistance = (float*)0x00A0B060;
-float*								TESRenderWindow::SnapAngle = (float*)0x00A0B068;
+UInt32*								TESRenderWindow::SnapGridDistance = (UInt32*)0x00A0B060;
+UInt32*								TESRenderWindow::SnapAngle = (UInt32*)0x00A0B068;
 float*								TESRenderWindow::RefRotationSpeed = (float*)0x00A0B070;
 float*								TESRenderWindow::RefMovementSpeed = (float*)0x00A0B078;
 

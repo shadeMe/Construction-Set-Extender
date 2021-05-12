@@ -370,25 +370,11 @@ namespace cse
 					s_MovementSettingBuffer = *TESRenderWindow::RefMovementSpeed;
 
 				break;
-			case kMovementSetting_RefSnapGrid:
-				if (_RENDERWIN_XSTATE.UseAlternateMovementSettings)
-					s_MovementSettingBuffer = settings::renderer::kAltRefSnapGrid.GetData().f;
-				else
-					s_MovementSettingBuffer = *TESRenderWindow::SnapGridDistance;
-
-				break;
 			case kMovementSetting_RefRotationSpeed:
 				if (_RENDERWIN_XSTATE.UseAlternateMovementSettings)
 					s_MovementSettingBuffer = settings::renderer::kAltRefRotationSpeed.GetData().f;
 				else
 					s_MovementSettingBuffer = *TESRenderWindow::RefRotationSpeed;
-
-				break;
-			case kMovementSetting_RefSnapAngle:
-				if (_RENDERWIN_XSTATE.UseAlternateMovementSettings)
-					s_MovementSettingBuffer = settings::renderer::kAltRefSnapAngle.GetData().f;
-				else
-					s_MovementSettingBuffer = *TESRenderWindow::SnapAngle;
 
 				break;
 			case kMovementSetting_CamRotationSpeed:
@@ -412,6 +398,20 @@ namespace cse
 					s_MovementSettingBuffer = *TESRenderWindow::CameraPanSpeed;
 
 				break;
+			case kMovementSetting_RefSnapGrid:
+				if (_RENDERWIN_XSTATE.UseAlternateMovementSettings)
+					s_MovementSettingBuffer = settings::renderer::kAltRefSnapGrid.GetData().f;
+				else
+					s_MovementSettingBuffer = *TESRenderWindow::SnapGridDistance;
+
+				break;
+			case kMovementSetting_RefSnapAngle:
+				if (_RENDERWIN_XSTATE.UseAlternateMovementSettings)
+					s_MovementSettingBuffer = settings::renderer::kAltRefSnapAngle.GetData().f;
+				else
+					s_MovementSettingBuffer = *TESRenderWindow::SnapAngle;
+
+				break;
 			default:
 				s_MovementSettingBuffer = 0.0;
 
@@ -428,8 +428,23 @@ namespace cse
 			__asm	popad
 			__asm
 			{
-				fild	s_MovementSettingBuffer
+				fld		s_MovementSettingBuffer
 				fstp	dword ptr [esp + 0x20]
+
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		#define _hhName		TESRenderControlAltRefSnapAngle
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00425DCD);
+			__asm	pushad
+			InitializeCurrentRenderWindowMovementSetting(kMovementSetting_RefSnapAngle);
+			__asm	popad
+			__asm
+			{
+				fld		s_MovementSettingBuffer
 
 				jmp		_hhGetVar(Retn)
 			}
@@ -495,21 +510,6 @@ namespace cse
 				mov		eax, [TESRenderWindow::StateFlags]
 				mov		eax, [eax]
 				test	eax, 0x2
-
-				jmp		_hhGetVar(Retn)
-			}
-		}
-
-		#define _hhName		TESRenderControlAltRefSnapAngle
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x00425DCD);
-			__asm	pushad
-			InitializeCurrentRenderWindowMovementSetting(kMovementSetting_RefSnapAngle);
-			__asm	popad
-			__asm
-			{
-				fild	s_MovementSettingBuffer
 
 				jmp		_hhGetVar(Retn)
 			}

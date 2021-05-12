@@ -241,8 +241,8 @@ namespace cse
 				UInt32 Flags = *TESRenderWindow::StateFlags;
 				bool SnapGrid = Flags & TESRenderWindow::kRenderWindowState_SnapToGrid;
 				bool SnapAngle = Flags & TESRenderWindow::kRenderWindowState_SnapToAngle;
-				int GridVal = *(UInt32*)TESRenderWindow::SnapGridDistance;
-				int AngleVal = *(UInt32*)TESRenderWindow::SnapAngle;
+				int GridVal = _RENDERWIN_XSTATE.UseAlternateMovementSettings ? settings::renderer::kAltRefSnapGrid.GetData().f : *TESRenderWindow::SnapGridDistance;
+				int AngleVal = _RENDERWIN_XSTATE.UseAlternateMovementSettings ? settings::renderer::kAltRefSnapAngle.GetData().f : *TESRenderWindow::SnapAngle;
 				TESObjectREFR* SnapRef = *TESRenderWindow::SnapReference;
 
 				ImGui::PushStyleCompact();
@@ -302,8 +302,16 @@ namespace cse
 					SnapRef = nullptr;
 				ImGui::PopStyleCompact();
 
-				*(UInt32*)TESRenderWindow::SnapGridDistance = GridVal;
-				*(UInt32*)TESRenderWindow::SnapAngle = AngleVal;
+				if (_RENDERWIN_XSTATE.UseAlternateMovementSettings)
+					settings::renderer::kAltRefSnapGrid.SetFloat(GridVal);
+				else
+					*TESRenderWindow::SnapGridDistance = GridVal;
+
+				if (_RENDERWIN_XSTATE.UseAlternateMovementSettings)
+					settings::renderer::kAltRefSnapAngle.SetFloat(AngleVal);
+				else
+					*TESRenderWindow::SnapAngle = AngleVal;
+
 				*TESRenderWindow::StateFlags = Flags;
 				*TESRenderWindow::SnapReference = SnapRef;
 			};
@@ -433,8 +441,10 @@ namespace cse
 				}
 
 				ImGui::NewLine();
-				if (ImGui::Checkbox("Alternate Settings", &Alternate))
+				if (ImGui::Checkbox("Alternate " ICON_MD_ZOOM_OUT_MAP " / " ICON_MD_GRID_ON, &Alternate))
 					actions::ToggleAlternateMovementSettings();
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Alternate Movement/Snap Settings");
 				ImGui::PopStyleCompact();
 			};
 			PopupMovementControls= BottomToolbarPopupProvider.RegisterPopup("popup_movement_controls",
