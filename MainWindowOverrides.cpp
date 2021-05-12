@@ -400,7 +400,7 @@ namespace cse
 					break;
 				case IDC_MAINMENU_BATCHLIPGENERATOR:
 					{
-						if (CSIOM->GetInitialized() == false)
+						if (CSIOM.IsAvailable() == false)
 						{
 							BGSEEUI->MsgBoxE("The CSInteropManager is not initialized!");
 							break;
@@ -498,7 +498,7 @@ namespace cse
 														{
 															if (OverwriteExisting || ExistingFile.Open(LIPPath.c_str()) == false)
 															{
-																if (CSIOM->GenerateLIPSyncFile(VoiceFilePath, Response->responseText.c_str()))
+																if (CSIOM.GenerateLIPSyncFile(VoiceFilePath, Response->responseText.c_str()))
 																	BatchGenCounter++;
 																else
 																{

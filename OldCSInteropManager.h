@@ -5,29 +5,34 @@ namespace cse
 	// loader derived from OBSE's code. well, duplicated.
 	class OldCSInteropManager
 	{
-		static OldCSInteropManager*		Singleton;
-
 		OldCSInteropManager();
 
-		PROCESS_INFORMATION				CS10ProcInfo;
-		std::string						DLLPath;
-		HANDLE							InteropPipeHandle;
-		bool							Loaded;
-		GUID							PipeGUID;
+		enum class LoadState
+		{
+			Unloaded,
+			Loaded,
+			Error
+		};
 
-		void							DoInjectDLL(PROCESS_INFORMATION * info);
-		bool							InjectDLL(PROCESS_INFORMATION * info);
-		bool							CreateNamedPipeServer(char** GUIDOut);
-		bool							CreateTempWAVFile(const char* MP3Path, const char* WAVPath);
+		PROCESS_INFORMATION		CS10ProcInfo;
+		std::string				DLLPath;
+		HANDLE					InteropPipeHandle;
+		LoadState				State;
+		GUID					PipeGUID;
+
+		bool	DoInjectDLL();
+		bool	InjectDLL(PROCESS_INFORMATION * info);
+		bool	CreateNamedPipeServer(char** GUIDOut);
+		bool	CreateTempWAVFile(const char* MP3Path, const char* WAVPath);
+		void	Initialize();
 	public:
 		~OldCSInteropManager();
 
-		static OldCSInteropManager*		GetSingleton();
+		bool	GenerateLIPSyncFile(const char* InputPath, const char* ResponseText);
+		bool	IsAvailable() const;
 
-		bool							Initialize();
-		bool							GenerateLIPSyncFile(const char* InputPath, const char* ResponseText);
-		bool							GetInitialized() const;
+		static	OldCSInteropManager		Instance;
 	};
 
-#define CSIOM						OldCSInteropManager::GetSingleton()
+#define CSIOM						OldCSInteropManager::Instance
 }

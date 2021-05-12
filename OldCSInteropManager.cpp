@@ -4,22 +4,13 @@
 
 namespace cse
 {
-#define INJECT_TIMEOUT			5000
+	OldCSInteropManager	OldCSInteropManager::Instance;
 
-	OldCSInteropManager* OldCSInteropManager::Singleton = nullptr;
-
-	OldCSInteropManager* OldCSInteropManager::GetSingleton()
-	{
-		if (Singleton == nullptr)
-			Singleton = new OldCSInteropManager();
-
-		return Singleton;
-	}
 
 	OldCSInteropManager::OldCSInteropManager()
 	{
-		Loaded = false;
-		DLLPath = BGSEEMAIN->GetAPPPath();
+		State = LoadState::Unloaded;
+		DLLPath = "";
 		InteropPipeHandle = INVALID_HANDLE_VALUE;
 
 		ZeroMemory(&CS10ProcInfo, sizeof(PROCESS_INFORMATION));
@@ -28,25 +19,19 @@ namespace cse
 
 	OldCSInteropManager::~OldCSInteropManager()
 	{
-		if (Loaded)
-		{
-			OldCSInteropData InteropDataOut(OldCSInteropData::kMessageType_Quit);
-			DWORD BytesWritten = 0;
+		if (State != LoadState::Loaded)
+			return;
 
-			if (!WriteFile(InteropPipeHandle,
-				&InteropDataOut,
-				sizeof(OldCSInteropData),
-				&BytesWritten,
-				nullptr) &&
-				GetLastError() != ERROR_SUCCESS)
-			{
-				BGSEECONSOLE_ERROR("Couldn't write exit message to interop pipe!");
-			}
+		OldCSInteropData InteropDataOut(OldCSInteropData::kMessageType_Quit);
+		DWORD BytesWritten = 0;
 
-			CloseHandle(InteropPipeHandle);
-		}
+		WriteFile(InteropPipeHandle,
+			&InteropDataOut,
+			sizeof(OldCSInteropData),
+			&BytesWritten,
+			nullptr);
 
-		Singleton = nullptr;
+		CloseHandle(InteropPipeHandle);
 	}
 
 	bool OldCSInteropManager::CreateNamedPipeServer(char** GUIDOut)
@@ -56,7 +41,6 @@ namespace cse
 
 		if ((GUIDReturn == RPC_S_OK || GUIDReturn == RPC_S_UUID_LOCAL_ONLY) && GUIDStrReturn == RPC_S_OK)
 		{
-	//		BGSEECONSOLE_MESSAGE("Pipe GUID = %s", *GUIDOut);
 			char PipeName[0x200] = {0};
 			sprintf_s(PipeName, 0x200, "\\\\.\\pipe\\{%s}", *GUIDOut);
 
@@ -115,7 +99,7 @@ namespace cse
 				HANDLE	thread = CreateRemoteThread(process, nullptr, 0, (LPTHREAD_START_ROUTINE)hookBase, (void *)(hookBase + 5), 0, nullptr);
 				if(thread)
 				{
-					switch(WaitForSingleObject(thread, INJECT_TIMEOUT))
+					switch(WaitForSingleObject(thread, 5000))
 					{
 					case WAIT_OBJECT_0:
 						result = true;
@@ -146,29 +130,32 @@ namespace cse
 		return result;
 	}
 
-	void OldCSInteropManager::DoInjectDLL(PROCESS_INFORMATION * info)
+	bool OldCSInteropManager::DoInjectDLL()
 	{
-		Loaded = false;
-
 		__try
 		{
-			Loaded = InjectDLL(&CS10ProcInfo);
+			return InjectDLL(&CS10ProcInfo);
 		}
 		__except(EXCEPTION_EXECUTE_HANDLER)
 		{
 			;//
 		}
+
+		return false;
 	}
 
-	bool OldCSInteropManager::Initialize()
+	void OldCSInteropManager::Initialize()
 	{
-		if (Loaded)
-			return true;
+		if (State == LoadState::Loaded || State == LoadState::Error)
+			return;
+
+		BGSEECONSOLE_MESSAGE("Initializing Old CS Interop Manager...");
 
 		char* GUIDStr = 0;
 		if (!CreateNamedPipeServer(&GUIDStr))
 		{
-			return false;
+			State = LoadState::Error;
+			return;
 		}
 
 		STARTUPINFO			startupInfo = { 0 };
@@ -186,10 +173,11 @@ namespace cse
 			BGSEECONSOLE_MESSAGE("Couldn't find DLL (%s)!", this->DLLPath.c_str());
 			RpcStringFree((RPC_CSTR*)&GUIDStr);
 
-			return false;
+			State = LoadState::Error;
+			return;
 		}
 
-		Loaded = CreateProcess(procName,
+		auto CreateProcessResult = CreateProcess(procName,
 							GUIDStr,	// pass the pipe guid
 							nullptr,		// default process security
 							nullptr,		// default thread security
@@ -201,26 +189,19 @@ namespace cse
 
 		RpcStringFree((RPC_CSTR*)&GUIDStr);
 
-		// check for Vista failing to create the process due to elevation requirements
-		if(Loaded == false && (GetLastError() == ERROR_ELEVATION_REQUIRED))
-		{
-			// in theory we could figure out how to UAC-prompt for this process and then run CreateProcess again, but I have no way to test code for that
-			BGSEECONSOLE_MESSAGE("Vista has decided that launching the CS 1.0 requires UAC privilege elevation. There is no good reason for this to happen, but to fix it, right-click on obse_loader.exe, go to Properties, pick the Compatibility tab, then turn on \"Run this program as an administrator\".");
-			return Loaded;
-		}
 
-		if (Loaded == false)
+		if (CreateProcessResult == false)
 		{
 			BGSEECONSOLE_ERROR("Couldn't load CS 1.0!");
-			return Loaded;
+
+			State = LoadState::Error;
+			return;
 		}
 
-		DoInjectDLL(&CS10ProcInfo);
+		State = DoInjectDLL() ? LoadState::Loaded : LoadState::Error;
 
-		if (Loaded)
-		{
+		if (State == LoadState::Loaded)
 			ResumeThread(CS10ProcInfo.hThread);
-		}
 		else
 		{
 			BGSEECONSOLE_MESSAGE("DLL injection failed. In most cases, this is caused by an overly paranoid software firewall or antivirus package. Disabling either of these may solve the problem.");
@@ -232,8 +213,6 @@ namespace cse
 		// clean up
 		CloseHandle(CS10ProcInfo.hProcess);
 		CloseHandle(CS10ProcInfo.hThread);
-
-		return Loaded;
 	}
 
 	bool OldCSInteropManager::CreateTempWAVFile(const char* MP3Path, const char* WAVPath)
@@ -283,7 +262,10 @@ namespace cse
 
 	bool OldCSInteropManager::GenerateLIPSyncFile(const char* InputPath, const char* ResponseText)
 	{
-		if (Loaded == false)
+		// Lazy load the old CS
+		Initialize();
+
+		if (State == LoadState::Error)
 		{
 			BGSEECONSOLE_MESSAGE("Interop manager not initialized!");
 			return false;
@@ -361,9 +343,11 @@ namespace cse
 		return Result;
 	}
 
-	bool OldCSInteropManager::GetInitialized() const
+	bool OldCSInteropManager::IsAvailable() const
 	{
-		return Loaded;
+		return State == LoadState::Loaded;
 	}
+
+
 }
 

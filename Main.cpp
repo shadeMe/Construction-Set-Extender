@@ -206,12 +206,6 @@ namespace cse
 		AUXVIEWPORT->Initialize();
 		BGSEECONSOLE->Outdent();
 
-		BGSEECONSOLE_MESSAGE("Initializing CSInterop Manager");
-		BGSEECONSOLE->Indent();
-		if (CSIOM->Initialize() == false)
-			BGSEECONSOLE_MESSAGE("Failed to initialize successfully! Lip service will be unavailable for this session");
-		BGSEECONSOLE->Outdent();
-
 		BGSEECONSOLE_MESSAGE("Initializing Achievements");
 		BGSEECONSOLE->Indent();
 		achievements::Initialize();
@@ -406,11 +400,6 @@ namespace cse
 		BGSEECONSOLE_MESSAGE("Deinitializing Change Log Manager");
 		BGSEECONSOLE->Indent();
 		changeLogManager::Deinitialize();
-		BGSEECONSOLE->Outdent();
-
-		BGSEECONSOLE_MESSAGE("Deinitializing CSInterop Manager");
-		BGSEECONSOLE->Indent();
-		delete CSIOM;
 		BGSEECONSOLE->Outdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Serialization");
