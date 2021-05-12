@@ -180,7 +180,9 @@ namespace cse
 
 		void VerticalSplitter::ResizeControl(ObjectWindowControlID Control, LONG Delta) const
 		{
-			BGSEECONSOLE_MESSAGE("Vert splitter resizing control: %d | Delta: %d", Control, Delta);
+			char Buffer[200];
+			FORMAT_STR(Buffer, "Control: %d | Delta = %d\r\n", Control, Delta);
+			OutputDebugString(Buffer);
 
 			HWND CurrentHandle = NULL;
 			RECT* CurrentRect = nullptr;
@@ -305,17 +307,23 @@ namespace cse
 		{
 			const auto SafeZoneOffset = 7;
 
-			//if (SplitterBounds->top + Delta <= SafeZoneOffset && Delta < 0)
-			//	Delta = SafeZoneOffset - SplitterBounds->top;
-			//else if (SplitterBounds->bottom + Delta >= (WindowState->CurrentDialogSize.y - SafeZoneOffset) && Delta > 0)
-			//	Delta = (WindowState->CurrentDialogSize.y - SafeZoneOffset) - SplitterBounds->bottom;
+			const auto TopSafeZonePos = SafeZoneOffset;
+			const auto BottomSafeZonePos = WindowState->CurrentDialogSize.y - SafeZoneOffset - (SplitterBounds->bottom - SplitterBounds->top);
+
+			//if (SplitterBounds->top + Delta <= TopSafeZonePos && SplitterBounds->top > TopSafeZonePos)
+			//	Delta = TopSafeZonePos - SplitterBounds->top;
+			//else if (SplitterBounds->top + Delta >= BottomSafeZonePos && SplitterBounds->top < BottomSafeZonePos)
+			//	Delta = BottomSafeZonePos - SplitterBounds->top;
 
 			//if (Delta == 0)
 			//	return;
 
 			// do nothing if the new splitter position is outside the safe-zone
-			if ((SplitterBounds->top + Delta <= SafeZoneOffset && Delta < 0) || (SplitterBounds->bottom + Delta >= (WindowState->CurrentDialogSize.y - SafeZoneOffset) && Delta > 0))
+			if ((SplitterBounds->top + Delta <= TopSafeZonePos && Delta < 0)
+				|| (SplitterBounds->top + Delta >= BottomSafeZonePos && Delta > 0))
+			{
 				return;
+			}
 
 
 			HWND CurrentHandle = NULL;
@@ -332,7 +340,7 @@ namespace cse
 			auto Action = Mode::Resize;
 			if (SplitterBounds->top + Delta <= kHidePanelMinOffset)
 				Action = Mode::HideTop;
-			else if (SplitterBounds->bottom + Delta >= WindowState->CurrentDialogSize.y - kHidePanelMaxOffset)
+			else if (SplitterBounds->top + Delta >= WindowState->CurrentDialogSize.y - kHidePanelMaxOffset - (SplitterBounds->bottom - SplitterBounds->top))
 				Action = Mode::HideBottom;
 
 			auto SetHidden = [](HWND hWnd, bool Hide) -> void {
@@ -386,13 +394,18 @@ namespace cse
 					}
 				}
 
-				*Toggle = true;
-
 				for (const auto& Itr : Action == Mode::HideTop ? TopControls : BottomControls)
+				{
+					if (!*Toggle)
+						ResizeControl(Itr, Delta);
+
 					SetHidden(WindowState->Handles.at(Itr), true);
+				}
 
 				for (const auto& Itr : Action == Mode::HideTop ? BottomControls : TopControls)
 					ResizeControl(Itr, Delta);
+
+				*Toggle = true;
 
 				break;
 			}
@@ -454,7 +467,7 @@ namespace cse
 		}
 
 		LRESULT ObjectWindowExtraState::SplitterSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-															bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+			bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT ProcResult = FALSE;
 			auto SplitterData = reinterpret_cast<SplitterState*>(GetWindowLongPtr(hWnd, GWL_USERDATA));
@@ -551,17 +564,6 @@ namespace cse
 				POINT Delta { CurrentCursorPos.x - SplitterData->DragOrigin.x, CurrentCursorPos.y - SplitterData->DragOrigin.y };
 				SplitterData->DragOrigin.x = CurrentCursorPos.x;
 				SplitterData->DragOrigin.y = CurrentCursorPos.y;
-
-				//constexpr auto kMaxDeltaAbsolute = 5;
-				//if (Delta.x < -kMaxDeltaAbsolute)
-				//	Delta.x = -kMaxDeltaAbsolute;
-				//else if (Delta.x > kMaxDeltaAbsolute)
-				//	Delta.x = kMaxDeltaAbsolute;
-
-				//if (Delta.y < -kMaxDeltaAbsolute)
-				//	Delta.y = -kMaxDeltaAbsolute;
-				//else if (Delta.y > kMaxDeltaAbsolute)
-				//	Delta.y = kMaxDeltaAbsolute;
 
 				const auto SplitterDelta = SplitterData->ID == kVerticalSplitter ? Delta.y : Delta.x;
 				if (SplitterDelta != 0)
@@ -710,14 +712,14 @@ namespace cse
 				SetWindowPos(hWnd, HWND_TOP, Bounds.left, Bounds.top, Bounds.right, Bounds.bottom, NULL);
 
 			FilterableFormListManager::Instance.Register(xData->Handles.at(ObjectWindowControlID::kForm_FilterEdit),
-														xData->Handles.at(ObjectWindowControlID::kForm_FilterLabel),
-														xData->Handles.at(ObjectWindowControlID::kForm_ListView),
-														hWnd);
+				xData->Handles.at(ObjectWindowControlID::kForm_FilterLabel),
+				xData->Handles.at(ObjectWindowControlID::kForm_ListView),
+				hWnd);
 
 			FilterableFormListManager::Instance.Register(xData->Handles.at(ObjectWindowControlID::kTag_FilterEdit),
-														xData->Handles.at(ObjectWindowControlID::kTag_FilterLabel),
-														xData->Handles.at(ObjectWindowControlID::kTag_ListView),
-														hWnd);
+				xData->Handles.at(ObjectWindowControlID::kTag_FilterLabel),
+				xData->Handles.at(ObjectWindowControlID::kTag_ListView),
+				hWnd);
 
 			std::string WndTitle = "Object Window";
 			if (settings::general::kShowHallOfFameMembersInTitleBar().i != hallOfFame::kDisplayESMember_None)
@@ -780,11 +782,11 @@ namespace cse
 			CurrentRect = &xData->CurrentRects.at(ObjectWindowControlID::kForm_TreeView);
 
 			MoveWindow(CurrentHandle,
-					CurrentRect->left,
-					CurrentRect->top,
-					CurrentRect->right - CurrentRect->left,
-					CurrentRect->bottom - CurrentRect->top + SizeDelta.y,
-					TRUE);
+				CurrentRect->left,
+				CurrentRect->top,
+				CurrentRect->right - CurrentRect->left,
+				CurrentRect->bottom - CurrentRect->top + SizeDelta.y,
+				TRUE);
 
 			// form splitter - same width, new height
 			CurrentHandle = xData->Handles.at(ObjectWindowControlID::kForm_Splitter);
@@ -907,17 +909,17 @@ namespace cse
 				return;
 
 			if (FilterableFormListManager::Instance.HandleMessages(xData->Handles.at(ObjectWindowControlID::kForm_FilterEdit),
-																uMsg, wParam, lParam))
+				uMsg, wParam, lParam))
 				RefreshFormList(xData->Handles.at(ObjectWindowControlID::kForm_TreeView));
 
 			if (FilterableFormListManager::Instance.HandleMessages(xData->Handles.at(ObjectWindowControlID::kTag_FilterEdit),
-																uMsg, wParam, lParam))
+				uMsg, wParam, lParam))
 				RefreshFormList(xData->Handles.at(ObjectWindowControlID::kTag_TreeView));
 		}
 
 
 		LRESULT CALLBACK ObjectWindowPrimarySubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+			bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
