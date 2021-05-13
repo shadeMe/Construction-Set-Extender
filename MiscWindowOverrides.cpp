@@ -326,11 +326,13 @@ namespace cse
 					HiddenGroup.cbSize = sizeof(LVGROUP);
 					HiddenGroup.mask = LVGF_GROUPID | LVGF_STATE;
 					HiddenGroup.iGroupId = FilteredGroupId;
-					HiddenGroup.stateMask = LVGS_HIDDEN;
-					HiddenGroup.state = LVGS_HIDDEN;
+					HiddenGroup.stateMask = LVGS_HIDDEN | LVGS_COLLAPSED;
+					HiddenGroup.state = LVGS_HIDDEN | LVGS_COLLAPSED;
 
 					ListView_InsertGroup(PluginList, -1, &DefaultGroup);
 					ListView_InsertGroup(PluginList, -1, &HiddenGroup);
+
+					CheckDlgButton(hWnd, IDC_CSE_DATA_FILTERNAME, BST_CHECKED);
 				}
 
 				break;
@@ -494,6 +496,16 @@ namespace cse
 			case WM_COMMAND:
 				switch (LOWORD(wParam))
 				{
+				case IDC_CSE_DATA_FILTERNAME:
+				case IDC_CSE_DATA_FILTERAUTHOR:
+				case IDC_CSE_DATA_FILTERSUMMARY:
+					// Fake a text-change event
+					PostMessage(hWnd,
+								WM_COMMAND,
+								MAKEWPARAM(IDC_CSE_DATA_FILTEREDIT, EN_CHANGE),
+								reinterpret_cast<LPARAM>(GetDlgItem(hWnd, IDC_CSE_DATA_FILTEREDIT)));
+
+					break;
 				case IDC_CSE_DATA_FILTEREDIT:
 					if (HIWORD(wParam) == EN_CHANGE)
 					{
@@ -513,37 +525,44 @@ namespace cse
 							SendMessageA(PluginList, LVM_ENABLEGROUPVIEW, TRUE, 0);
 
 							// Iterate over each item in the list, compare its file name text, then assign it to the relevant group
-							int itemCount = ListView_GetItemCount(PluginList);
+							int ItemCount = ListView_GetItemCount(PluginList);
+							bool FilterName = IsDlgButtonChecked(hWnd, IDC_CSE_DATA_FILTERNAME) == BST_CHECKED;
+							bool FilterAuthor = IsDlgButtonChecked(hWnd, IDC_CSE_DATA_FILTERAUTHOR) == BST_CHECKED;
+							bool FilterSummary = IsDlgButtonChecked(hWnd, IDC_CSE_DATA_FILTERSUMMARY) == BST_CHECKED;
 
-							for (int i = 0; i < itemCount; i++)
+
+							for (int i = 0; i < ItemCount; i++)
 							{
-								char ItemText[MAX_PATH] = {};
-
-								LVITEMA GetItem { 0 };
-								GetItem.mask = LVIF_TEXT;
-								GetItem.iItem = i;
-								GetItem.iSubItem = 0;
-								GetItem.pszText = ItemText;
-								GetItem.cchTextMax = sizeof(ItemText);
-
-								ListView_GetItem(PluginList, &GetItem);
+								UInt32 PluginIndex = reinterpret_cast<UInt32>(TESListView::GetItemData(PluginList, i));
+								TESFile* CurrentFile = _DATAHANDLER->LookupPluginByIndex(PluginIndex);
 
 								// Case insensitive strstr
-								bool isVisible = [&]()
+								auto ContainsFilterString = [&](const char* Source)
 								{
-									for (auto c = GetItem.pszText; *c != '\0'; c++)
+									if (Source == nullptr)
+										return false;
+
+									for (auto c = Source; *c != '\0'; c++)
 									{
 										if (_strnicmp(c, Filter, strlen(Filter)) == 0)
 											return true;
 									}
 
 									return false;
-								}();
+								};
+
+								bool HasMatch = false;
+								if (FilterName && ContainsFilterString(CurrentFile->fileName))
+									HasMatch = true;
+								else if (FilterAuthor && ContainsFilterString(CurrentFile->authorName.c_str()))
+									HasMatch = true;
+								else if (FilterSummary && ContainsFilterString(CurrentFile->description.c_str()))
+									HasMatch = true;
 
 								LVITEMA SetItem { 0 };
 								SetItem.mask = LVIF_GROUPID;
 								SetItem.iItem = i;
-								SetItem.iGroupId = isVisible ? VisibleGroupId : FilteredGroupId;
+								SetItem.iGroupId = HasMatch ? VisibleGroupId : FilteredGroupId;
 
 								ListView_SetItem(PluginList, &SetItem);
 							}
