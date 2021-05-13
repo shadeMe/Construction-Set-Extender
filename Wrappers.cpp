@@ -880,7 +880,7 @@ namespace cse
 
 			if (Result)
 			{
-				PreviewControl->CenterCamera();
+				PreviewControl->ResetCamera();
 
 				Vector3 PosOffset;
 				GetPositionOffset(OutPreviewRefs, PreviewControl->sceneRoot, PosOffset);

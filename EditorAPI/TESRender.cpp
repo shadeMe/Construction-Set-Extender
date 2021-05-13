@@ -340,7 +340,7 @@ void TESRender::PrimaryRenderer::ScaleReferenceSelection(int Offset, bool Global
 	cdeclCall<void>(0x00424650, Offset, Global);
 }
 
-bool TESRender::UpdateNode(NiAVObject* Node, UInt32 UpdateType, float Multiplier, bool UpdateOnSuccess)
+bool TESRender::TransformNode(NiAVObject* Node, UInt32 UpdateType, float Multiplier, bool UpdateOnSuccess)
 {
 	bool Result = cdeclCall<bool>(0x00430080, Node, UpdateType, Multiplier);
 
@@ -453,6 +453,16 @@ NiProperty* TESRender::GetProperty(NiAVObject* In, UInt16 ID)
 NiExtraData* TESRender::GetExtraData(NiAVObject* In, const char* Name)
 {
 	return thisCall<NiExtraData*>(0x006F62B0, In, Name);
+}
+
+void TESRender::AddExtraData(NiAVObject* To, NiExtraData* ExtraData)
+{
+	thisCall<void>(0x006F6190, To, ExtraData);
+}
+
+void TESRender::SetExtraDataName(NiExtraData* To, const char* Name)
+{
+	thisCall<void>(0x00714530, To, Name);
 }
 
 NiProperty* TESRender::CreateProperty(UInt8 Type)

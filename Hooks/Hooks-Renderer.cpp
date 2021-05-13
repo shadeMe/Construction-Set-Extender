@@ -78,6 +78,7 @@ namespace cse
 		_DefineHookHdlr(MoveSelectionClampMul, 0x0042572C);
 		_DefineHookHdlr(ShadowSceneNodeUseFullBrightLight, 0x00772091);
 		_DefineHookHdlr(UpdateUsageInfoForTempRefs, 0x00540010);
+		_DefineHookHdlr(TESRenderControlWndProcConditionalFocus, 0x0044D718);
 
 
 		void PatchRendererHooks(void)
@@ -143,6 +144,7 @@ namespace cse
 			_MemHdlr(MoveSelectionClampMul).WriteJump();
 			_MemHdlr(ShadowSceneNodeUseFullBrightLight).WriteJump();
 			_MemHdlr(UpdateUsageInfoForTempRefs).WriteJump();
+			_MemHdlr(TESRenderControlWndProcConditionalFocus).WriteJump();
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -175,6 +177,10 @@ namespace cse
 
 				// fix for the CS bug that caused temporary references (door/travel markers) to disappear if they were moved outside the loaded cell grid
 				SME::MemoryHandler::WriteRelJump(0x00539345, 0x00539351);
+
+				// fix for the CS bug that causes camera rotation in preview controls to go awry due to the presence of the ground plane
+				SME::MemoryHandler::SafeWrite32(0x00933DC0, reinterpret_cast<UInt32>(&TESPreviewControlResetCameraDetour));
+				SME::MemoryHandler::WriteRelCall(0x0044C77E, reinterpret_cast<UInt32>(&TESPreviewControlRotateCameraDetour));
 			}
 		}
 
@@ -186,6 +192,7 @@ namespace cse
 		void __cdecl ShadowLightShaderSetAmbientColorShaderConstantDetour(UInt16 ConstantIndex, float R, float G, float B, float A)
 		{
 			auto IsGeometryMasked = [](NiAVObject* Geom, NiColor* OutMaskColor) -> bool {
+				// exclude terrain geom
 				if (Geom->m_pcName && strstr(Geom->m_pcName, "Block") == Geom->m_pcName)
 					return false;
 
@@ -231,6 +238,90 @@ namespace cse
 			}
 
 			cdeclCall<void>(0x0079AC60, ConstantIndex, R, G, B, A);
+		}
+
+		void __stdcall DoTESPreviewControlResetCameraDetour(TESPreviewControl* Control)
+		{
+			auto SceneRoot = Control->sceneRoot;
+			auto CameraNode = Control->cameraNode;
+
+			if (SceneRoot == nullptr || CameraNode == nullptr)
+				return;
+
+			TESRender::UpdateAVObject(SceneRoot);
+
+			NiSphere Bounds { 0.f };
+			if (SceneRoot->m_children.numObjs > 0)
+			{
+				for (int i = 0; i < SceneRoot->m_children.numObjs; ++i)
+				{
+					auto ChildNode = SceneRoot->m_children.data[i];
+
+					// skip the ground plane
+					if (ChildNode->m_pcName && strstr(ChildNode->m_pcName, "EditorLandPlane.NIF") != nullptr)
+						continue;
+
+					// combine the bounds
+					thisCall<void>(0x00708790, &Bounds, &ChildNode->m_kWorldBound);
+				}
+			}
+
+			CameraNode->m_localTranslate.x = Bounds.x;
+			CameraNode->m_localTranslate.y = Bounds.y - 2 * Bounds.radius;
+			CameraNode->m_localTranslate.z = Bounds.z;
+
+			// init rotation matrix
+			NiMatrix33 RotMatrix { 0.f };
+			thisCall<void>(0x00704C00, &RotMatrix, 0.f);
+
+			memcpy(&CameraNode->m_localRotate, &RotMatrix, sizeof(decltype(CameraNode->m_localRotate)));
+			TESRender::UpdateAVObject(CameraNode);
+
+			// save the pivot in the camera node for later use
+			auto PivotData = NI_CAST(TESRender::GetExtraData(CameraNode, "Pivot"), NiVectorExtraData);
+			if (PivotData == nullptr)
+			{
+				// call the default factory method for this extra data
+				// ### HACK! actually a __stdcall function but we can use the thisCall wrapper for our purposes
+				auto xData = thisCall<NiVectorExtraData*>(0x0072D4B0, nullptr);
+				TESRender::SetExtraDataName(xData, "Pivot");
+				TESRender::AddExtraData(CameraNode, xData);
+
+				PivotData = xData;
+			}
+
+			PivotData->data.x = Bounds.x;
+			PivotData->data.y = Bounds.y;
+			PivotData->data.z = Bounds.z;
+			PivotData->data.w = Bounds.radius;
+		}
+
+		void __declspec(naked) TESPreviewControlResetCameraDetour()
+		{
+			__asm
+			{
+				push	ecx
+				mov		eax, DoTESPreviewControlResetCameraDetour
+				call	eax
+				retn
+			}
+		}
+
+		void __cdecl TESPreviewControlRotateCameraDetour(NiAVObject* CameraNode, Vector3* Pivot, int XOffset, int YOffset, float SpeedMultiplier)
+		{
+			// use previously saved pivot data to calculate the current pivot
+			auto PivotData = NI_CAST(TESRender::GetExtraData(CameraNode, "Pivot"), NiVectorExtraData);
+			Vector3 NewPivot(*Pivot);
+
+			if (PivotData)
+			{
+				const auto& CameraLocation = CameraNode->m_localTranslate;
+				NewPivot.x = CameraLocation.x;
+				NewPivot.y = CameraLocation.y - 2 * PivotData->data.w;
+				NewPivot.z = CameraLocation.z;
+			}
+
+			TESRender::RotateNode(CameraNode, &NewPivot, XOffset, YOffset, SpeedMultiplier);
 		}
 
 		#define _hhName		DoorMarkerProperties
@@ -1649,6 +1740,26 @@ namespace cse
 				push    esi
 				mov     esi, ecx
 				mov     eax, [esi+8]
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		void __stdcall DoTESRenderControlWndProcConditionalFocusHook(HWND PreviewControl)
+		{
+			auto ParentDlg = GetParent(PreviewControl);
+
+			if (GetActiveWindow() == ParentDlg)
+				SetFocus(PreviewControl);
+		}
+
+		#define _hhName		TESRenderControlWndProcConditionalFocus
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0044D71F);
+			__asm
+			{
+				push	esi
+				call	DoTESRenderControlWndProcConditionalFocusHook
 				jmp		_hhGetVar(Retn)
 			}
 		}

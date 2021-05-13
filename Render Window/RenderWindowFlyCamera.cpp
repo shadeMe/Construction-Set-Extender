@@ -238,7 +238,7 @@ namespace cse
 				if (Direction == RenderWindowFlyCamera::kMoveDirection_Backward)
 					Velocity *= -1;
 
-				TESRender::UpdateNode(_PRIMARYRENDERER->primaryCameraParentNode, TESRender::kNodeUpdate_Unk04, Velocity);
+				TESRender::TransformNode(_PRIMARYRENDERER->primaryCameraParentNode, TESRender::kNodeUpdate_Unk04, Velocity);
 			}
 
 			break;
@@ -248,7 +248,7 @@ namespace cse
 				if (Direction == RenderWindowFlyCamera::kMoveDirection_Right)
 					Velocity *= -1;
 
-				TESRender::UpdateNode(_PRIMARYRENDERER->primaryCameraParentNode, TESRender::kNodeUpdate_Unk02, Velocity);
+				TESRender::TransformNode(_PRIMARYRENDERER->primaryCameraParentNode, TESRender::kNodeUpdate_Unk02, Velocity);
 			}
 
 			break;
@@ -258,7 +258,7 @@ namespace cse
 				if (Direction == RenderWindowFlyCamera::kMoveDirection_Down)
 					Velocity *= -1;
 
-				TESRender::UpdateNode(_PRIMARYRENDERER->primaryCameraParentNode, TESRender::kNodeUpdate_Unk00, Velocity);
+				TESRender::TransformNode(_PRIMARYRENDERER->primaryCameraParentNode, TESRender::kNodeUpdate_Unk00, Velocity);
 			}
 
 			break;

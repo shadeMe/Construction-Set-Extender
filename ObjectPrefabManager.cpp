@@ -41,7 +41,7 @@ namespace cse
 
 			Parent = To;
 			Parent->AddPreviewNode(RootNode);
-			Parent->CenterCamera();
+			Parent->ResetCamera();
 		}
 
 		void PrefabObjectPreviewData::Detach()
@@ -50,7 +50,7 @@ namespace cse
 			{
 				SME_ASSERT(RootNode->m_uiRefCount == 1);
 				Parent->TESPreviewControl::RemovePreviewNode(RootNode);
-				Parent->CenterCamera();
+				Parent->ResetCamera();
 				Parent->Present();
 
 				Parent = nullptr;

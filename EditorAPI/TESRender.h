@@ -160,7 +160,7 @@ public:
 	};
 
 	// methods
-	static bool								UpdateNode(NiAVObject* Node, UInt32 UpdateType, float Multiplier, bool UpdateOnSuccess = true);
+	static bool								TransformNode(NiAVObject* Node, UInt32 UpdateType, float Multiplier, bool UpdateOnSuccess = true);
 	static void								RotateNode(NiAVObject* Node, Vector3* Pivot, int XOffset, int YOffset, float SpeedMultiplier);
 	static void								SetCameraFOV(NiCamera* Camera, float FOV, float Width = -1, float Height = -1);		// horizontal FOV
 	static TESObjectREFR*					PickRefAtCoords(int X, int Y);
@@ -178,6 +178,8 @@ public:
 	static void								AddProperty(NiAVObject* To, NiProperty* Property, bool InitializeState = true);
 	static NiProperty*						GetProperty(NiAVObject* In, UInt16 ID);
 	static NiExtraData*						GetExtraData(NiAVObject* In, const char* Name);
+	static void								AddExtraData(NiAVObject* To, NiExtraData* ExtraData);
+	static void								SetExtraDataName(NiExtraData* To, const char* Name);
 	static NiProperty*						CreateProperty(UInt8 Type);		// increments ref count
 	static NiSourceTexture*					CreateSourceTexture(const char* FilePath);
 	static NiCamera*						CreateCamera();
@@ -396,7 +398,7 @@ public:
 	/*20*/ NiCamera*				camera;			// smart ptr
 	/*24*/ NiWindow*				renderer;
 	/*28*/ UInt32					unk28;
-	/*2C*/ UInt32					unk2C;
+	/*2C*/ BSRenderedTexture*		unk2C;
 	/*30*/ UInt32					unk30;
 	/*34*/ UInt32					unk34;
 	/*38*/ UInt32					unk38;
@@ -412,10 +414,10 @@ public:
 	virtual void				Dtor(bool ReleaseMemory) = 0;
 	virtual void				AddPreviewNode(NiNode* Node) = 0;			// adds the node to the scene root and increments its ref count
 	virtual void				RemovePreviewNode(NiNode* Node) = 0;		// removes the node from the scene root and decrements its ref count
-	virtual void				CenterCamera(void) = 0;
+	virtual void				ResetCamera(void) = 0;
 	virtual void				HandleResize(void) = 0;
 	virtual void				Present(float Time = 0.f) = 0;
-	virtual LRESULT				DialogMessageCallback(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPARAM, LONG_PTR OutUnk05) = 0;		// OutUnk05 set to 1 inside the WM_DRAWITEM callback, whenin the method call Render()
+	virtual LRESULT				DialogMessageCallback(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPARAM, LONG_PTR OutUnk05) = 0;		// OutUnk05 set to 1 inside the WM_DRAWITEM callback, when in the method call Render()
 };
 STATIC_ASSERT(sizeof(TESRenderControl) == 0x48);
 

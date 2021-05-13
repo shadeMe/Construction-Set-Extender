@@ -99,25 +99,25 @@ namespace cse
 
 				break;
 			case VK_LEFT:
-				TESRender::UpdateNode(Instance->CameraRoot,
+				TESRender::TransformNode(Instance->CameraRoot,
 									  ShiftDown ? TESRender::kNodeUpdate_Unk08 : TESRender::kNodeUpdate_Unk09,
 									  ShiftDown ? -0.1 : -2048.f);
 				Instance->Redraw();
 				break;
 			case VK_RIGHT:
-				TESRender::UpdateNode(Instance->CameraRoot,
+				TESRender::TransformNode(Instance->CameraRoot,
 									  ShiftDown ? TESRender::kNodeUpdate_Unk08 : TESRender::kNodeUpdate_Unk09,
 									  ShiftDown ? 0.1 : 2048.f);
 				Instance->Redraw();
 				break;
 			case VK_UP:
-				TESRender::UpdateNode(Instance->CameraRoot,
+				TESRender::TransformNode(Instance->CameraRoot,
 									  ShiftDown ? TESRender::kNodeUpdate_Unk07 : TESRender::kNodeUpdate_Unk10,
 									  ShiftDown ? 0.1 : 2048.f);
 				Instance->Redraw();
 				break;
 			case VK_DOWN:
-				TESRender::UpdateNode(Instance->CameraRoot,
+				TESRender::TransformNode(Instance->CameraRoot,
 									  ShiftDown ? TESRender::kNodeUpdate_Unk07 : TESRender::kNodeUpdate_Unk10,
 									  ShiftDown ? -0.1 : -2048.f);
 				Instance->Redraw();
@@ -190,14 +190,14 @@ namespace cse
 					else if (Instance->Zooming)
 					{
 						float ZoomMul = kINI_ZoomSpeed().f * MouseDelta.y * 10.f;
-						TESRender::UpdateNode(Instance->CameraRoot, TESRender::kNodeUpdate_Unk04, ZoomMul);
+						TESRender::TransformNode(Instance->CameraRoot, TESRender::kNodeUpdate_Unk04, ZoomMul);
 					}
 					else
 					{
 						float PanMul = kINI_PanSpeed().f;
 
-						TESRender::UpdateNode(Instance->CameraRoot, TESRender::kNodeUpdate_Unk02, PanMul * -MouseDelta.x);
-						TESRender::UpdateNode(Instance->CameraRoot, TESRender::kNodeUpdate_Unk00, PanMul * -MouseDelta.y);
+						TESRender::TransformNode(Instance->CameraRoot, TESRender::kNodeUpdate_Unk02, PanMul * -MouseDelta.x);
+						TESRender::TransformNode(Instance->CameraRoot, TESRender::kNodeUpdate_Unk00, PanMul * -MouseDelta.y);
 					}
 
 					Instance->Redraw();
@@ -209,7 +209,7 @@ namespace cse
 			{
 				Return = true;
 				float ZoomMul = kINI_ZoomSpeed().f * GET_WHEEL_DELTA_WPARAM(wParam) * 0.5;
-				TESRender::UpdateNode(Instance->CameraRoot, TESRender::kNodeUpdate_Unk04, ZoomMul);
+				TESRender::TransformNode(Instance->CameraRoot, TESRender::kNodeUpdate_Unk04, ZoomMul);
 				Instance->Redraw();
 			}
 
