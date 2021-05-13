@@ -253,11 +253,25 @@ namespace cse
 			return DlgProcResult;
 		}
 
-
+		static void MarkTESFileForLoadingRecursive(TESFile* PluginFile)
+		{
+			if (PluginFile)
+			{
+				if (PluginFile->IsLoaded() == false)
+				{
+					PluginFile->SetLoaded(true);
+					for (int i = 0; i < PluginFile->masterCount; i++)
+						MarkTESFileForLoadingRecursive(PluginFile->masterFiles[i]);
+				}
+			}
+		}
 
 		LRESULT CALLBACK DataDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 											 bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
 		{
+			static constexpr int VisibleGroupId = 0;
+			static constexpr int FilteredGroupId = 1;
+
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
 
@@ -266,24 +280,6 @@ namespace cse
 
 			switch (uMsg)
 			{
-			case WM_DATADLG_RECURSEMASTERS:
-				{
-					Return = true;
-
-					TESFile* PluginFile = (TESFile*)lParam;
-
-					if (PluginFile)
-					{
-						if (PluginFile->IsLoaded() == false)
-						{
-							PluginFile->SetLoaded(true);
-							for (int i = 0; i < PluginFile->masterCount; i++)
-								SendMessage(hWnd, WM_DATADLG_RECURSEMASTERS, NULL, (LPARAM)PluginFile->masterFiles[i]);
-						}
-					}
-				}
-
-				break;
 			case WM_INITDIALOG:
 				{
 					LVCOLUMN ColumnData = { 0 };
@@ -306,10 +302,35 @@ namespace cse
 						ExtraData->Add(xData);
 					}
 
-					// cache the flags of all plugins for later restoration if the active file needs to be saved
+					// Cache the flags of all plugins for later restoration if the active file needs to be saved
 					// necessary if the user unselects the masters of the currently active plugin
 					for (auto Itr = _DATAHANDLER->fileList.Begin(); Itr.Get() && Itr.End() == false; ++Itr)
 						xData->PluginFlagsInitialState.emplace_back(Itr.Get());
+
+					// Subscribe to notifications when the user types in the filter text box
+					SendMessageA(GetDlgItem(hWnd, IDC_CSE_DATA_FILTEREDIT), EM_SETEVENTMASK, 0, ENM_CHANGE);
+
+					// Create two separate list view groups: one for default items and one for hidden (filtered) items. This has to be run
+					// after WM_INITDIALOG because list views can't have groups with no items present.
+					Return = true;
+					DlgProcResult = TRUE;
+
+					Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, false);
+
+					LVGROUP DefaultGroup { 0 };
+					DefaultGroup.cbSize = sizeof(LVGROUP);
+					DefaultGroup.mask = LVGF_GROUPID;
+					DefaultGroup.iGroupId = VisibleGroupId;
+
+					LVGROUP HiddenGroup { 0 };
+					HiddenGroup.cbSize = sizeof(LVGROUP);
+					HiddenGroup.mask = LVGF_GROUPID | LVGF_STATE;
+					HiddenGroup.iGroupId = FilteredGroupId;
+					HiddenGroup.stateMask = LVGS_HIDDEN;
+					HiddenGroup.state = LVGS_HIDDEN;
+
+					ListView_InsertGroup(PluginList, -1, &DefaultGroup);
+					ListView_InsertGroup(PluginList, -1, &HiddenGroup);
 				}
 
 				break;
@@ -473,6 +494,63 @@ namespace cse
 			case WM_COMMAND:
 				switch (LOWORD(wParam))
 				{
+				case IDC_CSE_DATA_FILTEREDIT:
+					if (HIWORD(wParam) == EN_CHANGE)
+					{
+						Return = true;
+						DlgProcResult = TRUE;
+
+						char Filter[1024] = {};
+						GetWindowTextA(reinterpret_cast<HWND>(lParam), Filter, sizeof(Filter));
+
+						if (strlen(Filter) <= 0)
+						{
+							// No filtering
+							SendMessageA(PluginList, LVM_ENABLEGROUPVIEW, FALSE, 0);
+						}
+						else
+						{
+							SendMessageA(PluginList, LVM_ENABLEGROUPVIEW, TRUE, 0);
+
+							// Iterate over each item in the list, compare its file name text, then assign it to the relevant group
+							int itemCount = ListView_GetItemCount(PluginList);
+
+							for (int i = 0; i < itemCount; i++)
+							{
+								char ItemText[MAX_PATH] = {};
+
+								LVITEMA GetItem { 0 };
+								GetItem.mask = LVIF_TEXT;
+								GetItem.iItem = i;
+								GetItem.iSubItem = 0;
+								GetItem.pszText = ItemText;
+								GetItem.cchTextMax = sizeof(ItemText);
+
+								ListView_GetItem(PluginList, &GetItem);
+
+								// Case insensitive strstr
+								bool isVisible = [&]()
+								{
+									for (auto c = GetItem.pszText; *c != '\0'; c++)
+									{
+										if (_strnicmp(c, Filter, strlen(Filter)) == 0)
+											return true;
+									}
+
+									return false;
+								}();
+
+								LVITEMA SetItem { 0 };
+								SetItem.mask = LVIF_GROUPID;
+								SetItem.iItem = i;
+								SetItem.iGroupId = isVisible ? VisibleGroupId : FilteredGroupId;
+
+								ListView_SetItem(PluginList, &SetItem);
+							}
+						}
+					}
+
+					break;
 				case IDC_CSE_DATA_SELECTLOADORDER:
 					{
 						std::string PluginListPath(TESCSMain::ProfileFolderPath);
@@ -598,22 +676,20 @@ namespace cse
 						FormEnumerationManager::Instance.ResetVisibility();
 
 						if (ActiveTESFile)
-							SendMessage(hWnd, WM_DATADLG_RECURSEMASTERS, NULL, (LPARAM)ActiveTESFile);
+							MarkTESFileForLoadingRecursive(ActiveTESFile);
 						else
 						{
-							int Selection = -1;
-							do
+							for (int Selection = ListView_GetNextItem(PluginList, -1, LVNI_SELECTED);
+								Selection != -1;
+								Selection = ListView_GetNextItem(PluginList, Selection, LVNI_SELECTED))
 							{
-								Selection = ListView_GetNextItem(PluginList, Selection, LVNI_SELECTED);
-								if (Selection == -1)
-									break;
 
 								UInt32 PluginIndex = (UInt32)TESListView::GetItemData(PluginList, Selection);
 								TESFile* CurrentFile = _DATAHANDLER->LookupPluginByIndex(PluginIndex);
 
 								if (CurrentFile && CurrentFile->IsLoaded())
-									SendMessage(hWnd, WM_DATADLG_RECURSEMASTERS, NULL, (LPARAM)CurrentFile);
-							} while (true);
+									MarkTESFileForLoadingRecursive(CurrentFile);
+							}
 						}
 					}
 
