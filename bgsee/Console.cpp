@@ -288,7 +288,7 @@ namespace bgsee
 
 #define IDC_BGSEE_CONSOLE_MESSAGELOG_REFRESHTIMER		0xC05
 
-	LRESULT CALLBACK Console::MessageLogSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, WindowExtraDataCollection* ExtraData, WindowSubclasser* )
+	LRESULT CALLBACK Console::MessageLogSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 	{
 		DlgUserData* UserData = (DlgUserData*)GetWindowLongPtr(GetAncestor(hWnd, GA_PARENT), GWL_USERDATA);
 		Console* Instance = dynamic_cast<Console*>(UserData->Instance);
@@ -325,11 +325,11 @@ namespace bgsee
 				break;
 			}
 
-			Return = true;
+			SubclassParams->Out.MarkMessageAsHandled = true;
 			CallbackResult = TRUE;
 			break;
 		case WM_CONTEXTMENU:
-			Return = true;
+			SubclassParams->Out.MarkMessageAsHandled = true;
 			CallbackResult = SendMessage(GetAncestor(hWnd, GA_PARENT), uMsg, wParam, lParam);
 
 			break;
@@ -338,7 +338,7 @@ namespace bgsee
 		return CallbackResult;
 	}
 
-	LRESULT CALLBACK Console::CommandLineSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, WindowExtraDataCollection* ExtraData, WindowSubclasser* )
+	LRESULT CALLBACK Console::CommandLineSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 	{
 		DlgUserData* UserData = (DlgUserData*)GetWindowLongPtr(GetAncestor(hWnd, GA_PARENT), GWL_USERDATA);
 		Console* Instance = dynamic_cast<Console*>(UserData->Instance);
@@ -368,13 +368,13 @@ namespace bgsee
 			}
 
 			CallbackResult = TRUE;
-			Return = true;
+			SubclassParams->Out.MarkMessageAsHandled = true;
 			break;
 		case WM_CHAR:
 			if (wParam == VK_RETURN)
 			{
 				CallbackResult = TRUE;
-				Return = true;
+				SubclassParams->Out.MarkMessageAsHandled = true;
 			}
 
 			break;
@@ -397,7 +397,7 @@ namespace bgsee
 				}
 
 				CallbackResult = TRUE;
-				Return = true;
+				SubclassParams->Out.MarkMessageAsHandled = true;
 				break;
 			case VK_UP:
 				if (Instance->CommandLineHistory.empty() == false)
@@ -409,7 +409,7 @@ namespace bgsee
 					Instance->CommandLineHistoryAuxiliary.push(Command);
 
 					CallbackResult = TRUE;
-					Return = true;
+					SubclassParams->Out.MarkMessageAsHandled = true;
 				}
 
 				break;
@@ -423,7 +423,7 @@ namespace bgsee
 					Instance->CommandLineHistory.push(Command);
 
 					CallbackResult = TRUE;
-					Return = true;
+					SubclassParams->Out.MarkMessageAsHandled = true;
 				}
 
 				break;

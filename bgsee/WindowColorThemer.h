@@ -171,7 +171,7 @@ namespace bgsee
 					ActiveThemeHandles;
 		std::unordered_map<HWND, WindowThemeData>
 					ActiveThemedWindows;
-		util::ThunkStdCall<WindowColorThemer, LRESULT, HWND, UINT, WPARAM, LPARAM, bool&, WindowExtraDataCollection*, WindowSubclasser*>
+		util::ThunkStdCall<WindowColorThemer, LRESULT, HWND, UINT, WPARAM, LPARAM, WindowSubclassProcCollection::SubclassProcExtraParams*>
 					ThunkThemeOverrideSubclass;
 		util::ThunkStdCall<WindowColorThemer, DWORD, int>
 					ThunkHookComctl32GetSysColor;
@@ -185,7 +185,7 @@ namespace bgsee
 					Comctl32IATPatches[kIATPatch__MAX];
 		bool		AllHooksValid;
 
-		LRESULT		ThemeOverrideSubclass(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, WindowExtraDataCollection* ExtraData, WindowSubclasser* Subclasser);
+		LRESULT		ThemeOverrideSubclass(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
 		DWORD		HookComctl32GetSysColor(int nIndex);
 		HBRUSH		HookComctl32GetSysColorBrush(int nIndex);
 		HRESULT		HookComctl32DrawThemeText(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCWSTR pszText, int cchText, DWORD dwTextFlags, DWORD dwTextFlags2, LPCRECT pRect);

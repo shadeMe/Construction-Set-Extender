@@ -171,7 +171,7 @@ namespace bgsee
 		}
 	}
 
-	LRESULT WindowColorThemer::ThemeOverrideSubclass(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, WindowExtraDataCollection* ExtraData, WindowSubclasser* Subclasser)
+	LRESULT WindowColorThemer::ThemeOverrideSubclass(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 	{
 		LRESULT CallbackResult = FALSE;
 
@@ -232,7 +232,7 @@ namespace bgsee
 			if (!IsEnabled())
 				break;
 
-			Return = true;
+			SubclassParams->Out.MarkMessageAsHandled = true;
 			HDC hdc = reinterpret_cast<HDC>(wParam);
 			if (hdc)
 			{
@@ -241,7 +241,7 @@ namespace bgsee
 			}
 
 			CallbackResult = reinterpret_cast<INT_PTR>(Brushes[kColor_DefaultColorBackground]);
-			if (Subclasser->IsWindowADialog(hWnd))
+			if (SubclassParams->In.Subclasser->IsWindowADialog(hWnd))
 				SetWindowLongPtr(hWnd, DWL_MSGRESULT, CallbackResult);
 
 			break;
@@ -260,12 +260,12 @@ namespace bgsee
 			if (ThemeData.Type == ThemeType::ListView)
 			{
 				// Prevent the OS grid separators from drawing
-				Return = true;
+				SubclassParams->Out.MarkMessageAsHandled = true;
 
 				wParam &= ~static_cast<WPARAM>(LVS_EX_GRIDLINES);
 				lParam &= ~static_cast<LPARAM>(LVS_EX_GRIDLINES);
 
-				CallbackResult = Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
+				CallbackResult = SubclassParams->In.Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
 			}
 
 			break;
@@ -300,8 +300,8 @@ namespace bgsee
 			case ThemeType::ListView:
 			{
 				// Paint normally, then apply custom grid lines
-				Return = true;
-				CallbackResult = Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
+				SubclassParams->Out.MarkMessageAsHandled = true;
+				CallbackResult = SubclassParams->In.Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
 
 				RECT headerRect;
 				GetClientRect(ListView_GetHeader(hWnd), &headerRect);

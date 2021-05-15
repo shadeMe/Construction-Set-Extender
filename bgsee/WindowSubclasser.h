@@ -44,8 +44,23 @@ namespace bgsee
 	class WindowSubclassProcCollection
 	{
 	public:
-		typedef LRESULT (CALLBACK* SubclassProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												bool& Return, WindowExtraDataCollection* ExtraData, WindowSubclasser* Subclasser);
+		struct SubclassProcExtraParams
+		{
+			struct Inputs
+			{
+				bool PreviousSubclassHandledMessage = false;		// set to true if a previous subclass call explicitly handled the message and returned a value
+				WindowExtraDataCollection* ExtraData = nullptr;
+				WindowSubclasser* Subclasser = nullptr;
+			} In;
+
+			struct Outputs
+			{
+				bool MarkMessageAsHandled = false;					// must be set to true on return to explicitly mark the message as handled
+																	// the return value of the first subclass proc call to mark this will be final return value for the message
+			} Out;
+		};
+
+		typedef LRESULT (CALLBACK* SubclassProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, SubclassProcExtraParams* SubclassParams);
 
 		typedef std::vector<SubclassProc>
 							SubclassProcArrayT;
@@ -86,7 +101,7 @@ namespace bgsee
 	};
 
 	template <typename Class>
-	using SubclassProcThunk = util::ThunkStdCall<Class, LRESULT, HWND, UINT, WPARAM, LPARAM, bool&, bgsee::WindowExtraDataCollection*, bgsee::WindowSubclasser*>;
+	using SubclassProcThunk = util::ThunkStdCall<Class, LRESULT, HWND, UINT, WPARAM, LPARAM, bgsee::WindowSubclassProcCollection::SubclassProcExtraParams*>;
 
 
 	// Used by the UIManager to communicate extra information

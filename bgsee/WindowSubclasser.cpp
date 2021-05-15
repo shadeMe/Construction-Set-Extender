@@ -217,7 +217,6 @@ namespace bgsee
 	LRESULT WindowSubclasser::SubclassedWindowData::ProcessSubclasses(WindowSubclasser* Subclasser, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return)
 	{
 		LRESULT Result = FALSE;
-		bool ReturnMark = false;
 
 		if (QueuedForDeletion)
 			return Result;
@@ -237,8 +236,13 @@ namespace bgsee
 			else if (QueuedForDeletion)
 				break;
 
-			auto CurrentResult = Itr(hWnd, uMsg, wParam, lParam, ReturnMark, &ExtraData, Subclasser);
-			if (ReturnMark && Return == false)
+			WindowSubclassProcCollection::SubclassProcExtraParams xParams;
+			xParams.In.PreviousSubclassHandledMessage = Return;
+			xParams.In.ExtraData = &ExtraData;
+			xParams.In.Subclasser = Subclasser;
+
+			auto CurrentResult = Itr(hWnd, uMsg, wParam, lParam, &xParams);
+			if (Return == false && xParams.Out.MarkMessageAsHandled)
 			{
 				Result = CurrentResult;
 				Return = true;
@@ -296,7 +300,6 @@ namespace bgsee
 			return true;
 
 		// skip all non-native windows/dialogs and their children, amongst others that we don't want to hook
-
 		HWND NextWindow = hWnd;
 		while (NextWindow != NULL)
 		{
