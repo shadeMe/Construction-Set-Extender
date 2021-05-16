@@ -273,12 +273,12 @@ namespace cse
 		}
 
 		LRESULT RenderWindowFlyCamera::RenderWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-																bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser )
+																bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams )
 		{
 			SME_ASSERT(Active == true);
 
 			LRESULT DlgProcResult = TRUE;
-			Return = true;		// never let a message pass through to the original dlgproc, unless it's absolutely necessary
+			SubclassParams->Out.MarkMessageAsHandled = true;		// never let a message pass through to the original dlgproc, unless it's absolutely necessary
 
 			switch (uMsg)
 			{
@@ -288,7 +288,7 @@ namespace cse
 				break;
 			case WM_TIMER:
 				{
-					Return = false;		// the org dlgproc needs to process the timer message to update the viewport
+					SubclassParams->Out.MarkMessageAsHandled = false;		// the org dlgproc needs to process the timer message to update the viewport
 
 					POINT MouseDelta = {0};
 					bool Sprinting = false;

@@ -3,7 +3,6 @@ To-Do
 
 IMMEDIATE  >>
 
-
 NOTE	---->
 
 
@@ -13,7 +12,6 @@ CSE		---->
 		> Cell use list is broken
 			> Forms instantiated with our custom serializers don't correctly update the cell count leading to negative values
 			> Deleting a ref from the render window doesn't update its baseform's cell use counts (vanilla bug)
-		> Prevent the selection of refs through the cell view dialog when editing landscape/pathgrids
 		> Dirty edits?
 			>> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=25301452
 		> Object window columns like Auto calc, Enchantment type, Count don't sort consistently
@@ -55,6 +53,7 @@ SE		---->
 
 
 	BUGFIX			=
+		> The font selector in the preferences dialog is bugged
 		> Editor doesn't acquire focus after switching scripts/on opening and general focus related wonkiness
 			>> Even with the FocusHelper, the Tab key needs to be pressed to relinquish focus to the text editor. Not sure what else to do
 

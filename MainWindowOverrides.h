@@ -28,13 +28,13 @@ namespace cse
 		};
 
 		LRESULT CALLBACK		MainWindowMenuInitSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-															bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
+															bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
 		LRESULT CALLBACK		MainWindowMenuSelectSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-															bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
+															bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
 		LRESULT CALLBACK		MainWindowMiscSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-														bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
+														bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
 		LRESULT CALLBACK		MainWindowToolbarSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-															bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
+															bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
 
 		void InitializeMainWindowOverrides();
 	}

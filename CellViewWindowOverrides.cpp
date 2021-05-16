@@ -158,10 +158,9 @@ namespace cse
 
 
 		LRESULT CALLBACK CellViewWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+													bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
 
 			HWND WorldspaceLabel = GetDlgItem(hWnd, TESCellViewWindow::kWorldspaceLabel);
 			HWND WorldspaceCombo = GetDlgItem(hWnd, TESCellViewWindow::kWorldspaceComboBox);
@@ -185,6 +184,21 @@ namespace cse
 
 			switch (uMsg)
 			{
+			case TESCellViewWindow::kWindowMessage_ReloadObjects:
+				// update the cell list's selection too to keep it synchronised
+				SubclassParams->Out.MarkMessageAsHandled = true;
+				DlgProcResult = TRUE;
+
+				SubclassParams->In.Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
+
+				if (*TESCellViewWindow::CurrentCellSelection)
+				{
+					int Index = TESListView::GetItemByData(*TESCellViewWindow::CellListHandle, *TESCellViewWindow::CurrentCellSelection);
+					if (Index != -1)
+						ListView_EnsureVisible(*TESCellViewWindow::CellListHandle, Index, FALSE);
+				}
+
+				break;
 			case WM_ACTIVATE:
 				if (LOWORD(wParam) != WA_INACTIVE)
 				{
@@ -199,16 +213,16 @@ namespace cse
 				break;
 			case WM_CLOSE:
 				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kMainMenu_View_CellViewWindow, NULL);
-				Return = true;
+				SubclassParams->Out.MarkMessageAsHandled = true;
 
 				break;
 			case WM_DESTROY:
 				{
-					CellViewExtraData* xData = BGSEE_GETWINDOWXDATA(CellViewExtraData, ExtraData);
+					CellViewExtraData* xData = BGSEE_GETWINDOWXDATA(CellViewExtraData, SubclassParams->In.ExtraData);
 
 					if (xData)
 					{
-						ExtraData->Remove(CellViewExtraData::kTypeID);
+						SubclassParams->In.ExtraData->Remove(CellViewExtraData::kTypeID);
 						delete xData;
 					}
 
@@ -221,11 +235,11 @@ namespace cse
 				break;
 			case WM_INITDIALOG:
 				{
-					CellViewExtraData* xData = BGSEE_GETWINDOWXDATA(CellViewExtraData, ExtraData);
+					CellViewExtraData* xData = BGSEE_GETWINDOWXDATA(CellViewExtraData, SubclassParams->In.ExtraData);
 					if (xData == nullptr)
 					{
 						xData = new CellViewExtraData();
-						ExtraData->Add(xData);
+						SubclassParams->In.ExtraData->Add(xData);
 
 						RECT Bounds = { 0 };
 
@@ -299,7 +313,7 @@ namespace cse
 					}
 
 					DlgProcResult = TRUE;
-					Return = true;
+					SubclassParams->Out.MarkMessageAsHandled = true;
 
 					break;
 				}
@@ -310,6 +324,73 @@ namespace cse
 					NMHDR* NotificationData = (NMHDR*)lParam;
 					switch (NotificationData->code)
 					{
+					case NM_CUSTOMDRAW:
+						if (wParam == TESCellViewWindow::kCellListView)
+						{
+							NMLVCUSTOMDRAW* DrawData = (NMLVCUSTOMDRAW*)lParam;
+
+							switch (DrawData->nmcd.dwDrawStage)
+							{
+							case CDDS_PREPAINT:
+							{
+								SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NOTIFYITEMDRAW);
+								DlgProcResult = TRUE;
+								SubclassParams->Out.MarkMessageAsHandled = true;
+							}
+
+							break;
+							case CDDS_ITEMPREPAINT:
+							{
+								if (wParam == TESCellViewWindow::kCellListView)
+								{
+									auto Cell = reinterpret_cast<TESObjectCELL*>(DrawData->nmcd.lItemlParam);
+									if (Cell)
+									{
+										bool Update = true;
+										if (_TES->currentInteriorCell == Cell || *TESRenderWindow::ActiveCell == Cell)
+										{
+											DrawData->clrText = SME::StringHelpers::GetRGB(settings::dialogs::kCellViewActiveCellForeColor.GetData().s);
+											DrawData->clrTextBk = SME::StringHelpers::GetRGB(settings::dialogs::kCellViewActiveCellBackColor.GetData().s);
+										}
+										else if (_TES->gridCellArray->IsCellInGrid(Cell))
+										{
+											DrawData->clrText = SME::StringHelpers::GetRGB(settings::dialogs::kCellViewLoadedGridCellForeColor.GetData().s);
+											DrawData->clrTextBk = SME::StringHelpers::GetRGB(settings::dialogs::kCellViewLoadedGridCellBackColor.GetData().s);
+										}
+										else
+											Update = false;
+
+
+										if (Update)
+										{
+											SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NEWFONT);
+											DlgProcResult = TRUE;
+											SubclassParams->Out.MarkMessageAsHandled = true;
+										}
+									}
+								}
+							}
+
+							break;
+							}
+						}
+
+						break;
+					case LVN_ITEMCHANGED:
+						if (NotificationData->hwndFrom == CellList)
+						{
+							NMITEMACTIVATE* ActivateData = reinterpret_cast<NMITEMACTIVATE*>(lParam);
+							if (ActivateData->iItem >= 0 && (ActivateData->uNewState & 2))
+							{
+								SubclassParams->Out.MarkMessageAsHandled = true;
+								DlgProcResult = TRUE;
+
+								TESCellViewWindow::OnSelectCellListItem(reinterpret_cast<TESObjectCELL*>(ActivateData->lParam), true);
+							}
+						}
+
+
+						break;
 					case LVN_GETDISPINFO:
 						if (NotificationData->hwndFrom == RefList)
 						{
@@ -318,7 +399,7 @@ namespace cse
 							if ((DisplayData->item.mask & LVIF_TEXT) && DisplayData->item.lParam)
 							{
 								DlgProcResult = TRUE;
-								Return = true;
+								SubclassParams->Out.MarkMessageAsHandled = true;
 
 								TESObjectREFR* Current = (TESObjectREFR*)DisplayData->item.lParam;
 
@@ -381,7 +462,7 @@ namespace cse
 
 									break;
 								default:
-									Return = false;
+									SubclassParams->Out.MarkMessageAsHandled = false;
 								}
 							}
 						}
@@ -404,7 +485,7 @@ namespace cse
 								SendMessage(RefList, LVM_SORTITEMS, *RefListSortColumn, (LPARAM)CellViewExtraData::CustomFormListComparator);
 
 								DlgProcResult = TRUE;
-								Return = true;
+								SubclassParams->Out.MarkMessageAsHandled = true;
 							}
 						}
 
@@ -454,7 +535,7 @@ namespace cse
 
 					EndDeferWindowPos(DeferPosData);
 
-					CellViewExtraData* xData = BGSEE_GETWINDOWXDATA(CellViewExtraData, ExtraData);
+					CellViewExtraData* xData = BGSEE_GETWINDOWXDATA(CellViewExtraData, SubclassParams->In.ExtraData);
 
 					if (xData)
 					{
@@ -522,13 +603,24 @@ namespace cse
 						EndDeferWindowPos(DeferPosData);
 					}
 
-					Return = true;
+					SubclassParams->Out.MarkMessageAsHandled = true;
 				}
 
 				break;
 			case WM_COMMAND:
 				switch (LOWORD(wParam))
 				{
+				case TESCellViewWindow::kWorldspaceComboBox:
+					if (HIWORD(wParam) == CBN_SELCHANGE)
+					{
+						// override the default handler to use a common code path to update the cell list
+						SubclassParams->Out.MarkMessageAsHandled = true;
+						DlgProcResult = TRUE;
+
+						TESCellViewWindow::RefreshCellList();
+					}
+
+					break;
 				case IDC_CSE_CELLVIEW_GOBTN:
 					{
 						char XCoord[4] = { 0 }, YCoord[4] = { 0 };
@@ -544,7 +636,7 @@ namespace cse
 								break;
 							}
 
-							Vector3 Coords((atoi(XCoord) << 12) + 2048.0, (atoi(YCoord) << 12) + 2048.0, 0);
+							Vector3 Coords((X << 12) + 2048.0, (Y << 12) + 2048.0, 0);
 							_TES->LoadCellIntoViewPort(&Coords, nullptr);
 						}
 					}
@@ -559,7 +651,7 @@ namespace cse
 				}
 			}
 
-			if (Return == false)
+			if (SubclassParams->Out.MarkMessageAsHandled == false)
 			{
 				if (FilterableFormListManager::Instance.HandleMessages(RefFilterEditBox, uMsg, wParam, lParam))
 					TESCellViewWindow::RefreshObjectList();
@@ -574,9 +666,9 @@ namespace cse
 		void InitializeCellViewWindowOverrides()
 		{
 			BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_CellView,
-				uiManager::CellViewWindowSubclassProc);
+				uiManager::CellViewWindowSubclassProc, 99);
 			BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_CellView,
-				uiManager::CommonDialogExtraFittingsSubClassProc);
+				uiManager::CommonDialogExtraFittingsSubClassProc, 1);
 
 			if (settings::dialogs::kShowMainWindowsInTaskbar.GetData().i)
 			{

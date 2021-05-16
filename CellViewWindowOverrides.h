@@ -39,7 +39,7 @@ namespace cse
 		};
 
 		LRESULT CALLBACK CellViewWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
+													bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
 
 		void InitializeCellViewWindowOverrides();
 	}

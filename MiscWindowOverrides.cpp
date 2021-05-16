@@ -51,10 +51,10 @@ namespace cse
 #define IDC_FINDTEXT_OPENSCRIPTS				9014
 
 		LRESULT CALLBACK FindTextDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												 bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+												 bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
+			SubclassParams->Out.MarkMessageAsHandled = false;
 
 			static bool kDraggingForms = false;
 
@@ -267,13 +267,13 @@ namespace cse
 		}
 
 		LRESULT CALLBACK DataDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-											 bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+											 bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			static constexpr int VisibleGroupId = 0;
 			static constexpr int FilteredGroupId = 1;
 
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
+			SubclassParams->Out.MarkMessageAsHandled = false;
 
 			TESFile* ActiveTESFile = *DataDialog::ActivePlugin;
 			HWND PluginList = GetDlgItem(hWnd, DataDialog::kCtrlId_PluginFileList);
@@ -295,11 +295,11 @@ namespace cse
 					if (LoadStartupPlugin)
 						CheckDlgButton(hWnd, IDC_CSE_DATA_LOADSTARTUPPLUGIN, BST_CHECKED);
 
-					LoadPluginsWindowData* xData = BGSEE_GETWINDOWXDATA(LoadPluginsWindowData, ExtraData);
+					LoadPluginsWindowData* xData = BGSEE_GETWINDOWXDATA(LoadPluginsWindowData, SubclassParams->In.ExtraData);
 					if (xData == nullptr)
 					{
 						xData = new LoadPluginsWindowData();
-						ExtraData->Add(xData);
+						SubclassParams->In.ExtraData->Add(xData);
 					}
 
 					// Cache the flags of all plugins for later restoration if the active file needs to be saved
@@ -312,10 +312,10 @@ namespace cse
 
 					// Create two separate list view groups: one for default items and one for hidden (filtered) items. This has to be run
 					// after WM_INITDIALOG because list views can't have groups with no items present.
-					Return = true;
+					SubclassParams->Out.MarkMessageAsHandled = true;
 					DlgProcResult = TRUE;
 
-					Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, false);
+					SubclassParams->In.Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, false);
 
 					LVGROUP DefaultGroup { 0 };
 					DefaultGroup.cbSize = sizeof(LVGROUP);
@@ -345,10 +345,10 @@ namespace cse
 						ActiveFile->SetMaster(false);
 
 
-					LoadPluginsWindowData* xData = BGSEE_GETWINDOWXDATA(LoadPluginsWindowData, ExtraData);
+					LoadPluginsWindowData* xData = BGSEE_GETWINDOWXDATA(LoadPluginsWindowData, SubclassParams->In.ExtraData);
 					if (xData)
 					{
-						ExtraData->Remove(LoadPluginsWindowData::kTypeID);
+						SubclassParams->In.ExtraData->Remove(LoadPluginsWindowData::kTypeID);
 						delete xData;
 					}
 				}
@@ -371,7 +371,7 @@ namespace cse
 								{
 									SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NOTIFYITEMDRAW);
 									DlgProcResult = TRUE;
-									Return = true;
+									SubclassParams->Out.MarkMessageAsHandled = true;
 								}
 
 								break;
@@ -427,7 +427,7 @@ namespace cse
 									{
 										SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NEWFONT);
 										DlgProcResult = TRUE;
-										Return = true;
+										SubclassParams->Out.MarkMessageAsHandled = true;
 									}
 								}
 
@@ -452,7 +452,7 @@ namespace cse
 															 MB_YESNO,
 															 "You are about to remove a master file from the selected plugin.\n\nAre you sure you'd like to proceed?") == IDNO)
 										{
-											Return = true;
+											SubclassParams->Out.MarkMessageAsHandled = true;
 										}
 									}
 								}
@@ -472,7 +472,7 @@ namespace cse
 						{
 							if (wParam == DataDialog::kCtrlId_ParentMasterFileList)
 							{
-								Return = true;
+								SubclassParams->Out.MarkMessageAsHandled = true;
 
 								auto Info = (NMLVDISPINFO*)lParam;
 								auto Plugin = (TESFile*)Info->item.lParam;
@@ -509,7 +509,7 @@ namespace cse
 				case IDC_CSE_DATA_FILTEREDIT:
 					if (HIWORD(wParam) == EN_CHANGE)
 					{
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 						DlgProcResult = TRUE;
 
 						char Filter[1024] = {};
@@ -643,11 +643,11 @@ namespace cse
 						LoadPluginsWindowData CurrentState;
 						CurrentState.BuildPluginFlagCache();
 
-						LoadPluginsWindowData* xData = BGSEE_GETWINDOWXDATA(LoadPluginsWindowData, ExtraData);
+						LoadPluginsWindowData* xData = BGSEE_GETWINDOWXDATA(LoadPluginsWindowData, SubclassParams->In.ExtraData);
 						xData->UpdatePluginFlagsFromCache();
 
 						if (TESCSMain::ConfirmUnsavedChanges() == false)
-							Return = true;
+							SubclassParams->Out.MarkMessageAsHandled = true;
 						else
 						{
 							// reset the unsaved changes flag to prevent the prompt from showing up a second time
@@ -657,19 +657,19 @@ namespace cse
 
 						CurrentState.UpdatePluginFlagsFromCache();
 
-						if (Return)
+						if (SubclassParams->Out.MarkMessageAsHandled)
 							break;
 					}
 
 					if (cliWrapper::interfaces::SE->GetOpenEditorCount())
 					{
 						if (BGSEEUI->MsgBoxW(hWnd, MB_YESNO, "There are open script windows. Are you sure you'd like to proceed?") == IDNO)
-							Return = true;
+							SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 					else if (cliWrapper::interfaces::SE->IsDiskSyncInProgress())
 					{
 						BGSEEUI->MsgBoxE(hWnd, 0, "Script syncing is currently in progress. The syncing process must be stopped before (re)loading plugins.");
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 					else if (ActiveTESFile != nullptr && !_stricmp(ActiveTESFile->fileName, "oblivion.esm"))
 					{
@@ -677,20 +677,20 @@ namespace cse
 											 MB_YESNO,
 											 "You have set Oblvion.esm as an active file. Are you absolutely sure this is the end of the world?") == IDNO)
 						{
-							Return = true;
+							SubclassParams->Out.MarkMessageAsHandled = true;
 						}
 						else if (BGSEEUI->MsgBoxW(hWnd,
 												  MB_YESNO,
 												  "What you're about to do is tantamount to using the Osterhagen Key.\n\nThis is the Point Of No Return. Proceed?") == IDNO)
 						{
-							Return = true;
+							SubclassParams->Out.MarkMessageAsHandled = true;
 							BGSEEACHIEVEMENTS->Unlock(achievements::kChicken);
 						}
 						else
 							BGSEEACHIEVEMENTS->Unlock(achievements::kFearless);
 					}
 
-					if (Return == false)
+					if (SubclassParams->Out.MarkMessageAsHandled == false)
 					{
 						FormEnumerationManager::Instance.ResetVisibility();
 
@@ -716,7 +716,7 @@ namespace cse
 				case TESDialog::kStandardButton_Cancel:
 					{
 						// revert any changes to the loaded flags of plugins that were made in the dialog
-						LoadPluginsWindowData* xData = BGSEE_GETWINDOWXDATA(LoadPluginsWindowData, ExtraData);
+						LoadPluginsWindowData* xData = BGSEE_GETWINDOWXDATA(LoadPluginsWindowData, SubclassParams->In.ExtraData);
 						xData->UpdatePluginFlagsFromCache();
 					}
 
@@ -731,10 +731,10 @@ namespace cse
 
 
 		LRESULT CALLBACK ResponseDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												 bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+												 bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
+			SubclassParams->Out.MarkMessageAsHandled = false;
 
 			HWND VoiceList = GetDlgItem(hWnd, ResponseEditorData::kVoiceFileListView);
 
@@ -802,7 +802,7 @@ namespace cse
 
 								if (NPCEditDlg)
 								{
-									Return = true;
+									SubclassParams->Out.MarkMessageAsHandled = true;
 
 									FaceGenVoicePreviewData PreviewData = { 0 };
 									FORMAT_STR(PreviewData.VoicePath, "%s", VoicePath);
@@ -845,7 +845,7 @@ namespace cse
 							if (ListView_GetItem(VoiceList, &SelectedVoiceItem) != TRUE)
 							{
 								BGSEEUI->MsgBoxI(hWnd, NULL, "Please select a voice file first from the list above.");
-								Return = true;
+								SubclassParams->Out.MarkMessageAsHandled = true;
 								break;
 							}
 
@@ -886,7 +886,7 @@ namespace cse
 									BGSEECONSOLE_MESSAGE("Copied external audio file '%s' to '%s'", FilePath, Destination.c_str());
 							}
 
-							Return = true;
+							SubclassParams->Out.MarkMessageAsHandled = true;
 						}
 
 						break;
@@ -894,7 +894,7 @@ namespace cse
 						if (ListView_GetItem(VoiceList, &SelectedVoiceItem) != TRUE)
 						{
 							BGSEEUI->MsgBoxI(hWnd, NULL, "Please select a voice file first from the list above.");
-							Return = true;
+							SubclassParams->Out.MarkMessageAsHandled = true;
 							break;
 						}
 
@@ -914,7 +914,7 @@ namespace cse
 
 						DestroyWindow(IdleWindow);
 
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
@@ -927,10 +927,10 @@ namespace cse
 		}
 
 		LRESULT CALLBACK LandscapeTextureUseDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-															bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+															bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
+			SubclassParams->Out.MarkMessageAsHandled = false;
 
 			switch (uMsg)
 			{
@@ -964,16 +964,16 @@ namespace cse
 		}
 
 		LRESULT CALLBACK FilteredDialogQuestDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-															bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+															bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
+			SubclassParams->Out.MarkMessageAsHandled = false;
 
 			switch (uMsg)
 			{
 			case WM_INITDIALOG:
 				{
-					if (Subclasser->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_Quest)
+					if (SubclassParams->In.Subclasser->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_Quest)
 					{
 						LVCOLUMN ColumnData = { 0 };
 						ColumnData.mask = LVCF_WIDTH;
@@ -1004,7 +1004,7 @@ namespace cse
 						}
 					}
 
-					Return = true;
+					SubclassParams->Out.MarkMessageAsHandled = true;
 					break;
 				}
 
@@ -1015,10 +1015,10 @@ namespace cse
 		}
 
 		LRESULT CALLBACK AboutDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-											  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+											  bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
+			SubclassParams->Out.MarkMessageAsHandled = false;
 
 			switch (uMsg)
 			{
@@ -1085,10 +1085,10 @@ namespace cse
 		}
 
 		LRESULT CALLBACK RaceDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-											 bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+											 bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
+			SubclassParams->Out.MarkMessageAsHandled = false;
 
 			switch (uMsg)
 			{
@@ -1166,10 +1166,10 @@ namespace cse
 
 
 		LRESULT CALLBACK LandscapeEditDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+													  bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
+			SubclassParams->Out.MarkMessageAsHandled = false;
 
 			switch (uMsg)
 			{
@@ -1186,7 +1186,7 @@ namespace cse
 				break;
 			case TESDialog::kWindowMessage_Refresh:		// update active landscape texture
 				{
-					Return = true;
+					SubclassParams->Out.MarkMessageAsHandled = true;
 
 					HWND TexList = GetDlgItem(hWnd, kFormList_LandTextures);
 					int Selection = TESListView::GetItemByData(TexList, *TESRenderWindow::ActiveLandscapeTexture);
@@ -1204,10 +1204,10 @@ namespace cse
 		}
 
 		LRESULT CALLBACK AIPackagesDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												   bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+												   bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
+			SubclassParams->Out.MarkMessageAsHandled = false;
 
 			HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
 			HWND FormList = GetDlgItem(hWnd, kFormList_TESPackage);
@@ -1260,7 +1260,7 @@ namespace cse
 				{
 					if (HIWORD(wParam) == EN_KILLFOCUS || HIWORD(wParam) == EN_SETFOCUS)
 					{
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 						DlgProcResult = TRUE;
 					}
 				}
@@ -1275,10 +1275,10 @@ namespace cse
 		}
 
 		LRESULT CALLBACK AIFormDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-											   bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+											   bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
+			SubclassParams->Out.MarkMessageAsHandled = false;
 
 			switch (uMsg)
 			{
@@ -1305,10 +1305,10 @@ namespace cse
 #define IDT_FACEGENPREVIEW_PREVIEWUPDATE			0x7FF
 
 		LRESULT CALLBACK FaceGenParamListSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+													  bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
+			SubclassParams->Out.MarkMessageAsHandled = false;
 
 			switch (uMsg)
 			{
@@ -1317,7 +1317,7 @@ namespace cse
 					if (GetAsyncKeyState(VK_RBUTTON))
 					{
 						// RMB is held down, forward the message to the trackbar and then consume it
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 
 						HWND Parent = nullptr;
 						if ((Parent = GetParent(hWnd)))
@@ -1336,10 +1336,10 @@ namespace cse
 		}
 
 		LRESULT CALLBACK FaceGenDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+												bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
+			SubclassParams->Out.MarkMessageAsHandled = false;
 
 			switch (uMsg)
 			{
@@ -1349,9 +1349,9 @@ namespace cse
 					{
 					case IDT_FACEGENPREVIEW_VOICEPLAYBACK:
 						{
-							Return = true;
+							SubclassParams->Out.MarkMessageAsHandled = true;
 
-							FaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(FaceGenWindowData, ExtraData);
+							FaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(FaceGenWindowData, SubclassParams->In.ExtraData);
 							SME_ASSERT(xData);
 
 							TESSound::PlaySoundFile(xData->VoicePlaybackFilePath.c_str());
@@ -1361,9 +1361,9 @@ namespace cse
 						break;
 					case IDT_FACEGENPREVIEW_PREVIEWUPDATE:
 						{
-							Return = true;
+							SubclassParams->Out.MarkMessageAsHandled = true;
 
-							FaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(FaceGenWindowData, ExtraData);
+							FaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(FaceGenWindowData, SubclassParams->In.ExtraData);
 							SME_ASSERT(xData);
 
 							// re-enable updates now that most, if not all, of the init is done
@@ -1419,7 +1419,7 @@ namespace cse
 																											// delay voice file playback to account for synchronization
 						if (!RelativeVoicePath.empty())
 						{
-							FaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(FaceGenWindowData, ExtraData);
+							FaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(FaceGenWindowData, SubclassParams->In.ExtraData);
 							SME_ASSERT(xData);
 
 							if (Data->DelayTime < 8 || Data->DelayTime > 5000)
@@ -1434,11 +1434,11 @@ namespace cse
 				break;
 			case WM_DESTROY:
 				{
-					FaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(FaceGenWindowData, ExtraData);
+					FaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(FaceGenWindowData, SubclassParams->In.ExtraData);
 
 					if (xData)
 					{
-						ExtraData->Remove(FaceGenWindowData::kTypeID);
+						SubclassParams->In.ExtraData->Remove(FaceGenWindowData::kTypeID);
 						delete xData;
 					}
 
@@ -1449,11 +1449,11 @@ namespace cse
 				break;
 			case WM_INITDIALOG:
 				{
-					FaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(FaceGenWindowData, ExtraData);
+					FaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(FaceGenWindowData, SubclassParams->In.ExtraData);
 					if (xData == nullptr)
 					{
 						xData = new FaceGenWindowData();
-						ExtraData->Add(xData);
+						SubclassParams->In.ExtraData->Add(xData);
 					}
 
 					DragAcceptFiles(hWnd, TRUE);
@@ -1518,13 +1518,13 @@ namespace cse
 					{
 						if (NotificationData->code == TCN_SELCHANGE)
 						{
-							FaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(FaceGenWindowData, ExtraData);
+							FaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(FaceGenWindowData, SubclassParams->In.ExtraData);
 
 							// consume the original notification and disable preview control updates
 							// otherwise, the morph values will get reset upon subwindow init
 							if (xData && xData->TunnelingTabSelectMessage == false)
 							{
-								Return = true;
+								SubclassParams->Out.MarkMessageAsHandled = true;
 
 								xData->TunnelingTabSelectMessage = true;
 								xData->AllowPreviewUpdates = false;
@@ -1547,7 +1547,7 @@ namespace cse
 									if (!_stricmp("SysListView32", Buffer))
 									{
 										// right, subclass it to forward mouse wheel messages to the trackbar
-										Subclasser->RegisterSubclassForWindow(AdvancedParamsList, FaceGenParamListSubClassProc);
+										SubclassParams->In.Subclasser->RegisterSubclassForWindow(AdvancedParamsList, FaceGenParamListSubClassProc);
 									}
 								}
 							}
@@ -1570,7 +1570,7 @@ namespace cse
 						// the issue is only noticeable in the race edit dialog as it's a FormIDListView dlg
 						// we HACK around this by preventing updates for a short time after the current tab's been switched
 						// during this time, updates to the edit controls' text will be ignored by this handler
-						FaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(FaceGenWindowData, ExtraData);
+						FaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(FaceGenWindowData, SubclassParams->In.ExtraData);
 						if (xData == nullptr || xData->AllowPreviewUpdates == false)
 							break;
 
@@ -1595,10 +1595,10 @@ namespace cse
 
 
 		LRESULT CALLBACK MagicItemFormDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+													  bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
+			SubclassParams->Out.MarkMessageAsHandled = false;
 
 			switch (uMsg)
 			{
@@ -1613,13 +1613,13 @@ namespace cse
 					switch (NotificationData->code)
 					{
 					case LVN_COLUMNCLICK:
-						Return = true;				// no sorting!
+						SubclassParams->Out.MarkMessageAsHandled = true;				// no sorting!
 
 						break;
 					case LVN_KEYDOWN:
 						if (GetAsyncKeyState(VK_CONTROL))
 						{
-							Return = true;
+							SubclassParams->Out.MarkMessageAsHandled = true;
 
 							NMLVKEYDOWN* KeyData = (NMLVKEYDOWN*)lParam;
 							TESForm* LocalCopy = TESDialog::GetDialogExtraLocalCopy(hWnd);
@@ -1693,10 +1693,10 @@ namespace cse
 		}
 
 		LRESULT CALLBACK LeveledItemFormDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-														bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+														bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
+			SubclassParams->Out.MarkMessageAsHandled = false;
 
 			switch (uMsg)
 			{
@@ -1715,7 +1715,7 @@ namespace cse
 						if ((CS_CAST(TempCopy, TESForm, TESLeveledList))->CheckForCircularPaths(ValidationOutput) == false)
 						{
 							BGSEEUI->MsgBoxE(hWnd, 0, "The leveled list contents are invalid!\n\nA circular link was found at:\n%s", ValidationOutput.c_str());
-							Return = true;
+							SubclassParams->Out.MarkMessageAsHandled = true;
 						}
 
 						TempCopy->DeleteInstance();
@@ -1731,10 +1731,10 @@ namespace cse
 		}
 
 		LRESULT CALLBACK TESObjectCELLDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+													  bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
+			SubclassParams->Out.MarkMessageAsHandled = false;
 
 			HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
 			HWND FormList = GetDlgItem(hWnd, kFormList_TESFormIDListView);
@@ -1744,7 +1744,7 @@ namespace cse
 			case WM_COMMAND:
 				if (LOWORD(wParam) == TESCellViewWindow::kWorldspaceComboBox && HIWORD(wParam) == 1)
 				{
-					Return = true;
+					SubclassParams->Out.MarkMessageAsHandled = true;
 
 					if ((HWND)lParam == GetDlgItem(hWnd, TESCellViewWindow::kWorldspaceComboBox))
 					{
@@ -1752,14 +1752,14 @@ namespace cse
 						// this is done to prevent the dialog's controls from being disabled if the active filter string doesn't match any forms in the new worldspace
 						FilterableFormListManager::Instance.SetEnabled(FilterEditBox, false);
 						SetWindowText(FilterEditBox, "");
-						Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
+						SubclassParams->In.Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
 						FilterableFormListManager::Instance.SetEnabled(FilterEditBox, true);
 					}
 					else if (lParam == NULL)
 					{
 						// filter refresh
 						// prevent filter controls from being disabled
-						Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
+						SubclassParams->In.Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
 						EnableWindow(FilterEditBox, TRUE);
 						EnableWindow(GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL), TRUE);
 					}
@@ -1814,10 +1814,10 @@ namespace cse
 		}
 
 		LRESULT CALLBACK SelectTopicsQuestsSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-														bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+														bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
+			SubclassParams->Out.MarkMessageAsHandled = false;
 
 			HWND FormList = GetDlgItem(hWnd, kFormList_Generic);
 			HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
@@ -1860,7 +1860,7 @@ namespace cse
 							SetWindowLongPtr(FormList, GWL_USERDATA, (LONG)SortOrder);
 
 							DlgProcResult = TRUE;
-							Return = true;
+							SubclassParams->Out.MarkMessageAsHandled = true;
 						}
 
 						break;
@@ -1870,9 +1870,9 @@ namespace cse
 				break;
 			}
 
-			if (Return == false && FilterableFormListManager::Instance.HandleMessages(FilterEditBox, uMsg, wParam, lParam))
+			if (SubclassParams->Out.MarkMessageAsHandled == false && FilterableFormListManager::Instance.HandleMessages(FilterEditBox, uMsg, wParam, lParam))
 			{
-				if (Subclasser->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_SelectTopic)
+				if (SubclassParams->In.Subclasser->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_SelectTopic)
 					(*SelectTopicWindowData::Singleton)->RefreshListView(hWnd);
 				else
 					(*SelectQuestWindowData::Singleton)->RefreshListView(hWnd);
@@ -1961,22 +1961,22 @@ namespace cse
 
 
 		LRESULT CALLBACK CommonDialogExtraFittingsSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-															bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser )
+															bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams )
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
-			DialogExtraFittingsData* xData = BGSEE_GETWINDOWXDATA(DialogExtraFittingsData, ExtraData);
+			SubclassParams->Out.MarkMessageAsHandled = false;
+			DialogExtraFittingsData* xData = BGSEE_GETWINDOWXDATA(DialogExtraFittingsData, SubclassParams->In.ExtraData);
 
 			switch (uMsg)
 			{
 			case WM_INITDIALOG:
 			case WM_OBJECTWINDOWIMPOSTER_INITIALIZEXTRA:
 				{
-					xData = BGSEE_GETWINDOWXDATA(DialogExtraFittingsData, ExtraData);
+					xData = BGSEE_GETWINDOWXDATA(DialogExtraFittingsData, SubclassParams->In.ExtraData);
 					if (xData == nullptr)
 					{
 						xData = new DialogExtraFittingsData();
-						ExtraData->Add(xData);
+						SubclassParams->In.ExtraData->Add(xData);
 					}
 
 					SetTimer(hWnd, ID_COMMONDLGEXTRAFITTINGS_QUICKVIEWTIMERID, 100, nullptr);
@@ -1989,10 +1989,10 @@ namespace cse
 				break;
 			case WM_DESTROY:
 				{
-					xData = BGSEE_GETWINDOWXDATA(DialogExtraFittingsData, ExtraData);
+					xData = BGSEE_GETWINDOWXDATA(DialogExtraFittingsData, SubclassParams->In.ExtraData);
 					if (xData)
 					{
-						ExtraData->Remove(DialogExtraFittingsData::kTypeID);
+						SubclassParams->In.ExtraData->Remove(DialogExtraFittingsData::kTypeID);
 						delete xData;
 
 						xData = nullptr;
@@ -2136,7 +2136,7 @@ namespace cse
 								}
 
 								DlgProcResult = TRUE;
-								Return = true;
+								SubclassParams->Out.MarkMessageAsHandled = true;
 							}
 						}
 					}
@@ -2151,6 +2151,9 @@ namespace cse
 					switch (NotificationData->code)
 					{
 					case NM_CUSTOMDRAW:
+						if (SubclassParams->In.PreviousSubclassHandledMessage)
+							break;
+
 												// valid listviews
 						if (wParam == kFormList_ObjectWindowObjects ||
 							wParam == kFormList_TESPackage ||
@@ -2184,7 +2187,7 @@ namespace cse
 								{
 									SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NOTIFYITEMDRAW);
 									DlgProcResult = CDRF_NOTIFYITEMDRAW;
-									Return = true;
+									SubclassParams->Out.MarkMessageAsHandled = true;
 								}
 
 								break;
@@ -2228,7 +2231,7 @@ namespace cse
 										break;
 									case kFormList_ClimateWeatherRaceHairFindTextTopics:
 										{
-											auto TemplateID = Subclasser->GetDialogTemplate(hWnd);
+											auto TemplateID = SubclassParams->In.Subclasser->GetDialogTemplate(hWnd);
 
 											switch (TemplateID)
 											{
@@ -2346,7 +2349,7 @@ namespace cse
 
 											SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NEWFONT);
 											DlgProcResult = TRUE;
-											Return = true;
+											SubclassParams->Out.MarkMessageAsHandled = true;
 										}
 									}
 								}
@@ -2420,13 +2423,13 @@ namespace cse
 #define ID_TESFORMIDLISTVIEW_DRAGTIMER							(WM_USER + 2008)
 
 		LRESULT CALLBACK TESFormIDListViewDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-														bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser )
+														bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams )
 		{
 			LRESULT DlgProcResult = FALSE;
 
 			HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
 
-			Return = false;
+			SubclassParams->Out.MarkMessageAsHandled = false;
 
 			switch (uMsg)
 			{
@@ -2434,7 +2437,7 @@ namespace cse
 				{
 					// doesn't reliably work on TESGlobal forms
 					// given their bollocks'd-up way of copying data from the dialog
-					Return = true;
+					SubclassParams->Out.MarkMessageAsHandled = true;
 
 					if (IsWindowEnabled(GetDlgItem(hWnd, TESDialog::kStandardButton_Ok)))
 					{
@@ -2486,13 +2489,13 @@ namespace cse
 						}
 					}
 
-					Return = true;
+					SubclassParams->Out.MarkMessageAsHandled = true;
 				}
 
 				break;
 			case WM_INITDIALOG:
 				{
-					if (Subclasser->GetDialogTemplate(hWnd) != TESDialog::kDialogTemplate_Quest)
+					if (SubclassParams->In.Subclasser->GetDialogTemplate(hWnd) != TESDialog::kDialogTemplate_Quest)
 					{
 						SetWindowText(GetDlgItem(hWnd, TESDialog::kStandardButton_Ok), "Apply");
 						SetWindowText(GetDlgItem(hWnd, TESDialog::kStandardButton_Cancel), "Close");
@@ -2507,11 +2510,11 @@ namespace cse
 					FilterableFormListManager::Instance.Register(FilterEditBox, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL),
 																	GetDlgItem(hWnd, kFormList_TESFormIDListView), hWnd);
 
-					TESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(TESFormIDListViewData, ExtraData);
+					TESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(TESFormIDListViewData, SubclassParams->In.ExtraData);
 					if (xData == nullptr)
 					{
 						xData = new TESFormIDListViewData();
-						ExtraData->Add(xData);
+						SubclassParams->In.ExtraData->Add(xData);
 					}
 				}
 
@@ -2519,10 +2522,10 @@ namespace cse
 			case WM_DESTROY:
 				{
 					FilterableFormListManager::Instance.Unregister(FilterEditBox);
-					TESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(TESFormIDListViewData, ExtraData);
+					TESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(TESFormIDListViewData, SubclassParams->In.ExtraData);
 					if (xData)
 					{
-						ExtraData->Remove(TESFormIDListViewData::kTypeID);
+						SubclassParams->In.ExtraData->Remove(TESFormIDListViewData::kTypeID);
 						delete xData;
 					}
 				}
@@ -2535,7 +2538,7 @@ namespace cse
 					{
 						// reenable dragging after a single tick
 						KillTimer(hWnd, ID_TESFORMIDLISTVIEW_DRAGTIMER);
-						TESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(TESFormIDListViewData, ExtraData);
+						TESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(TESFormIDListViewData, SubclassParams->In.ExtraData);
 						SME_ASSERT(xData);
 						xData->DisableDragHandling = false;
 					}
@@ -2548,14 +2551,14 @@ namespace cse
 				if (HIWORD(wParam))		// to keep EN_KILLFOCUS notifications from inadvertently calling the button handlers
 					break;				// ### could cause weird behaviour later on
 
-				if (Subclasser->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_Quest)
+				if (SubclassParams->In.Subclasser->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_Quest)
 					break;
 
 				switch (LOWORD(wParam))
 				{
 				case TESDialog::kStandardButton_Ok:			// OK/Apply button
 					{
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 
 						SendMessage(hWnd, WM_TESFORMIDLISTVIEW_SAVECHANGES, NULL, NULL);
 					}
@@ -2563,7 +2566,7 @@ namespace cse
 					break;
 				case TESDialog::kStandardButton_Cancel:			// Cancel/Close button
 					{
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 						bool Cancelled = false;
 
 						if (SendMessage(hWnd, WM_TESFORMIDLISTVIEW_HASCHANGES, NULL, NULL) == TRUE)
@@ -2600,7 +2603,7 @@ namespace cse
 					if (NotificationData->idFrom != kFormList_TESFormIDListView)
 						break;		// only interested in the main listview control
 
-					if (Subclasser->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_Quest)
+					if (SubclassParams->In.Subclasser->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_Quest)
 						break;
 
 					switch (NotificationData->code)
@@ -2613,7 +2616,7 @@ namespace cse
 
 							if (xParam->formType == TESForm::kFormType_GMST)
 							{
-								Return = true;
+								SubclassParams->Out.MarkMessageAsHandled = true;
 
 								DlgProcResult = TRUE;
 								SetWindowLongPtr(hWnd, DWL_MSGRESULT, DlgProcResult);
@@ -2623,7 +2626,7 @@ namespace cse
 						break;
 					case LVN_BEGINDRAG:
 						{
-							TESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(TESFormIDListViewData, ExtraData);
+							TESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(TESFormIDListViewData, SubclassParams->In.ExtraData);
 							SME_ASSERT(xData);
 							if (xData->DisableDragHandling == false)
 							{
@@ -2653,11 +2656,11 @@ namespace cse
 									SetCursor(LoadCursor(*TESCSMain::Instance, (LPCSTR)0xB8));
 									SetCapture(hWnd);
 
-									Return = true;
+									SubclassParams->Out.MarkMessageAsHandled = true;
 								}
 							}
 							else
-								Return = true;
+								SubclassParams->Out.MarkMessageAsHandled = true;
 						}
 
 						break;
@@ -2685,12 +2688,12 @@ namespace cse
 								}
 
 								// we need to disable the listview begin drag handler for a bit to prevent it from getting triggered after the selection
-								TESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(TESFormIDListViewData, ExtraData);
+								TESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(TESFormIDListViewData, SubclassParams->In.ExtraData);
 								SME_ASSERT(xData);
 								xData->DisableDragHandling = true;
 								SetTimer(hWnd, ID_TESFORMIDLISTVIEW_DRAGTIMER, 1000, nullptr);
 
-								Return = true;
+								SubclassParams->Out.MarkMessageAsHandled = true;
 								SetWindowLongPtr(hWnd, DWL_MSGRESULT, DlgProcResult);
 							}
 							else if ((ChangeData->uChanged & LVIF_STATE) &&
@@ -2727,7 +2730,7 @@ namespace cse
 
 									SetFocus(ListView);
 
-									Return = true;
+									SubclassParams->Out.MarkMessageAsHandled = true;
 									SetWindowLongPtr(hWnd, DWL_MSGRESULT, DlgProcResult);
 								}
 							}
@@ -2740,7 +2743,7 @@ namespace cse
 				break;
 			}
 
-			if (Return == false && FilterableFormListManager::Instance.HandleMessages(FilterEditBox, uMsg, wParam, lParam))
+			if (SubclassParams->Out.MarkMessageAsHandled == false && FilterableFormListManager::Instance.HandleMessages(FilterEditBox, uMsg, wParam, lParam))
 			{
 				TESForm* LocalCopy = TESDialog::GetDialogExtraLocalCopy(hWnd);
 				if (LocalCopy)
@@ -2755,22 +2758,22 @@ namespace cse
 
 
 		LRESULT CALLBACK TESFormEditDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser )
+												bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams )
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
+			SubclassParams->Out.MarkMessageAsHandled = false;
 
 			switch (uMsg)
 			{
 			case WM_INITDIALOG:
 				{
-					TESFormEditData* xData = BGSEE_GETWINDOWXDATA(TESFormEditData, ExtraData);
+					TESFormEditData* xData = BGSEE_GETWINDOWXDATA(TESFormEditData, SubclassParams->In.ExtraData);
 					TESForm* WorkingCopy = TESDialog::GetDialogExtraParam(hWnd);
 
 					if (xData == nullptr)
 					{
 						xData = new TESFormEditData();
-						ExtraData->Add(xData);
+						SubclassParams->In.ExtraData->Add(xData);
 
 						if (WorkingCopy)		// can be NULL when creating new forms
 							xData->FillBuffer(WorkingCopy);
@@ -2796,7 +2799,7 @@ namespace cse
 				break;
 			case WM_DESTROY:
 				{
-					TESFormEditData* xData = BGSEE_GETWINDOWXDATA(TESFormEditData, ExtraData);
+					TESFormEditData* xData = BGSEE_GETWINDOWXDATA(TESFormEditData, SubclassParams->In.ExtraData);
 					if (xData)
 					{
 						// at this point, the working copy is already modified (if there were changes and the user confirmed them)
@@ -2808,7 +2811,7 @@ namespace cse
 							BGSEEUNDOSTACK->Record(new formUndoStack::FormUndoProxy(WorkingCopy, xData->Buffer));
 						}
 
-						ExtraData->Remove(TESFormEditData::kTypeID);
+						SubclassParams->In.ExtraData->Remove(TESFormEditData::kTypeID);
 						delete xData;
 					}
 
@@ -2916,17 +2919,17 @@ namespace cse
 		}
 
 		LRESULT CALLBACK WindowPosDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+												  bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
+			SubclassParams->Out.MarkMessageAsHandled = false;
 
 			switch (uMsg)
 			{
 			case WM_INITDIALOG:
 				if (settings::dialogs::kPreserveEditorDialogLocations().i)
 				{
-					std::string ClassName(GetWindowClassNameForWindowPosition(hWnd, Subclasser));
+					std::string ClassName(GetWindowClassNameForWindowPosition(hWnd, SubclassParams->In.Subclasser));
 					if (!ClassName.empty())
 					{
 						RECT Bounds = { 0 };
@@ -2939,7 +2942,7 @@ namespace cse
 			case WM_DESTROY:
 				if (settings::dialogs::kPreserveEditorDialogLocations().i)
 				{
-					std::string ClassName(GetWindowClassNameForWindowPosition(hWnd, Subclasser));
+					std::string ClassName(GetWindowClassNameForWindowPosition(hWnd, SubclassParams->In.Subclasser));
 					if (!ClassName.empty())
 						TESDialog::WriteBoundsToINI(hWnd, ClassName.c_str());
 				}

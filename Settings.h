@@ -33,6 +33,11 @@ namespace cse
 
 			extern INISetting					kMultiplePreviewWindows;
 			extern INISetting					kPreserveEditorDialogLocations;
+
+			extern INISetting					kCellViewActiveCellForeColor;
+			extern INISetting					kCellViewActiveCellBackColor;
+			extern INISetting					kCellViewLoadedGridCellForeColor;
+			extern INISetting					kCellViewLoadedGridCellBackColor;
 		}
 
 		namespace general

@@ -19,6 +19,8 @@ namespace cse
 		private:
 			class FilterableWindowData
 			{
+				friend class FilterableFormListManager;
+
 				bgsee::SubclassProcThunk<FilterableWindowData>
 										ThunkFormListSubclassProc;
 				bgsee::SubclassProcThunk<FilterableWindowData>
@@ -47,9 +49,9 @@ namespace cse
 				};
 
 				LRESULT FormListSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-											bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
+											bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
 				LRESULT	FilterEditBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-											bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
+											bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
 
 				bool	HasRegEx(void) const { return Flags & kFlags_RegEx; }
 				bool	HasEditorID(void) const { return Flags & kFlags_SearchEditorID; }
@@ -65,15 +67,16 @@ namespace cse
 
 				bool	HandleMessages(UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true on timeout
 				void	SetEnabled(bool State);
-
-				bool	operator==(HWND FilterEditBox);
+				bool	HasFilter() const;
+				void	ResetFilter();
 			};
 
 			typedef std::vector<FilterableWindowData*>	FilterDataArrayT;
 
 			FilterDataArrayT		ActiveFilters;
 
-			FilterableWindowData*	Lookup(HWND FilterEdit);
+			FilterableWindowData*	LookupByFilterEdit(HWND FilterEdit) const;
+			FilterableWindowData*	LookupByFormList(HWND FormList) const;
 		public:
 			FilterableFormListManager();
 			~FilterableFormListManager();
@@ -83,6 +86,8 @@ namespace cse
 
 			bool	HandleMessages(HWND FilterEdit, UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true to request a refresh of the form list
 			void	SetEnabled(HWND FilterEdit, bool State);
+			bool	HasActiveFilter(HWND FilterEdit) const;
+			void	ResetFilter(HWND FilterEdit);
 
 			static FilterableFormListManager Instance;
 		};
@@ -143,7 +148,7 @@ namespace cse
 			bool		Initialized;
 
 			LRESULT		ComboBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-											bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
+											bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
 			void		RegisterComboBox(HWND hWnd);
 			void		DeregisterComboBox(HWND hWnd);
 			void		FlushQueuedMessages(HWND hWnd, bgsee::WindowSubclasser* Subclasser);

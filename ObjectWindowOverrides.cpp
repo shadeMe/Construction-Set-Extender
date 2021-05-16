@@ -8,10 +8,9 @@ namespace cse
 	namespace uiManager
 	{
 		LRESULT CALLBACK ObjectWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+												  bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
 
 			if (ObjectWindowImposterManager::Instance.IsImposter(hWnd))
 			{
@@ -26,17 +25,17 @@ namespace cse
 			switch (uMsg)
 			{
 			case TESObjectWindow::kWindowMessage_Reload:
-				Return = true;
+				SubclassParams->Out.MarkMessageAsHandled = true;
 
 				// the window subclasser's windows hook has an out-sized performance penalty for
 				// insertions in tree view controls (probably also has to do with the way it's used in this dialog)
 				// so we have to temporarily suspend the hook when this code is executing
 				BGSEEUI->GetInvalidationManager()->Push(TreeList);
-				Subclasser->SuspendHooks();
+				SubclassParams->In.Subclasser->SuspendHooks();
 				{
-					DlgProcResult = Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
+					DlgProcResult = SubclassParams->In.Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
 				}
-				Subclasser->ResumeHooks();
+				SubclassParams->In.Subclasser->ResumeHooks();
 				BGSEEUI->GetInvalidationManager()->Pop(TreeList);
 				BGSEEUI->GetInvalidationManager()->Redraw(TreeList);
 
@@ -55,18 +54,18 @@ namespace cse
 					if (Skip)
 						break;
 
-					Return = true;
+					SubclassParams->Out.MarkMessageAsHandled = true;
 					ObjectWindowImposterManager::Instance.RefreshImposters();
 					SendMessage(hWnd, TESDialog::kWindowMessage_Refresh, NULL, NULL);
 				}
 			case WM_ACTIVATE:
 				ObjectWindowImposterManager::Instance.HandleObjectWindowActivating(hWnd, uMsg, wParam, lParam);
-				Return = true;
+				SubclassParams->Out.MarkMessageAsHandled = true;
 
 				break;
 			case WM_CLOSE:
 				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kMainMenu_View_ObjectWindow, NULL);
-				Return = true;
+				SubclassParams->Out.MarkMessageAsHandled = true;
 
 				break;
 			case TESDialog::kWindowMessage_Destroy:
@@ -97,12 +96,12 @@ namespace cse
 				break;
 			case WM_SIZE:
 				ObjectWindowImposterManager::Instance.HandleObjectWindowSizing(hWnd, uMsg, wParam, lParam);
-				Return = true;
+				SubclassParams->Out.MarkMessageAsHandled = true;
 
 				break;
 			}
 
-			if (Return == false && FilterableFormListManager::Instance.HandleMessages(FilterEditBox, uMsg, wParam, lParam))
+			if (SubclassParams->Out.MarkMessageAsHandled == false && FilterableFormListManager::Instance.HandleMessages(FilterEditBox, uMsg, wParam, lParam))
 			{
 				HTREEITEM Selection = TreeView_GetSelection(TreeList);
 

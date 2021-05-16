@@ -431,9 +431,20 @@ void BSRenderedTexture::DeleteInstance( bool ReleaseMemory /*= 0*/ )
 	thisVirtualCall<void>(0x0, this, ReleaseMemory);
 }
 
-GridCellArray::GridEntry* GridCellArray::GetCellEntry( SInt32 X, SInt32 Y )
+GridCellArray::GridEntry* GridCellArray::GetCellEntry( UInt32 X, UInt32 Y )
 {
 	return &grid[Y + X * size];
+}
+
+bool GridCellArray::IsCellInGrid(TESObjectCELL* Cell) const
+{
+	for (int i = 0; i < size * size; ++i)
+	{
+		if (grid[i].cell == Cell)
+			return true;
+	}
+
+	return false;
 }
 
 void TESLODTextureGenerator::SaveExteriorSnapshot( TESObjectCELL* Exterior, UInt32 Resolution, const char* SavePath )

@@ -50,7 +50,7 @@ namespace cse
 		}
 
 		LRESULT FilterableFormListManager::FilterableWindowData::FormListSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-																					bool& Return, bgsee::WindowExtraDataCollection*, bgsee::WindowSubclasser*)
+																					bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT CallbackResult = FALSE;
 
@@ -66,7 +66,7 @@ namespace cse
 					{
 						if (!FilterForm(Form) || (SecondFilter && !SecondFilter(Form)))
 						{
-							Return = true;
+							SubclassParams->Out.MarkMessageAsHandled = true;
 							CallbackResult = -1;
 						}
 					}
@@ -79,7 +79,7 @@ namespace cse
 		}
 
 		LRESULT FilterableFormListManager::FilterableWindowData::FilterEditBoxSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-																							bool& Return, bgsee::WindowExtraDataCollection*, bgsee::WindowSubclasser*)
+																							bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT CallbackResult = FALSE;
 
@@ -90,7 +90,7 @@ namespace cse
 				TimeCounter = GetTickCount64();
 				break;
 			case WM_RBUTTONUP:
-				Return = true;
+				SubclassParams->Out.MarkMessageAsHandled = true;
 
 				POINT CursorLoc { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 				ClientToScreen(hWnd, &CursorLoc);
@@ -334,9 +334,15 @@ namespace cse
 			Enabled = State;
 		}
 
-		bool FilterableFormListManager::FilterableWindowData::operator==(HWND FilterEditBox)
+		bool FilterableFormListManager::FilterableWindowData::HasFilter() const
 		{
-			return this->FilterEditBox == FilterEditBox;
+			return !FilterString.empty();
+		}
+
+		void FilterableFormListManager::FilterableWindowData::ResetFilter()
+		{
+			FilterString.clear();
+			FilterRegEx = "";
 		}
 
 		FilterableFormListManager::FilterableFormListManager() :
@@ -358,7 +364,7 @@ namespace cse
 			SME_ASSERT(ParentWindow && FormList);
 			SME_ASSERT(FilterEdit && FilterLabel);
 
-			if (Lookup(FilterEdit) == nullptr)
+			if (LookupByFilterEdit(FilterEdit) == nullptr)
 			{
 				ActiveFilters.push_back(new FilterableWindowData(ParentWindow, FilterEdit, FormList, FilterLabel, InputTimeoutThreshold, UserFilter));
 				return true;
@@ -373,7 +379,7 @@ namespace cse
 
 			for (auto Itr = ActiveFilters.begin(); Itr != ActiveFilters.end(); Itr++)
 			{
-				if (**Itr == FilterEdit)
+				if ((*Itr)->FilterEditBox == FilterEdit)
 				{
 					delete *Itr;
 					ActiveFilters.erase(Itr);
@@ -386,7 +392,7 @@ namespace cse
 		{
 			SME_ASSERT(FilterEdit);
 
-			FilterableWindowData* Data = Lookup(FilterEdit);
+			FilterableWindowData* Data = LookupByFilterEdit(FilterEdit);
 			if (Data)
 				return Data->HandleMessages(uMsg, wParam, lParam);
 
@@ -397,16 +403,49 @@ namespace cse
 		{
 			SME_ASSERT(FilterEdit);
 
-			FilterableWindowData* Data = Lookup(FilterEdit);
+			FilterableWindowData* Data = LookupByFilterEdit(FilterEdit);
 			if (Data)
 				Data->SetEnabled(State);
 		}
 
-		FilterableFormListManager::FilterableWindowData* FilterableFormListManager::Lookup(HWND FilterEdit)
+		bool FilterableFormListManager::HasActiveFilter(HWND FilterEdit) const
+		{
+			SME_ASSERT(FilterEdit);
+
+			auto FilterData = LookupByFilterEdit(FilterEdit);
+			if (FilterData == nullptr)
+				return false;
+
+			return FilterData->HasFilter();
+		}
+
+		void FilterableFormListManager::ResetFilter(HWND FilterEdit)
+		{
+			SME_ASSERT(FilterEdit);
+			
+			auto FilterData = LookupByFilterEdit(FilterEdit);
+			if (FilterData == nullptr)
+				return;
+
+			return FilterData->ResetFilter();
+		}
+
+		FilterableFormListManager::FilterableWindowData* FilterableFormListManager::LookupByFilterEdit(HWND FilterEdit) const
 		{
 			for (auto Itr : ActiveFilters)
 			{
-				if (*Itr == FilterEdit)
+				if (Itr->FilterEditBox == FilterEdit)
+					return Itr;
+			}
+
+			return nullptr;
+		}
+
+		FilterableFormListManager::FilterableWindowData* FilterableFormListManager::LookupByFormList(HWND FormList) const
+		{
+			for (auto Itr : ActiveFilters)
+			{
+				if (Itr->FormListView == FormList)
 					return Itr;
 			}
 
@@ -505,7 +544,7 @@ namespace cse
 		}
 
 		LRESULT DeferredComboBoxController::ComboBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-																bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+																bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT Result = NULL;
 
@@ -523,11 +562,11 @@ namespace cse
 				switch (uMsg)
 				{
 				case CustomMessageAddItem:
-					Return = true;
+					SubclassParams->Out.MarkMessageAsHandled = true;
 					QueueMessage(hWnd, uMsg, wParam, lParam);
 					break;
 				case CB_ADDSTRING:
-					Return = true;
+					SubclassParams->Out.MarkMessageAsHandled = true;
 					Result = AddStringMarkerResult;
 					QueueMessage(hWnd, uMsg, wParam, lParam);
 					break;
@@ -536,11 +575,11 @@ namespace cse
 					{
 						// attempting to set the data of an item whose insertion wasn't tracked by us
 						// so, flush the queued messages and break early
-						FlushQueuedMessages(hWnd, Subclasser);
+						FlushQueuedMessages(hWnd, SubclassParams->In.Subclasser);
 						break;
 					}
 
-					Return = true;
+					SubclassParams->Out.MarkMessageAsHandled = true;
 					QueueMessage(hWnd, uMsg, wParam, lParam);
 					break;
 				default:
@@ -552,7 +591,7 @@ namespace cse
 
 					// all other messages will trigger the flushing of queued messages
 					// then, pass through the message to the default handler
-					FlushQueuedMessages(hWnd, Subclasser);
+					FlushQueuedMessages(hWnd, SubclassParams->In.Subclasser);
 				}
 			}
 

@@ -883,6 +883,10 @@ public:
 	static void						RefreshCellList(bool RefreshWorldspaces = false);
 	static void						UpdateCurrentWorldspace();
 	static void						SetCurrentCell(Vector3* Position, bool ReloadObjectList);
+	static TESWorldSpace*			GetCurrentWorldSpace();
+	static bool						CellListNeedsUpdate(Vector3* TargetCoords = nullptr);
+
+	static void						OnSelectCellListItem(TESObjectCELL* ItemCell, bool ClearRenderWindowSelection);
 
 	static HWND*					WindowHandle;
 	static HWND*					ObjectListHandle;
@@ -891,6 +895,7 @@ public:
 	static UInt8*					MainMenuState;
 	static TESObjectCELL**			CurrentCellSelection;
 	static int*						ObjectListSortColumn;
+	static int*						CellListSortColumn;
 
 	enum
 	{
@@ -899,6 +904,12 @@ public:
 		kCellLabel = 1163,
 		kCellListView = 1155,
 		kObjectRefListView = 1156,
+	};
+
+	enum
+	{
+		kWindowMessage_ReloadWorldspacesAndCells	= 0x40E,		// wParam - reload worldspaces, lParam - don't reload cells
+		kWindowMessage_ReloadObjects				= 0x40F,
 	};
 };
 

@@ -50,10 +50,9 @@ namespace cse
 
 
 		LRESULT CALLBACK MainWindowMenuInitSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-														bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+														bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
 
 			switch (uMsg)
 			{
@@ -237,7 +236,7 @@ namespace cse
 						}
 					}
 
-					Return = true;
+					SubclassParams->Out.MarkMessageAsHandled = true;
 				}
 
 				break;
@@ -247,15 +246,14 @@ namespace cse
 		}
 
 		LRESULT CALLBACK MainWindowMenuSelectSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-														  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+														  bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
 
 			switch (uMsg)
 			{
 			case WM_COMMAND:
-				Return = true;
+				SubclassParams->Out.MarkMessageAsHandled = true;
 
 				switch (LOWORD(wParam))
 				{
@@ -263,7 +261,7 @@ namespace cse
 					if (PreviewWindowImposterManager::Instance.GetEnabled())
 						BGSEEUI->MsgBoxI("Use the Object Window's context menu to preview objects when multiple preview windows are enabled.");
 					else
-						Return = false;
+						SubclassParams->Out.MarkMessageAsHandled = false;
 
 					break;
 				case TESCSMain::kMainMenu_Help_Contents:
@@ -275,7 +273,7 @@ namespace cse
 							BGSEEACHIEVEMENTS->Unlock(achievements::kOldestTrickInTheBook);
 						}
 						else
-							Return = false;
+							SubclassParams->Out.MarkMessageAsHandled = false;
 					}
 
 					break;
@@ -682,7 +680,7 @@ namespace cse
 
 					break;
 				default:
-					Return = false;
+					SubclassParams->Out.MarkMessageAsHandled = false;
 
 					break;
 				}
@@ -696,10 +694,9 @@ namespace cse
 #define ID_PATHGRIDTOOLBARBUTTION_TIMERID		0x99
 
 		LRESULT CALLBACK MainWindowMiscSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+													bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
 
 			switch (uMsg)
 			{
@@ -708,12 +705,12 @@ namespace cse
 				// strangely, when the primary instance has an active/open preview control, the call crashes (presumably due to a corrupt lParam pointer)
 				// as far as I can tell, the corresponding code path is never executed, so we can consume this message entirely
 
-				Return = true;
+				SubclassParams->Out.MarkMessageAsHandled = true;
 				break;
 			case WM_MAINWINDOW_INIT_DIALOG:
 				{
 					SetTimer(hWnd, ID_PATHGRIDTOOLBARBUTTION_TIMERID, 500, nullptr);
-					Return = true;
+					SubclassParams->Out.MarkMessageAsHandled = true;
 				}
 
 				break;
@@ -721,10 +718,10 @@ namespace cse
 				{
 					KillTimer(hWnd, ID_PATHGRIDTOOLBARBUTTION_TIMERID);
 
-					MainWindowMiscData* xData = BGSEE_GETWINDOWXDATA(MainWindowMiscData, ExtraData);
+					MainWindowMiscData* xData = BGSEE_GETWINDOWXDATA(MainWindowMiscData, SubclassParams->In.ExtraData);
 					if (xData)
 					{
-						ExtraData->Remove(MainWindowMiscData::kTypeID);
+						SubclassParams->In.ExtraData->Remove(MainWindowMiscData::kTypeID);
 						delete xData;
 					}
 				}
@@ -732,11 +729,11 @@ namespace cse
 				break;
 			case WM_MAINWINDOW_INIT_EXTRADATA:
 				{
-					MainWindowMiscData* xData = BGSEE_GETWINDOWXDATA(MainWindowMiscData, ExtraData);
+					MainWindowMiscData* xData = BGSEE_GETWINDOWXDATA(MainWindowMiscData, SubclassParams->In.ExtraData);
 					if (xData == nullptr)
 					{
 						xData = new MainWindowMiscData();
-						ExtraData->Add(xData);
+						SubclassParams->In.ExtraData->Add(xData);
 
 						xData->ToolbarExtras->hInstance = BGSEEMAIN->GetExtenderHandle();
 						xData->ToolbarExtras->hDialog = *TESCSMain::MainToolbarHandle;
@@ -748,7 +745,7 @@ namespace cse
 							BGSEECONSOLE_ERROR("Couldn't build main window toolbar subwindow!");
 						else
 						{
-							Subclasser->RegisterSubclassForWindow(*TESCSMain::MainToolbarHandle, MainWindowToolbarSubClassProc);
+							SubclassParams->In.Subclasser->RegisterSubclassForWindow(*TESCSMain::MainToolbarHandle, MainWindowToolbarSubClassProc);
 							SendMessage(*TESCSMain::MainToolbarHandle, WM_MAINTOOLBAR_INIT, NULL, NULL);
 
 							HWND TODSlider = GetDlgItem(hWnd, IDC_TOOLBAR_TODSLIDER);
@@ -768,7 +765,7 @@ namespace cse
 				break;
 			case WM_TIMER:
 				DlgProcResult = TRUE;
-				Return = true;
+				SubclassParams->Out.MarkMessageAsHandled = true;
 
 				switch (wParam)
 				{
@@ -802,10 +799,9 @@ namespace cse
 		}
 
 		LRESULT CALLBACK MainWindowToolbarSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													   bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+													   bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
-			Return = false;
 
 			HWND TODSlider = GetDlgItem(hWnd, IDC_TOOLBAR_TODSLIDER);
 			HWND TODEdit = GetDlgItem(hWnd, IDC_TOOLBAR_TODCURRENT);
@@ -814,21 +810,21 @@ namespace cse
 			{
 			case WM_MAINTOOLBAR_INIT:
 				{
-					MainWindowToolbarData* xData = BGSEE_GETWINDOWXDATA(MainWindowToolbarData, ExtraData);
+					MainWindowToolbarData* xData = BGSEE_GETWINDOWXDATA(MainWindowToolbarData, SubclassParams->In.ExtraData);
 					if (xData == nullptr)
 					{
 						xData = new MainWindowToolbarData();
-						ExtraData->Add(xData);
+						SubclassParams->In.ExtraData->Add(xData);
 					}
 				}
 
 				break;
 			case WM_DESTROY:
 				{
-					MainWindowToolbarData* xData = BGSEE_GETWINDOWXDATA(MainWindowToolbarData, ExtraData);
+					MainWindowToolbarData* xData = BGSEE_GETWINDOWXDATA(MainWindowToolbarData, SubclassParams->In.ExtraData);
 					if (xData)
 					{
-						ExtraData->Remove(MainWindowToolbarData::kTypeID);
+						SubclassParams->In.ExtraData->Remove(MainWindowToolbarData::kTypeID);
 						delete xData;
 					}
 				}
@@ -836,7 +832,7 @@ namespace cse
 				break;
 			case WM_COMMAND:
 				{
-					MainWindowToolbarData* xData = BGSEE_GETWINDOWXDATA(MainWindowToolbarData, ExtraData);
+					MainWindowToolbarData* xData = BGSEE_GETWINDOWXDATA(MainWindowToolbarData, SubclassParams->In.ExtraData);
 					SME_ASSERT(xData);
 
 					if (HIWORD(wParam) == EN_CHANGE &&
@@ -888,7 +884,7 @@ namespace cse
 
 					_TES->SetSkyTOD(TOD);
 
-					MainWindowToolbarData* xData = BGSEE_GETWINDOWXDATA(MainWindowToolbarData, ExtraData);
+					MainWindowToolbarData* xData = BGSEE_GETWINDOWXDATA(MainWindowToolbarData, SubclassParams->In.ExtraData);
 					SME_ASSERT(xData);
 
 					if (xData->SettingTODSlider == false)

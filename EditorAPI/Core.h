@@ -324,7 +324,8 @@ public:
 												// init'ed with coords and passed to a bhkWorldM method, which calculates the extents
 
 	// methods
-	GridEntry*				GetCellEntry(SInt32 X, SInt32 Y);
+	GridEntry*				GetCellEntry(UInt32 X, UInt32 Y);
+	bool					IsCellInGrid(TESObjectCELL* Cell) const;
 };
 STATIC_ASSERT(sizeof(GridCellArray) == 0x20);
 

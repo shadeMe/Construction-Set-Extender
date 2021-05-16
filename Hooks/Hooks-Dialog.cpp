@@ -65,7 +65,6 @@ namespace cse
 		_DefineHookHdlr(TESPackageWndProcAddNew, 0x004523FD);
 		_DefineHookHdlr(RegionEditorCreateDataCopy, 0x004BF763);
 		_DefineNopHdlr(AIFormResetPackageListColumns, 0x00452FC9, 5);
-		_DefineHookHdlr(CellViewOnCellSelection, 0x0040A174);
 		_DefineJumpHdlr(EffectItemListViewSortingA, 0x0051DE03, 0x0051DE1B);
 		_DefineJumpHdlr(EffectItemListViewSortingB, 0x00567F15, 0x00567F27);
 		_DefineJumpHdlr(EffectItemListViewSortingC, 0x0056D963, 0x0056D97B);
@@ -76,6 +75,9 @@ namespace cse
 		_DefineHookHdlr(TESObjectCELLWndProcEndDrag, 0x0053B501);
 		_DefineHookHdlr(ObjectWindowSplitterWndProcDisable, 0x00404502);
 		_DefineHookHdlr(TESComboBoxAddItem, 0x00403540);
+		_DefineHookHdlr(CellViewSetCellListSelection, 0x00409106);
+		_DefineHookHdlr(CellViewSetCurrentCellUpdateCellList , 0x004091C8);
+		_DefineHookHdlr(CellViewInitializeCellList, 0x00408773);
 
 		void PatchDialogHooks(void)
 		{
@@ -328,7 +330,6 @@ namespace cse
 			_MemHdlr(TESPackageWndProcAddNew).WriteJump();
 			_MemHdlr(RegionEditorCreateDataCopy).WriteJump();
 			_MemHdlr(AIFormResetPackageListColumns).WriteNop();
-			_MemHdlr(CellViewOnCellSelection).WriteJump();
 			_MemHdlr(EffectItemListViewSortingA).WriteJump();
 			_MemHdlr(EffectItemListViewSortingB).WriteJump();
 			_MemHdlr(EffectItemListViewSortingC).WriteJump();
@@ -339,6 +340,12 @@ namespace cse
 			_MemHdlr(TESObjectCELLWndProcEndDrag).WriteJump();
 			_MemHdlr(ObjectWindowSplitterWndProcDisable).WriteJump();
 			_MemHdlr(TESComboBoxAddItem).WriteJump();
+			_MemHdlr(CellViewSetCellListSelection).WriteJump();
+			_MemHdlr(CellViewSetCurrentCellUpdateCellList).WriteJump();
+			_MemHdlr(CellViewInitializeCellList).WriteJump();
+
+			// remove superfluous call to invalidate the cell view window's cell list
+			SME::MemoryHandler::WriteRelJump(0x0040AF97, 0x0040AFC3);
 		}
 
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex)
@@ -1935,6 +1942,97 @@ namespace cse
 				pop		ebx
 				pop		esi
 				retn
+			}
+		}
+
+		void __stdcall DoCellViewSetCellListSelectionHook(TESObjectCELL* NewSelection, int ListViewItemIndex)
+		{
+			TESCellViewWindow::OnSelectCellListItem(NewSelection, false);
+		}
+
+		#define _hhName		CellViewSetCellListSelection
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00409113);
+			__asm
+			{
+				mov		eax, [esp + 0x14]
+				mov		ebp, [esp + 0x30]
+				push	eax
+				push	ebp
+				call	DoCellViewSetCellListSelectionHook
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		void __stdcall DoCellViewSetCurrentCellUpdateCellListHook(Vector3* Coords)
+		{
+			bool RefreshCellList = false;
+
+			if (uiManager::FilterableFormListManager::Instance.HasActiveFilter(GetDlgItem(*TESCellViewWindow::WindowHandle, IDC_CSE_CELLVIEW_CELLFILTEREDIT)) == false)
+			{
+				// fallback to default, stupid behaviour when there is no active filter
+				RefreshCellList = true;
+			}
+			else
+			{
+				// ignore the default, stupid behaviour of using cell counts to determine synchronisation state
+				// otherwise, we'll always refresh the cell when a filter is active (and the current item count doesn't match the expected one)
+				// in this case, only refresh the cell list if necessary
+				// we also fix a vanilla bug (probably caused by a copy-paste error) where the vanilla code path doesn't pass a comparator to sort the listview
+				// this resulted in an undefined sort order in such cases as the original order of insertion was not guaranteed to be stable
+				RefreshCellList = TESCellViewWindow::CellListNeedsUpdate(Coords);
+			}
+
+			if (RefreshCellList)
+				TESCellViewWindow::RefreshCellList();
+		}
+
+		#define _hhName		CellViewSetCurrentCellUpdateCellList
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00409202);
+			__asm
+			{
+				mov		eax, [esp + 0x10]
+				pushad
+				push	eax
+				call	DoCellViewSetCurrentCellUpdateCellListHook
+				popad
+
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		bool __stdcall DoCellViewInitializeCellListHook()
+		{
+			// same as above
+			if (uiManager::FilterableFormListManager::Instance.HasActiveFilter(GetDlgItem(*TESCellViewWindow::WindowHandle, IDC_CSE_CELLVIEW_CELLFILTEREDIT)) == false)
+				return true;
+
+			return TESCellViewWindow::CellListNeedsUpdate();
+		}
+
+		#define _hhName		CellViewInitializeCellList
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0040877C);
+			_hhSetVar(Skip, 0x004087B3);
+			__asm
+			{
+				pushad
+				call	DoCellViewInitializeCellListHook
+				test	al, al
+				jz		SKIP
+				popad
+
+				push	0
+				push	0
+				push	LVM_DELETEALLITEMS
+				jmp		_hhGetVar(Retn)
+			SKIP:
+				popad
+				jmp		_hhGetVar(Skip)
 			}
 		}
 	}

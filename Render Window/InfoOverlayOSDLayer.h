@@ -11,10 +11,10 @@ namespace cse
 			InfoOverlayOSDLayer();
 			virtual ~InfoOverlayOSDLayer();
 
-			virtual void						Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI);
-			virtual bool						NeedsBackgroundUpdate();
+			virtual void	Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI);
+			virtual bool	NeedsBackgroundUpdate();
 
-			static InfoOverlayOSDLayer		Instance;
+			static InfoOverlayOSDLayer Instance;
 		};
 	}
 }

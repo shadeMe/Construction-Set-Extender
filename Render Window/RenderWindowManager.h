@@ -206,11 +206,12 @@ namespace cse
 
 			typedef std::vector<DelegateT>		DelegateArrayT;
 
-			DelegateArrayT			Handlers;
+			DelegateArrayT	Handlers;
+			bool			Executing = false;
 
-			void					HandlePostRenderWindowUpdate();
+			void			HandlePostRenderWindowUpdate();
 		public:
-			void					QueueTask(DelegateT Delegate);		// consumes the task after execution
+			void			QueueTask(DelegateT Delegate);		// consumes the task after execution
 		};
 
 		class RenderWindowManager
@@ -227,9 +228,9 @@ namespace cse
 			friend class GlobalEventSink;
 
 			static LRESULT CALLBACK						RenderWindowMenuInitSelectSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-																							bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
+																							bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
 			static LRESULT CALLBACK						RenderWindowMasterSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-																					bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
+																					bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
 
 			RenderWindowExtendedState*					ExtendedState;
 			RenderWindowSceneGraphManager*				SceneGraphManager;

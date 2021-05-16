@@ -567,14 +567,23 @@ namespace cse
 
 		void RenderWindowDeferredExecutor::HandlePostRenderWindowUpdate()
 		{
+			if (Executing)
+				return;
+
+			Executing = true;
+
 			for (auto& Itr : Handlers)
 				Itr();
 
 			Handlers.clear();
+
+			Executing = false;
 		}
 
 		void RenderWindowDeferredExecutor::QueueTask(DelegateT Delegate)
 		{
+			SME_ASSERT(Executing == false);
+
 			Handlers.push_back(Delegate);
 		}
 
@@ -626,10 +635,9 @@ namespace cse
 		}
 
 		LRESULT CALLBACK RenderWindowManager::RenderWindowMenuInitSelectSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-																bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+																bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = TRUE;
-			Return = false;
 
 			switch (uMsg)
 			{
@@ -756,7 +764,7 @@ namespace cse
 						}
 					}
 
-					Return = true;
+					SubclassParams->Out.MarkMessageAsHandled = true;
 				}
 
 				break;
@@ -770,77 +778,77 @@ namespace cse
 				case IDC_RENDERWINDOWCONTEXT_OFFSETDUPLICATEDREFSINTHEZAXIS:
 					{
 						settings::renderer::kZOffsetDuplicatedRefs.ToggleData();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_FREEZEINACTIVE:
 					{
 						actions::ToggleFreezeInactive();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_INVERTSELECTION:
 					{
 						actions::InvertSelection();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_THAWALLINCELL:
 					{
 						actions::ThawAll();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL:
 					{
 						actions::RevealAll();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_TOGGLEVISIBILITY:
 					{
 						actions::ToggleSelectionVisibility();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_TOGGLECHILDRENVISIBILITY:
 					{
 						actions::ToggleSelectionChildrenVisibility();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_FREEZE:
 					{
 						actions::FreezeSelection();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_THAW:
 					{
 						actions::ThawSelection();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_GROUP:
 					{
 						actions::GroupSelection();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_UNGROUP:
 					{
 						actions::UngroupSelection();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
@@ -853,7 +861,7 @@ namespace cse
 						else
 							NotificationOSDLayer::Instance.ShowNotification("Disabled co-planar dropping");
 
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
@@ -866,7 +874,7 @@ namespace cse
 
 						Buffer.Copy();
 						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_GlobalClipboard);
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
@@ -874,21 +882,21 @@ namespace cse
 					{
 						BGSEECLIPBOARD->Paste();
 						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_GlobalClipboard);
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_OSD_MOUSEREF:
 					{
 						settings::renderWindowOSD::kShowMouseRef.ToggleData();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_OSD_MOUSEREF_CTRLMODIFIED:
 					{
 						settings::renderWindowOSD::kMouseRefCtrlModified.ToggleData();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
@@ -905,26 +913,26 @@ namespace cse
 				case IDC_RENDERWINDOWCONTEXT_OSD_INFOOVERLAY:
 					{
 						settings::renderWindowOSD::kShowInfoOverlay.ToggleData();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_OSD_REFERENCEEDITOR:
 					{
 						actions::ShowBatchEditor();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_OSD_TOOLBARS:
 					{
 						settings::renderWindowOSD::kShowToolbar.ToggleData();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_RENDERWINDOWHOTKEYS:
-					Return = true;
+					SubclassParams->Out.MarkMessageAsHandled = true;
 
 					if (*TESRenderWindow::ActiveCell)
 						Instance.KeyboardInputManager->ShowHotKeyEditor();
@@ -933,28 +941,28 @@ namespace cse
 				case IDC_RENDERWINDOWCONTEXT_UNRESTRICTEDMOUSEMOVEMENT:
 					{
 						settings::renderer::kUnrestrictedMouseMovement.ToggleData();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_OSD_EDITCOLORTHEME:
 					{
 						RenderWindowOSD::ShowColorThemeEditor();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_SPAWNRULERMEASURE:
 					{
 						actions::CreateMeasureRuler();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_SPAWNCIRCLEMEASURE:
 					{
 						actions::CreateMeasureCircle();
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 
 					break;
@@ -968,10 +976,9 @@ namespace cse
 
 
 		LRESULT CALLBACK RenderWindowManager::RenderWindowMasterSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													  bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser)
+													  bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = TRUE;
-			Return = false;
 
 			if (Instance.Initialized == false || BGSEEDAEMON->IsCrashing())
 			{
@@ -986,19 +993,19 @@ namespace cse
 			else if (Instance.OSD->HandleMessage(hWnd, uMsg, wParam, lParam, &Instance))
 			{
 				// OSD handled the message, consume
-				Return = true;
+				SubclassParams->Out.MarkMessageAsHandled = true;
 				return DlgProcResult;
 			}
 			else if (Instance.KeyboardInputManager->HandleInput(hWnd, uMsg, wParam, lParam, &Instance))
 			{
 				// key input was handled, consume message
-				Return = true;
+				SubclassParams->Out.MarkMessageAsHandled = true;
 				return DlgProcResult;
 			}
 			else if (Instance.MouseInputManager->HandleInput(hWnd, uMsg, wParam, lParam, &Instance))
 			{
 				// mouse input was handled, consume message
-				Return = true;
+				SubclassParams->Out.MarkMessageAsHandled = true;
 				return DlgProcResult;
 			}
 
@@ -1007,7 +1014,7 @@ namespace cse
 			case WM_QUIT:
 			case WM_CLOSE:
 				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kMainMenu_View_RenderWindow, NULL);
-				Return = true;
+				SubclassParams->Out.MarkMessageAsHandled = true;
 
 				break;
 			case WM_MOUSEMOVE:
@@ -1063,7 +1070,7 @@ namespace cse
 					if (Instance.IsRenderingScene())
 					{
 						// consume the message as the previous render call isn't done yet
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 					else if (Instance.MouseInClientArea || Instance.MouseInputManager->IsFreeMouseMovementActive())
 					{
@@ -1080,7 +1087,7 @@ namespace cse
 					if (TESPreviewControl::ActivePreviewControls->Count())
 					{
 						BGSEEUI->MsgBoxW(hWnd, 0, "Please close any dialogs with preview controls before attempting to resize the render window.");
-						Return = true;
+						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
 				}
 

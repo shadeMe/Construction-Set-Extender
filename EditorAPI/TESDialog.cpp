@@ -3,6 +3,7 @@
 #include "[Common]\CLIWrapper.h"
 #include "Hooks\Hooks-Dialog.h"
 #include "Achievements.h"
+#include "CellViewWindowOverrides.h"
 
 TESFile**					DataDialog::ActivePlugin = (TESFile**)0x00A0AA7C;
 TESFile**					DataDialog::CurrentSelection = (TESFile**)0x00A0AA78;
@@ -46,6 +47,7 @@ HWND*						TESCellViewWindow::CellListHandle = (HWND*)0x00A0AA34;
 UInt8*						TESCellViewWindow::MainMenuState = (UInt8*)0x00A0AF48;
 TESObjectCELL**				TESCellViewWindow::CurrentCellSelection = (TESObjectCELL**)0x00A0A9DC;
 int*						TESCellViewWindow::ObjectListSortColumn = (int*)0x00A0A9D4;
+int*						TESCellViewWindow::CellListSortColumn = (int*)0x00A0A9D0;
 
 ResponseEditorData**		ResponseEditorData::EditorCache = (ResponseEditorData**)0x00A10E2C;
 
@@ -289,7 +291,7 @@ void TESDialog::ResetFormListControls()
 {
 	TESCSMain::DeinitializeCSWindows();
 
-	SendMessage(*TESCellViewWindow::WindowHandle, 0x40E, 1, 1);			// for worldspaces
+	SendMessage(*TESCellViewWindow::WindowHandle, TESCellViewWindow::kWindowMessage_ReloadWorldspacesAndCells, 1, 1);			// for worldspaces
 	SendMessage(*TESPackage::WindowHandle, 0x41A, 0, 0);				// for AI packages
 
 	TESCSMain::InitializeCSWindows();
@@ -556,14 +558,14 @@ void TESCellViewWindow::SetCellSelection(TESObjectCELL* Cell)
 
 void TESCellViewWindow::RefreshObjectList(void)
 {
-	SendMessage(*WindowHandle, 0x40F, NULL, NULL);
+	SendMessage(*WindowHandle, kWindowMessage_ReloadObjects, NULL, NULL);
 }
 
 void TESCellViewWindow::RefreshCellList(bool RefreshWorldspaces /*= false*/)
 {
 	// the vanilla handler only updates when the no. of list view items is not equal to the current worldspace's exterior/interior cell count
 	SendMessage(*CellListHandle, LVM_DELETEALLITEMS, NULL, NULL);
-	SendMessage(*WindowHandle, 0x40E, RefreshWorldspaces, NULL);
+	SendMessage(*WindowHandle, kWindowMessage_ReloadWorldspacesAndCells, RefreshWorldspaces, NULL);
 }
 
 void TESCellViewWindow::UpdateCurrentWorldspace()
@@ -574,6 +576,95 @@ void TESCellViewWindow::UpdateCurrentWorldspace()
 void TESCellViewWindow::SetCurrentCell(Vector3* Position, bool ReloadObjectList)
 {
 	cdeclCall<void>(0x00409170, Position, (UInt32)ReloadObjectList);
+}
+
+TESWorldSpace* TESCellViewWindow::GetCurrentWorldSpace()
+{
+	return cdeclCall<TESWorldSpace*>(0x004086B0);
+}
+
+bool TESCellViewWindow::CellListNeedsUpdate(Vector3* TargetCoords)
+{
+	auto ItemCount = ListView_GetItemCount(*CellListHandle);
+	if (ItemCount == 0)
+	{
+		// always update if empty
+		return true;
+	}
+
+	auto CellViewWorldspace = GetCurrentWorldSpace();
+	auto SampleCellListCell = reinterpret_cast<TESObjectCELL*>(TESListView::GetItemData(*CellListHandle, 0));
+	bool CellListHasInteriors = (SampleCellListCell && SampleCellListCell->IsInterior()) || (CellViewWorldspace == nullptr && SampleCellListCell == nullptr);
+
+	if (CellViewWorldspace && CellListHasInteriors)
+	{
+		// exterior worldspace selected but list has interiors
+		return true;
+	}
+	else if (CellViewWorldspace == nullptr && !CellListHasInteriors)
+	{
+		// interiors selected but list has exteriors
+		return true;
+	}
+	else if (TargetCoords && _TES->currentInteriorCell == nullptr)
+	{
+		auto TargetCell = CellViewWorldspace ? _DATAHANDLER->GetExteriorCell(TargetCoords->x, TargetCoords->y, CellViewWorldspace) : nullptr;
+		if (TargetCell == nullptr && _TES->currentWorldSpace)
+			TargetCell = _DATAHANDLER->GetExteriorCell(TargetCoords->x, TargetCoords->y, _TES->currentWorldSpace);
+
+		if (TargetCell == nullptr)
+		{
+			// the target cell doesn't exist and needs to be created
+			return true;
+		}
+		else if (CellViewWorldspace != _TES->currentWorldSpace)
+		{
+			// no clue if this is actually possible, but let's be safe
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void TESCellViewWindow::OnSelectCellListItem(TESObjectCELL* ItemCell, bool ClearRenderWindowSelection)
+{
+	// basically reproduces the code in the original window proc with some extra bits
+	if (ItemCell == *CurrentCellSelection)
+		return;
+
+	if (ClearRenderWindowSelection)
+	{
+		_RENDERSEL->ClearSelection(true);
+		SendMessage(*TESRenderWindow::WindowHandle, 0x40A, 0, 1);
+	}
+
+	*CurrentCellSelection = ItemCell;
+	char Buffer[MAX_PATH];
+	if (ItemCell->IsInterior())
+		FORMAT_STR(Buffer, "%s Objects", ItemCell->GetEditorID());
+	else
+		FORMAT_STR(Buffer, "%s (%d, %d) Objects", ItemCell->GetEditorID(), ItemCell->cellData.coords->x, ItemCell->cellData.coords->y);
+
+	SetDlgItemText(*WindowHandle, kCellLabel, Buffer);
+	ListView_DeleteAllItems(*ObjectListHandle);
+	RefreshObjectList();
+
+	// preserve object list sort order
+	if (abs(*TESCellViewWindow::ObjectListSortColumn) < cse::uiManager::CellViewExtraData::kExtraRefListColumn_Persistent)
+	{
+		SendMessage(*TESCellViewWindow::ObjectListHandle,
+			LVM_SORTITEMS,
+			*TESCellViewWindow::ObjectListSortColumn,
+			(LPARAM)cse::hooks::TESDialogReferenceListComparator);
+	}
+	else
+	{
+		SendMessage(*TESCellViewWindow::ObjectListHandle,
+			LVM_SORTITEMS,
+			*TESCellViewWindow::ObjectListSortColumn,
+			(LPARAM)cse::uiManager::CellViewExtraData::CustomFormListComparator);
+	}
 }
 
 void TESObjectWindow::RefreshFormList(void)

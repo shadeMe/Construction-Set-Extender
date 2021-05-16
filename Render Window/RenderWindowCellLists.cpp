@@ -2,6 +2,8 @@
 #include "IconFontCppHeaders\IconsMaterialDesign.h"
 #include "ToolbarOSDLayer.h"
 #include "RenderWindowManager.h"
+#include "UIManager.h"
+#include "CellViewWindowOverrides.h"
 
 namespace cse
 {
@@ -72,32 +74,54 @@ namespace cse
 		void RenderWindowCellLists::OnSelectCell(TESObjectCELL* Cell) const
 		{
 			RenderWindowDeferredExecutor::DelegateT Task = [Cell]() {
-				// emulating a mouse click in the cell view dialog to ensure that the right code path is selected
+				// emulating item activation in the cell view dialog to ensure that the right code path is selected
 				// which includes our hooks
-				TESWorldSpace* ParentWorldspace = Cell->GetParentWorldSpace();
-				TESObjectCELL* Buffer = _TES->currentInteriorCell;
-				if (ParentWorldspace == nullptr)
-					_TES->currentInteriorCell = Cell;
-				else
+				auto CellListFilterEdit = GetDlgItem(*TESCellViewWindow::WindowHandle, IDC_CSE_CELLVIEW_CELLFILTEREDIT);
+				auto ExistingCellItem = TESListView::GetItemByData(*TESCellViewWindow::CellListHandle, Cell);
+				bool FilterEnabled = false;
+
+				if (ExistingCellItem == -1)
 				{
-					_TES->SetCurrentWorldspace(ParentWorldspace);
-					_TES->currentInteriorCell = nullptr;
+					TESWorldSpace* ParentWorldspace = Cell->GetParentWorldSpace();
+					TESObjectCELL* Buffer = _TES->currentInteriorCell;
+					if (ParentWorldspace == nullptr)
+						_TES->currentInteriorCell = Cell;
+					else
+					{
+						_TES->SetCurrentWorldspace(ParentWorldspace);
+						_TES->currentInteriorCell = nullptr;
+					}
+
+					// disable the current filter, if any, to ensure that the list view item we want has been added to the cell list
+					if (uiManager::FilterableFormListManager::Instance.HasActiveFilter(CellListFilterEdit))
+					{
+						uiManager::FilterableFormListManager::Instance.SetEnabled(CellListFilterEdit, false);
+						FilterEnabled = true;
+					}
+
+					TESCellViewWindow::UpdateCurrentWorldspace();
+					TESCellViewWindow::RefreshCellList();
+					TESCellViewWindow::SetCellSelection(Cell);
+					_TES->currentInteriorCell = Buffer;
+
+					ExistingCellItem = TESListView::GetItemByData(*TESCellViewWindow::CellListHandle, Cell);
+					SME_ASSERT(ExistingCellItem != -1);
 				}
 
-				TESCellViewWindow::UpdateCurrentWorldspace();
-				TESCellViewWindow::RefreshCellList(false);
-				TESCellViewWindow::SetCellSelection(Cell);
-				_TES->currentInteriorCell = Buffer;
-
-				// the cell is selected in the list at this point, so we emulate a double click
 				NMITEMACTIVATE Data = { 0 };
-				Data.hdr.code = -3;		// ### what notification is this?
+				Data.hdr.code = -3;		// ### what notification is this? LVN_ITEMACTIVATE?
 				Data.hdr.hwndFrom = *TESCellViewWindow::CellListHandle;
 				Data.hdr.idFrom = TESCellViewWindow::kCellListView;
-				Data.iItem = TESListView::GetItemByData(*TESCellViewWindow::CellListHandle, Cell);
-				SME_ASSERT(Data.iItem != -1);
-				Data.lParam = (LPARAM)Cell;
-				SendMessage(*TESCellViewWindow::WindowHandle, WM_NOTIFY, Data.hdr.idFrom, (LPARAM)&Data);
+				Data.iItem = ExistingCellItem;
+				Data.lParam = reinterpret_cast<LPARAM>(Cell);
+				SendMessage(*TESCellViewWindow::WindowHandle, WM_NOTIFY, Data.hdr.idFrom, reinterpret_cast<LPARAM>(&Data));
+
+				// re-enable the filter
+				if (FilterEnabled)
+				{
+					uiManager::FilterableFormListManager::Instance.SetEnabled(CellListFilterEdit, true);
+					TESCellViewWindow::RefreshCellList();
+				}
 
 				SetActiveWindow(*TESRenderWindow::WindowHandle);
 			};

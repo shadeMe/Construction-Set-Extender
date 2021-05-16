@@ -26,6 +26,10 @@ namespace cse
 			Depot.push_back(&dialogs::kFormOverrideLevel3BackColor);
 			Depot.push_back(&dialogs::kMultiplePreviewWindows);
 			Depot.push_back(&dialogs::kPreserveEditorDialogLocations);
+			Depot.push_back(&dialogs::kCellViewActiveCellForeColor);
+			Depot.push_back(&dialogs::kCellViewActiveCellBackColor);
+			Depot.push_back(&dialogs::kCellViewLoadedGridCellForeColor);
+			Depot.push_back(&dialogs::kCellViewLoadedGridCellBackColor);
 
 			Depot.push_back(&general::kShowNumericEditorIDWarning);
 			Depot.push_back(&general::kCrashHandlerMode);
@@ -180,6 +184,12 @@ namespace cse
 
 			INISetting		kMultiplePreviewWindows("MultiplePreviewWindows", DIALOGS_INISECTION, "Allow multiple preview windows", (SInt32)1);
 			INISetting		kPreserveEditorDialogLocations("PreserveEditorDialogLocations", DIALOGS_INISECTION, "Save/Load the desktop locations of editor dialogs to/from the INI file", (SInt32)1);
+
+			INISetting		kCellViewActiveCellForeColor("CellViewActiveCellForeColor", DIALOGS_INISECTION, "Foreground color of the active interior/grid-center exterior cell in the cell view window (RGB)", "0,0,0");
+			INISetting		kCellViewActiveCellBackColor("CellViewActiveCellBackColor", DIALOGS_INISECTION, "Background color of the active interior/grid-center exterior cell in the cell view window (RGB)", "102,196,251");
+
+			INISetting		kCellViewLoadedGridCellForeColor("CellViewLoadedGridCellForeColor", DIALOGS_INISECTION, "Foreground color of the non-grid-center exterior cells in the cell view window (RGB)", "200,200,200");
+			INISetting		kCellViewLoadedGridCellBackColor("CellViewLoadedGridCellBackColor", DIALOGS_INISECTION, "Background color of the non-grid-center exterior cell in the cell view window (RGB)", "3,89,141");
 		}
 
 		namespace general

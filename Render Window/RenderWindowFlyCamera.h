@@ -18,7 +18,7 @@ namespace cse
 			BYTE					DIKeyboardState[256];
 			NiFrustum				ViewportFrustumBuffer;
 
-			bgsee::util::ThunkStdCall<RenderWindowFlyCamera, LRESULT, HWND, UINT, WPARAM, LPARAM, bool&, bgsee::WindowExtraDataCollection*, bgsee::WindowSubclasser*>
+			bgsee::util::ThunkStdCall<RenderWindowFlyCamera, LRESULT, HWND, UINT, WPARAM, LPARAM, bgsee::WindowSubclassProcCollection::SubclassProcExtraParams*>
 									ThunkRenderWindowSubclassProc;
 
 			enum
@@ -48,7 +48,7 @@ namespace cse
 			bool	GetToggleHotkeyPressed();
 
 			LRESULT RenderWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-											bool& Return, bgsee::WindowExtraDataCollection* ExtraData, bgsee::WindowSubclasser* Subclasser);
+											bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
 
 			RenderWindowFlyCamera();
 		public:

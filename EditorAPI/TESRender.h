@@ -111,7 +111,7 @@ public:
 		/*12*/ UInt16						pad12;
 		/*14*/ NiNode*						root;				// smart ptr, picking is done on its children
 		/*18*/ NiTArray<Record*>			pickRecords;		// NiTArray<NiPick::Record*>
-		/*28*/ UInt32						unk28;
+		/*28*/ Record*						unk28;
 		/*2C*/ UInt8						unk2C;
 		/*2D*/ UInt8						unk2D;
 		/*2E*/ UInt8						unk2E;
