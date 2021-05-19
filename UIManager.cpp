@@ -90,6 +90,9 @@ namespace cse
 				TimeCounter = GetTickCount64();
 				break;
 			case WM_RBUTTONUP:
+				if (GetAsyncKeyState(VK_CONTROL))
+					break;
+
 				SubclassParams->Out.MarkMessageAsHandled = true;
 
 				POINT CursorLoc { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
@@ -422,7 +425,7 @@ namespace cse
 		void FilterableFormListManager::ResetFilter(HWND FilterEdit)
 		{
 			SME_ASSERT(FilterEdit);
-			
+
 			auto FilterData = LookupByFilterEdit(FilterEdit);
 			if (FilterData == nullptr)
 				return;
