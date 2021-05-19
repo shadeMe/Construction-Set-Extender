@@ -46,7 +46,40 @@ namespace cse
 			NativeScriptDataWrapper(componentDLLInterface::ScriptData* Data);
 		};
 
-		ref class SelectScriptDialog : public AnimatedForm
+		ref class ScriptCollectionSorter : public System::Collections::Generic::IComparer<NativeScriptDataWrapper^>, System::Collections::IComparer
+		{
+		public:
+			static enum class SortField
+			{
+				Flags,
+				EditorID,
+				FormID,
+				Type,
+				ParentPlugin
+			};
+		private:
+			SortField	Field;
+			SortOrder	Order;
+
+			static int	CompareFieldAscending(NativeScriptDataWrapper^ X, NativeScriptDataWrapper^ Y, SortField Field);
+		public:
+			ScriptCollectionSorter(SortField Field, SortOrder Order)
+				: Field(Field), Order(Order) {}
+
+			virtual int Compare(NativeScriptDataWrapper^ X, NativeScriptDataWrapper^ Y);
+			virtual int Compare(Object^ X, Object^ Y);
+		};
+
+		ref class FastScriptListViewDataSource : public BrightIdeasSoftware::FastObjectListDataSource
+		{
+		public:
+			FastScriptListViewDataSource(BrightIdeasSoftware::FastObjectListView^ Parent)
+				: FastObjectListDataSource(Parent) {}
+
+			virtual void Sort(BrightIdeasSoftware::OLVColumn^ column, System::Windows::Forms::SortOrder order) override;
+		};
+
+		ref class SelectScriptDialog : public Form
 		{
 		public:
 			// Also doubles as precedence
@@ -102,7 +135,7 @@ namespace cse
 			void						SaveBoundsToINI();
 			void						LoadBoundsFromINI();
 			void						CompleteSelection();
-			void						PopulateLoadedScripts(String^ FilterString, bool DefaultSelection);
+			void						PopulateLoadedScripts(String^ FilterString, bool DefaultSelection, bool SortByFlags);
 
 			static Object^				ScriptListAspectScriptNameGetter(Object^ RowObject);
 			static Object^				ScriptListAspectFormIDGetter(Object^ RowObject);
@@ -117,6 +150,7 @@ namespace cse
 			SelectScriptDialogParams^				Parameters;
 			componentDLLInterface::ScriptListData*	LoadedScripts;
 			List<NativeScriptDataWrapper^>^			ListDataSource;
+			List<NativeScriptDataWrapper^>^			DisabledScripts;
 		public:
 			property SelectScriptDialogData^		ResultData;
 			property bool							HasResult;

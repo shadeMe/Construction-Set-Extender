@@ -49,29 +49,35 @@ namespace cse
 		{
 			static String^ CategoryName = "General";
 
-			[Category("General")]
+			[Category("Editor")]
 			[Description("Automatically indent script lines")]
 			property bool AutoIndent;
 
-			[Category("General")]
-			[Description("Hide script editor window in Windows taskbar/task-switcher")]
-			property bool HideInTaskbar;
-
-			[Category("General")]
-			[Description("Save/restore caret position on save/load")]
-			property bool SaveRestoreCaret;
-
-			[Category("General")]
-			[Description("'Load Script(s)' updates existing scripts if editorIDs match")]
-			property bool LoadScriptUpdatesExistingScripts;
-
-			[Category("General")]
+			[Category("Editor")]
 			[Description("Cut/copy entire line when no text is selected")]
 			property bool CutCopyEntireLine;
 
-			[Category("General")]
+			[Category("Editor")]
+			[Description("Save/restore caret position on save/load")]
+			property bool SaveRestoreCaret;
+
+
+			[Category("Tools")]
+			[Description("'Load Script(s)' updates existing scripts if editorIDs match")]
+			property bool LoadScriptUpdatesExistingScripts;
+
+			[Category("Tools")]
 			[Description("Recompile dependencies after variable index modification")]
 			property bool RecompileDependsOnVarIdxMod;
+
+			[Category("Window")]
+			[Description("Hide script editor window in Windows taskbar/task-switcher")]
+			property bool HideInTaskbar;
+
+
+			[Category("Script Picker")]
+			[Description("Sort scripts according to their flags (modified, deleted, etc) by default")]
+			property bool SortScriptsByFlags;
 
 			GeneralSettings()
 			{
@@ -81,6 +87,7 @@ namespace cse
 				LoadScriptUpdatesExistingScripts = true;
 				CutCopyEntireLine = true;
 				RecompileDependsOnVarIdxMod = true;
+				SortScriptsByFlags = true;
 			}
 
 			virtual bool Validate(SettingsGroup^ OldValue, String^% OutMessage) override { return true; }
@@ -110,6 +117,7 @@ namespace cse
 			[Description("Maximum number of suggestions to display")]
 			property UInt32 MaxSuggestionsToDisplay;
 
+
 			[Category("Insight Info")]
 			[Description("Show info tooltip on mouse hover")]
 			property bool ShowInsightToolTip;
@@ -122,9 +130,11 @@ namespace cse
 			[Description("Show error messages in info tooltip")]
 			property bool ShowErrorsInInsightToolTip;
 
+
 			[Category("Database")]
 			[Description("IntelliSense database update interval in Earth minutes")]
 			property UInt32 DatabaseUpdateInterval;
+
 
 			[Category("Background Analysis")]
 			[Description("Background semantic analysis interval in Earth seconds. "
@@ -392,6 +402,7 @@ namespace cse
 			[Category("Collision Checking")]
 			[Description("Check for variable-command name collisions (recommended)")]
 			property bool CheckVarCommandNameCollisions;
+
 
 			[Category("General")]
 			[Description("Count local variable references")]

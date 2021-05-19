@@ -4,6 +4,7 @@
 #include "WorkspaceModelInterface.h"
 #include "[Common]\ListViewUtilities.h"
 #include "ScriptSync.h"
+#include "Preferences.h"
 
 namespace cse
 {
@@ -29,6 +30,57 @@ namespace cse
 				Type = "Magic Effect";
 				break;
 			}
+		}
+
+		int ScriptCollectionSorter::CompareFieldAscending(NativeScriptDataWrapper^ X, NativeScriptDataWrapper^ Y, SortField Field)
+		{
+			switch (Field)
+			{
+			case SortField::Flags:
+				return safe_cast<int>(SelectScriptDialog::GetFlagType(X->ScriptData)).CompareTo(safe_cast<int>(SelectScriptDialog::GetFlagType(Y->ScriptData)));
+			case SortField::EditorID:
+				return String::Compare(X->EditorID, Y->EditorID, System::StringComparison::CurrentCultureIgnoreCase);
+			case SortField::FormID:
+				return X->ScriptData->FormID.CompareTo(Y->ScriptData->FormID);
+			case SortField::Type:
+				return String::Compare(X->Type, Y->Type, System::StringComparison::CurrentCultureIgnoreCase);
+			case SortField::ParentPlugin:
+				return String::Compare(X->ParentPluginName, Y->ParentPluginName, System::StringComparison::CurrentCultureIgnoreCase);
+			default:
+				return 0;
+			}
+		}
+
+		int ScriptCollectionSorter::Compare(NativeScriptDataWrapper^ X, NativeScriptDataWrapper^ Y)
+		{
+			int Result = CompareFieldAscending(X, Y, Field);
+
+			// Sort by editorID if equal
+			if (Result == 0)
+				Result = CompareFieldAscending(X, Y, SortField::EditorID);
+
+			if (Order == SortOrder::Descending)
+				Result = -Result;
+
+			return Result;
+		}
+
+		int ScriptCollectionSorter::Compare(Object^ X, Object^ Y)
+		{
+			return Compare(safe_cast<NativeScriptDataWrapper^>(X), safe_cast<NativeScriptDataWrapper^>(Y));
+		}
+
+		void FastScriptListViewDataSource::Sort(BrightIdeasSoftware::OLVColumn^ column, System::Windows::Forms::SortOrder order)
+		{
+			if (order == SortOrder::None)
+				return;
+
+			ScriptCollectionSorter::SortField SortField = safe_cast<ScriptCollectionSorter::SortField>(column->Tag);
+			auto Comparator = gcnew ScriptCollectionSorter(SortField, order);
+			ObjectList->Sort(Comparator);
+			FilteredObjectList->Sort(Comparator);
+
+			RebuildIndexMap();
 		}
 
 		void SelectScriptDialog::ScriptList_SelectionChanged(Object^ Sender, EventArgs^ E)
@@ -111,7 +163,7 @@ namespace cse
 
 		void SelectScriptDialog::ToolStripFilterTextBox_TextChanged(Object^ Sender, EventArgs^ E)
 		{
-			PopulateLoadedScripts(ToolStripFilterTextBox->Text, false);
+			PopulateLoadedScripts(ToolStripFilterTextBox->Text, false, false);
 		}
 
 		void SelectScriptDialog::ToolStripFilterTextBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
@@ -158,7 +210,7 @@ namespace cse
 		void SelectScriptDialog::InitializeComponent()
 		{
 			this->PreviewBox = (gcnew System::Windows::Forms::TextBox());
-			this->ScriptList = (gcnew BrightIdeasSoftware::FastObjectListView());
+			this->ScriptList = gcnew BrightIdeasSoftware::FastObjectListView();
 			this->ScriptListCFlags = (gcnew BrightIdeasSoftware::OLVColumn());
 			this->ScriptListCScriptName = (gcnew BrightIdeasSoftware::OLVColumn());
 			this->ScriptListCFormID = (gcnew BrightIdeasSoftware::OLVColumn());
@@ -373,8 +425,18 @@ namespace cse
 			ToolStripFilterTextBox->KeyDown += gcnew KeyEventHandler(this, &SelectScriptDialog::ToolStripFilterTextBox_KeyDown);
 			this->Closing += gcnew CancelEventHandler(this, &SelectScriptDialog::Dialog_Cancel);
 
-
 			BottomToolStrip->Renderer = gcnew CustomToolStripSystemRenderer;
+
+			// Set the sort fields in the columns' tag fields
+			ScriptListCFlags->Tag = ScriptCollectionSorter::SortField::Flags;
+			ScriptListCScriptName->Tag = ScriptCollectionSorter::SortField::EditorID;
+			ScriptListCFormID->Tag = ScriptCollectionSorter::SortField::FormID;
+			ScriptListCType->Tag = ScriptCollectionSorter::SortField::Type;
+			ScriptListCParentPlugin->Tag = ScriptCollectionSorter::SortField::ParentPlugin;
+
+			ScriptList->VirtualListDataSource = gcnew FastScriptListViewDataSource(ScriptList);
+
+			ToolStripFilterTextBox->Focus();
 		}
 
 
@@ -446,14 +508,14 @@ namespace cse
 			this->Close();
 		}
 
-		void SelectScriptDialog::PopulateLoadedScripts(String^ FilterString, bool DefaultSelection)
+		void SelectScriptDialog::PopulateLoadedScripts(String^ FilterString, bool DefaultSelection, bool SortByFlags)
 		{
 			ScriptList->DeselectAll();
 			ScriptList->ClearObjects();
 			ListDataSource->Clear();
+			DisabledScripts->Clear();
 			PreviewBox->Text = "";
 
-			List<NativeScriptDataWrapper^>^ ScriptsInSync = gcnew List<NativeScriptDataWrapper^>;
 			NativeScriptDataWrapper^ DefaultSelectedItem = nullptr;
 			if (LoadedScripts)
 			{
@@ -480,7 +542,7 @@ namespace cse
 					NativeScriptDataWrapper^ NewItem = gcnew NativeScriptDataWrapper(ThisScript);
 					ListDataSource->Add(NewItem);
 					if (scriptSync::DiskSync::Get()->IsScriptBeingSynced(ScriptEID) && Parameters->PreventSyncedScriptSelection)
-						ScriptsInSync->Add(NewItem);
+						DisabledScripts->Add(NewItem);
 
 					if (DefaultSelection && ScriptEID->Equals(Parameters->SelectedScriptEditorID))
 						DefaultSelectedItem = NewItem;
@@ -488,7 +550,10 @@ namespace cse
 			}
 
 			ScriptList->SetObjects(ListDataSource);
-			ScriptList->DisableObjects(ScriptsInSync);
+			ScriptList->DisableObjects(DisabledScripts);
+
+			if (SortByFlags)
+				ScriptList->Sort(ScriptListCFlags, SortOrder::Ascending);
 
 			if (ScriptList->GetItemCount())
 			{
@@ -589,7 +654,7 @@ namespace cse
 		}
 
 		SelectScriptDialog::SelectScriptDialog(SelectScriptDialogParams^ Params) :
-			AnimatedForm(0.125, false)
+			Form()
 		{
 			InitializeComponent();
 
@@ -599,8 +664,9 @@ namespace cse
 			Parameters = Params;
 			LoadedScripts = nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetScriptList();
 			ListDataSource = gcnew List<NativeScriptDataWrapper ^>;
+			DisabledScripts = gcnew List<NativeScriptDataWrapper ^>;
 
-			PopulateLoadedScripts(Parameters->FilterString, true);
+			PopulateLoadedScripts(Parameters->FilterString, true, preferences::SettingsHolder::Get()->General->SortScriptsByFlags);
 			ButtonCompleteSelection->Enabled = false;
 
 			LoadBoundsFromINI();
@@ -619,6 +685,8 @@ namespace cse
 				delete components;
 			}
 		}
+
+
 
 	}
 }
