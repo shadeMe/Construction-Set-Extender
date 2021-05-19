@@ -685,7 +685,7 @@ namespace bgsee
 			CrashRptData.uPriorities[CR_HTTP] = CR_NEGATIVE_PRIORITY;
 			CrashRptData.uPriorities[CR_SMTP] = CR_NEGATIVE_PRIORITY;
 			CrashRptData.dwFlags |= CR_INST_HTTP_BINARY_ENCODING | CR_INST_SHOW_ADDITIONAL_INFO_FIELDS | CR_INST_ALLOW_ATTACH_MORE_FILES;
-			CrashRptData.dwFlags |= CR_INST_DONT_SEND_REPORT | CR_INST_SEND_QUEUED_REPORTS | CR_INST_STORE_ZIP_ARCHIVES;
+			CrashRptData.dwFlags |= CR_INST_SEND_QUEUED_REPORTS /*| CR_INST_DONT_SEND_REPORT | CR_INST_STORE_ZIP_ARCHIVES*/;
 			CrashRptData.uMiniDumpType = (MINIDUMP_TYPE)(MiniDumpNormal |
 														 MiniDumpWithIndirectlyReferencedMemory |
 														 MiniDumpScanMemory |
@@ -718,8 +718,8 @@ namespace bgsee
 				crAddFile2(GetINIPath(),
 						   nullptr, "BGSEE INI File", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
-				crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)Params.EditorID]) + ".log")).c_str(),
-						   nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
+				//crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)Params.EditorID]) + ".log")).c_str(),
+				//		   nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
 				crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)Params.EditorID]) + "_editor.log")).c_str(),
 						   nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
@@ -727,8 +727,8 @@ namespace bgsee
 				crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)Params.EditorID]) + "_loader.log")).c_str(),
 						   nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
-				crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)Params.EditorID]) + "_steam_loader.log")).c_str(),
-						   nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
+				//crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)Params.EditorID]) + "_steam_loader.log")).c_str(),
+				//		   nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
 				crAddScreenshot2(CR_AS_PROCESS_WINDOWS, 0);
 			}
