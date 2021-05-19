@@ -1291,21 +1291,27 @@ namespace cse
 				obScriptParsing::AnalysisData^ Data = Parent->SemanticAnalysisData;
 				for each (obScriptParsing::ControlBlock^ Itr in Data->ControlBlocks)
 				{
-					if (Itr->IsMalformed() == false &&
-						Itr->StartLine <= document->LineCount && Itr->StartLine > 0 &&
-						Itr->EndLine <= document->LineCount && Itr->EndLine > 0)
-					{
-						AvalonEdit::Document::DocumentLine^ StartLine = document->GetLineByNumber(Itr->StartLine);
-						AvalonEdit::Document::DocumentLine^ EndLine = document->GetLineByNumber(Itr->EndLine);
+					if (Itr->IsMalformed())
+						continue;
+					else if (Itr->StartLine < 0 || Itr->StartLine > document->LineCount)
+						continue;
+					else if (Itr->EndLine - 1 < 0 || Itr->EndLine - 1 > document->LineCount)
+						continue;
 
-						Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartLine->EndOffset, EndLine->Offset - 1));
-					}
+					auto StartLine = document->GetLineByNumber(Itr->StartLine);
+					auto EndLine = document->GetLineByNumber(Itr->EndLine - 1);
+
+					auto StartOffset = StartLine->EndOffset;
+					auto EndOffset = EndLine->EndOffset;
+
+					if (EndOffset - StartOffset < 1)
+						continue;
+
+					Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartOffset, EndOffset));
 				}
+
 				if (Data->MalformedStructure && Data->FirstStructuralErrorLine <= document->LineCount && Data->FirstStructuralErrorLine > 0)
-				{
-					AvalonEdit::Document::DocumentLine^ ErrorLine = document->GetLineByNumber(Data->FirstStructuralErrorLine);
-					firstErrorOffset = ErrorLine->Offset;
-				}
+					firstErrorOffset = document->GetLineByNumber(Data->FirstStructuralErrorLine)->Offset;
 
 				if (Foldings->Count)
 					Foldings->Sort(Sorter);
@@ -1338,7 +1344,7 @@ namespace cse
 				BackgroundGeometryBuilder^ Builder = gcnew BackgroundGeometryBuilder();
 
 				Builder->CornerRadius = 1;
-				Builder->AlignToMiddleOfPixels = true;
+				//Builder->AlignToMiddleOfPixels = true;
 
 				if (OpenBraceOffset != -1)
 				{
