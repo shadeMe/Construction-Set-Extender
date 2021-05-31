@@ -672,6 +672,11 @@ void TESObjectWindow::RefreshFormList(void)
 	SendMessage(*TESObjectWindow::WindowHandle, 0x41A, NULL, NULL);
 }
 
+void TESObjectWindow::InitializeSplitter(HWND Splitter, HWND TreeView, HWND ListView)
+{
+	cdeclCall<void>(0x00404F30, Splitter, TreeView, ListView);
+}
+
 void TESObjectWindow::SetSplitterEnabled(HWND Splitter, bool State)
 {
 	cdeclCall<void>(0x004044D0, Splitter, State);

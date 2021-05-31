@@ -768,7 +768,7 @@ public:
 		/*11*/ UInt8		performingDrag;
 		/*12*/ UInt8		enabled;			// disables all message processing when not set
 		/*13*/ UInt8		pad13;
-		/*14*/ POINT		cursorPos;			// buffer used to store the coords of the cursor during a drag op
+		/*14*/ POINT		dragOrigin;			// buffer used to store the coords of the cursor during a drag op
 	};
 	STATIC_ASSERT(sizeof(SplitterData) == 0x1C);
 
@@ -843,6 +843,7 @@ public:
 	};
 
 	static void						RefreshFormList(void);
+	static void						InitializeSplitter(HWND Splitter, HWND TreeView, HWND ListView);
 	static void						SetSplitterEnabled(HWND Splitter, bool State);
 	static bool						GetMinimized(void);
 
