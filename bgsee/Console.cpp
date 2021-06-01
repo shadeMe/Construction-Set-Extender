@@ -45,8 +45,7 @@ namespace bgsee
 																			(SInt32)0);
 
 #define IDM_BGSEE_CONSOLE_COMMANDLINE_RESETCOMMANDSTACK			(WM_USER + 5001)
-#define ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_START		(WM_USER + 8001)
-#define ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_END		(WM_USER + 9000)
+#define IDM_BGSEE_CONSOLE_CONTEXTTABS_RELOAD					(WM_USER + 5002)
 
 	LRESULT CALLBACK Console::BaseDlgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return)
 	{
@@ -57,6 +56,71 @@ namespace bgsee
 
 		switch (uMsg)
 		{
+		case IDM_BGSEE_CONSOLE_CONTEXTTABS_RELOAD:
+			{
+				HWND TabStrip = GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_CONTEXTS_TABLIST);
+
+				ContextArrayT Contexts;
+				Contexts.emplace_back(Instance->PrimaryContext);
+				Contexts.insert(Contexts.end(), Instance->SecondaryContexts.begin(), Instance->SecondaryContexts.end());
+
+				TabCtrl_DeleteAllItems(TabStrip);
+
+				int Index = 0;
+				for (auto Context : Contexts)
+				{
+					TCITEM NewTabItem;
+					NewTabItem.mask = TCIF_STATE | TCIF_TEXT | TCIF_PARAM;
+					if (Context == Instance->PrimaryContext)
+						NewTabItem.pszText = "DEFAULT";
+					else
+						NewTabItem.pszText = reinterpret_cast<LPSTR>(const_cast<char*>(Context->GetName()));
+
+					NewTabItem.lParam = reinterpret_cast<LPARAM>(Context);
+
+					TabCtrl_InsertItem(TabStrip, Index, &NewTabItem);
+					if (Instance->ActiveContext == Context)
+						TabCtrl_SetCurSel(TabStrip, Index);
+
+					++Index;
+				}
+
+				Return = true;
+				DlgProcResult = TRUE;
+			}
+
+			break;
+		case WM_NOTIFY:
+			{
+				auto Data = reinterpret_cast<NMHDR*>(lParam);
+
+				switch (Data->code)
+				{
+				case TCN_SELCHANGE:
+					{
+						SME_ASSERT(wParam == IDC_BGSEE_CONSOLE_CONTEXTS_TABLIST);
+
+						HWND TabStrip = GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_CONTEXTS_TABLIST);
+						int SelectionIndex = TabCtrl_GetCurSel(TabStrip);
+						SME_ASSERT(SelectionIndex != -1);
+
+						TCITEM ItemData;
+						ItemData.mask = TCIF_PARAM;
+						TabCtrl_GetItem(TabStrip, SelectionIndex, &ItemData);
+
+						SME_ASSERT(ItemData.lParam);
+						auto Context = reinterpret_cast<MessageLogContext*>(ItemData.lParam);
+						Instance->SetActiveContext(Context);
+
+						Return = true;
+						DlgProcResult = TRUE;
+
+						break;
+					}
+				}
+			}
+
+			break;
 		case WM_DROPFILES:
 			{
 				// drag-drop coda script files to execute them
@@ -121,29 +185,8 @@ namespace bgsee
 					if (Instance->SecondaryContexts.size())
 						InsertMenu(ContextsMenu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
 
-					int i = 1;
-					for (ContextArrayT::const_iterator Itr = Instance->SecondaryContexts.begin(); Itr != Instance->SecondaryContexts.end(); Itr++, i++)
-					{
-						MENUITEMINFO ContextMenuItem = {0};
-						ContextMenuItem.cbSize = sizeof(MENUITEMINFO);
-						ContextMenuItem.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING|MIIM_DATA;
-						ContextMenuItem.wID = ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_START + i;
-						if (Instance->GetActiveContext() == *Itr)
-							ContextMenuItem.fState = MFS_ENABLED|MFS_CHECKED;
-						else
-							ContextMenuItem.fState = MFS_ENABLED;
-						ContextMenuItem.dwTypeData = (LPSTR)(*Itr)->GetName();
-						ContextMenuItem.cch = 0;
-						ContextMenuItem.dwItemData = (ULONG_PTR)(*Itr);
-						InsertMenuItem(ContextsMenu, GetMenuItemCount(ContextsMenu), TRUE, &ContextMenuItem);
-
-						SME_ASSERT(i < ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_END);
-					}
-
 					UIExtraData* xData = (UIExtraData*)UserData->ExtraData;
 					SME_ASSERT(xData);
-
-					xData->SelectedContext = nullptr;
 
 					MENUITEMINFO ContextMenuItem = {0};
 					ContextMenuItem.cbSize = sizeof(MENUITEMINFO);
@@ -153,36 +196,6 @@ namespace bgsee
 					else
 						ContextMenuItem.fState = MFS_DISABLED;
 					SetMenuItemInfo((HMENU)wParam, ID_BGSEE_CONSOLE_CONTEXTMENU_OPENLOG, FALSE, &ContextMenuItem);
-				}
-			}
-
-			break;
-		case WM_UNINITMENUPOPUP:
-			if (wParam == (WPARAM)Instance->ContextMenuHandle)
-			{
-				HMENU ContextsMenu = GetSubMenu((HMENU)wParam, GetMenuItemCount((HMENU)wParam) - 1);
-
-				while (GetMenuItemCount(ContextsMenu) > 1)
-					DeleteMenu(ContextsMenu, GetMenuItemCount(ContextsMenu) - 1, MF_BYPOSITION);
-			}
-
-			break;
-		case WM_MENUSELECT:
-			if (LOWORD(wParam) > ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_START &&
-				LOWORD(wParam) < ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_END)
-			{
-				if ((HIWORD(wParam) & MF_MOUSESELECT))
-				{
-					MENUITEMINFO ContextMenuItem = {0};
-					ContextMenuItem.cbSize = sizeof(MENUITEMINFO);
-					ContextMenuItem.fMask = MIIM_DATA;
-					GetMenuItemInfo((HMENU)lParam, LOWORD(wParam), FALSE, &ContextMenuItem);
-					SME_ASSERT(ContextMenuItem.dwItemData);
-
-					UIExtraData* xData = (UIExtraData*)UserData->ExtraData;
-					SME_ASSERT(xData);
-
-					xData->SelectedContext = (MessageLogContext*)ContextMenuItem.dwItemData;
 				}
 			}
 
@@ -202,17 +215,6 @@ namespace bgsee
 			case ID_BGSEE_CONSOLE_CONTEXTMENU_WARNINGS:
 				Instance->GetWarningManager()->ShowGUI(Instance->ResourceInstance, hWnd);
 				break;
-			default:
-				if (LOWORD(wParam) > ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_START &&
-					LOWORD(wParam) < ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_END)
-				{
-					UIExtraData* xData = (UIExtraData*)UserData->ExtraData;
-					SME_ASSERT(xData);
-
-					Instance->SetActiveContext(xData->SelectedContext);
-				}
-
-				break;
 			}
 
 			break;
@@ -221,6 +223,7 @@ namespace bgsee
 				RECT CurrentRect = {0};
 				HWND MessageLog = GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_MESSAGELOG);
 				HWND CommandLine = GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_COMMANDLINE);
+				HWND TabStrip = GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_CONTEXTS_TABLIST);
 
 				UIExtraData* xData = (UIExtraData*)UserData->ExtraData;
 				SME_ASSERT(xData);
@@ -230,7 +233,14 @@ namespace bgsee
 				int DeltaDlgHeight = (CurrentRect.bottom - xData->DialogInitBounds.bottom);
 				int VerticalScrollWidth = GetSystemMetrics(SM_CXVSCROLL) + 4;
 				int HorScrollWidth = GetSystemMetrics(SM_CXHSCROLL) + 4;
-				HDWP DeferPosData = BeginDeferWindowPos(2);
+				HDWP DeferPosData = BeginDeferWindowPos(3);
+
+				DeferWindowPos(DeferPosData, TabStrip, nullptr,
+							xData->ContextTabStripInitBounds.left,
+							xData->ContextTabStripInitBounds.top,
+							DeltaDlgWidth + xData->ContextTabStripInitBounds.right,
+							xData->ContextTabStripInitBounds.bottom,
+							NULL);
 
 				DeferWindowPos(DeferPosData, MessageLog, nullptr,
 							xData->MessageLogInitBounds.left,
@@ -269,10 +279,12 @@ namespace bgsee
 
 				HWND MessageLog = GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_MESSAGELOG);
 				HWND CommandLine = GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_COMMANDLINE);
+				HWND TabStrip = GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_CONTEXTS_TABLIST);
 
 				GetClientRect(hWnd, &xData->DialogInitBounds);
 				SME::UIHelpers::GetClientRectInitBounds(MessageLog, hWnd, &xData->MessageLogInitBounds);
 				SME::UIHelpers::GetClientRectInitBounds(CommandLine, hWnd, &xData->CommandLineInitBounds);
+				SME::UIHelpers::GetClientRectInitBounds(TabStrip, hWnd, &xData->ContextTabStripInitBounds);
 
 				SendDlgItemMessage(hWnd, IDC_BGSEE_CONSOLE_MESSAGELOG, WM_SETFONT, (WPARAM)xData->MessageLogFont, (LPARAM)TRUE);
 				SendDlgItemMessage(hWnd, IDC_BGSEE_CONSOLE_COMMANDLINE, WM_SETFONT, (WPARAM)xData->CommandLineFont, (LPARAM)TRUE);
@@ -775,7 +787,6 @@ namespace bgsee
 	}
 
 	Console::UIExtraData::UIExtraData() :
-		SelectedContext(nullptr),
 		MessageLogFont(nullptr),
 		CommandLineFont(nullptr),
 		DialogInitBounds(),
@@ -785,6 +796,7 @@ namespace bgsee
 		ZeroMemory(&DialogInitBounds, sizeof(RECT));
 		ZeroMemory(&MessageLogInitBounds, sizeof(RECT));
 		ZeroMemory(&CommandLineInitBounds, sizeof(RECT));
+		ZeroMemory(&ContextTabStripInitBounds, sizeof(RECT));
 
 		MessageLogFont = CreateFont(Console::kINI_FontSize.GetData().i, 0, 0, 0,
 									FW_REGULAR,
@@ -808,7 +820,7 @@ namespace bgsee
 									CLIP_DEFAULT_PRECIS,
 									CLEARTYPE_QUALITY,
 									FF_DONTCARE,
-									"Consolas");
+									Console::kINI_FontFace.GetData().s);
 	}
 
 	Console::UIExtraData::~UIExtraData()
@@ -858,6 +870,8 @@ namespace bgsee
 
 		ClearMessageLog();
 		SetTitle(ActiveContext->GetName());
+
+		PostMessage(DialogHandle, IDM_BGSEE_CONSOLE_CONTEXTTABS_RELOAD, 0, 0);
 	}
 
 	void Console::ResetActiveContext( void )
@@ -1131,6 +1145,10 @@ namespace bgsee
 
 		MessageLogContext* NewContext = new MessageLogContext(Name, LogPath);
 		SecondaryContexts.push_back(NewContext);
+		std::sort(SecondaryContexts.begin(), SecondaryContexts.end(), [](const auto& a, const auto& b) { return _stricmp(a->GetName(), b->GetName()) < 0; });
+
+		PostMessage(DialogHandle, IDM_BGSEE_CONSOLE_CONTEXTTABS_RELOAD, 0, 0);
+
 		return NewContext;
 	}
 
@@ -1144,6 +1162,9 @@ namespace bgsee
 
 		SecondaryContexts.erase(Match);
 		delete Context;
+		std::sort(SecondaryContexts.begin(), SecondaryContexts.end(), [](const auto& a, const auto& b) { return _stricmp(a->GetName(), b->GetName()) < 0; });
+
+		PostMessage(DialogHandle, IDM_BGSEE_CONSOLE_CONTEXTTABS_RELOAD, 0, 0);
 	}
 
 	void Console::PrintToMessageLogContext( void* Context, bool HideTimestamp, const char* Format, ... )

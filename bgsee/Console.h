@@ -213,13 +213,13 @@ namespace bgsee
 
 		struct UIExtraData
 		{
-			MessageLogContext*					SelectedContext;
-			HFONT								MessageLogFont;
-			HFONT								CommandLineFont;
+			HFONT				MessageLogFont;
+			HFONT				CommandLineFont;
 
-			RECT								DialogInitBounds;
-			RECT								MessageLogInitBounds;
-			RECT								CommandLineInitBounds;
+			RECT				DialogInitBounds;
+			RECT				MessageLogInitBounds;
+			RECT				CommandLineInitBounds;
+			RECT				ContextTabStripInitBounds;
 
 			UIExtraData();
 			~UIExtraData();
