@@ -34,7 +34,7 @@ HWND*						TESObjectWindow::FormListHandle = (HWND*)0x00A0BAA0;
 HWND*						TESObjectWindow::TreeViewHandle = (HWND*)0x00A0BAA4;
 HWND*						TESObjectWindow::SplitterHandle = (HWND*)0x00A0BA6C;
 UInt8*						TESObjectWindow::Initialized = (UInt8*)0x00A0AF40;
-UInt32*						TESObjectWindow::CurrentTreeNode = (UInt32*)0x00A0B6F8;
+UInt32*						TESObjectWindow::CurrentTreeNodeType = (UInt32*)0x00A0B6F8;
 int*						TESObjectWindow::SortColumnArray = (int*)0x00A0B668;
 DLGPROC						TESObjectWindow::DialogProc = (DLGPROC)0x00420240;
 TESObjectWindow::TreeEntryInfo**

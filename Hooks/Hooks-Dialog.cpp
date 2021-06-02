@@ -346,6 +346,11 @@ namespace cse
 
 			// remove superfluous call to invalidate the cell view window's cell list
 			SME::MemoryHandler::WriteRelJump(0x0040AF97, 0x0040AFC3);
+
+			// prevent the data dialog's listview from generate a mask for the checkmarks (to ensure visibility regardless of the active editor-wide color theme)
+			SME::MemoryHandler::SafeWrite8(0x0040B476 + 1, LR_MONOCHROME);
+			SME::MemoryHandler::SafeWrite16(0x0040B47A + 1, 0xFFFF);
+			SME::MemoryHandler::SafeWrite8(0x0040B47A + 3, 0xFF);
 		}
 
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex)

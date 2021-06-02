@@ -469,8 +469,15 @@ namespace cse
 		CR_CRASH_CALLBACK_INFO* CrashInfo = (CR_CRASH_CALLBACK_INFO*)Parameter;
 		bool ResumeExecution = false;
 
-		int CrashHandlerMode = settings::general::kCrashHandlerMode.GetData().i;
+		std::string CrashMessage("The editor has encountered a critical error!\n\nA crash report will be generated shortly in the following folder: ");
+		CrashMessage += BGSEEMAIN->GetCrashReportDirPath();
+		CrashMessage += "\n\n";
+		int MBFlags = MB_TASKMODAL | MB_TOPMOST | MB_SETFOREGROUND | MB_ICONSTOP | MB_OK;
 
+		if (PanicSaved)
+			CrashMessage += "Unsaved changes were saved to the panic save file in the Data\\Backup folder.\n\n";
+
+		int CrashHandlerMode = settings::general::kCrashHandlerMode.GetData().i;
 		if (CrashHandlerMode == kCrashHandlerMode_Terminate)
 			ResumeExecution = false;
 		else if (CrashHandlerMode == kCrashHandlerMode_Resume)
@@ -479,39 +486,38 @@ namespace cse
 		{
 			bool FunnyGuyUnlocked = BGSEEDAEMON->GetFullInitComplete() &&
 				(achievements::kFunnyGuy->GetUnlocked() || achievements::kFunnyGuy->GetTriggered());
-			int MBFlags = MB_TASKMODAL | MB_TOPMOST | MB_SETFOREGROUND | MB_ICONERROR;
+
+			MBFlags &= ~MB_OK;
 
 			if (FunnyGuyUnlocked == false)
-				MBFlags |= MB_YESNOCANCEL;
-			else
-				MBFlags |= MB_YESNO;
-
-			std::string Jingle = "The editor has encountered a critical error! ";
-			if (PanicSaved)
-				Jingle += "Unsaved changes were saved to the panic save file. ";
-
-			Jingle += "An error report will be generated shortly.\n\n";
-
-			if (FunnyGuyUnlocked == false)
-				Jingle += "Do you wish to resume execution once you've:\n   1. Prayed to your various deities\n   2. Walked the dog\n   3. Sent the author of this editor extender plugin a pile of cash\n   4. Pleaded to the editor in a soft but sultry voice, and\n   5. Crossed your appendages...\n...in hopes of preventing it from crashing outright upon selecting 'Yes' in this dialog?";
-			else
-				Jingle += "Do you wish to resume execution?\n\nPS: It is almost always futile to select 'Yes'.";
-
-			switch (MessageBox(nullptr, Jingle.c_str(), BGSEEMAIN->ExtenderGetShortName(), MBFlags))
 			{
-			case IDYES:
-				ResumeExecution = true;
-				break;
-			case IDNO:
-				ResumeExecution = false;
-				break;
-			case IDCANCEL:
-				if (BGSEEDAEMON->GetFullInitComplete())
-					BGSEEACHIEVEMENTS->Unlock(achievements::kFunnyGuy, false, true);
-
-				MessageBox(nullptr, "Hah! Nice try, Bob.", BGSEEMAIN->ExtenderGetDisplayName(), MB_TASKMODAL | MB_TOPMOST | MB_SETFOREGROUND);
-				break;
+				MBFlags |= MB_YESNOCANCEL;
+				CrashMessage += "Do you wish to resume execution once you've:\n   1. Prayed to your various deities\n   2. Sent the shadeMe a pile of cash, and\n   3. Pleaded to the editor in a soft, sultry voice in hopes of preventing it from crashing outright upon selecting 'Yes' in this dialog?";
 			}
+			else
+			{
+				MBFlags |= MB_YESNO;
+				CrashMessage += "Do you wish to resume execution? The editor will probably terminate anyway.";
+			}
+		}
+
+		switch (MessageBox(nullptr, CrashMessage.c_str(), BGSEEMAIN->ExtenderGetDisplayName(), MBFlags))
+		{
+		case IDOK:
+			// nothing to do here
+			break;
+		case IDYES:
+			ResumeExecution = true;
+			break;
+		case IDNO:
+			ResumeExecution = false;
+			break;
+		case IDCANCEL:
+			if (BGSEEDAEMON->GetFullInitComplete())
+				BGSEEACHIEVEMENTS->Unlock(achievements::kFunnyGuy, false, true);
+
+			MessageBox(nullptr, "Hah! Nice try, Bob.", BGSEEMAIN->ExtenderGetDisplayName(), MB_TASKMODAL | MB_TOPMOST | MB_SETFOREGROUND | MB_ICONERROR);
+			break;
 		}
 
 		return ResumeExecution;

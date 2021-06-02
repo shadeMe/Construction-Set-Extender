@@ -73,7 +73,7 @@ namespace cse
 		{
 			NamedReferenceCollectionManager::Initialize();
 
-			ConsoleContext = BGSEECONSOLE->RegisterMessageLogContext("Reference Group Manager");
+			ConsoleContext = BGSEECONSOLE->RegisterMessageLogContext("Reference Groups");
 			SME_ASSERT(ConsoleContext);
 		}
 

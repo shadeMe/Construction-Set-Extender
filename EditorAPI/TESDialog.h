@@ -745,8 +745,50 @@ public:
 			kGroup__MAX
 		};
 
+		enum
+		{
+			kType_Activator = 0,
+			kType_Apparatus,
+			kType_Armor,
+			kType_Book,
+			kType_Clothing,
+			kType_Container,
+			kType_Door,
+			kType_Ingredient,
+			kType_Light,
+			kType_MiscItem,
+			kType_Static,
+			kType_Grass,
+			kType_Tree,
+			kType_Weapon,
+			kType_NPC,
+			kType_Creature,
+			kType_LeveledCreature,
+			kType_Spell,
+			kType_Enchantment,
+			kType_Potion,
+			kType_LeveledItem,
+			kType_Key,
+			kType_SoulGem,
+			kType_Ammo,
+			kType_Flora,
+			kType_Furniture,
+			kType_Sound,
+			kType_LandTexture,
+			kType_CombatStyle,
+			kType_LoadScreen,
+			kType_LeveledSpell,
+			kType_AnimObject,
+			kType_WaterType,
+			kType_SubSpace,
+			kType_EffectShader,
+			kType_SigilStone,
+
+			kType__MAX
+		};
+
 		// members
-		/*000*/ SInt32		formType;					// -1 for groups
+		/*000*/ SInt32		type;						// one of the above IDs, -1 for groups
 		/*004*/ UInt32		group;						// parent group ID
 		/*008*/ char		hierarchy[MAX_PATH];		// path to the item in the tree view hierarchy, including the item name
 														// only filled for items with depth > 2
@@ -860,7 +902,7 @@ public:
 	static HWND*					SplitterHandle;
 
 	static UInt8*					Initialized;			// set when the window is created and initialized
-	static UInt32*					CurrentTreeNode;		// index of the current tree view selection, used with the tree entry and sort column arrays
+	static UInt32*					CurrentTreeNodeType;	// TreeViewItemData::type the current tree view selection, used with the tree entry and sort column arrays
 	static int*						SortColumnArray;
 	static TreeEntryInfo**			TreeEntryArray;
 

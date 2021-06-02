@@ -416,7 +416,7 @@ namespace cse
 			kOver3000				= new AchievementBase("Over 3000!", "OMFGodrays! RAM usage of 3 gigs?! It's gonna blow!!",
 															IDB_ACHIEVEMENT_OVER3000, "17C0EA7A-DB0C-46BA-A19F-232A73630AD5");
 
-			kFunnyGuy				= new AchievementBase("Funny Guy Bob", "How lovely! You've got a sense of humour...",
+			kFunnyGuy				= new AchievementBase("Funny Guy Bob", "Tried to \"cancel\" a CTD! You've got a sense of humour...",
 															IDB_ACHIEVEMENT_FUNNYGUY, "13275AC0-DA3B-4802-813A-4DB3E7C4168D");
 
 			kHappyBDayMoi			= new AchievementHappypotamus("CSE", "I mean, who would have thought!",
