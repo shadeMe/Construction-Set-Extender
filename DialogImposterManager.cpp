@@ -187,14 +187,14 @@ namespace cse
 		FormList = *TESObjectWindow::FormListHandle;
 		TreeView = *TESObjectWindow::TreeViewHandle;
 		Splitter = *TESObjectWindow::SplitterHandle;
-		TreeSelection = *TESObjectWindow::CurrentTreeNode;
+		TreeSelection = *TESObjectWindow::CurrentTreeNodeType;
 		memcpy(SortColumns, TESObjectWindow::SortColumnArray, sizeof(SortColumns));
 
 		*TESObjectWindow::WindowHandle = Imposter;
 		*TESObjectWindow::FormListHandle = GetDlgItem(Imposter, TESObjectWindow::kFormListCtrlID);
 		*TESObjectWindow::TreeViewHandle = GetDlgItem(Imposter, TESObjectWindow::kTreeViewCtrlID);
 		*TESObjectWindow::SplitterHandle = GetDlgItem(Imposter, TESObjectWindow::kSplitterCtrlID);
-		*TESObjectWindow::CurrentTreeNode = ParentData->TreeSelection;
+		*TESObjectWindow::CurrentTreeNodeType = ParentData->TreeSelection;
 		memcpy(TESObjectWindow::SortColumnArray, ParentData->SortColumns, sizeof(ParentData->SortColumns));
 	}
 
@@ -206,10 +206,10 @@ namespace cse
 		*TESObjectWindow::SplitterHandle = Splitter;
 
 		// copy the current selection and sort columns into the imposter data before resetting them
-		ParentData->TreeSelection = *TESObjectWindow::CurrentTreeNode;
+		ParentData->TreeSelection = *TESObjectWindow::CurrentTreeNodeType;
 		memcpy(ParentData->SortColumns, TESObjectWindow::SortColumnArray, sizeof(ParentData->SortColumns));
 
-		*TESObjectWindow::CurrentTreeNode = TreeSelection;
+		*TESObjectWindow::CurrentTreeNodeType = TreeSelection;
 		memcpy(TESObjectWindow::SortColumnArray, SortColumns, sizeof(SortColumns));
 	}
 

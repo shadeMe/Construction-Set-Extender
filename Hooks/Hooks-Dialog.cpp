@@ -355,6 +355,11 @@ namespace cse
 			// prevent the object window's WM_INITDIALOG from screwing up the dialog's initial layout
 			SME::MemoryHandler::WriteRelJump(0x004218F8, 0x004219EC);
 			SME::MemoryHandler::WriteNop(0x00404F97, 0x0040501E - 0x00404F97);	// splitter init'er
+
+			// prevent the data dialog's listview from generate a mask for the checkmarks (to ensure visibility regardless of the active editor-wide color theme)
+			SME::MemoryHandler::SafeWrite8(0x0040B476 + 1, LR_MONOCHROME);
+			SME::MemoryHandler::SafeWrite16(0x0040B47A + 1, 0xFFFF);
+			SME::MemoryHandler::SafeWrite8(0x0040B47A + 3, 0xFF);
 		}
 
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex)
