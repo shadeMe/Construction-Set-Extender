@@ -775,6 +775,11 @@ bool TESObjectWindow::GetMinimized(void)
 	return (GetMenuState(*TESCSMain::MainMenuHandle, 40199, MF_BYCOMMAND) & MF_CHECKED) == false;
 }
 
+HTREEITEM TESObjectWindow::LookupTreeItemByData(HWND TreeView, HTREEITEM SearchStartItem, SInt32 TreeItemType, UInt32 TreeItemGroup, const char* TreeItemHierachy)
+{
+	return cdeclCall<HTREEITEM>(0x0041FA00, TreeView, SearchStartItem, TreeItemType, TreeItemGroup, TreeItemHierachy);
+}
+
 void* TESTreeView::GetItemData(HWND hWnd, HTREEITEM Item)
 {
 	return cdeclCall<void*>(0x0041F990, hWnd, Item);

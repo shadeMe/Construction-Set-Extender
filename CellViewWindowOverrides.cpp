@@ -494,6 +494,20 @@ namespace cse
 				}
 
 				break;
+			case WM_WINDOWPOSCHANGING:
+				{
+					static constexpr auto kMinWidth = 630;
+					static constexpr auto kMinHeight = 330;
+
+					auto WindowPosParams = reinterpret_cast<WINDOWPOS*>(lParam);
+					if (WindowPosParams->cx < kMinWidth)
+						WindowPosParams->cx = kMinWidth;
+
+					if (WindowPosParams->cy < kMinHeight)
+						WindowPosParams->cy = kMinHeight;
+				}
+
+				break;
 			case WM_SIZE:
 				if (wParam != SIZE_MINIMIZED)
 				{
@@ -510,30 +524,43 @@ namespace cse
 					int DeltaDlgWidth = (CurrentRect.right - BaseDlgRect->right) >> 1;
 					HDWP DeferPosData = BeginDeferWindowPos(3);
 
-					DeferWindowPos(DeferPosData, CellList, 0,
-								   0, 0,
-								   DeltaDlgWidth + BaseCellListRect->right, CurrentRect.bottom + BaseCellListRect->bottom - BaseDlgRect->bottom,
-								   SWP_NOMOVE);
+					if (DeferPosData)
+					{
+						DeferPosData = DeferWindowPos(DeferPosData, CellList, 0,
+							0, 0,
+							DeltaDlgWidth + BaseCellListRect->right, CurrentRect.bottom + BaseCellListRect->bottom - BaseDlgRect->bottom,
+							SWP_NOMOVE);
+					}
 
-					DeferWindowPos(DeferPosData, WorldspaceCombo, 0,
-								   0, 0,
-								   BaseCellListRect->right + DeltaDlgWidth - BaseWorldspaceLabelRect->right, BaseWorldspaceComboRect->bottom,
-								   SWP_NOMOVE);
+					if (DeferPosData)
+					{
+						DeferPosData = DeferWindowPos(DeferPosData, WorldspaceCombo, 0,
+							0, 0,
+							BaseCellListRect->right + DeltaDlgWidth - BaseWorldspaceLabelRect->right, BaseWorldspaceComboRect->bottom,
+							SWP_NOMOVE);
+					}
 
-					DeferWindowPos(DeferPosData, RefList, 0,
-								   DeltaDlgWidth + BaseRefListRect->left, BaseRefListRect->top,
-								   DeltaDlgWidth + BaseRefListRect->right, CurrentRect.bottom + BaseRefListRect->bottom - BaseDlgRect->bottom,
-								   NULL);
+					if (DeferPosData)
+					{
+						DeferPosData = DeferWindowPos(DeferPosData, RefList, 0,
+							DeltaDlgWidth + BaseRefListRect->left, BaseRefListRect->top,
+							DeltaDlgWidth + BaseRefListRect->right, CurrentRect.bottom + BaseRefListRect->bottom - BaseDlgRect->bottom,
+							NULL);
+					}
 
-					DeferWindowPos(DeferPosData, CellLabel, 0,
-								   BaseCellNameLabelRect->left + DeltaDlgWidth, BaseCellNameLabelRect->top,
-								   DeltaDlgWidth + BaseCellNameLabelRect->right, BaseCellNameLabelRect->bottom,
-								   NULL);
+					if (DeferPosData)
+					{
+						DeferPosData = DeferWindowPos(DeferPosData, CellLabel, 0,
+							BaseCellNameLabelRect->left + DeltaDlgWidth, BaseCellNameLabelRect->top,
+							DeltaDlgWidth + BaseCellNameLabelRect->right, BaseCellNameLabelRect->bottom,
+							NULL);
+					}
 
 					InvalidateRect(CellLabel, nullptr, TRUE);
 					InvalidateRect(WorldspaceLabel, nullptr, TRUE);
 
-					EndDeferWindowPos(DeferPosData);
+					if (DeferPosData)
+						EndDeferWindowPos(DeferPosData);
 
 					CellViewExtraData* xData = BGSEE_GETWINDOWXDATA(CellViewExtraData, SubclassParams->In.ExtraData);
 
@@ -541,66 +568,100 @@ namespace cse
 					{
 						DeferPosData = BeginDeferWindowPos(8);
 
-						DeferWindowPos(DeferPosData, XLabel, 0,
-									   DeltaDlgWidth + xData->XLabel.left, xData->XLabel.top,
-									   0, 0,
-									   SWP_NOSIZE);
+						if (DeferPosData)
+						{
+							DeferPosData = DeferWindowPos(DeferPosData, XLabel, 0,
+								DeltaDlgWidth + xData->XLabel.left, xData->XLabel.top,
+								0, 0,
+								SWP_NOSIZE);
+						}
 
-						DeferWindowPos(DeferPosData, XEdit, 0,
-									   DeltaDlgWidth + xData->XEdit.left, xData->XEdit.top,
-									   0, 0,
-									   SWP_NOSIZE);
+						if (DeferPosData)
+						{
+							DeferPosData = DeferWindowPos(DeferPosData, XEdit, 0,
+								DeltaDlgWidth + xData->XEdit.left, xData->XEdit.top,
+								0, 0,
+								SWP_NOSIZE);
+						}
 
-						DeferWindowPos(DeferPosData, YLabel, 0,
-									   DeltaDlgWidth + xData->YLabel.left, xData->YLabel.top,
-									   0, 0,
-									   SWP_NOSIZE);
+						if (DeferPosData)
+						{
+							DeferPosData = DeferWindowPos(DeferPosData, YLabel, 0,
+								DeltaDlgWidth + xData->YLabel.left, xData->YLabel.top,
+								0, 0,
+								SWP_NOSIZE);
+						}
 
-						DeferWindowPos(DeferPosData, YEdit, 0,
-									   DeltaDlgWidth + xData->YEdit.left, xData->YEdit.top,
-									   0, 0,
-									   SWP_NOSIZE);
+						if (DeferPosData)
+						{
+							DeferPosData = DeferWindowPos(DeferPosData, YEdit, 0,
+								DeltaDlgWidth + xData->YEdit.left, xData->YEdit.top,
+								0, 0,
+								SWP_NOSIZE);
+						}
 
-						DeferWindowPos(DeferPosData, GoBtn, 0,
-									   DeltaDlgWidth + xData->GoBtn.left, xData->GoBtn.top,
-									   0, 0,
-									   SWP_NOSIZE);
+						if (DeferPosData)
+						{
+							DeferPosData = DeferWindowPos(DeferPosData, GoBtn, 0,
+								DeltaDlgWidth + xData->GoBtn.left, xData->GoBtn.top,
+								0, 0,
+								SWP_NOSIZE);
+						}
 
-						DeferWindowPos(DeferPosData, RefFilterLabel, 0,
-									   DeltaDlgWidth + xData->RefFilterLabel.left, xData->RefFilterLabel.top,
-									   0, 0,
-									   SWP_NOSIZE);
+						if (DeferPosData)
+						{
+							DeferPosData = DeferWindowPos(DeferPosData, RefFilterLabel, 0,
+								DeltaDlgWidth + xData->RefFilterLabel.left, xData->RefFilterLabel.top,
+								0, 0,
+								SWP_NOSIZE);
+						}
 
-						DeferWindowPos(DeferPosData, RefFilterEditBox, 0,
-									   DeltaDlgWidth + xData->RefFilterEditBox.left, xData->RefFilterEditBox.top,
-									   DeltaDlgWidth + xData->RefFilterEditBox.right, xData->RefFilterEditBox.bottom + 2,
-									   NULL);
+						if (DeferPosData)
+						{
+							DeferPosData = DeferWindowPos(DeferPosData, RefFilterEditBox, 0,
+								DeltaDlgWidth + xData->RefFilterEditBox.left, xData->RefFilterEditBox.top,
+								DeltaDlgWidth + xData->RefFilterEditBox.right, xData->RefFilterEditBox.bottom + 2,
+								NULL);
+						}
 
-						DeferWindowPos(DeferPosData, VisibleOnlyCheckbox, 0,
-									   DeltaDlgWidth + xData->VisibleOnlyCheckBox.left, xData->VisibleOnlyCheckBox.top,
-									   0, 0,
-									   SWP_NOSIZE);
+						if (DeferPosData)
+						{
+							DeferPosData = DeferWindowPos(DeferPosData, VisibleOnlyCheckbox, 0,
+								DeltaDlgWidth + xData->VisibleOnlyCheckBox.left, xData->VisibleOnlyCheckBox.top,
+								0, 0,
+								SWP_NOSIZE);
+						}
 
-						DeferWindowPos(DeferPosData, SelectionOnlyCheckbox, 0,
-									   DeltaDlgWidth + xData->SelectionOnlyCheckBox.left, xData->SelectionOnlyCheckBox.top,
-									   0, 0,
-									   SWP_NOSIZE);
+						if (DeferPosData)
+						{
+							DeferPosData = DeferWindowPos(DeferPosData, SelectionOnlyCheckbox, 0,
+								DeltaDlgWidth + xData->SelectionOnlyCheckBox.left, xData->SelectionOnlyCheckBox.top,
+								0, 0,
+								SWP_NOSIZE);
+						}
 
-						DeferWindowPos(DeferPosData, RefreshRefListBtn, 0,
-									   DeltaDlgWidth + xData->RefreshRefListBtn.left, xData->RefreshRefListBtn.top,
-									   0, 0,
-									   SWP_NOSIZE);
+						if (DeferPosData)
+						{
+							DeferPosData = DeferWindowPos(DeferPosData, RefreshRefListBtn, 0,
+								DeltaDlgWidth + xData->RefreshRefListBtn.left, xData->RefreshRefListBtn.top,
+								0, 0,
+								SWP_NOSIZE);
+						}
 
-						DeferWindowPos(DeferPosData, CellFilterEditBox, 0,
-									   0, 0,
-									   BaseCellListRect->right + DeltaDlgWidth - xData->CellFilterLabel.right - 7, xData->CellFilterEditBox.bottom,
-									   SWP_NOMOVE);
+						if (DeferPosData)
+						{
+							DeferPosData = DeferWindowPos(DeferPosData, CellFilterEditBox, 0,
+								0, 0,
+								BaseCellListRect->right + DeltaDlgWidth - xData->CellFilterLabel.right - 7, xData->CellFilterEditBox.bottom,
+								SWP_NOMOVE);
+						}
 
 						InvalidateRect(XLabel, nullptr, TRUE);
 						InvalidateRect(YLabel, nullptr, TRUE);
 						InvalidateRect(RefFilterLabel, nullptr, TRUE);
 
-						EndDeferWindowPos(DeferPosData);
+						if (DeferPosData)
+							EndDeferWindowPos(DeferPosData);
 					}
 
 					SubclassParams->Out.MarkMessageAsHandled = true;

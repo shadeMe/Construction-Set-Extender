@@ -763,7 +763,7 @@ public:
 		/*00*/ HWND         treeView;
 		/*04*/ HWND			listView;
 		/*08*/ HWND			parent;				// object window
-		/*0C*/ HWND			splitter;
+		/*0C*/ WNDPROC		orgWndProc;
 		/*10*/ UInt8		mouseOver;			// set when the cursor is over the splitter control
 		/*11*/ UInt8		performingDrag;
 		/*12*/ UInt8		enabled;			// disables all message processing when not set
@@ -846,6 +846,7 @@ public:
 	static void						InitializeSplitter(HWND Splitter, HWND TreeView, HWND ListView);
 	static void						SetSplitterEnabled(HWND Splitter, bool State);
 	static bool						GetMinimized(void);
+	static HTREEITEM				LookupTreeItemByData(HWND TreeView, HTREEITEM SearchStartItem, SInt32 TreeItemType, UInt32 TreeItemGroup, const char* TreeItemHierachy);
 
 	// object window imposter wrappers
 	// caches must point to the calling imposter's child controls

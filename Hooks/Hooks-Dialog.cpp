@@ -8,6 +8,7 @@
 #include "ObjectPrefabManager.h"
 #include "CustomDialogProcs.h"
 #include "CellViewWindowOverrides.h"
+#include "ObjectWindowOverrides.h"
 #include <bgsee/FormUndoStack.h>
 
 #pragma warning(push)
@@ -346,6 +347,14 @@ namespace cse
 
 			// remove superfluous call to invalidate the cell view window's cell list
 			SME::MemoryHandler::WriteRelJump(0x0040AF97, 0x0040AFC3);
+
+			// override the default object window splitter subclass
+			SME::MemoryHandler::WriteNop(0x00404F76, 6);
+			SME::MemoryHandler::SafeWrite32(0x00405056 + 1, reinterpret_cast<UInt32>(&uiManager::ObjectWindowSplitterSubclassOverrideProc));
+
+			// prevent the object window's WM_INITDIALOG from screwing up the dialog's initial layout
+			SME::MemoryHandler::WriteRelJump(0x004218F8, 0x004219EC);
+			SME::MemoryHandler::WriteNop(0x00404F97, 0x0040501E - 0x00404F97);	// splitter init'er
 		}
 
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex)

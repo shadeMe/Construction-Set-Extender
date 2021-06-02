@@ -19,6 +19,11 @@ CSE		---->
 
 
 	ENHANCEMENT		=
+		> Tag editor
+			> Save/cluster tags by parent plugins; load appropriately when parent plugin in loaded
+		> Serialization enhancements:
+			> Save parent plugin data to disk
+			> 
 		> OSD enhancements
 			> Render window gizmos
 				> Imguizmo has issues with the CS' renderer (view matrix related) (ask Nukem)
