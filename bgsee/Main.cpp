@@ -631,6 +631,7 @@ namespace bgsee
 		ExtenderDLLPath = std::string(Params.APPPath) + "Data\\" + std::string(kXSEShortName[(int)Params.EditorID]) + "\\Plugins\\" + ExtenderLongName + ".dll";
 		ExtenderINIPath = std::string(Params.APPPath) + "Data\\" + std::string(kXSEShortName[(int)Params.EditorID]) + "\\Plugins\\" + ExtenderLongName + ".ini";
 		ExtenderComponentDLLPath = std::string(Params.APPPath) + "Data\\" + std::string(kXSEShortName[(int)Params.EditorID]) + "\\Plugins\\" + ExtenderShortName + "\\";
+		CrashReportDirPath = GameDirectoryPath + "\\BGSEE Crash Reports\\";
 
 		ScriptExtenderPluginHandle = Params.SEPluginHandle;
 		ScriptExtenderCurrentVersion = Params.SECurrentVersion;
@@ -676,16 +677,16 @@ namespace bgsee
 			CrashRptData.pszAppName = nullptr;
 			CrashRptData.pszAppVersion = nullptr;
 			CrashRptData.pszEmailSubject = nullptr;
-			CrashRptData.pszEmailTo = "shademe.here+bgsee@gmail.com";
+			CrashRptData.pszEmailTo = nullptr;
 			CrashRptData.pszUrl = nullptr;
 			CrashRptData.pszPrivacyPolicyURL = nullptr;
-			CrashRptData.dwFlags |= CR_INST_ALL_POSSIBLE_HANDLERS;
+			CrashRptData.dwFlags |= CR_INST_ALL_POSSIBLE_HANDLERS | CR_INST_AUTO_THREAD_HANDLERS;
 
-			CrashRptData.uPriorities[CR_SMAPI] = 1;
+			CrashRptData.uPriorities[CR_SMAPI] = CR_NEGATIVE_PRIORITY;
 			CrashRptData.uPriorities[CR_HTTP] = CR_NEGATIVE_PRIORITY;
 			CrashRptData.uPriorities[CR_SMTP] = CR_NEGATIVE_PRIORITY;
 			CrashRptData.dwFlags |= CR_INST_HTTP_BINARY_ENCODING | CR_INST_SHOW_ADDITIONAL_INFO_FIELDS | CR_INST_ALLOW_ATTACH_MORE_FILES;
-			CrashRptData.dwFlags |= CR_INST_SEND_QUEUED_REPORTS /*| CR_INST_DONT_SEND_REPORT | CR_INST_STORE_ZIP_ARCHIVES*/;
+			CrashRptData.dwFlags |= CR_INST_DONT_SEND_REPORT | CR_INST_STORE_ZIP_ARCHIVES;
 			CrashRptData.uMiniDumpType = (MINIDUMP_TYPE)(MiniDumpNormal |
 														 MiniDumpWithIndirectlyReferencedMemory |
 														 MiniDumpScanMemory |
@@ -694,8 +695,7 @@ namespace bgsee
 														 MiniDumpWithUnloadedModules |
 														 MiniDumpWithHandleData |
 														 MiniDumpWithFullMemoryInfo);
-			std::string CrashReportSaveDir(GameDirectoryPath + "\\BGSEE Crash Reports\\");
-			CrashRptData.pszErrorReportSaveDir = CrashReportSaveDir.c_str();
+			CrashRptData.pszErrorReportSaveDir = CrashReportDirPath.c_str();
 
 			if (crInstall(&CrashRptData) || crSetCrashCallback(Main::CrashCallback, this))
 			{
@@ -718,17 +718,11 @@ namespace bgsee
 				crAddFile2(GetINIPath(),
 						   nullptr, "BGSEE INI File", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
-				//crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)Params.EditorID]) + ".log")).c_str(),
-				//		   nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
-
 				crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)Params.EditorID]) + "_editor.log")).c_str(),
 						   nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
 				crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)Params.EditorID]) + "_loader.log")).c_str(),
 						   nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
-
-				//crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)Params.EditorID]) + "_steam_loader.log")).c_str(),
-				//		   nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
 				crAddScreenshot2(CR_AS_PROCESS_WINDOWS, 0);
 			}
@@ -823,7 +817,12 @@ namespace bgsee
 		return ExtenderComponentDLLPath.c_str();
 	}
 
-	const char* Main::ParentEditorGetLongName( void ) const
+	const char* Main::GetCrashReportDirPath(void) const
+	{
+		return CrashReportDirPath.c_str();
+	}
+
+	const char* Main::ParentEditorGetLongName(void) const
 	{
 		return kParentEditorLongName[ParentEditorID];
 	}

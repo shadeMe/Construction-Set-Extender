@@ -218,6 +218,7 @@ namespace bgsee
 		std::string					ExtenderDLLPath;				// derived from the dirpath and long name
 		std::string					ExtenderINIPath;				// derived from the dirpath and long name
 		std::string					ExtenderComponentDLLPath;
+		std::string					CrashReportDirPath;
 
 		UInt32						ScriptExtenderPluginHandle;
 		UInt32						ScriptExtenderCurrentVersion;
@@ -255,6 +256,7 @@ namespace bgsee
 		const char*								GetDLLPath(void) const;
 		const char*								GetINIPath(void) const;
 		const char*								GetComponentDLLPath(void) const;
+		const char*								GetCrashReportDirPath(void) const;
 
 		INIManagerGetterFunctor					INIGetter(void);
 		INIManagerSetterFunctor					INISetter(void);
