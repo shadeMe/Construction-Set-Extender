@@ -697,7 +697,7 @@ namespace cse
 			{
 				if (SaveDefinitionComments && Parser->GetFirstTokenType() == ScriptTokenType::Comment)
 				{
-					Description += ReadLine->Substring(Parser->Indices[0] + 1) + "\n";
+					Description += ReadLine->Substring(Parser->Indices[0] + 1)->Trim() + "\n";
 					NextVariableLine = CurrentLine + 1;
 				}
 

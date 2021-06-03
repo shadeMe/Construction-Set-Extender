@@ -35,22 +35,23 @@ namespace cse
 			Form->ShowIcon = false;
 			Form->ControlBox = false;
 			Form->Controls->Add(ListView);
-			//Form->PreventActivation = true;
+
+			IntelliSenseItemImages = gcnew ImageList();
+			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemEmpty"));
+			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemCommand"));
+			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemLocalVar"));
+			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemQuest"));
+			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemUDF"));
+			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemUDF"));
+			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemGMST"));
+			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemGlobalVar"));
+			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemForm"));
+			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemSnippet"));
 
 			ListView->View = View::Details;
 			ListView->Dock = DockStyle::Fill;
 			ListView->MultiSelect = false;
-			ListView->SmallImageList = gcnew ImageList();
-			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemEmpty"));
-			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemCommand"));
-			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemLocalVar"));
-			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemQuest"));
-			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemUDF"));
-			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemUDF"));
-			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemGMST"));
-			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemGlobalVar"));
-			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemForm"));
-			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemSnippet"));
+			ListView->SmallImageList = IntelliSenseItemImages;
 			ListView->Location = Point(0, 0);
 			ListView->LabelEdit = false;
 			ListView->CheckBoxes = false;
@@ -67,21 +68,20 @@ namespace cse
 			ListView->AllColumns->Add(Column);
 			ListView->Columns->Add(Column);
 
-			ListViewPopup = gcnew ModalToolTip;
-			ListViewPopup->AutoPopDelay = 0;
-			ListViewPopup->InitialDelay = 0;
-			ListViewPopup->ReshowDelay = 0;
-			ListViewPopup->ToolTipIcon = ToolTipIcon::None;
-			ListViewPopup->Tag = nullptr;
-			ListViewPopup->ShowAlways = true;
-			//ListViewPopup->UseAnimation = false;
-			//ListViewPopup->UseFading = false;
+			ListViewPopup = gcnew DotNetBar::SuperTooltip;
+			ListViewPopup->CheckTooltipPosition = false;
+			ListViewPopup->DelayTooltipHideDuration = 9999999;
+			ListViewPopup->TooltipDuration = 0;
+			ListViewPopup->IgnoreFormActiveState = true;
+			ListViewPopup->ShowTooltipImmediately = true;
+			ListViewPopup->HoverDelayMultiplier = 0;
+			ListViewPopup->DefaultFont = SystemFonts::DialogFont;
 
-			InsightPopup = gcnew ToolTip;
-			InsightPopup->InitialDelay = 0;
-			InsightPopup->ReshowDelay = 0;
-			InsightPopup->ToolTipIcon = ToolTipIcon::None;
-			InsightPopup->Tag = nullptr;
+			InsightPopup = gcnew DotNetBar::SuperTooltip;
+			InsightPopup->DelayTooltipHideDuration = 0;
+			InsightPopup->TooltipDuration = 0;
+			InsightPopup->CheckTooltipPosition = false;
+			InsightPopup->DefaultFont = SystemFonts::DialogFont;
 
 			MaximumVisibleItemCount = preferences::SettingsHolder::Get()->IntelliSense->MaxSuggestionsToDisplay;
 			InsightPopupDisplayDuration = preferences::SettingsHolder::Get()->IntelliSense->InsightToolTipDisplayDuration;
@@ -108,7 +108,7 @@ namespace cse
 			SAFEDELETE_CLR(ListViewSelectionChangedHandler);
 			SAFEDELETE_CLR(ScriptEditorPreferencesSavedHandler);
 
-			for each (Image^ Itr in ListView->SmallImageList->Images)
+			for each (Image^ Itr in IntelliSenseItemImages->Images)
 				delete Itr;
 
 			HideListViewToolTip();
@@ -233,18 +233,32 @@ namespace cse
 
 		void IntelliSenseInterfaceView::ShowListViewToolTip(IntelliSenseItem^ Item)
 		{
-			const UInt32 kDefaultDisplayDuration = 30 * 1000;
+			auto TooltipData = gcnew DotNetBar::SuperTooltipInfo;
+			TooltipData->HeaderText = Item->GetIdentifier();
+			TooltipData->BodyText = Item->Describe();
+			TooltipData->FooterText = Item->GetItemTypeName();
+			TooltipData->FooterImage = IntelliSenseItemImages->Images[safe_cast<int>(Item->GetItemType())];
+			TooltipData->Color = DotNetBar::eTooltipColor::System;
 
-			ListViewPopup->Tag = Form->Handle;
-			ListViewPopup->ToolTipTitle = Item->GetItemTypeName();
-			ListViewPopup->Show(Item->Describe(), Control::FromHandle(Form->Handle), Point(ListView->Size.Width + 17, 0), kDefaultDisplayDuration);
-			//ListViewPopup->StopHideTimer();
+			auto DesktopLocation = Point(Form->DesktopBounds.Left + Form->DesktopBounds.Width, Form->DesktopBounds.Top);
+
+			if (ListViewPopup->IsTooltipVisible)
+			{
+				ListViewPopup->SuperTooltipControl->UpdateWithSuperTooltipInfo(TooltipData);
+				ListViewPopup->SuperTooltipControl->RecalcSize();
+				ListViewPopup->SuperTooltipControl->UpdateShadow();
+				ListViewPopup->SuperTooltipControl->SetBounds(DesktopLocation.X, DesktopLocation.Y, 0, 0, System::Windows::Forms::BoundsSpecified::Location);
+			}
+			else
+			{
+				ListViewPopup->SetSuperTooltip(Form, TooltipData);
+				ListViewPopup->ShowTooltip(Form, DesktopLocation);
+			}
 		}
 
 		void IntelliSenseInterfaceView::HideListViewToolTip()
 		{
-			ListViewPopup->Hide(Control::FromHandle(Form->Handle));
-			ListViewPopup->Tag = nullptr;
+			ListViewPopup->HideTooltip();
 		}
 
 		void IntelliSenseInterfaceView::Bind(IIntelliSenseInterfaceModel^ To)
@@ -316,21 +330,30 @@ namespace cse
 
 		void IntelliSenseInterfaceView::ShowInsightToolTip(IntelliSenseShowInsightToolTipArgs^ Args)
 		{
-			InsightPopup->ToolTipTitle = Args->Title;
-			InsightPopup->ToolTipIcon = Args->Icon;
-			InsightPopup->Tag = Args->ParentWindowHandle;
-			InsightPopup->Show(Args->Text,
-							Control::FromHandle(Args->ParentWindowHandle),
-							Args->DisplayScreenCoords, InsightPopupDisplayDuration * 1000);
+			auto TooltipData = gcnew DotNetBar::SuperTooltipInfo;
+			TooltipData->HeaderText = Args->Title;
+			TooltipData->BodyText = Args->Text;
+			switch (Args->Icon)
+			{
+			case ToolTipIcon::Warning:
+				TooltipData->Color = DotNetBar::eTooltipColor::Yellow;
+				break;
+			case ToolTipIcon::Error:
+				TooltipData->Color = DotNetBar::eTooltipColor::Red;
+				break;
+			default:
+				TooltipData->Color = DotNetBar::eTooltipColor::System;
+			}
+
+			auto Control = Control::FromHandle(Args->ParentWindowHandle);
+			InsightPopup->SetSuperTooltip(Control, TooltipData);
+			InsightPopup->ShowTooltip(Control, Args->DisplayScreenCoords);
+			InsightPopup->TooltipDuration = InsightPopupDisplayDuration * 1000;
 		}
 
 		void IntelliSenseInterfaceView::HideInsightToolTip()
 		{
-			if (InsightPopup->Tag)
-			{
-				InsightPopup->Hide(Control::FromHandle((IntPtr)InsightPopup->Tag));
-				InsightPopup->Tag = nullptr;
-			}
+			InsightPopup->HideTooltip();
 		}
 
 		void IntelliSenseInterfaceView::Update()
@@ -350,26 +373,30 @@ namespace cse
 				// yields a different result than when the setting's disabled
 				Size DisplaySize = Size(240, (MaximumVisibleItemCount * ItemHeight + ItemHeight) - ((MaximumVisibleItemCount - ItemCount) * ItemHeight));
 
+				Debug::Assert(Form->Tag == nullptr);
+				Form->Tag = FormInvokeDelegate::SetSize;
 				Form->BeginInvoke(gcnew UIInvokeDelegate_FormSetSize(&IntelliSenseInterfaceView::UIInvoke_FormSetSize), gcnew array < Object^ > { this, Form, DisplaySize });
 			}
 		}
 
 		void IntelliSenseInterfaceView::Show(Point Location, IntPtr Parent)
 		{
+			Debug::Assert(Form->Tag == nullptr);
+			Form->Tag = FormInvokeDelegate::Hide;
 			Form->BeginInvoke(gcnew UIInvokeDelegate_FormShow(&IntelliSenseInterfaceView::UIInvoke_FormShow), gcnew array < Object^ > { this, Form, Location, Parent });
 		}
 
 		void IntelliSenseInterfaceView::Hide()
 		{
 			ListView->ClearObjects();
+			HideListViewToolTip();
 
 			if (Form->Visible)
 			{
-				HideListViewToolTip();
-
+				Debug::Assert(Form->Tag == nullptr);
+				Form->Tag = FormInvokeDelegate::Hide;
 				Form->BeginInvoke(gcnew UIInvokeDelegate_FormHide(&IntelliSenseInterfaceView::UIInvoke_FormHide), gcnew array < Object^ > { this, Form });
 			}
-
 		}
 
 		// HACK!
@@ -383,7 +410,6 @@ namespace cse
 			try
 			{
 				ToInvoke->Show(Location, Parent, (ToInvoke->Visible == false));
-				Sender->HideListViewToolTip();
 
 				if (Sender->BoundModel->DataStore->Count)
 				{
@@ -401,6 +427,9 @@ namespace cse
 				Debugger::Break();
 #endif // !NDEBUG
 			}
+
+			Debug::Assert(ToInvoke->Tag != nullptr && safe_cast<FormInvokeDelegate>(ToInvoke->Tag) == FormInvokeDelegate::Show);
+			ToInvoke->Tag = nullptr;
 		}
 
 		void IntelliSenseInterfaceView::UIInvoke_FormSetSize(IntelliSenseInterfaceView^ Sender,
@@ -415,6 +444,9 @@ namespace cse
 				Debugger::Break();
 #endif // !NDEBUG
 			}
+
+			Debug::Assert(ToInvoke->Tag != nullptr && safe_cast<FormInvokeDelegate>(ToInvoke->Tag) == FormInvokeDelegate::SetSize);
+			ToInvoke->Tag = nullptr;
 		}
 
 		void IntelliSenseInterfaceView::UIInvoke_FormHide(IntelliSenseInterfaceView^ Sender, AnimatedForm^ ToInvoke)
@@ -428,6 +460,9 @@ namespace cse
 				Debugger::Break();
 #endif // !NDEBUG
 			}
+
+			Debug::Assert(ToInvoke->Tag != nullptr && safe_cast<FormInvokeDelegate>(ToInvoke->Tag) == FormInvokeDelegate::Hide);
+			ToInvoke->Tag = nullptr;
 		}
 	}
 }

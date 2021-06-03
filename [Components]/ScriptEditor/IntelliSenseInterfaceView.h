@@ -7,20 +7,22 @@ namespace cse
 {
 	namespace intellisense
 	{
-		ref class ModalToolTip : public ToolTip
-		{
-		public:
-			void StopHideTimer() { StopTimer(); }
-		};
+		using namespace DevComponents;
 
 		ref class IntelliSenseInterfaceView : public IIntelliSenseInterfaceView
 		{
+			static enum class FormInvokeDelegate
+			{
+				Show, SetSize, Hide
+			};
+
 			IIntelliSenseInterfaceModel^			BoundModel;
 
 			AnimatedForm^							Form;
 			BrightIdeasSoftware::ObjectListView^	ListView;
-			ModalToolTip^							ListViewPopup;
-			ToolTip^								InsightPopup;
+			DotNetBar::SuperTooltip^				ListViewPopup;
+			DotNetBar::SuperTooltip^				InsightPopup;
+			ImageList^								IntelliSenseItemImages;
 
 			property UInt32							MaximumVisibleItemCount;
 			property UInt32							InsightPopupDisplayDuration;
@@ -74,7 +76,11 @@ namespace cse
 				{
 					if (Form->IsFadingIn)
 						return true;
+					else if (Form->Tag != nullptr && safe_cast<FormInvokeDelegate>(Form->Tag) == FormInvokeDelegate::Show)
+						return false;
 					else if (Form->IsFadingOut)
+						return false;
+					else if (Form->Tag != nullptr && safe_cast<FormInvokeDelegate>(Form->Tag) == FormInvokeDelegate::Hide)
 						return false;
 					else
 						return Form->Visible;

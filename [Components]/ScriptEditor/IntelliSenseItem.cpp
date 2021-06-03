@@ -202,13 +202,13 @@ namespace cse
 			BaseForm = Data->ObjectReference == false;
 			AttachedScriptEditorID = AttachedScript && AttachedScript->IsValid() ? gcnew String(AttachedScript->EditorID) : String::Empty;
 
-			String^ FlagDescription = "" + ((Flags & (UInt32)FormFlags::FromMaster)?"   From Master File\n":"") +
-				((Flags & (UInt32)FormFlags::FromActiveFile)?"   From Active File\n":"") +
-				((Flags & (UInt32)FormFlags::Deleted)?"   Deleted\n":"") +
-				((Flags & (UInt32)FormFlags::TurnOffFire)?"   Turn Off Fire\n":"") +
-				((Flags & (UInt32)FormFlags::QuestItem)?(TypeID == 0x31?"   Persistent\n":"   Quest Item\n"):"") +
-				((Flags & (UInt32)FormFlags::Disabled)?"   Initially Disabled\n":"") +
-				((Flags & (UInt32)FormFlags::VisibleWhenDistant)?"   Visible When Distant\n":"");
+			String^ FlagDescription = "" + ((Flags & (UInt32)FormFlags::FromMaster) ? gcnew String(' ', 7) + "From Master File\n" : "") +
+				((Flags & (UInt32)FormFlags::FromActiveFile) ? gcnew String(' ', 7) + "From Active File\n" : "") +
+				((Flags & (UInt32)FormFlags::Deleted) ? gcnew String(' ', 7) + "Deleted\n" : "") +
+				((Flags & (UInt32)FormFlags::TurnOffFire) ? gcnew String(' ', 7) + "Turn Off Fire\n" : "") +
+				((Flags & (UInt32)FormFlags::QuestItem) ? gcnew String(' ', 7) + (TypeID == 0x31 ? "Persistent\n" : "Quest Item\n") : "") +
+				((Flags & (UInt32)FormFlags::Disabled) ? gcnew String(' ', 7) + "Initially Disabled\n" : "") +
+				((Flags & (UInt32)FormFlags::VisibleWhenDistant) ? gcnew String(' ', 7) + "Visible When Distant\n" : "");
 
 			String^ RefBaseFormDescription = "";
 			if (Data->ObjectReference && Data->BaseFormEditorID)
@@ -218,8 +218,7 @@ namespace cse
 			if (AttachedScriptEditorID->Length > 0)
 				ScriptDescription += "\nAttached Script: " + gcnew String(AttachedScript->EditorID);
 
-			this->Description = EditorID +
-								//"\n\nType: " + GetFormTypeIdentifier() +
+			this->Description = "EditorID: " + EditorID +
 								"\nFormID: " + FormID.ToString("X8") +
 								(FlagDescription->Length ? "\nFlags:\n" + FlagDescription : "") +
 								RefBaseFormDescription + ScriptDescription;
@@ -357,7 +356,7 @@ namespace cse
 
 			CommentDescription = InitialAnalysisData->Description;
 
-			Description += (CommentDescription ->Length > 0 ? "\n" + CommentDescription : "")
+			Description += (CommentDescription ->Length > 0 ? "\nDescription: " + CommentDescription : "")
 						+ "\n\nNumber of variables: " + VarList->Count;
 		}
 
@@ -424,7 +423,7 @@ namespace cse
 
 				String^ Comment = VarList[VarIdx]->GetComment();
 				String^ Name = VarList[VarIdx]->GetIdentifier();
-				Scratch += "\n\t" + ((Comment == "") ? Name : Comment) + " [" + (safe_cast<IntelliSenseItemScriptVariable^>(VarList[VarIdx]))->GetDataTypeID() + "]";
+				Scratch += "\n" + gcnew String(' ', 7) + ((Comment == "") ? Name : Comment) + " [" + (safe_cast<IntelliSenseItemScriptVariable^>(VarList[VarIdx]))->GetDataTypeID() + "]";
 				ParamIdx++;
 			}
 

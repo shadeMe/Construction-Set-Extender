@@ -967,6 +967,7 @@ namespace cse
 					else
 						Location.Y += preferences::SettingsHolder::Get()->Appearance->TextFont->Size;
 
+					Location = TextField->PointToScreen(Location);
 					E->DisplayScreenCoords = Point(Location.X, Location.Y);
 
 					IntelliSenseInsightHover(this, E);

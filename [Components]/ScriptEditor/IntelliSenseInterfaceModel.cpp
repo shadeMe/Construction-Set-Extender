@@ -206,7 +206,10 @@ namespace cse
 			HideInsightTooltip();
 
 			if (LastContextUpdateDiff->LineChanged && Visible)
+			{
 				HidePopup(PopupHideReason::ContextChanged);
+				return;
+			}
 
 			if (Visible)
 				UpdatePopup();
@@ -618,22 +621,27 @@ namespace cse
 				return;
 			}
 
-			UpdatePopup();
-			ShowReason = Reason;
-			HideReason = PopupHideReason::None;
+			if (UpdatePopup())
+			{
+				ShowReason = Reason;
+				HideReason = PopupHideReason::None;
+			}
 		}
 
-		void IntelliSenseInterfaceModel::UpdatePopup()
+		bool IntelliSenseInterfaceModel::UpdatePopup()
 		{
 			PopulateDataStore();
-			if (EnumeratedItems->Count > 0)
+			if (EnumeratedItems->Count == 0)
 			{
-				BoundView->Update();
-				BoundView->Show(Context->DisplayScreenCoords, ParentEditor->WindowHandle);
-				ParentEditor->FocusTextArea();
-			}
-			else
 				HidePopup(PopupHideReason::ContextChanged);
+				return false;
+			}
+
+			BoundView->Update();
+			BoundView->Show(Context->DisplayScreenCoords, ParentEditor->WindowHandle);
+			ParentEditor->FocusTextArea();
+
+			return true;
 		}
 
 		void IntelliSenseInterfaceModel::HidePopup(PopupHideReason Reason)

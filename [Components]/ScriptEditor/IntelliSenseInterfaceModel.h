@@ -188,7 +188,7 @@ namespace cse
 			void						HideInsightTooltip();
 
 			void						ShowPopup(PopupShowReason Reason);
-			void						UpdatePopup();
+			bool						UpdatePopup();
 			void						HidePopup(PopupHideReason Reason);
 			void						RelocatePopup();
 
