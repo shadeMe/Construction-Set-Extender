@@ -667,6 +667,11 @@ void TESCellViewWindow::OnSelectCellListItem(TESObjectCELL* ItemCell, bool Clear
 	}
 }
 
+void TESObjectWindow::TreeEntryInfo::PopulateObjectWindowListView(const char* ResourcePathFilter)
+{
+	thisCall<void>(0x00414C90, this, ResourcePathFilter);
+}
+
 void TESObjectWindow::RefreshFormList(void)
 {
 	SendMessage(*TESObjectWindow::WindowHandle, 0x41A, NULL, NULL);
@@ -689,20 +694,35 @@ void TESObjectWindow::PerformLimitedInit(HWND ObjectWindow)
 	BGSEEUI->GetInvalidationManager()->Push(*TreeViewHandle);
 	BGSEEUI->GetInvalidationManager()->Push(*FormListHandle);
 	{
-		cdeclCall<void>(0x00420130, *TESObjectWindow::TreeViewHandle);
-		int TreeIndex = cdeclCall<int>(0x0041FA00,
-			*TESObjectWindow::TreeViewHandle,
-			SendMessage(*TESObjectWindow::TreeViewHandle, TVM_GETNEXTITEM, 0, 0),
-			0, 0, 0);
-		SendMessage(*TESObjectWindow::TreeViewHandle, TVM_SELECTITEM, 9u, TreeIndex);
-		thisCall<void>(0x00414C90, TESObjectWindow::TreeEntryArray[0], 0);
-		SendMessage(*TESObjectWindow::FormListHandle, LVM_SORTITEMS, 1, (LPARAM)cse::hooks::ObjectWindowFormListComparator);
+		InitializeTreeView(*TESObjectWindow::TreeViewHandle);
+		auto TreeItem = LookupTreeItemByData(*TESObjectWindow::TreeViewHandle,
+											reinterpret_cast<HTREEITEM>(SendMessage(*TESObjectWindow::TreeViewHandle, TVM_GETNEXTITEM, TVGN_ROOT, 0)),
+											0, 0, nullptr);
+
+		SendMessage(*TESObjectWindow::TreeViewHandle,
+					TVM_SELECTITEM,
+					TVGN_CARET,
+					reinterpret_cast<LPARAM>(TreeItem));
+
+		TESObjectWindow::TreeEntryArray[0]->PopulateObjectWindowListView();
+
+		SendMessage(*TESObjectWindow::FormListHandle,
+					LVM_SORTITEMS,
+					1,
+					reinterpret_cast<LPARAM>(cse::hooks::ObjectWindowFormListComparator));
 		SetWindowLong(*TESObjectWindow::FormListHandle,
-			GWL_STYLE,
-			GetWindowLong(*TESObjectWindow::FormListHandle, GWL_STYLE) | LVS_SHAREIMAGELISTS);
-		SendMessage(*TESObjectWindow::FormListHandle, LVM_SETIMAGELIST, 1u, (LPARAM)*TESCSMain::BoundObjectIcons);
-		cdeclCall<void>(0x00404F30, *TESObjectWindow::SplitterHandle, *TESObjectWindow::TreeViewHandle, *TESObjectWindow::FormListHandle);
-		SendMessage(*TESObjectWindow::FormListHandle, LVM_SETEXTENDEDLISTVIEWSTYLE, 0x421u, 0x421u);
+					GWL_STYLE,
+					GetWindowLong(*TESObjectWindow::FormListHandle, GWL_STYLE) | LVS_SHAREIMAGELISTS);
+		SendMessage(*TESObjectWindow::FormListHandle,
+					LVM_SETIMAGELIST,
+					LVSIL_SMALL,
+					reinterpret_cast<LPARAM>(*TESCSMain::BoundObjectIcons));
+		SendMessage(*TESObjectWindow::FormListHandle,
+					LVM_SETEXTENDEDLISTVIEWSTYLE,
+					LVS_EX_INFOTIP | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES,
+					LVS_EX_INFOTIP | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+
+		InitializeSplitter(*TESObjectWindow::SplitterHandle, *TESObjectWindow::TreeViewHandle, *TESObjectWindow::FormListHandle);
 	}
 	BGSEEUI->GetInvalidationManager()->Pop(*FormListHandle);
 	BGSEEUI->GetInvalidationManager()->Pop(*TreeViewHandle);
@@ -713,9 +733,10 @@ void TESObjectWindow::PerformLimitedDeinit(HWND ObjectWindow)
 {
 	SME_ASSERT(ObjectWindow == *WindowHandle);
 
-	int FirstNode = SendMessage(*TESObjectWindow::TreeViewHandle, TVM_GETNEXTITEM, 0, 0);
-	cdeclCall<void>(0x0041FE40, *TESObjectWindow::TreeViewHandle, FirstNode);
-	SendMessage(*TESObjectWindow::TreeViewHandle, TVM_DELETEITEM, 0, -65536);
+	auto FirstNode = SendMessage(*TESObjectWindow::TreeViewHandle, TVM_GETNEXTITEM, TVGN_ROOT, 0);
+	RemoveTreeItemChildren(*TESObjectWindow::TreeViewHandle, reinterpret_cast<HTREEITEM>(FirstNode));
+
+	SendMessage(*TESObjectWindow::TreeViewHandle, TVM_DELETEITEM, 0, reinterpret_cast<LPARAM>(TVI_ROOT));
 	SendMessage(*TESObjectWindow::FormListHandle, LVM_DELETEALLITEMS, NULL, NULL);
 }
 
@@ -746,7 +767,7 @@ void TESObjectWindow::UpdateTreeChildren(HWND ObjectWindow)
 				 ++Itr)
 			{
 				TESForm* Form = Itr.Get();
-				cdeclCall<void>(0x00422310, Form);
+				AddTreeItemFromFormResourcePath(Form);
 			}
 		}
 
@@ -780,9 +801,29 @@ HTREEITEM TESObjectWindow::LookupTreeItemByData(HWND TreeView, HTREEITEM SearchS
 	return cdeclCall<HTREEITEM>(0x0041FA00, TreeView, SearchStartItem, TreeItemType, TreeItemGroup, TreeItemHierachy);
 }
 
-void* TESTreeView::GetItemData(HWND hWnd, HTREEITEM Item)
+void TESObjectWindow::InitializeTreeView(HWND TreeView)
 {
-	return cdeclCall<void*>(0x0041F990, hWnd, Item);
+	cdeclCall<void>(0x00420130, TreeView);
+}
+
+void TESObjectWindow::DeinitializeTreeView(HWND TreeView)
+{
+	cdeclCall<void>(0x004200E0, TreeView);
+}
+
+TESObjectWindow::TreeViewItemData* TESObjectWindow::GetTreeItemData(HWND hWnd, HTREEITEM Item)
+{
+	return cdeclCall<TreeViewItemData*>(0x0041F990, hWnd, Item);
+}
+
+void TESObjectWindow::RemoveTreeItemChildren(HWND hWnd, HTREEITEM Item)
+{
+	cdeclCall<void>(0x0041FE40, hWnd, Item);
+}
+
+void TESObjectWindow::AddTreeItemFromFormResourcePath(TESForm* Form)
+{
+	cdeclCall<void>(0x00422310, Form);
 }
 
 void SelectTopicWindowData::RefreshListView(HWND Dialog)

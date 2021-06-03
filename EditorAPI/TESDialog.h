@@ -582,36 +582,29 @@ class TESComboBox
 {
 public:
 	// methods
-	static void								AddItem(HWND hWnd, const char* Text, void* Data, bool ResizeDroppedWidth = true);
-	static void*							GetSelectedItemData(HWND hWnd);
-	static void								SetSelectedItemByData(HWND hWnd, void* Data);
+	static void		AddItem(HWND hWnd, const char* Text, void* Data, bool ResizeDroppedWidth = true);
+	static void*	GetSelectedItemData(HWND hWnd);
+	static void		SetSelectedItemByData(HWND hWnd, void* Data);
 
-	static void								PopulateWithForms(HWND hWnd, UInt8 FormType, bool ClearItems, bool AddDefaultItem);
-	static void								ClearItems(HWND hWnd);
+	static void		PopulateWithForms(HWND hWnd, UInt8 FormType, bool ClearItems, bool AddDefaultItem);
+	static void		ClearItems(HWND hWnd);
 };
 
 class TESListView
 {
 public:
 	// methods
-	static void								SetSelectedItem(HWND hWnd, int Index);
-	static void*							GetSelectedItemData(HWND hWnd);
-	static void*							GetItemData(HWND hWnd, int Index);
-	static int								GetItemByData(HWND hWnd, void* Data);
-	static void								ScrollToItem(HWND hWnd, int Index);
-	static void								InsertItem(HWND hWnd, void* Data, bool ImageCallback = false, int Index = -1);
-	static UInt32							GetSelectedItemCount(HWND hWnd);
+	static void		SetSelectedItem(HWND hWnd, int Index);
+	static void*	GetSelectedItemData(HWND hWnd);
+	static void*	GetItemData(HWND hWnd, int Index);
+	static int		GetItemByData(HWND hWnd, void* Data);
+	static void		ScrollToItem(HWND hWnd, int Index);
+	static void		InsertItem(HWND hWnd, void* Data, bool ImageCallback = false, int Index = -1);
+	static UInt32	GetSelectedItemCount(HWND hWnd);
 
-	static void								AddColumnHeader(HWND hWnd, int Index, const char* Name, int Width, UInt32 Format = LVCFMT_LEFT);
-	static void								ClearColumnHeaders(HWND hWnd);
-	static void								ClearItems(HWND hWnd);
-};
-
-class TESTreeView
-{
-public:
-	// methods
-	static void*							GetItemData(HWND hWnd, HTREEITEM Item);
+	static void		AddColumnHeader(HWND hWnd, int Index, const char* Name, int Width, UInt32 Format = LVCFMT_LEFT);
+	static void		ClearColumnHeaders(HWND hWnd);
+	static void		ClearItems(HWND hWnd);
 };
 
 class TESTabControl
@@ -726,6 +719,8 @@ public:
 		/*04*/ UInt32        columnCount;        // number of columns in listview
 		/*08*/ UInt32        selectedIndex;      // index of currently selected item in listview (??)
 		/*0C*/ FormListT     formList;
+
+		void	PopulateObjectWindowListView(const char* ResourcePathFilter = nullptr);
 
 		static const UInt32		kTreeEntryCount = 0x24; // size of static tree entry arrays
 	};
@@ -884,30 +879,35 @@ public:
 		kColumn__MAX
 	};
 
-	static void						RefreshFormList(void);
-	static void						InitializeSplitter(HWND Splitter, HWND TreeView, HWND ListView);
-	static void						SetSplitterEnabled(HWND Splitter, bool State);
-	static bool						GetMinimized(void);
-	static HTREEITEM				LookupTreeItemByData(HWND TreeView, HTREEITEM SearchStartItem, SInt32 TreeItemType, UInt32 TreeItemGroup, const char* TreeItemHierachy);
+	static void					RefreshFormList(void);
+	static void					InitializeSplitter(HWND Splitter, HWND TreeView, HWND ListView);
+	static void					SetSplitterEnabled(HWND Splitter, bool State);
+	static bool					GetMinimized(void);
+	static HTREEITEM			LookupTreeItemByData(HWND TreeView, HTREEITEM SearchStartItem, SInt32 TreeItemType, UInt32 TreeItemGroup, const char* TreeItemHierachy);
+	static void					InitializeTreeView(HWND TreeView);
+	static void					DeinitializeTreeView(HWND TreeView);
+	static TreeViewItemData*	GetTreeItemData(HWND hWnd, HTREEITEM Item);
+	static void					RemoveTreeItemChildren(HWND hWnd, HTREEITEM Item);
+	static void					AddTreeItemFromFormResourcePath(TESForm* Form);
 
 	// object window imposter wrappers
 	// caches must point to the calling imposter's child controls
-	static void						PerformLimitedInit(HWND ObjectWindow);
-	static void						PerformLimitedDeinit(HWND ObjectWindow);
-	static void						UpdateTreeChildren(HWND ObjectWindow);
+	static void			PerformLimitedInit(HWND ObjectWindow);
+	static void			PerformLimitedDeinit(HWND ObjectWindow);
+	static void			UpdateTreeChildren(HWND ObjectWindow);
 
 	// caches used by the object window, and to a lesser extent, other dialogs
-	static HWND*					WindowHandle;
-	static HWND*					FormListHandle;
-	static HWND*					TreeViewHandle;
-	static HWND*					SplitterHandle;
+	static HWND*				WindowHandle;
+	static HWND*				FormListHandle;
+	static HWND*				TreeViewHandle;
+	static HWND*				SplitterHandle;
 
-	static UInt8*					Initialized;			// set when the window is created and initialized
-	static UInt32*					CurrentTreeNodeType;	// TreeViewItemData::type the current tree view selection, used with the tree entry and sort column arrays
-	static int*						SortColumnArray;
-	static TreeEntryInfo**			TreeEntryArray;
+	static UInt8*				Initialized;			// set when the window is created and initialized
+	static UInt32*				CurrentTreeNodeType;	// TreeViewItemData::type the current tree view selection, used with the tree entry and sort column arrays
+	static int*					SortColumnArray;
+	static TreeEntryInfo**		TreeEntryArray;
 
-	static DLGPROC					DialogProc;
+	static DLGPROC				DialogProc;
 	enum
 	{
 		kFormListCtrlID = 1041,
@@ -915,7 +915,7 @@ public:
 		kSplitterCtrlID = 2157,
 	};
 
-	static HWND						PrimaryObjectWindowHandle;			// always points to the main object window instance
+	static HWND					PrimaryObjectWindowHandle;			// always points to the main object window instance
 };
 
 // container class, arbitrarily named
