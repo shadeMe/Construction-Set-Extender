@@ -282,7 +282,7 @@ namespace bgsee
 					MAKEINTRESOURCE(IDD_BGSEE_ACHIEVEMENTUNLOCKED),
 					nullptr,
 					NotificationDlgProc,
-					(LPARAM)UserData);
+					(LPARAM)UserData, false);
 			}
 
 			SaveAchievementState(Achievement, true);
