@@ -23,7 +23,8 @@ CSE		---->
 			> Save/cluster tags by parent plugins; load appropriately when parent plugin in loaded
 		> Serialization enhancements:
 			> Save parent plugin data to disk
-			> 
+		> Reimplement the hide active/deleted forms tool
+		> Add support for filtering strings in all form list subitems
 		> OSD enhancements
 			> Render window gizmos
 				> Imguizmo has issues with the CS' renderer (view matrix related) (ask Nukem)
