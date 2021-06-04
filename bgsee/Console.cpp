@@ -174,28 +174,46 @@ namespace bgsee
 			{
 				if (wParam == (WPARAM)Instance->ContextMenuHandle)
 				{
-					// this means the contexts menu absolutely needs to be the last item
-					HMENU ContextsMenu = GetSubMenu((HMENU)wParam, GetMenuItemCount((HMENU)wParam) - 1);
-
-					if (Instance->GetActiveContext() == Instance->PrimaryContext)
-						CheckMenuItem(ContextsMenu, ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_DEFAULT, MFS_CHECKED);
-					else
-						CheckMenuItem(ContextsMenu, ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_DEFAULT, MFS_UNCHECKED);
-
-					if (Instance->SecondaryContexts.size())
-						InsertMenu(ContextsMenu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, nullptr);
-
 					UIExtraData* xData = (UIExtraData*)UserData->ExtraData;
 					SME_ASSERT(xData);
 
 					MENUITEMINFO ContextMenuItem = {0};
 					ContextMenuItem.cbSize = sizeof(MENUITEMINFO);
 					ContextMenuItem.fMask = MIIM_STATE;
+
 					if (Instance->GetActiveContext()->HasLog())
 						ContextMenuItem.fState = MFS_ENABLED;
 					else
 						ContextMenuItem.fState = MFS_DISABLED;
 					SetMenuItemInfo((HMENU)wParam, ID_BGSEE_CONSOLE_CONTEXTMENU_OPENLOG, FALSE, &ContextMenuItem);
+
+					if (Instance->GetActiveContext() != Instance->PrimaryContext)
+					{
+						ContextMenuItem.fState = MFS_DISABLED;
+						SetMenuItemInfo((HMENU)wParam, ID_BGSEE_CONSOLE_CONTEXTMENU_LOGWARNINGS, FALSE, &ContextMenuItem);
+						SetMenuItemInfo((HMENU)wParam, ID_BGSEE_CONSOLE_CONTEXTMENU_LOGASSERTIONS, FALSE, &ContextMenuItem);
+					}
+					else
+					{
+						ContextMenuItem.fState = MFS_ENABLED;
+						if (kINI_LogWarnings().i)
+							ContextMenuItem.fState |= MFS_CHECKED;
+						else
+							ContextMenuItem.fState &= ~MFS_CHECKED;
+						SetMenuItemInfo((HMENU)wParam, ID_BGSEE_CONSOLE_CONTEXTMENU_LOGWARNINGS, FALSE, &ContextMenuItem);
+
+						if (kINI_LogAssertions().i)
+							ContextMenuItem.fState |= MFS_CHECKED;
+						else
+							ContextMenuItem.fState &= ~MFS_CHECKED;
+						SetMenuItemInfo((HMENU)wParam, ID_BGSEE_CONSOLE_CONTEXTMENU_LOGASSERTIONS, FALSE, &ContextMenuItem);
+
+						if (kINI_LogTimestamps().i)
+							ContextMenuItem.fState |= MFS_CHECKED;
+						else
+							ContextMenuItem.fState &= ~MFS_CHECKED;
+						SetMenuItemInfo((HMENU)wParam, ID_BGSEE_CONSOLE_CONTEXTMENU_SHOWTIMESTAMPS, FALSE, &ContextMenuItem);
+					}
 				}
 			}
 
@@ -209,8 +227,14 @@ namespace bgsee
 			case ID_BGSEE_CONSOLE_CONTEXTMENU_OPENLOG:
 				Instance->GetActiveContext()->OpenLog();
 				break;
-			case ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_DEFAULT:
-				Instance->ResetActiveContext();
+			case ID_BGSEE_CONSOLE_CONTEXTMENU_LOGWARNINGS:
+				kINI_LogWarnings.ToggleData();
+				break;
+			case ID_BGSEE_CONSOLE_CONTEXTMENU_SHOWTIMESTAMPS:
+				kINI_LogTimestamps.ToggleData();
+				break;
+			case ID_BGSEE_CONSOLE_CONTEXTMENU_LOGASSERTIONS:
+				kINI_LogAssertions.ToggleData();
 				break;
 			case ID_BGSEE_CONSOLE_CONTEXTMENU_WARNINGS:
 				Instance->GetWarningManager()->ShowGUI(Instance->ResourceInstance, hWnd);
