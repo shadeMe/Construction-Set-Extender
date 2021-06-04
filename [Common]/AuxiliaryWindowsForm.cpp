@@ -29,7 +29,7 @@ namespace cse
 		case WM_ACTIVATE:
 			if (((int)m.WParam & 0xFFFF) != WA_INACTIVE)
 			{
-				if (!PreventActivation && FadeOperation == FadeOperationType::None)
+				if (!PreventActivation && ActiveTransition == Transition::None)
 					break;
 
 				if (m.LParam != IntPtr::Zero)
@@ -46,133 +46,213 @@ namespace cse
 
 	void AnimatedForm::FadeTimer_Tick(Object^ Sender, EventArgs^ E)
 	{
-		RemainingTime -= FadeTimer->Interval / 1000.0;
+		const auto kTransitionTime = 1000;		// in ms
 
-		if (FadeOperation == FadeOperationType::FadeIn)
-			this->Opacity += FadeTimer->Interval / (RemainingTime * 1000.0);
-		else
-			this->Opacity -= FadeTimer->Interval / (RemainingTime * 1000.0);
+		double NumTicksReqd = kTransitionTime / static_cast<double>(FadeTimer->Interval);
+		double PerTickDelta = 1.0 / NumTicksReqd;
+
+		if (ActiveTransition == Transition::FadeIn)
+			this->Opacity += PerTickDelta;
+		else if (ActiveTransition == Transition::FadeOut)
+			this->Opacity -= PerTickDelta;
 
 		if (this->Opacity >= 1.0 || this->Opacity <= 0.0)
+			EndTransition();
+	}
+
+	void AnimatedForm::StartTransition(StartTransitionParams^ Params)
+	{
+		Debug::Assert(ClosingForm == false);
+		Debug::Assert(ActiveTransition == Transition::None);
+		Debug::Assert(ActiveTransitionEndState == TransitionFinalState::None);
+		Debug::Assert(FadeTimer->Enabled == false);
+
+		switch (Params->EndState)
 		{
-			FadeTimer->Stop();
+		case TransitionFinalState::Show:
+			if (Params->UsePosition)
+				SetDesktopLocation(Params->Position.X, Params->Position.Y);
 
-			if (FadeOperation == FadeOperationType::FadeOut)
-			{
-				if (CloseOnFadeOut)
-					Form::Close();
-				else
-					Form::Hide();
-			}
+			if (Params->ParentWindowHandle != IntPtr::Zero)
+				Form::Show(gcnew WindowHandleWrapper(Params->ParentWindowHandle));
 			else
-				Form::BringToFront();
+				Form::Show();
 
-			FadeOperation = FadeOperationType::None;
+			if (Params->Animate)
+			{
+				ActiveTransition = Transition::FadeIn;
+				this->Opacity = 0;
+			}
+
+			break;
+		case TransitionFinalState::Hide:
+		case TransitionFinalState::Close:
+			if (!Visible)
+				Form::Show();
+
+			if (Params->Animate)
+			{
+				ActiveTransition = Transition::FadeOut;
+				this->Opacity = 1;
+			}
+
+			break;
 		}
+
+		ActiveTransitionEndState = Params->EndState;
+		if (!Params->Animate)
+		{
+			// end the transition right away
+			EndTransition();
+		}
+		else
+			FadeTimer->Start();
+	}
+
+	void AnimatedForm::EndTransition()
+	{
+		if (ActiveTransitionEndState == TransitionFinalState::None)
+			return;
+		else if (ClosingForm)
+			return;
+
+		FadeTimer->Stop();
+
+		if (ActiveTransitionCompleteHandler)
+			ActiveTransitionCompleteHandler(this);
+
+		switch (ActiveTransitionEndState)
+		{
+		case TransitionFinalState::Hide:
+			Form::Hide();
+			this->Opacity = 1;
+			break;
+		case TransitionFinalState::Show:
+			Form::BringToFront();
+			this->Opacity = 1;
+			break;
+		case TransitionFinalState::Close:
+			Form::Close();
+			ClosingForm = true;
+			break;
+		}
+
+		ActiveTransition = Transition::None;
+		ActiveTransitionEndState = TransitionFinalState::None;
+		ActiveTransitionCompleteHandler = nullptr;
+	}
+
+	AnimatedForm::AnimatedForm( bool ShowFormWithoutActivation )
+		: System::Windows::Forms::Form()
+	{
+		ActiveTransition = Transition::None;
+		ActiveTransitionEndState = TransitionFinalState::None;
+		ActiveTransitionCompleteHandler = nullptr;
+
+		this->ShowFormWithoutActivation = ShowFormWithoutActivation;
+
+		FadeTimerTickHandler = gcnew EventHandler(this, &AnimatedForm::FadeTimer_Tick);
+		FadeTimer = gcnew Timer();
+		FadeTimer->Interval = 4;
+		FadeTimer->Tick += FadeTimerTickHandler;
+		FadeTimer->Enabled = false;
+
+		AllowMove = true;
+		PreventActivation = false;
+		ClosingForm = false;
+	}
+
+	AnimatedForm::~AnimatedForm()
+	{
+		if (ClosingForm)
+			return;
+
+		EndTransition();
+		ClosingForm = true;
+
+		FadeTimer->Tick -= FadeTimerTickHandler;
+		delete FadeTimer;
 	}
 
 	void AnimatedForm::Show()
 	{
-		this->Opacity = 0.0;
-		RemainingTime = FadeDuration;
-		Form::Show();
+		if (ClosingForm)
+			throw gcnew System::InvalidOperationException("Form is being disposed or has already been disposed");
 
-		FadeOperation = FadeOperationType::FadeIn;
-		FadeTimer->Start();
+		if (Visible)
+			return;
+
+		EndTransition();
+
+		auto Params = gcnew StartTransitionParams;
+		Params->EndState = TransitionFinalState::Show;
+		StartTransition(Params);
 	}
 
-	void AnimatedForm::Show( IWin32Window^ Parent )
+	void AnimatedForm::Show(IntPtr ParentHandle)
 	{
-		this->Opacity = 0.0;
-		RemainingTime = FadeDuration;
-		Form::Show(Parent);
+		if (ClosingForm)
+			throw gcnew System::InvalidOperationException("Form is being disposed or has already been disposed");
 
-		FadeOperation = FadeOperationType::FadeIn;
-		FadeTimer->Start();
+		if (Visible)
+			return;
+
+		EndTransition();
+
+		auto Params = gcnew StartTransitionParams;
+		Params->EndState = TransitionFinalState::Show;
+		Params->ParentWindowHandle = ParentHandle;
+		StartTransition(Params);
 	}
 
 	void AnimatedForm::Show(Drawing::Point Position, IntPtr ParentHandle, bool Animate)
 	{
-		SetDesktopLocation(Position.X, Position.Y);
+		if (ClosingForm)
+			throw gcnew System::InvalidOperationException("Form is being disposed or has already been disposed");
+
 		if (Visible)
 			return;
 
-		if (!Animate)
-		{
-			this->Opacity = 1.0;
-			if (ParentHandle != IntPtr::Zero)
-				Form::Show(gcnew WindowHandleWrapper(ParentHandle));
-			else
-				Form::Show();
+		EndTransition();
 
-			return;
-		}
-
-		if (ParentHandle != IntPtr::Zero)
-			Show(gcnew WindowHandleWrapper(ParentHandle));
-		else
-			Show();
-	}
-
-	System::Windows::Forms::DialogResult AnimatedForm::ShowDialog()
-	{
-		this->Opacity = 0.0;
-		RemainingTime = FadeDuration;
-
-		FadeOperation = FadeOperationType::FadeIn;
-		FadeTimer->Start();
-
-		return Form::ShowDialog();
+		auto Params = gcnew StartTransitionParams;
+		Params->EndState = TransitionFinalState::Show;
+		Params->ParentWindowHandle = ParentHandle;
+		Params->Position = Position;
+		Params->Animate = Animate;
+		StartTransition(Params);
 	}
 
 	void AnimatedForm::Hide()
 	{
-		if (Visible)
-		{
-			FadeOperation = FadeOperationType::FadeOut;
-			this->Opacity = 1.0;
-			FadeTimer->Start();
-			RemainingTime = FadeDuration;
-		}
-	}
+		if (ClosingForm)
+			throw gcnew System::InvalidOperationException("Form is being disposed or has already been disposed");
 
-	AnimatedForm::AnimatedForm( double FadeDuration, bool ShowFormWithoutActivation ) : System::Windows::Forms::Form()
-	{
-		this->FadeDuration = FadeDuration;
-		this->ShowFormWithoutActivation = ShowFormWithoutActivation;
-		FadeOperation = FadeOperationType::None;
-		CloseOnFadeOut = false;
-		RemainingTime = 0.0;
+		if (!Visible)
+			return;
 
-		FadeTimer = gcnew Timer();
-		FadeTimerTickHandler = gcnew EventHandler(this, &AnimatedForm::FadeTimer_Tick);
-		FadeTimer->Interval = 10;
-		FadeTimer->Tick += FadeTimerTickHandler;
-		FadeTimer->Stop();
+		EndTransition();
 
-		AllowMove = true;
-		PreventActivation = false;
+		auto Params = gcnew StartTransitionParams;
+		Params->EndState = TransitionFinalState::Hide;
+		StartTransition(Params);
 	}
 
 	void AnimatedForm::Close()
 	{
-		CloseOnFadeOut = true;
-		FadeOperation = FadeOperationType::FadeOut;
-		this->Opacity = 1.0;
-		RemainingTime = FadeDuration;
-		FadeTimer->Start();
+		if (ClosingForm)
+			throw gcnew System::InvalidOperationException("Form is being disposed or has already been disposed");
+
+		EndTransition();
+
+		auto Params = gcnew StartTransitionParams;
+		Params->EndState = TransitionFinalState::Close;
+		StartTransition(Params);
 	}
 
 	void AnimatedForm::ForceClose()
 	{
 		Form::Close();
-	}
-
-	AnimatedForm::~AnimatedForm()
-	{
-		FadeTimer->Stop();
-		FadeTimer->Tick -= FadeTimerTickHandler;
-		delete FadeTimer;
 	}
 
 	void AnimatedForm::SetSize(Drawing::Size WindowSize)
@@ -182,5 +262,12 @@ namespace cse
 		WindowSize.Height += 3;
 		MaximumSize = WindowSize;
 		MinimumSize = WindowSize;
+	}
+
+	void AnimatedForm::SetNextActiveTransitionCompleteHandler(TransitionCompleteHandler^ NewHandler)
+	{
+		EndTransition();
+
+		ActiveTransitionCompleteHandler = NewHandler;
 	}
 }
