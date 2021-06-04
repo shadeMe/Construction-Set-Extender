@@ -425,6 +425,15 @@ BEGIN
             MENUITEM "Faction Rank Names",          40538
         END
         MENUITEM SEPARATOR
+        POPUP "On Editor Startup..."
+        BEGIN
+            MENUITEM "Startup parameters can be set in 'CSE Preferences'", ID_Menu, INACTIVE
+            MENUITEM SEPARATOR
+            MENUITEM "Set Startup Workspace",       IDC_MAINMENU_ONEDITORSTARTUP_SETSTARTUPWORKSPACE
+            MENUITEM "Load Startup Plugin",         IDC_MAINMENU_ONEDITORSTARTUP_LOADSTARTUPPLUGIN
+            MENUITEM "Open Startup Script/Script Editor", IDC_MAINMENU_ONEDITORSTARTUP_OPENSTARTUPSCRIPT
+        END
+        MENUITEM SEPARATOR
         MENUITEM "Set Workspace",               IDC_MAINMENU_SETWORKSPACE
         MENUITEM SEPARATOR
         MENUITEM "CS &Preferences...",          40136

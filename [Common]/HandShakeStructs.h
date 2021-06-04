@@ -30,6 +30,8 @@ namespace componentDLLInterface
 		UInt32											Flags;
 		TESForm*										ParentForm;
 		const char*										ParentPluginName;
+		const char*										NameComponent;
+		const char*										DescriptionComponent;
 		bool											ObjectReference;
 		const char*										BaseFormEditorID;
 
@@ -89,9 +91,6 @@ namespace componentDLLInterface
 
 	struct QuestData : public FormData
 	{
-		const char*										FullName;
-		const char*										ScriptName;
-
 		QuestData();
 		virtual ~QuestData();
 	};
@@ -422,6 +421,18 @@ namespace componentDLLInterface
 			UInt32			infoVersion;
 			const char *	name;
 			UInt32			version;
+		};
+
+		enum
+		{
+			kRetnType_Default = 0,
+			kRetnType_Form,
+			kRetnType_String,
+			kRetnType_Array,
+			kRetnType_ArrayIndex,
+			kRetnType_Ambiguous,
+
+			kRetnType__Max
 		};
 
 		const ObScriptCommandInfo*						CommandTableStart;

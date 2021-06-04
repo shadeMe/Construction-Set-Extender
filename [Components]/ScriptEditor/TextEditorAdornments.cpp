@@ -11,7 +11,7 @@ namespace cse
 		Image^ ScopeBreadcrumbManager::GetScopeIcon(obScriptParsing::Structurizer::Node::NodeType Type)
 		{
 			if (DefaultIcon == nullptr)
-				DefaultIcon = Globals::ScriptEditorImageResourceManager->CreateImage("AvalonEditStructureVisualizer");
+				DefaultIcon = Globals::ImageResources()->CreateImage("AvalonEditStructureVisualizer");
 
 			return DefaultIcon;
 		}

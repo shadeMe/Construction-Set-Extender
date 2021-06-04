@@ -11,7 +11,7 @@ namespace cse
 		{
 			BoundModel = nullptr;
 
-			Form = gcnew AnimatedForm(0.1, true);
+			Form = gcnew AnimatedForm(0.13, true);
 			ListView = gcnew BrightIdeasSoftware::FastObjectListView;
 
 			ListViewSelectionChangedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceView::ListView_SelectionChanged);
@@ -20,6 +20,7 @@ namespace cse
 			ListViewItemActivateHandler = gcnew EventHandler(this, &IntelliSenseInterfaceView::ListView_ItemActivate);
 			ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceView::ScriptEditorPreferences_Saved);
 			ListViewFormatRowHandler = gcnew EventHandler<BrightIdeasSoftware::FormatRowEventArgs^>(this, &IntelliSenseInterfaceView::ListView_FormatRow);
+			SelectFirstItemOnShowHandler = gcnew AnimatedForm::TransitionCompleteHandler(this, &IntelliSenseInterfaceView::SelectFirstItemOnShow);
 
 			ListView->KeyDown += ListViewKeyDownHandler;
 			ListView->KeyUp += ListViewKeyUpHandler;
@@ -37,16 +38,7 @@ namespace cse
 			Form->Controls->Add(ListView);
 
 			IntelliSenseItemImages = gcnew ImageList();
-			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemEmpty"));
-			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemCommand"));
-			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemLocalVar"));
-			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemQuest"));
-			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemUDF"));
-			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemUDF"));
-			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemGMST"));
-			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemGlobalVar"));
-			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemForm"));
-			IntelliSenseItemImages->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemSnippet"));
+			IntelliSenseItem::PopulateImageListWithItemTypeImages(IntelliSenseItemImages);
 
 			ListView->View = View::Details;
 			ListView->Dock = DockStyle::Fill;
@@ -59,14 +51,13 @@ namespace cse
 			ListView->GridLines = false;
 			ListView->HeaderStyle = ColumnHeaderStyle::None;
 			ListView->HideSelection = true;
+			ListView->Font = gcnew Font(SystemFonts::DialogFont->FontFamily, 9.25);
 
-			BrightIdeasSoftware::OLVColumn^ Column = gcnew BrightIdeasSoftware::OLVColumn;
-			Column->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&IntelliSenseInterfaceView::ListViewAspectGetter);
-			Column->ImageGetter = gcnew BrightIdeasSoftware::ImageGetterDelegate(&IntelliSenseInterfaceView::ListViewImageGetter);
-			Column->Text = "IntelliSense Item";
-			Column->Width = 203;
-			ListView->AllColumns->Add(Column);
-			ListView->Columns->Add(Column);
+			ListViewDefaultColumn = gcnew BrightIdeasSoftware::OLVColumn;
+			ListViewDefaultColumn->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&IntelliSenseInterfaceView::ListViewAspectGetter);
+			ListViewDefaultColumn->ImageGetter = gcnew BrightIdeasSoftware::ImageGetterDelegate(&IntelliSenseInterfaceView::ListViewImageGetter);
+			ListView->AllColumns->Add(ListViewDefaultColumn);
+			ListView->Columns->Add(ListViewDefaultColumn);
 
 			ListViewPopup = gcnew DotNetBar::SuperTooltip;
 			ListViewPopup->CheckTooltipPosition = false;
@@ -74,17 +65,23 @@ namespace cse
 			ListViewPopup->TooltipDuration = 0;
 			ListViewPopup->IgnoreFormActiveState = true;
 			ListViewPopup->ShowTooltipImmediately = true;
+			ListViewPopup->PositionBelowControl = false;
 			ListViewPopup->HoverDelayMultiplier = 0;
-			ListViewPopup->DefaultFont = SystemFonts::DialogFont;
+			ListViewPopup->DefaultFont = gcnew Font(SystemFonts::DialogFont->FontFamily, 9.25);
+			ListViewPopup->MinimumTooltipSize = Size(180, 25);
+			ListViewPopup->MarkupLinkClick += gcnew DotNetBar::MarkupLinkClickEventHandler(&IntelliSenseInterfaceView::SuperTooltip_MarkupLinkClick);
 
 			InsightPopup = gcnew DotNetBar::SuperTooltip;
-			InsightPopup->DelayTooltipHideDuration = 0;
+			InsightPopup->DelayTooltipHideDuration = 500;
 			InsightPopup->TooltipDuration = 0;
 			InsightPopup->CheckTooltipPosition = false;
-			InsightPopup->DefaultFont = SystemFonts::DialogFont;
+			InsightPopup->DefaultFont = gcnew Font(SystemFonts::DialogFont->FontFamily, 9.25);
+			InsightPopup->MinimumTooltipSize = Size(180, 25);
+			InsightPopup->MarkupLinkClick += gcnew DotNetBar::MarkupLinkClickEventHandler(&IntelliSenseInterfaceView::SuperTooltip_MarkupLinkClick);
 
 			MaximumVisibleItemCount = preferences::SettingsHolder::Get()->IntelliSense->MaxSuggestionsToDisplay;
 			InsightPopupDisplayDuration = preferences::SettingsHolder::Get()->IntelliSense->InsightToolTipDisplayDuration;
+			WindowWidth = preferences::SettingsHolder::Get()->IntelliSense->WindowWidth;
 
 			Form->SetSize(Size(0, 0));
 			Form->Show(Point(0, 0), Form->Handle, false);
@@ -107,9 +104,7 @@ namespace cse
 			SAFEDELETE_CLR(ListViewItemActivateHandler);
 			SAFEDELETE_CLR(ListViewSelectionChangedHandler);
 			SAFEDELETE_CLR(ScriptEditorPreferencesSavedHandler);
-
-			for each (Image^ Itr in IntelliSenseItemImages->Images)
-				delete Itr;
+			SAFEDELETE_CLR(SelectFirstItemOnShowHandler);
 
 			HideListViewToolTip();
 			HideInsightToolTip();
@@ -125,6 +120,7 @@ namespace cse
 		{
 			MaximumVisibleItemCount = preferences::SettingsHolder::Get()->IntelliSense->MaxSuggestionsToDisplay;
 			InsightPopupDisplayDuration = preferences::SettingsHolder::Get()->IntelliSense->InsightToolTipDisplayDuration;
+			WindowWidth = preferences::SettingsHolder::Get()->IntelliSense->WindowWidth;
 		}
 
 		void IntelliSenseInterfaceView::ListView_SelectionChanged(Object^ Sender, EventArgs^ E)
@@ -231,14 +227,19 @@ namespace cse
 				return nullptr;
 		}
 
+		void IntelliSenseInterfaceView::SuperTooltip_MarkupLinkClick(Object^ Sender, DotNetBar::MarkupLinkClickEventArgs^ E)
+		{
+			Process::Start(E->HRef);
+		}
+
 		void IntelliSenseInterfaceView::ShowListViewToolTip(IntelliSenseItem^ Item)
 		{
 			auto TooltipData = gcnew DotNetBar::SuperTooltipInfo;
-			TooltipData->HeaderText = Item->GetIdentifier();
-			TooltipData->BodyText = Item->Describe();
-			TooltipData->FooterText = Item->GetItemTypeName();
-			TooltipData->FooterImage = IntelliSenseItemImages->Images[safe_cast<int>(Item->GetItemType())];
-			TooltipData->Color = DotNetBar::eTooltipColor::System;
+			TooltipData->HeaderText = Item->TooltipHeaderText;
+			TooltipData->BodyText = Item->TooltipBodyText;
+			TooltipData->FooterText = Item->TooltipFooterText;
+			TooltipData->FooterImage = Item->TooltipFooterImage;
+			TooltipData->Color = MapRichTooltipBackgroundColorToDotNetBar(Item->TooltipBgColor);
 
 			auto DesktopLocation = Point(Form->DesktopBounds.Left + Form->DesktopBounds.Width, Form->DesktopBounds.Top);
 
@@ -247,7 +248,17 @@ namespace cse
 				ListViewPopup->SuperTooltipControl->UpdateWithSuperTooltipInfo(TooltipData);
 				ListViewPopup->SuperTooltipControl->RecalcSize();
 				ListViewPopup->SuperTooltipControl->UpdateShadow();
-				ListViewPopup->SuperTooltipControl->SetBounds(DesktopLocation.X, DesktopLocation.Y, 0, 0, System::Windows::Forms::BoundsSpecified::Location);
+
+				auto Height = ListViewPopup->SuperTooltipControl->Bounds.Height;
+				int CoordY = DesktopLocation.Y;
+				if (CoordY + Height > Screen::PrimaryScreen->Bounds.Height)
+				{
+					CoordY += Screen::PrimaryScreen->Bounds.Height - CoordY - Height;
+					if (CoordY < 0)
+						CoordY = 0;
+				}
+
+				ListViewPopup->SuperTooltipControl->SetBounds(DesktopLocation.X, CoordY, 0, 0, System::Windows::Forms::BoundsSpecified::Location);
 			}
 			else
 			{
@@ -259,6 +270,19 @@ namespace cse
 		void IntelliSenseInterfaceView::HideListViewToolTip()
 		{
 			ListViewPopup->HideTooltip();
+		}
+
+		void IntelliSenseInterfaceView::SelectFirstItemOnShow(AnimatedForm^ Sender)
+		{
+			if (BoundModel->DataStore->Count)
+			{
+				auto DefaultSelection = BoundModel->DataStore[0];
+				ListView->SelectObject(DefaultSelection);
+
+				// The SelectionChanged event doesn't get raised consistently at this point
+				// So, we ensure that the tooltip is shown
+				//ShowListViewToolTip(DefaultSelection);
+			}
 		}
 
 		void IntelliSenseInterfaceView::Bind(IIntelliSenseInterfaceModel^ To)
@@ -273,6 +297,8 @@ namespace cse
 			if (Bound)
 			{
 				BoundModel = nullptr;
+				ListView->ClearObjects();
+
 				Hide();
 				HideInsightToolTip();
 			}
@@ -331,19 +357,12 @@ namespace cse
 		void IntelliSenseInterfaceView::ShowInsightToolTip(IntelliSenseShowInsightToolTipArgs^ Args)
 		{
 			auto TooltipData = gcnew DotNetBar::SuperTooltipInfo;
-			TooltipData->HeaderText = Args->Title;
-			TooltipData->BodyText = Args->Text;
-			switch (Args->Icon)
-			{
-			case ToolTipIcon::Warning:
-				TooltipData->Color = DotNetBar::eTooltipColor::Yellow;
-				break;
-			case ToolTipIcon::Error:
-				TooltipData->Color = DotNetBar::eTooltipColor::Red;
-				break;
-			default:
-				TooltipData->Color = DotNetBar::eTooltipColor::System;
-			}
+			TooltipData->HeaderText = Args->TooltipHeaderText;
+			TooltipData->BodyText = Args->TooltipBodyText;
+			TooltipData->BodyImage = Args->TooltipBodyImage;
+			TooltipData->FooterText = Args->TooltipFooterText;
+			TooltipData->FooterImage = Args->TooltipFooterImage;
+			TooltipData->Color = MapRichTooltipBackgroundColorToDotNetBar(Args->TooltipBgColor);
 
 			auto Control = Control::FromHandle(Args->ParentWindowHandle);
 			InsightPopup->SetSuperTooltip(Control, TooltipData);
@@ -367,102 +386,62 @@ namespace cse
 				int ItemCount = BoundModel->DataStore->Count;
 				if (ItemCount > MaximumVisibleItemCount)
 					ItemCount = MaximumVisibleItemCount;
-				int ItemHeight = ListView->Items[0]->Bounds.Height;
+				int ItemHeight = ListView->GetItemRect(0).Height;
 
-				// mucking about with the CS' compatibility settings (setting it to Windows 7, for instance)
-				// yields a different result than when the setting's disabled
-				Size DisplaySize = Size(240, (MaximumVisibleItemCount * ItemHeight + ItemHeight) - ((MaximumVisibleItemCount - ItemCount) * ItemHeight));
+				auto MaxHeight = MaximumVisibleItemCount * ItemHeight + ItemHeight;
+				auto ExtraHeight = (MaximumVisibleItemCount - ItemCount) * ItemHeight;
+				Size DisplaySize = Size(WindowWidth, MaxHeight - ExtraHeight);
 
-				Debug::Assert(Form->Tag == nullptr);
-				Form->Tag = FormInvokeDelegate::SetSize;
-				Form->BeginInvoke(gcnew UIInvokeDelegate_FormSetSize(&IntelliSenseInterfaceView::UIInvoke_FormSetSize), gcnew array < Object^ > { this, Form, DisplaySize });
+				// ### HACK!
+				// The SetSize call crashes consistently under certain conditions (which are yet to be decoded) due to an invalid window handle
+				// Might have something to do with how the call is invoked (multiple levels of interop b'ween WinForms and WPF)
+				try {
+
+					Form->SetSize(DisplaySize);
+
+					// the column width needs to be (re)set after the form (and its docked listview) have been resized
+					ListViewDefaultColumn->Width = ListView->Width - 4 - SystemInformation::HorizontalScrollBarHeight;
+				}
+				catch (Exception^ E) {
+					DebugPrint("IntelliSenseInterfaceView::Update Exception! Message - " + E->Message);
+#ifndef NDEBUG
+					Debugger::Break();
+#endif // !NDEBUG
+				}
 			}
 		}
 
 		void IntelliSenseInterfaceView::Show(Point Location, IntPtr Parent)
 		{
-			Debug::Assert(Form->Tag == nullptr);
-			Form->Tag = FormInvokeDelegate::Hide;
-			Form->BeginInvoke(gcnew UIInvokeDelegate_FormShow(&IntelliSenseInterfaceView::UIInvoke_FormShow), gcnew array < Object^ > { this, Form, Location, Parent });
+			try
+			{
+				Form->SetNextActiveTransitionCompleteHandler(SelectFirstItemOnShowHandler);
+				Form->Show(Location, Parent, (Form->Visible == false));
+			}
+			catch (Exception^ E) {
+				DebugPrint("IntelliSenseInterfaceView::Show Exception! Message - " + E->Message);
+#ifndef NDEBUG
+				Debugger::Break();
+#endif // !NDEBUG
+			}
 		}
 
 		void IntelliSenseInterfaceView::Hide()
 		{
-			ListView->ClearObjects();
 			HideListViewToolTip();
 
-			if (Form->Visible)
-			{
-				Debug::Assert(Form->Tag == nullptr);
-				Form->Tag = FormInvokeDelegate::Hide;
-				Form->BeginInvoke(gcnew UIInvokeDelegate_FormHide(&IntelliSenseInterfaceView::UIInvoke_FormHide), gcnew array < Object^ > { this, Form });
-			}
-		}
+			if (!Form->Visible)
+				return;
 
-		// HACK!
-		// The SetSize call crashes consistently under certain conditions (which are yet to be decoded) due to an invalid window handle
-		// Methinks it has something to do with how the call is invoked (multiple levels of interop b'ween WinForms and WPF)
-		// Delegating it to the UI thread through BeginInvoke seems to help apparently, but we still need to wrap it in an exception handler
-
-		void IntelliSenseInterfaceView::UIInvoke_FormShow(IntelliSenseInterfaceView^ Sender,
-			AnimatedForm^ ToInvoke, Point Location, IntPtr Parent)
-		{
-			try
-			{
-				ToInvoke->Show(Location, Parent, (ToInvoke->Visible == false));
-
-				if (Sender->BoundModel->DataStore->Count)
-				{
-					auto DefaultSelection = Sender->BoundModel->DataStore[0];
-					Sender->ListView->SelectObject(DefaultSelection);
-
-					// The SelectionChanged event doesn't get raised consistently at this point
-					// So, we ensure that the tooltip is shown
-					Sender->ShowListViewToolTip(DefaultSelection);
-				}
-			}
-			catch (Exception^ E) {
-#ifndef NDEBUG
-				DebugPrint("IntelliSenseInterfaceView::UIInvoke_FormShow Exception! Message - " + E->Message);
-				Debugger::Break();
-#endif // !NDEBUG
-			}
-
-			Debug::Assert(ToInvoke->Tag != nullptr && safe_cast<FormInvokeDelegate>(ToInvoke->Tag) == FormInvokeDelegate::Show);
-			ToInvoke->Tag = nullptr;
-		}
-
-		void IntelliSenseInterfaceView::UIInvoke_FormSetSize(IntelliSenseInterfaceView^ Sender,
-			AnimatedForm^ ToInvoke, Size ToSet)
-		{
 			try {
-				ToInvoke->SetSize(ToSet);
+				Form->Hide();
 			}
 			catch (Exception^ E) {
+				DebugPrint("IntelliSenseInterfaceView::Hide Exception! Message - " + E->Message);
 #ifndef NDEBUG
-				DebugPrint("IntelliSenseInterfaceView::UIInvoke_FormSetSize Exception! Message - " + E->Message);
 				Debugger::Break();
 #endif // !NDEBUG
 			}
-
-			Debug::Assert(ToInvoke->Tag != nullptr && safe_cast<FormInvokeDelegate>(ToInvoke->Tag) == FormInvokeDelegate::SetSize);
-			ToInvoke->Tag = nullptr;
-		}
-
-		void IntelliSenseInterfaceView::UIInvoke_FormHide(IntelliSenseInterfaceView^ Sender, AnimatedForm^ ToInvoke)
-		{
-			try {
-				ToInvoke->Hide();
-			}
-			catch (Exception^ E) {
-#ifndef NDEBUG
-				DebugPrint("IntelliSenseInterfaceView::UIInvoke_FormHide Exception! Message - " + E->Message);
-				Debugger::Break();
-#endif // !NDEBUG
-			}
-
-			Debug::Assert(ToInvoke->Tag != nullptr && safe_cast<FormInvokeDelegate>(ToInvoke->Tag) == FormInvokeDelegate::Hide);
-			ToInvoke->Tag = nullptr;
 		}
 	}
 }

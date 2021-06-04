@@ -3,6 +3,7 @@
 #include "[Common]\HandShakeStructs.h"
 #include "SemanticAnalysis.h"
 #include "ScriptTextEditorInterface.h"
+#include "Globals.h"
 
 namespace cse
 {
@@ -20,8 +21,7 @@ namespace cse
 
 		bool DoStringMatch(String^ Source, String^ Target, StringMatchType Comparison);
 
-
-		ref class IntelliSenseItem
+		ref class IntelliSenseItem : public IRichTooltipContentProvider
 		{
 			static array<String^>^ ItemTypeID =
 			{
@@ -35,6 +35,20 @@ namespace cse
 				"Global Variable",
 				"Form",
 				"Code Snippet"
+			};
+
+			static array<Image^>^ ItemTypeImages =
+			{
+				Globals::ImageResources()->CreateImage("IntelliSenseItemEmpty"),
+				Globals::ImageResources()->CreateImage("IntelliSenseItemCommand"),
+				Globals::ImageResources()->CreateImage("IntelliSenseItemLocalVar"),
+				Globals::ImageResources()->CreateImage("IntelliSenseItemQuest"),
+				Globals::ImageResources()->CreateImage("IntelliSenseItemUDF"),
+				Globals::ImageResources()->CreateImage("IntelliSenseItemUDF"),
+				Globals::ImageResources()->CreateImage("IntelliSenseItemGMST"),
+				Globals::ImageResources()->CreateImage("IntelliSenseItemGlobalVar"),
+				Globals::ImageResources()->CreateImage("IntelliSenseItemForm"),
+				Globals::ImageResources()->CreateImage("IntelliSenseItemSnippet"),
 			};
 		public:
 			static enum class ItemType
@@ -51,10 +65,19 @@ namespace cse
 				Snippet,
 			};
 
+			static void		PopulateImageListWithItemTypeImages(ImageList^ Destination);
+		protected:
+			ItemType	Type;
+			String^		HelpTextHeader;
+			String^		HelpTextBody;
+			String^		HelpTextFooter;
+
+			String^		GenerateHelpTextHeader(String^ Identifier);
+			String^		GenerateHelpTextFooter();
+		public:
 			IntelliSenseItem();
 			IntelliSenseItem(ItemType Type);
 
-			virtual String^		Describe();
 			virtual void		Insert(textEditors::IScriptTextEditor^ Editor);
 
 			virtual bool		MatchesToken(String^ Token, StringMatchType Comparison);
@@ -62,23 +85,61 @@ namespace cse
 
 			virtual String^		GetIdentifier() abstract;
 			virtual String^		GetSubstitution() abstract;
-
-			ItemType			GetItemType();
 			virtual String^		GetItemTypeName();
-		protected:
-			String^				Description;
-			ItemType			Type;
+			ItemType			GetItemType();
+
+			virtual property String^ TooltipHeaderText
+			{
+				String^ get() { return HelpTextHeader; }
+				void set(String^ set) {}
+			}
+			virtual property String^ TooltipBodyText
+			{
+				String^ get() { return HelpTextBody; }
+				void set(String^ set) {}
+			}
+			virtual property Image^	TooltipBodyImage
+			{
+				Image^ get() { return nullptr; }
+				void set(Image^ set) {}
+			}
+			virtual property String^ TooltipFooterText
+			{
+				String^ get() { return HelpTextFooter; }
+				void set(String^ set) {}
+			}
+			virtual property Image^	TooltipFooterImage
+			{
+				Image^ get() { return ItemTypeImages[safe_cast<int>(Type)]; }
+				void set(Image^ set) {}
+			}
+			virtual property IRichTooltipContentProvider::BackgroundColor TooltipBgColor
+			{
+				IRichTooltipContentProvider::BackgroundColor get()
+				{ return IRichTooltipContentProvider::BackgroundColor::Default; }
+				void set(IRichTooltipContentProvider::BackgroundColor set) {}
+			}
+		};
+
+		ref struct ScriptCommandParameter
+		{
+			String^	TypeName;
+			String^ Description;
+			bool	Optional;
+
+			ScriptCommandParameter(componentDLLInterface::ObScriptCommandInfo::ParamInfo* ParamInfo);
 		};
 
 		ref class IntelliSenseItemScriptCommand : public IntelliSenseItem
 		{
-		public:
+		protected:
 			static enum class SourceType
 			{
 				Vanilla = 0,
-				OBSE
+				OBSE,
+				OBSEPlugin
 			};
-		private:
+
 			static array<String^>^ ReturnValueTypeID =
 			{
 				"Numeric",
@@ -88,6 +149,7 @@ namespace cse
 				"Array [Reference]",
 				"Ambiguous"
 			};
+
 			static enum class ReturnValueType
 			{
 				Default = 0,
@@ -98,33 +160,31 @@ namespace cse
 				Ambiguous
 			};
 
-			String^						Name;
-			String^						CmdDescription;
-			String^						Shorthand;
-			UInt16						ParamCount;
-			bool						RequiresParent;
-			ReturnValueType				ResultType;
-			SourceType					Source;
-			String^						DeveloperURL;
-		public:
-			IntelliSenseItemScriptCommand(String^ Name,
-										  String^ Desc,
-										  String^ Shorthand,
-										  UInt16 NoOfParams,
-										  bool RequiresParent,
-										  UInt16 ReturnType,
-										  SourceType Source,
-										  String^ Params,
-										  String^ DeveloperURL);
+			static String^	GetPrettyNameForObsePlugin(String^ PluginName);
 
-			virtual bool				MatchesToken(String^ Token, StringMatchType Comparison) override;
-			virtual String^				GetIdentifier() override;
-			virtual String^				GetSubstitution() override;
-			bool						GetRequiresParent();
-			SourceType					GetSource();
-			String^						GetShorthand();
-			String^						GetDeveloperURL();
-			void						SetDeveloperURL(String^ URL);
+			String^		Name;
+			SourceType	Source;
+			String^		SourceName;
+			UInt32		SourceVersion;
+			String^		Description;
+			String^		Shorthand;
+			ReturnValueType
+						ResultType;
+			List<ScriptCommandParameter^>^
+						Parameters;
+			bool		RequireCallingRef;
+			String^		DocumentationUrl;
+		public:
+			IntelliSenseItemScriptCommand(componentDLLInterface::CommandTableData* CommandTableData,
+										  const componentDLLInterface::ObScriptCommandInfo* CommandInfo,
+										  String^ DeveloperUrl);
+
+			virtual bool		MatchesToken(String^ Token, StringMatchType Comparison) override;
+			virtual String^		GetIdentifier() override;
+			virtual String^		GetSubstitution() override;
+			bool				RequiresCallingRef();
+			String^				GetShorthand();
+			String^				GetDocumentationUrl();
 		};
 
 		ref class IntelliSenseItemScriptVariable : public IntelliSenseItem
@@ -136,8 +196,10 @@ namespace cse
 			String^								ParentEditorID;		// Optional editorID of the parent script
 																	// Empty for ad-hoc local variables.
 		public:
-			IntelliSenseItemScriptVariable(String^ Name, String^ Comment, obScriptParsing::Variable::DataType Type,
-										String^ ParentEditorID);
+			IntelliSenseItemScriptVariable(String^ Name,
+										   String^ Comment,
+										   obScriptParsing::Variable::DataType Type,
+										   String^ ParentEditorID);
 
 			virtual String^							GetItemTypeName() override;
 			virtual String^							GetIdentifier() override;
@@ -193,9 +255,13 @@ namespace cse
 			IntelliSenseItemGlobalVariable(componentDLLInterface::FormData* Data,
 								obScriptParsing::Variable::DataType Type, String^ Value);
 
-			virtual String^ Describe() override;
-			virtual String^ GetItemTypeName() override;
-			void			SetValue(String^ Val);
+			void				SetValue(String^ Val);
+			virtual String^		GetItemTypeName() override;
+
+			property String^ TooltipBodyText
+			{
+				virtual String^ get() override;
+			}
 		};
 
 		ref class IntelliSenseItemGameSetting : public IntelliSenseItemGlobalVariable
@@ -203,18 +269,15 @@ namespace cse
 		public:
 			IntelliSenseItemGameSetting(componentDLLInterface::FormData* Data,
 				obScriptParsing::Variable::DataType Type, String^ Value);
+
+			virtual String^		GetItemTypeName() override;
 		};
 
 		ref class IntelliSenseItemQuest : public IntelliSenseItemForm
 		{
-		protected:
-			String^		FullName;
 		public:
 			IntelliSenseItemQuest(componentDLLInterface::FormData* Data,
-								componentDLLInterface::ScriptData* AttachedScript,
-								String^ FullName);
-
-			String^		GetFullName();
+								componentDLLInterface::ScriptData* AttachedScript);
 		};
 
 		ref class IntelliSenseItemScript : public IntelliSenseItemForm
@@ -234,11 +297,12 @@ namespace cse
 				IntelliSenseItemScript^ get() { return Empty; }
 			}
 
-			virtual String^								GetItemTypeName() override;
 			IEnumerable<IntelliSenseItemScriptVariable^>^
-														GetVariables();
-			IntelliSenseItemScriptVariable^				LookupVariable(String^ VariableName);
-			bool										IsUserDefinedFunction();
+								GetVariables();
+			IntelliSenseItemScriptVariable^				
+								LookupVariable(String^ VariableName);
+			bool				IsUserDefinedFunction();
+			virtual String^		GetItemTypeName() override;
 		};
 
 		ref class IntelliSenseItemUserFunction : public IntelliSenseItemScript

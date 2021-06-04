@@ -183,6 +183,15 @@ namespace cse
 			String^ Errors = "";
 			IntelliSenseSettings^ Old = safe_cast<IntelliSenseSettings^>(OldValue);
 
+			const UInt32 kMinWindowWidth = 200, kMaxWindowWidth = 600;
+			if (WindowWidth < kMinWindowWidth|| WindowWidth > kMaxWindowWidth)
+			{
+				Success = false;
+				Errors += "WindowWidth must be between " + kMinWindowWidth + " and " + kMaxWindowWidth;
+				Errors += "\n";
+				WindowWidth = Old->WindowWidth;
+			}
+
 			const UInt32 kMinSuggestionCharThreshold = 1, kMaxSuggestionCharThreshold = 10;
 			if (SuggestionCharThreshold < kMinSuggestionCharThreshold || SuggestionCharThreshold > kMaxSuggestionCharThreshold)
 			{
@@ -473,7 +482,7 @@ namespace cse
 
 					ToolStripButton^ NewButton = gcnew ToolStripButton;
 					NewButton->Text = CategoryName;
-					NewButton->Image = Globals::ScriptEditorImageResourceManager->CreateImage("PreferencesDialogCategory" + CategoryName);
+					NewButton->Image = Globals::ImageResources()->CreateImage("PreferencesDialogCategory" + CategoryName);
 					NewButton->Click += gcnew System::EventHandler(this, &PreferencesDialog::ToolStripCategoryButton_Click);
 					NewButton->Tag = Group;
 					NewButton->CheckState = CheckState::Unchecked;

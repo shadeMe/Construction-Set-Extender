@@ -11,22 +11,18 @@ namespace cse
 
 		ref class IntelliSenseInterfaceView : public IIntelliSenseInterfaceView
 		{
-			static enum class FormInvokeDelegate
-			{
-				Show, SetSize, Hide
-			};
-
 			IIntelliSenseInterfaceModel^			BoundModel;
 
 			AnimatedForm^							Form;
 			BrightIdeasSoftware::ObjectListView^	ListView;
+			BrightIdeasSoftware::OLVColumn^			ListViewDefaultColumn;
 			DotNetBar::SuperTooltip^				ListViewPopup;
 			DotNetBar::SuperTooltip^				InsightPopup;
 			ImageList^								IntelliSenseItemImages;
 
-			property UInt32							MaximumVisibleItemCount;
-			property UInt32							InsightPopupDisplayDuration;
-
+			property UInt32		MaximumVisibleItemCount;
+			property UInt32		InsightPopupDisplayDuration;
+			property UInt32		WindowWidth;
 			property bool Bound
 			{
 				bool get() { return BoundModel != nullptr; }
@@ -41,6 +37,7 @@ namespace cse
 
 			static Object^		ListViewAspectGetter(Object^ RowObject);
 			static Object^		ListViewImageGetter(Object^ RowObject);
+			static void			SuperTooltip_MarkupLinkClick(Object^ Sender, DotNetBar::MarkupLinkClickEventArgs ^ E);
 
 			EventHandler^		ScriptEditorPreferencesSavedHandler;
 			EventHandler^		ListViewSelectionChangedHandler;
@@ -49,19 +46,15 @@ namespace cse
 			KeyEventHandler^	ListViewKeyUpHandler;
 			EventHandler<BrightIdeasSoftware::FormatRowEventArgs^>^
 								ListViewFormatRowHandler;
+			AnimatedForm::TransitionCompleteHandler^
+								SelectFirstItemOnShowHandler;
 
-			void				ShowListViewToolTip(IntelliSenseItem^ Item);
-			void				HideListViewToolTip();
+			void	ShowListViewToolTip(IntelliSenseItem^ Item);
+			void	HideListViewToolTip();
 
-			delegate void		UIInvokeDelegate_FormShow(IntelliSenseInterfaceView^, AnimatedForm^, Point, IntPtr);
-			delegate void		UIInvokeDelegate_FormSetSize(IntelliSenseInterfaceView^, AnimatedForm^, Size);
-			delegate void		UIInvokeDelegate_FormHide(IntelliSenseInterfaceView^, AnimatedForm^);
+			void	SelectFirstItemOnShow(AnimatedForm^ Sender);
 
-			static void			UIInvoke_FormShow(IntelliSenseInterfaceView^ Sender, AnimatedForm^ ToInvoke, Point Location, IntPtr Parent);
-			static void			UIInvoke_FormSetSize(IntelliSenseInterfaceView^ Sender, AnimatedForm^ ToInvoke, Size ToSet);
-			static void			UIInvoke_FormHide(IntelliSenseInterfaceView^ Sender, AnimatedForm^ ToInvoke);
-
-			static const float	DimmedOpacity = 0.1f;
+			static const float	DimmedOpacity = 0.15f;
 		public:
 			IntelliSenseInterfaceView();
 			~IntelliSenseInterfaceView();
@@ -76,11 +69,7 @@ namespace cse
 				{
 					if (Form->IsFadingIn)
 						return true;
-					else if (Form->Tag != nullptr && safe_cast<FormInvokeDelegate>(Form->Tag) == FormInvokeDelegate::Show)
-						return false;
 					else if (Form->IsFadingOut)
-						return false;
-					else if (Form->Tag != nullptr && safe_cast<FormInvokeDelegate>(Form->Tag) == FormInvokeDelegate::Hide)
 						return false;
 					else
 						return Form->Visible;

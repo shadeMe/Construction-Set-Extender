@@ -74,4 +74,37 @@ namespace cse
 		else
 			Buffer[Size - 1] = '\0';
 	}
+
+#ifdef CSE_SE
+	DevComponents::DotNetBar::eTooltipColor MapRichTooltipBackgroundColorToDotNetBar(IRichTooltipContentProvider::BackgroundColor BgColor)
+	{
+		switch (BgColor)
+		{
+		case IRichTooltipContentProvider::BackgroundColor::Default:
+			return DevComponents::DotNetBar::eTooltipColor::System;
+		case IRichTooltipContentProvider::BackgroundColor::Blue:
+			return DevComponents::DotNetBar::eTooltipColor::Blue;
+		case IRichTooltipContentProvider::BackgroundColor::Yellow:
+			return DevComponents::DotNetBar::eTooltipColor::Yellow;
+		case IRichTooltipContentProvider::BackgroundColor::Green:
+			return DevComponents::DotNetBar::eTooltipColor::Green;
+		case IRichTooltipContentProvider::BackgroundColor::Red:
+			return DevComponents::DotNetBar::eTooltipColor::Red;
+		case IRichTooltipContentProvider::BackgroundColor::Magenta:
+			return DevComponents::DotNetBar::eTooltipColor::Magenta;
+		case IRichTooltipContentProvider::BackgroundColor::BlueMist:
+			return DevComponents::DotNetBar::eTooltipColor::BlueMist;
+		case IRichTooltipContentProvider::BackgroundColor::Lemon:
+			return DevComponents::DotNetBar::eTooltipColor::Lemon;
+		case IRichTooltipContentProvider::BackgroundColor::Apple:
+			return DevComponents::DotNetBar::eTooltipColor::Apple;
+		case IRichTooltipContentProvider::BackgroundColor::Silver:
+			return DevComponents::DotNetBar::eTooltipColor::Silver;
+		case IRichTooltipContentProvider::BackgroundColor::Gray:
+			return DevComponents::DotNetBar::eTooltipColor::Gray;
+		default:
+			return DevComponents::DotNetBar::eTooltipColor::Default;
+		}
+	}
+#endif
 }

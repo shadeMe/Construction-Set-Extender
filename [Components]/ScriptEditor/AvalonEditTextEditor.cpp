@@ -917,61 +917,42 @@ namespace cse
 					return;
 				}
 
-				int Line = GetLineNumberFromCharIndex(Offset);
-				bool DisplayPopup = false;
+				E->Line = GetLineNumberFromCharIndex(Offset);
+				E->HoveringOverComment = GetCharIndexInsideCommentSegment(Offset);
 
-				if (preferences::SettingsHolder::Get()->IntelliSense->ShowErrorsInInsightToolTip)
-				{
-					List<ScriptMessage^>^ Messages = gcnew List < ScriptMessage^ >;
-					LineTracker->GetMessages(Line,
-						IScriptTextEditor::ScriptMessageSource::Validator,
-						IScriptTextEditor::ScriptMessageType::Error,
-						Messages);
-					LineTracker->GetMessages(Line,
-						IScriptTextEditor::ScriptMessageSource::Compiler,
-						IScriptTextEditor::ScriptMessageType::Error,
-						Messages);
+				auto Messages = gcnew List < ScriptMessage^ >;
+				LineTracker->GetMessages(E->Line,
+										IScriptTextEditor::ScriptMessageSource::Validator,
+										IScriptTextEditor::ScriptMessageType::Error,
+										Messages);
+				LineTracker->GetMessages(E->Line,
+										IScriptTextEditor::ScriptMessageSource::Compiler,
+										IScriptTextEditor::ScriptMessageType::Error,
+										Messages);
 
-					if (Messages->Count)
-					{
-						for each (ScriptMessage ^ Itr in Messages)
-						{
-							String^ Str = Itr->Message();
-							E->OverrideText  += Str + "\n";
-						}
+				if (E->HoveringOverComment && Messages->Count == 0)
+					return;
 
-						E->OverrideText = E->OverrideText->TrimEnd();
-						E->OverrideTitle = "Error" + (Messages->Count > 1 ? "s" : "");
-						E->OverrideIcon = ToolTipIcon::Error;
-						E->UseOverrideParams = true;
-						DisplayPopup = true;
-					}
-				}
+				for each (auto Itr in Messages)
+					E->ErrorMessagesForHoveredLine->Add(Itr->Message());
 
-				if (DisplayPopup == false && GetCharIndexInsideCommentSegment(Offset) == false)
-				{
-					array<Tuple<Char, Char>^>^ Delimiters = gcnew array<Tuple<Char, Char>^>(3);
-					array<String^>^ Tokens = GetTokenAtLocation(Offset, Delimiters);
+				array<Tuple<Char, Char>^>^ Delimiters = gcnew array<Tuple<Char, Char>^>(3);
+				array<String^>^ Tokens = GetTokenAtLocation(Offset, Delimiters);
 
-					E->CurrentToken = Tokens[1];
-					E->PreviousToken = Tokens[0];
-					E->DotOperatorInUse = Delimiters[1]->Item1 == '.';
-					DisplayPopup = true;
-				}
+				E->HoveredToken = Tokens[1];
+				E->PreviousToken = Tokens[0];
+				E->DotOperatorInUse = Delimiters[1]->Item1 == '.';
 
-				if (DisplayPopup)
-				{
-					VisualLine^ Current = TextField->TextArea->TextView->GetVisualLine(CurrentLine);
-					if (Current)
-						Location.Y += Current->Height;
-					else
-						Location.Y += preferences::SettingsHolder::Get()->Appearance->TextFont->Size;
+				VisualLine^ Current = TextField->TextArea->TextView->GetVisualLine(CurrentLine);
+				if (Current)
+					Location.Y += Current->Height;
+				else
+					Location.Y += preferences::SettingsHolder::Get()->Appearance->TextFont->Size;
 
-					Location = TextField->PointToScreen(Location);
-					E->DisplayScreenCoords = Point(Location.X, Location.Y);
+				Location = TextField->PointToScreen(Location);
+				E->DisplayScreenCoords = Point(Location.X, Location.Y);
 
-					IntelliSenseInsightHover(this, E);
-				}
+				IntelliSenseInsightHover(this, E);
 			}
 
 			void AvalonEditTextEditor::RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::Event Type)

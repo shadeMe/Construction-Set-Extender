@@ -58,7 +58,7 @@ namespace cse
 					String^ EditorID = gcnew String(Data->EditorID);
 					DisposibleDataAutoPtr<componentDLLInterface::ScriptData> AttachedScript
 						(nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CString(EditorID).c_str()));
-					IntelliSenseItemQuest^ NewItem = gcnew IntelliSenseItemQuest(Data, AttachedScript.get(), gcnew String(Data->FullName));
+					IntelliSenseItemQuest^ NewItem = gcnew IntelliSenseItemQuest(Data, AttachedScript.get());
 
 					IntelliSenseItemQuest^ Existing = nullptr;
 					if (!Quests->TryGetValue(EditorID, Existing))
@@ -299,6 +299,8 @@ namespace cse
 			SnippetCollection->Load(gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetSnippetCachePath()));
 			RefreshCodeSnippetIntelliSenseItems();
 
+			LastUpdateTimestamp = DateTime::MinValue;
+
 			DebugPrint("\tLoaded " + SnippetCollection->LoadedSnippets->Count + " Code Snippet(s)");
 		}
 
@@ -323,121 +325,54 @@ namespace cse
 
 		void IntelliSenseBackend::InitializeScriptCommands(componentDLLInterface::CommandTableData* Data)
 		{
-			String^ Name;
-			String^ Description;
-			String^ ShortHand;
-			String^ PluginName;
-			int Count = 0, ReturnType = 0, CSCount = 0;
-			IntelliSenseItemScriptCommand::SourceType Source;
-			System::Globalization::TextInfo^ Locale = (gcnew System::Globalization::CultureInfo("en-US", false))->TextInfo;
-			bool NameCollision = false;
-
-			for (const componentDLLInterface::ObScriptCommandInfo* Itr = Data->CommandTableStart; Itr != Data->CommandTableEnd; ++Itr)
+			auto DeveloperUrls = gcnew Dictionary<String^, String^>;
+			for (int i = 0; i < Data->DeveloperURLDataListCount; ++i)
 			{
-				Name = gcnew String(Itr->longName);
+				auto URLData = &Data->DeveloperURLDataListHead[i];
+				String^ CommandName = gcnew String(URLData->CommandName);
+				String^ Url = gcnew String(URLData->URL);
+
+				DeveloperUrls->Add(CommandName, Url);
+			}
+
+			bool CommandNameCollision = false;
+			int CommandCount = 0, BoundDevUrlCount = 0;
+			for (auto Itr = Data->CommandTableStart; Itr != Data->CommandTableEnd; ++Itr)
+			{
+				auto Name = gcnew String(Itr->longName);
 				if (!String::Compare(Name, "", true))
 					continue;
 
-				const componentDLLInterface::CommandTableData::PluginInfo* Info = Data->GetParentPlugin(Itr);
-
-				if (CSCount < 370)
+				String^ DevUrl = String::Empty;
+				if (DeveloperUrls->ContainsKey(Name))
 				{
-					Description = "[CS] ";				// 369 vanilla commands
-					Source = IntelliSenseItemScriptCommand::SourceType::Vanilla;
-				}
-				else if (Info)
-				{
-					PluginName = gcnew String(Info->name);
-					if (!String::Compare(PluginName, "OBSE_Kyoma_MenuQue", true))
-						PluginName = "MenuQue";
-					else if (!String::Compare(PluginName, "OBSE_Elys_Pluggy", true))
-						PluginName = "Pluggy";
-
-					Description = "[" + PluginName + " v" + Info->version + "] ";
-					Source = IntelliSenseItemScriptCommand::SourceType::OBSE;
-				}
-				else
-				{
-					UInt32 OBSEVersion = Data->GetRequiredOBSEVersion(Itr);
-					Description = "[OBSE v" + OBSEVersion + "] ";
-					Source = IntelliSenseItemScriptCommand::SourceType::OBSE;
+					DevUrl = DeveloperUrls[Name];
+					++BoundDevUrlCount;
 				}
 
-				if (!String::Compare(gcnew String(Itr->helpText), "", true))
-					Description += "No description";
-				else
-					Description += gcnew String(Itr->helpText);
-
-				if (!String::Compare(gcnew String(Itr->shortName), "", true))
-					ShortHand = "None";
-				else
-					ShortHand = gcnew String(Itr->shortName);
-
-				ReturnType = Data->GetCommandReturnType(Itr);
-				if (ReturnType == 6)
-					ReturnType = 0;
-
-				String^ Params = "";
-				for (int i = 0; i < Itr->numParams; i++)
-				{
-					if (i == 0)
-						Params += "\n";
-
-					componentDLLInterface::ObScriptCommandInfo::ParamInfo* Param = &Itr->params[i];
-					if (Param)
-					{
-						Params += "\t" + Locale->ToTitleCase(gcnew String((Param->typeStr ? Param->typeStr : "")) +
-							" [" + gcnew String(Param->TypeIDString()) + "]" +
-							(Param->isOptional ? " (Optional) " : "") + "\n");
-					}
-				}
-
-				IntelliSenseItemScriptCommand^ NewCommand = gcnew IntelliSenseItemScriptCommand(Name, Description, ShortHand,
-																Itr->numParams, Itr->needsParent, ReturnType, Source, Params, String::Empty);
+				auto NewCommand = gcnew IntelliSenseItemScriptCommand(Data, Itr, DevUrl);
 
 				IntelliSenseItemScriptCommand^ ExistingCommand = nullptr;
 				if (ScriptCommands->TryGetValue(Name, ExistingCommand))
 				{
 #ifndef NDEBUG
 					DebugPrint("\tIdentifier '" + Name + "' was bound to more than one script command");
-					DebugPrint("\t\tExisting Command: " + ExistingCommand->Describe());
-					DebugPrint("\t\tNew Command: " + NewCommand->Describe());
 #endif
-					NameCollision = true;
+					CommandNameCollision = true;
 					continue;
 				}
 
 				ScriptCommands->Add(Name, NewCommand);
-				CSCount++;
-				Count++;
+				++CommandCount;
 			}
 
-			DebugPrint(String::Format("\tParsed {0} Commands", Count));
+			DebugPrint("\tParsed " + CommandCount + " Commands");
+			DebugPrint("\tBound " + BoundDevUrlCount + " developer URLs");
 
 #ifndef NDEBUG
-			if (NameCollision)
+			if (CommandNameCollision)
 				DebugPrint("\tErrors were encountered while parsing the command table!", false);
 #endif
-
-			int BoundDevURLCount = 0;
-			for (int i = 0; i < Data->DeveloperURLDataListCount; ++i)
-			{
-				auto URLData = &Data->DeveloperURLDataListHead[i];
-				String^ CommandName = gcnew String(URLData->CommandName);
-				String^ URL= gcnew String(URLData->URL);
-
-				IntelliSenseItemScriptCommand^ Command = nullptr;
-				if (ScriptCommands->TryGetValue(CommandName, Command) == false)
-				{
-					DebugPrint("\tCouldn't bind developer URL '" + URL + "' to unknown script command '" + CommandName + "'!");
-					continue;
-				}
-
-				Command->SetDeveloperURL(URL);
-				++BoundDevURLCount;
-			}
-
-			DebugPrint("\tBound " + BoundDevURLCount + " developer URLs");
 		}
 
 		void IntelliSenseBackend::InitializeGameSettings(componentDLLInterface::IntelliSenseUpdateData* Data)
@@ -482,7 +417,7 @@ namespace cse
 			if (ScriptCommands->TryGetValue(CommandName, Command) == false)
 				return String::Empty;
 
-			return Command->GetDeveloperURL();
+			return Command->GetDocumentationUrl();
 		}
 
 		bool IntelliSenseBackend::IsUserFunction(String^ Identifier)
@@ -597,7 +532,7 @@ namespace cse
 				if (Form->HasAttachedScript())
 				{
 					if (Scripts->TryGetValue(Form->GetAttachedScriptEditorID(), Result) == false)
-						DebugPrint("Coldn't find attached script for the following form:\n" + Form->Describe(), true);
+						DebugPrint("Couldn't find attached script for the following form: " + Form->GetIdentifier(), true);
 				}
 
 				break;
@@ -631,6 +566,8 @@ namespace cse
 
 		List<IntelliSenseItem^>^ IntelliSenseBackend::FetchIntelliSenseItems(FetchIntelliSenseItemsArgs^ FetchArgs)
 		{
+			Refresh(false);
+
 			List<IntelliSenseItem^>^ Fetched = gcnew List<IntelliSenseItem ^>;
 
 			if (FetchArgs->FilterBy.HasFlag(DatabaseLookupFilter::Command))
@@ -642,7 +579,7 @@ namespace cse
 					Fetched = AllCommands;
 				else for each (IntelliSenseItem ^ Itr in AllCommands)
 				{
-					if (safe_cast<IntelliSenseItemScriptCommand^>(Itr)->GetRequiresParent())
+					if (safe_cast<IntelliSenseItemScriptCommand^>(Itr)->RequiresCallingRef())
 						Fetched->Add(Itr);
 				}
 			}
@@ -696,6 +633,8 @@ namespace cse
 
 		ContextualIntelliSenseLookupResult^ IntelliSenseBackend::ContextualIntelliSenseLookup(ContextualIntelliSenseLookupArgs^ LookupArgs)
 		{
+			Refresh(false);
+
 			ContextualIntelliSenseLookupResult^ Result = gcnew ContextualIntelliSenseLookupResult;
 
 			Result->PreviousToken = LookupIntelliSenseItem(LookupArgs->PreviousToken, LookupArgs->OnlyWithInsightInfo);

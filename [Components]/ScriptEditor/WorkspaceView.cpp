@@ -253,8 +253,8 @@ namespace cse
 			ListView->BorderStyle = BorderStyle::None;
 			ListView->Size = Size(285, 89);
 			ListView->SmallImageList = gcnew ImageList();
-			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ModifiedFlagOff"));
-			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ModifiedFlagOn"));
+			ListView->SmallImageList->Images->Add(Globals::ImageResources()->CreateImage("ModifiedFlagOff"));
+			ListView->SmallImageList->Images->Add(Globals::ImageResources()->CreateImage("ModifiedFlagOn"));
 			ListView->Location = Point(0, 0);
 			ListView->Font = gcnew Font("Lucida Grande", 10, FontStyle::Regular);
 			ListView->LabelEdit = false;
@@ -444,11 +444,11 @@ namespace cse
 			ListView->BorderStyle = BorderStyle::None;
 			ListView->Size = Size(285, 89);
 			ListView->SmallImageList = gcnew ImageList();
-			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("MessageListError"));
-			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("OutlineViewVariables"));
-			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("OutlineViewScriptBlock"));
-			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("OutlineViewConditionalBlock"));
-			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("OutlineViewLoopBlock"));
+			ListView->SmallImageList->Images->Add(Globals::ImageResources()->CreateImage("MessageListError"));
+			ListView->SmallImageList->Images->Add(Globals::ImageResources()->CreateImage("OutlineViewVariables"));
+			ListView->SmallImageList->Images->Add(Globals::ImageResources()->CreateImage("OutlineViewScriptBlock"));
+			ListView->SmallImageList->Images->Add(Globals::ImageResources()->CreateImage("OutlineViewConditionalBlock"));
+			ListView->SmallImageList->Images->Add(Globals::ImageResources()->CreateImage("OutlineViewLoopBlock"));
 			ListView->Location = Point(0, 0);
 			ListView->LabelEdit = false;
 			ListView->CheckBoxes = false;
@@ -647,8 +647,8 @@ namespace cse
 			EditorTabStrip->AntiAlias = true;
 			EditorTabStrip->TabStop = false;
 			EditorTabStrip->ImageList = gcnew ImageList;
-			EditorTabStrip->ImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ModifiedFlagOff"));
-			EditorTabStrip->ImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ModifiedFlagOn"));
+			EditorTabStrip->ImageList->Images->Add(Globals::ImageResources()->CreateImage("ModifiedFlagOff"));
+			EditorTabStrip->ImageList->Images->Add(Globals::ImageResources()->CreateImage("ModifiedFlagOn"));
 			EditorTabStrip->ImageList->ImageSize = Size(12, 12);
 			EditorTabStrip->ReorderTabsEnabled = true;
 			EditorTabStrip->TabStyle = DotNetBar::eSuperTabStyle::Office2010BackstageBlue;
@@ -658,7 +658,7 @@ namespace cse
 			EditorTabStrip->TabStrip->Tag = this;
 
 			NewTabButton = gcnew DotNetBar::ButtonItem();
-			NewTabButton->Image = Globals::ScriptEditorImageResourceManager->CreateImage("NewTabButton");
+			NewTabButton->Image = Globals::ImageResources()->CreateImage("NewTabButton");
 			NewTabButton->ButtonStyle = DotNetBar::eButtonStyle::Default;
 			NewTabButton->Style = DotNetBar::eDotNetBarStyle::Office2010;
 			NewTabButton->ColorTable = DotNetBar::eButtonColor::Flat;

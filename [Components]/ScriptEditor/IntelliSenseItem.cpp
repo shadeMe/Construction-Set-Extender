@@ -23,31 +23,46 @@ namespace cse
 			}
 		}
 
+		void IntelliSenseItem::PopulateImageListWithItemTypeImages(ImageList^ Destination)
+		{
+			Destination->Images->Clear();
+			Destination->Images->AddRange(ItemTypeImages);
+		}
+
+		System::String^ IntelliSenseItem::GenerateHelpTextHeader(String^ Identifier)
+		{
+			return "<font size=\"+2\"><b>" + Identifier + "</b></font>";
+		}
+
+		System::String^ IntelliSenseItem::GenerateHelpTextFooter()
+		{
+			return "<span align=\"left\">" + GetItemTypeName() + "</span>";
+		}
+
 		IntelliSenseItem::IntelliSenseItem()
 		{
-			this->Description = String::Empty;
+			this->HelpTextHeader = String::Empty;
+			this->HelpTextBody = String::Empty;
+			this->HelpTextFooter = String::Empty;
 			this->Type = ItemType::Invalid;
 		}
 
 		IntelliSenseItem::IntelliSenseItem(ItemType Type)
 		{
-			this->Description = String::Empty;
+			this->HelpTextHeader = String::Empty;
+			this->HelpTextBody = String::Empty;
+			this->HelpTextFooter = String::Empty;
 			this->Type = Type;
+		}
+
+		System::String^ IntelliSenseItem::GetItemTypeName()
+		{
+			return ItemTypeID[safe_cast<int>(Type)];
 		}
 
 		IntelliSenseItem::ItemType IntelliSenseItem::GetItemType()
 		{
 			return Type;
-		}
-
-		String^ IntelliSenseItem::GetItemTypeName()
-		{
-			return ItemTypeID[(int)Type];
-		}
-
-		String^ IntelliSenseItem::Describe()
-		{
-			return Description;
 		}
 
 		void IntelliSenseItem::Insert(textEditors::IScriptTextEditor^ Editor)
@@ -65,32 +80,137 @@ namespace cse
 			return true;
 		}
 
-		IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(String^ Name,
-																	 String^ Desc,
-																	 String^ Shorthand,
-																	 UInt16 NoOfParams,
-																	 bool RequiresParent,
-																	 UInt16 ReturnType,
-																	 SourceType Source,
-																	 String^ Params,
-																	 String^ DeveloperURL) :
-			IntelliSenseItem(ItemType::ScriptCommand),
-			Name(Name),
-			CmdDescription(Desc),
-			Shorthand(Shorthand),
-			ParamCount(NoOfParams),
-			RequiresParent(RequiresParent),
-			ResultType((ReturnValueType)ReturnType),
-			Source(Source),
-			DeveloperURL(DeveloperURL)
+		ScriptCommandParameter::ScriptCommandParameter(componentDLLInterface::ObScriptCommandInfo::ParamInfo* ParamInfo)
 		{
-			Description = String::Format("{0}{1}\n\n{4}\n\n{2} parameter(s){6}\nReturn Type: {3}{5}",
-										Name,
-										(Shorthand == "None") ? "" : (" [ " + Shorthand + " ]"),
-										NoOfParams.ToString(),
-										IntelliSenseItemScriptCommand::ReturnValueTypeID[(int)ReturnType],
-										Desc, (RequiresParent) ? "\n\nRequires a calling reference" : "",
-										Params);
+
+			TypeName = gcnew String(ParamInfo->TypeIDString());
+			Description = ParamInfo->typeStr ? gcnew String(ParamInfo->typeStr) : "";
+			Optional = ParamInfo->isOptional;
+		}
+
+		System::String^ IntelliSenseItemScriptCommand::GetPrettyNameForObsePlugin(String^ PluginName)
+		{
+			if (!String::Compare(PluginName, "OBSE_Kyoma_MenuQue", true))
+				return "MenuQue";
+			else if (!String::Compare(PluginName, "OBSE_Elys_Pluggy", true))
+				return "Pluggy";
+
+			return PluginName;
+		}
+
+		IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(componentDLLInterface::CommandTableData* CommandTableData,
+																	 const componentDLLInterface::ObScriptCommandInfo* CommandInfo,
+																	 String^ DeveloperUrl)
+			: IntelliSenseItem(ItemType::ScriptCommand)
+		{
+			const UInt16 kVanillaCommandStartOpcode = 0x1000, kVanillaCommandEndOpcode = 0x1170;
+			auto Locale = System::Globalization::CultureInfo::CurrentCulture->TextInfo;
+
+			SourceType CommandSource = SourceType::Vanilla;
+			String^ CommandSourceName = "Vanilla";
+			UInt32 CommandSourceVersion = 0;
+
+			if (CommandInfo->opcode >= kVanillaCommandStartOpcode && CommandInfo->opcode <= kVanillaCommandEndOpcode)
+				;//
+			else
+			{
+				auto SourceObsePlugin = CommandTableData->GetParentPlugin(CommandInfo);
+				if (SourceObsePlugin)
+				{
+					CommandSource = SourceType::OBSEPlugin;
+					CommandSourceName = GetPrettyNameForObsePlugin(gcnew String(SourceObsePlugin->name));
+					CommandSourceVersion = SourceObsePlugin->version;
+				}
+				else
+				{
+					CommandSource = SourceType::OBSE;
+					CommandSourceName = "OBSE";
+					CommandSourceVersion = CommandTableData->GetRequiredOBSEVersion(CommandInfo);
+				}
+			}
+
+			String^ CommandName = gcnew String(CommandInfo->longName);
+
+			String^ CommandHelpText = "";
+			if (CommandInfo->helpText && CommandInfo->helpText[0] != '\0')
+				CommandHelpText = gcnew String(CommandInfo->helpText);
+
+			String^ CommandShorthand = "";
+			if (CommandInfo->shortName && CommandInfo->shortName[0] != '\0')
+				CommandShorthand = gcnew String(CommandInfo->shortName);
+
+			ReturnValueType CommandReturnType = safe_cast<ReturnValueType>(CommandTableData->GetCommandReturnType(CommandInfo));
+
+			List<ScriptCommandParameter^>^ CommandParameters = gcnew List<ScriptCommandParameter^>;
+			for (int i = 0; i < CommandInfo->numParams; ++i)
+			{
+				auto Param = &CommandInfo->params[i];
+				if (Param)
+				{
+					auto NewParam = gcnew ScriptCommandParameter(Param);
+					if (NewParam->Description->Length != 0)
+						NewParam->Description = Locale->ToTitleCase(NewParam->Description);
+
+					CommandParameters->Add(NewParam);
+				}
+			}
+
+			Name = CommandName;
+			Source = CommandSource;
+			SourceName = CommandSourceName;
+			SourceVersion = CommandSourceVersion;
+			Description = CommandHelpText;
+			Shorthand = CommandShorthand;
+			ResultType = CommandReturnType;
+			Parameters = CommandParameters;
+			RequireCallingRef = CommandInfo->needsParent;
+			DocumentationUrl = DeveloperUrl;
+
+			HelpTextHeader = GenerateHelpTextHeader(Name + (Shorthand->Length ? " (" + Shorthand + ")" : ""));
+
+			HelpTextBody += SourceName + (SourceVersion ? " v" + SourceVersion : "") + " command<br/>";
+			if (Description->Length)
+				HelpTextBody += "<p width=\"300\" padding=\"0,0,5,5\">Description: " + Description + "</p>";
+
+			if (Parameters->Count)
+			{
+				String^ kParamRowStart = "<div width=\"250\">", ^kParamRowEnd = "</div>";
+				String^ kParamCellStart = "<span width=\"125\">", ^kParamCellEnd = "</span>";
+
+				HelpTextBody += Parameters->Count + " parameter(s):<br/>";
+				HelpTextBody += "<div padding=\"15,0,2,10\">";
+				HelpTextBody += "<div width=\"250\" padding=\"0,0,0,4\">" +
+								kParamCellStart + "<u>Name</u>" + kParamCellEnd +
+								kParamCellStart + "<u>Type (O = Optional)</u>" + kParamCellEnd +
+								kParamRowEnd;
+
+				for each (auto Param in Parameters)
+				{
+					HelpTextBody += kParamRowStart;
+					HelpTextBody += kParamCellStart + Param->Description + kParamCellEnd;
+					HelpTextBody += kParamCellStart + Param->TypeName + (Param->Optional ? " (O)" : "") + kParamCellEnd;
+					HelpTextBody += kParamRowEnd;
+				}
+				HelpTextBody += "</div>";
+			}
+			else
+				HelpTextBody += "No parameters<br/>";
+
+			HelpTextBody += "Return type: " + ReturnValueTypeID[safe_cast<int>(ResultType)];
+
+			if (RequireCallingRef)
+				HelpTextBody += "<br/>Requires a calling reference";
+
+			String^ WikiUrl = "https://cs.elderscrolls.com/index.php?title=" + Name;
+			HelpTextFooter = GenerateHelpTextFooter();
+			HelpTextFooter += "<span align=\"right\">Links:&nbsp;&nbsp;<a href=\"" + WikiUrl + "\">Wiki</a>";
+
+			if (DocumentationUrl->Length &&
+				!WikiUrl->Equals(DocumentationUrl, StringComparison::CurrentCultureIgnoreCase))
+			{
+				HelpTextFooter += " | <a href=\"" + DocumentationUrl + "\">Docs</a>";
+			}
+			HelpTextFooter += "</span>";
 		}
 
 		String^ IntelliSenseItemScriptCommand::GetIdentifier()
@@ -98,14 +218,9 @@ namespace cse
 			return Name;
 		}
 
-		bool IntelliSenseItemScriptCommand::GetRequiresParent()
+		bool IntelliSenseItemScriptCommand::RequiresCallingRef()
 		{
-			return RequiresParent;
-		}
-
-		IntelliSenseItemScriptCommand::SourceType IntelliSenseItemScriptCommand::GetSource()
-		{
-			return Source;
+			return RequireCallingRef;
 		}
 
 		String^ IntelliSenseItemScriptCommand::GetSubstitution()
@@ -127,14 +242,9 @@ namespace cse
 			return Shorthand;
 		}
 
-		System::String^ IntelliSenseItemScriptCommand::GetDeveloperURL()
+		System::String^ IntelliSenseItemScriptCommand::GetDocumentationUrl()
 		{
-			return DeveloperURL;
-		}
-
-		void IntelliSenseItemScriptCommand::SetDeveloperURL(String^ URL)
-		{
-			DeveloperURL = URL;
+			return DocumentationUrl;
 		}
 
 		IntelliSenseItemScriptVariable::IntelliSenseItemScriptVariable(String^ Name, String^ Comment,
@@ -145,11 +255,16 @@ namespace cse
 			Comment(Comment),
 			ParentEditorID(ParentEditorID)
 		{
-			Description = String::Format("{0} [{1}]{2}{3}",
-										Name,
-										obScriptParsing::Variable::GetVariableDataTypeDescription(DataType),
-										Comment->Length > 0 ? "\n\n" + Comment : "",
-										ParentEditorID->Length > 0 ? "\n\nParent Script: " + ParentEditorID : "");
+			HelpTextHeader = GenerateHelpTextHeader(Name);
+
+			HelpTextBody = "Type: " + obScriptParsing::Variable::GetVariableDataTypeDescription(DataType) + "<br/>";
+			if (Comment->Length)
+				HelpTextBody += "<p width=\"200\" padding=\"0,0,5,0\">Comment: <i>" + Comment + "</i></p>";
+
+			if (ParentEditorID->Length)
+				HelpTextBody += "Parent script: " + ParentEditorID;
+
+			HelpTextFooter = GenerateHelpTextFooter();
 		}
 
 
@@ -202,26 +317,49 @@ namespace cse
 			BaseForm = Data->ObjectReference == false;
 			AttachedScriptEditorID = AttachedScript && AttachedScript->IsValid() ? gcnew String(AttachedScript->EditorID) : String::Empty;
 
-			String^ FlagDescription = "" + ((Flags & (UInt32)FormFlags::FromMaster) ? gcnew String(' ', 7) + "From Master File\n" : "") +
-				((Flags & (UInt32)FormFlags::FromActiveFile) ? gcnew String(' ', 7) + "From Active File\n" : "") +
-				((Flags & (UInt32)FormFlags::Deleted) ? gcnew String(' ', 7) + "Deleted\n" : "") +
-				((Flags & (UInt32)FormFlags::TurnOffFire) ? gcnew String(' ', 7) + "Turn Off Fire\n" : "") +
-				((Flags & (UInt32)FormFlags::QuestItem) ? gcnew String(' ', 7) + (TypeID == 0x31 ? "Persistent\n" : "Quest Item\n") : "") +
-				((Flags & (UInt32)FormFlags::Disabled) ? gcnew String(' ', 7) + "Initially Disabled\n" : "") +
-				((Flags & (UInt32)FormFlags::VisibleWhenDistant) ? gcnew String(' ', 7) + "Visible When Distant\n" : "");
+			HelpTextHeader = GenerateHelpTextHeader(EditorID);
 
-			String^ RefBaseFormDescription = "";
+			HelpTextBody = "FormID: " + FormID.ToString("X8") + "<br/>";
+			if (Data->NameComponent)
+				HelpTextBody += "Name: " + gcnew String(Data->NameComponent) + "<br/>";
+
+			String^ FlagsDesc = "";
+			auto CheckedFlags = gcnew Dictionary<FormFlags, String^>;
+			CheckedFlags->Add(FormFlags::FromMaster, "From master file");
+			CheckedFlags->Add(FormFlags::FromActiveFile, "From active file");
+			CheckedFlags->Add(FormFlags::Deleted, "Deleted");
+			CheckedFlags->Add(FormFlags::TurnOffFire, "Turn off fire");
+			CheckedFlags->Add(FormFlags::QuestItem, "Quest item");
+			CheckedFlags->Add(FormFlags::VisibleWhenDistant, "Visible when distant");
+
+			for each (auto% CheckedFlag in CheckedFlags)
+			{
+				if (Flags & safe_cast<UInt32>(CheckedFlag.Key))
+				{
+					auto FlagString = CheckedFlag.Value;
+					if (TypeID == 0x31 && CheckedFlag.Key == FormFlags::QuestItem)
+						FlagString = "Persistent";
+
+					FlagsDesc += "<div width=\"100\"><span width=\"100\">" + FlagString + "</span></div>";
+				}
+			}
+
+			if (FlagsDesc->Length)
+			{
+				HelpTextBody += "Flags:<br/>";
+				HelpTextBody += "<div padding=\"15,0,2,10\" width=\"150\">" + FlagsDesc + "</div>";
+			}
+
+			if (Data->DescriptionComponent)
+				HelpTextBody += "<p width=\"250\">Description: " + gcnew String(Data->DescriptionComponent) + "</p>";
+
 			if (Data->ObjectReference && Data->BaseFormEditorID)
-				RefBaseFormDescription = "\nBase Form: " + gcnew String(Data->BaseFormEditorID);
+				HelpTextBody += "<br/>Base form: " + gcnew String(Data->BaseFormEditorID);
 
-			String^ ScriptDescription = "";
-			if (AttachedScriptEditorID->Length > 0)
-				ScriptDescription += "\nAttached Script: " + gcnew String(AttachedScript->EditorID);
+			if (AttachedScriptEditorID->Length)
+				HelpTextBody += "<br/>Attached script: " + AttachedScriptEditorID;
 
-			this->Description = "EditorID: " + EditorID +
-								"\nFormID: " + FormID.ToString("X8") +
-								(FlagDescription->Length ? "\nFlags:\n" + FlagDescription : "") +
-								RefBaseFormDescription + ScriptDescription;
+			HelpTextFooter = GenerateHelpTextFooter();
 		}
 
 		IntelliSenseItemForm::IntelliSenseItemForm() :
@@ -233,7 +371,6 @@ namespace cse
 			Flags = 0;
 			BaseForm = false;
 			AttachedScriptEditorID = String::Empty;
-			Description = EditorID;
 		}
 
 		String^ IntelliSenseItemForm::GetIdentifier()
@@ -273,26 +410,12 @@ namespace cse
 
 		{
 			this->Type = IntelliSenseItem::ItemType::GlobalVariable;
-
 			this->DataType = Type;
 			this->Value = Value;
-		}
 
-		System::String^ IntelliSenseItemGlobalVariable::Describe()
-		{
-			const UInt32 kMaxValueStringLength = 30;
-
-			String^ TruncatedValue = gcnew String(Value);
-			if (TruncatedValue->Length > kMaxValueStringLength)
-				TruncatedValue = TruncatedValue->Substring(0, kMaxValueStringLength) + "...";
-
-			return Description + "\n\nType: " + obScriptParsing::Variable::GetVariableDataTypeDescription(DataType)
-					+ (TruncatedValue->Length > 0 ? "\nValue: " + TruncatedValue : "");
-		}
-
-		System::String^ IntelliSenseItemGlobalVariable::GetItemTypeName()
-		{
-			return IntelliSenseItem::GetItemTypeName();
+			// the body text is generated on demand to reflect any changes to the variable's in-editor value
+			HelpTextHeader = GenerateHelpTextHeader(EditorID);
+			HelpTextFooter = GenerateHelpTextFooter();
 		}
 
 		void IntelliSenseItemGlobalVariable::SetValue(String^ Val)
@@ -300,27 +423,51 @@ namespace cse
 			Value = Val;
 		}
 
+		System::String^ IntelliSenseItemGlobalVariable::GetItemTypeName()
+		{
+			// override IntelliSenseItemForm::GetItemTypeName to use the locally defined type name
+			return IntelliSenseItem::GetItemTypeName();
+		}
+
+		System::String^ IntelliSenseItemGlobalVariable::TooltipBodyText::get()
+		{
+			const UInt32 kMaxValueStringLength = 100;
+
+			String^ TruncatedValue = gcnew String(Value);
+			if (TruncatedValue->Length > kMaxValueStringLength)
+				TruncatedValue = TruncatedValue->Substring(0, kMaxValueStringLength) + "...";
+
+			HelpTextBody = "Type: " + obScriptParsing::Variable::GetVariableDataTypeDescription(DataType) + "<br/>";
+			if (TruncatedValue->Length)
+				HelpTextBody += "<p width=\"150\" padding=\"0,0,5,0\">Value: " + Value + "</p>";
+
+			return HelpTextBody;
+		}
+
 		IntelliSenseItemGameSetting::IntelliSenseItemGameSetting(componentDLLInterface::FormData* Data,
 			obScriptParsing::Variable::DataType Type, String^ Value) :
 			IntelliSenseItemGlobalVariable(Data, Type, Value)
 		{
 			this->Type = IntelliSenseItem::ItemType::GameSetting;
+
+			// regenerate after changing type
+			HelpTextFooter = GenerateHelpTextFooter();
+		}
+
+		System::String^ IntelliSenseItemGameSetting::GetItemTypeName()
+		{
+			// we need to distinguish ourselves from global vars
+			return IntelliSenseItem::GetItemTypeName();
 		}
 
 		IntelliSenseItemQuest::IntelliSenseItemQuest(componentDLLInterface::FormData* Data,
-													componentDLLInterface::ScriptData* AttachedScript,
-													String^ FullName) :
-			IntelliSenseItemForm(Data, AttachedScript)
+													componentDLLInterface::ScriptData* AttachedScript)
+			: IntelliSenseItemForm(Data, AttachedScript)
 		{
 			this->Type = IntelliSenseItem::ItemType::Quest;
-			FullName = FullName;
 
-			Description += (FullName->Length > 0 ? "\n\n" + FullName : "");
-		}
-
-		System::String^ IntelliSenseItemQuest::GetFullName()
-		{
-			return FullName;
+			// regenerate after changing type
+			HelpTextFooter = GenerateHelpTextFooter();
 		}
 
 
@@ -356,13 +503,12 @@ namespace cse
 
 			CommentDescription = InitialAnalysisData->Description;
 
-			Description += (CommentDescription ->Length > 0 ? "\nDescription: " + CommentDescription : "")
-						+ "\n\nNumber of variables: " + VarList->Count;
-		}
+			if (CommentDescription->Length)
+				HelpTextBody += "<p width=\"250\" padding=\"0,0,5,10\">Comment: <i>" + CommentDescription->Replace("\n", "<br/>") + "</i></p>";
+			HelpTextBody += "Variables: " + VarList->Count;
 
-		String^ IntelliSenseItemScript::GetItemTypeName()
-		{
-			return IntelliSenseItem::GetItemTypeName();
+			// regenerate after changing type
+			HelpTextFooter = GenerateHelpTextFooter();
 		}
 
 		IntelliSenseItemScriptVariable ^ IntelliSenseItemScript::LookupVariable(String ^ VariableName)
@@ -379,6 +525,12 @@ namespace cse
 		bool IntelliSenseItemScript::IsUserDefinedFunction()
 		{
 			return Type == IntelliSenseItem::ItemType::UserFunction;
+		}
+
+		System::String^ IntelliSenseItemScript::GetItemTypeName()
+		{
+			// to differentiate between regular scripts and UDFs
+			return IntelliSenseItem::GetItemTypeName();
 		}
 
 		IEnumerable<IntelliSenseItemScriptVariable^>^ IntelliSenseItemScript::GetVariables()
@@ -398,11 +550,14 @@ namespace cse
 
 			Debug::Assert(InitialAnalysisData->UDF == true);
 
-			int VarIdx = 0;
+			int VarIdx = 0, NumParams = 0;
 			for each (obScriptParsing::Variable ^ Itr in InitialAnalysisData->Variables)
 			{
 				if (Itr->UDFParameter && Itr->ParameterIndex < 10)
+				{
 					ParameterIndices[Itr->ParameterIndex] = VarIdx;
+					++NumParams;
+				}
 
 				if (InitialAnalysisData->UDFResult == Itr)
 					ReturnVarIndex = VarIdx;
@@ -412,41 +567,61 @@ namespace cse
 				++VarIdx;
 			}
 
-
-			String^ Scratch = "";
-			int ParamIdx = 0;
-			while (ParamIdx < 10)
+			if (NumParams)
 			{
-				int VarIdx = ParameterIndices[ParamIdx];
-				if (VarIdx == -1)
-					break;
+				String^ kParamRowStart = "<div width=\"250\">", ^kParamRowEnd = "</div>";
+				String^ kParamCellStart = "<span width=\"125\">", ^kParamCellEnd = "</span>";
 
-				String^ Comment = VarList[VarIdx]->GetComment();
-				String^ Name = VarList[VarIdx]->GetIdentifier();
-				Scratch += "\n" + gcnew String(' ', 7) + ((Comment == "") ? Name : Comment) + " [" + (safe_cast<IntelliSenseItemScriptVariable^>(VarList[VarIdx]))->GetDataTypeID() + "]";
-				ParamIdx++;
+				HelpTextBody += "<br/>" + NumParams + " UDF parameter(s)<br/>";
+				HelpTextBody += "<div padding=\"15,0,2,10\">";
+				HelpTextBody += "<div width=\"250\" padding=\"0,0,0,4\">" +
+								kParamCellStart + "<u>Name</u>" + kParamCellEnd +
+								kParamCellStart + "<u>Type</u>" + kParamCellEnd +
+								kParamRowEnd;
+
+				for each (auto UdfParamIndex in ParameterIndices)
+				{
+					if (UdfParamIndex == -1)
+						break;
+
+					auto ScriptVar = safe_cast<IntelliSenseItemScriptVariable^>(VarList[UdfParamIndex]);
+
+					HelpTextBody += kParamRowStart;
+					HelpTextBody += kParamCellStart + ScriptVar->GetIdentifier() + kParamCellEnd;
+					HelpTextBody += kParamCellStart + ScriptVar->GetDataTypeID() + kParamCellEnd;
+					HelpTextBody += kParamRowEnd;
+				}
+				HelpTextBody += "</div>";
 			}
-
-			Description += "\n" + ParamIdx + " Parameter(s)" + Scratch + "\n\n";
-			if (ReturnVarIndex == kReturnVarIdxNone)
-				Description += "Does not return a value";
-			else if (ReturnVarIndex == kReturnVarIdxAmbiguous)
-				Description += "Return Type: Ambiguous";
 			else
-				Description += "Return Type: " + (safe_cast<IntelliSenseItemScriptVariable^>(VarList[ReturnVarIndex]))->GetDataTypeID();
+				HelpTextBody += "<br/>No UDF parameters<br/>";
+
+			if (ReturnVarIndex == kReturnVarIdxNone)
+				HelpTextBody += "Does not return a value";
+			else if (ReturnVarIndex == kReturnVarIdxAmbiguous)
+				HelpTextBody += "Return type: Ambiguous";
+			else
+				HelpTextBody += "Return type: " + safe_cast<IntelliSenseItemScriptVariable^>(VarList[ReturnVarIndex])->GetDataTypeID();
+
+			// regenerate after changing type
+			HelpTextFooter = GenerateHelpTextFooter();
 		}
 
 		IntelliSenseItemCodeSnippet::IntelliSenseItemCodeSnippet(CodeSnippet^ Source) :
 			IntelliSenseItem()
 		{
 			this->Type = IntelliSenseItem::ItemType::Snippet;
-
 			Parent = Source;
 
-			this->Description = "Name: " + Parent->Name + "\n" +
-				"Shorthand: " + Parent->Shorthand +
-				(Parent->Description->Length ? "\n\n" + Parent->Description : "") +
-				(Parent->Variables->Count ? "\n\nVariables: " + Parent->Variables->Count.ToString() : "");
+			HelpTextHeader = GenerateHelpTextHeader(Parent->Name + " (" + Parent->Shorthand + ")");
+
+			if (Parent->Description->Length)
+				HelpTextBody += "<p width=\"250\" padding=\"0,0,0,10\">Description: <i>" + Parent->Description + "</i></p>";
+
+			if (Parent->Variables->Count)
+				HelpTextBody += "New variables: " + Parent->Variables->Count;
+
+			HelpTextFooter = GenerateHelpTextFooter();
 		}
 
 		void IntelliSenseItemCodeSnippet::Insert(textEditors::IScriptTextEditor^ Editor)
@@ -500,7 +675,5 @@ namespace cse
 
 			return Result;
 		}
-
-
 	}
 }

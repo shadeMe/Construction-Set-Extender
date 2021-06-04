@@ -269,14 +269,10 @@ namespace cse
 			this->ScriptList->View = System::Windows::Forms::View::Details;
 			this->ScriptList->VirtualMode = true;
 			this->ScriptList->SmallImageList = gcnew ImageList();
-			this->ScriptList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->
-														CreateImage("ScriptListDialogFlagSyncing"));
-			this->ScriptList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->
-														CreateImage("ScriptListDialogFlagUncompiled"));
-			this->ScriptList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->
-														CreateImage("ScriptListDialogFlagActive"));
-			this->ScriptList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->
-														CreateImage("ScriptListDialogFlagDeleted"));
+			this->ScriptList->SmallImageList->Images->Add(Globals::ImageResources()->CreateImage("ScriptListDialogFlagSyncing"));
+			this->ScriptList->SmallImageList->Images->Add(Globals::ImageResources()->CreateImage("ScriptListDialogFlagUncompiled"));
+			this->ScriptList->SmallImageList->Images->Add(Globals::ImageResources()->CreateImage("ScriptListDialogFlagActive"));
+			this->ScriptList->SmallImageList->Images->Add(Globals::ImageResources()->CreateImage("ScriptListDialogFlagDeleted"));
 			//
 			// ScriptListCFlags
 			//
@@ -383,7 +379,7 @@ namespace cse
 			this->ButtonCompleteSelection->Size = System::Drawing::Size(66, 32);
 			this->ButtonCompleteSelection->Text = L"OK";
 			this->ButtonCompleteSelection->UseVisualStyleBackColor = true;
-			this->ButtonCompleteSelection->Image = Globals::ScriptEditorImageResourceManager->CreateImage("ScriptListDialogCompleteSelection");
+			this->ButtonCompleteSelection->Image = Globals::ImageResources()->CreateImage("ScriptListDialogCompleteSelection");
 			//
 			// DeferredSelectionUpdateTimer
 			//

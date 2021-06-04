@@ -896,10 +896,10 @@ namespace cse
 
 				this->ListViewSyncedScripts->SmallImageList = gcnew ImageList();
 				this->ListViewSyncedScripts->SmallImageList->ImageSize = Drawing::Size(14, 14);
-				this->ListViewSyncedScripts->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ScriptSyncStatusEmpty"));
-				this->ListViewSyncedScripts->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ScriptSyncStatusIndeterminate"));
-				this->ListViewSyncedScripts->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ScriptSyncStatusSuccess"));
-				this->ListViewSyncedScripts->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ScriptSyncStatusFailure"));
+				this->ListViewSyncedScripts->SmallImageList->Images->Add(Globals::ImageResources()->CreateImage("ScriptSyncStatusEmpty"));
+				this->ListViewSyncedScripts->SmallImageList->Images->Add(Globals::ImageResources()->CreateImage("ScriptSyncStatusIndeterminate"));
+				this->ListViewSyncedScripts->SmallImageList->Images->Add(Globals::ImageResources()->CreateImage("ScriptSyncStatusSuccess"));
+				this->ListViewSyncedScripts->SmallImageList->Images->Add(Globals::ImageResources()->CreateImage("ScriptSyncStatusFailure"));
 
 				this->ColScriptName->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&DiskSyncDialog::ListViewAspectScriptNameGetter);
 				this->ColScriptName->ImageGetter = gcnew BrightIdeasSoftware::ImageGetterDelegate(&DiskSyncDialog::ListViewImageScriptNameGetter);

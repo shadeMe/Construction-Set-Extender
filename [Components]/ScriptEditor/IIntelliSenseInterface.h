@@ -94,30 +94,25 @@ namespace cse
 
 			property Event			Type;
 
-			property String^		CurrentToken;
-			property String^		PreviousToken;
+			property UInt32			Line;
+			property String^		HoveredToken;
+			property String^		PreviousToken;		// relative to the hovered token
 			property bool			DotOperatorInUse;
+			property bool			HoveringOverComment;
 
-			property bool			UseOverrideParams;
-			property String^		OverrideTitle;
-			property String^		OverrideText;
-			property ToolTipIcon	OverrideIcon;
-
+			property List<String^>^	ErrorMessagesForHoveredLine;
 			property Point			DisplayScreenCoords;
 
 			IntelliSenseInsightHoverEventArgs(Event Type)
 			{
 				this->Type = Type;
 
-				CurrentToken = String::Empty;
+				Line = 0;
+				HoveredToken = String::Empty;
 				PreviousToken = String::Empty;
 				DotOperatorInUse = false;
-
-				UseOverrideParams = false;
-				OverrideTitle = String::Empty;
-				OverrideText = String::Empty;
-				OverrideIcon = ToolTipIcon::None;
-
+				HoveringOverComment = false;
+				ErrorMessagesForHoveredLine = gcnew List<String^>;
 				DisplayScreenCoords = Point(0, 0);
 			}
 		};
@@ -144,20 +139,56 @@ namespace cse
 			bool	IsLocalVariable(String^ Identifier);
 		};
 
-		ref struct IntelliSenseShowInsightToolTipArgs
+		ref class IntelliSenseShowInsightToolTipArgs : public IRichTooltipContentProvider
 		{
-			property String^		Title;
-			property String^		Text;
-			property ToolTipIcon	Icon;
-
-			property Point			DisplayScreenCoords;
-			property IntPtr			ParentWindowHandle;
+			String^		TooltipHeaderText_;
+			String^		TooltipBodyText_;
+			Image^		TooltipBodyImage_;
+			String^		TooltipFooterText_;
+			Image^		TooltipFooterImage_;
+			IRichTooltipContentProvider::BackgroundColor
+						TooltipBgColor_;
+		public:
+			virtual property String^ TooltipHeaderText
+			{
+				String^ get() { return TooltipHeaderText_; }
+				void set(String^ set) { TooltipHeaderText_ = set; }
+			}
+			virtual property String^ TooltipBodyText
+			{
+				String^ get() { return TooltipBodyText_; }
+				void set(String^ set) { TooltipBodyText_ = set; }
+			}
+			virtual property Image^	TooltipBodyImage
+			{
+				Image^ get() { return TooltipBodyImage_; }
+				void set(Image^ set) { TooltipBodyImage_ = set; }
+			}
+			virtual property String^ TooltipFooterText
+			{
+				String^ get() { return TooltipFooterText_; }
+				void set(String^ set) { TooltipFooterText_ = set; }
+			}
+			virtual property Image^	TooltipFooterImage
+			{
+				Image^ get() { return TooltipFooterImage_; }
+				void set(Image^ set) { TooltipFooterImage_ = set; }
+			}
+			virtual property IRichTooltipContentProvider::BackgroundColor TooltipBgColor
+			{
+				IRichTooltipContentProvider::BackgroundColor get() { return TooltipBgColor_; }
+				void set(IRichTooltipContentProvider::BackgroundColor set) { TooltipBgColor_ = set; }
+			}
+			property Point DisplayScreenCoords;
+			property IntPtr	ParentWindowHandle;
 
 			IntelliSenseShowInsightToolTipArgs()
 			{
-				Title = String::Empty;
-				Text = String::Empty;
-				Icon = ToolTipIcon::None;
+				TooltipHeaderText_ = String::Empty;
+				TooltipBodyText_ = String::Empty;
+				TooltipFooterText_ = String::Empty;
+				TooltipBodyImage_ = TooltipFooterImage_ = nullptr;
+				TooltipBgColor_ = IRichTooltipContentProvider::BackgroundColor::Default;
 
 				DisplayScreenCoords = Point(0, 0);
 				ParentWindowHandle = IntPtr::Zero;

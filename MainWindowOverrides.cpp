@@ -200,6 +200,21 @@ namespace cse
 										CheckItem = true;
 
 									break;
+								case IDC_MAINMENU_ONEDITORSTARTUP_LOADSTARTUPPLUGIN:
+									if (settings::startup::kLoadPlugin().i)
+										CheckItem = true;
+
+									break;
+								case IDC_MAINMENU_ONEDITORSTARTUP_SETSTARTUPWORKSPACE:
+									if (settings::startup::kSetWorkspace().i)
+										CheckItem = true;
+
+									break;
+								case IDC_MAINMENU_ONEDITORSTARTUP_OPENSTARTUPSCRIPT:
+									if (settings::startup::kOpenScriptWindow().i)
+										CheckItem = true;
+
+									break;
 								default:
 									UpdateItem = false;
 									break;
@@ -678,6 +693,15 @@ namespace cse
 					else
 						BGSEEUI->GetColorThemer()->Enable();
 
+					break;
+				case IDC_MAINMENU_ONEDITORSTARTUP_LOADSTARTUPPLUGIN:
+					settings::startup::kLoadPlugin.ToggleData();
+					break;
+				case IDC_MAINMENU_ONEDITORSTARTUP_SETSTARTUPWORKSPACE:
+					settings::startup::kSetWorkspace.ToggleData();
+					break;
+				case IDC_MAINMENU_ONEDITORSTARTUP_OPENSTARTUPSCRIPT:
+					settings::startup::kOpenScriptWindow.ToggleData();
 					break;
 				default:
 					SubclassParams->Out.MarkMessageAsHandled = false;

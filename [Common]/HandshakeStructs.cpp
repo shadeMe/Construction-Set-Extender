@@ -52,8 +52,13 @@ namespace componentDLLInterface
 			BaseFormEditorID = (CS_CAST(Form, TESForm, TESObjectREFR))->baseForm->editorID.c_str();
 
 		auto ParentFile = Form->GetOverrideFile(-1);
-		if (ParentFile)
-			ParentPluginName = ParentFile->fileName;
+		ParentPluginName = ParentFile ? ParentFile->fileName : nullptr;
+
+		auto Fullname = CS_CAST(Form, TESForm, TESFullName);
+		NameComponent = Fullname ? Fullname->name.c_str() : nullptr;
+
+		auto Description = CS_CAST(Form, TESForm, TESDescription);
+		DescriptionComponent = Description ? Description->description.c_str() : nullptr;
 	}
 
 	FormData::FormData() : EditorID(nullptr), FormID(0), TypeID(0), Flags(0), ParentForm(nullptr), ParentPluginName(nullptr), ObjectReference(false), BaseFormEditorID(nullptr)
@@ -180,8 +185,6 @@ namespace componentDLLInterface
 	QuestData::QuestData() : FormData()
 	{
 		kHandShakeStructCounters[kCounter_QuestData]++;
-		FullName = 0;
-		ScriptName = 0;
 	}
 
 	QuestData::~QuestData()

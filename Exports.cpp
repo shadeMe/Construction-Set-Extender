@@ -889,13 +889,7 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 
 	QuestCount = 0, ScriptCount = 0, GlobalCount = 0;
 	for (tList<TESQuest>::Iterator Itr = _DATAHANDLER->quests.Begin(); !Itr.End() && Itr.Get(); ++Itr, ++QuestCount)
-	{
 		Data->QuestListHead[QuestCount].FillFormData(Itr.Get());
-		Data->QuestListHead[QuestCount].FullName = Itr.Get()->name.c_str();
-		Data->QuestListHead[QuestCount].ScriptName = nullptr;
-		if (Itr.Get()->script)
-			Data->QuestListHead[QuestCount].ScriptName = Itr.Get()->script->editorID.c_str();
-	}
 
 	for (tList<Script>::Iterator Itr = _DATAHANDLER->scripts.Begin(); !Itr.End() && Itr.Get(); ++Itr, ++ScriptCount)
 	{

@@ -72,8 +72,6 @@ namespace cse
 				BoundView->Hide();
 			}
 
-			ResetContext();
-
 			AutomaticallyPopup = preferences::SettingsHolder::Get()->IntelliSense->ShowSuggestions;
 			PopupThresholdLength = preferences::SettingsHolder::Get()->IntelliSense->SuggestionCharThreshold;
 			UseSubstringFiltering = preferences::SettingsHolder::Get()->IntelliSense->UseSubstringSearch;
@@ -569,17 +567,21 @@ namespace cse
 
 			bool HasInsight = false;
 
-			if (E->UseOverrideParams)
+			if (E->ErrorMessagesForHoveredLine->Count > 0 &&
+				preferences::SettingsHolder::Get()->IntelliSense->ShowErrorsInInsightToolTip)
 			{
 				HasInsight = true;
-				ShowArgs->Text = E->OverrideText;
-				ShowArgs->Title = E->OverrideTitle;
-				ShowArgs->Icon = E->OverrideIcon;
+
+				ShowArgs->TooltipHeaderText = "<font size=\"+2\">" + E->ErrorMessagesForHoveredLine->Count + " error(s)</font>";
+				for each (auto Error in E->ErrorMessagesForHoveredLine)
+					ShowArgs->TooltipBodyText += Error + "\n";
+				ShowArgs->TooltipBodyText = ShowArgs->TooltipBodyText->TrimEnd();
+				ShowArgs->TooltipBgColor = IRichTooltipContentProvider::BackgroundColor::Red;
 			}
-			else
+			else if (!E->HoveringOverComment)
 			{
 				ContextualIntelliSenseLookupArgs^ LookupArgs = gcnew ContextualIntelliSenseLookupArgs;
-				LookupArgs->CurrentToken = E->CurrentToken;
+				LookupArgs->CurrentToken = E->HoveredToken;
 				LookupArgs->PreviousToken = E->PreviousToken;
 				LookupArgs->DotOperatorInUse = E->DotOperatorInUse;
 				LookupArgs->OnlyWithInsightInfo = true;
@@ -591,14 +593,18 @@ namespace cse
 					ResolvedItem = ContextualLookup->CurrentToken;
 
 				if (ResolvedItem == nullptr)
-					ResolvedItem = LookupLocalVariable(E->CurrentToken);
+					ResolvedItem = LookupLocalVariable(E->HoveredToken);
 
 				if (ResolvedItem)
 				{
 					HasInsight = true;
-					ShowArgs->Text = ResolvedItem->Describe();
-					ShowArgs->Title = ResolvedItem->GetItemTypeName();
-					ShowArgs->Icon = ToolTipIcon::Info;
+
+					ShowArgs->TooltipHeaderText = ResolvedItem->TooltipHeaderText;
+					ShowArgs->TooltipBodyText = ResolvedItem->TooltipBodyText;
+					ShowArgs->TooltipBodyImage = ResolvedItem->TooltipBodyImage;
+					ShowArgs->TooltipFooterText= ResolvedItem->TooltipFooterText;
+					ShowArgs->TooltipFooterImage = ResolvedItem->TooltipFooterImage;
+					ShowArgs->TooltipBgColor = ResolvedItem->TooltipBgColor;
 				}
 			}
 

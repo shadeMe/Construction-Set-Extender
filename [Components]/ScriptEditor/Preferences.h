@@ -97,6 +97,10 @@ namespace cse
 		{
 			static String^ CategoryName = "IntelliSense";
 
+			[Category("Popup Window")]
+			[Description("Width of the popup window")]
+			property UInt32 WindowWidth;
+
 			[Category("Suggestions")]
 			[Description("Automatically display suggestions")]
 			property bool ShowSuggestions;
@@ -143,6 +147,7 @@ namespace cse
 
 			IntelliSenseSettings()
 			{
+				WindowWidth = 250;
 				ShowSuggestions = true;
 				SuggestionCharThreshold = 5;
 				InsertSuggestionsWithEnterKey = true;

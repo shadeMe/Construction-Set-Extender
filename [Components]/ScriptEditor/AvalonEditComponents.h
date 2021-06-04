@@ -525,6 +525,7 @@ namespace cse
 				~IconMargin();
 			};
 
+			TODO("replace tooltip with supertooltip")
 			ref class DefaultIconMargin : public IconMargin
 			{
 				static int											InstanceCounter = 0;

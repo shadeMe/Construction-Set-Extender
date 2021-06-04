@@ -8,7 +8,7 @@ namespace cse
 {
 	System::Windows::Media::Imaging::BitmapSource^ WPFImageResourceGenerator::CreateImageSource(String^ ResourceIdentifier)
 	{
-		Drawing::Bitmap^ OrgResource = (Drawing::Bitmap^)Globals::ScriptEditorImageResourceManager->CreateImage(ResourceIdentifier);
+		Drawing::Bitmap^ OrgResource = safe_cast<Drawing::Bitmap^>(Globals::ImageResources()->CreateImage(ResourceIdentifier));
 		System::Windows::Media::Imaging::BitmapSource^ Result = nullptr;
 
 		try
@@ -402,8 +402,8 @@ namespace cse
 				Control->Columns->Add(Message);
 
 				Control->SmallImageList = gcnew ImageList();
-				Control->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("MessageListWarning"));
-				Control->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("MessageListError"));
+				Control->SmallImageList->Images->Add(Globals::ImageResources()->CreateImage("MessageListWarning"));
+				Control->SmallImageList->Images->Add(Globals::ImageResources()->CreateImage("MessageListError"));
 			}
 
 			System::Collections::IComparer^ ScriptMessageBinder::GetSorter(int Column, SortOrder Order)

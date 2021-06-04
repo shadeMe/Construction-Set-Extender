@@ -216,4 +216,37 @@ namespace cse
 	protected:
 		virtual void OnRenderToolStripBorder(ToolStripRenderEventArgs^ e) override {}
 	};
+
+	// For use with DotNetBar::SuperToolTip
+	// Text can include limited HTML-markup
+	// c.f https://www.devcomponents.com/kb2/?p=515
+	interface class IRichTooltipContentProvider
+	{
+		static enum class BackgroundColor
+		{
+			Default,
+			Blue,
+			Yellow,
+			Green,
+			Red,
+			Magenta,
+			BlueMist,
+			Lemon,
+			Apple,
+			Silver,
+			Gray
+		};
+
+		property String^	TooltipHeaderText;
+		property String^	TooltipBodyText;
+		property Image^		TooltipBodyImage;
+		property String^	TooltipFooterText;
+		property Image^		TooltipFooterImage;
+		property BackgroundColor
+							TooltipBgColor;
+	};
+
+#ifdef CSE_SE
+	DevComponents::DotNetBar::eTooltipColor MapRichTooltipBackgroundColorToDotNetBar(IRichTooltipContentProvider::BackgroundColor BgColor);
+#endif
 }

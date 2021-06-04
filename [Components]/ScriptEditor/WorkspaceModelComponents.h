@@ -24,45 +24,45 @@ namespace cse
 			};
 		protected:
 			textEditors::IScriptTextEditor::ILineAnchor^
-							_Anchor;
-			String^			_Message;
-			MessageType		_Type;
-			MessageSource	_Source;
+							Anchor_;
+			String^			Message_;
+			MessageType		Type_;
+			MessageSource	Source_;
 		public:
 			ScriptDiagnosticMessage(textEditors::IScriptTextEditor::ILineAnchor^ Anchor, String^ Message, MessageType Type, MessageSource Source)
 			{
-				_Anchor = Anchor;
-				_Message = Message;
-				_Type = Type;
-				_Source = Source;
+				Anchor_ = Anchor;
+				Message_ = Message;
+				Type_ = Type;
+				Source_ = Source;
 			}
 
 
 			virtual property UInt32 Line
 			{
-				UInt32 get() { return _Anchor->Line; }
+				UInt32 get() { return Anchor_->Line; }
 				void set(UInt32) {}
 			}
 
 			virtual property bool Valid
 			{
-				bool get() { return _Anchor->Valid; }
+				bool get() { return Anchor_->Valid; }
 				void set(bool) {}
 			}
 
 			property String^ Message
 			{
-				String^ get() { return _Message; }
+				String^ get() { return Message_; }
 			}
 
 			property MessageType Type
 			{
-				MessageType get() { return _Type; }
+				MessageType get() { return Type_; }
 			}
 
 			property MessageSource Source
 			{
-				MessageSource get() { return _Source; }
+				MessageSource get() { return Source_; }
 			}
 		};
 
@@ -70,31 +70,31 @@ namespace cse
 		{
 		protected:
 			textEditors::IScriptTextEditor::ILineAnchor^
-						_Anchor;
-			String^		_Description;
+						Anchor_;
+			String^		Description_;
 		public:
 			ScriptBookmark(textEditors::IScriptTextEditor::ILineAnchor^ Anchor, String^ Description)
 			{
-				_Anchor = Anchor;
-				_Description = Description;
+				Anchor_ = Anchor;
+				Description_ = Description;
 			}
 
 
 			virtual property UInt32 Line
 			{
-				UInt32 get() { return _Anchor->Line; }
+				UInt32 get() { return Anchor_->Line; }
 				void set(UInt32) {}
 			}
 
 			virtual property bool Valid
 			{
-				bool get() { return _Anchor->Valid; }
+				bool get() { return Anchor_->Valid; }
 				void set(bool) {}
 			}
 
 			property String^ Description
 			{
-				String^ get() { return _Description; }
+				String^ get() { return Description_; }
 			}
 		};
 
@@ -102,7 +102,7 @@ namespace cse
 		{
 			ref struct Bookmark
 			{
-				property UInt32		Line;
+				property UInt32	 Line;
 				property String^ Message;
 
 				Bookmark(UInt32 Line, String^ Message)
