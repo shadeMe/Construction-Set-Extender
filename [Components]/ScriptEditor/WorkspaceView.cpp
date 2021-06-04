@@ -12,35 +12,12 @@ namespace cse
 {
 	namespace scriptEditor
 	{
-		void WorkspaceViewTabTearing::End()
+		void WorkspaceViewTabTearingHelper::TearingEventHandler(Object^ Sender, MouseEventArgs^ E)
 		{
-			Debug::Assert(InProgress == true);
+			if (ProcessingMouseMessage)
+				return;
 
-			InProgress = false;
-			Torn = nullptr;
-			Source = nullptr;
-
-			HookManager::MouseUp -= TearingEventDelegate;
-		}
-
-		void WorkspaceViewTabTearing::Begin(IWorkspaceModel^ Tearing, ConcreteWorkspaceView^ From)
-		{
-			Debug::Assert(InProgress == false);
-			Debug::Assert(Tearing != nullptr);
-			Debug::Assert(From != nullptr);
-
-			InProgress = true;
-			Torn = Tearing;
-			Source = From;
-
-			HookManager::MouseUp += TearingEventDelegate;
-		}
-
-		void WorkspaceViewTabTearing::TearingEventHandler(Object^ Sender, MouseEventArgs^ E)
-		{
-			// Preemptively remove the hook to prevent re-entry
-			// for example, an event occurs before the handler returns that requires mouse input
-			HookManager::MouseUp -= TearingEventDelegate;
+			ProcessingMouseMessage = true;
 
 			switch (E->Button)
 			{
@@ -101,8 +78,61 @@ namespace cse
 				break;
 			default:
 				End();
-				break;
 			}
+		}
+
+		void WorkspaceViewTabTearingHelper::End()
+		{
+			Debug::Assert(Active == true);
+
+			Active = false;
+			Torn = nullptr;
+			Source = nullptr;
+			ProcessingMouseMessage = false;
+
+			HookManager::MouseUp -= TearingEventDelegate;
+		}
+
+		WorkspaceViewTabTearingHelper::WorkspaceViewTabTearingHelper()
+		{
+			Torn = nullptr;
+			Source = nullptr;
+			Active = false;
+			ProcessingMouseMessage = false;
+
+			TearingEventDelegate = gcnew MouseEventHandler(this, &WorkspaceViewTabTearingHelper::TearingEventHandler);
+		}
+
+		WorkspaceViewTabTearingHelper::~WorkspaceViewTabTearingHelper()
+		{
+			if (Active)
+				End();
+
+			Torn = nullptr;
+			Source = nullptr;
+			SAFEDELETE_CLR(TearingEventDelegate);
+		}
+
+		void WorkspaceViewTabTearingHelper::InitiateHandling(IWorkspaceModel^ Tearing, ConcreteWorkspaceView^ From)
+		{
+			Debug::Assert(Active == false);
+			Debug::Assert(ProcessingMouseMessage == false);
+			Debug::Assert(Tearing != nullptr);
+			Debug::Assert(From != nullptr);
+
+			Active = true;
+			Torn = Tearing;
+			Source = From;
+
+			HookManager::MouseUp += TearingEventDelegate;
+		}
+
+		WorkspaceViewTabTearingHelper^ WorkspaceViewTabTearingHelper::Get()
+		{
+			if (Singleton == nullptr)
+				Singleton = gcnew WorkspaceViewTabTearingHelper();
+
+			return Singleton;
 		}
 
 		void WorkspaceViewTabFilter::ListView_KeyDown(Object^ Sender, KeyEventArgs^ E)
@@ -226,7 +256,7 @@ namespace cse
 
 			Parent = ParentView;
 
-			Form = gcnew AnimatedForm(0.15, false);
+			Form = gcnew AnimatedForm(false);
 			ListView = gcnew BrightIdeasSoftware::FastObjectListView;
 			SearchBox = gcnew TextBox;
 			FilterResults = gcnew List < DotNetBar::SuperTabItem^ > ;
@@ -281,10 +311,9 @@ namespace cse
 			Form->Controls->Add(ListView);
 			Form->Controls->Add(SearchBox);
 
-			Form->Location = Point(-1000, -1000);
 			Form->Size = Size(1, 1);
-			Form->Show();
-			Form->Hide();
+			Form->Show(Point(0, 0), IntPtr::Zero, false);
+			Form->Hide(false);
 			Form->Size = Size(285, 120);
 			Form->MaximumSize = Size(285, 120);
 			Form->MinimumSize = Size(285, 120);
@@ -325,7 +354,7 @@ namespace cse
 										  Parent->EditorForm->Location.Y + (Parent->EditorForm->Height - Form->Height) / 2);
 
 			Form->Location = DisplayLocation;
-			Form->Show(gcnew WindowHandleWrapper(Parent->WindowHandle));
+			Form->Show(Parent->WindowHandle);
 			UpdateFilterResults();
 			Form->Focus();
 		}
@@ -431,7 +460,7 @@ namespace cse
 
 			Parent = ParentView;
 
-			Form = gcnew AnimatedForm(0.15, false);
+			Form = gcnew AnimatedForm(false);
 			ListView = gcnew BrightIdeasSoftware::TreeListView;
 
 			ListViewKeyDownHandler = gcnew KeyEventHandler(this, &WorkspaceViewOutlineView::ListView_KeyDown);
@@ -475,10 +504,9 @@ namespace cse
 			Form->ControlBox = false;
 			Form->Controls->Add(ListView);
 
-			Form->Location = Point(-1000, -1000);
 			Form->Size = Size(1, 1);
-			Form->Show();
-			Form->Hide();
+			Form->Show(Point(0, 0), IntPtr::Zero, false);
+			Form->Hide(false);
 			Form->Size = Size(400, 400);
 			Form->MaximumSize = Size(400, 400);
 			Form->MinimumSize = Size(400, 400);
@@ -531,7 +559,7 @@ namespace cse
 				ListView->SelectedItem->EnsureVisible();
 			}
 
-			Form->Show(gcnew WindowHandleWrapper(Parent->WindowHandle));
+			Form->Show(Parent->WindowHandle);
 			Form->Focus();
 		}
 
@@ -608,19 +636,18 @@ namespace cse
 			ScriptStripTabRemovedHandler = gcnew EventHandler<DotNetBar::SuperTabStripTabRemovedEventArgs^>(this, &ConcreteWorkspaceView::ScriptStrip_TabRemoved);
 			ScriptStripMouseClickHandler = gcnew EventHandler<MouseEventArgs^>(this, &ConcreteWorkspaceView::ScriptStrip_MouseClick);
 			ScriptStripTabMovingHandler = gcnew EventHandler<DotNetBar::SuperTabStripTabMovingEventArgs^>(this, &ConcreteWorkspaceView::ScriptStrip_TabMoving);
-
 			ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ScriptEditorPreferences_Saved);
 
 			NavigationStackBackward = gcnew Stack < IWorkspaceModel^ > ;
 			NavigationStackForward = gcnew Stack < IWorkspaceModel^ > ;
 			FreezeNavigationStacks = false;
 
-			EditorForm = gcnew AnimatedForm(0.1, false);
+			EditorForm = gcnew AnimatedForm(false);
 			EditorForm->SuspendLayout();
 
 			EditorForm->FormBorderStyle = FormBorderStyle::Sizable;
-	//		EditorForm->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
-	//		EditorForm->AutoScaleMode = AutoScaleMode::Font;
+			EditorForm->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
+			EditorForm->AutoScaleMode = AutoScaleMode::Font;
 			EditorForm->Size = Size(Bounds.Width, Bounds.Height);
 			EditorForm->KeyPreview = true;
 			EditorForm->TabStop = false;
@@ -1236,7 +1263,7 @@ namespace cse
 			if (preferences::SettingsHolder::Get()->General->HideInTaskbar)
 			{
 				EditorForm->ShowInTaskbar = false;
-				EditorForm->Show(gcnew WindowHandleWrapper((IntPtr)nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetMainWindowHandle()));
+				EditorForm->Show(safe_cast<IntPtr>(nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetMainWindowHandle()));
 			}
 			else
 				EditorForm->Show();
@@ -1622,11 +1649,11 @@ namespace cse
 
 		void ConcreteWorkspaceView::ScriptStrip_TabMoving(Object^ Sender, DotNetBar::SuperTabStripTabMovingEventArgs^ E)
 		{
-			if (WorkspaceViewTabTearing::InProgress == false)
+			if (WorkspaceViewTabTearingHelper::Get()->InProgress == false)
 			{
 				DotNetBar::SuperTabItem^ MouseOverTab = GetMouseOverTab();
 				if (MouseOverTab)
-					WorkspaceViewTabTearing::Begin(GetModel(MouseOverTab), this);
+					WorkspaceViewTabTearingHelper::Get()->InitiateHandling(GetModel(MouseOverTab), this);
 			}
 		}
 

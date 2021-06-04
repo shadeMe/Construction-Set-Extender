@@ -51,7 +51,6 @@ namespace cse
 
 			void	ShowListViewToolTip(IntelliSenseItem^ Item);
 			void	HideListViewToolTip();
-
 			void	SelectFirstItemOnShow(AnimatedForm^ Sender);
 
 			static const float	DimmedOpacity = 0.15f;
@@ -82,19 +81,19 @@ namespace cse
 				virtual void set(IntelliSenseItem^ e) {}
 			}
 
-			virtual void				Bind(IIntelliSenseInterfaceModel^ To);
-			virtual void				Unbind();
+			virtual void	Bind(IIntelliSenseInterfaceModel^ To);
+			virtual void	Unbind();
 
-			virtual void				ChangeSelection(IIntelliSenseInterfaceView::MoveDirection Direction);
-			virtual void				DimOpacity();
-			virtual void				ResetOpacity();
+			virtual void	ChangeSelection(IIntelliSenseInterfaceView::MoveDirection Direction);
+			virtual void	DimOpacity();
+			virtual void	ResetOpacity();
 
-			virtual void				ShowInsightToolTip(IntelliSenseShowInsightToolTipArgs^ Args);
-			virtual void				HideInsightToolTip();
+			virtual void	ShowInsightToolTip(IntelliSenseShowInsightToolTipArgs^ Args);
+			virtual void	HideInsightToolTip();
 
-			virtual void				Update();
-			virtual void				Show(Point Location, IntPtr Parent);
-			virtual void				Hide();
+			virtual void	Update();
+			virtual void	Show(Point Location, IntPtr Parent);
+			virtual void	Hide();
 #pragma endregion
 		};
 	}

@@ -68,20 +68,31 @@ namespace cse
 			virtual DialogResult	MessageBox(String^ Message, MessageBoxButtons Buttons, MessageBoxIcon Icon);
 		};
 
-		ref class WorkspaceViewTabTearing
+		ref class WorkspaceViewTabTearingHelper
 		{
-			static void							TearingEventHandler(Object^ Sender, MouseEventArgs^ E);
+			static WorkspaceViewTabTearingHelper^	Singleton = nullptr;
 
-			static MouseEventHandler^			TearingEventDelegate = gcnew MouseEventHandler(&TearingEventHandler);
+			IWorkspaceModel^		Torn;
+			ConcreteWorkspaceView^	Source;
+			bool					Active;
+			bool					ProcessingMouseMessage;
+			MouseEventHandler^		TearingEventDelegate;
 
-			static IWorkspaceModel^				Torn = nullptr;
-			static ConcreteWorkspaceView^		Source = nullptr;
+			void	TearingEventHandler(Object^ Sender, MouseEventArgs^ E);
+			void	End();
 
-			static void							End();
+			WorkspaceViewTabTearingHelper();
 		public:
-			static bool							InProgress = false;
+			~WorkspaceViewTabTearingHelper();
 
-			static void							Begin(IWorkspaceModel^ Tearing, ConcreteWorkspaceView^ From);
+			void InitiateHandling(IWorkspaceModel^ Tearing, ConcreteWorkspaceView^ From);
+
+			property bool InProgress
+			{
+				bool get() { return Active; }
+			}
+
+			static WorkspaceViewTabTearingHelper^ Get();
 		};
 
 		ref class WorkspaceViewTabFilter
@@ -222,7 +233,6 @@ namespace cse
 			EventHandler<DotNetBar::SuperTabStripTabRemovedEventArgs^>^             ScriptStripTabRemovedHandler;
 			EventHandler<MouseEventArgs^>^											ScriptStripMouseClickHandler;
 			EventHandler<DotNetBar::SuperTabStripTabMovingEventArgs^>^              ScriptStripTabMovingHandler;
-
 			EventHandler^							ScriptEditorPreferencesSavedHandler;
 
 			void									EditorForm_Cancel(Object^ Sender, CancelEventArgs^ E);

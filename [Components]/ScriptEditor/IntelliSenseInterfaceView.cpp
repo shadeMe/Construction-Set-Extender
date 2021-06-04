@@ -11,7 +11,7 @@ namespace cse
 		{
 			BoundModel = nullptr;
 
-			Form = gcnew AnimatedForm(0.13, true);
+			Form = gcnew AnimatedForm(true);
 			ListView = gcnew BrightIdeasSoftware::FastObjectListView;
 
 			ListViewSelectionChangedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceView::ListView_SelectionChanged);
@@ -85,7 +85,7 @@ namespace cse
 
 			Form->SetSize(Size(0, 0));
 			Form->Show(Point(0, 0), Form->Handle, false);
-			Form->Hide();
+			Form->Hide(false);
 		}
 
 		IntelliSenseInterfaceView::~IntelliSenseInterfaceView()
@@ -281,7 +281,7 @@ namespace cse
 
 				// The SelectionChanged event doesn't get raised consistently at this point
 				// So, we ensure that the tooltip is shown
-				//ShowListViewToolTip(DefaultSelection);
+				ShowListViewToolTip(DefaultSelection);
 			}
 		}
 
@@ -340,7 +340,7 @@ namespace cse
 
 		void IntelliSenseInterfaceView::DimOpacity()
 		{
-			if (!Visible)
+			if (!Visible || Form->IsFadingIn)
 				return;
 
 			Form->Opacity = DimmedOpacity;
@@ -348,7 +348,7 @@ namespace cse
 
 		void IntelliSenseInterfaceView::ResetOpacity()
 		{
-			if (!Visible)
+			if (!Visible || Form->IsFadingIn)
 				return;
 
 			Form->Opacity = 1.f;
@@ -380,6 +380,7 @@ namespace cse
 			Debug::Assert(Bound == true);
 
 			ListView->SetObjects(BoundModel->DataStore);
+			ListView->DeselectAll();
 
 			if (BoundModel->DataStore->Count)
 			{
@@ -415,8 +416,15 @@ namespace cse
 		{
 			try
 			{
-				Form->SetNextActiveTransitionCompleteHandler(SelectFirstItemOnShowHandler);
-				Form->Show(Location, Parent, (Form->Visible == false));
+				auto PopupHidden = !Form->Visible;
+
+				if (PopupHidden)
+					Form->SetNextActiveTransitionCompleteHandler(SelectFirstItemOnShowHandler);
+
+				Form->Show(Location, Parent, PopupHidden);
+
+				if (!PopupHidden)
+					SelectFirstItemOnShow(Form);
 			}
 			catch (Exception^ E) {
 				DebugPrint("IntelliSenseInterfaceView::Show Exception! Message - " + E->Message);

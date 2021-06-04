@@ -10,6 +10,7 @@ namespace cse
 		const int WM_MOVE = 0x003;
 		const int WM_MOVING = 0x0216;
 		const int WM_ACTIVATE = 0x6;
+		const int WM_NCACTIVATE = 0x86;
 		const int WA_INACTIVE = 0;
 
 		switch(m.Msg)
@@ -26,6 +27,12 @@ namespace cse
 					return;
 				break;
 			}
+		/*case WM_NCACTIVATE:
+			if (!PreventActivation && ActiveTransition == Transition::None)
+				break;
+
+			m.Result = IntPtr::Zero;
+			return;*/
 		case WM_ACTIVATE:
 			if (((int)m.WParam & 0xFFFF) != WA_INACTIVE)
 			{
@@ -46,10 +53,10 @@ namespace cse
 
 	void AnimatedForm::FadeTimer_Tick(Object^ Sender, EventArgs^ E)
 	{
-		const auto kTransitionTime = 1000;		// in ms
+		const auto kTransitionTime = 100;		// in ms
 
-		double NumTicksReqd = kTransitionTime / static_cast<double>(FadeTimer->Interval);
-		double PerTickDelta = 1.0 / NumTicksReqd;
+		auto NumTicksReqd = kTransitionTime / static_cast<double>(FadeTimer->Interval);
+		auto PerTickDelta = 1.0 / NumTicksReqd;
 
 		if (ActiveTransition == Transition::FadeIn)
 			this->Opacity += PerTickDelta;
@@ -57,7 +64,16 @@ namespace cse
 			this->Opacity -= PerTickDelta;
 
 		if (this->Opacity >= 1.0 || this->Opacity <= 0.0)
-			EndTransition();
+			EndTransition(nullptr);
+	}
+
+	void AnimatedForm::ShowFormDiscreetly(IntPtr ParentWindowHandle)
+	{
+		this->Opacity = 0;
+		if (ParentWindowHandle != IntPtr::Zero)
+			Form::Show(gcnew WindowHandleWrapper(ParentWindowHandle));
+		else
+			Form::Show();
 	}
 
 	void AnimatedForm::StartTransition(StartTransitionParams^ Params)
@@ -73,10 +89,8 @@ namespace cse
 			if (Params->UsePosition)
 				SetDesktopLocation(Params->Position.X, Params->Position.Y);
 
-			if (Params->ParentWindowHandle != IntPtr::Zero)
-				Form::Show(gcnew WindowHandleWrapper(Params->ParentWindowHandle));
-			else
-				Form::Show();
+			if (!Visible)
+				ShowFormDiscreetly(Params->ParentWindowHandle);
 
 			if (Params->Animate)
 			{
@@ -103,13 +117,13 @@ namespace cse
 		if (!Params->Animate)
 		{
 			// end the transition right away
-			EndTransition();
+			EndTransition(Params);
 		}
 		else
 			FadeTimer->Start();
 	}
 
-	void AnimatedForm::EndTransition()
+	void AnimatedForm::EndTransition(StartTransitionParams^ StartParams)
 	{
 		if (ActiveTransitionEndState == TransitionFinalState::None)
 			return;
@@ -128,7 +142,8 @@ namespace cse
 			this->Opacity = 1;
 			break;
 		case TransitionFinalState::Show:
-			Form::BringToFront();
+			if (StartParams == nullptr)
+				Form::BringToFront();
 			this->Opacity = 1;
 			break;
 		case TransitionFinalState::Close:
@@ -153,7 +168,7 @@ namespace cse
 
 		FadeTimerTickHandler = gcnew EventHandler(this, &AnimatedForm::FadeTimer_Tick);
 		FadeTimer = gcnew Timer();
-		FadeTimer->Interval = 4;
+		FadeTimer->Interval = 10;
 		FadeTimer->Tick += FadeTimerTickHandler;
 		FadeTimer->Enabled = false;
 
@@ -167,7 +182,6 @@ namespace cse
 		if (ClosingForm)
 			return;
 
-		EndTransition();
 		ClosingForm = true;
 
 		FadeTimer->Tick -= FadeTimerTickHandler;
@@ -182,7 +196,7 @@ namespace cse
 		if (Visible)
 			return;
 
-		EndTransition();
+		EndTransition(nullptr);
 
 		auto Params = gcnew StartTransitionParams;
 		Params->EndState = TransitionFinalState::Show;
@@ -197,7 +211,7 @@ namespace cse
 		if (Visible)
 			return;
 
-		EndTransition();
+		EndTransition(nullptr);
 
 		auto Params = gcnew StartTransitionParams;
 		Params->EndState = TransitionFinalState::Show;
@@ -210,20 +224,23 @@ namespace cse
 		if (ClosingForm)
 			throw gcnew System::InvalidOperationException("Form is being disposed or has already been disposed");
 
-		if (Visible)
-			return;
-
-		EndTransition();
+		EndTransition(nullptr);
 
 		auto Params = gcnew StartTransitionParams;
 		Params->EndState = TransitionFinalState::Show;
 		Params->ParentWindowHandle = ParentHandle;
 		Params->Position = Position;
+		Params->UsePosition = true;
 		Params->Animate = Animate;
 		StartTransition(Params);
 	}
 
 	void AnimatedForm::Hide()
+	{
+		Hide(true);
+	}
+
+	void AnimatedForm::Hide(bool Animate)
 	{
 		if (ClosingForm)
 			throw gcnew System::InvalidOperationException("Form is being disposed or has already been disposed");
@@ -231,10 +248,11 @@ namespace cse
 		if (!Visible)
 			return;
 
-		EndTransition();
+		EndTransition(nullptr);
 
 		auto Params = gcnew StartTransitionParams;
 		Params->EndState = TransitionFinalState::Hide;
+		Params->Animate = Animate;
 		StartTransition(Params);
 	}
 
@@ -243,7 +261,7 @@ namespace cse
 		if (ClosingForm)
 			throw gcnew System::InvalidOperationException("Form is being disposed or has already been disposed");
 
-		EndTransition();
+		EndTransition(nullptr);
 
 		auto Params = gcnew StartTransitionParams;
 		Params->EndState = TransitionFinalState::Close;
@@ -266,7 +284,7 @@ namespace cse
 
 	void AnimatedForm::SetNextActiveTransitionCompleteHandler(TransitionCompleteHandler^ NewHandler)
 	{
-		EndTransition();
+		EndTransition(nullptr);
 
 		ActiveTransitionCompleteHandler = NewHandler;
 	}

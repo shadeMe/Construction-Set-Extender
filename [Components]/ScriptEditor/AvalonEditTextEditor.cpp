@@ -2639,11 +2639,15 @@ namespace cse
 				Debug::Assert(CompilationInProgress == true);
 				CompilationInProgress = false;
 
+				String^ kRepeatedString = "Compiled script not saved!";
+
 				if (Data->CompileResult)
 				{
 					for (int i = 0; i < Data->CompileResult->CompileErrorData.Count; i++)
 					{
 						String^ Message = gcnew String(Data->CompileResult->CompileErrorData.ErrorListHead[i].Message);
+						Message = Message->Replace(kRepeatedString, String::Empty);
+
 						int Line = Data->CompileResult->CompileErrorData.ErrorListHead[i].Line;
 						if (Line < 1)
 							Line = 1;

@@ -572,10 +572,14 @@ namespace cse
 			{
 				HasInsight = true;
 
-				ShowArgs->TooltipHeaderText = "<font size=\"+2\">" + E->ErrorMessagesForHoveredLine->Count + " error(s)</font>";
+				ShowArgs->TooltipHeaderText = "<font size=\"+2\"><b>" + E->ErrorMessagesForHoveredLine->Count + " error" + (E->ErrorMessagesForHoveredLine->Count != 1 ? "s" : "") + "</b></font>";
+
+				ShowArgs->TooltipBodyText += "<div width=\"350\">";
 				for each (auto Error in E->ErrorMessagesForHoveredLine)
-					ShowArgs->TooltipBodyText += Error + "\n";
-				ShowArgs->TooltipBodyText = ShowArgs->TooltipBodyText->TrimEnd();
+					ShowArgs->TooltipBodyText += "<span padding=\"0,0,0,5\">" + Error + "</span>\n";
+				ShowArgs->TooltipBodyText += "</div>";
+
+				ShowArgs->TooltipBodyText = ShowArgs->TooltipBodyText->Replace("\n", "<br/>");
 				ShowArgs->TooltipBgColor = IRichTooltipContentProvider::BackgroundColor::Red;
 			}
 			else if (!E->HoveringOverComment)

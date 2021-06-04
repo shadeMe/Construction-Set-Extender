@@ -33,6 +33,10 @@ namespace cse
 		IntPtr											GetForegroundWindow();
 		[DllImport("user32.dll")]
 		IntPtr											GetFocus();
+		[DllImport("user32.dll")]
+		IntPtr											SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+		[DllImport("user32.dll")]
+		int												GetWindowLong(IntPtr hWnd, int nIndex);
 		[DllImport("gdi32.dll")]
 		int												DeleteObject(IntPtr hObject);
 

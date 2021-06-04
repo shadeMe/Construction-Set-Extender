@@ -206,7 +206,7 @@ namespace cse
 
 			[Category("General")]
 			[Description("Default text font")]
-			[Editor(CustomFontEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			//[Editor(CustomFontEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
 			property Font^ TextFont;
 
 			[Category("General")]

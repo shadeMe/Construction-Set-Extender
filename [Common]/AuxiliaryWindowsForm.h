@@ -68,8 +68,9 @@ namespace cse
 
 		void	FadeTimer_Tick(Object^ Sender, EventArgs^ E);
 
+		void	ShowFormDiscreetly(IntPtr ParentWindowHandle);
 		void	StartTransition(StartTransitionParams^ Params);
-		void	EndTransition();
+		void	EndTransition(StartTransitionParams^ StartParams);
 	public:
 		AnimatedForm(bool ShowFormWithoutActivation);
 		virtual ~AnimatedForm();
@@ -89,6 +90,7 @@ namespace cse
 		void	Show(IntPtr ParentHandle);
 		void	Show(Drawing::Point Position, IntPtr ParentHandle, bool Animate);
 		void	Hide();
+		void	Hide(bool Animate);
 		void	Close();
 		void	ForceClose();
 

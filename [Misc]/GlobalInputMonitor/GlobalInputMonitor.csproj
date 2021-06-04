@@ -163,7 +163,7 @@
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>copy "$(TargetPath)" "$(OblivionPath)\$(TargetFileName)"
+copy "$(TargetPath)" "$(ProjectDir)\..\..\[Depends]\$(TargetFileName)"</PostBuildEvent>
   </PropertyGroup>
 </Project>

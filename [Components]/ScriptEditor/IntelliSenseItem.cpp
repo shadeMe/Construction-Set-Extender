@@ -319,9 +319,14 @@ namespace cse
 
 			HelpTextHeader = GenerateHelpTextHeader(EditorID);
 
-			HelpTextBody = "FormID: " + FormID.ToString("X8") + "<br/>";
+			String^ kRowStart = "<div width=\"150\">", ^kRowEnd = "</div>";
+			String^ kCellStart = "<span width=\"75\">", ^kCellEnd = "</span>";
+
+			HelpTextBody = "<span>FormID: " + FormID.ToString("X8") + "</span><br/>";
+			if (Data->ParentPluginName)
+				HelpTextBody = "<span>Source file: " + gcnew String(Data->ParentPluginName) + "</span><br/>";
 			if (Data->NameComponent)
-				HelpTextBody += "Name: " + gcnew String(Data->NameComponent) + "<br/>";
+				HelpTextBody += "<span>Name: " + gcnew String(Data->NameComponent) + "</span><br/>";
 
 			String^ FlagsDesc = "";
 			auto CheckedFlags = gcnew Dictionary<FormFlags, String^>;
@@ -354,10 +359,10 @@ namespace cse
 				HelpTextBody += "<p width=\"250\">Description: " + gcnew String(Data->DescriptionComponent) + "</p>";
 
 			if (Data->ObjectReference && Data->BaseFormEditorID)
-				HelpTextBody += "<br/>Base form: " + gcnew String(Data->BaseFormEditorID);
+				HelpTextBody += "<br/><span>Base form: " + gcnew String(Data->BaseFormEditorID) + "</span>";
 
 			if (AttachedScriptEditorID->Length)
-				HelpTextBody += "<br/>Attached script: " + AttachedScriptEditorID;
+				HelpTextBody += "<br/><span>Attached script: " + AttachedScriptEditorID + "</span>";
 
 			HelpTextFooter = GenerateHelpTextFooter();
 		}

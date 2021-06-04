@@ -299,7 +299,7 @@ namespace cse
 
 			IEnumerable<IntelliSenseItemScriptVariable^>^
 								GetVariables();
-			IntelliSenseItemScriptVariable^				
+			IntelliSenseItemScriptVariable^
 								LookupVariable(String^ VariableName);
 			bool				IsUserDefinedFunction();
 			virtual String^		GetItemTypeName() override;

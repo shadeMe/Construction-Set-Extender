@@ -12,7 +12,7 @@ namespace cse
 			Closing = false;
 			ParentView = Parent;
 
-			FindReplaceBox = gcnew AnimatedForm(0.10, false);
+			FindReplaceBox = gcnew AnimatedForm(false);
 			this->LabelFind = (gcnew Label());
 			this->LabelReplace = (gcnew Label());
 			this->QueryBox = (gcnew ComboBox());
@@ -208,7 +208,7 @@ namespace cse
 			FindReplaceBox->ResumeLayout(false);
 			FindReplaceBox->PerformLayout();
 
-			FindReplaceBox->Hide();
+			FindReplaceBox->Hide(true);
 		}
 
 		FindReplaceDialog::~FindReplaceDialog()
@@ -424,7 +424,7 @@ namespace cse
 			if (FindReplaceBox->Visible == false)
 			{
 				Closing = false;
-				FindReplaceBox->Show(gcnew WindowHandleWrapper(ParentView->WindowHandle));
+				FindReplaceBox->Show(ParentView->WindowHandle);
 			}
 
 			if (PerformSearch && Query != "")
