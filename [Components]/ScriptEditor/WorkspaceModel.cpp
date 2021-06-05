@@ -33,9 +33,7 @@ namespace cse
 			Font^ CustomFont = safe_cast<Font^>(preferences::SettingsHolder::Get()->Appearance->TextFont->Clone());
 			int TabSize = preferences::SettingsHolder::Get()->Appearance->TabSize;
 
-			TextEditor = gcnew textEditors::avalonEditor::AvalonEditTextEditor(this,
-																			   gcnew textEditors::avalonEditor::JumpToScriptHandler(this, &ConcreteWorkspaceModel::JumpToScript),
-																			   BackgroundAnalysis, CustomFont, TabSize);
+			TextEditor = gcnew textEditors::avalonEditor::AvalonEditTextEditor(this);
 			IntelliSenseModel = gcnew intellisense::IntelliSenseInterfaceModel(TextEditor);
 
 
@@ -185,12 +183,6 @@ namespace cse
 				System::IO::File::Delete(gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()) + LongDescription + ".txt");
 			}
 			catch (...) {}
-		}
-
-		void ConcreteWorkspaceModel::JumpToScript(String^ TargetEditorID)
-		{
-			if (String::Compare(TargetEditorID, CurrentScriptEditorID, true) && Bound)
-				BoundParent->Controller->Jump(BoundParent, this, TargetEditorID);
 		}
 
 		String^ ConcreteWorkspaceModel::GetLineText(UInt32 Line)
@@ -889,6 +881,15 @@ namespace cse
 			}
 
 			return Result;
+		}
+
+		void ConcreteWorkspaceModelController::JumpToScript(IWorkspaceModel^ Model, String^ ScriptEditorID)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			if (String::Compare(ScriptEditorID, Concrete->CurrentScriptEditorID, true))
+				Concrete->BoundParent->Controller->Jump(Concrete->BoundParent, Concrete, ScriptEditorID);
 		}
 
 		// ConcreteWorkspaceModelFactory

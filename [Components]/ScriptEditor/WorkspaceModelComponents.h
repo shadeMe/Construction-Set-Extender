@@ -37,7 +37,6 @@ namespace cse
 				Source_ = Source;
 			}
 
-
 			virtual property UInt32 Line
 			{
 				UInt32 get() { return Anchor_->Line; }

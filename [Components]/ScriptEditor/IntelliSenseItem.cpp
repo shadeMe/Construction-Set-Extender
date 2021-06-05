@@ -577,7 +577,7 @@ namespace cse
 				String^ kParamRowStart = "<div width=\"250\">", ^kParamRowEnd = "</div>";
 				String^ kParamCellStart = "<span width=\"125\">", ^kParamCellEnd = "</span>";
 
-				HelpTextBody += "<br/>" + NumParams + " UDF parameter(s)<br/>";
+				HelpTextBody += "<br/>" + NumParams + " UDF parameter(s):<br/>";
 				HelpTextBody += "<div padding=\"15,0,2,10\">";
 				HelpTextBody += "<div width=\"250\" padding=\"0,0,0,4\">" +
 								kParamCellStart + "<u>Name</u>" + kParamCellEnd +

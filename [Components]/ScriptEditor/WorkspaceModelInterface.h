@@ -10,6 +10,7 @@ namespace cse
 		interface class IWorkspaceView;
 		interface class IWorkspaceModelFactory;
 		interface class IWorkspaceModelController;
+		interface class IBackgroundSemanticAnalyzer;
 
 		interface class IWorkspaceModel
 		{
@@ -64,6 +65,7 @@ namespace cse
 			property ScriptType						Type;
 			property String^						ShortDescription;	// EditorID
 			property String^						LongDescription;	// EditorID [FormID]
+			property IBackgroundSemanticAnalyzer^	BackgroundSemanticAnalyzer;
 
 			property Control^						InternalView;		// the text editor
 			property bool							Bound;
@@ -72,46 +74,45 @@ namespace cse
 		interface class IWorkspaceModelController
 		{
 		public:
-			void					Bind(IWorkspaceModel^ Model, IWorkspaceView^ To);		// attaches to the view for display
-			void					Unbind(IWorkspaceModel^ Model);							// detaches from the view
+			void	Bind(IWorkspaceModel^ Model, IWorkspaceView^ To);		// attaches to the view for display
+			void	Unbind(IWorkspaceModel^ Model);							// detaches from the view
 
-			void					SetText(IWorkspaceModel^ Model, String^ Text, bool ResetUndoStack);
-			String^					GetText(IWorkspaceModel^ Model, bool Preprocess, bool% PreprocessResult);
+			void	SetText(IWorkspaceModel^ Model, String^ Text, bool ResetUndoStack);
+			String^	GetText(IWorkspaceModel^ Model, bool Preprocess, bool% PreprocessResult);
 
-			int						GetCaret(IWorkspaceModel^ Model);
-			void					SetCaret(IWorkspaceModel^ Model, int Index);
+			int		GetCaret(IWorkspaceModel^ Model);
+			void	SetCaret(IWorkspaceModel^ Model, int Index);
 
-			String^					GetSelection(IWorkspaceModel^ Model);
-			String^					GetCaretToken(IWorkspaceModel^ Model);
+			String^	GetSelection(IWorkspaceModel^ Model);
+			String^	GetCaretToken(IWorkspaceModel^ Model);
 
-			void					AcquireInputFocus(IWorkspaceModel^ Model);
+			void	AcquireInputFocus(IWorkspaceModel^ Model);
 
-			void					New(IWorkspaceModel^ Model);
-			void					Open(IWorkspaceModel^ Model, componentDLLInterface::ScriptData* Data);
-			bool					Save(IWorkspaceModel^ Model, IWorkspaceModel::SaveOperation Operation, bool% HasWarnings);
-			bool					Close(IWorkspaceModel^ Model, bool% OperationCancelled);							// returns true if successful
-			void					Next(IWorkspaceModel^ Model);
-			void					Previous(IWorkspaceModel^ Model);
-			void					CompileDepends(IWorkspaceModel^ Model);
+			void	New(IWorkspaceModel^ Model);
+			void	Open(IWorkspaceModel^ Model, componentDLLInterface::ScriptData* Data);
+			bool	Save(IWorkspaceModel^ Model, IWorkspaceModel::SaveOperation Operation, bool% HasWarnings);
+			bool	Close(IWorkspaceModel^ Model, bool% OperationCancelled);							// returns true if successful
+			void	Next(IWorkspaceModel^ Model);
+			void	Previous(IWorkspaceModel^ Model);
+			void	CompileDepends(IWorkspaceModel^ Model);
 
-			void					SetType(IWorkspaceModel^ Model, IWorkspaceModel::ScriptType New);
-			void					GotoLine(IWorkspaceModel^ Model, UInt32 Line);
-			UInt32					GetLineCount(IWorkspaceModel^ Model);
-			bool					Sanitize(IWorkspaceModel^ Model);						// returns true if successful
-			void					BindToForm(IWorkspaceModel^ Model);
+			void	SetType(IWorkspaceModel^ Model, IWorkspaceModel::ScriptType New);
+			void	GotoLine(IWorkspaceModel^ Model, UInt32 Line);
+			UInt32	GetLineCount(IWorkspaceModel^ Model);
+			bool	Sanitize(IWorkspaceModel^ Model);						// returns true if successful
+			void	BindToForm(IWorkspaceModel^ Model);
 
-			void					LoadFromDisk(IWorkspaceModel^ Model, String^ PathToFile);
-			void					SaveToDisk(IWorkspaceModel^ Model, String^ PathToFile, bool PathIncludesFileName, String^ Extension);
+			void	LoadFromDisk(IWorkspaceModel^ Model, String^ PathToFile);
+			void	SaveToDisk(IWorkspaceModel^ Model, String^ PathToFile, bool PathIncludesFileName, String^ Extension);
 
 			textEditors::IScriptTextEditor::FindReplaceResult^
-									FindReplace(IWorkspaceModel^ Model, textEditors::IScriptTextEditor::FindReplaceOperation Operation,
-														String^ Query, String^ Replacement, textEditors::IScriptTextEditor::FindReplaceOptions Options);
+					FindReplace(IWorkspaceModel^ Model, textEditors::IScriptTextEditor::FindReplaceOperation Operation,
+								String^ Query, String^ Replacement, textEditors::IScriptTextEditor::FindReplaceOptions Options);
 
-											// returns false if the operation's invalid (unsaved changes)
-			bool					GetOffsetViewerData(IWorkspaceModel^ Model, String^% OutText, UInt32% OutBytecode, UInt32% OutLength);
 
-											// returns true on success
-			bool					ApplyRefactor(IWorkspaceModel^ Model, IWorkspaceModel::RefactorOperation Operation, Object^ Arg);
+			bool	GetOffsetViewerData(IWorkspaceModel^ Model, String^% OutText, UInt32% OutBytecode, UInt32% OutLength); // returns false if the operation's invalid (unsaved changes)
+			bool	ApplyRefactor(IWorkspaceModel^ Model, IWorkspaceModel::RefactorOperation Operation, Object^ Arg); // returns true on success
+			void	JumpToScript(IWorkspaceModel^ Model, String^ ScriptEditorID);
 		};
 
 		interface class IWorkspaceModelFactory

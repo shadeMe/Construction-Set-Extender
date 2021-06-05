@@ -1709,15 +1709,21 @@ namespace cse
 			void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::MouseEventArgs^ E)
 			{
 				bool DisplayPopup = false;
-				ToolTipIcon PopupIcon = ToolTipIcon::None;
 				String^ PopupTitle = "";
 				String^ PopupText = "";
+				auto PopupBgColor = IRichTooltipContentProvider::BackgroundColor::Default;
+
 				Windows::Point DisplayLocation = TransformToPixels(E->GetPosition(Parent));
-				DisplayLocation.Y += GetVisualLineFromMousePosition(E)->Height;
+				DisplayLocation.X += System::Windows::SystemParameters::CursorWidth;
+				//DisplayLocation.Y += GetVisualLineFromMousePosition(E)->Height;
+				DisplayLocation = Parent->PointToScreen(DisplayLocation);
 
 				List<ScriptMessage^>^ Warnings = gcnew List < ScriptMessage^ >;
 				List<ScriptMessage^>^ Errors = gcnew List < ScriptMessage^ >;
 				List<ScriptBookmark^>^ Bookmarks = gcnew List < ScriptBookmark^ >;
+
+				String^ kRowStart = "<div width=\"350\">", ^kRowEnd = "</div>";
+				String^ kCellStart = "<span padding=\"0,0,0,5\">", ^kCellEnd = "</span>\n";
 
 				if (LineTracker->GetMessages(Line,
 										IScriptTextEditor::ScriptMessageSource::None,
@@ -1725,13 +1731,14 @@ namespace cse
 										Errors))
 				{
 					DisplayPopup = true;
-					PopupIcon = ToolTipIcon::Error;
-					PopupTitle = Errors->Count + " Error" + (Errors->Count == 1 ? "" : "s");
 
+					PopupBgColor = IRichTooltipContentProvider::BackgroundColor::Red;
+					PopupTitle = Errors->Count + " error" + (Errors->Count == 1 ? "" : "s");
+
+					PopupText += kRowStart;
 					for each (auto Itr in Errors)
-						PopupText += Itr->Message() + "\n";
-
-					PopupText = PopupText->TrimEnd();
+						PopupText += kCellStart + Itr->Message() + kCellEnd;
+					PopupText += kRowEnd;
 				}
 				else if (LineTracker->GetMessages(Line,
 										 IScriptTextEditor::ScriptMessageSource::None,
@@ -1739,33 +1746,45 @@ namespace cse
 										 Warnings))
 				{
 					DisplayPopup = true;
-					PopupIcon = ToolTipIcon::Warning;
-					PopupTitle = Warnings->Count + " Warning" + (Warnings->Count == 1 ? "" : "s");
+					PopupBgColor = IRichTooltipContentProvider::BackgroundColor::Yellow;
+					PopupTitle = Warnings->Count + " warning" + (Warnings->Count == 1 ? "" : "s");
 
+					PopupText += kRowStart;
 					for each (auto Itr in Warnings)
-						PopupText += Itr->Message() + "\n";
-
-					PopupText = PopupText->TrimEnd();
+						PopupText += kCellStart + Itr->Message() + kCellEnd;
+					PopupText += kRowEnd;
 				}
 				else if (LineTracker->GetBookmarks(Line,Bookmarks))
 				{
 					DisplayPopup = true;
-					PopupIcon = ToolTipIcon::Info;
-					PopupTitle = Bookmarks->Count + " Bookmark" + (Bookmarks->Count == 1 ? "" : "s");
+					PopupBgColor = IRichTooltipContentProvider::BackgroundColor::Blue;
+					PopupTitle = Bookmarks->Count + " bookmark" + (Bookmarks->Count == 1 ? "" : "s");
 
+					PopupText += kRowStart;
 					for each (auto Itr in Bookmarks)
-						PopupText += Itr->Message() + "\n";
-
-					PopupText = PopupText->TrimEnd();
+						PopupText += kCellStart + Itr->Message() + kCellEnd;
+					PopupText += kRowEnd;
 				}
 
 				if (DisplayPopup)
-					ShowPopup(PopupTitle, PopupText, PopupIcon, Point(DisplayLocation.X, DisplayLocation.Y));
+				{
+					PopupTitle = "<font size=\"+2\"><b>" + PopupTitle + "</b></font>";
+					PopupText = PopupText->Replace("\n", "<br/>");
+
+					auto TooltipData = gcnew DotNetBar::SuperTooltipInfo;
+					TooltipData->HeaderText = PopupTitle;
+					TooltipData->BodyText = PopupText;
+					TooltipData->Color = MapRichTooltipBackgroundColorToDotNetBar(PopupBgColor);
+
+					auto Control = Control::FromHandle(PopupParent);
+					Popup->SetSuperTooltip(Control, TooltipData);
+					Popup->ShowTooltip(Control, Point(DisplayLocation.X, DisplayLocation.Y));
+				}
 			}
 
 			void DefaultIconMargin::HandleHoverStop()
 			{
-				HidePopup();
+				Popup->HideTooltip();
 			}
 
 			void DefaultIconMargin::HandleClick(int Line)
@@ -1814,13 +1833,14 @@ namespace cse
 
 				Parent = ParentEditor;
 				LineTracker = ParentLineTracker;
-				PopupParentHandle = ToolTipParent;
+				PopupParent = ToolTipParent;
 
-				Popup = gcnew Windows::Forms::ToolTip;
-				Popup->AutoPopDelay = 500;
-				Popup->InitialDelay = 500;
-				Popup->ReshowDelay = 0;
-				Popup->ToolTipIcon = ToolTipIcon::None;
+				Popup = gcnew DotNetBar::SuperTooltip;
+				Popup->DelayTooltipHideDuration = 500;
+				Popup->CheckTooltipPosition = false;
+				Popup->TooltipDuration = 30000;
+				Popup->DefaultFont = gcnew Font(SystemFonts::DialogFont->FontFamily, 9.25);
+				Popup->MinimumTooltipSize = Size(180, 25);
 
 				LineTracker->TrackedDataUpdated += HandlerTextViewChanged;
 			}
@@ -1832,7 +1852,7 @@ namespace cse
 
 				LineTracker->TrackedDataUpdated -= HandlerTextViewChanged;
 
-				HidePopup();
+				Popup->HideTooltip();
 				SAFEDELETE_CLR(Popup);
 
 				Parent = nullptr;
@@ -1846,18 +1866,6 @@ namespace cse
 					if (BookmarkIcon)
 						SAFEDELETE_CLR(BookmarkIcon);
 				}
-			}
-
-			void DefaultIconMargin::ShowPopup(String^ Title, String^ Message, ToolTipIcon Icon, Drawing::Point Location)
-			{
-				Popup->ToolTipIcon = Icon;
-				Popup->ToolTipTitle = Title;
-				Popup->Show(Message, Control::FromHandle(PopupParentHandle), Location, 6000);
-			}
-
-			void DefaultIconMargin::HidePopup()
-			{
-				Popup->Hide(Control::FromHandle(PopupParentHandle));
 			}
 		}
 	}

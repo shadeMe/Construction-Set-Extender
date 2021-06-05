@@ -192,7 +192,7 @@ namespace cse
 				WindowWidth = Old->WindowWidth;
 			}
 
-			const UInt32 kMinSuggestionCharThreshold = 1, kMaxSuggestionCharThreshold = 10;
+			const UInt32 kMinSuggestionCharThreshold = 1, kMaxSuggestionCharThreshold = 20;
 			if (SuggestionCharThreshold < kMinSuggestionCharThreshold || SuggestionCharThreshold > kMaxSuggestionCharThreshold)
 			{
 				Success = false;

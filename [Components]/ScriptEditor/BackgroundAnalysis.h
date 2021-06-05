@@ -33,7 +33,7 @@ namespace cse
 
 		ref class ScriptBackgroundAnalysis : public IBackgroundSemanticAnalyzer
 		{
-			static const UInt32 kTimerPollInterval = 500;	// in ms
+			static const UInt32 kTimerPollInterval = 100;	// in ms
 
 			static enum class ExecutionMode
 			{

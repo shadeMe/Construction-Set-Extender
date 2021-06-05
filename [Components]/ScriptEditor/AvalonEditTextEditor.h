@@ -22,29 +22,33 @@ namespace cse
 			using namespace System::Windows::Forms::Integration;
 			using namespace System::Threading::Tasks;
 
-			typedef System::Windows::Media::Imaging::RenderTargetBitmap			RTBitmap;
-			typedef System::EventHandler<AvalonEdit::Editing::TextEventArgs^>	AvalonEditTextEventHandler;
-
-			delegate void JumpToScriptHandler(String^ TargetEditorID);
-
+			using RTBitmap = System::Windows::Media::Imaging::RenderTargetBitmap;
+			using AvalonEditTextEventHandler = System::EventHandler<AvalonEdit::Editing::TextEventArgs^>;
 
 			ref class AvalonEditTextEditor : public IScriptTextEditor
 			{
-				static const UInt32									kSetTextFadeAnimationDuration = 150;		// in ms
+				static const UInt32	kSetTextFadeAnimationDuration = 150;		// in ms
 
-				static AvalonEditXSHDManager^						SyntaxHighlightingManager = gcnew AvalonEditXSHDManager();
+				static AvalonEditXSHDManager^ SyntaxHighlightingManager = gcnew AvalonEditXSHDManager();
 			protected:
-				static enum class									IntelliSenseTextChangeEventHandling
+				static enum class IntelliSenseTextChangeEventHandling
 				{
 					Propagate,
 					SuppressOnce,
 					SuppressAlways
 				};
 
-				static enum class									MoveSegmentDirection
+				static enum class MoveSegmentDirection
 				{
 					Up,
 					Down
+				};
+
+				static enum class ToggleCommentOperation
+				{
+					Add,
+					Remove,
+					Toggle,
 				};
 
 				Panel^												WinFormsContainer;
@@ -89,11 +93,9 @@ namespace cse
 
 				scriptEditor::IWorkspaceModel^						ParentModel;
 				LineTrackingManager^								LineTracker;
-				JumpToScriptHandler^								JumpScriptDelegate;
 				DefaultIconMargin^									IconBarMargin;
 				StructureVisualizerRenderer^						StructureVisualizer;
 				AvalonEdit::Search::SearchPanel^					InlineSearchPanel;
-				scriptEditor::IBackgroundSemanticAnalyzer^			BackgroundAnalyzer;
 				obScriptParsing::AnalysisData^						SemanticAnalysisCache;
 
 				EventHandler^										TextFieldTextChangedHandler;
@@ -118,32 +120,33 @@ namespace cse
 				EventHandler^										SetTextAnimationCompletedHandler;
 				EventHandler^										ScriptEditorPreferencesSavedHandler;
 				AvalonEditTextEventHandler^							TextFieldTextCopiedHandler;
-				EventHandler<VisualLineConstructionStartEventArgs^>^	
+				EventHandler<VisualLineConstructionStartEventArgs^>^
 																	TextFieldVisualLineConstructionStartingHandler;
-				EventHandler<AvalonEdit::Search::SearchOptionsChangedEventArgs^>^	
+				EventHandler<AvalonEdit::Search::SearchOptionsChangedEventArgs^>^
 																	SearchPanelSearchOptionsChangedHandler;
 
 				scriptEditor::SemanticAnalysisCompleteEventHandler^	BackgroundAnalyzerAnalysisCompleteHandler;
 
-				ContextMenuStrip^									TextEditorContextMenu;
-				ToolStripMenuItem^									ContextMenuCopy;
-				ToolStripMenuItem^									ContextMenuPaste;
-				ToolStripMenuItem^									ContextMenuToggleComment;
-				ToolStripMenuItem^									ContextMenuAddBookmark;
-				ToolStripMenuItem^									ContextMenuWord;
-				ToolStripMenuItem^									ContextMenuWikiLookup;
-				ToolStripMenuItem^									ContextMenuOBSEDocLookup;
-				ToolStripMenuItem^									ContextMenuDirectLink;
-				ToolStripMenuItem^									ContextMenuJumpToScript;
-				ToolStripMenuItem^									ContextMenuGoogleLookup;
-				ToolStripMenuItem^									ContextMenuOpenImportFile;
-				ToolStripMenuItem^									ContextMenuRefactorAddVariable;
-				ToolStripMenuItem^									ContextMenuRefactorAddVariableInt;
-				ToolStripMenuItem^									ContextMenuRefactorAddVariableFloat;
-				ToolStripMenuItem^									ContextMenuRefactorAddVariableRef;
-				ToolStripMenuItem^									ContextMenuRefactorAddVariableString;
-				ToolStripMenuItem^									ContextMenuRefactorAddVariableArray;
-				ToolStripMenuItem^									ContextMenuRefactorCreateUDFImplementation;
+				ContextMenuStrip^	TextEditorContextMenu;
+				ToolStripMenuItem^	ContextMenuCopy;
+				ToolStripMenuItem^	ContextMenuPaste;
+				ToolStripMenuItem^	ContextMenuToggleComment;
+				ToolStripMenuItem^	ContextMenuAddBookmark;
+				ToolStripMenuItem^	ContextMenuWord;
+				ToolStripMenuItem^	ContextMenuWikiLookup;
+				ToolStripMenuItem^	ContextMenuOBSEDocLookup;
+				ToolStripMenuItem^	ContextMenuDirectLink;
+				ToolStripMenuItem^	ContextMenuJumpToScript;
+				ToolStripMenuItem^	ContextMenuGoogleLookup;
+				ToolStripMenuItem^	ContextMenuOpenImportFile;
+				ToolStripMenuItem^	ContextMenuRefactorAddVariable;
+				ToolStripMenuItem^	ContextMenuRefactorAddVariableInt;
+				ToolStripMenuItem^	ContextMenuRefactorAddVariableFloat;
+				ToolStripMenuItem^	ContextMenuRefactorAddVariableRef;
+				ToolStripMenuItem^	ContextMenuRefactorAddVariableString;
+				ToolStripMenuItem^	ContextMenuRefactorAddVariableArray;
+				ToolStripMenuItem^	ContextMenuRefactorCreateUDFImplementation;
+				CancelEventHandler^	TextEditorContextMenuOpeningHandler;
 
 				AvalonEditTextEditorDeclareClickHandler(ContextMenuCopy);
 				AvalonEditTextEditorDeclareClickHandler(ContextMenuPaste);
@@ -158,179 +161,150 @@ namespace cse
 				AvalonEditTextEditorDeclareClickHandler(ContextMenuRefactorAddVariable);
 				AvalonEditTextEditorDeclareClickHandler(ContextMenuRefactorCreateUDFImplementation);
 
-				CancelEventHandler^							TextEditorContextMenuOpeningHandler;
-				void                                        TextEditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E);
 
-				bool										RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::Event Type, System::Windows::Input::KeyEventArgs^ K, System::Windows::Input::MouseButtonEventArgs^ M);
-				void										RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::Event Type, int Offset, Windows::Point Location);
-				void										RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::Event Type);
+				bool	RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::Event Type, System::Windows::Input::KeyEventArgs^ K, System::Windows::Input::MouseButtonEventArgs^ M);
+				void	RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::Event Type, int Offset, Windows::Point Location);
+				void	RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::Event Type);
 
-				void										OnScriptModified(bool ModificationState);
-				bool										OnKeyDown(System::Windows::Input::KeyEventArgs^ E);			// returns true if handled
-				void										OnMouseClick(System::Windows::Input::MouseButtonEventArgs^ E);
-				void										OnLineChanged();
-				void										OnTextUpdated();
+				void	OnScriptModified(bool ModificationState);
+				bool	OnKeyDown(System::Windows::Input::KeyEventArgs^ E);			// returns true if handled
+				void	OnMouseClick(System::Windows::Input::MouseButtonEventArgs^ E);
+				void	OnLineChanged();
+				void	OnTextUpdated();
 
-				void										TextField_TextChanged(Object^ Sender, EventArgs^ E);
-				void										TextField_CaretPositionChanged(Object^ Sender, EventArgs^ E);
-				void										TextField_ScrollOffsetChanged(Object^ Sender, EventArgs^ E);
-				void										TextField_TextCopied(Object^ Sender, AvalonEdit::Editing::TextEventArgs^ E);
+				void             TextEditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E);
+				void	TextField_TextChanged(Object^ Sender, EventArgs^ E);
+				void	TextField_CaretPositionChanged(Object^ Sender, EventArgs^ E);
+				void	TextField_ScrollOffsetChanged(Object^ Sender, EventArgs^ E);
+				void	TextField_TextCopied(Object^ Sender, AvalonEdit::Editing::TextEventArgs^ E);
 
-				void										TextField_KeyDown(Object^ Sender, System::Windows::Input::KeyEventArgs^ E);
-				void										TextField_KeyUp(Object^ Sender, System::Windows::Input::KeyEventArgs^ E);
-				void										TextField_MouseDown(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E);
-				void										TextField_MouseUp(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E);
-				void										TextField_MouseWheel(Object^ Sender, System::Windows::Input::MouseWheelEventArgs^ E);
+				void	TextField_KeyDown(Object^ Sender, System::Windows::Input::KeyEventArgs^ E);
+				void	TextField_KeyUp(Object^ Sender, System::Windows::Input::KeyEventArgs^ E);
+				void	TextField_MouseDown(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E);
+				void	TextField_MouseUp(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E);
+				void	TextField_MouseWheel(Object^ Sender, System::Windows::Input::MouseWheelEventArgs^ E);
 
-				void										TextField_MouseHover(Object^ Sender, System::Windows::Input::MouseEventArgs^ E);
-				void										TextField_MouseHoverStopped(Object^ Sender, System::Windows::Input::MouseEventArgs^ E);
-				void										TextField_MouseMove(Object^ Sender, System::Windows::Input::MouseEventArgs^ E);
+				void	TextField_MouseHover(Object^ Sender, System::Windows::Input::MouseEventArgs^ E);
+				void	TextField_MouseHoverStopped(Object^ Sender, System::Windows::Input::MouseEventArgs^ E);
+				void	TextField_MouseMove(Object^ Sender, System::Windows::Input::MouseEventArgs^ E);
 
-				void										TextField_SelectionChanged(Object^ Sender, EventArgs^ E);
-				void										TextField_LostFocus(Object^ Sender, System::Windows::RoutedEventArgs^ E);
+				void	TextField_SelectionChanged(Object^ Sender, EventArgs^ E);
+				void	TextField_LostFocus(Object^ Sender, System::Windows::RoutedEventArgs^ E);
 
-				void										TextField_MiddleMouseScrollMove(Object^ Sender, System::Windows::Input::MouseEventArgs^ E);
-				void										TextField_MiddleMouseScrollDown(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E);
+				void	TextField_MiddleMouseScrollMove(Object^ Sender, System::Windows::Input::MouseEventArgs^ E);
+				void	TextField_MiddleMouseScrollDown(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E);
 
-				void										TextField_VisualLineConstructionStarting(Object^ Sender, VisualLineConstructionStartEventArgs^ E);
-				void										SearchPanel_SearchOptionsChanged(Object^ Sender, AvalonEdit::Search::SearchOptionsChangedEventArgs^ E);
+				void	TextField_VisualLineConstructionStarting(Object^ Sender, VisualLineConstructionStartEventArgs^ E);
+				void	SearchPanel_SearchOptionsChanged(Object^ Sender, AvalonEdit::Search::SearchOptionsChangedEventArgs^ E);
 
-				void										MiddleMouseScrollTimer_Tick(Object^ Sender, EventArgs^ E);
-				void										ScrollBarSyncTimer_Tick(Object^ Sender, EventArgs^ E);
+				void	MiddleMouseScrollTimer_Tick(Object^ Sender, EventArgs^ E);
+				void	ScrollBarSyncTimer_Tick(Object^ Sender, EventArgs^ E);
 
-				void										ExternalScrollBar_ValueChanged(Object^ Sender, EventArgs^ E);
-				void										SetTextAnimation_Completed(Object^ Sender, EventArgs^ E);
-				void										ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
-				void										BackgroundAnalysis_AnalysisComplete(Object^ Sender,
-																	scriptEditor::SemanticAnalysisCompleteEventArgs^ E);
+				void	ExternalScrollBar_ValueChanged(Object^ Sender, EventArgs^ E);
+				void	SetTextAnimation_Completed(Object^ Sender, EventArgs^ E);
+				void	ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
+				void	BackgroundAnalysis_AnalysisComplete(Object^ Sender, scriptEditor::SemanticAnalysisCompleteEventArgs^ E);
 
-				void										RoutePreprocessorMessages(int Line, String^ Message);
-
-
-				String^										GetTokenAtIndex(int Index, bool SelectText,
-																			int% OutStartIndex, int% OutEndIndex,
-																			Char% OutStartDelimiter, Char% OutEndDelimiter);
-				String^										GetTokenAtLocation(Point Location, bool SelectText);		// line breaks need to be replaced by the caller
-				String^										GetTokenAtLocation(int Index, bool SelectText);
-				array<String^>^								GetTokenAtLocation(int Index);								// gets three of the closest tokens surrounding the offset
-				array<String^>^								GetTokenAtLocation(int Index,
-																			array<Tuple<Char, Char>^>^% OutDelimiters);	// same as above; also returns the leading and trailing delimiters of each token
-				Char										GetDelimiterAtLocation(int Index);
-
-				bool										GetCharIndexInsideStringSegment(int Index);
-
-				void										SetIntelliSenseTextChangeEventHandlingMode(IntelliSenseTextChangeEventHandling State);
-				void										HandleKeyEventForKey(System::Windows::Input::Key Key);
-
-				void										HandleTextChangeEvent();
-				void										GotoLine(int Line);											// line numbers start at 1
-
-				void										RefreshBGColorizerLayer();
-				void										RefreshTextView();
-				int											PerformFindReplaceOperationOnSegment(System::Text::RegularExpressions::Regex^ ExpressionParser,
-																								 IScriptTextEditor::FindReplaceOperation Operation,
-																								 AvalonEdit::Document::DocumentLine^ Line,
-																								 String^ Replacement,
-																								 IScriptTextEditor::FindReplaceOptions Options);
-				void										StartMiddleMouseScroll(System::Windows::Input::MouseButtonEventArgs^ E);
-				void										StopMiddleMouseScroll();
-
-				void										UpdateCodeFoldings();
-				void										UpdateSyntaxHighlighting(bool Regenerate);
-				void										SynchronizeExternalScrollBars();
-				void										ResetExternalScrollBars();
-
-				void										MoveTextSegment(AvalonEdit::Document::ISegment^ Segment, MoveSegmentDirection Direction);
-
-				RTBitmap^									RenderFrameworkElement(System::Windows::FrameworkElement^ Element);
-				void										SearchBracesForHighlighting(int CaretPos);
-				AvalonEditHighlightingDefinition^			CreateSyntaxHighlightDefinitions(bool UpdateStableDefs);
-				String^										SanitizeUnicodeString(String^ In);							// removes unsupported characters
-
-				void										SetFont(Font^ FontObject);
-				void										SetTabCharacterSize(int PixelWidth);						// AvalonEdit uses character lengths
-
-				String^										GetTextAtLine(int LineNumber);
-				UInt32										GetTextLength(void);
-				void										InsertText(String^ Text, int Index, bool PreventTextChangedEventHandling);			// performs bounds check
-
-				void										SetSelectionStart(int Index);
-				void										SetSelectionLength(int Length);
-				bool										GetInSelection(int Index);
-
-				int											GetLineNumberFromCharIndex(int Index);
-				bool										GetCharIndexInsideCommentSegment(int Index);
-
-				String^										GetTokenAtMouseLocation();
-				array<String^>^								GetTokensAtMouseLocation();									// gets three of the closest tokens surrounding the mouse loc
-				int											GetLastKnownMouseClickOffset(void);
-				void										AddBookmark(int Index);
-
-				bool										GetLineVisible(UInt32 LineNumber, bool CheckVisualLine);	// inside the text field's viewable area
-				UInt32										GetFirstVisibleLine();
-				Point										PointToScreen(Point Location);
-
-
-				static enum class ToggleCommentOperation
-				{
-					Add,
-					Remove,
-					Toggle,
-				};
-
-				void										ToggleComment(int Line, ToggleCommentOperation Operation);
-				void										CommentLines(ToggleCommentOperation Operation);
-
-				void										ToggleSearchPanel(bool State);
-				String^										GetCurrentLineText(bool ClipAtCaretPos);
+				void				RoutePreprocessorMessages(int Line, String^ Message);
+				String^				GetTokenAtIndex(int Index, bool SelectText,
+													int% OutStartIndex, int% OutEndIndex,
+													Char% OutStartDelimiter, Char% OutEndDelimiter);
+				String^				GetTokenAtLocation(Point Location, bool SelectText);		// line breaks need to be replaced by the caller
+				String^				GetTokenAtLocation(int Index, bool SelectText);
+				array<String^>^		GetTokenAtLocation(int Index);								// gets three of the closest tokens surrounding the offset
+				array<String^>^		GetTokenAtLocation(int Index,
+													array<Tuple<Char, Char>^>^% OutDelimiters);	// same as above; also returns the leading and trailing delimiters of each token
+				Char				GetDelimiterAtLocation(int Index);
+				bool				GetCharIndexInsideStringSegment(int Index);
+				void				SetIntelliSenseTextChangeEventHandlingMode(IntelliSenseTextChangeEventHandling State);
+				void				HandleKeyEventForKey(System::Windows::Input::Key Key);
+				void				HandleTextChangeEvent();
+				void				GotoLine(int Line);											// line numbers start at 1
+				void				RefreshBGColorizerLayer();
+				void				RefreshTextView();
+				int					PerformFindReplaceOperationOnSegment(System::Text::RegularExpressions::Regex^ ExpressionParser,
+																		 IScriptTextEditor::FindReplaceOperation Operation,
+																		 AvalonEdit::Document::DocumentLine^ Line,
+																		 String^ Replacement,
+																		 IScriptTextEditor::FindReplaceOptions Options);
+				void				StartMiddleMouseScroll(System::Windows::Input::MouseButtonEventArgs^ E);
+				void				StopMiddleMouseScroll();
+				void				UpdateCodeFoldings();
+				void				UpdateSyntaxHighlighting(bool Regenerate);
+				void				SynchronizeExternalScrollBars();
+				void				ResetExternalScrollBars();
+				void				MoveTextSegment(AvalonEdit::Document::ISegment^ Segment, MoveSegmentDirection Direction);
+				RTBitmap^			RenderFrameworkElement(System::Windows::FrameworkElement^ Element);
+				void				SearchBracesForHighlighting(int CaretPos);
+				AvalonEditHighlightingDefinition^
+									CreateSyntaxHighlightDefinitions(bool UpdateStableDefs);
+				String^				SanitizeUnicodeString(String^ In);							// removes unsupported characters
+				void				SetFont(Font^ FontObject);
+				void				SetTabCharacterSize(int PixelWidth);						// AvalonEdit uses character lengths
+				String^				GetTextAtLine(int LineNumber);
+				UInt32				GetTextLength(void);
+				void				InsertText(String^ Text, int Index, bool PreventTextChangedEventHandling);			// performs bounds check
+				void				SetSelectionStart(int Index);
+				void				SetSelectionLength(int Length);
+				bool				GetInSelection(int Index);
+				int					GetLineNumberFromCharIndex(int Index);
+				bool				GetCharIndexInsideCommentSegment(int Index);
+				String^				GetTokenAtMouseLocation();
+				array<String^>^		GetTokensAtMouseLocation();									// gets three of the closest tokens surrounding the mouse loc
+				int					GetLastKnownMouseClickOffset(void);
+				void				AddBookmark(int Index);
+				bool				GetLineVisible(UInt32 LineNumber, bool CheckVisualLine);	// inside the text field's viewable area
+				UInt32				GetFirstVisibleLine();
+				Point				PointToScreen(Point Location);
+				void				ToggleComment(int Line, ToggleCommentOperation Operation);
+				void				CommentLines(ToggleCommentOperation Operation);
+				void				ToggleSearchPanel(bool State);
+				String^				GetCurrentLineText(bool ClipAtCaretPos);
 			public:
-				AvalonEditTextEditor(scriptEditor::IWorkspaceModel^ ParentModel,
-									JumpToScriptHandler^ JumpScriptDelegate, scriptEditor::IBackgroundSemanticAnalyzer^ BackgroundAnalysis,
-									Font^ Font, int TabSize);
+				AvalonEditTextEditor(scriptEditor::IWorkspaceModel^ ParentModel);
 				~AvalonEditTextEditor();
 
-				property UInt32								FirstVisibleLine
+				property UInt32	FirstVisibleLine
 				{
 					UInt32 get() { return GetFirstVisibleLine(); }
 				}
 
-#pragma region Interfaces
 				virtual event intellisense::IntelliSenseInputEventHandler^			IntelliSenseInput;
 				virtual event intellisense::IntelliSenseInsightHoverEventHandler^	IntelliSenseInsightHover;
 				virtual event intellisense::IntelliSenseContextChangeEventHandler^	IntelliSenseContextChange;
 
-				virtual event TextEditorScriptModifiedEventHandler^			ScriptModified;
-				virtual event KeyEventHandler^								KeyDown;
-				virtual event TextEditorMouseClickEventHandler^				MouseClick;
-				virtual event EventHandler^									LineChanged;
-				virtual event EventHandler^									TextUpdated;
+				virtual event TextEditorScriptModifiedEventHandler^	ScriptModified;
+				virtual event KeyEventHandler^						KeyDown;
+				virtual event TextEditorMouseClickEventHandler^		MouseClick;
+				virtual event EventHandler^							LineChanged;
+				virtual event EventHandler^							TextUpdated;
 
-				property Control^							Container
+				property Control^ Container
 				{
 					virtual Control^ get() { return WinFormsContainer; }
 					virtual void set(Control^ e) {}
 				}
-				property IntPtr								WindowHandle
+				property IntPtr WindowHandle
 				{
 					virtual IntPtr get() { return WinFormsContainer->Handle; }
 					virtual void set(IntPtr e) {}
 				}
-				property bool								Enabled
+				property bool Enabled
 				{
 					virtual bool get() { return WPFHost->Enabled; }
 					virtual void set(bool e) { WPFHost->Enabled = e; }
 				}
-				property int								CurrentLine
+				property int CurrentLine
 				{
 					virtual int get() { return TextField->TextArea->Caret->Line; }
 					virtual void set(int e) {}
 				}
-				property int								LineCount
+				property int LineCount
 				{
 					virtual int get() { return TextField->Document->LineCount; }
 					virtual void set(int e) {}
 				}
-				property int								Caret
+				property int Caret
 				{
 					virtual int get() { return TextField->TextArea->Caret->Offset; }
 					virtual void set(int Index)
@@ -347,7 +321,7 @@ namespace cse
 						ScrollToCaret();
 					}
 				}
-				property bool								Modified
+				property bool Modified
 				{
 					virtual bool get() { return ModifiedFlag; }
 					virtual void set(bool State)
@@ -361,46 +335,48 @@ namespace cse
 					obScriptParsing::AnalysisData^ get() { return SemanticAnalysisCache; }
 				}
 
-				virtual void								Bind(ListView^ MessageList,
-																 ListView^ BookmarkList,
-																 ListView^ FindResultList);
-				virtual void								Unbind();
+				virtual void	Bind(ListView^ MessageList,
+									 ListView^ BookmarkList,
+									 ListView^ FindResultList);
+				virtual void	Unbind();
 
-				virtual String^								GetText();
-				virtual String^								GetText(UInt32 LineNumber);
-				virtual String^								GetPreprocessedText(bool% OutPreprocessResult, bool SuppressErrors);
-				virtual void								SetText(String^ Text, bool ResetUndoStack);
-				virtual String^								GetSelectedText(void);
-				virtual void								SetSelectedText(String^ Text);
-				virtual int									GetCharIndexFromPosition(Point Position);
-				virtual Point								GetPositionFromCharIndex(int Index, bool Absolute);
-				virtual String^								GetTokenAtCharIndex(int Offset);
-				virtual String^								GetTokenAtCaretPos();
-				virtual void								SetTokenAtCaretPos(String^ Replacement);
-				virtual void								ScrollToCaret();
-				virtual void								ScrollToLine(UInt32 LineNumber);
-				virtual void								FocusTextArea();
+				virtual String^	GetText();
+				virtual String^	GetText(UInt32 LineNumber);
+				virtual String^	GetPreprocessedText(bool% OutPreprocessResult, bool SuppressErrors);
+				virtual void	SetText(String^ Text, bool ResetUndoStack);
+				virtual String^	GetSelectedText(void);
+				virtual void	SetSelectedText(String^ Text);
+				virtual int		GetCharIndexFromPosition(Point Position);
+				virtual Point	GetPositionFromCharIndex(int Index, bool Absolute);
+				virtual String^	GetTokenAtCharIndex(int Offset);
+				virtual String^	GetTokenAtCaretPos();
+				virtual void	SetTokenAtCaretPos(String^ Replacement);
+				virtual void	ScrollToCaret();
+				virtual void	ScrollToLine(UInt32 LineNumber);
+				virtual void	FocusTextArea();
 
-				virtual void								LoadFileFromDisk(String^ Path);
-				virtual void								SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ DefaultName, String^ DefaultExtension);
+				virtual void	LoadFileFromDisk(String^ Path);
+				virtual void	SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ DefaultName, String^ DefaultExtension);
 
-				virtual IScriptTextEditor::FindReplaceResult^	FindReplace(IScriptTextEditor::FindReplaceOperation Operation,
-																		String^ Query,
-																		String^ Replacement,
-																		IScriptTextEditor::FindReplaceOptions Options);
+				virtual IScriptTextEditor::FindReplaceResult^
+								FindReplace(IScriptTextEditor::FindReplaceOperation Operation,
+											String^ Query,
+											String^ Replacement,
+											IScriptTextEditor::FindReplaceOptions Options);
 
 
-				virtual void								BeginUpdate(void);
-				virtual void								EndUpdate(bool FlagModification);
+				virtual void	BeginUpdate(void);
+				virtual void	EndUpdate(bool FlagModification);
 
-				virtual UInt32								GetIndentLevel(UInt32 LineNumber);
-				virtual void								InsertVariable(String^ VariableName, obScriptParsing::Variable::DataType VariableType);
+				virtual UInt32	GetIndentLevel(UInt32 LineNumber);
+				virtual void	InsertVariable(String^ VariableName, obScriptParsing::Variable::DataType VariableType);
 
-				virtual void								InitializeState(String^ RawScriptText);
-				virtual CompilationData^					BeginScriptCompilation();
-				virtual void								EndScriptCompilation(CompilationData^ Data);
-				virtual IScriptTextEditor::ILineAnchor^		CreateAnchor(UInt32 Line);
-#pragma endregion
+				virtual void	InitializeState(String^ RawScriptText);
+				virtual IScriptTextEditor::ILineAnchor^
+								CreateAnchor(UInt32 Line);
+
+				virtual CompilationData^	BeginScriptCompilation();
+				virtual void				EndScriptCompilation(CompilationData^ Data);
 			};
 		}
 	}

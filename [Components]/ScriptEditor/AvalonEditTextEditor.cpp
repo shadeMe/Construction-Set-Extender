@@ -943,6 +943,7 @@ namespace cse
 				E->PreviousToken = Tokens[0];
 				E->DotOperatorInUse = Delimiters[1]->Item1 == '.';
 
+				//Location.X += System::Windows::SystemParameters::CursorWidth;
 				VisualLine^ Current = TextField->TextArea->TextView->GetVisualLine(CurrentLine);
 				if (Current)
 					Location.Y += Current->Height;
@@ -1206,7 +1207,7 @@ namespace cse
 							String^ TokenAtCaretPos = GetTokenAtCaretPos();
 							auto AttachedScript = intellisense::IntelliSenseBackend::Get()->GetAttachedScript(TokenAtCaretPos);
 							if (AttachedScript)
-								JumpScriptDelegate(AttachedScript->GetIdentifier());
+								ParentModel->Controller->JumpToScript(ParentModel, AttachedScript->GetIdentifier());
 
 							HandleKeyEventForKey(E->Key);
 							E->Handled = true;
@@ -1663,7 +1664,7 @@ namespace cse
 
 			void AvalonEditTextEditor::ContextMenuJumpToScript_Click(Object^ Sender, EventArgs^ E)
 			{
-				JumpScriptDelegate((String^)ContextMenuJumpToScript->Tag);
+				ParentModel->Controller->JumpToScript(ParentModel, (String^)ContextMenuJumpToScript->Tag);
 			}
 
 			void AvalonEditTextEditor::ContextMenuGoogleLookup_Click(Object^ Sender, EventArgs^ E)
@@ -1703,14 +1704,10 @@ namespace cse
 			}
 #pragma endregion
 
-			AvalonEditTextEditor::AvalonEditTextEditor(scriptEditor::IWorkspaceModel^ ParentModel,
-													JumpToScriptHandler^ JumpScriptDelegate,
-													scriptEditor::IBackgroundSemanticAnalyzer^ BackgroundAnalysis,
-													Font^ Font, int TabSize)
+			AvalonEditTextEditor::AvalonEditTextEditor(scriptEditor::IWorkspaceModel^ ParentModel)
 			{
 				Debug::Assert(ParentModel != nullptr);
 				this->ParentModel = ParentModel;
-				this->JumpScriptDelegate = JumpScriptDelegate;
 
 				WinFormsContainer = gcnew Panel();
 				WPFHost = gcnew ElementHost();
@@ -1728,10 +1725,9 @@ namespace cse
 				ExternalHorizontalScrollBar = gcnew HScrollBar();
 				ScrollBarSyncTimer = gcnew Timer();
 
-				BackgroundAnalyzer = BackgroundAnalysis;
 				BackgroundAnalyzerAnalysisCompleteHandler = gcnew scriptEditor::SemanticAnalysisCompleteEventHandler(this,
 																&AvalonEditTextEditor::BackgroundAnalysis_AnalysisComplete);
-				BackgroundAnalyzer->SemanticAnalysisComplete += BackgroundAnalyzerAnalysisCompleteHandler;
+				ParentModel->BackgroundSemanticAnalyzer->SemanticAnalysisComplete += BackgroundAnalyzerAnalysisCompleteHandler;
 
 				TextFieldTextChangedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::TextField_TextChanged);
 				TextFieldCaretPositionChangedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::TextField_CaretPositionChanged);
@@ -1981,9 +1977,8 @@ namespace cse
 				WPFHost->BackColor = BackgroundColor;
 				WPFHost->TabStop = false;
 
-				SetFont(Font);
-				if (TabSize)
-					SetTabCharacterSize(TabSize);
+				SetFont(preferences::SettingsHolder::Get()->Appearance->TextFont);
+				SetTabCharacterSize(preferences::SettingsHolder::Get()->Appearance->TabSize);
 
 				TextField->TextChanged += TextFieldTextChangedHandler;
 				TextField->TextArea->Caret->PositionChanged += TextFieldCaretPositionChangedHandler;
@@ -2032,8 +2027,7 @@ namespace cse
 			{
 				ParentModel = nullptr;
 
-				BackgroundAnalyzer->SemanticAnalysisComplete -= BackgroundAnalyzerAnalysisCompleteHandler;
-				BackgroundAnalyzer = nullptr;
+				ParentModel->BackgroundSemanticAnalyzer->SemanticAnalysisComplete -= BackgroundAnalyzerAnalysisCompleteHandler;
 
 				TextField->Clear();
 				MiddleMouseScrollTimer->Stop();
@@ -2140,7 +2134,6 @@ namespace cse
 
 				SAFEDELETE_CLR(IconBarMargin);
 				SAFEDELETE_CLR(LineTracker);
-				SAFEDELETE_CLR(JumpScriptDelegate);
 				SAFEDELETE_CLR(StructureVisualizer);
 				SAFEDELETE_CLR(InlineSearchPanel);
 
@@ -2292,7 +2285,7 @@ namespace cse
 					SetSelectionLength(0);
 				}
 
-				SemanticAnalysisCache = BackgroundAnalyzer->DoSynchronousAnalysis();
+				SemanticAnalysisCache = ParentModel->BackgroundSemanticAnalyzer->DoSynchronousAnalysis();
 				UpdateCodeFoldings();
 				UpdateSyntaxHighlighting(false);
 				OnTextUpdated();
@@ -2587,7 +2580,7 @@ namespace cse
 
 				LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
 
-				SemanticAnalysisCache = BackgroundAnalyzer->DoSynchronousAnalysis();
+				SemanticAnalysisCache = ParentModel->BackgroundSemanticAnalyzer->DoSynchronousAnalysis();
 				LineTracker->ClearMessages(textEditors::IScriptTextEditor::ScriptMessageSource::Validator,
 										   textEditors::IScriptTextEditor::ScriptMessageType::None);
 
