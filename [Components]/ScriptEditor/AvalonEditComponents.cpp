@@ -183,7 +183,6 @@ namespace cse
 						             false);
 
 					Start = EndIndex + 1;
-					TODO("test selection bg colorizer")
 				}
 			}
 
@@ -207,7 +206,6 @@ namespace cse
 					if (!Itr->Enabled)
 						continue;
 
-					TODO("why did this need exception handling?")
 					RenderBackground(textView,
 									drawingContext,
 									Itr->StartOffset,
