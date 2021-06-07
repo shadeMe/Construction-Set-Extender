@@ -109,7 +109,7 @@ namespace cse
 
 			property bool										OffsetFlag;		// line numbering will be rendered in offsets when set to true
 
-			bool												CalculateLineOffsetsForTextField(UInt32 Data, UInt32 Length);
+			bool												CalculateLineOffsetsForTextField(void* Data, UInt32 Length);
 			virtual void										JumpToLine(String^ Line) override;
 			UInt16												GetLastOffset(void);
 

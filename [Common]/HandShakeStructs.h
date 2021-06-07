@@ -179,7 +179,7 @@ namespace componentDLLInterface
 		ScriptData				Script;			// callee updates the member after a successful compile op
 		bool					PrintErrorsToConsole;
 
-		bool					CompileResult;
+		bool					CompilationSuccessful;
 		ScriptErrorListData		CompileErrorData;
 
 		ScriptCompileData();

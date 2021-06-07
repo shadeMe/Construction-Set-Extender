@@ -5,6 +5,12 @@ namespace cse
 {
 	namespace scriptEditor
 	{
+		void ScriptDiagnosticMessage::PopulateImageListWithMessageTypeImages(ImageList^ Destination)
+		{
+			Destination->Images->Clear();
+			Destination->Images->AddRange(MessageTypeImages);
+		}
+
 		void ScriptTextMetadataHelper::SeparateScriptTextFromMetadataBlock(String^ RawScriptText, String^% OutScriptText, String^% OutMetadata)
 		{
 			ScriptParser^ TextParser = gcnew ScriptParser();
@@ -104,7 +110,7 @@ namespace cse
 
 
 			for each (ScriptTextMetadata::Bookmark ^ Itr in Metadata->Bookmarks)
-				Block += ";<" + kMetadataSigilBookmark + ">\t" + Itr->Line + "\t" + Itr->Message + "\t</" + kMetadataSigilBookmark + ">\n";
+				Block += ";<" + kMetadataSigilBookmark + ">\t" + Itr->Line + "\t" + Itr->Text + "\t</" + kMetadataSigilBookmark + ">\n";
 
 
 			if (Metadata->HasPreprocessorDirectives)
@@ -119,6 +125,9 @@ namespace cse
 
 			return Result;
 		}
+
+
+
 	}
 }
 

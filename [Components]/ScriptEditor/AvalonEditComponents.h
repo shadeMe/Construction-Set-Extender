@@ -2,7 +2,7 @@
 
 #include "[Common]/ListViewUtilities.h"
 #include "ScriptTextEditorInterface.h"
-#include "WorkspaceModelComponents.h"
+#include "WorkspaceModelInterface.h"
 
 using namespace ICSharpCode;
 using namespace ICSharpCode::AvalonEdit::Rendering;
@@ -43,359 +43,122 @@ namespace cse
 			ref class AvalonEditTextEditor;
 			ref class LineTrackingManager;
 
-			ref class ILineBackgroundColorizer abstract : public AvalonEdit::Rendering::IBackgroundRenderer
+			ref struct BackgroundRenderSegment
 			{
-			protected:
-				AvalonEdit::TextEditor^		ParentEditor;
-				KnownLayer					RenderLayer;
+				property UInt32 Line;
+				property int StartOffset;
+				property int EndOffset;
+				property bool Enabled;
 
-				void	RenderBackground(TextView^ Destination,
-										 System::Windows::Media::DrawingContext^ DrawingContext,
-										 int StartOffset, int EndOffset,
-										 Windows::Media::Color Background,
-										 Windows::Media::Color Border,
-										 Double BorderThickness,
-										 bool ColorEntireLine);
-			public:
-				ILineBackgroundColorizer(AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer);
-				virtual ~ILineBackgroundColorizer();
-
-				virtual void Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) abstract;
-
-				property KnownLayer Layer
+				BackgroundRenderSegment()
 				{
-					virtual KnownLayer get() { return RenderLayer; }
+					Line = 0;
+					StartOffset = 0;
+					EndOffset = 0;
+					Enabled = true;
 				}
 			};
 
-			ref class TrackingMessage abstract
+			ref class LineTrackingManagerBgRenderer : public AvalonEdit::Rendering::IBackgroundRenderer
 			{
-			public:
-				virtual int		Line() abstract;
-				virtual String^	Message() abstract;
+				AvalonEdit::TextEditor^ ParentEditor;
 
-				virtual void	Jump() abstract;
-				virtual bool	Deleted() abstract;
-			};
 
-			ref class TrackingImageMessage abstract : public TrackingMessage
-			{
-			public:
-				virtual int		ImageIndex() abstract;
-			};
-
-			ref struct TrackingMessageSorter abstract
-			{
-				static enum class ComparisonField
-				{
-					Line,
-					Message,
-					ImageIndex
-				};
-			protected:
-				ComparisonField	CompareField;
-			public:
-				TrackingMessageSorter(ComparisonField Field) : CompareField(Field) {}
-
-				int Compare(TrackingMessage^ X, TrackingMessage^ Y);
-			};
-
-			ref class TrackingMessageListViewSorter : public ListViewGenericSorter, public System::Collections::IComparer
-			{
-			public:
-				TrackingMessageListViewSorter(int Index, SortOrder Order) : ListViewGenericSorter(Index, Order) {}
-
-				virtual int	Compare(Object^ X, Object^ Y);
-			};
-
-			ref class TrackingImageMessageListViewSorter : public ListViewGenericSorter, public System::Collections::IComparer
-			{
-			public:
-				TrackingImageMessageListViewSorter(int Index, SortOrder Order) : ListViewGenericSorter(Index, Order) {}
-
-				virtual int	Compare(Object^ X, Object^ Y);
-			};
-
-			ref class ScriptMessage : public TrackingImageMessage
-			{
-				LineTrackingManager^						Manager;
-			protected:
-				TextAnchor^									Anchor;
-				IScriptTextEditor::ScriptMessageType		MessageType;
-				IScriptTextEditor::ScriptMessageSource		MessageSource;
-				String^										MessageString;
-			public:
-				ScriptMessage(LineTrackingManager^ Parent, TextAnchor^ Location,
-							  IScriptTextEditor::ScriptMessageType Type,
-							  IScriptTextEditor::ScriptMessageSource Source,
-							  String^ Text);
-				~ScriptMessage();
-
-				property bool	IndicatorDisabled;
-
-				virtual int		Line() override;
-				virtual String^	Message() override;
-				virtual int		ImageIndex() override;
-				virtual void	Jump() override;
-				virtual bool	Deleted() override;
-
-				IScriptTextEditor::ScriptMessageSource
-								Source();
-				IScriptTextEditor::ScriptMessageType
-								Type();
-			};
-
-			ref struct ScriptMessageSorter : public System::Collections::Generic::IComparer < ScriptMessage^ >, TrackingMessageSorter
-			{
-				ScriptMessageSorter(ComparisonField Field) : TrackingMessageSorter(Field) {}
-
-				virtual int Compare(ScriptMessage^ X, ScriptMessage^ Y) { return TrackingMessageSorter::Compare(X, Y); }
-			};
-
-			ref class ScriptBookmark : public TrackingMessage
-			{
-				LineTrackingManager^ Manager;
-			protected:
-				TextAnchor^	Anchor;
-				String^		Description;
-			public:
-				ScriptBookmark(LineTrackingManager^ Parent, TextAnchor^ Location, String^ Text);
-				~ScriptBookmark();
-
-				virtual int		Line() override;
-				virtual String^	Message() override;
-				virtual void	Jump() override;
-				virtual bool	Deleted() override;
-			};
-
-			ref struct ScriptBookmarkSorter : public System::Collections::Generic::IComparer < ScriptBookmark^ >, TrackingMessageSorter
-			{
-				ScriptBookmarkSorter(ComparisonField Field) : TrackingMessageSorter(Field) {}
-
-				virtual int Compare(ScriptBookmark^ X, ScriptBookmark^ Y) { return TrackingMessageSorter::Compare(X, Y); }
-			};
-
-			ref class ScriptFindResult : public TrackingMessage
-			{
-				LineTrackingManager^ Manager;
-			protected:
-				TextAnchor^	AnchorStart;
-				TextAnchor^	AnchorEnd;
-				String^		Description;
-			public:
-				ScriptFindResult(LineTrackingManager^ Parent, TextAnchor^ Start, TextAnchor^ End, String^ Text);
-				~ScriptFindResult();
-
-				property bool	IndicatorDisabled;
-
-				virtual int		Line() override;
-				virtual String^	Message() override;
-				virtual void	Jump() override;
-				virtual bool	Deleted() override;
-
-				int				StartOffset();
-				int				EndOffset();
-			};
-
-			ref struct ScriptFindResultSorter : public System::Collections::Generic::IComparer < ScriptFindResult^ >, TrackingMessageSorter
-			{
-				ScriptFindResultSorter(ComparisonField Field) : TrackingMessageSorter(Field) {}
-
-				virtual int Compare(ScriptFindResult^ X, ScriptFindResult^ Y) { return TrackingMessageSorter::Compare(X, Y); }
-			};
-
-			ref class ScriptBookmarkBinder : public SimpleListViewBinder < ScriptBookmark^ >
-			{
-			protected:
-				virtual void		InitializeListView(ListView^ Control) override;
-				virtual System::Collections::IComparer^
-									GetSorter(int Column, SortOrder Order) override;
-				virtual int			GetImageIndex(ScriptBookmark^ Item) override;
-				virtual String^		GetSubItemText(ScriptBookmark^ Item, int Column) override;
-				virtual void		ActivateItem(ScriptBookmark^ Item) override;
-				virtual void		KeyPress(KeyEventArgs^ E) override;
-				virtual UInt32		GetColumnCount() override;
-				virtual UInt32		GetDefaultSortColumn() override;
-				virtual SortOrder	GetDefaultSortOrder() override;
-			};
-
-			ref class ScriptMessageBinder : public SimpleListViewBinder < ScriptMessage^ >
-			{
-			protected:
-				virtual void		InitializeListView(ListView^ Control) override;
-				virtual System::Collections::IComparer^
-									GetSorter(int Column, SortOrder Order) override;
-				virtual int			GetImageIndex(ScriptMessage^ Item) override;
-				virtual String^		GetSubItemText(ScriptMessage^ Item, int Column) override;
-				virtual void		ActivateItem(ScriptMessage^ Item) override;
-				virtual void		KeyPress(KeyEventArgs^ E) override;
-				virtual UInt32		GetColumnCount() override;
-				virtual UInt32		GetDefaultSortColumn() override;
-				virtual SortOrder	GetDefaultSortOrder() override;
-			};
-
-			ref class ScriptFindResultBinder : public SimpleListViewBinder < ScriptFindResult^ >
-			{
-			protected:
-				bool				HasLine(ScriptFindResult^ Check);
-
-				virtual ListViewItem^
-									Create(ScriptFindResult^ Data) override;
-				virtual void		InitializeListView(ListView^ Control) override;
-				virtual System::Collections::IComparer^
-									GetSorter(int Column, SortOrder Order) override;
-				virtual int			GetImageIndex(ScriptFindResult^ Item) override;
-				virtual String^		GetSubItemText(ScriptFindResult^ Item, int Column) override;
-				virtual void		ActivateItem(ScriptFindResult^ Item) override;
-				virtual void		KeyPress(KeyEventArgs^ E) override;
-				virtual UInt32		GetColumnCount() override;
-				virtual UInt32		GetDefaultSortColumn() override;
-				virtual SortOrder	GetDefaultSortOrder() override;
-			};
-
-			ref struct ColorizerSegment
-			{
-				int Start;
-				int End;
-			};
-
-			delegate List<ColorizerSegment^>^ GetColorizerSegments();
-
-			ref class ScriptErrorIndicator : public AvalonEdit::Rendering::IBackgroundRenderer
-			{
-			protected:
-				GetColorizerSegments^ Delegate;
-
-				void RenderSquiggly(TextView^ Destination,
+				void RenderBackground(TextView^ Destination,
+									  System::Windows::Media::DrawingContext^ DrawingContext,
+									  int StartOffset, int EndOffset,
+									  Windows::Media::Color Background,
+									  Windows::Media::Color Border,
+									  Double BorderThickness,
+									  bool ColorEntireLine);
+				void RenderSquiggle(TextView^ Destination,
 					 			   System::Windows::Media::DrawingContext^ DrawingContext,
 					 			   int StartOffset, int EndOffset,
 					 			   Windows::Media::Color Color);
+
+				void DoCurrentLineBackground(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext);
+				void DoLineLimitBackground(DocumentLine^ Line, TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext);
+				void DoSelectedStringBackground(String^ SelectionText, DocumentLine^ Line, TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext);
+				void DoErrorSquiggles(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext);
+				void DoFindResults(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext);
+				void DoBraceIndicators(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext);
 			public:
-				ScriptErrorIndicator(GetColorizerSegments^ Getter);
-				~ScriptErrorIndicator();
+				LineTrackingManagerBgRenderer(AvalonEdit::TextEditor^ Parent);
+				~LineTrackingManagerBgRenderer();
 
-				virtual void Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext);
 
+				property List<BackgroundRenderSegment^>^ ErrorSquiggles;
+				property List<BackgroundRenderSegment^>^ FindResults;
+				property BackgroundRenderSegment^		 OpenCloseBraces;
 				property KnownLayer Layer
 				{
 					virtual KnownLayer get() { return KnownLayer::Background; }
 				}
+
+				virtual void Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext);
+				void Redraw();
 			};
 
-			ref class ScriptFindResultIndicator : public ILineBackgroundColorizer
-			{
-			protected:
-				GetColorizerSegments^ Delegate;
-			public:
-				ScriptFindResultIndicator(GetColorizerSegments^ Getter);
-				~ScriptFindResultIndicator();
 
-				virtual void Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
+			ref struct AvalonEditLineAnchor : public ILineAnchor
+			{
+				TextAnchor^ Anchor;
+			public:
+				AvalonEditLineAnchor(AvalonEdit::TextEditor^ Parent, UInt32 Line, bool AllowDeletion);
+
+				virtual property UInt32 Line
+				{
+					UInt32 get() { return Anchor->Line; }
+					void set(UInt32 s) {}
+				}
+				virtual property bool Valid
+				{
+					bool get() { return !Anchor->IsDeleted; }
+					void set(bool s) {}
+				}
 			};
 
 			ref class LineTrackingManager
 			{
-			public:
-				static enum class UpdateSource
+				ref struct FindResultSegment
 				{
-					None,
-					Messages,
-					Bookmarks,
-					FindResults,
+					TextAnchor^ Start;
+					TextAnchor^ End;
 				};
-			private:
-				AvalonEdit::TextEditor^					Parent;
 
-				SimpleBindingList<ScriptMessage^>^		Messages;
-				SimpleBindingList<ScriptBookmark^>^		Bookmarks;
-				SimpleBindingList<ScriptFindResult^>^	FindResults;
+				AvalonEdit::TextEditor^		ParentEditor;
+				scriptEditor::IWorkspaceModel^
+											ParentModel;
+				List<AvalonEditLineAnchor^>^
+											TrackedLineAnchors;
+				Dictionary<FindResultSegment^, BackgroundRenderSegment^>^
+											TrackedFindResultSegments;
+				LineTrackingManagerBgRenderer^
+											LineBgRenderer;
+				scriptEditor::IWorkspaceModel::StateChangeEventHandler^
+											ParentModelStateChangedHandler;
+				EventHandler^				ParentEditorTextChangedHandler;
 
-				ScriptMessageBinder^					BinderMessages;
-				ScriptBookmarkBinder^					BinderBookmarks;
-				ScriptFindResultBinder^					BinderFindResults;
 
-				UpdateSource							CurrentBatchUpdate;
-				int										CurrentUpdateCounter;
+				void		ParentEditor_TextChanged(Object^ Sender, EventArgs^ E);
+				void		ParentModel_StateChanged(scriptEditor::IWorkspaceModel^ Sender, scriptEditor::IWorkspaceModel::StateChangeEventArgs^ E);
 
-				ScriptErrorIndicator^					ErrorColorizer;
-				ScriptFindResultIndicator^				FindResultColorizer;
-
-				EventHandler^							ParentTextChangedHandler;
-
-				void		Parent_TextChanged(Object^ Sender, EventArgs^ E);
-
-				TextAnchor^	CreateAnchor(UInt32 Offset, bool AllowDeletion);
-				void		RefreshBackgroundRenderers(bool IgnoreBatchUpdate);
-				UInt32		GetFindResults(UInt32 At, List<ScriptFindResult^>^% Out);
-
-				List<ColorizerSegment^>^
-							GetErrorColorizerSegments();
-				List<ColorizerSegment^>^
-							GetFindResultColorizerSegments();
-
-				void		OnTrackedDataUpdated();
+				TextAnchor^ CreateAnchor(int Offset, bool AllowDeletion);
 			public:
-				LineTrackingManager(AvalonEdit::TextEditor^ ParentEditor);
+				LineTrackingManager(AvalonEdit::TextEditor^ ParentEditor, scriptEditor::IWorkspaceModel^ ParentModel);
 				~LineTrackingManager();
 
-				event EventHandler^	TrackedDataUpdated;
+				property LineTrackingManagerBgRenderer^ LineBackgroundRenderer
+				{
+					LineTrackingManagerBgRenderer^ get() { return LineBgRenderer; }
+				}
 
-				void	Bind(ListView^ MessageList, ListView^ BookmarkList, ListView^ FindResultList);
-				void	Unbind();
-
-				void	BeginUpdate(UpdateSource Source);
-				void	EndUpdate(bool Sort);
-
-				void	TrackMessage(UInt32 Line,
-									 IScriptTextEditor::ScriptMessageType Type,
-									 IScriptTextEditor::ScriptMessageSource Source,
-									 String^ Message);
-				void	ClearMessages(IScriptTextEditor::ScriptMessageSource SourceFilter,
-									  IScriptTextEditor::ScriptMessageType TypeFilter); // pass None to clear all
-				bool	GetMessages(UInt32 Line,
-									IScriptTextEditor::ScriptMessageSource SourceFilter,
-									IScriptTextEditor::ScriptMessageType TypeFilter,
-									List<ScriptMessage^>^% OutMessages); // returns false when there are no messages
-				UInt32	GetMessageCount(UInt32 Line,
-										IScriptTextEditor::ScriptMessageSource SourceFilter,
-										IScriptTextEditor::ScriptMessageType TypeFilter); // pass zero as line to count all lines
-
-				void	AddBookmark(UInt32 Line, String^ Description);
-				UInt32	GetBookmarks(UInt32 Line, List<ScriptBookmark^>^% Out);
-				List<scriptEditor::ScriptTextMetadata::Bookmark^>^
-						GetAllBookmarks();
-				void	ClearBookmarks();
-
-				void	TrackFindResult(UInt32 Start, UInt32 End, String^ Text);
-				void	ClearFindResults(bool IndicatorOnly);
-
-				void	Cleanup();						// removes deleted anchors
-				void	Jump(TrackingMessage^ To);
+				AvalonEditLineAnchor^	CreateLineAnchor(UInt32 Line, bool AllowDeletion);
+				void					TrackFindResultSegment(UInt32 Start, UInt32 End);
+				void					ClearFindResultSegments();
+				bool					RemoveDeletedLineAnchors(); // returns true if any line anchors were removed
 			};
 
-			ref class CurrentLineBGColorizer : public ILineBackgroundColorizer
-			{
-			public:
-				CurrentLineBGColorizer(AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer);
-
-				virtual void Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
-			};
-
-			ref class SelectionBGColorizer : public ILineBackgroundColorizer
-			{
-			public:
-				SelectionBGColorizer(AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer);
-
-				virtual void Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
-			};
-
-			ref class LineLimitBGColorizer : public ILineBackgroundColorizer
-			{
-			public:
-				LineLimitBGColorizer(AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer);
-
-				virtual void Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
-			};
 
 			ref class ObScriptIndentStrategy : public AvalonEdit::Indentation::IIndentationStrategy
 			{
@@ -432,28 +195,12 @@ namespace cse
 				virtual IEnumerable<AvalonEdit::Folding::NewFolding^>^ CreateNewFoldings(AvalonEdit::Document::TextDocument^ document, int% firstErrorOffset);
 			};
 
-			ref class TagableDoubleAnimation : public System::Windows::Media::Animation::DoubleAnimation
+			ref struct TagableDoubleAnimation : public System::Windows::Media::Animation::DoubleAnimation
 			{
-			public:
-				TagableDoubleAnimation(double fromValue,
-									   double toValue,
-									   System::Windows::Duration duration,
-									   System::Windows::Media::Animation::FillBehavior fillBehavior);
+				TagableDoubleAnimation(double fromValue, double toValue, System::Windows::Duration duration, System::Windows::Media::Animation::FillBehavior fillBehavior)
+					: DoubleAnimation(fromValue, toValue, duration, fillBehavior) {}
 
 				property Object^ Tag;
-			};
-
-			ref class BraceHighlightingBGColorizer : public ILineBackgroundColorizer
-			{
-				int	 OpenBraceOffset;
-				int	 CloseBraceOffset;
-				bool DoHighlight;
-			public:
-				BraceHighlightingBGColorizer(AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer);
-
-				virtual void Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
-				void SetHighlight(int OpenBraceOffset, int CloseBraceOffset);
-				void ClearHighlight(void);
 			};
 
 			ref class StructureVisualizerRenderer : public VisualLineElementGenerator
@@ -538,10 +285,15 @@ namespace cse
 				static Windows::Media::Imaging::BitmapSource^ GetErrorIcon();
 				static Windows::Media::Imaging::BitmapSource^ GetBookmarkIcon();
 			protected:
-				AvalonEdit::TextEditor^		Parent;
-				LineTrackingManager^		LineTracker;
+				AvalonEdit::TextEditor^		ParentEditor;
+				scriptEditor::IWorkspaceModel^
+											ParentModel;
 				DotNetBar::SuperTooltip^	Popup;
 				IntPtr						PopupParent;
+				scriptEditor::IWorkspaceModel::StateChangeEventHandler^
+											ParentModelStateChangedHandler;
+
+				void ParentModel_StateChanged(scriptEditor::IWorkspaceModel^ Sender, scriptEditor::IWorkspaceModel::StateChangeEventArgs^ E);
 
 				virtual void HandleHoverStart(int Line, System::Windows::Input::MouseEventArgs^ E) override;
 				virtual void HandleHoverStop() override;
@@ -552,7 +304,7 @@ namespace cse
 							 			int% Width,
 							 			int% Height) override;
 			public:
-				DefaultIconMargin(AvalonEdit::TextEditor^ ParentEditor, LineTrackingManager^ ParentLineTracker, IntPtr ToolTipParent);
+				DefaultIconMargin(AvalonEdit::TextEditor^ ParentEditor, scriptEditor::IWorkspaceModel^ ParentModel, IntPtr ToolTipParent);
 				virtual ~DefaultIconMargin();
 			};
 		}

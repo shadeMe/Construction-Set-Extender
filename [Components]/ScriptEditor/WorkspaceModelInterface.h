@@ -2,6 +2,7 @@
 
 #include "ScriptTextEditorInterface.h"
 #include "RefactorTools.h"
+#include "WorkspaceModelComponents.h"
 
 namespace cse
 {
@@ -37,24 +38,52 @@ namespace cse
 				CreateUDF,
 			};
 
-			// common for all events, holds the updated state
 			ref struct StateChangeEventArgs
 			{
-				bool								Dirty;
-				UInt32								ByteCodeSize;		// in bytes
-				ScriptType							Type;
-				String^								ShortDescription;
-				String^								LongDescription;
+				static enum class Type
+				{
+					None,
+					Dirty,
+					ByteCodeSize,
+					ScriptType,
+					Description,
+					Messages,
+					Bookmarks,
+					FindResults
+				};
 
-				StateChangeEventArgs() : Dirty(false), ByteCodeSize(0), Type(ScriptType::Object), ShortDescription(""), LongDescription("") {}
+				Type		EventType;
+
+				bool		Dirty;
+				UInt32		ByteCodeSize;		// in bytes
+				ScriptType	ScriptType;
+				String^		ShortDescription;
+				String^		LongDescription;
+				List<ScriptDiagnosticMessage^>^
+							Messages;
+				List<ScriptBookmark^>^
+							Bookmarks;
+				List<ScriptFindResult^>^
+							FindResults;
+
+				StateChangeEventArgs()
+				{
+					EventType = Type::None;
+
+					Dirty = false;
+					ByteCodeSize = 0;
+					ScriptType = ScriptType::Object;
+					ShortDescription = "";
+					LongDescription = "";
+					Messages = gcnew List<ScriptDiagnosticMessage^>;
+					Bookmarks = gcnew List<ScriptBookmark^>;
+					FindResults = gcnew List<ScriptFindResult^>;
+				}
 			};
 
 			delegate void StateChangeEventHandler(IWorkspaceModel^ Sender, StateChangeEventArgs^ E);
 
-			event StateChangeEventHandler^			StateChangedDirty;
-			event StateChangeEventHandler^			StateChangedByteCodeSize;
-			event StateChangeEventHandler^			StateChangedType;
-			event StateChangeEventHandler^			StateChangedDescription;		// raised when either of the descriptions is changed
+			event StateChangeEventHandler^			StateChanged;
 
 			property IWorkspaceModelFactory^		Factory;
 			property IWorkspaceModelController^		Controller;
@@ -78,7 +107,7 @@ namespace cse
 			void	Unbind(IWorkspaceModel^ Model);							// detaches from the view
 
 			void	SetText(IWorkspaceModel^ Model, String^ Text, bool ResetUndoStack);
-			String^	GetText(IWorkspaceModel^ Model, bool Preprocess, bool% PreprocessResult);
+			String^	GetText(IWorkspaceModel^ Model, bool Preprocess, bool% PreprocessResult, bool SuppressPreprocessorErrors);
 
 			int		GetCaret(IWorkspaceModel^ Model);
 			void	SetCaret(IWorkspaceModel^ Model, int Index);
@@ -110,9 +139,30 @@ namespace cse
 								String^ Query, String^ Replacement, textEditors::IScriptTextEditor::FindReplaceOptions Options);
 
 
-			bool	GetOffsetViewerData(IWorkspaceModel^ Model, String^% OutText, UInt32% OutBytecode, UInt32% OutLength); // returns false if the operation's invalid (unsaved changes)
+			bool	GetOffsetViewerData(IWorkspaceModel^ Model, String^% OutText, void** OutBytecode, UInt32% OutLength); // returns false if the operation's invalid (unsaved changes)
 			bool	ApplyRefactor(IWorkspaceModel^ Model, IWorkspaceModel::RefactorOperation Operation, Object^ Arg); // returns true on success
 			void	JumpToScript(IWorkspaceModel^ Model, String^ ScriptEditorID);
+
+			void	AddMessage(IWorkspaceModel^ Model, UInt32 Line, String^ Text, ScriptDiagnosticMessage::MessageType Type, ScriptDiagnosticMessage::MessageSource Source);
+			void	ClearMessages(IWorkspaceModel^ Model, ScriptDiagnosticMessage::MessageSource SourceFilter, ScriptDiagnosticMessage::MessageType TypeFilter);
+			bool	GetMessages(IWorkspaceModel^ Model, UInt32 Line, ScriptDiagnosticMessage::MessageSource SourceFilter, ScriptDiagnosticMessage::MessageType TypeFilter, List<ScriptDiagnosticMessage^>^% OutMessages); // returns false when there are no messages
+			UInt32	GetErrorCount(IWorkspaceModel^ Model, UInt32 Line);
+			UInt32	GetWarningCount(IWorkspaceModel^ Model, UInt32 Line);
+			void	BeginUpdateMessages(IWorkspaceModel^ Model);
+			void	EndUpdateMessages(IWorkspaceModel^ Model);
+
+			void	AddBookmark(IWorkspaceModel^ Model, UInt32 Line, String^ BookmarkText);
+			void	RemoveBookmark(IWorkspaceModel^ Model, UInt32 Line, String^ BookmarkText);
+			void	ClearBookmarks(IWorkspaceModel^ Model);
+			bool	GetBookmarks(IWorkspaceModel^ Model, UInt32 Line, List<ScriptBookmark^>^% OutBookmarks);
+			UInt32	GetBookmarkCount(IWorkspaceModel^ Model, UInt32 Line);
+			void	BeginUpdateBookmarks(IWorkspaceModel^ Model);
+			void	EndUpdateBookmarks(IWorkspaceModel^ Model);
+
+			void	AddFindResult(IWorkspaceModel^ Model, UInt32 Line, String^ PreviewText, UInt32 Hits);
+			void	ClearFindResults(IWorkspaceModel^ Model);
+			void	BeginUpdateFindResults(IWorkspaceModel^ Model);
+			void	EndUpdateFindResults(IWorkspaceModel^ Model);
 		};
 
 		interface class IWorkspaceModelFactory

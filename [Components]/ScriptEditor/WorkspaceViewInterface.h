@@ -12,24 +12,17 @@ namespace cse
 		interface class IWorkspaceModel;
 		interface class IWorkspaceViewController;
 
-		interface class IWorkspaceViewBindableData
+		interface class IWorkspaceView
 		{
 		public:
-			property ListView^		ListViewMessages;
-			property ListView^		ListViewBookmarks;
-			property ListView^		ListViewFindResults;
-
-			property intellisense::IIntelliSenseInterfaceView^		IntelliSenseInterfaceView;
-			property textEditors::ScopeBreadcrumbManager^			BreadcrumbManager;
-		};
-
-		interface class IWorkspaceView : public	IWorkspaceViewBindableData
-		{
-		public:
-			property IWorkspaceViewController^			Controller;
-
-			property IntPtr								WindowHandle;
-			property bool								Enabled;
+			property IWorkspaceViewController^
+								Controller;
+			property intellisense::IIntelliSenseInterfaceView^
+								IntelliSenseInterfaceView;
+			property textEditors::ScopeBreadcrumbManager^
+								BreadcrumbManager;
+			property IntPtr		WindowHandle;
+			property bool		Enabled;
 		};
 
 		ref struct NewTabOperationArgs
@@ -44,41 +37,42 @@ namespace cse
 				SetText
 			};
 
-			PostNewTabOperation							PostCreationOperation;
-			String^										PathToFile;
-			componentDLLInterface::ScriptData*			OpenArgs;
-			String^										NewText;
+			PostNewTabOperation					PostCreationOperation;
+			String^								PathToFile;
+			componentDLLInterface::ScriptData* 	OpenArgs;
+			String^								NewText;
+			bool								BindAfterCreation;
 
-			bool										BindAfterCreation;
-
-			NewTabOperationArgs() : PostCreationOperation(PostNewTabOperation::None), PathToFile(""), OpenArgs(nullptr), NewText(""), BindAfterCreation(true) {}
+			NewTabOperationArgs()
+			{
+				PostCreationOperation = PostNewTabOperation::None;
+				PathToFile = "";
+				OpenArgs = nullptr;
+				NewText = "";
+				BindAfterCreation = false;
+			}
 		};
 
 		interface class IWorkspaceViewController
 		{
 		public:
-			void	AttachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
-			void	DetachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
-
-			void	BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
-
-			void	Jump(IWorkspaceView^ View, IWorkspaceModel^ From, String^ ScriptEditorID);
-			int		FindReplace(IWorkspaceView^ View, textEditors::IScriptTextEditor::FindReplaceOperation Operation,
-																	String^ Query, String^ Replacement, textEditors::IScriptTextEditor::FindReplaceOptions Options, bool Global);
-			void	ShowOutline(IWorkspaceView^ View, obScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model);
-
-			void	Redraw(IWorkspaceView^ View);
-
-			void	NewTab(IWorkspaceView^ View, NewTabOperationArgs^ E);
-
-			DialogResult	MessageBox(String^ Message, MessageBoxButtons Buttons, MessageBoxIcon Icon);
+			void AttachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
+			void DetachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
+			void BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
+			void Jump(IWorkspaceView^ View, IWorkspaceModel^ From, String^ ScriptEditorID);
+			int	 FindReplace(IWorkspaceView^ View, textEditors::IScriptTextEditor::FindReplaceOperation Operation,
+				 			 String^ Query, String^ Replacement, textEditors::IScriptTextEditor::FindReplaceOptions Options, bool Global);
+			void ShowOutline(IWorkspaceView^ View, obScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model);
+			void Redraw(IWorkspaceView^ View);
+			void NewTab(IWorkspaceView^ View, NewTabOperationArgs^ E);
+			DialogResult MessageBox(String^ Message, MessageBoxButtons Buttons, MessageBoxIcon Icon);
 		};
 
 		interface class IWorkspaceViewFactory
 		{
 		public:
-			IWorkspaceView^					CreateView(int X, int Y, int Width, int Height);
-			IWorkspaceViewController^		CreateController();
+			IWorkspaceView^ CreateView(int X, int Y, int Width, int Height);
+			IWorkspaceViewController^ CreateController();
 		};
 	}
 }

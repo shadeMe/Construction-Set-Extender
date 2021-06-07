@@ -17,7 +17,7 @@ namespace cse
 				SAFEDELETE_CLR(Viewer);
 			}
 
-			virtual bool							InitializeViewer(String^ ScriptText, UInt32 Data, UInt32 Length);
+			virtual bool							InitializeViewer(String^ ScriptText, void* Data, UInt32 Length);
 			bool									Show(int CaretPosition);
 			int										Hide(void);
 			void									JumpToLine(String^ Line) { Viewer->JumpToLine(Line); }

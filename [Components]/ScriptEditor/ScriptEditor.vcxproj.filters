@@ -570,5 +570,8 @@
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\BrushTool_207.png">
       <Filter>Resources\Images</Filter>
     </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Annotations\png\Information_blue_6227_16x16.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
   </ItemGroup>
 </Project>

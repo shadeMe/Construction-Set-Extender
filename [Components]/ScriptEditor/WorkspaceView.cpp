@@ -574,7 +574,7 @@ namespace cse
 		{
 			if (E->GetType() == FindReplaceAllResults::typeid)
 				return true;
-			else if (E->GetType() == FindReplaceAllResults::HitData::typeid)
+			else if (E->GetType() == FindReplaceAllResults::PerScriptData::typeid)
 				return true;
 			else
 				return false;
@@ -583,41 +583,73 @@ namespace cse
 		Collections::IEnumerable^ FindReplaceAllResults::GenericChildrenGetter(Object^ E)
 		{
 			if (E->GetType() == FindReplaceAllResults::typeid)
-				return ((FindReplaceAllResults^)E)->Hits;
-			else if (E->GetType() == FindReplaceAllResults::HitData::typeid)
-				return ((FindReplaceAllResults::HitData^)E)->Hits->Hits;
-			else
-				return nullptr;
+			{
+				auto TopItem = safe_cast<FindReplaceAllResults^>(E);
+				return TopItem->ScriptsWithHits;
+			}
+
+			if (E->GetType() == FindReplaceAllResults::PerScriptData::typeid)
+			{
+				auto PerScript = safe_cast<FindReplaceAllResults::PerScriptData^>(E);
+				return PerScript->Results->Hits;
+			}
+
+			return nullptr;
 		}
 
-		Object^ FindReplaceAllResults::GenericAspectGetter(Object^ E)
+		Object^ FindReplaceAllResults::TextAspectGetter(Object^ E)
 		{
-			String^ Result = "<unknown>";
 			if (E->GetType() == FindReplaceAllResults::typeid)
 			{
-				FindReplaceAllResults^ Data = (FindReplaceAllResults^)E;
-				switch (Data->Operation)
+				auto TopItem = safe_cast<FindReplaceAllResults^>(E);
+				switch (TopItem->Operation)
 				{
 				case textEditors::IScriptTextEditor::FindReplaceOperation::Replace:
-					Result = "Replace \"" + Data->Query + "\" with \"" + Data->Replacement + "\" (" + Data->TotalHitCount + " hits in " + Data->Hits->Count + " script(s))";
-					break;
+					return "Replace \"" + TopItem->Query + "\" with \"" + TopItem->Replacement + "\" (" + TopItem->TotalHitCount + " hits in " + TopItem->ScriptsWithHits->Count + " script(s))";
 				default:
-					Result = "Search \"" + Data->Query + "\" (" + Data->TotalHitCount + " hits in " + Data->Hits->Count + " script(s))";
-					break;
+					return "Search \"" + TopItem->Query + "\" (" + TopItem->TotalHitCount + " hits in " + TopItem->ScriptsWithHits->Count + " script(s))";
 				}
 			}
-			else if (E->GetType() == FindReplaceAllResults::HitData::typeid)
+
+			if (E->GetType() == FindReplaceAllResults::PerScriptData::typeid)
 			{
-				FindReplaceAllResults::HitData^ Data = (FindReplaceAllResults::HitData^)E;
-				Result = "Script " + Data->ParentDescription + " (" + Data->Hits->TotalHitCount + " hits)";
-			}
-			else if (E->GetType() == textEditors::IScriptTextEditor::FindReplaceResult::HitData::typeid)
-			{
-				textEditors::IScriptTextEditor::FindReplaceResult::HitData^ Data = (textEditors::IScriptTextEditor::FindReplaceResult::HitData^)E;
-				Result = "Line " + Data->Line + " (" + Data->Hits + " hit(s)): " + Data->Text;
+				auto PerScript = safe_cast<FindReplaceAllResults::PerScriptData^>(E);
+				return "Script " + PerScript->ParentDescription;
 			}
 
-			return Result;
+			if (E->GetType() == textEditors::IScriptTextEditor::FindReplaceResult::HitData::typeid)
+			{
+				auto PerLine = safe_cast<textEditors::IScriptTextEditor::FindReplaceResult::HitData^>(E);
+				return PerLine->Text;
+			}
+
+			return String::Empty;
+		}
+
+		System::Object^ FindReplaceAllResults::LineAspectGetter(Object^ E)
+		{
+			if (E->GetType() != textEditors::IScriptTextEditor::FindReplaceResult::HitData::typeid)
+				return String::Empty;
+
+			auto Model = safe_cast<textEditors::IScriptTextEditor::FindReplaceResult::HitData^>(E);
+			return Model->Line;
+		}
+
+		System::Object^ FindReplaceAllResults::HitsAspectGetter(Object^ E)
+		{
+			if (E->GetType() == FindReplaceAllResults::PerScriptData::typeid)
+			{
+				auto PerScript = safe_cast<FindReplaceAllResults::PerScriptData^>(E);
+				return PerScript->TotalHitCount;
+			}
+
+			if (E->GetType() == textEditors::IScriptTextEditor::FindReplaceResult::HitData::typeid)
+			{
+				auto PerLine = safe_cast<textEditors::IScriptTextEditor::FindReplaceResult::HitData^>(E);
+				return PerLine->Hits;
+			}
+
+			return String::Empty;
 		}
 
 		ConcreteWorkspaceView::ConcreteWorkspaceView(ConcreteWorkspaceViewController^ Controller, ConcreteWorkspaceViewFactory^ Factory, Rectangle Bounds)
@@ -713,10 +745,7 @@ namespace cse
 			AllowDisposal = false;
 			DisallowBinding = false;
 
-			ModelStateChangedDirty = gcnew IWorkspaceModel::StateChangeEventHandler(this, &ConcreteWorkspaceView::ModelStateChangeHandler_Dirty);
-			ModelStateChangedByteCodeSize = gcnew IWorkspaceModel::StateChangeEventHandler(this, &ConcreteWorkspaceView::ModelStateChangeHandler_ByteCodeSize);
-			ModelStateChangedType = gcnew IWorkspaceModel::StateChangeEventHandler(this, &ConcreteWorkspaceView::ModelStateChangeHandler_Type);
-			ModelStateChangedDescription = gcnew IWorkspaceModel::StateChangeEventHandler(this, &ConcreteWorkspaceView::ModelStateChangeHandler_Description);
+			ModelStateChangedHandler = gcnew IWorkspaceModel::StateChangeEventHandler(this, &ConcreteWorkspaceView::Model_StateChangeHandler);
 
 			EditorForm->Closing += EditorFormCancelHandler;
 			EditorForm->KeyDown += EditorFormKeyDownHandler;
@@ -737,17 +766,20 @@ namespace cse
 			WorkspaceSplitter->TabStop = false;
 			WorkspaceSplitter->Panel1->TabStop = false;
 			WorkspaceSplitter->Panel2->TabStop = false;
-			MessageList = gcnew DoubleBufferedListView();
+
+			MessageList = gcnew BrightIdeasSoftware::FastObjectListView();
 			MessageList->TabStop = false;
-			FindList = gcnew DoubleBufferedListView();
-			FindList->TabStop = false;
-			BookmarkList = gcnew DoubleBufferedListView();
+			FindResultsList = gcnew BrightIdeasSoftware::FastObjectListView();
+			FindResultsList->TabStop = false;
+			BookmarkList = gcnew BrightIdeasSoftware::FastObjectListView();
 			BookmarkList->TabStop = false;
 			GlobalFindList = gcnew BrightIdeasSoftware::TreeListView;
 			GlobalFindList->TabStop = false;
 			SpoilerText = gcnew Label();
 
+			ScriptAnnotationListItemActivate = gcnew EventHandler(this, &ConcreteWorkspaceView::ScriptAnnotationList_ItemActivate);
 			GlobalFindListItemActivate = gcnew EventHandler(this, &ConcreteWorkspaceView::GlobalFindList_ItemActivate);
+			BookmarksListButtonClick = gcnew EventHandler<BrightIdeasSoftware::CellClickEventArgs^>(this, &ConcreteWorkspaceView::BookmarksList_ButtonClick);
 
 			AttachPanel = gcnew Panel();
 			AttachPanel->Dock = DockStyle::Fill;
@@ -940,7 +972,7 @@ namespace cse
 			ToolBarSpacerA->Spring = true;
 
 			WorkspaceSplitter->Dock = DockStyle::Fill;
-			WorkspaceSplitter->SplitterWidth = 2;
+			WorkspaceSplitter->SplitterWidth = 5;
 			WorkspaceSplitter->Orientation = Orientation::Horizontal;
 
 			WorkspaceMainToolBar->GripStyle = ToolStripGripStyle::Hidden;
@@ -1012,14 +1044,23 @@ namespace cse
 			ToolBarMessageList->ToolTipText = "Messages";
 			ToolBarMessageList->AutoSize = true;
 			ToolBarMessageList->Margin = Padding(0, 0, ToolBarButtonPaddingRegular.Right, 0);
+			ToolBarMessageList->Font = gcnew Font(SystemFonts::DefaultFont->FontFamily, 9.25, FontStyle::Bold);
+			ToolBarMessageList->TextAlign = ContentAlignment::MiddleCenter;
+			ToolBarMessageList->ImageAlign = ContentAlignment::MiddleCenter;
 
 			ToolBarFindList->ToolTipText = "Find/Replace Results";
 			ToolBarFindList->AutoSize = true;
 			ToolBarFindList->Margin = ToolBarButtonPaddingRegular;
+			ToolBarFindList->Font = gcnew Font(SystemFonts::DefaultFont->FontFamily, 9.25, FontStyle::Bold);
+			ToolBarFindList->TextAlign = ContentAlignment::MiddleCenter;
+			ToolBarFindList->ImageAlign = ContentAlignment::MiddleCenter;
 
 			ToolBarBookmarkList->ToolTipText = "Bookmarks";
 			ToolBarBookmarkList->AutoSize = true;
 			ToolBarBookmarkList->Margin = Padding(ToolBarButtonPaddingRegular.Left, 0, ToolBarButtonPaddingLarge.Right, 0);
+			ToolBarBookmarkList->Font = gcnew Font(SystemFonts::DefaultFont->FontFamily, 9.25, FontStyle::Bold);
+			ToolBarBookmarkList->TextAlign = ContentAlignment::MiddleCenter;
+			ToolBarBookmarkList->ImageAlign = ContentAlignment::MiddleCenter;
 
 			ToolBarDumpScript->ToolTipText = "Dump Script";
 			ToolBarDumpScript->AutoSize = true;
@@ -1153,6 +1194,8 @@ namespace cse
 			SpoilerText->TextAlign = ContentAlignment::MiddleCenter;
 			SpoilerText->Text = "Right, everybody out! Smash the Spinning Jenny! Burn the rolling Rosalind! Destroy the going-up-and-down-a-bit-and-then-moving-along Gertrude! And death to the stupid Prince who grows fat on the profits!";
 
+			auto EmpytListFont = gcnew Font("Segoe UI Light", 16);
+
 			MessageList->Dock = DockStyle::Fill;
 			MessageList->BorderStyle = BorderStyle::Fixed3D;
 			MessageList->Visible = false;
@@ -1161,15 +1204,95 @@ namespace cse
 			MessageList->CheckBoxes = false;
 			MessageList->FullRowSelect = true;
 			MessageList->HideSelection = false;
+			MessageList->ShowGroups = false;	// ### disabled as it kinda breaks sorting
+			MessageList->GridLines = true;
+			MessageList->UseAlternatingBackColors = false;
+			MessageList->IsSearchOnSortColumn = true;
+			MessageList->ItemActivate += ScriptAnnotationListItemActivate;
+			MessageList->EmptyListMsg = "Doesn't look like anything to me...";
+			MessageList->EmptyListMsgFont = EmpytListFont;
+			MessageList->SmallImageList = gcnew ImageList;
+			ScriptDiagnosticMessage::PopulateImageListWithMessageTypeImages(MessageList->SmallImageList);
 
-			FindList->Dock = DockStyle::Fill;
-			FindList->BorderStyle = BorderStyle::Fixed3D;
-			FindList->Visible = false;
-			FindList->View = View::Details;
-			FindList->MultiSelect = false;
-			FindList->CheckBoxes = false;
-			FindList->FullRowSelect = true;
-			FindList->HideSelection = false;
+			auto MessageListColumnType = gcnew BrightIdeasSoftware::OLVColumn;
+			MessageListColumnType->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&ConcreteWorkspaceView::MessageListTypeAspectGetter);
+			MessageListColumnType->AspectToStringConverter = gcnew BrightIdeasSoftware::AspectToStringConverterDelegate(&ConcreteWorkspaceView::MessageListTypeAspectToStringConverter);
+			MessageListColumnType->ImageGetter = gcnew BrightIdeasSoftware::ImageGetterDelegate(&ConcreteWorkspaceView::MessageListTypeImageGetter);
+			MessageListColumnType->GroupKeyGetter = gcnew BrightIdeasSoftware::GroupKeyGetterDelegate(&ConcreteWorkspaceView::MessageListTypeGroupKeyGetter);
+			MessageListColumnType->GroupKeyToTitleConverter  = gcnew BrightIdeasSoftware::GroupKeyToTitleConverterDelegate(&ConcreteWorkspaceView::MessageListTypeGroupKeyToTitleConverter);
+			MessageListColumnType->Text = "Type";
+			MessageListColumnType->Width = 40;
+			MessageListColumnType->MinimumWidth = 40;
+			MessageListColumnType->MaximumWidth = 40;
+			MessageListColumnType->Groupable = true;
+			MessageListColumnType->UseInitialLetterForGroup = false;
+
+			auto MessageListColumnLine = gcnew BrightIdeasSoftware::OLVColumn;
+			MessageListColumnLine->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&ConcreteWorkspaceView::ScriptTextAnnotationListLineNumberAspectGetter);
+			MessageListColumnLine->Text = "Line";
+			MessageListColumnLine->MinimumWidth = 30;
+			MessageListColumnLine->Width = 40;
+			MessageListColumnLine->Groupable = false;
+
+			auto MessageListColumnText = gcnew BrightIdeasSoftware::OLVColumn;
+			MessageListColumnText->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&ConcreteWorkspaceView::ScriptTextAnnotationListTextAspectGetter);
+			MessageListColumnText->Text = "Message";
+			MessageListColumnText->MinimumWidth = 600;
+			MessageListColumnText->Groupable = false;
+
+			auto MessageListColumnSource = gcnew BrightIdeasSoftware::OLVColumn;
+			MessageListColumnSource->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&ConcreteWorkspaceView::MessageListSourceAspectGetter);
+			MessageListColumnSource->GroupKeyGetter = gcnew BrightIdeasSoftware::GroupKeyGetterDelegate(&ConcreteWorkspaceView::MessageListSourceGroupKeyGetter);
+			MessageListColumnSource->GroupKeyToTitleConverter  = gcnew BrightIdeasSoftware::GroupKeyToTitleConverterDelegate(&ConcreteWorkspaceView::MessageListSourceGroupKeyToTitleConverter);
+			MessageListColumnSource->Text = "Message Source";
+			MessageListColumnSource->MinimumWidth = 100;
+			MessageListColumnSource->Groupable = true;
+
+			MessageList->AllColumns->Add(MessageListColumnType);
+			MessageList->Columns->Add(MessageListColumnType);
+			MessageList->AllColumns->Add(MessageListColumnLine);
+			MessageList->Columns->Add(MessageListColumnLine);
+			MessageList->AllColumns->Add(MessageListColumnText);
+			MessageList->Columns->Add(MessageListColumnText);
+			MessageList->AllColumns->Add(MessageListColumnSource);
+			MessageList->Columns->Add(MessageListColumnSource);
+
+			FindResultsList->Dock = DockStyle::Fill;
+			FindResultsList->BorderStyle = BorderStyle::Fixed3D;
+			FindResultsList->Visible = false;
+			FindResultsList->View = View::Details;
+			FindResultsList->MultiSelect = false;
+			FindResultsList->CheckBoxes = false;
+			FindResultsList->FullRowSelect = true;
+			FindResultsList->HideSelection = false;
+			FindResultsList->GridLines = true;
+			FindResultsList->UseAlternatingBackColors = false;
+			FindResultsList->IsSearchOnSortColumn = true;
+			FindResultsList->ItemActivate += ScriptAnnotationListItemActivate;
+			FindResultsList->EmptyListMsg = "Doesn't look like anything to me...";
+			FindResultsList->EmptyListMsgFont = EmpytListFont;
+
+			auto FindResultsListColumnLine = gcnew BrightIdeasSoftware::OLVColumn;
+			FindResultsListColumnLine->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&ConcreteWorkspaceView::ScriptTextAnnotationListLineNumberAspectGetter);
+			FindResultsListColumnLine->Text = "Line";
+			FindResultsListColumnLine->MinimumWidth = 16;
+
+			auto FindResultsListColumnText = gcnew BrightIdeasSoftware::OLVColumn;
+			FindResultsListColumnText->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&ConcreteWorkspaceView::ScriptTextAnnotationListTextAspectGetter);
+			FindResultsListColumnText->Text = "Code";
+			FindResultsListColumnText->MinimumWidth = 250;
+
+			auto FindResultsListColumnHits = gcnew BrightIdeasSoftware::OLVColumn;
+			FindResultsListColumnHits->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&ConcreteWorkspaceView::FindResultsListHitsAspectGetter);
+			FindResultsListColumnHits->Text = "Hits";
+			FindResultsListColumnHits->MinimumWidth = 20;
+
+			FindResultsList->AllColumns->Add(FindResultsListColumnLine);
+			FindResultsList->Columns->Add(FindResultsListColumnLine);
+			FindResultsList->AllColumns->Add(FindResultsListColumnText);
+			FindResultsList->Columns->Add(FindResultsListColumnText);
+			FindResultsList->AllColumns->Add(FindResultsListColumnHits);
+			FindResultsList->Columns->Add(FindResultsListColumnHits);
 
 			BookmarkList->Dock = DockStyle::Fill;
 			BookmarkList->BorderStyle = BorderStyle::Fixed3D;
@@ -1179,6 +1302,41 @@ namespace cse
 			BookmarkList->CheckBoxes = false;
 			BookmarkList->FullRowSelect = true;
 			BookmarkList->HideSelection = false;
+			BookmarkList->IsSearchOnSortColumn = true;
+			BookmarkList->GridLines = true;
+			BookmarkList->UseAlternatingBackColors = false;
+			BookmarkList->ItemActivate += ScriptAnnotationListItemActivate;
+			BookmarkList->ButtonClick += BookmarksListButtonClick;
+			BookmarkList->EmptyListMsg = "Doesn't look like anything to me...";
+			BookmarkList->EmptyListMsgFont = EmpytListFont;
+
+			auto BookmarksListColumnLine = gcnew BrightIdeasSoftware::OLVColumn;
+			BookmarksListColumnLine->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&ConcreteWorkspaceView::ScriptTextAnnotationListLineNumberAspectGetter);
+			BookmarksListColumnLine->Text = "Line";
+			BookmarksListColumnLine->MinimumWidth = 16;
+
+			auto BookmarksListColumnText = gcnew BrightIdeasSoftware::OLVColumn;
+			BookmarksListColumnText->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&ConcreteWorkspaceView::ScriptTextAnnotationListTextAspectGetter);
+			BookmarksListColumnText->Text = "Description";
+			BookmarksListColumnText->MinimumWidth = 250;
+
+			auto BookmarksListColumnAction = gcnew BrightIdeasSoftware::OLVColumn;
+			BookmarksListColumnAction->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&ConcreteWorkspaceView::BookmarksListActionAspectGetter);
+			BookmarksListColumnAction->Text = "Action";
+			BookmarksListColumnAction->MinimumWidth = 75;
+			BookmarksListColumnAction->MaximumWidth = 75;
+			BookmarksListColumnAction->CellVerticalAlignment = StringAlignment::Center;
+			BookmarksListColumnAction->TextAlign = HorizontalAlignment::Center;
+			BookmarksListColumnAction->IsButton = true;
+			BookmarksListColumnAction->ButtonSizing = BrightIdeasSoftware::OLVColumn::ButtonSizingMode::TextBounds;
+			BookmarksListColumnAction->ButtonPadding = Size(3, 1.5);
+
+			BookmarkList->AllColumns->Add(BookmarksListColumnLine);
+			BookmarkList->Columns->Add(BookmarksListColumnLine);
+			BookmarkList->AllColumns->Add(BookmarksListColumnText);
+			BookmarkList->Columns->Add(BookmarksListColumnText);
+			BookmarkList->AllColumns->Add(BookmarksListColumnAction);
+			BookmarkList->Columns->Add(BookmarksListColumnAction);
 
 			GlobalFindList->Dock = DockStyle::Fill;
 			GlobalFindList->BorderStyle = BorderStyle::Fixed3D;
@@ -1194,13 +1352,31 @@ namespace cse
 			GlobalFindList->CanExpandGetter = gcnew BrightIdeasSoftware::TreeListView::CanExpandGetterDelegate(&FindReplaceAllResults::GenericCanExpandGetter);
 			GlobalFindList->ChildrenGetter = gcnew BrightIdeasSoftware::TreeListView::ChildrenGetterDelegate(&FindReplaceAllResults::GenericChildrenGetter);
 			GlobalFindList->ItemActivate += GlobalFindListItemActivate;
+			GlobalFindList->EmptyListMsg = "Doesn't look like anything to me...";
+			GlobalFindList->EmptyListMsgFont = EmpytListFont;
 
-			BrightIdeasSoftware::OLVColumn^ Column = gcnew BrightIdeasSoftware::OLVColumn;
-			Column->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&FindReplaceAllResults::GenericAspectGetter);
-			Column->Text = "Global Find/Replace Results";
-			Column->Width = Bounds.Width;
-			GlobalFindList->AllColumns->Add(Column);
-			GlobalFindList->Columns->Add(Column);
+			auto GlobalFindListColumnText = gcnew BrightIdeasSoftware::OLVColumn;
+			GlobalFindListColumnText->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&FindReplaceAllResults::TextAspectGetter);
+			GlobalFindListColumnText->Text = "Code";
+			GlobalFindListColumnText->Width = 500;
+
+			auto GlobalFindListColumnLine = gcnew BrightIdeasSoftware::OLVColumn;
+			GlobalFindListColumnLine->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&FindReplaceAllResults::LineAspectGetter);
+			GlobalFindListColumnLine->Text = "Line";
+			GlobalFindListColumnLine->MinimumWidth = 20;
+
+			auto GlobalFindListColumnHits = gcnew BrightIdeasSoftware::OLVColumn;
+			GlobalFindListColumnHits->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&FindReplaceAllResults::HitsAspectGetter);
+			GlobalFindListColumnHits->Text = "Hits";
+			GlobalFindListColumnHits->MinimumWidth = 20;
+
+
+			GlobalFindList->Columns->Add(GlobalFindListColumnText);
+			GlobalFindList->Columns->Add(GlobalFindListColumnLine);
+			GlobalFindList->Columns->Add(GlobalFindListColumnHits);
+			GlobalFindList->AllColumns->Add(GlobalFindListColumnText);
+			GlobalFindList->AllColumns->Add(GlobalFindListColumnLine);
+			GlobalFindList->AllColumns->Add(GlobalFindListColumnHits);
 
 			// ideally, the main toolbar should be the main form's child but that screws with the tab strip's layout
 			WorkspaceSplitter->Panel1->Controls->Add(AttachPanel);
@@ -1209,7 +1385,7 @@ namespace cse
 
 			WorkspaceSplitter->Panel2->Controls->Add(WorkspaceSecondaryToolBar);
 			WorkspaceSplitter->Panel2->Controls->Add(MessageList);
-			WorkspaceSplitter->Panel2->Controls->Add(FindList);
+			WorkspaceSplitter->Panel2->Controls->Add(FindResultsList);
 			WorkspaceSplitter->Panel2->Controls->Add(BookmarkList);
 			WorkspaceSplitter->Panel2->Controls->Add(GlobalFindList);
 			WorkspaceSplitter->Panel2->Controls->Add(SpoilerText);
@@ -1304,10 +1480,7 @@ namespace cse
 
 			AssociatedModels->Clear();
 
-			SAFEDELETE_CLR(ModelStateChangedDirty);
-			SAFEDELETE_CLR(ModelStateChangedByteCodeSize);
-			SAFEDELETE_CLR(ModelStateChangedType);
-			SAFEDELETE_CLR(ModelStateChangedDescription);
+			SAFEDELETE_CLR(ModelStateChangedHandler);
 
 			for each (Image^ Itr in EditorTabStrip->ImageList->Images)
 				delete Itr;
@@ -1397,6 +1570,13 @@ namespace cse
 
 			GlobalFindList->ItemActivate -= GlobalFindListItemActivate;
 			SAFEDELETE_CLR(GlobalFindListItemActivate);
+
+			MessageList->ItemActivate -= ScriptAnnotationListItemActivate;
+			BookmarkList->ItemActivate -= ScriptAnnotationListItemActivate;
+			BookmarkList->ButtonClick -= BookmarksListButtonClick;
+			FindResultsList->ItemActivate -= ScriptAnnotationListItemActivate;
+			SAFEDELETE_CLR(ScriptAnnotationListItemActivate);
+			SAFEDELETE_CLR(BookmarksListButtonClick);
 
 			DisposeControlImage(ToolBarNewScript);
 			DisposeControlImage(ToolBarOpenScript);
@@ -1495,7 +1675,7 @@ namespace cse
 
 			SAFEDELETE_CLR(WorkspaceSplitter);
 			SAFEDELETE_CLR(MessageList);
-			SAFEDELETE_CLR(FindList);
+			SAFEDELETE_CLR(FindResultsList);
 			SAFEDELETE_CLR(BookmarkList);
 			SAFEDELETE_CLR(GlobalFindList);
 			SAFEDELETE_CLR(SpoilerText);
@@ -2031,9 +2211,10 @@ namespace cse
 			else
 			{
 				String^ Text = "";
-				UInt32 Data = 0, Length = 0;
+				void* Data = nullptr;
+				UInt32 Length = 0;
 
-				if (ModelController()->GetOffsetViewerData(Active, Text, Data, Length))
+				if (ModelController()->GetOffsetViewerData(Active, Text, &Data, Length))
 				{
 					OffsetTextViewer->InitializeViewer(Text, Data, Length);
 					int Caret = ModelController()->GetCaret(Active);
@@ -2064,7 +2245,7 @@ namespace cse
 			else
 			{
 				bool Preprocess = false;
-				String^ PreprocessedText = ModelController()->GetText(Active, true, Preprocess);
+				String^ PreprocessedText = ModelController()->GetText(Active, true, Preprocess, false);
 				if (Preprocess)
 				{
 					int Caret = ModelController()->GetCaret(Active);
@@ -2179,39 +2360,105 @@ namespace cse
 			}
 		}
 
-		void ConcreteWorkspaceView::ModelStateChangeHandler_Dirty(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E)
+		void ConcreteWorkspaceView::Model_StateChangeHandler(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E)
 		{
-			DotNetBar::SuperTabItem^ Tab = GetTab(Sender);
-			Debug::Assert(Tab != nullptr);
-
-			Tab->ImageIndex = (int)E->Dirty;
-		}
-
-		void ConcreteWorkspaceView::ModelStateChangeHandler_ByteCodeSize(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E)
-		{
-			if (GetActiveModel() == Sender)
+			switch (E->EventType)
 			{
-				ToolBarByteCodeSize->Value = E->ByteCodeSize;
-				ToolBarByteCodeSize->ToolTipText = String::Format("Compiled Script Size: {0:F2} KB", (float)(E->ByteCodeSize / 1024.0));
+			case IWorkspaceModel::StateChangeEventArgs::Type::Dirty:
+			{
+				DotNetBar::SuperTabItem^ Tab = GetTab(Sender);
+				Debug::Assert(Tab != nullptr);
+
+				Tab->ImageIndex = (int)E->Dirty;
+				break;
 			}
-		}
+			case IWorkspaceModel::StateChangeEventArgs::Type::ByteCodeSize:
+			{
+				if (GetActiveModel() == Sender)
+				{
+					ToolBarByteCodeSize->Value = E->ByteCodeSize;
+					ToolBarByteCodeSize->ToolTipText = String::Format("Compiled Script Size: {0:F2} KB", (float)(E->ByteCodeSize / 1024.0));
+				}
 
-		void ConcreteWorkspaceView::ModelStateChangeHandler_Type(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E)
-		{
-			if (GetActiveModel() == Sender)
-				UpdateScriptTypeControls(E->Type);
-		}
+				break;
+			}
+			case IWorkspaceModel::StateChangeEventArgs::Type::ScriptType:
+			{
+				if (GetActiveModel() == Sender)
+					UpdateScriptTypeControls(E->ScriptType);
 
-		void ConcreteWorkspaceView::ModelStateChangeHandler_Description(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E)
-		{
-			DotNetBar::SuperTabItem^ Tab = GetTab(Sender);
-			Debug::Assert(Tab != nullptr);
+				break;
+			}
+			case IWorkspaceModel::StateChangeEventArgs::Type::Description:
+			{
+				DotNetBar::SuperTabItem^ Tab = GetTab(Sender);
+				Debug::Assert(Tab != nullptr);
 
-			Tab->Text = E->ShortDescription;
-			Tab->Tooltip = E->LongDescription;
+				Tab->Text = E->ShortDescription;
+				Tab->Tooltip = E->LongDescription;
 
-			if (GetActiveModel() == Sender)
-				EditorForm->Text = E->LongDescription + " - " + SCRIPTEDITOR_TITLE;
+				if (GetActiveModel() == Sender)
+					EditorForm->Text = E->LongDescription + " - " + SCRIPTEDITOR_TITLE;
+
+				break;
+			}
+			case IWorkspaceModel::StateChangeEventArgs::Type::Messages:
+			{
+				MessageList->SetObjects(E->Messages, true);
+
+				if (E->Messages->Count == 0)
+				{
+					ToolBarMessageList->DisplayStyle = ToolStripItemDisplayStyle::Image;
+					ToolBarMessageList->ToolTipText = "Messages";
+				}
+				else
+				{
+					ToolBarMessageList->DisplayStyle = ToolStripItemDisplayStyle::ImageAndText;
+					ToolBarMessageList->Text = "(" + E->Messages->Count + ")";
+					ToolBarMessageList->ToolTipText = E->Messages->Count + " Message(s)";
+				}
+
+				break;
+			}
+			case IWorkspaceModel::StateChangeEventArgs::Type::Bookmarks:
+			{
+				BookmarkList->SetObjects(E->Bookmarks, true);
+
+				if (E->Bookmarks->Count == 0)
+				{
+					ToolBarBookmarkList->DisplayStyle = ToolStripItemDisplayStyle::Image;
+					ToolBarBookmarkList->ToolTipText = "Bookmarks";
+				}
+				else
+				{
+					ToolBarBookmarkList->DisplayStyle = ToolStripItemDisplayStyle::ImageAndText;
+					ToolBarBookmarkList->Text = "(" + E->Bookmarks->Count + ")";
+					ToolBarBookmarkList->ToolTipText = E->Bookmarks->Count + " Bookmark(s)";
+				}
+
+				break;
+			}
+			case IWorkspaceModel::StateChangeEventArgs::Type::FindResults:
+			{
+				FindResultsList->SetObjects(E->FindResults, true);
+
+				if (E->FindResults->Count == 0)
+				{
+					ToolBarFindList->DisplayStyle = ToolStripItemDisplayStyle::Image;
+					ToolBarFindList->ToolTipText = "Find/Replace Results";
+				}
+				else
+				{
+					ToolBarFindList->DisplayStyle = ToolStripItemDisplayStyle::ImageAndText;
+					ToolBarFindList->Text = "(" + E->FindResults->Count + ")";
+					ToolBarFindList->ToolTipText = E->FindResults->Count + " Find/Replace Result(s)";
+				}
+
+				break;
+			}
+			default:
+				break;
+			}
 		}
 
 		void ConcreteWorkspaceView::GlobalFindList_ItemActivate(Object^ Sender, EventArgs^ E)
@@ -2222,12 +2469,12 @@ namespace cse
 				if (Selection->GetType() == textEditors::IScriptTextEditor::FindReplaceResult::HitData::typeid)
 				{
 					textEditors::IScriptTextEditor::FindReplaceResult::HitData^ Data = (textEditors::IScriptTextEditor::FindReplaceResult::HitData^)Selection;
-					FindReplaceAllResults::HitData^ ParentData = (FindReplaceAllResults::HitData^)GlobalFindList->GetParent(Selection);
+					FindReplaceAllResults::PerScriptData^ ParentData = (FindReplaceAllResults::PerScriptData^)GlobalFindList->GetParent(Selection);
 
-					if (ParentData->Parent)
+					if (ParentData->ParentModel)
 					{
-						SelectTab(GetTab(ParentData->Parent));
-						ParentData->Parent->Controller->GotoLine(ParentData->Parent, Data->Line);
+						SelectTab(GetTab(ParentData->ParentModel));
+						ParentData->ParentModel->Controller->GotoLine(ParentData->ParentModel, Data->Line);
 					}
 				}
 				else if (GlobalFindList->CanExpand(Selection))
@@ -2238,6 +2485,127 @@ namespace cse
 						GlobalFindList->Collapse(Selection);
 				}
 			}
+		}
+
+		void ConcreteWorkspaceView::ScriptAnnotationList_ItemActivate(Object^ Sender, EventArgs^ E)
+		{
+			auto ListView = safe_cast<BrightIdeasSoftware::ObjectListView^>(Sender);
+			auto Annotation = safe_cast<ScriptLineAnnotation^>(ListView->SelectedObject);
+			if (Annotation == nullptr)
+				return;
+
+			auto Model = GetActiveModel();
+			Model->Controller->GotoLine(Model, Annotation->Line);
+		}
+
+		void ConcreteWorkspaceView::BookmarksList_ButtonClick(Object^ Sender, BrightIdeasSoftware::CellClickEventArgs^ E)
+		{
+			auto Bookmark = safe_cast<ScriptBookmark^>(E->Model);
+			if (Bookmark == nullptr)
+				return;
+
+			auto Model = GetActiveModel();
+			Model->Controller->RemoveBookmark(Model, Bookmark->Line, Bookmark->Text);
+		}
+
+		System::Object^ ConcreteWorkspaceView::ScriptTextAnnotationListLineNumberAspectGetter(Object^ E)
+		{
+			auto Model = safe_cast<ScriptLineAnnotation^>(E);
+			if (Model == nullptr)
+				return nullptr;
+
+			return Model->Line;
+		}
+
+		System::Object^ ConcreteWorkspaceView::ScriptTextAnnotationListTextAspectGetter(Object^ E)
+		{
+			auto Model = safe_cast<ScriptLineAnnotation^>(E);
+			if (Model == nullptr)
+				return nullptr;
+
+			return Model->Text;
+		}
+
+		System::Object^ ConcreteWorkspaceView::MessageListTypeAspectGetter(Object^ E)
+		{
+			auto Model = safe_cast<ScriptDiagnosticMessage^>(E);
+			if (Model == nullptr)
+				return nullptr;
+
+			return Model->Type;
+		}
+
+		System::Object^ ConcreteWorkspaceView::MessageListTypeImageGetter(Object^ RowObject)
+		{
+			auto Model = safe_cast<ScriptDiagnosticMessage^>(RowObject);
+			if (Model == nullptr)
+				return nullptr;
+
+			return safe_cast<int>(Model->Type);
+		}
+
+		System::String^ ConcreteWorkspaceView::MessageListTypeAspectToStringConverter(Object^ E)
+		{
+			return String::Empty;
+		}
+
+		System::Object^ ConcreteWorkspaceView::MessageListTypeGroupKeyGetter(Object^ RowObject)
+		{
+			auto Model = safe_cast<ScriptDiagnosticMessage^>(RowObject);
+			if (Model == nullptr)
+				return nullptr;
+
+			return Model->Type;
+		}
+
+		System::String^ ConcreteWorkspaceView::MessageListTypeGroupKeyToTitleConverter(System::Object^ GroupKey)
+		{
+			auto Key = safe_cast<ScriptDiagnosticMessage::MessageType>(GroupKey);
+			return Key.ToString();
+		}
+
+		System::Object^ ConcreteWorkspaceView::MessageListSourceAspectGetter(Object^ E)
+		{
+			auto Model = safe_cast<ScriptDiagnosticMessage^>(E);
+			if (Model == nullptr)
+				return nullptr;
+
+			return Model->Source;
+		}
+
+		System::String^ ConcreteWorkspaceView::MessageListSourceAspectToStringConverter(Object^ E)
+		{
+			auto Key = safe_cast<ScriptDiagnosticMessage::MessageSource>(E);
+			return Key.ToString();
+		}
+
+		System::Object^ ConcreteWorkspaceView::MessageListSourceGroupKeyGetter(Object^ RowObject)
+		{
+			auto Model = safe_cast<ScriptDiagnosticMessage^>(RowObject);
+			if (Model == nullptr)
+				return nullptr;
+
+			return Model->Source;
+		}
+
+		System::String^ ConcreteWorkspaceView::MessageListSourceGroupKeyToTitleConverter(System::Object^ GroupKey)
+		{
+			auto Key = safe_cast<ScriptDiagnosticMessage::MessageSource>(GroupKey);
+			return Key.ToString();
+		}
+
+		System::Object^ ConcreteWorkspaceView::BookmarksListActionAspectGetter(Object^ E)
+		{
+			return "Remove";
+		}
+
+		System::Object^ ConcreteWorkspaceView::FindResultsListHitsAspectGetter(Object^ E)
+		{
+			auto Model = safe_cast<ScriptFindResult^>(E);
+			if (Model == nullptr)
+				return nullptr;
+
+			return Model->Hits;
 		}
 
 		IWorkspaceModelController^ ConcreteWorkspaceView::ModelController()
@@ -2753,18 +3121,12 @@ namespace cse
 
 		void ConcreteWorkspaceView::ModelSubscribeEvents(IWorkspaceModel^ Model)
 		{
-			Model->StateChangedDirty += ModelStateChangedDirty;
-			Model->StateChangedByteCodeSize += ModelStateChangedByteCodeSize;
-			Model->StateChangedType += ModelStateChangedType;
-			Model->StateChangedDescription += ModelStateChangedDescription;
+			Model->StateChanged += ModelStateChangedHandler;
 		}
 
 		void ConcreteWorkspaceView::ModelUnsubscribeEvents(IWorkspaceModel^ Model)
 		{
-			Model->StateChangedDirty -= ModelStateChangedDirty;
-			Model->StateChangedByteCodeSize -= ModelStateChangedByteCodeSize;
-			Model->StateChangedType -= ModelStateChangedType;
-			Model->StateChangedDescription -= ModelStateChangedDescription;
+			Model->StateChanged -= ModelStateChangedHandler;
 		}
 
 		void ConcreteWorkspaceView::RemoveFromNavigationStacks(IWorkspaceModel^ Model)
@@ -2796,10 +3158,10 @@ namespace cse
 		{
 			for each (auto Itr in CachedFindReplaceAllResults)
 			{
-				for each (auto Data in Itr->Hits)
+				for each (auto Data in Itr->ScriptsWithHits)
 				{
-					if (Data->Parent == Model)
-						Data->Parent = nullptr;
+					if (Data->ParentModel == Model)
+						Data->ParentModel = nullptr;
 				}
 			}
 		}
@@ -2846,14 +3208,14 @@ namespace cse
 			if (State)
 			{
 				ToolBarFindList->Checked = true;
-				FindList->Visible = true;
-				FindList->BringToFront();
+				FindResultsList->Visible = true;
+				FindResultsList->BringToFront();
 			}
 			else
 			{
 				ToolBarFindList->Checked = false;
-				FindList->Visible = false;
-				FindList->SendToBack();
+				FindResultsList->Visible = false;
+				FindResultsList->SendToBack();
 			}
 		}
 

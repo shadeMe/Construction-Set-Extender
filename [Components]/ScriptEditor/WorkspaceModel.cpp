@@ -16,45 +16,48 @@ namespace cse
 			ModelController = Controller;
 			ModelFactory = Factory;
 
-			CurrentScript = nullptr;
-			CurrentScriptType = IWorkspaceModel::ScriptType::Object;
-			CurrentScriptEditorID = FIRSTRUNSCRIPTID;
-			CurrentScriptFormID = 0;
-			CurrentScriptBytecode = 0;
-			CurrentScriptBytecodeLength = 0;
+			ScriptNativeObject = nullptr;
+			ScriptType = IWorkspaceModel::ScriptType::Object;
+			EditorID = FIRSTRUNSCRIPTID;
+			FormID = 0;
+			Bytecode = 0;
+			BytecodeLength = 0;
 			NewScriptFlag = false;
+			CompilationInProgress = false;
 			BoundParent = nullptr;
+			ActiveBatchUpdateSource = BatchUpdateSource::None;
+			ActiveBatchUpdateSourceCounter = 0;
+			Messages = gcnew List<ScriptDiagnosticMessage^>;
+			Bookmarks = gcnew List<ScriptBookmark^>;
+			FindResults = gcnew List<ScriptFindResult^>;
 
 			AutoSaveTimer = gcnew Timer();
 			AutoSaveTimer->Interval = preferences::SettingsHolder::Get()->Backup->AutoRecoveryInterval * 1000 * 60;
 
 			BackgroundAnalysis = gcnew ScriptBackgroundAnalysis(this);
-
-			Font^ CustomFont = safe_cast<Font^>(preferences::SettingsHolder::Get()->Appearance->TextFont->Clone());
-			int TabSize = preferences::SettingsHolder::Get()->Appearance->TabSize;
-
 			TextEditor = gcnew textEditors::avalonEditor::AvalonEditTextEditor(this);
 			IntelliSenseModel = gcnew intellisense::IntelliSenseInterfaceModel(TextEditor);
-
 
 			TextEditorKeyDownHandler = gcnew KeyEventHandler(this, &ConcreteWorkspaceModel::TextEditor_KeyDown);
 			TextEditorScriptModifiedHandler = gcnew textEditors::TextEditorScriptModifiedEventHandler(this, &ConcreteWorkspaceModel::TextEditor_ScriptModified);
 			TextEditorMouseClickHandler = gcnew textEditors::TextEditorMouseClickEventHandler(this, &ConcreteWorkspaceModel::TextEditor_MouseClick);
-
+			TextEditorLineAnchorInvalidatedHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::TextEditor_LineAnchorInvalidated);
 			ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ScriptEditorPreferences_Saved);
 			AutoSaveTimerTickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::AutoSaveTimer_Tick);
+			BackgroundAnalyzerAnalysisCompleteHandler = gcnew SemanticAnalysisCompleteEventHandler(this, &ConcreteWorkspaceModel::BackgroundAnalysis_AnalysisComplete);
 
 			TextEditor->KeyDown += TextEditorKeyDownHandler;
 			TextEditor->ScriptModified += TextEditorScriptModifiedHandler;
 			TextEditor->MouseClick += TextEditorMouseClickHandler;
-
+			TextEditor->LineAnchorInvalidated += TextEditorLineAnchorInvalidatedHandler;
+			BackgroundAnalysis->SemanticAnalysisComplete += BackgroundAnalyzerAnalysisCompleteHandler;
 			preferences::SettingsHolder::Get()->SavedToDisk += ScriptEditorPreferencesSavedHandler;
 			AutoSaveTimer->Tick += AutoSaveTimerTickHandler;
 
 			AutoSaveTimer->Start();
 
 			if (Data && Data->ParentForm)
-				Setup(Data, false, false);
+				InitializeState(Data, false);
 
 			nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 		}
@@ -68,13 +71,16 @@ namespace cse
 			TextEditor->KeyDown -= TextEditorKeyDownHandler;
 			TextEditor->ScriptModified -= TextEditorScriptModifiedHandler;
 			TextEditor->MouseClick -= TextEditorMouseClickHandler;
-
+			TextEditor->LineAnchorInvalidated -= TextEditorLineAnchorInvalidatedHandler;
+			BackgroundAnalysis->SemanticAnalysisComplete -= BackgroundAnalyzerAnalysisCompleteHandler;
 			preferences::SettingsHolder::Get()->SavedToDisk -= ScriptEditorPreferencesSavedHandler;
 			AutoSaveTimer->Tick -= AutoSaveTimerTickHandler;
 
 			SAFEDELETE_CLR(TextEditorKeyDownHandler);
 			SAFEDELETE_CLR(TextEditorScriptModifiedHandler);
 			SAFEDELETE_CLR(TextEditorMouseClickHandler);
+			SAFEDELETE_CLR(TextEditorLineAnchorInvalidatedHandler);
+			SAFEDELETE_CLR(BackgroundAnalyzerAnalysisCompleteHandler);
 			SAFEDELETE_CLR(ScriptEditorPreferencesSavedHandler);
 			SAFEDELETE_CLR(AutoSaveTimerTickHandler);
 
@@ -130,6 +136,49 @@ namespace cse
 				if (AttachedScript)
 					BoundParent->Controller->Jump(BoundParent, this, AttachedScript->GetIdentifier());
 			}
+		}
+
+		generic <typename T> where T : textEditors::ILineAnchor
+		bool RemoveInvalidatedAnchors(List<T>^ Source)
+		{
+			auto Invalidated = gcnew List<T>;
+			for each (auto Itr in Source)
+			{
+				if (!Itr->Valid)
+					Invalidated->Add(Itr);
+			}
+
+			for each (auto Itr in Invalidated)
+				Source->Remove(Itr);
+
+			return Invalidated->Count != 0;
+		}
+
+		void ConcreteWorkspaceModel::TextEditor_LineAnchorInvalidated(Object^ Sender, EventArgs^ E)
+		{
+			if (RemoveInvalidatedAnchors<ScriptDiagnosticMessage^>(Messages))
+				OnStateChangedMessages();
+
+			if (RemoveInvalidatedAnchors<ScriptBookmark^>(Bookmarks))
+				OnStateChangedBookmarks();
+
+			if (RemoveInvalidatedAnchors<ScriptFindResult^>(FindResults))
+				OnStateChangedFindResults();
+		}
+
+		void ConcreteWorkspaceModel::BackgroundAnalysis_AnalysisComplete(Object^ Sender, scriptEditor::SemanticAnalysisCompleteEventArgs^ E)
+		{
+			BeginBatchUpdate(BatchUpdateSource::Messages);
+			{
+				ClearMessages(ScriptDiagnosticMessage::MessageSource::Validator, ScriptDiagnosticMessage::MessageType::All);
+				for each (auto Itr in E->Result->AnalysisMessages)
+				{
+					AddMessage(Itr->Line, Itr->Message,
+						Itr->Critical ? ScriptDiagnosticMessage::MessageType::Error : ScriptDiagnosticMessage::MessageType::Warning,
+						ScriptDiagnosticMessage::MessageSource::Validator);
+				}
+			}
+			EndBatchUpdate(BatchUpdateSource::Messages);
 		}
 
 		void ConcreteWorkspaceModel::ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E)
@@ -192,83 +241,56 @@ namespace cse
 
 		void ConcreteWorkspaceModel::ShowSyncedScriptWarning()
 		{
-			if (Bound && scriptSync::DiskSync::Get()->IsScriptBeingSynced(CurrentScriptEditorID))
+			Debug::Assert(Bound);
+
+			if (scriptSync::DiskSync::Get()->IsScriptBeingSynced(EditorID))
 			{
 				BoundParent->Controller->MessageBox("The current script is actively being synced from/to disk. Modifying it inside the script editor will cause inconsistent and unexpected behaviour.",
-					MessageBoxButtons::OK,
-					MessageBoxIcon::Exclamation);
+													MessageBoxButtons::OK,
+													MessageBoxIcon::Exclamation);
 			}
 		}
 
-		void ConcreteWorkspaceModel::Setup(componentDLLInterface::ScriptData* Data, bool PartialUpdate, bool NewScript)
+		void ConcreteWorkspaceModel::InitializeState(componentDLLInterface::ScriptData* ScriptData, bool NewScript)
 		{
-			if (Data == nullptr)
-			{
-				CurrentScript = nullptr;
-				CurrentScriptType = IWorkspaceModel::ScriptType::Object;
-				CurrentScriptEditorID = FIRSTRUNSCRIPTID;
-				CurrentScriptFormID = 0;
-				CurrentScriptBytecode = 0;
-				CurrentScriptBytecodeLength = 0;
-				NewScriptFlag = false;
+			Debug::Assert(ScriptData != nullptr);
 
-				if (Bound)
-					BoundParent->Enabled = false;
-
-				return;
-			}
-
-			String^ ScriptName = gcnew String(Data->EditorID);
-			String^ ScriptText = gcnew String(Data->Text);
-			UInt16 ScriptType = Data->Type;
-			UInt32 ByteCode = (UInt32)Data->ByteCode;
-			UInt32 ByteCodeLength = Data->Length;
-			UInt32 FormID = Data->FormID;
-
-			if (ScriptName->Length == 0)
-				ScriptName = NEWSCRIPTID;
-
-			if (PartialUpdate == false)
-			{
-				CurrentScript = Data->ParentForm;
-				NewScriptFlag = NewScript;
-
-				TextEditor->InitializeState(ScriptText);
-
-				if (Bound)
-					BoundParent->Enabled = true;
-			}
+			if (!NewScript)
+				EditorID = gcnew String(ScriptData->EditorID);
 			else
-				Debug::Assert(NewScript == false);
+				EditorID = NEWSCRIPTID;
 
-			CurrentScriptEditorID = ScriptName;
-			CurrentScriptFormID = FormID;
+			FormID = ScriptData->FormID;
+			Bytecode = ScriptData->ByteCode;
+			BytecodeLength = ScriptData->Length;
+			ScriptNativeObject = ScriptData->ParentForm;
+			NewScriptFlag = NewScript;
+
+			SetType(safe_cast<IWorkspaceModel::ScriptType>(ScriptData->Type));
 			OnStateChangedDescription();
-			CurrentScriptBytecode = ByteCode;
-			CurrentScriptBytecodeLength = ByteCodeLength;
-			OnStateChangedByteCodeSize(CurrentScriptBytecodeLength);
-
-			SetType((IWorkspaceModel::ScriptType)ScriptType);
+			OnStateChangedByteCodeSize(BytecodeLength);
 			TextEditor->Modified = false;
 
-			if (PartialUpdate == false &&
-				NewScriptFlag == false &&
-				Data->Compiled == false &&
-				Data->FormID >= 0x800) 			// skip default forms
-			{
-				if (Bound)
-				{
-					BoundParent->Controller->MessageBox("The current script has not been compiled. It cannot be executed in-game until it has been compiled at least once.",
-														MessageBoxButtons::OK,
-														MessageBoxIcon::Exclamation);
-				}
-			}
-
-			if (preferences::SettingsHolder::Get()->Backup->UseAutoRecovery && PartialUpdate == false && Bound)
-				CheckAutoRecovery();
+			InitializeTextEditor(gcnew String(ScriptData->Text));
 
 			if (Bound)
 			{
+				BoundParent->Enabled = true;
+
+				if (!NewScript && !ScriptData->Compiled)
+				{
+					// skip default script forms
+					if (FormID >= 0x800)
+					{
+						BoundParent->Controller->MessageBox("The current script has not been compiled. It will not be executed in-game until it has been compiled at least once.",
+															MessageBoxButtons::OK,
+															MessageBoxIcon::Exclamation);
+					}
+				}
+
+				if (preferences::SettingsHolder::Get()->Backup->UseAutoRecovery)
+					CheckAutoRecovery();
+
 				TextEditor->FocusTextArea();
 				ShowSyncedScriptWarning();
 			}
@@ -285,7 +307,7 @@ namespace cse
 			if (TextEditor->Modified)
 			{
 				Debug::Assert(Bound == true);
-				DialogResult Result = BoundParent->Controller->MessageBox("The current script '" + CurrentScriptEditorID + "' has unsaved changes.\n\nDo you wish to save them?",
+				DialogResult Result = BoundParent->Controller->MessageBox("The current script '" + EditorID + "' has unsaved changes.\n\nDo you wish to save them?",
 													   MessageBoxButtons::YesNoCancel,
 													   MessageBoxIcon::Exclamation);
 				bool HasWarnings = false;
@@ -295,8 +317,8 @@ namespace cse
 				{
 					if (NewScriptFlag)
 					{
-						nativeWrapper::g_CSEInterfaceTable->ScriptEditor.DestroyScriptInstance(CurrentScript);
-						CurrentScript = 0;
+						nativeWrapper::g_CSEInterfaceTable->ScriptEditor.DestroyScriptInstance(ScriptNativeObject);
+						ScriptNativeObject = 0;
 					}
 
 					ClearAutoRecovery();
@@ -321,14 +343,15 @@ namespace cse
 			BoundParent->Enabled = Initialized;
 
 			// update the view's state
-			OnStateChangedType(CurrentScriptType);
-			OnStateChangedByteCodeSize(CurrentScriptBytecodeLength);
+			OnStateChangedType(ScriptType);
+			OnStateChangedByteCodeSize(BytecodeLength);
 			OnStateChangedDescription();
 			OnStateChangedDirty(TextEditor->Modified);
+			OnStateChangedMessages();
+			OnStateChangedBookmarks();
+			OnStateChangedFindResults();
 
-			TextEditor->Bind(BoundParent->ListViewMessages,
-							 BoundParent->ListViewBookmarks,
-							 BoundParent->ListViewFindResults);
+			TextEditor->Bind();
 
 			BoundParent->BreadcrumbManager->Bind(TextEditor, BackgroundAnalysis);
 			IntelliSenseModel->Bind(BoundParent->IntelliSenseInterfaceView);
@@ -359,7 +382,7 @@ namespace cse
 			if (PerformHouseKeeping())
 			{
 				componentDLLInterface::ScriptData* Data = nativeWrapper::g_CSEInterfaceTable->ScriptEditor.CreateNewScript();
-				Setup(Data, false, true);
+				InitializeState(Data, true);
 				nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 
 				TextEditor->Modified = true;
@@ -371,59 +394,47 @@ namespace cse
 			Debug::Assert(Data != nullptr);
 
 			if (PerformHouseKeeping())
-				Setup(Data, false, false);
+				InitializeState(Data, false);
 
 			nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 		}
 
 		bool ConcreteWorkspaceModel::SaveScript(IWorkspaceModel::SaveOperation Operation, bool% HasWarnings)
 		{
+			if (ScriptNativeObject == nullptr)
+				return false;
+
 			bool Result = false;
-
-			if (CurrentScript)
+			DisposibleDataAutoPtr<componentDLLInterface::ScriptCompileData> CompileInteropData(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.AllocateCompileData());
+			auto Data = BeginScriptCompilation();
 			{
-				componentDLLInterface::ScriptCompileData* CompileData = nullptr;
-				textEditors::CompilationData^ Data = TextEditor->BeginScriptCompilation();
+				if (Data->CanCompile)
 				{
-					if (Data->CanCompile)
+					Data->CompileResult = CompileInteropData.get();
+
+					if (Operation == IWorkspaceModel::SaveOperation::NoCompile)
+						nativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(false);
+
+					CString ScriptText(Data->PreprocessedScriptText->Replace("\n", "\r\n"));
+					CompileInteropData->Script.Text = ScriptText.c_str();
+					CompileInteropData->Script.Type = (int)Type;
+					CompileInteropData->Script.ParentForm = (TESForm*)ScriptNativeObject;
+					CompileInteropData->PrintErrorsToConsole = false;
+
+					nativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileScript(CompileInteropData.get());
+					Result = CompileInteropData->CompilationSuccessful;
+
+					if (Operation == IWorkspaceModel::SaveOperation::NoCompile)
 					{
-						if (Operation == IWorkspaceModel::SaveOperation::NoCompile)
-							nativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(false);
-
-						CompileData = nativeWrapper::g_CSEInterfaceTable->ScriptEditor.AllocateCompileData();
-
-						CString ScriptText(Data->PreprocessedScriptText->Replace("\n", "\r\n"));
-						CompileData->Script.Text = ScriptText.c_str();
-						CompileData->Script.Type = (int)Type;
-						CompileData->Script.ParentForm = (TESForm*)CurrentScript;
-						CompileData->PrintErrorsToConsole = false;
-
-						if (nativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileScript(CompileData))
-						{
-							Setup(&CompileData->Script, true, false);
-
-							String^ OriginalText = Data->UnpreprocessedScriptText + Data->SerializedMetadata;
-							CString OrgScriptText(OriginalText);
-							nativeWrapper::g_CSEInterfaceTable->ScriptEditor.SetScriptText(CurrentScript, OrgScriptText.c_str());
-							Result = true;
-						}
-						else
-							Data->CompileResult = CompileData;
-
-						if (Operation == IWorkspaceModel::SaveOperation::NoCompile)
-						{
-							nativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(true);
-							nativeWrapper::g_CSEInterfaceTable->ScriptEditor.RemoveScriptBytecode(CurrentScript);
-						}
-						else if (Operation == IWorkspaceModel::SaveOperation::SavePlugin)
-							nativeWrapper::g_CSEInterfaceTable->EditorAPI.SaveActivePlugin();
+						nativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(true);
+						nativeWrapper::g_CSEInterfaceTable->ScriptEditor.RemoveScriptBytecode(ScriptNativeObject);
 					}
+					else if (Operation == IWorkspaceModel::SaveOperation::SavePlugin)
+						nativeWrapper::g_CSEInterfaceTable->EditorAPI.SaveActivePlugin();
 				}
-				TextEditor->EndScriptCompilation(Data);
-				nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(CompileData, false);
-
-				HasWarnings = Data->HasWarnings;
 			}
+			EndScriptCompilation(Data);
+			HasWarnings = Data->HasWarnings;
 
 			if (Result)
 				ClearAutoRecovery();
@@ -443,10 +454,9 @@ namespace cse
 		{
 			if (PerformHouseKeeping())
 			{
-				componentDLLInterface::ScriptData* Data = nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetNextScriptInList(CurrentScript);
+				DisposibleDataAutoPtr<componentDLLInterface::ScriptData> Data(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetNextScriptInList(ScriptNativeObject));
 				if (Data)
-					Setup(Data, false, false);
-				nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+					InitializeState(Data.get(), false);
 			}
 		}
 
@@ -454,16 +464,15 @@ namespace cse
 		{
 			if (PerformHouseKeeping())
 			{
-				componentDLLInterface::ScriptData* Data = nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreviousScriptInList(CurrentScript);
+				DisposibleDataAutoPtr<componentDLLInterface::ScriptData> Data(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreviousScriptInList(ScriptNativeObject));
 				if (Data)
-					Setup(Data, false, false);
-				nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+					InitializeState(Data.get(), false);
 			}
 		}
 
 		void ConcreteWorkspaceModel::SetType(IWorkspaceModel::ScriptType New)
 		{
-			CurrentScriptType = New;
+			ScriptType = New;
 			OnStateChangedType(New);
 		}
 
@@ -496,33 +505,434 @@ namespace cse
 			return Result;
 		}
 
+		void ConcreteWorkspaceModel::AddMessage(UInt32 Line, String^ Text, ScriptDiagnosticMessage::MessageType Type, ScriptDiagnosticMessage::MessageSource Source)
+		{
+			if (Line > TextEditor->LineCount)
+				Line = TextEditor->LineCount;
+
+			auto LineAnchor = TextEditor->CreateLineAnchor(Line);
+			auto NewMessage = gcnew ScriptDiagnosticMessage(LineAnchor,
+															Text->Replace("\t", "")->Replace("\r", "")->Replace("\n", ""),
+															Type, Source);
+			Messages->Add(NewMessage);
+			OnStateChangedMessages();
+		}
+
+		void ConcreteWorkspaceModel::ClearMessages(ScriptDiagnosticMessage::MessageSource SourceFilter, ScriptDiagnosticMessage::MessageType TypeFilter)
+		{
+			auto Buffer = gcnew List<ScriptDiagnosticMessage^> ;
+
+			for each (auto Itr in Messages)
+			{
+				bool MatchedSource = SourceFilter == ScriptDiagnosticMessage::MessageSource::All || Itr->Source == SourceFilter;
+				bool MatchedType = TypeFilter == ScriptDiagnosticMessage::MessageType::All || Itr->Type == TypeFilter;
+
+				if (MatchedSource && MatchedType)
+					Buffer->Add(Itr);
+			}
+
+			if (Buffer->Count)
+			{
+				for each (auto Itr in Buffer)
+					Messages->Remove(Itr);
+
+				OnStateChangedBookmarks();
+			}
+		}
+
+		bool ConcreteWorkspaceModel::GetMessages(UInt32 Line, ScriptDiagnosticMessage::MessageSource SourceFilter, ScriptDiagnosticMessage::MessageType TypeFilter, List<ScriptDiagnosticMessage^>^% OutMessages)
+		{
+			bool Result = false;
+			for each (auto Itr in Messages)
+			{
+				if (Itr->Line == Line)
+				{
+					bool MatchedSource = SourceFilter == ScriptDiagnosticMessage::MessageSource::All || Itr->Source == SourceFilter;
+					bool MatchedType = TypeFilter == ScriptDiagnosticMessage::MessageType::All || Itr->Type == TypeFilter;
+
+					if (MatchedSource && MatchedType)
+					{
+						OutMessages->Add(Itr);
+						Result = true;
+					}
+				}
+			}
+
+			return Result;
+		}
+
+		UInt32 ConcreteWorkspaceModel::GetErrorCount(UInt32 Line)
+		{
+			UInt32 Count = 0;
+			for each (auto Itr in Messages)
+			{
+				if ((Itr->Line == 0 || Itr->Line == Line) && Itr->Type == ScriptDiagnosticMessage::MessageType::Error)
+					++Count;
+			}
+
+			return Count;
+		}
+
+		UInt32 ConcreteWorkspaceModel::GetWarningCount(UInt32 Line)
+		{
+			UInt32 Count = 0;
+			for each (auto Itr in Messages)
+			{
+				if ((Itr->Line == 0 || Itr->Line == Line) && Itr->Type == ScriptDiagnosticMessage::MessageType::Warning)
+					++Count;
+			}
+
+			return Count;
+		}
+
+		void ConcreteWorkspaceModel::AddBookmark(UInt32 Line, String^ BookmarkText)
+		{
+			if (Line > TextEditor->LineCount)
+				Line = TextEditor->LineCount;
+
+			if (LookupBookmark(Line, BookmarkText) != nullptr)
+				return;
+
+			auto LineAnchor = TextEditor->CreateLineAnchor(Line);
+			auto NewBookmark= gcnew ScriptBookmark(LineAnchor, BookmarkText->Replace("\t", ""));
+			Bookmarks->Add(NewBookmark);
+			OnStateChangedBookmarks();
+		}
+
+		void ConcreteWorkspaceModel::RemoveBookmark(UInt32 Line, String^ BookmarkText)
+		{
+			auto ToRemove = LookupBookmark(Line, BookmarkText);
+			if (ToRemove)
+			{
+				Bookmarks->Remove(ToRemove);
+				OnStateChangedBookmarks();
+			}
+		}
+
+		void ConcreteWorkspaceModel::ClearBookmarks()
+		{
+			Bookmarks->Clear();
+			OnStateChangedBookmarks();
+		}
+
+		bool ConcreteWorkspaceModel::GetBookmarks(UInt32 Line, List<ScriptBookmark^>^% OutBookmarks)
+		{
+			bool Result = false;
+			for each (auto Itr in Bookmarks)
+			{
+				if (Itr->Line == Line)
+				{
+					OutBookmarks->Add(Itr);
+					Result = true;
+				}
+			}
+
+			return Result;
+		}
+
+		UInt32 ConcreteWorkspaceModel::GetBookmarkCount(UInt32 Line)
+		{
+			UInt32 Count = 0;
+			for each (auto Itr in Bookmarks)
+			{
+				if (Itr->Line == Line)
+					++Count;
+			}
+
+			return Count;
+		}
+
+		void ConcreteWorkspaceModel::AddFindResult(UInt32 Line, String^ PreviewText, UInt32 Hits)
+		{
+			if (Line > TextEditor->LineCount)
+				Line = TextEditor->LineCount;
+
+			auto LineAnchor = TextEditor->CreateLineAnchor(Line);
+			auto NewFindResult= gcnew ScriptFindResult(LineAnchor, PreviewText->Replace("\t", ""), Hits);
+			FindResults->Add(NewFindResult);
+			OnStateChangedFindResults();
+		}
+
+		void ConcreteWorkspaceModel::ClearFindResults()
+		{
+			FindResults->Clear();
+			OnStateChangedFindResults();
+		}
+
+		void ConcreteWorkspaceModel::BeginBatchUpdate(BatchUpdateSource Source)
+		{
+			Debug::Assert(ActiveBatchUpdateSource == BatchUpdateSource::None || ActiveBatchUpdateSource == Source);
+			Debug::Assert(Source != BatchUpdateSource::None);
+
+			++ActiveBatchUpdateSourceCounter;
+			ActiveBatchUpdateSource = Source;
+		}
+
+		void ConcreteWorkspaceModel::EndBatchUpdate(BatchUpdateSource Source)
+		{
+			Debug::Assert(ActiveBatchUpdateSource != BatchUpdateSource::None);
+
+			ActiveBatchUpdateSourceCounter--;
+			Debug::Assert(ActiveBatchUpdateSourceCounter >= 0);
+
+			if (ActiveBatchUpdateSourceCounter == 0)
+			{
+				auto CompletedBatchUpdateSource = ActiveBatchUpdateSource;
+				ActiveBatchUpdateSource = BatchUpdateSource::None;
+
+				switch (CompletedBatchUpdateSource)
+				{
+				case BatchUpdateSource::Messages:
+					OnStateChangedMessages();
+					break;
+				case BatchUpdateSource::Bookmarks:
+					OnStateChangedBookmarks();
+					break;
+				case BatchUpdateSource::FindResults:
+					OnStateChangedFindResults();
+					break;
+				}
+			}
+		}
+
 		void ConcreteWorkspaceModel::OnStateChangedDirty(bool Modified)
 		{
 			IWorkspaceModel::StateChangeEventArgs^ E = gcnew IWorkspaceModel::StateChangeEventArgs;
+			E->EventType = IWorkspaceModel::StateChangeEventArgs::Type::Dirty;
 			E->Dirty = Modified;
-			StateChangedDirty(this, E);
+			StateChanged(this, E);
 		}
 
 		void ConcreteWorkspaceModel::OnStateChangedByteCodeSize(UInt32 Size)
 		{
 			IWorkspaceModel::StateChangeEventArgs^ E = gcnew IWorkspaceModel::StateChangeEventArgs;
+			E->EventType = IWorkspaceModel::StateChangeEventArgs::Type::ByteCodeSize;
 			E->ByteCodeSize = Size;
-			StateChangedByteCodeSize(this, E);
+			StateChanged(this, E);
 		}
 
 		void ConcreteWorkspaceModel::OnStateChangedType(IWorkspaceModel::ScriptType Type)
 		{
 			IWorkspaceModel::StateChangeEventArgs^ E = gcnew IWorkspaceModel::StateChangeEventArgs;
-			E->Type = Type;
-			StateChangedType(this, E);
+			E->EventType = IWorkspaceModel::StateChangeEventArgs::Type::ScriptType;
+			E->ScriptType = Type;
+			StateChanged(this, E);
 		}
 
 		void ConcreteWorkspaceModel::OnStateChangedDescription()
 		{
 			IWorkspaceModel::StateChangeEventArgs^ E = gcnew IWorkspaceModel::StateChangeEventArgs;
+			E->EventType = IWorkspaceModel::StateChangeEventArgs::Type::Description;
 			E->ShortDescription = ShortDescription;
 			E->LongDescription = LongDescription;
-			StateChangedDescription(this, E);
+			StateChanged(this, E);
+		}
+
+		void ConcreteWorkspaceModel::OnStateChangedMessages()
+		{
+			if (ActiveBatchUpdateSource == BatchUpdateSource::Messages)
+				return;
+
+			IWorkspaceModel::StateChangeEventArgs^ E = gcnew IWorkspaceModel::StateChangeEventArgs;
+			E->EventType = IWorkspaceModel::StateChangeEventArgs::Type::Messages;
+			E->Messages = Messages;
+			StateChanged(this, E);
+		}
+
+		void ConcreteWorkspaceModel::OnStateChangedBookmarks()
+		{
+			if (ActiveBatchUpdateSource == BatchUpdateSource::Bookmarks)
+				return;
+
+			IWorkspaceModel::StateChangeEventArgs^ E = gcnew IWorkspaceModel::StateChangeEventArgs;
+			E->EventType = IWorkspaceModel::StateChangeEventArgs::Type::Bookmarks;
+			E->Bookmarks = Bookmarks;
+			StateChanged(this, E);
+		}
+
+		void ConcreteWorkspaceModel::OnStateChangedFindResults()
+		{
+			if (ActiveBatchUpdateSource == BatchUpdateSource::FindResults)
+				return;
+
+			IWorkspaceModel::StateChangeEventArgs^ E = gcnew IWorkspaceModel::StateChangeEventArgs;
+			E->EventType = IWorkspaceModel::StateChangeEventArgs::Type::FindResults;
+			E->FindResults = FindResults;
+			StateChanged(this, E);
+		}
+
+		void DummyOutputWrapper(int Line, String^ Message)
+		{
+			;//
+		}
+
+		System::String^ ConcreteWorkspaceModel::PreprocessScriptText(String^ ScriptText, bool SuppressErrors, bool% OutPreprocessResult, bool% OutContainsDirectives)
+		{
+			String^ Preprocessed = "";
+			scriptPreprocessor::StandardOutputError^ ErrorOutput = gcnew scriptPreprocessor::StandardOutputError(&DummyOutputWrapper);
+			if (SuppressErrors == false)
+			{
+				ErrorOutput = gcnew scriptPreprocessor::StandardOutputError(this, &ConcreteWorkspaceModel::TrackPreprocessorMessage);
+				BeginBatchUpdate(BatchUpdateSource::Messages);
+				ClearMessages(ScriptDiagnosticMessage::MessageSource::Preprocessor, ScriptDiagnosticMessage::MessageType::All);
+			}
+
+
+			auto PreprocessorParams = gcnew ScriptEditorPreprocessorData(gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
+																		 gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
+																		 preferences::SettingsHolder::Get()->Preprocessor->AllowMacroRedefs,
+																		 preferences::SettingsHolder::Get()->Preprocessor->NumPasses);
+
+			bool Result = Preprocessor::GetSingleton()->PreprocessScript(ScriptText, Preprocessed, ErrorOutput, PreprocessorParams);
+
+			if (SuppressErrors == false)
+				EndBatchUpdate(BatchUpdateSource::Messages);
+
+			OutPreprocessResult = Result;
+			return Preprocessed;
+		}
+
+		void ConcreteWorkspaceModel::TrackPreprocessorMessage(int Line, String^ Message)
+		{
+			AddMessage(Line, Message, ScriptDiagnosticMessage::MessageType::Error, ScriptDiagnosticMessage::MessageSource::Preprocessor);
+		}
+
+		CompilationData^ ConcreteWorkspaceModel::BeginScriptCompilation()
+		{
+			Debug::Assert(CompilationInProgress == false);
+			CompilationInProgress = true;
+
+			BeginBatchUpdate(BatchUpdateSource::Messages);
+
+			CompilationData^ Result = gcnew CompilationData;
+			Result->UnpreprocessedScriptText = TextEditor->GetText();
+
+			auto SemanticAnalysisData = BackgroundSemanticAnalyzer->DoSynchronousAnalysis(false);
+			ClearMessages(ScriptDiagnosticMessage::MessageSource::Validator, ScriptDiagnosticMessage::MessageType::All);
+
+			for each (auto Itr in SemanticAnalysisData->AnalysisMessages)
+			{
+				AddMessage(Itr->Line, Itr->Message,
+						   Itr->Critical ? ScriptDiagnosticMessage::MessageType::Error : ScriptDiagnosticMessage::MessageType::Warning,
+						   ScriptDiagnosticMessage::MessageSource::Validator);
+			}
+
+			if (!SemanticAnalysisData->HasCriticalMessages && !SemanticAnalysisData->MalformedStructure)
+			{
+				Result->PreprocessedScriptText = PreprocessScriptText(Result->UnpreprocessedScriptText, false, Result->CanCompile, Result->HasPreprocessorDirectives);
+				if (Result->CanCompile)
+				{
+					auto Metadata = gcnew scriptEditor::ScriptTextMetadata;
+					Metadata->CaretPos = TextEditor->Caret;
+					Metadata->HasPreprocessorDirectives = Result->HasPreprocessorDirectives;
+					for each (auto Itr in Bookmarks)
+						Metadata->Bookmarks->Add(gcnew ScriptTextMetadata::Bookmark(Itr->Line, Itr->Text));
+
+					Result->SerializedMetadata = scriptEditor::ScriptTextMetadataHelper::SerializeMetadata(Metadata);
+					ClearMessages(ScriptDiagnosticMessage::MessageSource::Compiler, ScriptDiagnosticMessage::MessageType::All);
+				}
+			}
+
+			// doesn't include compiler warnings for obvious reasons but it's okay since all compiler messages are errors
+			Result->HasWarnings = GetWarningCount(0);
+			return Result;
+		}
+
+		void ConcreteWorkspaceModel::EndScriptCompilation(CompilationData^ Data)
+		{
+			Debug::Assert(CompilationInProgress == true);
+			CompilationInProgress = false;
+
+			String^ kRepeatedString = "Compiled script not saved!";
+
+			if (Data->CanCompile)
+			{
+				if (Data->CompileResult->CompilationSuccessful)
+				{
+					String^ OriginalText = Data->UnpreprocessedScriptText + Data->SerializedMetadata;
+					CString OrgScriptText(OriginalText);
+					nativeWrapper::g_CSEInterfaceTable->ScriptEditor.SetScriptText(ScriptNativeObject, OrgScriptText.c_str());
+
+					// update model local state
+					EditorID = gcnew String(Data->CompileResult->Script.EditorID);
+					FormID = Data->CompileResult->Script.FormID;
+					Bytecode = Data->CompileResult->Script.ByteCode;
+					BytecodeLength = Data->CompileResult->Script.Length;
+
+					SetType(safe_cast<IWorkspaceModel::ScriptType>(Data->CompileResult->Script.Type));
+					OnStateChangedDescription();
+					OnStateChangedByteCodeSize(BytecodeLength);
+					TextEditor->Modified = false;
+				}
+				else
+				{
+					for (int i = 0; i < Data->CompileResult->CompileErrorData.Count; i++)
+					{
+						String^ Message = gcnew String(Data->CompileResult->CompileErrorData.ErrorListHead[i].Message);
+						Message = Message->Replace(kRepeatedString, String::Empty);
+
+						int Line = Data->CompileResult->CompileErrorData.ErrorListHead[i].Line;
+						if (Line < 1)
+							Line = 1;
+
+						AddMessage(Line, Message, ScriptDiagnosticMessage::MessageType::Error, ScriptDiagnosticMessage::MessageSource::Compiler);
+					}
+				}
+			}
+
+			EndBatchUpdate(BatchUpdateSource::Messages);
+		}
+
+		void ConcreteWorkspaceModel::InitializeTextEditor(String^ RawScriptText)
+		{
+			ClearMessages(ScriptDiagnosticMessage::MessageSource::All, ScriptDiagnosticMessage::MessageType::All);
+			ClearBookmarks();
+			ClearFindResults();
+
+			String^ ExtractedScriptText = "";
+			auto ExtractedMetadata = gcnew ScriptTextMetadata();
+			ScriptTextMetadataHelper::DeserializeRawScriptText(RawScriptText, ExtractedScriptText, ExtractedMetadata);
+
+			if (ExtractedMetadata->CaretPos > ExtractedScriptText->Length)
+				ExtractedMetadata->CaretPos = ExtractedScriptText->Length;
+			else if (ExtractedMetadata->CaretPos < 0)
+				ExtractedMetadata->CaretPos = 0;
+
+			TextEditor->InitializeState(ExtractedScriptText, ExtractedMetadata->CaretPos);
+
+			BeginBatchUpdate(BatchUpdateSource::Bookmarks);
+			{
+				for each (auto Itr in ExtractedMetadata->Bookmarks)
+				{
+					if (Itr->Line > 0 && Itr->Line <= TextEditor->LineCount)
+						AddBookmark(Itr->Line, Itr->Text);
+				}
+			}
+			EndBatchUpdate(BatchUpdateSource::Bookmarks);
+
+			intellisense::IntelliSenseBackend::Get()->Refresh(false);
+		}
+
+		ScriptBookmark^ ConcreteWorkspaceModel::LookupBookmark(UInt32 Line, String^ Text)
+		{
+			for each (auto Itr in Bookmarks)
+			{
+				if (Itr->Line == Line && Itr->Text->Equals(Text))
+					return Itr;
+			}
+
+			return nullptr;
+		}
+
+		String^ ConcreteWorkspaceModel::GetText(bool Preprocess, bool% PreprocessResult, bool SuppressPreprocessorErrors)
+		{
+			if (Preprocess)
+			{
+				bool Throwaway;
+				return PreprocessScriptText(TextEditor->GetText(), SuppressPreprocessorErrors, PreprocessResult, Throwaway);
+			}
+			else
+				return TextEditor->GetText();
 		}
 
 		// ConcreteWorkspaceModelController
@@ -551,15 +961,12 @@ namespace cse
 			Concrete->TextEditor->SetText(Text, ResetUndoStack);
 		}
 
-		String^ ConcreteWorkspaceModelController::GetText(IWorkspaceModel^ Model, bool Preprocess, bool% PreprocessResult)
+		String^ ConcreteWorkspaceModelController::GetText(IWorkspaceModel^ Model, bool Preprocess, bool% PreprocessResult, bool SuppressPreprocessorErrors)
 		{
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
 
-			if (Preprocess)
-				return Concrete->TextEditor->GetPreprocessedText(PreprocessResult, false);
-			else
-				return Concrete->TextEditor->GetText();
+			return Concrete->GetText(Preprocess, PreprocessResult, SuppressPreprocessorErrors);
 		}
 
 		int ConcreteWorkspaceModelController::GetCaret(IWorkspaceModel^ Model)
@@ -658,7 +1065,7 @@ namespace cse
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
 
-			CString CEID(Concrete->CurrentScriptEditorID);
+			CString CEID(Concrete->EditorID);
 			nativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileDependencies(CEID.c_str());
 		}
 
@@ -702,7 +1109,7 @@ namespace cse
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
 
-			nativeWrapper::g_CSEInterfaceTable->ScriptEditor.BindScript((CString(Concrete->CurrentScriptEditorID)).c_str(),
+			nativeWrapper::g_CSEInterfaceTable->ScriptEditor.BindScript((CString(Concrete->EditorID)).c_str(),
 																		(HWND)Concrete->BoundParent->WindowHandle);
 		}
 
@@ -731,10 +1138,20 @@ namespace cse
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
 
-			return Concrete->TextEditor->FindReplace(Operation, Query, Replacement, Options);
+			auto Result = Concrete->TextEditor->FindReplace(Operation, Query, Replacement, Options);
+			if (!Result->HasError)
+			{
+				Concrete->BeginBatchUpdate(ConcreteWorkspaceModel::BatchUpdateSource::FindResults);
+				Concrete->ClearFindResults();
+				for each (auto Itr in Result->Hits)
+					Concrete->AddFindResult(Itr->Line, Itr->Text, Itr->Hits);
+				Concrete->EndBatchUpdate(ConcreteWorkspaceModel::BatchUpdateSource::FindResults);
+			}
+
+			return Result;
 		}
 
-		bool ConcreteWorkspaceModelController::GetOffsetViewerData(IWorkspaceModel^ Model, String^% OutText, UInt32% OutBytecode, UInt32% OutLength)
+		bool ConcreteWorkspaceModelController::GetOffsetViewerData(IWorkspaceModel^ Model, String^% OutText, void** OutBytecode, UInt32% OutLength)
 		{
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
@@ -743,13 +1160,13 @@ namespace cse
 				return false;
 
 			bool PP = false;
-			String^ Preprocessed = Concrete->TextEditor->GetPreprocessedText(PP, true);
+			String^ Preprocessed = Concrete->GetText(true, PP, true);
 			if (PP == false)
 				return false;
 
 			OutText = Preprocessed;
-			OutBytecode = Concrete->CurrentScriptBytecode;
-			OutLength = Concrete->CurrentScriptBytecodeLength;
+			*OutBytecode = Concrete->Bytecode;
+			OutLength = Concrete->BytecodeLength;
 			return true;
 		}
 
@@ -766,7 +1183,7 @@ namespace cse
 			case cse::scriptEditor::IWorkspaceModel::RefactorOperation::DocumentScript:
 				{
 					refactoring::EditScriptComponentDialog DocumentScriptData(Concrete->BoundParent->WindowHandle,
-																			  Concrete->CurrentScriptEditorID,
+																			  Concrete->EditorID,
 																			  refactoring::EditScriptComponentDialog::OperationType::DocumentScript,
 																			  "Script Description");
 
@@ -786,7 +1203,7 @@ namespace cse
 			case cse::scriptEditor::IWorkspaceModel::RefactorOperation::RenameVariables:
 				{
 					refactoring::EditScriptComponentDialog RenameVariablesData(Concrete->BoundParent->WindowHandle,
-																			   Concrete->CurrentScriptEditorID,
+																			   Concrete->EditorID,
 																			   refactoring::EditScriptComponentDialog::OperationType::RenameVariables,
 																			   "");
 
@@ -818,7 +1235,7 @@ namespace cse
 								StringAllocations->Add(NewID);
 							}
 
-							CString CEID(Concrete->CurrentScriptEditorID);
+							CString CEID(Concrete->EditorID);
 							nativeWrapper::g_CSEInterfaceTable->ScriptEditor.UpdateScriptVarNames(CEID.c_str(), RenameData);
 
 							for each (CString^ Itr in StringAllocations)
@@ -837,7 +1254,7 @@ namespace cse
 				break;
 			case cse::scriptEditor::IWorkspaceModel::RefactorOperation::ModifyVariableIndices:
 				{
-					refactoring::ModifyVariableIndicesDialog ModifyIndicesData(Concrete->BoundParent->WindowHandle, Concrete->CurrentScriptEditorID);
+					refactoring::ModifyVariableIndicesDialog ModifyIndicesData(Concrete->BoundParent->WindowHandle, Concrete->EditorID);
 
 					if (ModifyIndicesData.IndicesUpdated)
 					{
@@ -888,8 +1305,134 @@ namespace cse
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
 
-			if (String::Compare(ScriptEditorID, Concrete->CurrentScriptEditorID, true))
+			if (String::Compare(ScriptEditorID, Concrete->EditorID, true))
 				Concrete->BoundParent->Controller->Jump(Concrete->BoundParent, Concrete, ScriptEditorID);
+		}
+
+		void ConcreteWorkspaceModelController::AddMessage(IWorkspaceModel^ Model, UInt32 Line, String^ Text, ScriptDiagnosticMessage::MessageType Type, ScriptDiagnosticMessage::MessageSource Source)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			Concrete->AddMessage(Line, Text, Type, Source);
+		}
+
+		void ConcreteWorkspaceModelController::ClearMessages(IWorkspaceModel^ Model, ScriptDiagnosticMessage::MessageSource SourceFilter, ScriptDiagnosticMessage::MessageType TypeFilter)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			Concrete->ClearMessages(SourceFilter, TypeFilter);
+		}
+
+		bool ConcreteWorkspaceModelController::GetMessages(IWorkspaceModel^ Model, UInt32 Line, ScriptDiagnosticMessage::MessageSource SourceFilter, ScriptDiagnosticMessage::MessageType TypeFilter, List<ScriptDiagnosticMessage^>^% OutMessages)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			return Concrete->GetMessages(Line, SourceFilter, TypeFilter, OutMessages);
+		}
+
+		UInt32 ConcreteWorkspaceModelController::GetErrorCount(IWorkspaceModel^ Model, UInt32 Line)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			return Concrete->GetErrorCount(Line);
+		}
+
+		UInt32 ConcreteWorkspaceModelController::GetWarningCount(IWorkspaceModel^ Model, UInt32 Line)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			return Concrete->GetWarningCount(Line);
+		}
+
+		void ConcreteWorkspaceModelController::BeginUpdateMessages(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			Concrete->BeginBatchUpdate(ConcreteWorkspaceModel::BatchUpdateSource::Messages);
+		}
+
+		void ConcreteWorkspaceModelController::EndUpdateMessages(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			Concrete->EndBatchUpdate(ConcreteWorkspaceModel::BatchUpdateSource::Messages);
+		}
+
+		void ConcreteWorkspaceModelController::AddBookmark(IWorkspaceModel^ Model, UInt32 Line, String^ BookmarkText)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			Concrete->AddBookmark(Line, BookmarkText);
+		}
+
+		void ConcreteWorkspaceModelController::RemoveBookmark(IWorkspaceModel^ Model, UInt32 Line, String^ BookmarkText)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			Concrete->RemoveBookmark(Line, BookmarkText);
+		}
+
+		void ConcreteWorkspaceModelController::ClearBookmarks(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			Concrete->ClearBookmarks();
+		}
+
+		bool ConcreteWorkspaceModelController::GetBookmarks(IWorkspaceModel^ Model, UInt32 Line, List<ScriptBookmark^>^% OutBookmarks)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			return Concrete->GetBookmarks(Line, OutBookmarks);
+		}
+
+		UInt32 ConcreteWorkspaceModelController::GetBookmarkCount(IWorkspaceModel^ Model, UInt32 Line)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			return Concrete->GetBookmarkCount(Line);
+		}
+
+		void ConcreteWorkspaceModelController::BeginUpdateBookmarks(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			Concrete->BeginBatchUpdate(ConcreteWorkspaceModel::BatchUpdateSource::Bookmarks);
+		}
+
+		void ConcreteWorkspaceModelController::EndUpdateBookmarks(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			Concrete->EndBatchUpdate(ConcreteWorkspaceModel::BatchUpdateSource::Bookmarks);
+		}
+
+		void ConcreteWorkspaceModelController::AddFindResult(IWorkspaceModel^ Model, UInt32 Line, String^ PreviewText, UInt32 Hits)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			Concrete->AddFindResult(Line, PreviewText, Hits);
+		}
+
+		void ConcreteWorkspaceModelController::ClearFindResults(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			Concrete->ClearFindResults();
+		}
+
+		void ConcreteWorkspaceModelController::BeginUpdateFindResults(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			Concrete->BeginBatchUpdate(ConcreteWorkspaceModel::BatchUpdateSource::FindResults);
+		}
+
+		void ConcreteWorkspaceModelController::EndUpdateFindResults(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			Concrete->EndBatchUpdate(ConcreteWorkspaceModel::BatchUpdateSource::FindResults);
 		}
 
 		// ConcreteWorkspaceModelFactory

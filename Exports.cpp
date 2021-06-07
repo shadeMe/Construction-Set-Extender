@@ -292,7 +292,7 @@ bool CompileScript(ScriptCompileData* Data)
 						MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_OK,
 						"Script %s {%08X} has been deleted, ergo it cannot be compiled.", ScriptForm->editorID.c_str(), ScriptForm->formID);
 
-		Data->CompileResult = false;
+		Data->CompilationSuccessful = false;
 	}
 	else
 	{
@@ -307,7 +307,7 @@ bool CompileScript(ScriptCompileData* Data)
 		if (!Data->PrintErrorsToConsole)
 			TESScriptCompiler::PrintErrorsToConsole = false;
 
-		ScriptForm->compileResult = Data->CompileResult = ScriptForm->Compile();
+		ScriptForm->compileResult = Data->CompilationSuccessful = ScriptForm->Compile();
 		TESScriptCompiler::PrintErrorsToConsole = true;
 
 		if (ScriptForm->compileResult)
@@ -338,7 +338,7 @@ bool CompileScript(ScriptCompileData* Data)
 		OldText->DeleteInstance();
 	}
 
-	return Data->CompileResult;
+	return Data->CompilationSuccessful;
 }
 
 void RecompileScripts(void)

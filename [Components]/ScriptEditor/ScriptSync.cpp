@@ -319,26 +319,24 @@ namespace cse
 
 				String^ PreprocessedScriptText = "";
 				bool ContainsPreprocessorDirectives = false;
-				if (DoPreprocessingAndAnalysis(NativeScript.get(),
-												ImportedScriptText,
-												PreprocessedScriptText,
-												ContainsPreprocessorDirectives,
-												OutMessages) == false)
+				if (!DoPreprocessingAndAnalysis(NativeScript.get(),
+											   ImportedScriptText,
+											   PreprocessedScriptText,
+											   ContainsPreprocessorDirectives,
+											   OutMessages))
 					return;
 
-				textEditors::CompilationData^ CompilationData = gcnew textEditors::CompilationData;
+				auto CompilationData = gcnew scriptEditor::CompilationData;
 				CompilationData->PreprocessedScriptText = PreprocessedScriptText;
 				CompilationData->UnpreprocessedScriptText = ImportedScriptText;
-				CompilationData->HasDirectives = ContainsPreprocessorDirectives;
+				CompilationData->HasPreprocessorDirectives = ContainsPreprocessorDirectives;
 				CompilationData->CanCompile = true;
 
 				auto Metadata = gcnew ScriptTextMetadata;
 				Metadata->HasPreprocessorDirectives = ContainsPreprocessorDirectives;
 				CompilationData->SerializedMetadata = ScriptTextMetadataHelper::SerializeMetadata(Metadata);
 
-
-				DisposibleDataAutoPtr<componentDLLInterface::ScriptCompileData> CompilationResult(
-					nativeWrapper::g_CSEInterfaceTable->ScriptEditor.AllocateCompileData());
+				DisposibleDataAutoPtr<componentDLLInterface::ScriptCompileData> CompilationResult(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.AllocateCompileData());
 
 				CString ScriptTextToCompile(CompilationData->PreprocessedScriptText->Replace("\n", "\r\n"));
 				CompilationResult->Script.Text = ScriptTextToCompile.c_str();

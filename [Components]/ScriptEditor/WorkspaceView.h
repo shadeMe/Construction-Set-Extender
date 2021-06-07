@@ -22,30 +22,31 @@ namespace cse
 {
 	namespace scriptEditor
 	{
+		using namespace BrightIdeasSoftware;
+
 		ref class ConcreteWorkspaceView;
 
 		ref class ConcreteWorkspaceViewFactory : public IWorkspaceViewFactory
 		{
-			List<ConcreteWorkspaceView^>^				Allocations;
+			List<ConcreteWorkspaceView^>^ Allocations;
 
 			ConcreteWorkspaceViewFactory();
 		public:
 			~ConcreteWorkspaceViewFactory();
 
-			property UInt32								Count
+			property UInt32	Count
 			{
 				virtual UInt32 get() { return Allocations->Count; }
 				virtual void set(UInt32 e) {}
 			}
 
-			static ConcreteWorkspaceViewFactory^		Instance = gcnew ConcreteWorkspaceViewFactory;
+			void								Remove(ConcreteWorkspaceView^ Allocation);
+			void								Clear();
 
-			void										Remove(ConcreteWorkspaceView^ Allocation);
-			void										Clear();
+			virtual IWorkspaceView^				CreateView(int X, int Y, int Width, int Height);
+			virtual IWorkspaceViewController^	CreateController();
 
-			// IWorkspaceViewFactory
-			virtual IWorkspaceView^						CreateView(int X, int Y, int Width, int Height);
-			virtual IWorkspaceViewController^			CreateController();
+			static ConcreteWorkspaceViewFactory^ Instance = gcnew ConcreteWorkspaceViewFactory;
 		};
 
 		ref class ConcreteWorkspaceViewController : public IWorkspaceViewController
@@ -169,16 +170,23 @@ namespace cse
 
 		ref struct FindReplaceAllResults
 		{
-			ref struct HitData
+			ref struct PerScriptData
 			{
-				IWorkspaceModel^										Parent;
+				IWorkspaceModel^										ParentModel;
 				String^													ParentDescription;
-				textEditors::IScriptTextEditor::FindReplaceResult^		Hits;
+				textEditors::IScriptTextEditor::FindReplaceResult^		Results;
 
-				HitData(IWorkspaceModel^ Parent, textEditors::IScriptTextEditor::FindReplaceResult^ Data) :
-						Parent(Parent),
-						ParentDescription(Parent->LongDescription),
-						Hits(Data) {}
+				PerScriptData(IWorkspaceModel^ Parent, textEditors::IScriptTextEditor::FindReplaceResult^ Data)
+				{
+					ParentModel = Parent;
+					ParentDescription = ParentModel->LongDescription;
+					Results = Data;
+				}
+
+				property int TotalHitCount
+				{
+					int get() { return Results->TotalHitCount; }
+				}
 			};
 
 			textEditors::IScriptTextEditor::FindReplaceOperation		Operation;
@@ -186,15 +194,21 @@ namespace cse
 			String^														Replacement;
 			textEditors::IScriptTextEditor::FindReplaceOptions			Options;
 
-			List<HitData^>^												Hits;
+			List<PerScriptData^>^										ScriptsWithHits;
 
-			FindReplaceAllResults() : Operation(textEditors::IScriptTextEditor::FindReplaceOperation::CountMatches),
-				Query(""), Replacement(""), Options((textEditors::IScriptTextEditor::FindReplaceOptions)0), Hits(gcnew List<HitData^>) {}
+			FindReplaceAllResults()
+			{
+				Operation = textEditors::IScriptTextEditor::FindReplaceOperation::CountMatches;
+				Query = "";
+				Replacement = "";
+				Options = textEditors::IScriptTextEditor::FindReplaceOptions::None;
+				ScriptsWithHits = gcnew List<PerScriptData^>;
+			}
 
 			void Add(IWorkspaceModel^ Model, textEditors::IScriptTextEditor::FindReplaceResult^ Data)
 			{
 				Debug::Assert(Data->HasError == false);
-				Hits->Add(gcnew HitData(Model, Data));
+				ScriptsWithHits->Add(gcnew PerScriptData(Model, Data));
 			}
 
 			property int TotalHitCount
@@ -203,8 +217,8 @@ namespace cse
 				{
 					int Count = 0;
 
-					for each (auto Instance in Hits)
-						Count += Instance->Hits->TotalHitCount;
+					for each (auto Instance in ScriptsWithHits)
+						Count += Instance->Results->TotalHitCount;
 
 					return Count;
 				}
@@ -212,42 +226,41 @@ namespace cse
 
 			static bool							GenericCanExpandGetter(Object^ E);
 			static Collections::IEnumerable^	GenericChildrenGetter(Object^ E);
-			static Object^						GenericAspectGetter(Object^ E);
+			static Object^						TextAspectGetter(Object^ E);
+			static Object^						LineAspectGetter(Object^ E);
+			static Object^						HitsAspectGetter(Object^ E);
 		};
-
-
-
 
 		ref class ConcreteWorkspaceView : public IWorkspaceView
 		{
 			static Rectangle LastUsedBounds = Rectangle(100, 100, 100, 100);
 
-			CancelEventHandler^						EditorFormCancelHandler;
-			KeyEventHandler^						EditorFormKeyDownHandler;
-			EventHandler^							EditorFormPositionChangedHandler;
-			EventHandler^							EditorFormSizeChangedHandler;
-			EventHandler^							EditorFormActivated;
+			CancelEventHandler^	EditorFormCancelHandler;
+			KeyEventHandler^	EditorFormKeyDownHandler;
+			EventHandler^		EditorFormPositionChangedHandler;
+			EventHandler^		EditorFormSizeChangedHandler;
+			EventHandler^		EditorFormActivated;
 
-			EventHandler<DotNetBar::SuperTabStripTabItemCloseEventArgs^>^			ScriptStripTabItemCloseHandler;
-			EventHandler<DotNetBar::SuperTabStripSelectedTabChangedEventArgs^>^		ScriptStripSelectedTabChangedHandler;
-			EventHandler<DotNetBar::SuperTabStripTabRemovedEventArgs^>^             ScriptStripTabRemovedHandler;
-			EventHandler<MouseEventArgs^>^											ScriptStripMouseClickHandler;
-			EventHandler<DotNetBar::SuperTabStripTabMovingEventArgs^>^              ScriptStripTabMovingHandler;
-			EventHandler^							ScriptEditorPreferencesSavedHandler;
+			EventHandler<DotNetBar::SuperTabStripTabItemCloseEventArgs^>^		ScriptStripTabItemCloseHandler;
+			EventHandler<DotNetBar::SuperTabStripSelectedTabChangedEventArgs^>^	ScriptStripSelectedTabChangedHandler;
+			EventHandler<DotNetBar::SuperTabStripTabRemovedEventArgs^>^         ScriptStripTabRemovedHandler;
+			EventHandler<MouseEventArgs^>^										ScriptStripMouseClickHandler;
+			EventHandler<DotNetBar::SuperTabStripTabMovingEventArgs^>^          ScriptStripTabMovingHandler;
+			EventHandler^														ScriptEditorPreferencesSavedHandler;
 
-			void									EditorForm_Cancel(Object^ Sender, CancelEventArgs^ E);
-			void									EditorForm_KeyDown(Object^ Sender, KeyEventArgs^ E);
-			void									EditorForm_SizeChanged(Object^ Sender, EventArgs^ E);
-			void									EditorForm_PositionChanged(Object^ Sender, EventArgs^ E);
-			void									EditorForm_Activated(Object^ Sender, EventArgs^ E);
+			void EditorForm_Cancel(Object^ Sender, CancelEventArgs^ E);
+			void EditorForm_KeyDown(Object^ Sender, KeyEventArgs^ E);
+			void EditorForm_SizeChanged(Object^ Sender, EventArgs^ E);
+			void EditorForm_PositionChanged(Object^ Sender, EventArgs^ E);
+			void EditorForm_Activated(Object^ Sender, EventArgs^ E);
 
-			void									ScriptStrip_TabItemClose(Object^ Sender, DotNetBar::SuperTabStripTabItemCloseEventArgs ^ E);
-			void									ScriptStrip_SelectedTabChanged(Object^ Sender, DotNetBar::SuperTabStripSelectedTabChangedEventArgs^ E);
-			void									ScriptStrip_TabRemoved(Object^ Sender, DotNetBar::SuperTabStripTabRemovedEventArgs^ E);
-			void									ScriptStrip_MouseClick(Object^ Sender, MouseEventArgs^ E);
-			void									ScriptStrip_TabMoving(Object^ Sender, DotNetBar::SuperTabStripTabMovingEventArgs^ E);
+			void ScriptStrip_TabItemClose(Object^ Sender, DotNetBar::SuperTabStripTabItemCloseEventArgs ^ E);
+			void ScriptStrip_SelectedTabChanged(Object^ Sender, DotNetBar::SuperTabStripSelectedTabChangedEventArgs^ E);
+			void ScriptStrip_TabRemoved(Object^ Sender, DotNetBar::SuperTabStripTabRemovedEventArgs^ E);
+			void ScriptStrip_MouseClick(Object^ Sender, MouseEventArgs^ E);
+			void ScriptStrip_TabMoving(Object^ Sender, DotNetBar::SuperTabStripTabMovingEventArgs^ E);
 
-			void									ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
+			void ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
 
 			ConcreteWorkspaceViewDeclareClickHandler(NewTabButton);
 			ConcreteWorkspaceViewDeclareClickHandler(SortTabsButton);
@@ -297,28 +310,49 @@ namespace cse
 			ConcreteWorkspaceViewDeclareClickHandler(ToolBarSnippetManager);
 			ConcreteWorkspaceViewDeclareClickHandler(ToolBarSyncScriptsToDisk);
 
-			void											ModelStateChangeHandler_Dirty(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E);
-			void											ModelStateChangeHandler_ByteCodeSize(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E);
-			void											ModelStateChangeHandler_Type(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E);
-			void											ModelStateChangeHandler_Description(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E);
+			void Model_StateChangeHandler(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E);
 
-			IWorkspaceModel::StateChangeEventHandler^		ModelStateChangedDirty;
-			IWorkspaceModel::StateChangeEventHandler^		ModelStateChangedByteCodeSize;
-			IWorkspaceModel::StateChangeEventHandler^		ModelStateChangedType;
-			IWorkspaceModel::StateChangeEventHandler^		ModelStateChangedDescription;
+			IWorkspaceModel::StateChangeEventHandler^ ModelStateChangedHandler;
 
-			void									ModelSubscribeEvents(IWorkspaceModel^ Model);
-			void									ModelUnsubscribeEvents(IWorkspaceModel^ Model);
 
-			Stack<IWorkspaceModel^>^				NavigationStackBackward;
-			Stack<IWorkspaceModel^>^				NavigationStackForward;
-			bool									FreezeNavigationStacks;
+			void ModelSubscribeEvents(IWorkspaceModel^ Model);
+			void ModelUnsubscribeEvents(IWorkspaceModel^ Model);
 
-			void									RemoveFromNavigationStacks(IWorkspaceModel^ Model);
-			void									RemoveFromFindReplaceAllResultCache(IWorkspaceModel^ Model);
+			Stack<IWorkspaceModel^>^ NavigationStackBackward;
+			Stack<IWorkspaceModel^>^ NavigationStackForward;
+			bool					 FreezeNavigationStacks;
 
-			EventHandler^							GlobalFindListItemActivate;
-			void									GlobalFindList_ItemActivate(Object^ Sender, EventArgs^ E);
+			void RemoveFromNavigationStacks(IWorkspaceModel^ Model);
+			void RemoveFromFindReplaceAllResultCache(IWorkspaceModel^ Model);
+
+			EventHandler^	GlobalFindListItemActivate;
+			void			GlobalFindList_ItemActivate(Object^ Sender, EventArgs^ E);
+
+			EventHandler^	ScriptAnnotationListItemActivate;
+			void			ScriptAnnotationList_ItemActivate(Object^ Sender, EventArgs^ E);
+
+
+			EventHandler<BrightIdeasSoftware::CellClickEventArgs^>^
+							BookmarksListButtonClick;
+			void			BookmarksList_ButtonClick(Object^ Sender, BrightIdeasSoftware::CellClickEventArgs^ E);
+
+			using ModelTabTableT = Dictionary<IWorkspaceModel^, DotNetBar::SuperTabItem^>;
+
+			static Object^ ScriptTextAnnotationListLineNumberAspectGetter(Object^ E);
+			static Object^ ScriptTextAnnotationListTextAspectGetter(Object^ E);
+
+			static Object^ MessageListTypeAspectGetter(Object^ E);
+			static Object^ MessageListTypeImageGetter(Object^ RowObject);
+			static String^ MessageListTypeAspectToStringConverter(Object^ E);
+			static Object^ MessageListTypeGroupKeyGetter(Object^ RowObject);
+			static String^ MessageListTypeGroupKeyToTitleConverter(System::Object^ GroupKey);
+			static Object^ MessageListSourceAspectGetter(Object^ E);
+			static String^ MessageListSourceAspectToStringConverter(Object^ E);
+			static Object^ MessageListSourceGroupKeyGetter(Object^ RowObject);
+			static String^ MessageListSourceGroupKeyToTitleConverter(System::Object^ GroupKey);
+
+			static Object^ BookmarksListActionAspectGetter(Object^ E);
+			static Object^ FindResultsListHitsAspectGetter(Object^ E);
 		public:
 			AnimatedForm^							EditorForm;
 			DotNetBar::SuperTabControl^				EditorTabStrip;
@@ -382,10 +416,10 @@ namespace cse
 
 			SplitContainer^							WorkspaceSplitter;
 			Panel^									AttachPanel;
-			ListView^								MessageList;
-			ListView^								FindList;
-			ListView^								BookmarkList;
-			BrightIdeasSoftware::TreeListView^		GlobalFindList;
+			ObjectListView^							MessageList;
+			FastObjectListView^						FindResultsList;
+			FastObjectListView^						BookmarkList;
+			TreeListView^							GlobalFindList;
 			Label^									SpoilerText;
 
 			textEditors::ScriptOffsetViewer^		OffsetTextViewer;
@@ -395,8 +429,8 @@ namespace cse
 			textEditors::ScopeBreadcrumbManager^	ScopeCrumbManager;
 
 			FindReplaceDialog^						FindReplaceBox;
-
-			intellisense::IIntelliSenseInterfaceView^	IntelliSenseView;
+			intellisense::IIntelliSenseInterfaceView^
+													IntelliSenseView;
 
 			WorkspaceViewTabFilter^					TabStripFilter;
 			List<FindReplaceAllResults^>^			CachedFindReplaceAllResults;
@@ -404,117 +438,98 @@ namespace cse
 
 			ConcreteWorkspaceViewController^		ViewController;
 			ConcreteWorkspaceViewFactory^			ViewFactory;
-
-			typedef Dictionary<IWorkspaceModel^, DotNetBar::SuperTabItem^>	ModelTabTableT;
 			ModelTabTableT^							AssociatedModels;
 
 			bool									AllowDisposal;								// when false, the form's closing is canceled
 			bool									DisallowBinding;							// when true, prevents models from binding to the view
 
-			IWorkspaceModelController^				ModelController();							// yeah, not nice
-			IWorkspaceModelFactory^					ModelFactory();								// not nice at all...
+			IWorkspaceModelController^ 	ModelController();							// yeah, not nice
+			IWorkspaceModelFactory^		ModelFactory();								// not nice at all...
 
-			void									AssociateModel(IWorkspaceModel^ Model, bool Bind);			// assign model a tab item and add it to the table
-			void									DissociateModel(IWorkspaceModel^ Model, bool Destroy);		// remove model from table and dissociate from the view
-			IWorkspaceModel^						GetModel(DotNetBar::SuperTabItem^ Tab);
-			bool									IsModelAssociated(IWorkspaceModel^ Model);
-			IWorkspaceModel^						GetActiveModel();
-			IWorkspaceModel^						GetModel(String^ Description);
+			void						AssociateModel(IWorkspaceModel^ Model, bool Bind);			// assign model a tab item and add it to the table
+			void						DissociateModel(IWorkspaceModel^ Model, bool Destroy);		// remove model from table and dissociate from the view
+			IWorkspaceModel^			GetModel(DotNetBar::SuperTabItem^ Tab);
+			bool						IsModelAssociated(IWorkspaceModel^ Model);
+			IWorkspaceModel^			GetActiveModel();
+			IWorkspaceModel^			GetModel(String^ Description);
 
-			DotNetBar::SuperTabItem^				GetTab(IWorkspaceModel^ Model);
-			DotNetBar::SuperTabItem^				GetMouseOverTab();
-			DotNetBar::SuperTabItem^				GetActiveTab();
+			DotNetBar::SuperTabItem^ GetTab(IWorkspaceModel^ Model);
+			DotNetBar::SuperTabItem^ GetMouseOverTab();
+			DotNetBar::SuperTabItem^ GetActiveTab();
 
-			Rectangle								GetBounds(bool UseRestoreBounds);
-			void									ToggleSecondaryPanel(bool State);
-			void									UpdateScriptTypeControls(IWorkspaceModel::ScriptType Type);
+			Rectangle GetBounds(bool UseRestoreBounds);
+			void ToggleSecondaryPanel(bool State);
+			void UpdateScriptTypeControls(IWorkspaceModel::ScriptType Type);
 
-			void									ShowMessageList();
-			void									ShowFindResultList();
-			void									ShowBookmarkList();
-			void									ShowGlobalFindResultList();
-			void									ToggleMessageList(bool State);
-			void									ToggleBookmarkList(bool State);
-			void									ToggleFindResultList(bool State);
-			void									ToggleGlobalFindResultList(bool State);
-			void									HideAllLists();
+			void ShowMessageList();
+			void ShowFindResultList();
+			void ShowBookmarkList();
+			void ShowGlobalFindResultList();
+			void ToggleMessageList(bool State);
+			void ToggleBookmarkList(bool State);
+			void ToggleFindResultList(bool State);
+			void ToggleGlobalFindResultList(bool State);
+			void HideAllLists();
 
-			void									ShowOpenDialog();
-			void									ShowDeleteDialog();
-			void									ShowFindReplaceDialog(bool PerformSearch);
+			void ShowOpenDialog();
+			void ShowDeleteDialog();
+			void ShowFindReplaceDialog(bool PerformSearch);
 
-			void									GotoLine();
-			void									GotoOffset();
+			void GotoLine();
+			void GotoOffset();
 
-			void									SaveAll();
-			void									CloseAll();
+			void SaveAll();
+			void CloseAll();
 
-			void									DumpAllToDisk(String^ OutputDirectory, String^ FileExtension);
-			void									LoadAllFromDisk(array<String^>^ FilePaths);
+			void DumpAllToDisk(String^ OutputDirectory, String^ FileExtension);
+			void LoadAllFromDisk(array<String^>^ FilePaths);
 
-			void									BeginUpdate();
-			void									EndUpdate();
-			void									Redraw();
-			void									Focus();
+			void BeginUpdate();
+			void EndUpdate();
+			void Redraw();
+			void Focus();
 
-			int										GetTabCount();
-			void									SelectTab(DotNetBar::SuperTabItem^ Tab);
-			void									SelectTab(Keys Index);
-			void									SelectTab(int Index);
-			void									SelectNextTab();
-			void									SelectPreviousTab();
+			int	GetTabCount();
+			void SelectTab(DotNetBar::SuperTabItem^ Tab);
+			void SelectTab(Keys Index);
+			void SelectTab(int Index);
+			void SelectNextTab();
+			void SelectPreviousTab();
 
-			void									NewTab(NewTabOperationArgs^ E);
+			void NewTab(NewTabOperationArgs^ E);
 
 			ConcreteWorkspaceView(ConcreteWorkspaceViewController^ Controller, ConcreteWorkspaceViewFactory^ Factory, Rectangle Bounds);
 			~ConcreteWorkspaceView();
 
-#pragma region Interfaces
-			property ListView^						ListViewMessages
+			virtual property intellisense::IIntelliSenseInterfaceView^ IntelliSenseInterfaceView
 			{
-				virtual ListView^ get() { return MessageList; }
-				virtual void set(ListView^ e) {}
+				intellisense::IIntelliSenseInterfaceView^ get() { return IntelliSenseView; }
+				void set(intellisense::IIntelliSenseInterfaceView^ e) {}
 			}
-			property ListView^						ListViewBookmarks
+			virtual property textEditors::ScopeBreadcrumbManager^ BreadcrumbManager
 			{
-				virtual ListView^ get() { return BookmarkList; }
-				virtual void set(ListView^ e) {}
+				textEditors::ScopeBreadcrumbManager^ get() { return ScopeCrumbManager; }
+				void set(textEditors::ScopeBreadcrumbManager^ e) {}
 			}
-			property ListView^						ListViewFindResults
+			virtual property IWorkspaceViewController^ Controller
 			{
-				virtual ListView^ get() { return FindList; }
-				virtual void set(ListView^ e) {}
+				IWorkspaceViewController^ get() { return ViewController; }
+				void set(IWorkspaceViewController^ e) {}
 			}
-			property intellisense::IIntelliSenseInterfaceView^		IntelliSenseInterfaceView
+			virtual property IntPtr WindowHandle
 			{
-				virtual intellisense::IIntelliSenseInterfaceView^ get() { return IntelliSenseView; }
-				virtual void set(intellisense::IIntelliSenseInterfaceView^ e) {}
+				IntPtr get() { return EditorForm->Handle; }
+				void set(IntPtr e) {}
 			}
-			property textEditors::ScopeBreadcrumbManager^			BreadcrumbManager
+			virtual property bool Enabled
 			{
-				virtual textEditors::ScopeBreadcrumbManager^ get() { return ScopeCrumbManager; }
-				virtual void set(textEditors::ScopeBreadcrumbManager^ e) {}
-			}
-			property IWorkspaceViewController^		Controller
-			{
-				virtual IWorkspaceViewController^ get() { return ViewController; }
-				virtual void set(IWorkspaceViewController^ e) {}
-			}
-			property IntPtr							WindowHandle
-			{
-				virtual IntPtr get() { return EditorForm->Handle; }
-				virtual void set(IntPtr e) {}
-			}
-			property bool							Enabled
-			{
-				virtual bool get() { return WorkspaceSplitter->Panel1->Enabled; }
-				virtual void set(bool e)
+				bool get() { return WorkspaceSplitter->Panel1->Enabled; }
+				void set(bool e)
 				{
 					AttachPanel->Enabled = e;
 					WorkspaceSplitter->Panel2->Enabled = e;
 				}
 			}
-#pragma endregion
 		};
 	}
 }

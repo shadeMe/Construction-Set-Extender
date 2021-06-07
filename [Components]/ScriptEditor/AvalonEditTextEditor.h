@@ -59,7 +59,6 @@ namespace cse
 
 				AvalonEdit::Folding::FoldingManager^				CodeFoldingManager;
 				ObScriptCodeFoldingStrategy^						CodeFoldingStrategy;
-				BraceHighlightingBGColorizer^						BraceColorizer;
 
 				bool												InitializingFlag;
 				bool												ModifiedFlag;
@@ -171,8 +170,9 @@ namespace cse
 				void	OnMouseClick(System::Windows::Input::MouseButtonEventArgs^ E);
 				void	OnLineChanged();
 				void	OnTextUpdated();
+				void	OnLineAnchorInvalidated();
 
-				void             TextEditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E);
+				void    TextEditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E);
 				void	TextField_TextChanged(Object^ Sender, EventArgs^ E);
 				void	TextField_CaretPositionChanged(Object^ Sender, EventArgs^ E);
 				void	TextField_ScrollOffsetChanged(Object^ Sender, EventArgs^ E);
@@ -205,7 +205,6 @@ namespace cse
 				void	ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
 				void	BackgroundAnalysis_AnalysisComplete(Object^ Sender, scriptEditor::SemanticAnalysisCompleteEventArgs^ E);
 
-				void				RoutePreprocessorMessages(int Line, String^ Message);
 				String^				GetTokenAtIndex(int Index, bool SelectText,
 													int% OutStartIndex, int% OutEndIndex,
 													Char% OutStartDelimiter, Char% OutEndDelimiter);
@@ -220,7 +219,6 @@ namespace cse
 				void				HandleKeyEventForKey(System::Windows::Input::Key Key);
 				void				HandleTextChangeEvent();
 				void				GotoLine(int Line);											// line numbers start at 1
-				void				RefreshBGColorizerLayer();
 				void				RefreshTextView();
 				int					PerformFindReplaceOperationOnSegment(System::Text::RegularExpressions::Regex^ ExpressionParser,
 																		 IScriptTextEditor::FindReplaceOperation Operation,
@@ -278,36 +276,37 @@ namespace cse
 				virtual event TextEditorMouseClickEventHandler^		MouseClick;
 				virtual event EventHandler^							LineChanged;
 				virtual event EventHandler^							TextUpdated;
+				virtual event EventHandler^							LineAnchorInvalidated;
 
-				property Control^ Container
+				virtual property Control^ Container
 				{
-					virtual Control^ get() { return WinFormsContainer; }
-					virtual void set(Control^ e) {}
+					Control^ get() { return WinFormsContainer; }
+					void set(Control^ e) {}
 				}
-				property IntPtr WindowHandle
+				virtual property IntPtr WindowHandle
 				{
-					virtual IntPtr get() { return WinFormsContainer->Handle; }
-					virtual void set(IntPtr e) {}
+					IntPtr get() { return WinFormsContainer->Handle; }
+					void set(IntPtr e) {}
 				}
-				property bool Enabled
+				virtual property bool Enabled
 				{
-					virtual bool get() { return WPFHost->Enabled; }
-					virtual void set(bool e) { WPFHost->Enabled = e; }
+					bool get() { return WPFHost->Enabled; }
+					void set(bool e) { WPFHost->Enabled = e; }
 				}
-				property int CurrentLine
+				virtual property int CurrentLine
 				{
-					virtual int get() { return TextField->TextArea->Caret->Line; }
-					virtual void set(int e) {}
+					int get() { return TextField->TextArea->Caret->Line; }
+					void set(int e) {}
 				}
-				property int LineCount
+				virtual property int LineCount
 				{
-					virtual int get() { return TextField->Document->LineCount; }
-					virtual void set(int e) {}
+					int get() { return TextField->Document->LineCount; }
+					void set(int e) {}
 				}
-				property int Caret
+				virtual property int Caret
 				{
-					virtual int get() { return TextField->TextArea->Caret->Offset; }
-					virtual void set(int Index)
+					int get() { return TextField->TextArea->Caret->Offset; }
+					void set(int Index)
 					{
 						TextField->SelectionLength = 0;
 						if (Index > GetTextLength())
@@ -321,28 +320,25 @@ namespace cse
 						ScrollToCaret();
 					}
 				}
-				property bool Modified
+				virtual property bool Modified
 				{
-					virtual bool get() { return ModifiedFlag; }
-					virtual void set(bool State)
+					bool get() { return ModifiedFlag; }
+					void set(bool State)
 					{
 						ModifiedFlag = State;
 						OnScriptModified(Modified);
 					}
 				}
-				property obScriptParsing::AnalysisData^ SemanticAnalysisData
+				virtual property obScriptParsing::AnalysisData^ SemanticAnalysisData
 				{
 					obScriptParsing::AnalysisData^ get() { return SemanticAnalysisCache; }
 				}
 
-				virtual void	Bind(ListView^ MessageList,
-									 ListView^ BookmarkList,
-									 ListView^ FindResultList);
+				virtual void	Bind();
 				virtual void	Unbind();
 
 				virtual String^	GetText();
 				virtual String^	GetText(UInt32 LineNumber);
-				virtual String^	GetPreprocessedText(bool% OutPreprocessResult, bool SuppressErrors);
 				virtual void	SetText(String^ Text, bool ResetUndoStack);
 				virtual String^	GetSelectedText(void);
 				virtual void	SetSelectedText(String^ Text);
@@ -371,12 +367,9 @@ namespace cse
 				virtual UInt32	GetIndentLevel(UInt32 LineNumber);
 				virtual void	InsertVariable(String^ VariableName, obScriptParsing::Variable::DataType VariableType);
 
-				virtual void	InitializeState(String^ RawScriptText);
-				virtual IScriptTextEditor::ILineAnchor^
-								CreateAnchor(UInt32 Line);
-
-				virtual CompilationData^	BeginScriptCompilation();
-				virtual void				EndScriptCompilation(CompilationData^ Data);
+				virtual void	InitializeState(String^ ScriptText, int CaretPosition);
+				virtual ILineAnchor^
+								CreateLineAnchor(UInt32 Line);
 			};
 		}
 	}

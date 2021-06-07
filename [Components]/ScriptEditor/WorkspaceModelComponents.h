@@ -2,39 +2,46 @@
 
 #include "ScriptTextEditorInterface.h"
 #include "SemanticAnalysis.h"
+#include "Globals.h"
 
 namespace cse
 {
 	namespace scriptEditor
 	{
-		ref struct ScriptDiagnosticMessage : public textEditors::IScriptTextEditor::ILineAnchor
+		ref struct CompilationData
 		{
-			static enum class MessageType
-			{
-				Info,
-				Warning,
-				Error,
-			};
+			String^	UnpreprocessedScriptText;
+			String^	PreprocessedScriptText;
+			String^	SerializedMetadata;
 
-			static enum class MessageSource
+			bool CanCompile;
+			bool HasPreprocessorDirectives;
+			bool HasWarnings;
+
+			componentDLLInterface::ScriptCompileData* CompileResult;
+
+			CompilationData()
 			{
-				Compiler,
-				Validator,
-				Preprocessor,
-			};
+				UnpreprocessedScriptText = "";
+				PreprocessedScriptText = "";
+				SerializedMetadata = "";
+				CanCompile = false;
+				HasPreprocessorDirectives = false;
+				HasWarnings = false;
+				CompileResult = nullptr;
+			}
+		};
+
+		ref struct ScriptLineAnnotation : public textEditors::ILineAnchor
+		{
 		protected:
-			textEditors::IScriptTextEditor::ILineAnchor^
-							Anchor_;
-			String^			Message_;
-			MessageType		Type_;
-			MessageSource	Source_;
+			textEditors::ILineAnchor^ Anchor_;
+			String^ Text_;
 		public:
-			ScriptDiagnosticMessage(textEditors::IScriptTextEditor::ILineAnchor^ Anchor, String^ Message, MessageType Type, MessageSource Source)
+			ScriptLineAnnotation(textEditors::ILineAnchor^ Anchor, String^ Text)
 			{
 				Anchor_ = Anchor;
-				Message_ = Message;
-				Type_ = Type;
-				Source_ = Source;
+				Text_ = Text;
 			}
 
 			virtual property UInt32 Line
@@ -49,9 +56,51 @@ namespace cse
 				void set(bool) {}
 			}
 
-			property String^ Message
+			property String^ Text
 			{
-				String^ get() { return Message_; }
+				String^ get() { return Text_; }
+			}
+		};
+
+		ref struct ScriptDiagnosticMessage : public ScriptLineAnnotation
+		{
+			static enum class MessageType
+			{
+				All,
+				Info,
+				Warning,
+				Error,
+			};
+
+			static enum class MessageSource
+			{
+				All,
+				Compiler,
+				Validator,
+				Preprocessor,
+			};
+
+			static void		PopulateImageListWithMessageTypeImages(ImageList^ Destination);
+		protected:
+			static array<Image^>^ MessageTypeImages =
+			{
+				Globals::ImageResources()->CreateImage("IntelliSenseItemEmpty"),
+				Globals::ImageResources()->CreateImage("MessageListInfo"),
+				Globals::ImageResources()->CreateImage("MessageListWarning"),
+				Globals::ImageResources()->CreateImage("MessageListError"),
+			};
+
+			MessageType		Type_;
+			MessageSource	Source_;
+		public:
+			ScriptDiagnosticMessage(textEditors::ILineAnchor^ Anchor,
+									String^ Message,
+									MessageType Type,
+									MessageSource Source)
+				: ScriptLineAnnotation(Anchor, Message)
+			{
+				Type_ = Type;
+				Source_ = Source;
 			}
 
 			property MessageType Type
@@ -65,64 +114,51 @@ namespace cse
 			}
 		};
 
-		ref struct ScriptBookmark : public textEditors::IScriptTextEditor::ILineAnchor
+		ref struct ScriptBookmark : public ScriptLineAnnotation
 		{
-		protected:
-			textEditors::IScriptTextEditor::ILineAnchor^
-						Anchor_;
-			String^		Description_;
 		public:
-			ScriptBookmark(textEditors::IScriptTextEditor::ILineAnchor^ Anchor, String^ Description)
-			{
-				Anchor_ = Anchor;
-				Description_ = Description;
-			}
+			ScriptBookmark(textEditors::ILineAnchor^ Anchor, String^ Description)
+				: ScriptLineAnnotation(Anchor, Description) {}
+		};
 
+		ref struct ScriptFindResult : public ScriptLineAnnotation
+		{
+			UInt32 Hits_;
+		public:
+			ScriptFindResult(textEditors::ILineAnchor^ Anchor, String^ Description, UInt32 Hits)
+				: ScriptLineAnnotation(Anchor, Description), Hits_(Hits) {}
 
-			virtual property UInt32 Line
+			property UInt32 Hits
 			{
-				UInt32 get() { return Anchor_->Line; }
-				void set(UInt32) {}
-			}
-
-			virtual property bool Valid
-			{
-				bool get() { return Anchor_->Valid; }
-				void set(bool) {}
-			}
-
-			property String^ Description
-			{
-				String^ get() { return Description_; }
+				UInt32 get() { return Hits_; }
 			}
 		};
 
 		ref struct ScriptTextMetadata
 		{
+			using CaretPosition = int;
+
 			ref struct Bookmark
 			{
 				property UInt32	 Line;
-				property String^ Message;
+				property String^ Text;
 
 				Bookmark(UInt32 Line, String^ Message)
 				{
 					this->Line = Line;
-					this->Message = Message;
+					this->Text = Message;
 				}
 			};
 
-			using CaretPosition = int;
-
-
-			property CaretPosition		CaretPos;
-			property List<Bookmark^>^	Bookmarks;
-			property bool				HasPreprocessorDirectives;
+			property CaretPosition CaretPos;
+			property List<Bookmark^>^ Bookmarks;
+			property bool HasPreprocessorDirectives;
 
 			ScriptTextMetadata()
 			{
-				this->CaretPos = -1;
-				this->Bookmarks = gcnew List<Bookmark^>();
-				this->HasPreprocessorDirectives = false;
+				CaretPos = -1;
+				Bookmarks = gcnew List<Bookmark^>;
+				HasPreprocessorDirectives = false;
 			}
 		};
 

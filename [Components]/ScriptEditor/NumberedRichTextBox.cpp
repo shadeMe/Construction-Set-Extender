@@ -434,7 +434,7 @@ namespace cse
 			return -1;
 		}
 
-		bool OffsetRichTextBox::CalculateLineOffsetsForTextField(UInt32 Data, UInt32 Length)
+		bool OffsetRichTextBox::CalculateLineOffsetsForTextField(void* Data, UInt32 Length)
 		{
 			bool Result = false;
 			Array^ ByteCode = nullptr;

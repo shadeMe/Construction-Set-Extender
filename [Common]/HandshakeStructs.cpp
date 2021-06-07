@@ -313,7 +313,7 @@ namespace componentDLLInterface
 		delete[] UseInfoListCellItemListHead;
 	}
 
-	ScriptCompileData::ScriptCompileData() : Script(), CompileResult(false), CompileErrorData()
+	ScriptCompileData::ScriptCompileData() : Script(), CompilationSuccessful(false), CompileErrorData()
 	{
 		PrintErrorsToConsole = true;
 		kHandShakeStructCounters[kCounter_ScriptCompileData]++;

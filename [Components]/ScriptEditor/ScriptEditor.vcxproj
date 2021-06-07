@@ -319,6 +319,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Union_534.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\UpdatedJscriptIntelliSense_10740.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Annotations\png\Error_red_16x16.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Annotations\png\Information_blue_6227_16x16.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Annotations\png\Messages_7234.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Annotations\png\PendingDelete_13298.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\BindingSource_6844.png" />

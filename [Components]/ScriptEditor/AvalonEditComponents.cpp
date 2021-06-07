@@ -52,7 +52,6 @@ namespace cse
 	{
 		namespace avalonEditor
 		{
-
 			System::Windows::Point TransformToPixels(double X, double Y)
 			{
 				// get DPI independent coords
@@ -70,14 +69,8 @@ namespace cse
 				return TransformToPixels(In.X, In.Y);
 			}
 
-			void ILineBackgroundColorizer::RenderBackground(TextView^ Destination,
-															System::Windows::Media::DrawingContext^ DrawingContext,
-															int StartOffset,
-															int EndOffset,
-															Windows::Media::Color Background,
-															Windows::Media::Color Border,
-															Double BorderThickness,
-															bool ColorEntireLine)
+
+			void LineTrackingManagerBgRenderer::RenderBackground(TextView^ Destination, System::Windows::Media::DrawingContext^ DrawingContext, int StartOffset, int EndOffset, Windows::Media::Color Background, Windows::Media::Color Border, Double BorderThickness, bool ColorEntireLine)
 			{
 				Destination->EnsureVisualLines();
 				TextSegment^ Segment = gcnew TextSegment();
@@ -88,460 +81,19 @@ namespace cse
 					if (ColorEntireLine)
 					{
 						DrawingContext->DrawRoundedRectangle(gcnew System::Windows::Media::SolidColorBrush(Background),
-															 gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(Border), BorderThickness),
-															 Windows::Rect(R.Location, Windows::Size(Destination->ActualWidth + Destination->HorizontalOffset, R.Height)), 2, 2);
+							gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(Border), BorderThickness),
+							Windows::Rect(R.Location, Windows::Size(Destination->ActualWidth + Destination->HorizontalOffset, R.Height)), 2, 2);
 					}
 					else
 					{
 						DrawingContext->DrawRoundedRectangle(gcnew System::Windows::Media::SolidColorBrush(Background),
-															 gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(Border), BorderThickness),
-															 Windows::Rect(R.Location, Windows::Size(R.Width, R.Height)), 2, 2);
+							gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(Border), BorderThickness),
+							Windows::Rect(R.Location, Windows::Size(R.Width, R.Height)), 2, 2);
 					}
 				}
 			}
 
-			ILineBackgroundColorizer::~ILineBackgroundColorizer()
-			{
-				ParentEditor = nullptr;
-			}
-
-			ILineBackgroundColorizer::ILineBackgroundColorizer(AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer) :
-				ParentEditor(Parent),
-				RenderLayer(RenderLayer)
-			{
-				;//
-			}
-
-			ScriptMessage::ScriptMessage(LineTrackingManager^ Parent, TextAnchor^ Location,
-										 IScriptTextEditor::ScriptMessageType Type,
-										 IScriptTextEditor::ScriptMessageSource Source,
-										 String^ Text)
-			{
-				Manager = Parent;
-				Anchor = Location;
-				MessageType = Type;
-				MessageSource = Source;
-				MessageString = Text;
-				IndicatorDisabled = false;
-			}
-
-			int ScriptMessage::Line()
-			{
-				return Anchor->Line;
-			}
-
-			String^ ScriptMessage::Message()
-			{
-				return MessageString;
-			}
-
-			int ScriptMessage::ImageIndex()
-			{
-				return (int)MessageType;
-			}
-
-			void ScriptMessage::Jump()
-			{
-				Manager->Jump(this);
-			}
-
-			ScriptMessage::~ScriptMessage()
-			{
-				Manager = nullptr;
-			}
-
-			IScriptTextEditor::ScriptMessageSource ScriptMessage::Source()
-			{
-				return MessageSource;
-			}
-
-			bool ScriptMessage::Deleted()
-			{
-				return Anchor->IsDeleted;
-			}
-
-			IScriptTextEditor::ScriptMessageType ScriptMessage::Type()
-			{
-				return MessageType;
-			}
-
-			ScriptBookmark::ScriptBookmark(LineTrackingManager^ Parent, TextAnchor^ Location, String^ Text)
-			{
-				Manager = Parent;
-				Anchor = Location;
-				Description = Text;
-			}
-
-			int ScriptBookmark::Line()
-			{
-				if (Anchor->IsDeleted)
-					return 0;
-				else
-					return Anchor->Line;
-			}
-
-			String^ ScriptBookmark::Message()
-			{
-				return Description;
-			}
-
-			void ScriptBookmark::Jump()
-			{
-				Manager->Jump(this);
-			}
-
-			ScriptBookmark::~ScriptBookmark()
-			{
-				Manager = nullptr;
-			}
-
-			bool ScriptBookmark::Deleted()
-			{
-				return Anchor->IsDeleted;
-			}
-
-			ScriptFindResult::ScriptFindResult(LineTrackingManager^ Parent, TextAnchor^ Start, TextAnchor^ End, String^ Text)
-			{
-				Manager = Parent;
-				AnchorStart = Start;
-				AnchorEnd = End;
-				Description = Text;
-				IndicatorDisabled = false;
-			}
-
-			int ScriptFindResult::Line()
-			{
-				return AnchorStart->Line;
-			}
-
-			String^ ScriptFindResult::Message()
-			{
-				return Description;
-			}
-
-			void ScriptFindResult::Jump()
-			{
-				Manager->Jump(this);
-			}
-
-			ScriptFindResult::~ScriptFindResult()
-			{
-				Manager = nullptr;
-			}
-
-			bool ScriptFindResult::Deleted()
-			{
-				return (AnchorStart->IsDeleted || AnchorEnd->IsDeleted);
-			}
-
-			int ScriptFindResult::StartOffset()
-			{
-				return AnchorStart->Offset;
-			}
-
-			int ScriptFindResult::EndOffset()
-			{
-				return AnchorEnd->Offset;
-			}
-
-			int TrackingMessageSorter::Compare(TrackingMessage^ X, TrackingMessage^ Y)
-			{
-				switch (CompareField)
-				{
-				case cse::textEditors::avalonEditor::TrackingMessageSorter::ComparisonField::Line:
-					return X->Line() < Y->Line();
-				case cse::textEditors::avalonEditor::TrackingMessageSorter::ComparisonField::Message:
-					return String::Compare(X->Message(), Y->Message(), true);
-				case cse::textEditors::avalonEditor::TrackingMessageSorter::ComparisonField::ImageIndex:
-					{
-						TrackingImageMessage^ XImage = (TrackingImageMessage^)X;
-						TrackingImageMessage^ YImage = (TrackingImageMessage^)Y;
-
-						if (XImage == nullptr || YImage == nullptr)
-							throw gcnew ArgumentException("Object is not a TrackingImageMessage");
-
-						return XImage->ImageIndex() < YImage->ImageIndex();
-					}
-				default:
-					return 0;
-				}
-			}
-
-			int TrackingMessageListViewSorter::Compare(Object^ X, Object^ Y)
-			{
-				int Result = -1;
-
-				TrackingMessage^ First = (TrackingMessage^)((ListViewItem^)X)->Tag;
-				TrackingMessage^ Second = (TrackingMessage^)((ListViewItem^)Y)->Tag;
-
-				switch (_Column)
-				{
-				case 0:		// line
-					Result = First->Line() - Second->Line();
-					break;
-				case 1:		// message
-					Result = String::Compare(First->Message(), Second->Message(), true);
-					break;
-				}
-
-				if (_Order == SortOrder::Descending)
-					Result *= -1;
-
-				return Result;
-			}
-
-			int TrackingImageMessageListViewSorter::Compare(Object^ X, Object^ Y)
-			{
-				int Result = -1;
-
-				TrackingImageMessage^ First = (TrackingImageMessage^)((ListViewItem^)X)->Tag;
-				TrackingImageMessage^ Second = (TrackingImageMessage^)((ListViewItem^)Y)->Tag;
-
-				switch (_Column)
-				{
-				case 0:		// image/dummy column
-					Result = First->ImageIndex() - Second->ImageIndex();
-					break;
-				case 1:		// line
-					Result = First->Line() - Second->Line();
-					break;
-				case 2:		// message
-					Result = String::Compare(First->Message(), Second->Message(), true);
-					break;
-				}
-
-				if (_Order == SortOrder::Descending)
-					Result *= -1;
-
-				return Result;
-			}
-
-			void ScriptBookmarkBinder::InitializeListView(ListView^ Control)
-			{
-				ColumnHeader^ Line = gcnew ColumnHeader();
-				Line->Text = "Line";
-				Line->Width = 50;
-				ColumnHeader^ Message = gcnew ColumnHeader();
-				Message->Text = "Description";
-				Message->Width = 720;
-
-				Control->Columns->Add(Line);
-				Control->Columns->Add(Message);
-			}
-
-			System::Collections::IComparer^ ScriptBookmarkBinder::GetSorter(int Column, SortOrder Order)
-			{
-				return gcnew TrackingMessageListViewSorter(Column, Order);
-			}
-
-			int ScriptBookmarkBinder::GetImageIndex(ScriptBookmark^ Item)
-			{
-				return -1;
-			}
-
-			void ScriptBookmarkBinder::ActivateItem(ScriptBookmark^ Item)
-			{
-				Item->Jump();
-			}
-
-			void ScriptBookmarkBinder::KeyPress(KeyEventArgs^ E)
-			{
-				if (E->KeyCode == Keys::Delete)
-				{
-					ListViewItem^ Selection = GetListViewSelectedItem(Sink);
-					if (Selection)
-					{
-						ScriptBookmark^ Data = (ScriptBookmark^)Selection->Tag;
-						Source->Remove(Data);
-					}
-				}
-			}
-
-			UInt32 ScriptBookmarkBinder::GetColumnCount()
-			{
-				return 2;
-			}
-
-			String^ ScriptBookmarkBinder::GetSubItemText(ScriptBookmark^ Item, int Column)
-			{
-				switch (Column)
-				{
-				case 0:
-					return Item->Line().ToString();
-				case 1:
-					return Item->Message();
-				default:
-					return "<unknown>";
-				}
-			}
-
-			UInt32 ScriptBookmarkBinder::GetDefaultSortColumn()
-			{
-				return 0;
-			}
-
-			System::Windows::Forms::SortOrder ScriptBookmarkBinder::GetDefaultSortOrder()
-			{
-				return SortOrder::Ascending;
-			}
-
-			void ScriptMessageBinder::InitializeListView(ListView^ Control)
-			{
-				ColumnHeader^ Dummy = gcnew ColumnHeader();
-				Dummy->Text = " ";
-				Dummy->Width = 25;
-				ColumnHeader^ Line = gcnew ColumnHeader();
-				Line->Text = "Line";
-				Line->Width = 50;
-				ColumnHeader^ Message = gcnew ColumnHeader();
-				Message->Text = "Message";
-				Message->Width = 720;
-
-				Control->Columns->Add(Dummy);
-				Control->Columns->Add(Line);
-				Control->Columns->Add(Message);
-
-				Control->SmallImageList = gcnew ImageList();
-				Control->SmallImageList->Images->Add(Globals::ImageResources()->CreateImage("MessageListWarning"));
-				Control->SmallImageList->Images->Add(Globals::ImageResources()->CreateImage("MessageListError"));
-			}
-
-			System::Collections::IComparer^ ScriptMessageBinder::GetSorter(int Column, SortOrder Order)
-			{
-				return gcnew TrackingImageMessageListViewSorter(Column, Order);
-			}
-
-			int ScriptMessageBinder::GetImageIndex(ScriptMessage^ Item)
-			{
-				return Item->ImageIndex();
-			}
-
-			void ScriptMessageBinder::ActivateItem(ScriptMessage^ Item)
-			{
-				Item->Jump();
-			}
-
-			void ScriptMessageBinder::KeyPress(KeyEventArgs^ E)
-			{
-				;//
-			}
-
-			UInt32 ScriptMessageBinder::GetColumnCount()
-			{
-				return 3;
-			}
-
-			String^ ScriptMessageBinder::GetSubItemText(ScriptMessage^ Item, int Column)
-			{
-				switch (Column)
-				{
-				case 0:
-					return "";
-				case 1:
-					return Item->Line().ToString();
-				case 2:
-					return Item->Message();
-				default:
-					return "<unknown>";
-				}
-			}
-
-			UInt32 ScriptMessageBinder::GetDefaultSortColumn()
-			{
-				return 0;
-			}
-
-			System::Windows::Forms::SortOrder ScriptMessageBinder::GetDefaultSortOrder()
-			{
-				// errors first
-				return SortOrder::Descending;
-			}
-
-			bool ScriptFindResultBinder::HasLine(ScriptFindResult^ Check)
-			{
-				for each (ListViewItem^ Itr in Sink->Items)
-				{
-					ScriptFindResult^ Data = (ScriptFindResult^)Itr->Tag;
-					if (Data->Line() == Check->Line())
-						return true;
-				}
-
-				return false;
-			}
-
-			ListViewItem^ ScriptFindResultBinder::Create(ScriptFindResult^ Data)
-			{
-				if (HasLine(Data) == false)
-					return SimpleListViewBinder::Create(Data);
-				else
-					return nullptr;
-			}
-
-			void ScriptFindResultBinder::InitializeListView(ListView^ Control)
-			{
-				ColumnHeader^ Line = gcnew ColumnHeader();
-				Line->Text = "Line";
-				Line->Width = 50;
-				ColumnHeader^ Message = gcnew ColumnHeader();
-				Message->Text = "Result";
-				Message->Width = 720;
-
-				Control->Columns->Add(Line);
-				Control->Columns->Add(Message);
-			}
-
-			System::Collections::IComparer^ ScriptFindResultBinder::GetSorter(int Column, SortOrder Order)
-			{
-				return gcnew TrackingMessageListViewSorter(Column, Order);
-			}
-
-			int ScriptFindResultBinder::GetImageIndex(ScriptFindResult^ Item)
-			{
-				return -1;
-			}
-
-			void ScriptFindResultBinder::ActivateItem(ScriptFindResult^ Item)
-			{
-				Item->Jump();
-			}
-
-			void ScriptFindResultBinder::KeyPress(KeyEventArgs^ E)
-			{
-				;//
-			}
-
-			UInt32 ScriptFindResultBinder::GetColumnCount()
-			{
-				return 2;
-			}
-
-			String^ ScriptFindResultBinder::GetSubItemText(ScriptFindResult^ Item, int Column)
-			{
-				switch (Column)
-				{
-				case 0:
-					return Item->Line().ToString();
-				case 1:
-					return Item->Message();
-				default:
-					return "<unknown>";
-				}
-			}
-
-			UInt32 ScriptFindResultBinder::GetDefaultSortColumn()
-			{
-				return 0;
-			}
-
-			System::Windows::Forms::SortOrder ScriptFindResultBinder::GetDefaultSortOrder()
-			{
-				return SortOrder::Ascending;
-			}
-
-			void ScriptErrorIndicator::RenderSquiggly(TextView^ Destination,
-													  System::Windows::Media::DrawingContext^ DrawingContext,
-													  int StartOffset, int EndOffset,
-													  Windows::Media::Color Color)
+			void LineTrackingManagerBgRenderer::RenderSquiggle(TextView^ Destination, System::Windows::Media::DrawingContext^ DrawingContext, int StartOffset, int EndOffset, Windows::Media::Color Color)
 			{
 				Destination->EnsureVisualLines();
 				TextSegment^ Segment = gcnew TextSegment();
@@ -576,616 +128,349 @@ namespace cse
 				}
 			}
 
-			ScriptErrorIndicator::ScriptErrorIndicator(GetColorizerSegments^ Getter)
+			void LineTrackingManagerBgRenderer::DoCurrentLineBackground(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 			{
-				Delegate = Getter;
+				if (!ParentEditor->TextArea->Selection->IsEmpty)
+					return;
+
+				DocumentLine^ Line = ParentEditor->Document->GetLineByNumber(ParentEditor->TextArea->Caret->Line);
+				Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorCurrentLine;
+				RenderBackground(textView,
+								 drawingContext,
+								 Line->Offset,
+								 Line->EndOffset,
+								 Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
+								 Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
+								 1,
+								 true);
 			}
 
-			ScriptErrorIndicator::~ScriptErrorIndicator()
+			void LineTrackingManagerBgRenderer::DoLineLimitBackground(DocumentLine^ Line, TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 			{
-				SAFEDELETE_CLR(Delegate);
+				if (Line->Length <= 512)
+					return;
+
+				Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorCharLimit;
+				RenderBackground(textView,
+								 drawingContext,
+								 Line->Offset,
+								 Line->EndOffset,
+								 Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
+								 Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
+								 1,
+								 true);
 			}
 
-			void ScriptErrorIndicator::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
+			void LineTrackingManagerBgRenderer::DoSelectedStringBackground(String^ SelectionText, DocumentLine^ Line, TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
+			{
+				if (SelectionText->Length <= 1)
+					return;
+
+				Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorSelection;
+				String^ CurrentLine = ParentEditor->Document->GetText(Line);
+
+				int Index = 0, Start = 0;
+				while (Start < CurrentLine->Length && (Index = CurrentLine->IndexOf(SelectionText, Start, System::StringComparison::CurrentCultureIgnoreCase)) != -1)
+				{
+					int EndIndex = Index + SelectionText->Length;
+					RenderBackground(textView,
+						             drawingContext,
+						             Line->Offset + Index,
+						             Line->Offset + EndIndex,
+						             Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
+						             Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
+						             1,
+						             false);
+
+					Start = EndIndex + 1;
+					TODO("test selection bg colorizer")
+				}
+			}
+
+			void LineTrackingManagerBgRenderer::DoErrorSquiggles(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 			{
 				Color Buffer = preferences::SettingsHolder::Get()->Appearance->UnderlineColorError;
 				Windows::Media::Color RenderColor = Windows::Media::Color::FromArgb(255, Buffer.R, Buffer.G, Buffer.B);
 
-				for each (ColorizerSegment^ Itr in Delegate())
-					RenderSquiggly(textView, drawingContext, Itr->Start, Itr->End, RenderColor);
-			}
-
-			ScriptFindResultIndicator::ScriptFindResultIndicator(GetColorizerSegments^ Getter) :
-				ILineBackgroundColorizer(nullptr, KnownLayer::Background)
-			{
-				Delegate = Getter;
-			}
-
-			ScriptFindResultIndicator::~ScriptFindResultIndicator()
-			{
-				SAFEDELETE_CLR(Delegate);
-			}
-
-			void ScriptFindResultIndicator::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
-			{
-				Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorFindResults;
-
-				for each (ColorizerSegment^ Itr in Delegate())
+				for each (auto Itr in ErrorSquiggles)
 				{
-					try
-					{
-						RenderBackground(textView,
-										 drawingContext,
-										 Itr->Start,
-										 Itr->End,
-										 Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
-										 Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
-										 1,
-										 false);
-					}
-					catch (...) {}
+					if (Itr->Enabled)
+						RenderSquiggle(textView, drawingContext, Itr->StartOffset, Itr->EndOffset, RenderColor);
 				}
 			}
 
-			void LineTrackingManager::Parent_TextChanged(Object^ Sender, EventArgs^ E)
+			void LineTrackingManagerBgRenderer::DoFindResults(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
+			{
+				Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorFindResults;
+				for each (auto Itr in FindResults)
+				{
+					if (!Itr->Enabled)
+						continue;
+
+					TODO("why did this need exception handling?")
+					RenderBackground(textView,
+									drawingContext,
+									Itr->StartOffset,
+									Itr->EndOffset,
+									Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
+									Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
+									1,
+									false);
+				}
+			}
+
+			void LineTrackingManagerBgRenderer::DoBraceIndicators(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
+			{
+				if (!OpenCloseBraces->Enabled)
+					return;
+				else if (OpenCloseBraces->StartOffset == -1 && OpenCloseBraces->EndOffset == -1)
+					return;
+
+				auto ValidBraceColor = Color::LightSlateGray;
+				auto InvalidBraceColor = Color::MediumVioletRed;
+
+				auto Builder = gcnew BackgroundGeometryBuilder();
+				Builder->CornerRadius = 1;
+
+				if (OpenCloseBraces->StartOffset != -1)
+				{
+					TextSegment^ OpenBraceSeg = gcnew TextSegment();
+					OpenBraceSeg->StartOffset = OpenCloseBraces->StartOffset;
+					OpenBraceSeg->Length = 1;
+					Builder->AddSegment(textView, OpenBraceSeg);
+					Builder->CloseFigure();						 // prevent connecting the two segments
+				}
+
+				if (OpenCloseBraces->EndOffset != -1)
+				{
+					TextSegment^ CloseBraceSeg = gcnew TextSegment();
+					CloseBraceSeg->StartOffset = OpenCloseBraces->EndOffset;
+					CloseBraceSeg->Length = 1;
+					Builder->AddSegment(textView, CloseBraceSeg);
+				}
+
+				auto HighlightGeometry = Builder->CreateGeometry();
+				if (HighlightGeometry == nullptr)
+					return;
+
+				auto HighlightColor = OpenCloseBraces->StartOffset == -1 || OpenCloseBraces->EndOffset == -1 ? InvalidBraceColor : ValidBraceColor;
+				drawingContext->DrawGeometry(gcnew System::Windows::Media::SolidColorBrush(System::Windows::Media::Color::FromArgb(125, InvalidBraceColor.R, InvalidBraceColor.G, InvalidBraceColor.B)),
+											 gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(System::Windows::Media::Color::FromArgb(150, 0, 0, 0)), 0), HighlightGeometry);
+			}
+
+			LineTrackingManagerBgRenderer::LineTrackingManagerBgRenderer(AvalonEdit::TextEditor^ Parent)
+			{
+				ParentEditor = Parent;
+
+				ErrorSquiggles = gcnew List<BackgroundRenderSegment^>;
+				FindResults = gcnew List<BackgroundRenderSegment^>;
+				OpenCloseBraces = gcnew BackgroundRenderSegment;
+			}
+
+			LineTrackingManagerBgRenderer::~LineTrackingManagerBgRenderer()
+			{
+				ParentEditor = nullptr;
+			}
+
+			void LineTrackingManagerBgRenderer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
+			{
+				textView->EnsureVisualLines();
+
+				DoCurrentLineBackground(textView, drawingContext);
+				DoErrorSquiggles(textView, drawingContext);
+				DoFindResults(textView, drawingContext);
+				DoBraceIndicators(textView, drawingContext);
+
+				String^ SelectionText = "";
+				if (!ParentEditor->TextArea->Selection->IsEmpty)
+					SelectionText = ParentEditor->TextArea->Selection->GetText()->Replace("\t", "")->Replace(" ", "")->Replace("\n", "")->Replace("\r\n", "");
+
+				for each (auto Line in ParentEditor->Document->Lines)
+				{
+					if (ParentEditor->TextArea->TextView->GetVisualLine(Line->LineNumber) == nullptr)
+						continue;
+
+					DoLineLimitBackground(Line, textView, drawingContext);
+					DoSelectedStringBackground(SelectionText, Line, textView, drawingContext);
+				}
+			}
+
+			void LineTrackingManagerBgRenderer::Redraw()
+			{
+				ParentEditor->TextArea->TextView->InvalidateLayer(Layer);
+			}
+
+
+			AvalonEditLineAnchor::AvalonEditLineAnchor(AvalonEdit::TextEditor^ Parent, UInt32 Line, bool AllowDeletion)
+			{
+				if (Line > Parent->LineCount)
+					Line = Parent->LineCount;
+
+				auto LineStartOffset = Parent->Document->GetLineByNumber(Line)->Offset;
+				if (LineStartOffset > Parent->Document->TextLength)
+					LineStartOffset = Parent->Document->TextLength;
+
+				Anchor = Parent->Document->CreateAnchor(LineStartOffset);
+				Anchor->SurviveDeletion = AllowDeletion == false;
+			}
+
+			void LineTrackingManager::ParentEditor_TextChanged(Object^ Sender, EventArgs^ E)
 			{
 				// disable compiler error indicators for the changed line
-				int Caret = Parent->TextArea->Caret->Offset;
-				int Line = Parent->Document->GetLineByOffset(Caret)->LineNumber;
+				int Caret = ParentEditor->TextArea->Caret->Offset;
+				int Line = ParentEditor->Document->GetLineByOffset(Caret)->LineNumber;
+				bool RefreshBg = false;
 
-				List<ScriptMessage^>^ CompilerErrors = gcnew List < ScriptMessage^ > ;
-
-				if (GetMessages(Line,
-								textEditors::IScriptTextEditor::ScriptMessageSource::Compiler,
-								textEditors::IScriptTextEditor::ScriptMessageType::Error,
-								CompilerErrors))
+				for each (auto Error in LineBgRenderer->ErrorSquiggles)
 				{
-					for each (auto Itr in CompilerErrors)
-						Itr->IndicatorDisabled = true;
+					if (Error->Line == Line)
+					{
+						Error->Enabled = false;
+						RefreshBg = true;
+					}
 				}
 
 				// disable find result indicators for modified segments
-				List<ScriptFindResult^>^ CurrentResults = gcnew List < ScriptFindResult^ > ;
-				if (GetFindResults(Line, CurrentResults))
+				for each (auto% FindResult in TrackedFindResultSegments)
 				{
-					for each (auto Itr in CurrentResults)
+					if (FindResult.Key->Start->IsDeleted || FindResult.Key->End->IsDeleted)
+						continue;
+
+					if (Caret >= FindResult.Value->StartOffset && Caret <= FindResult.Value->EndOffset)
 					{
-						if (Caret >= Itr->StartOffset() && Caret <= Itr->EndOffset())
-							Itr->IndicatorDisabled = true;
-					}
-				}
-			}
-
-			TextAnchor^ LineTrackingManager::CreateAnchor(UInt32 Offset, bool AllowDeletion)
-			{
-				if (Offset > Parent->Document->TextLength)
-					Offset = Parent->Document->TextLength;
-
-				TextAnchor^ New = Parent->Document->CreateAnchor(Offset);
-				New->SurviveDeletion = AllowDeletion == false;
-				return New;
-			}
-
-			void LineTrackingManager::RefreshBackgroundRenderers(bool IgnoreBatchUpdate)
-			{
-				if (IgnoreBatchUpdate || CurrentBatchUpdate == UpdateSource::None)
-					Parent->TextArea->TextView->InvalidateLayer(KnownLayer::Background);
-			}
-
-			UInt32 LineTrackingManager::GetFindResults(UInt32 At, List<ScriptFindResult^>^% Out)
-			{
-				int Count = 0;
-				for each (ScriptFindResult^ Itr in FindResults)
-				{
-					if (Itr->Line() == At)
-					{
-						Out->Add(Itr);
-						Count++;
-					}
-				}
-				return Count;
-			}
-
-			List<ColorizerSegment^>^ LineTrackingManager::GetErrorColorizerSegments()
-			{
-				List<ColorizerSegment^>^ Result = gcnew List < ColorizerSegment^ > ;
-				List<int>^ ParsedLines = gcnew List < int > ;
-
-				for each (ScriptMessage^ Itr in Messages)
-				{
-					if (Itr->Deleted() == false &&
-						Itr->IndicatorDisabled == false &&
-						Itr->Type() == IScriptTextEditor::ScriptMessageType::Error &&
-						ParsedLines->Contains(Itr->Line()) == false)
-					{
-						DocumentLine^ Line = Parent->TextArea->Document->GetLineByNumber(Itr->Line());
-						ISegment^ WhitespaceLeading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(Parent->TextArea->Document, Line);
-						ISegment^ WhitespaceTrailing = AvalonEdit::Document::TextUtilities::GetTrailingWhitespace(Parent->TextArea->Document, Line);
-
-						ColorizerSegment^ Segment = gcnew ColorizerSegment;
-						Segment->Start = WhitespaceLeading->EndOffset;
-						Segment->End = WhitespaceTrailing->Offset;
-						Result->Add(Segment);
-						ParsedLines->Add(Itr->Line());
+						FindResult.Value->Enabled = false;
+						RefreshBg = true;
 					}
 				}
 
-				return Result;
+				if (RefreshBg)
+					LineBgRenderer->Redraw();
 			}
 
-			List<ColorizerSegment^>^ LineTrackingManager::GetFindResultColorizerSegments()
+			void LineTrackingManager::ParentModel_StateChanged(scriptEditor::IWorkspaceModel^ Sender, scriptEditor::IWorkspaceModel::StateChangeEventArgs^ E)
 			{
-				List<ColorizerSegment^>^ Result = gcnew List < ColorizerSegment^ >;
+				if (E->EventType != scriptEditor::IWorkspaceModel::StateChangeEventArgs::Type::Messages)
+					return;
 
-				for each (ScriptFindResult^ Itr in FindResults)
+				// update the error squiggles
+				LineBgRenderer->ErrorSquiggles->Clear();
+				auto ProcessedLines = gcnew List<UInt32>;
+				for each (auto Itr in E->Messages)
 				{
-					if (Itr->Deleted() == false && Itr->IndicatorDisabled == false)
-					{
-						ColorizerSegment^ Segment = gcnew ColorizerSegment;
-						Segment->Start = Itr->StartOffset();
-						Segment->End = Itr->EndOffset();
-						Result->Add(Segment);
-					}
+					if (!Itr->Valid)
+						continue;
+					else if (ProcessedLines->Contains(Itr->Line))
+						continue;
+					else if (Itr->Type != scriptEditor::ScriptDiagnosticMessage::MessageType::Error)
+						continue;
+
+					DocumentLine^ Line = ParentEditor->TextArea->Document->GetLineByNumber(Itr->Line);
+					ISegment^ WhitespaceLeading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(ParentEditor->TextArea->Document, Line);
+					ISegment^ WhitespaceTrailing = AvalonEdit::Document::TextUtilities::GetTrailingWhitespace(ParentEditor->TextArea->Document, Line);
+
+					auto NewSegment = gcnew BackgroundRenderSegment;
+					NewSegment->Line = Itr->Line;
+					NewSegment->StartOffset = WhitespaceLeading->EndOffset;
+					NewSegment->EndOffset = WhitespaceTrailing->Offset;
+					LineBgRenderer->ErrorSquiggles->Add(NewSegment);
+					ProcessedLines->Add(Itr->Line);
 				}
-
-				return Result;
 			}
 
-			void LineTrackingManager::OnTrackedDataUpdated()
+			LineTrackingManager::LineTrackingManager(AvalonEdit::TextEditor^ ParentEditor, scriptEditor::IWorkspaceModel^ ParentModel)
 			{
-				if (CurrentUpdateCounter == 0)
-					TrackedDataUpdated(this, EventArgs::Empty);
-			}
+				this->ParentEditor = ParentEditor;
+				this->ParentModel = ParentModel;
 
-			LineTrackingManager::LineTrackingManager(AvalonEdit::TextEditor^ ParentEditor) :
-				Parent(ParentEditor)
-			{
-				Messages = gcnew SimpleBindingList < ScriptMessage^ > ;
-				Bookmarks = gcnew SimpleBindingList < ScriptBookmark^ > ;
-				FindResults = gcnew SimpleBindingList < ScriptFindResult^ > ;
+				TrackedLineAnchors = gcnew List<AvalonEditLineAnchor^>;
+				TrackedFindResultSegments = gcnew Dictionary<FindResultSegment^, BackgroundRenderSegment^>;
+				LineBgRenderer = gcnew LineTrackingManagerBgRenderer(ParentEditor);
 
-				BinderMessages = gcnew ScriptMessageBinder;
-				BinderBookmarks = gcnew ScriptBookmarkBinder;
-				BinderFindResults = gcnew ScriptFindResultBinder;
+				ParentModelStateChangedHandler = gcnew scriptEditor::IWorkspaceModel::StateChangeEventHandler(this, &LineTrackingManager::ParentModel_StateChanged);
+				ParentEditorTextChangedHandler = gcnew EventHandler(this, &LineTrackingManager::ParentEditor_TextChanged);
 
-				CurrentBatchUpdate = UpdateSource::None;
-				CurrentUpdateCounter = 0;
+				this->ParentEditor->TextArea->TextView->BackgroundRenderers->Add(LineBgRenderer);
 
-				ErrorColorizer = gcnew ScriptErrorIndicator(gcnew GetColorizerSegments(this, &LineTrackingManager::GetErrorColorizerSegments));
-				FindResultColorizer = gcnew ScriptFindResultIndicator(gcnew GetColorizerSegments(this, &LineTrackingManager::GetFindResultColorizerSegments));
-
-				Parent->TextArea->TextView->BackgroundRenderers->Add(ErrorColorizer);
-				Parent->TextArea->TextView->BackgroundRenderers->Add(FindResultColorizer);
-
-				ParentTextChangedHandler = gcnew EventHandler(this, &LineTrackingManager::Parent_TextChanged);
-				Parent->TextChanged += ParentTextChangedHandler;
+				this->ParentEditor->TextChanged += ParentEditorTextChangedHandler;
+				this->ParentModel->StateChanged += ParentModelStateChangedHandler;
 			}
 
 			LineTrackingManager::~LineTrackingManager()
 			{
-				Debug::Assert(CurrentBatchUpdate == UpdateSource::None && CurrentUpdateCounter == 0);
+				TrackedLineAnchors->Clear();
+				TrackedFindResultSegments->Clear();
 
-				Unbind();
+				ParentEditor->TextArea->TextView->BackgroundRenderers->Remove(LineBgRenderer);
 
-				ClearMessages(IScriptTextEditor::ScriptMessageSource::None, IScriptTextEditor::ScriptMessageType::None);
-				ClearBookmarks();
-				ClearFindResults(false);
+				ParentEditor->TextChanged -= ParentEditorTextChangedHandler;
+				ParentModel->StateChanged -= ParentModelStateChangedHandler;
 
-				Parent->TextArea->TextView->BackgroundRenderers->Remove(ErrorColorizer);
-				Parent->TextArea->TextView->BackgroundRenderers->Remove(FindResultColorizer);
+				SAFEDELETE_CLR(ParentEditorTextChangedHandler);
+				SAFEDELETE_CLR(ParentModelStateChangedHandler);
+				SAFEDELETE_CLR(LineBgRenderer);
 
-				Parent->TextChanged -= ParentTextChangedHandler;
-
-				SAFEDELETE_CLR(FindResultColorizer);
-				SAFEDELETE_CLR(ErrorColorizer);
-
-				SAFEDELETE_CLR(Messages);
-				SAFEDELETE_CLR(FindResults);
-				SAFEDELETE_CLR(Bookmarks);
-
-				SAFEDELETE_CLR(BinderMessages);
-				SAFEDELETE_CLR(BinderBookmarks);
-				SAFEDELETE_CLR(BinderFindResults);
-
-				SAFEDELETE_CLR(ParentTextChangedHandler);
-
-				Parent = nullptr;
+				ParentEditor = nullptr;
+				ParentModel = nullptr;
 			}
 
-			void LineTrackingManager::Bind(ListView^ MessageList, ListView^ BookmarkList, ListView^ FindResultList)
+			TextAnchor^ LineTrackingManager::CreateAnchor(int Offset, bool AllowDeletion)
 			{
-				BinderMessages->Bind(MessageList, Messages);
-				BinderBookmarks->Bind(BookmarkList, Bookmarks);
-				BinderFindResults->Bind(FindResultList, FindResults);
+				if (Offset > ParentEditor->Document->TextLength)
+					Offset = ParentEditor->Document->TextLength;
+
+				TextAnchor^ New = ParentEditor->Document->CreateAnchor(Offset);
+				New->SurviveDeletion = AllowDeletion == false;
+				return New;
 			}
 
-			void LineTrackingManager::Unbind()
+			AvalonEditLineAnchor^ LineTrackingManager::CreateLineAnchor(UInt32 Line, bool AllowDeletion)
 			{
-				BinderMessages->Unbind();
-				BinderBookmarks->Unbind();
-				BinderFindResults->Unbind();
+				auto NewLineAnchor = gcnew AvalonEditLineAnchor(ParentEditor, Line, AllowDeletion);;
+				TrackedLineAnchors->Add(NewLineAnchor);
+				return NewLineAnchor;
 			}
 
-			void LineTrackingManager::BeginUpdate(UpdateSource Source)
+			void LineTrackingManager::TrackFindResultSegment(UInt32 Start, UInt32 End)
 			{
-				Debug::Assert(CurrentBatchUpdate == UpdateSource::None || CurrentBatchUpdate == Source);
-				Debug::Assert(Source != UpdateSource::None);
+				auto NewSegment = gcnew FindResultSegment;
+				NewSegment->Start = CreateAnchor(Start, false);
+				NewSegment->End = CreateAnchor(End, false);
 
-				if (CurrentUpdateCounter == 0)
+				auto BgRendererSegment = gcnew BackgroundRenderSegment;
+				BgRendererSegment->StartOffset = NewSegment->Start->Offset;
+				BgRendererSegment->EndOffset = NewSegment->End->Offset;
+
+				TrackedFindResultSegments->Add(NewSegment, BgRendererSegment);
+				LineBgRenderer->FindResults->Add(BgRendererSegment);
+
+				LineBgRenderer->Redraw();
+			}
+
+			void LineTrackingManager::ClearFindResultSegments()
+			{
+				TrackedFindResultSegments->Clear();
+				LineBgRenderer->FindResults->Clear();
+				LineBgRenderer->Redraw();
+			}
+
+			bool LineTrackingManager::RemoveDeletedLineAnchors()
+			{
+				auto Invalidated = gcnew List<AvalonEditLineAnchor^>;
+
+				for each (auto Itr in TrackedLineAnchors)
 				{
-					switch (Source)
-					{
-					case cse::textEditors::avalonEditor::LineTrackingManager::UpdateSource::Messages:
-						Messages->BeginUpdate();
-						break;
-					case cse::textEditors::avalonEditor::LineTrackingManager::UpdateSource::Bookmarks:
-						Bookmarks->BeginUpdate();
-						break;
-					case cse::textEditors::avalonEditor::LineTrackingManager::UpdateSource::FindResults:
-						FindResults->BeginUpdate();
-						break;
-					}
+					if (Itr->Anchor->IsDeleted)
+						Invalidated->Add(Itr);
 				}
 
-				CurrentUpdateCounter++;
-				CurrentBatchUpdate = Source;
-			}
+				for each (auto Itr in Invalidated)
+					TrackedLineAnchors->Remove(Itr);
 
-			void LineTrackingManager::EndUpdate(bool Sort)
-			{
-				Debug::Assert(CurrentBatchUpdate != UpdateSource::None);
+				if (Invalidated->Count == 0)
+					return false;
 
-				CurrentUpdateCounter--;
-				Debug::Assert(CurrentUpdateCounter >= 0);
-
-				if (CurrentUpdateCounter == 0)
-				{
-					switch (CurrentBatchUpdate)
-					{
-					case cse::textEditors::avalonEditor::LineTrackingManager::UpdateSource::Messages:
-						Messages->EndUpdate(Sort, gcnew ScriptMessageSorter(TrackingMessageSorter::ComparisonField::ImageIndex));
-						break;
-					case cse::textEditors::avalonEditor::LineTrackingManager::UpdateSource::Bookmarks:
-						Bookmarks->EndUpdate(Sort, gcnew ScriptBookmarkSorter(TrackingMessageSorter::ComparisonField::Line));
-						break;
-					case cse::textEditors::avalonEditor::LineTrackingManager::UpdateSource::FindResults:
-						FindResults->EndUpdate(Sort, gcnew ScriptFindResultSorter(TrackingMessageSorter::ComparisonField::Line));
-						break;
-					}
-
-					CurrentBatchUpdate = UpdateSource::None;
-					RefreshBackgroundRenderers(false);
-					OnTrackedDataUpdated();
-				}
-			}
-
-			void LineTrackingManager::TrackMessage(UInt32 Line,
-												   IScriptTextEditor::ScriptMessageType Type,
-												   IScriptTextEditor::ScriptMessageSource Source,
-												   String^ Message)
-			{
-				Debug::Assert(Type != IScriptTextEditor::ScriptMessageType::None);
-				Debug::Assert(Source != IScriptTextEditor::ScriptMessageSource::None);
-				Debug::Assert(Line > 0);
-
-				if (Line > Parent->LineCount)
-					Line = Parent->LineCount;
-
-				ScriptMessage^ New = gcnew ScriptMessage(this, CreateAnchor(Parent->Document->GetLineByNumber(Line)->Offset, false),
-														 Type, Source, Message->Replace("\t", "")->Replace("\r", "")->Replace("\n", ""));
-				Messages->Add(New);
-				RefreshBackgroundRenderers(false);
-				OnTrackedDataUpdated();
-			}
-
-			void LineTrackingManager::ClearMessages(IScriptTextEditor::ScriptMessageSource SourceFilter,
-													IScriptTextEditor::ScriptMessageType TypeFilter)
-			{
-				List<ScriptMessage^>^ Buffer = gcnew List < ScriptMessage^ > ;
-
-				BeginUpdate(LineTrackingManager::UpdateSource::Messages);
-				for each (ScriptMessage^ Itr in Messages)
-				{
-					if ((SourceFilter == IScriptTextEditor::ScriptMessageSource::None || Itr->Source() == SourceFilter) &&
-						(TypeFilter == IScriptTextEditor::ScriptMessageType::None || Itr->Type() == TypeFilter))
-					{
-						Buffer->Add(Itr);
-					}
-				}
-
-				for each (ScriptMessage^ Itr in Buffer)
-					Messages->Remove(Itr);
-
-				EndUpdate(false);
-			}
-
-			bool LineTrackingManager::GetMessages(UInt32 Line,
-												  IScriptTextEditor::ScriptMessageSource SourceFilter,
-												  IScriptTextEditor::ScriptMessageType TypeFilter,
-												  List<ScriptMessage^>^% OutMessages)
-			{
-				bool Result = false;
-				for each (ScriptMessage^ Itr in Messages)
-				{
-					if (Itr->Line() == Line)
-					{
-						if ((SourceFilter == IScriptTextEditor::ScriptMessageSource::None || Itr->Source() == SourceFilter) &&
-							(TypeFilter == IScriptTextEditor::ScriptMessageType::None || Itr->Type() == TypeFilter))
-						{
-							OutMessages->Add(Itr);
-							Result = true;
-						}
-					}
-				}
-
-				return Result;
-			}
-
-			UInt32 LineTrackingManager::GetMessageCount(UInt32 Line,
-														IScriptTextEditor::ScriptMessageSource SourceFilter,
-														IScriptTextEditor::ScriptMessageType TypeFilter)
-			{
-				int Count = 0;
-				for each (ScriptMessage^ Itr in Messages)
-				{
-					if (Line == 0 || Itr->Line() == Line)
-					{
-						if ((SourceFilter == IScriptTextEditor::ScriptMessageSource::None || Itr->Source() == SourceFilter) &&
-							(TypeFilter == IScriptTextEditor::ScriptMessageType::None || Itr->Type() == TypeFilter))
-						{
-							Count++;
-						}
-					}
-				}
-
-				return Count;
-			}
-
-			void LineTrackingManager::AddBookmark(UInt32 Line, String^ Description)
-			{
-				Debug::Assert(Line > 0);
-				if (Line > Parent->LineCount)
-					Line = Parent->LineCount;
-
-				Description->Replace("\t", " ");
-				ScriptBookmark^ New = gcnew ScriptBookmark(this, CreateAnchor(Parent->Document->GetLineByNumber(Line)->Offset, true), Description);
-
-				Bookmarks->Add(New);
-				RefreshBackgroundRenderers(false);
-				OnTrackedDataUpdated();
-			}
-
-			UInt32 LineTrackingManager::GetBookmarks(UInt32 Line, List<ScriptBookmark^>^% Out)
-			{
-				int Count = 0;
-				for each (ScriptBookmark^ Itr in Bookmarks)
-				{
-					if (Itr->Deleted() == false && Itr->Line() == Line)
-					{
-						Out->Add(Itr);
-						Count++;
-					}
-				}
-				return Count;
-			}
-
-			List<cse::scriptEditor::ScriptTextMetadata::Bookmark^>^ LineTrackingManager::GetAllBookmarks()
-			{
-				auto Out = gcnew List<scriptEditor::ScriptTextMetadata::Bookmark ^>;
-
-				for each (ScriptBookmark ^ Itr in Bookmarks)
-				{
-					if (Itr->Deleted() == false)
-						Out->Add(gcnew scriptEditor::ScriptTextMetadata::Bookmark(Itr->Line(), Itr->Message()));
-				}
-
-				return Out;
-			}
-
-			void LineTrackingManager::ClearBookmarks()
-			{
-				Bookmarks->Clear();
-				RefreshBackgroundRenderers(false);
-				OnTrackedDataUpdated();
-			}
-
-			void LineTrackingManager::TrackFindResult(UInt32 Start, UInt32 End, String^ Text)
-			{
-				ScriptFindResult^ New = gcnew ScriptFindResult(this, CreateAnchor(Start, false), CreateAnchor(End, false), Text);
-
-				FindResults->Add(New);
-				RefreshBackgroundRenderers(false);
-				OnTrackedDataUpdated();
-			}
-
-			void LineTrackingManager::ClearFindResults(bool IndicatorOnly)
-			{
-				if (IndicatorOnly)
-				{
-					for each (ScriptFindResult^ Itr in FindResults)
-						Itr->IndicatorDisabled = true;
-				}
-				else
-					FindResults->Clear();
-
-				RefreshBackgroundRenderers(false);
-				OnTrackedDataUpdated();
-			}
-
-			void LineTrackingManager::Cleanup()
-			{
-				List<ScriptMessage^>^ RemovedMessages = gcnew List < ScriptMessage^ > ;
-				List<ScriptBookmark^>^ RemovedBookmarks = gcnew List < ScriptBookmark^ > ;
-				List<ScriptFindResult^>^ RemovedFindResults = gcnew List < ScriptFindResult^ > ;
-
-				for each (ScriptMessage^ Itr in Messages)
-				{
-					if (Itr->Deleted())
-						RemovedMessages->Add(Itr);
-				}
-
-				for each (ScriptBookmark^ Itr in Bookmarks)
-				{
-					if (Itr->Deleted())
-						RemovedBookmarks->Add(Itr);
-				}
-
-				for each (ScriptFindResult^ Itr in FindResults)
-				{
-					if (Itr->Deleted())
-						RemovedFindResults->Add(Itr);
-				}
-
-				static const int BatchUpdateThreshold = 5;
-				{
-					if (RemovedMessages->Count > BatchUpdateThreshold)
-						BeginUpdate(LineTrackingManager::UpdateSource::Messages);
-
-					for each (ScriptMessage^ Itr in RemovedMessages)
-						Messages->Remove(Itr);
-
-					if (RemovedMessages->Count > BatchUpdateThreshold)
-						EndUpdate(false);
-				}
-
-				{
-					if (RemovedBookmarks->Count > BatchUpdateThreshold)
-						BeginUpdate(LineTrackingManager::UpdateSource::Bookmarks);
-
-					for each (ScriptBookmark^ Itr in RemovedBookmarks)
-						Bookmarks->Remove(Itr);
-
-					if (RemovedBookmarks->Count > BatchUpdateThreshold)
-						EndUpdate(false);
-				}
-
-				{
-					if (RemovedFindResults->Count > BatchUpdateThreshold)
-						BeginUpdate(LineTrackingManager::UpdateSource::FindResults);
-
-					for each (ScriptFindResult^ Itr in RemovedFindResults)
-						FindResults->Remove(Itr);
-
-					if (RemovedFindResults->Count > BatchUpdateThreshold)
-						EndUpdate(false);
-				}
-
-				RemovedMessages->Clear();
-				RemovedBookmarks->Clear();
-				RemovedFindResults->Clear();
-
-				RefreshBackgroundRenderers(false);
-				OnTrackedDataUpdated();
-			}
-
-			void LineTrackingManager::Jump(TrackingMessage^ To)
-			{
-				int Line = To->Line();
-
-				if (Line > 0 && Line <= Parent->LineCount)
-				{
-					Parent->TextArea->Caret->Line = Line;
-					Parent->TextArea->Caret->Column = 0;
-					Parent->TextArea->Caret->BringCaretToView();
-					Parent->Focus();
-				}
-			}
-
-			void CurrentLineBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
-			{
-				if (ParentEditor->TextArea->Selection->IsEmpty)
-				{
-					DocumentLine^ Line = ParentEditor->Document->GetLineByNumber(ParentEditor->TextArea->Caret->Line);
-					Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorCurrentLine;
-					RenderBackground(textView,
-									drawingContext,
-									Line->Offset,
-									Line->EndOffset,
-									Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
-									Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
-									1,
-									true);
-				}
-			}
-
-			CurrentLineBGColorizer::CurrentLineBGColorizer( AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer ) :
-				ILineBackgroundColorizer(Parent, RenderLayer)
-			{
-				;//
-			}
-
-			void SelectionBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
-			{
-				TextDocument^ CurrentDocument = ParentEditor->Document;
-				Selection^ CurrentSelection = ParentEditor->TextArea->Selection;
-
-				if (!CurrentSelection->IsEmpty)
-				{
-					String^ SelectionText = CurrentSelection->GetText()->Replace("\t", "")->Replace(" ", "")->Replace("\n", "")->Replace("\r\n", "");
-					if (SelectionText->Length > 1)
-					{
-						Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorSelection;
-
-						for each (DocumentLine^ Line in ParentEditor->Document->Lines)
-						{
-							// skip lines that are not visible
-							if (ParentEditor->TextArea->TextView->GetVisualLine(Line->LineNumber))
-							{
-								String^ CurrentLine = ParentEditor->Document->GetText(Line);
-
-								int Index = 0, Start = 0;
-								while ((Index = CurrentLine->IndexOf(SelectionText, Start, System::StringComparison::CurrentCultureIgnoreCase)) != -1)
-								{
-									int EndIndex = Index + SelectionText->Length;
-									RenderBackground(textView,
-													 drawingContext,
-													 Line->Offset + Index,
-													 Line->Offset + EndIndex,
-													 Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
-													 Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
-													 1,
-													 false);
-
-									Start = Index + 1;
-								}
-							}
-						}
-					}
-				}
-			}
-
-			SelectionBGColorizer::SelectionBGColorizer( AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer ) :
-				ILineBackgroundColorizer(Parent, RenderLayer)
-			{
-				;//
-			}
-
-			void LineLimitBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
-			{
-				Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorCharLimit;
-
-				for each (DocumentLine^ Line in ParentEditor->Document->Lines)
-				{
-					String^ CurrentLine = ParentEditor->Document->GetText(Line);
-
-					if (CurrentLine->Length > 512)
-					{
-						RenderBackground(textView,
-										drawingContext,
-										Line->Offset,
-										Line->EndOffset,
-										Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
-										Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
-										1,
-										true);
-					}
-				}
-			}
-
-			LineLimitBGColorizer::LineLimitBGColorizer( AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer ) :
-				ILineBackgroundColorizer(Parent, RenderLayer)
-			{
-				;//
+				LineBgRenderer->Redraw();
+				return true;
 			}
 
 			void ObScriptIndentStrategy::IndentLines(AvalonEdit::Document::TextDocument^ document, Int32 beginLine, Int32 endLine)
@@ -1327,94 +612,6 @@ namespace cse
 			ObScriptCodeFoldingStrategy::ObScriptCodeFoldingStrategy(AvalonEditTextEditor^ Parent) :
 				Parent(Parent),
 				Sorter(gcnew FoldingSorter())
-			{
-				;//
-			}
-
-			void BraceHighlightingBGColorizer::Draw( TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext )
-			{
-				if (DoHighlight == false || (OpenBraceOffset == -1 && CloseBraceOffset == -1))
-					return;
-
-				textView->EnsureVisualLines();
-
-				Color ValidBraceColor = Color::LightSlateGray;
-				Color InvalidBraceColor = Color::MediumVioletRed;
-
-				BackgroundGeometryBuilder^ Builder = gcnew BackgroundGeometryBuilder();
-
-				Builder->CornerRadius = 1;
-				//Builder->AlignToMiddleOfPixels = true;
-
-				if (OpenBraceOffset != -1)
-				{
-					TextSegment^ OpenBraceSeg = gcnew TextSegment();
-					OpenBraceSeg->StartOffset = OpenBraceOffset;
-					OpenBraceSeg->Length = 1;
-					Builder->AddSegment(textView, OpenBraceSeg);
-					Builder->CloseFigure();						 // prevent connecting the two segments
-				}
-
-				if (CloseBraceOffset != -1)
-				{
-					TextSegment^ CloseBraceSeg = gcnew TextSegment();
-					CloseBraceSeg->StartOffset = CloseBraceOffset;
-					CloseBraceSeg->Length = 1;
-					Builder->AddSegment(textView, CloseBraceSeg);
-				}
-
-				System::Windows::Media::Geometry^ HighlightGeometry = Builder->CreateGeometry();
-				if (HighlightGeometry != nullptr)
-				{
-					if (OpenBraceOffset == -1 || CloseBraceOffset == -1)
-					{
-						drawingContext->DrawGeometry(gcnew System::Windows::Media::SolidColorBrush(System::Windows::Media::Color::FromArgb(125,
-																									InvalidBraceColor.R,
-																									InvalidBraceColor.G,
-																									InvalidBraceColor.B)),
-													gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(
-															System::Windows::Media::Color::FromArgb(150, 0, 0, 0)), 0),
-													HighlightGeometry);
-					}
-					else
-					{
-						drawingContext->DrawGeometry(gcnew System::Windows::Media::SolidColorBrush(System::Windows::Media::Color::FromArgb(125,
-																									ValidBraceColor.R,
-																									ValidBraceColor.G,
-																									ValidBraceColor.B)),
-													gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(
-															System::Windows::Media::Color::FromArgb(150, 0, 0, 0)), 0),
-													HighlightGeometry);
-					}
-				}
-			}
-
-			void BraceHighlightingBGColorizer::SetHighlight( int OpenBraceOffset, int CloseBraceOffset )
-			{
-				this->OpenBraceOffset = OpenBraceOffset;
-				this->CloseBraceOffset = CloseBraceOffset;
-				this->DoHighlight = true;
-			}
-
-			void BraceHighlightingBGColorizer::ClearHighlight( void )
-			{
-				this->DoHighlight = false;
-			}
-
-			BraceHighlightingBGColorizer::BraceHighlightingBGColorizer( AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer ) :
-				ILineBackgroundColorizer(Parent, RenderLayer),
-				OpenBraceOffset(-1),
-				CloseBraceOffset(-1),
-				DoHighlight(false)
-			{
-				;//
-			}
-
-			TagableDoubleAnimation::TagableDoubleAnimation( double fromValue,
-															double toValue,
-															System::Windows::Duration duration,
-															System::Windows::Media::Animation::FillBehavior fillBehavior ) :
-				DoubleAnimation(fromValue, toValue, duration, fillBehavior)
 			{
 				;//
 			}
@@ -1706,6 +903,11 @@ namespace cse
 				return BookmarkIcon;
 			}
 
+			void DefaultIconMargin::ParentModel_StateChanged(scriptEditor::IWorkspaceModel^ Sender, scriptEditor::IWorkspaceModel::StateChangeEventArgs^ E)
+			{
+				this->InvalidateVisual();
+			}
+
 			void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::MouseEventArgs^ E)
 			{
 				bool DisplayPopup = false;
@@ -1713,56 +915,60 @@ namespace cse
 				String^ PopupText = "";
 				auto PopupBgColor = IRichTooltipContentProvider::BackgroundColor::Default;
 
-				Windows::Point DisplayLocation = TransformToPixels(E->GetPosition(Parent));
+				Windows::Point DisplayLocation = TransformToPixels(E->GetPosition(ParentEditor));
 				DisplayLocation.X += System::Windows::SystemParameters::CursorWidth;
 				//DisplayLocation.Y += GetVisualLineFromMousePosition(E)->Height;
-				DisplayLocation = Parent->PointToScreen(DisplayLocation);
-
-				List<ScriptMessage^>^ Warnings = gcnew List < ScriptMessage^ >;
-				List<ScriptMessage^>^ Errors = gcnew List < ScriptMessage^ >;
-				List<ScriptBookmark^>^ Bookmarks = gcnew List < ScriptBookmark^ >;
+				DisplayLocation = ParentEditor->PointToScreen(DisplayLocation);
 
 				String^ kRowStart = "<div width=\"350\">", ^kRowEnd = "</div>";
 				String^ kCellStart = "<span padding=\"0,0,0,5\">", ^kCellEnd = "</span>\n";
 
-				if (LineTracker->GetMessages(Line,
-										IScriptTextEditor::ScriptMessageSource::None,
-										IScriptTextEditor::ScriptMessageType::Error,
-										Errors))
+				if (ParentModel->Controller->GetErrorCount(ParentModel, Line))
 				{
 					DisplayPopup = true;
+					auto Errors = gcnew List<scriptEditor::ScriptDiagnosticMessage^>;
+					ParentModel->Controller->GetMessages(ParentModel,
+														 Line,
+														 scriptEditor::ScriptDiagnosticMessage::MessageSource::All,
+														 scriptEditor::ScriptDiagnosticMessage::MessageType::Error, Errors);
 
 					PopupBgColor = IRichTooltipContentProvider::BackgroundColor::Red;
 					PopupTitle = Errors->Count + " error" + (Errors->Count == 1 ? "" : "s");
 
 					PopupText += kRowStart;
 					for each (auto Itr in Errors)
-						PopupText += kCellStart + Itr->Message() + kCellEnd;
+						PopupText += kCellStart + Itr->Text + kCellEnd;
 					PopupText += kRowEnd;
 				}
-				else if (LineTracker->GetMessages(Line,
-										 IScriptTextEditor::ScriptMessageSource::None,
-										 IScriptTextEditor::ScriptMessageType::Warning,
-										 Warnings))
+				else if (ParentModel->Controller->GetWarningCount(ParentModel, Line))
 				{
 					DisplayPopup = true;
+					auto Warnings = gcnew List<scriptEditor::ScriptDiagnosticMessage^>;
+					ParentModel->Controller->GetMessages(ParentModel,
+														 Line,
+														 scriptEditor::ScriptDiagnosticMessage::MessageSource::All,
+														 scriptEditor::ScriptDiagnosticMessage::MessageType::Warning, Warnings);
+
 					PopupBgColor = IRichTooltipContentProvider::BackgroundColor::Yellow;
 					PopupTitle = Warnings->Count + " warning" + (Warnings->Count == 1 ? "" : "s");
 
 					PopupText += kRowStart;
 					for each (auto Itr in Warnings)
-						PopupText += kCellStart + Itr->Message() + kCellEnd;
+						PopupText += kCellStart + Itr->Text + kCellEnd;
 					PopupText += kRowEnd;
 				}
-				else if (LineTracker->GetBookmarks(Line,Bookmarks))
+				else if (ParentModel->Controller->GetBookmarkCount(ParentModel, Line))
 				{
 					DisplayPopup = true;
+					auto Bookmarks = gcnew List<scriptEditor::ScriptBookmark^>;
+					ParentModel->Controller->GetBookmarks(ParentModel, Line, Bookmarks);
+
 					PopupBgColor = IRichTooltipContentProvider::BackgroundColor::Blue;
 					PopupTitle = Bookmarks->Count + " bookmark" + (Bookmarks->Count == 1 ? "" : "s");
 
 					PopupText += kRowStart;
 					for each (auto Itr in Bookmarks)
-						PopupText += kCellStart + Itr->Message() + kCellEnd;
+						PopupText += kCellStart + Itr->Text + kCellEnd;
 					PopupText += kRowEnd;
 				}
 
@@ -1794,27 +1000,24 @@ namespace cse
 
 			bool DefaultIconMargin::GetRenderData(int Line, Windows::Media::Imaging::BitmapSource^% OutIcon, double% OutOpacity, int% Width, int% Height)
 			{
-				List<ScriptMessage^>^ Errors = gcnew List < ScriptMessage^ >;
-				List<ScriptMessage^>^ Warnings = gcnew List < ScriptMessage^ >;
-				List<ScriptBookmark^>^ Bookmarks = gcnew List < ScriptBookmark^ >;
-				LineTracker->GetMessages(Line, IScriptTextEditor::ScriptMessageSource::None, IScriptTextEditor::ScriptMessageType::Error, Errors);
-				LineTracker->GetMessages(Line, IScriptTextEditor::ScriptMessageSource::None, IScriptTextEditor::ScriptMessageType::Warning, Warnings);
-				LineTracker->GetBookmarks(Line, Bookmarks);
+				auto ErrorCount = ParentModel->Controller->GetErrorCount(ParentModel, Line);
+				auto WarningCount = ParentModel->Controller->GetWarningCount(ParentModel, Line);
+				auto BookmarkCount = ParentModel->Controller->GetBookmarkCount(ParentModel, Line);
 
-				if (Errors->Count == 0 && Warnings->Count == 0 && Bookmarks->Count == 0)
+				if (ErrorCount == 0 && WarningCount == 0 && BookmarkCount == 0)
 					return false;
 
-				if (Errors->Count)
+				if (ErrorCount)
 				{
 					OutIcon = GetErrorIcon();
 					Width = Height = 16;
 				}
-				else if (Warnings->Count)
+				else if (WarningCount)
 				{
 					OutIcon = GetWarningIcon();
 					Width = Height = 16;
 				}
-				else
+				else if (BookmarkCount)
 				{
 					OutIcon = GetBookmarkIcon();
 					Width = Height = 16;
@@ -1824,16 +1027,13 @@ namespace cse
 				return true;
 			}
 
-			DefaultIconMargin::DefaultIconMargin(AvalonEdit::TextEditor^ ParentEditor, LineTrackingManager^ ParentLineTracker, IntPtr ToolTipParent)
+			DefaultIconMargin::DefaultIconMargin(AvalonEdit::TextEditor^ ParentEditor, scriptEditor::IWorkspaceModel^ ParentModel, IntPtr ToolTipParent)
 			{
-				InstanceCounter++;
+				++InstanceCounter;
 
-				Debug::Assert(ParentEditor != nullptr);
-				Debug::Assert(ParentLineTracker != nullptr);
-
-				Parent = ParentEditor;
-				LineTracker = ParentLineTracker;
-				PopupParent = ToolTipParent;
+				this->ParentEditor = ParentEditor;
+				this->ParentModel = ParentModel;
+				this->PopupParent = ToolTipParent;
 
 				Popup = gcnew DotNetBar::SuperTooltip;
 				Popup->DelayTooltipHideDuration = 500;
@@ -1842,7 +1042,8 @@ namespace cse
 				Popup->DefaultFont = gcnew Font(SystemFonts::DialogFont->FontFamily, 9.25);
 				Popup->MinimumTooltipSize = Size(180, 25);
 
-				LineTracker->TrackedDataUpdated += HandlerTextViewChanged;
+				ParentModelStateChangedHandler = gcnew scriptEditor::IWorkspaceModel::StateChangeEventHandler(this, &DefaultIconMargin::ParentModel_StateChanged);
+				this->ParentModel->StateChanged += ParentModelStateChangedHandler;
 			}
 
 			DefaultIconMargin::~DefaultIconMargin()
@@ -1850,13 +1051,14 @@ namespace cse
 				InstanceCounter--;
 				Debug::Assert(InstanceCounter >= 0);
 
-				LineTracker->TrackedDataUpdated -= HandlerTextViewChanged;
+				ParentModel->StateChanged -= ParentModelStateChangedHandler;
+				SAFEDELETE_CLR(ParentModelStateChangedHandler);
 
 				Popup->HideTooltip();
 				SAFEDELETE_CLR(Popup);
 
-				Parent = nullptr;
-				LineTracker = nullptr;
+				ParentEditor = nullptr;
+				ParentModel = nullptr;
 
 				if (InstanceCounter == 0)
 				{
@@ -1865,6 +1067,9 @@ namespace cse
 
 					if (BookmarkIcon)
 						SAFEDELETE_CLR(BookmarkIcon);
+
+					if (ErrorIcon)
+						SAFEDELETE_CLR(ErrorIcon);
 				}
 			}
 		}

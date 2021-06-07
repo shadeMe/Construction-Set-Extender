@@ -11,10 +11,12 @@ namespace cse
 		ref struct SemanticAnalysisCompleteEventArgs
 		{
 			property obScriptParsing::AnalysisData^		Result;
+			property bool								BackgroundAnalysis;
 
-			SemanticAnalysisCompleteEventArgs(obScriptParsing::AnalysisData^ Result)
+			SemanticAnalysisCompleteEventArgs(obScriptParsing::AnalysisData^ Result, bool BackgroundAnalysis)
 			{
 				this->Result = Result->Clone();
+				this->BackgroundAnalysis = BackgroundAnalysis;
 			}
 		};
 
@@ -27,7 +29,7 @@ namespace cse
 
 			property obScriptParsing::AnalysisData^ LastAnalysisResult;
 
-			obScriptParsing::AnalysisData^ DoSynchronousAnalysis();
+			obScriptParsing::AnalysisData^ DoSynchronousAnalysis(bool RaiseCompletionEvent);
 		};
 
 
@@ -89,7 +91,7 @@ namespace cse
 			void	Resume();
 			void	WaitForBackgroundTask();
 
-			virtual obScriptParsing::AnalysisData^		DoSynchronousAnalysis();
+			virtual obScriptParsing::AnalysisData^		DoSynchronousAnalysis(bool RaiseCompletionEvent);
 
 		};
 	}

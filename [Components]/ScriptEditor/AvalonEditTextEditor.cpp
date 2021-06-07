@@ -118,14 +118,14 @@ namespace cse
 									{
 										TextField->Document->Replace(Offset, Length, Replacement);
 										CurrentLine = TextField->Document->GetText(Line);
-										LineTracker->TrackFindResult(Offset, Offset + Replacement->Length, CurrentLine);
+										LineTracker->TrackFindResultSegment(Offset, Offset + Replacement->Length);
 										SearchStartOffset = Itr->Index + Replacement->Length;
 										Restart = true;
 										break;
 									}
 									else if (Operation == IScriptTextEditor::FindReplaceOperation::Find)
 									{
-										LineTracker->TrackFindResult(Offset, Offset + Length, CurrentLine);
+										LineTracker->TrackFindResultSegment(Offset, Offset + Length);
 									}
 								}
 							}
@@ -288,11 +288,6 @@ namespace cse
 				{
 					MessageBox::Show("Invalid line number.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
 				}
-			}
-
-			void AvalonEditTextEditor::RefreshBGColorizerLayer()
-			{
-				TextField->TextArea->TextView->InvalidateLayer(ICSharpCode::AvalonEdit::Rendering::KnownLayer::Text);
 			}
 
 			void AvalonEditTextEditor::RefreshTextView()
@@ -486,98 +481,99 @@ namespace cse
 
 			void AvalonEditTextEditor::SearchBracesForHighlighting( int CaretPos )
 			{
-				BraceColorizer->ClearHighlight();
+				LineTracker->LineBackgroundRenderer->OpenCloseBraces->Enabled = false;
 
-				if (TextField->TextArea->Selection->IsEmpty)
+				if (!TextField->TextArea->Selection->IsEmpty)
+					LineTracker->LineBackgroundRenderer->Redraw();
+
+				DocumentLine^ CurrentLine = TextField->Document->GetLineByOffset(CaretPos);
+				int OpenBraceOffset = -1, CloseBraceOffset = -1, RelativeCaretPos = -1;
+				ScriptParser^ LocalParser = gcnew ScriptParser();
+				Stack<BracketSearchData^>^ BracketStack = gcnew Stack<BracketSearchData^>();
+				List<BracketSearchData^>^ ParsedBracketList = gcnew List<BracketSearchData^>();
+
+				if (CurrentLine != nullptr)
 				{
-					DocumentLine^ CurrentLine = TextField->Document->GetLineByOffset(CaretPos);
-					int OpenBraceOffset = -1, CloseBraceOffset = -1, RelativeCaretPos = -1;
-					ScriptParser^ LocalParser = gcnew ScriptParser();
-					Stack<BracketSearchData^>^ BracketStack = gcnew Stack<BracketSearchData^>();
-					List<BracketSearchData^>^ ParsedBracketList = gcnew List<BracketSearchData^>();
-
-					if (CurrentLine != nullptr)
+					RelativeCaretPos = CaretPos - CurrentLine->Offset;
+					String^ Text = TextField->Document->GetText(CurrentLine);
+					LocalParser->Tokenize(Text, true);
+					if (LocalParser->Valid)
 					{
-						RelativeCaretPos = CaretPos - CurrentLine->Offset;
-						String^ Text = TextField->Document->GetText(CurrentLine);
-						LocalParser->Tokenize(Text, true);
-						if (LocalParser->Valid)
+						for (int i = 0; i < LocalParser->TokenCount; i++)
 						{
-							for (int i = 0; i < LocalParser->TokenCount; i++)
+							String^ Token = LocalParser->Tokens[i];
+							Char Delimiter = LocalParser->Delimiters[i];
+							int TokenIndex = LocalParser->Indices[i];
+							int DelimiterIndex = TokenIndex + Token->Length;
+
+							if (LocalParser->GetCommentTokenIndex(-1) == i)
+								break;
+
+							if (BracketSearchData::ValidOpeningBrackets->IndexOf(Delimiter) != -1)
 							{
-								String^ Token = LocalParser->Tokens[i];
-								Char Delimiter = LocalParser->Delimiters[i];
-								int TokenIndex = LocalParser->Indices[i];
-								int DelimiterIndex = TokenIndex + Token->Length;
-
-								if (LocalParser->GetCommentTokenIndex(-1) == i)
-									break;
-
-								if (BracketSearchData::ValidOpeningBrackets->IndexOf(Delimiter) != -1)
+								BracketStack->Push(gcnew BracketSearchData(Delimiter, DelimiterIndex));
+							}
+							else if (BracketSearchData::ValidClosingBrackets->IndexOf(Delimiter) != -1)
+							{
+								if (BracketStack->Count == 0)
 								{
-									BracketStack->Push(gcnew BracketSearchData(Delimiter, DelimiterIndex));
+									BracketSearchData^ DelinquentBracket = gcnew BracketSearchData(Delimiter, -1);
+									DelinquentBracket->EndOffset = DelimiterIndex;
+									DelinquentBracket->Mismatching = true;
+									ParsedBracketList->Add(DelinquentBracket);
 								}
-								else if (BracketSearchData::ValidClosingBrackets->IndexOf(Delimiter) != -1)
+								else
 								{
-									if (BracketStack->Count == 0)
-									{
-										BracketSearchData^ DelinquentBracket = gcnew BracketSearchData(Delimiter, -1);
-										DelinquentBracket->EndOffset = DelimiterIndex;
-										DelinquentBracket->Mismatching = true;
-										ParsedBracketList->Add(DelinquentBracket);
-									}
+									BracketSearchData^ CurrentBracket = BracketStack->Pop();
+									BracketSearchData Buffer(Delimiter, DelimiterIndex);
+
+									if (CurrentBracket->GetType() == Buffer.GetType() && CurrentBracket->GetKind() == BracketSearchData::BracketKind::Opening)
+										CurrentBracket->EndOffset = DelimiterIndex;
 									else
-									{
-										BracketSearchData^ CurrentBracket = BracketStack->Pop();
-										BracketSearchData Buffer(Delimiter, DelimiterIndex);
+										CurrentBracket->Mismatching = true;
 
-										if (CurrentBracket->GetType() == Buffer.GetType() && CurrentBracket->GetKind() == BracketSearchData::BracketKind::Opening)
-											CurrentBracket->EndOffset = DelimiterIndex;
-										else
-											CurrentBracket->Mismatching = true;
-
-										ParsedBracketList->Add(CurrentBracket);
-									}
+									ParsedBracketList->Add(CurrentBracket);
 								}
 							}
+						}
 
-							while (BracketStack->Count)
-							{
-								BracketSearchData^ DelinquentBracket = BracketStack->Pop();
-								DelinquentBracket->EndOffset = -1;
-								DelinquentBracket->Mismatching = true;
-								ParsedBracketList->Add(DelinquentBracket);
-							}
+						while (BracketStack->Count)
+						{
+							BracketSearchData^ DelinquentBracket = BracketStack->Pop();
+							DelinquentBracket->EndOffset = -1;
+							DelinquentBracket->Mismatching = true;
+							ParsedBracketList->Add(DelinquentBracket);
+						}
 
-							if (ParsedBracketList->Count)
+						if (ParsedBracketList->Count)
+						{
+							for each (BracketSearchData^ Itr in ParsedBracketList)
 							{
-								for each (BracketSearchData^ Itr in ParsedBracketList)
+								if	((Itr->GetStartOffset() <= RelativeCaretPos && Itr->EndOffset >= RelativeCaretPos) ||
+									(Itr->GetStartOffset() <= RelativeCaretPos && Itr->EndOffset == -1) ||
+									(Itr->GetStartOffset() == -1 && Itr->EndOffset >= RelativeCaretPos))
 								{
-									if	((Itr->GetStartOffset() <= RelativeCaretPos && Itr->EndOffset >= RelativeCaretPos) ||
-										(Itr->GetStartOffset() <= RelativeCaretPos && Itr->EndOffset == -1) ||
-										(Itr->GetStartOffset() == -1 && Itr->EndOffset >= RelativeCaretPos))
-									{
-										OpenBraceOffset = Itr->GetStartOffset();
-										CloseBraceOffset = Itr->EndOffset;
-										break;
-									}
+									OpenBraceOffset = Itr->GetStartOffset();
+									CloseBraceOffset = Itr->EndOffset;
+									break;
 								}
 							}
 						}
 					}
-
-					if (OpenBraceOffset != -1)
-						OpenBraceOffset += CurrentLine->Offset;
-					if (CloseBraceOffset != -1)
-						CloseBraceOffset += CurrentLine->Offset;
-
-					BraceColorizer->SetHighlight(OpenBraceOffset, CloseBraceOffset);
-
-					BracketStack->Clear();
-					ParsedBracketList->Clear();
 				}
 
-				TextField->TextArea->TextView->InvalidateLayer(BraceColorizer->Layer);
+				if (OpenBraceOffset != -1)
+					OpenBraceOffset += CurrentLine->Offset;
+				if (CloseBraceOffset != -1)
+					CloseBraceOffset += CurrentLine->Offset;
+
+				LineTracker->LineBackgroundRenderer->OpenCloseBraces->StartOffset = OpenBraceOffset;
+				LineTracker->LineBackgroundRenderer->OpenCloseBraces->EndOffset = CloseBraceOffset;
+
+				BracketStack->Clear();
+				ParsedBracketList->Clear();
+
+				LineTracker->LineBackgroundRenderer->Redraw();
 			}
 
 			AvalonEditHighlightingDefinition^ AvalonEditTextEditor::CreateSyntaxHighlightDefinitions( bool UpdateStableDefs )
@@ -804,17 +800,7 @@ namespace cse
 				else
 					BookmarkDesc = Result->Text;
 
-				LineTracker->AddBookmark(LineNo, BookmarkDesc);
-			}
-
-			void AvalonEditTextEditor::RoutePreprocessorMessages(int Line, String^ Message)
-			{
-				if (Line < 1)
-					Line = 1;
-
-				LineTracker->TrackMessage(Line,
-										  textEditors::IScriptTextEditor::ScriptMessageType::Error,
-										  textEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor, Message);
+				ParentModel->Controller->AddBookmark(ParentModel, LineNo, BookmarkDesc);
 			}
 
 			void AvalonEditTextEditor::ToggleSearchPanel(bool State)
@@ -920,21 +906,23 @@ namespace cse
 				E->Line = GetLineNumberFromCharIndex(Offset);
 				E->HoveringOverComment = GetCharIndexInsideCommentSegment(Offset);
 
-				auto Messages = gcnew List < ScriptMessage^ >;
-				LineTracker->GetMessages(E->Line,
-										IScriptTextEditor::ScriptMessageSource::Validator,
-										IScriptTextEditor::ScriptMessageType::Error,
-										Messages);
-				LineTracker->GetMessages(E->Line,
-										IScriptTextEditor::ScriptMessageSource::Compiler,
-										IScriptTextEditor::ScriptMessageType::Error,
-										Messages);
+				auto Messages = gcnew List <scriptEditor::ScriptDiagnosticMessage^>;
+				ParentModel->Controller->GetMessages(ParentModel,
+													 E->Line,
+													 scriptEditor::ScriptDiagnosticMessage::MessageSource::Validator,
+													 scriptEditor::ScriptDiagnosticMessage::MessageType::Error,
+													 Messages);
+				ParentModel->Controller->GetMessages(ParentModel,
+													 E->Line,
+													 scriptEditor::ScriptDiagnosticMessage::MessageSource::Compiler,
+													 scriptEditor::ScriptDiagnosticMessage::MessageType::Error,
+													 Messages);
 
 				if (E->HoveringOverComment && Messages->Count == 0)
 					return;
 
 				for each (auto Itr in Messages)
-					E->ErrorMessagesForHoveredLine->Add(Itr->Message());
+					E->ErrorMessagesForHoveredLine->Add(Itr->Text);
 
 				array<Tuple<Char, Char>^>^ Delimiters = gcnew array<Tuple<Char, Char>^>(3);
 				array<String^>^ Tokens = GetTokenAtLocation(Offset, Delimiters);
@@ -1049,6 +1037,12 @@ namespace cse
 			{
 				TextUpdated(this, EventArgs::Empty);
 			}
+
+			void AvalonEditTextEditor::OnLineAnchorInvalidated()
+			{
+				LineAnchorInvalidated(this, EventArgs::Empty);
+			}
+
 #pragma endregion
 
 #pragma region Event Handlers
@@ -1063,7 +1057,7 @@ namespace cse
 				if (TextField->TextArea->Caret->Line != PreviousLineBuffer)
 				{
 					PreviousLineBuffer = TextField->TextArea->Caret->Line;
-					RefreshBGColorizerLayer();
+					LineTracker->LineBackgroundRenderer->Redraw();
 					OnLineChanged();
 				}
 
@@ -1154,7 +1148,7 @@ namespace cse
 
 						break;
 					case System::Windows::Input::Key::Escape:
-						LineTracker->ClearFindResults(true);
+						LineTracker->ClearFindResultSegments();
 						ToggleSearchPanel(false);
 
 						break;
@@ -1234,6 +1228,9 @@ namespace cse
 
 			void AvalonEditTextEditor::TextField_KeyUp(Object^ Sender, System::Windows::Input::KeyEventArgs^ E)
 			{
+				if (IsFocused == false)
+					return;
+
 				if (E->Key == KeyToPreventHandling)
 				{
 					E->Handled = true;
@@ -1494,22 +1491,9 @@ namespace cse
 
 				SemanticAnalysisCache = E->Result->Clone();
 
-				LineTracker->Cleanup();
+				LineTracker->RemoveDeletedLineAnchors();
 				UpdateCodeFoldings();
 				UpdateSyntaxHighlighting(false);
-
-				LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
-				LineTracker->ClearMessages(textEditors::IScriptTextEditor::ScriptMessageSource::Validator,
-					textEditors::IScriptTextEditor::ScriptMessageType::None);
-
-				for each (obScriptParsing::AnalysisData::UserMessage ^ Itr in SemanticAnalysisCache->AnalysisMessages)
-				{
-					LineTracker->TrackMessage(Itr->Line,
-						(Itr->Critical == false ? textEditors::IScriptTextEditor::ScriptMessageType::Warning : textEditors::IScriptTextEditor::ScriptMessageType::Error),
-						textEditors::IScriptTextEditor::ScriptMessageSource::Validator, Itr->Message);
-				}
-
-				LineTracker->EndUpdate(false);
 
 				RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::Event::SemanticAnalysisCompleted);
 			}
@@ -1773,26 +1757,12 @@ namespace cse
 
 				Color ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
 				Color BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
-
-
-				System::Windows::Media::SolidColorBrush^ ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255,
-																													ForegroundColor.R,
-																													ForegroundColor.G,
-																													ForegroundColor.B));
-				System::Windows::Media::SolidColorBrush^ BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255,
-																													BackgroundColor.R,
-																													BackgroundColor.G,
-																													BackgroundColor.B));
+				auto ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, ForegroundColor.R, ForegroundColor.G, ForegroundColor.B));
+				auto BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B));
 
 				TextField->Foreground = ForegroundBrush;
 				TextField->Background = BackgroundBrush;
 				TextField->LineNumbersForeground = ForegroundBrush;
-
-				TextField->TextArea->TextView->BackgroundRenderers->Add(BraceColorizer = gcnew BraceHighlightingBGColorizer(TextField,
-																																KnownLayer::Background));
-				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew SelectionBGColorizer(TextField, KnownLayer::Background));
-				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew LineLimitBGColorizer(TextField, KnownLayer::Background));
-				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew CurrentLineBGColorizer(TextField, KnownLayer::Background));
 
 				TextField->TextArea->IndentationStrategy = nullptr;
 				if (preferences::SettingsHolder::Get()->General->AutoIndent)
@@ -1848,8 +1818,8 @@ namespace cse
 				PreviousLineBuffer = -1;
 				SemanticAnalysisCache = gcnew obScriptParsing::AnalysisData();
 
-				LineTracker = gcnew LineTrackingManager(TextField);
-				IconBarMargin = gcnew DefaultIconMargin(TextField, LineTracker, WindowHandle);
+				LineTracker = gcnew LineTrackingManager(TextField, ParentModel);
+				IconBarMargin = gcnew DefaultIconMargin(TextField, ParentModel, WindowHandle);
 				TextField->TextArea->LeftMargins->Insert(0, IconBarMargin);
 
 				StructureVisualizer = gcnew StructureVisualizerRenderer(this);
@@ -2163,7 +2133,6 @@ namespace cse
 				SAFEDELETE_CLR(TextFieldPanel);
 				SAFEDELETE_CLR(AnimationPrimitive);
 				SAFEDELETE_CLR(MiddleMouseScrollTimer);
-				SAFEDELETE_CLR(BraceColorizer);
 				SAFEDELETE_CLR(CodeFoldingManager);
 				SAFEDELETE_CLR(CodeFoldingStrategy);
 				SAFEDELETE_CLR(ScrollBarSyncTimer);
@@ -2180,12 +2149,10 @@ namespace cse
 			}
 
 #pragma region Interface
-			void AvalonEditTextEditor::Bind(ListView^ MessageList, ListView^ BookmarkList, ListView^ FindResultList)
+			void AvalonEditTextEditor::Bind()
 			{
 				IsFocused = true;
 				ScrollBarSyncTimer->Start();
-
-				LineTracker->Bind(MessageList, BookmarkList, FindResultList);
 				FocusTextArea();
 			}
 
@@ -2193,41 +2160,12 @@ namespace cse
 			{
 				IsFocused = false;
 				ScrollBarSyncTimer->Stop();
-
-				LineTracker->Unbind();
 				Windows::Input::Keyboard::ClearFocus();
 			}
 
 			void DummyOutputWrapper(int Line, String^ Message)
 			{
 				;//
-			}
-
-			String^ AvalonEditTextEditor::GetPreprocessedText(bool% OutPreprocessResult, bool SuppressErrors)
-			{
-				String^ Preprocessed = "";
-				scriptPreprocessor::StandardOutputError^ ErrorOutput = gcnew scriptPreprocessor::StandardOutputError(&DummyOutputWrapper);
-				if (SuppressErrors == false)
-				{
-					ErrorOutput = gcnew scriptPreprocessor::StandardOutputError(this, &AvalonEditTextEditor::RoutePreprocessorMessages);
-					LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
-					LineTracker->ClearMessages(textEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor,
-											   textEditors::IScriptTextEditor::ScriptMessageType::None);
-				}
-
-				bool Result = Preprocessor::GetSingleton()->PreprocessScript(GetText(),
-																			 Preprocessed,
-																			 ErrorOutput,
-																			 gcnew ScriptEditorPreprocessorData(gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
-																			 gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
-																			 preferences::SettingsHolder::Get()->Preprocessor->AllowMacroRedefs,
-																			 preferences::SettingsHolder::Get()->Preprocessor->NumPasses));
-
-				if (SuppressErrors == false)
-					LineTracker->EndUpdate(false);
-
-				OutPreprocessResult = Result;
-				return Preprocessed;
 			}
 
 			String^ AvalonEditTextEditor::GetText(void)
@@ -2285,9 +2223,7 @@ namespace cse
 					SetSelectionLength(0);
 				}
 
-				SemanticAnalysisCache = ParentModel->BackgroundSemanticAnalyzer->DoSynchronousAnalysis();
-				UpdateCodeFoldings();
-				UpdateSyntaxHighlighting(false);
+				ParentModel->BackgroundSemanticAnalyzer->DoSynchronousAnalysis(true);
 				OnTextUpdated();
 			}
 
@@ -2406,8 +2342,7 @@ namespace cse
 				if (Operation != IScriptTextEditor::FindReplaceOperation::CountMatches)
 				{
 					BeginUpdate();
-					LineTracker->ClearFindResults(false);
-					LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::FindResults);
+					LineTracker->ClearFindResultSegments();
 				}
 
 				try
@@ -2486,9 +2421,8 @@ namespace cse
 				if (Operation != IScriptTextEditor::FindReplaceOperation::CountMatches)
 				{
 					SetSelectionLength(0);
-					RefreshBGColorizerLayer();
+					LineTracker->LineBackgroundRenderer->Redraw();
 					EndUpdate(false);
-					LineTracker->EndUpdate(true);
 				}
 
 				if (Result->HasError)
@@ -2562,140 +2496,19 @@ namespace cse
 				}
 			}
 
-			CompilationData^ AvalonEditTextEditor::BeginScriptCompilation()
+			cse::textEditors::ILineAnchor^ AvalonEditTextEditor::CreateLineAnchor(UInt32 Line)
 			{
-				Debug::Assert(CompilationInProgress == false);
-				CompilationInProgress = true;
-
-				CompilationData^ Result = gcnew CompilationData;
-
-				String^ Preprocessed = "";
-				scriptPreprocessor::StandardOutputError^ ErrorOutput = gcnew scriptPreprocessor::StandardOutputError(this,
-																													 &AvalonEditTextEditor::RoutePreprocessorMessages);
-
-				ScriptEditorPreprocessorData^ Data = gcnew ScriptEditorPreprocessorData(gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
-																						gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
-																						preferences::SettingsHolder::Get()->Preprocessor->AllowMacroRedefs,
-																						preferences::SettingsHolder::Get()->Preprocessor->NumPasses);
-
-				LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
-
-				SemanticAnalysisCache = ParentModel->BackgroundSemanticAnalyzer->DoSynchronousAnalysis();
-				LineTracker->ClearMessages(textEditors::IScriptTextEditor::ScriptMessageSource::Validator,
-										   textEditors::IScriptTextEditor::ScriptMessageType::None);
-
-				for each (obScriptParsing::AnalysisData::UserMessage^ Itr in SemanticAnalysisCache->AnalysisMessages)
-				{
-					LineTracker->TrackMessage(Itr->Line,
-											  (Itr->Critical == false ? textEditors::IScriptTextEditor::ScriptMessageType::Warning : textEditors::IScriptTextEditor::ScriptMessageType::Error),
-											  textEditors::IScriptTextEditor::ScriptMessageSource::Validator, Itr->Message);
-				}
-
-				if (SemanticAnalysisCache->HasCriticalMessages == false && SemanticAnalysisCache->MalformedStructure == false)
-				{
-					LineTracker->ClearMessages(textEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor,
-											   textEditors::IScriptTextEditor::ScriptMessageType::None);
-
-					Result->CanCompile = Preprocessor::GetSingleton()->PreprocessScript(GetText(),
-																			Preprocessed,
-																			ErrorOutput,
-																			Data);
-
-					if (Result->CanCompile)
-					{
-						Result->PreprocessedScriptText = Preprocessed;
-						Result->UnpreprocessedScriptText = GetText();
-						Result->HasDirectives = Data->ContainsDirectives;
-
-						auto Metadata = gcnew scriptEditor::ScriptTextMetadata;
-						Metadata->CaretPos = Caret;
-						Metadata->HasPreprocessorDirectives = Result->HasDirectives;
-						Metadata->Bookmarks = LineTracker->GetAllBookmarks();
-
-						Result->SerializedMetadata = scriptEditor::ScriptTextMetadataHelper::SerializeMetadata(Metadata);
-
-						LineTracker->ClearMessages(textEditors::IScriptTextEditor::ScriptMessageSource::Compiler,
-												   textEditors::IScriptTextEditor::ScriptMessageType::None);
-					}
-				}
-
-				// doesn't include compiler warnings for obvious reasons but it's okay since all compiler messages are errors
-				Result->HasWarnings = LineTracker->GetMessageCount(0,
-															  textEditors::IScriptTextEditor::ScriptMessageSource::None,
-															  textEditors::IScriptTextEditor::ScriptMessageType::Warning);
-
-				return Result;
+				return LineTracker->CreateLineAnchor(Line, false);
 			}
 
-			void AvalonEditTextEditor::EndScriptCompilation(CompilationData^ Data)
+			void AvalonEditTextEditor::InitializeState(String^ ScriptText, int CaretPosition)
 			{
-				Debug::Assert(CompilationInProgress == true);
-				CompilationInProgress = false;
-
-				String^ kRepeatedString = "Compiled script not saved!";
-
-				if (Data->CompileResult)
-				{
-					for (int i = 0; i < Data->CompileResult->CompileErrorData.Count; i++)
-					{
-						String^ Message = gcnew String(Data->CompileResult->CompileErrorData.ErrorListHead[i].Message);
-						Message = Message->Replace(kRepeatedString, String::Empty);
-
-						int Line = Data->CompileResult->CompileErrorData.ErrorListHead[i].Line;
-						if (Line < 1)
-							Line = 1;
-
-						LineTracker->TrackMessage(Line,
-												  textEditors::IScriptTextEditor::ScriptMessageType::Error,
-												  textEditors::IScriptTextEditor::ScriptMessageSource::Compiler, Message);
-					}
-				}
-
-				LineTracker->EndUpdate(true);
-			}
-
-			cse::textEditors::IScriptTextEditor::ILineAnchor^ AvalonEditTextEditor::CreateAnchor(UInt32 Line)
-			{
-				throw gcnew InvalidOperationException("Not implemented yet");
-			}
-
-			void AvalonEditTextEditor::InitializeState(String^ RawScriptText)
-			{
-				LineTracker->ClearMessages(textEditors::IScriptTextEditor::ScriptMessageSource::None, textEditors::IScriptTextEditor::ScriptMessageType::None);
-				LineTracker->ClearBookmarks();
-				LineTracker->ClearFindResults(false);
-
 				ResetExternalScrollBars();
-
-				String^ ExtractedScriptText = "";
-				auto ExtractedMetadata = gcnew scriptEditor::ScriptTextMetadata();
-
-				scriptEditor::ScriptTextMetadataHelper::DeserializeRawScriptText(RawScriptText, ExtractedScriptText, ExtractedMetadata);
-				SetText(ExtractedScriptText, true);
-
-				if (ExtractedMetadata->CaretPos > GetTextLength())
-					ExtractedMetadata->CaretPos = GetTextLength();
-				else if (ExtractedMetadata->CaretPos < 0)
-					ExtractedMetadata->CaretPos = 0;
-
-				Caret = ExtractedMetadata->CaretPos;
+				SetText(ScriptText, true);
+				Caret = CaretPosition;
 				ScrollToCaret();
-
-				LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Bookmarks);
-				{
-					LineTracker->ClearBookmarks();
-					for each (scriptEditor::ScriptTextMetadata::Bookmark^ Itr in ExtractedMetadata->Bookmarks)
-					{
-						if (Itr->Line > 0 && Itr->Line <= TextField->LineCount)
-							LineTracker->AddBookmark(Itr->Line, Itr->Message);
-					}
-				}
-				LineTracker->EndUpdate(true);
-
 				Modified = false;
-
 				FocusTextArea();
-				intellisense::IntelliSenseBackend::Get()->Refresh(false);
 			}
 #pragma endregion
 		}

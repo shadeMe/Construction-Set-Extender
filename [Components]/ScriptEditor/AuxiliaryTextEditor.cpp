@@ -18,7 +18,7 @@ namespace cse
 			Parent->Controls->Add(Viewer->GetContainer());
 		}
 
-		bool ScriptOffsetViewer::InitializeViewer(String^ ScriptText, UInt32 Data, UInt32 Length)
+		bool ScriptOffsetViewer::InitializeViewer(String^ ScriptText, void* Data, UInt32 Length)
 		{
 			Viewer->GetTextField()->Text = ScriptText;
 			if (Viewer->CalculateLineOffsetsForTextField(Data, Length))

@@ -25,7 +25,8 @@ namespace cse
 
 		void ScriptBackgroundAnalysis::ParentModel_OnStateChangedDirty(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E)
 		{
-			ModificationsSinceLastAnalysis = true;
+			if (E->EventType == IWorkspaceModel::StateChangeEventArgs::Type::Dirty)
+				ModificationsSinceLastAnalysis = true;
 		}
 
 		void ScriptBackgroundAnalysis::QueuePollTimer_Tick(Object^ Sender, EventArgs^ E)
@@ -49,7 +50,7 @@ namespace cse
 			auto AnalysisParams = gcnew obScriptParsing::AnalysisData::Params;
 
 			bool Throwaway = false;
-			AnalysisParams->ScriptText = ParentModel->Controller->GetText(ParentModel, false, Throwaway);
+			AnalysisParams->ScriptText = ParentModel->Controller->GetText(ParentModel, false, Throwaway, false);
 			if (AnalysisParams->ScriptText->Length == 0)
 				return AnalysisParams;
 
@@ -169,7 +170,7 @@ namespace cse
 			SetExecutionMode(ExecutionMode::IdleQueue);
 
 			if (!Error)
-				SemanticAnalysisComplete(this, gcnew SemanticAnalysisCompleteEventArgs(LastAnalysisData));
+				SemanticAnalysisComplete(this, gcnew SemanticAnalysisCompleteEventArgs(LastAnalysisData, true));
 
 			return true;
 		}
@@ -195,7 +196,7 @@ namespace cse
 
 			preferences::SettingsHolder::Get()->SavedToDisk += PreferencesChangedHandler;
 			QueuePollTimer->Tick += QueuePollTimerTickHandler;
-			ParentModel->StateChangedDirty += ParentModelOnStateChangedDirtyHandler;
+			ParentModel->StateChanged += ParentModelOnStateChangedDirtyHandler;
 		}
 
 		ScriptBackgroundAnalysis::~ScriptBackgroundAnalysis()
@@ -205,7 +206,7 @@ namespace cse
 
 			preferences::SettingsHolder::Get()->SavedToDisk -= PreferencesChangedHandler;
 			QueuePollTimer->Tick -= QueuePollTimerTickHandler;
-			ParentModel->StateChangedDirty -= ParentModelOnStateChangedDirtyHandler;
+			ParentModel->StateChanged -= ParentModelOnStateChangedDirtyHandler;
 
 			SAFEDELETE_CLR(PreferencesChangedHandler);
 			SAFEDELETE_CLR(ParentModelOnStateChangedDirtyHandler);
@@ -240,7 +241,7 @@ namespace cse
 			}
 		}
 
-		cse::obScriptParsing::AnalysisData^ ScriptBackgroundAnalysis::DoSynchronousAnalysis()
+		cse::obScriptParsing::AnalysisData^ ScriptBackgroundAnalysis::DoSynchronousAnalysis(bool RaiseCompletionEvent)
 		{
 			auto AnalysisParams = GenerateAnalysisParameters();
 			auto AnalysisResult = gcnew obScriptParsing::AnalysisData;
@@ -249,6 +250,8 @@ namespace cse
 				return AnalysisResult;
 
 			AnalysisResult->PerformAnalysis(AnalysisParams);
+			if (RaiseCompletionEvent)
+				SemanticAnalysisComplete(this, gcnew SemanticAnalysisCompleteEventArgs(AnalysisResult, false));
 			return AnalysisResult;
 		}
 
