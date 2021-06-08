@@ -14,6 +14,13 @@ CSE		---->
 			> Deleting a ref from the render window doesn't update its baseform's cell use counts (vanilla bug)
 		> Dirty edits?
 			>> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=25301452
+			>> How do you stop the construction set from making automatic edits to an esp after saving it? Like for the unofficial oblivion patch, if I were to open in up in the CSE, do nothing, and save it, it will make loads of changes to region point list data under the region tab in TES4EDIT. For another file it automatically changes the "vertext height map" data under worldspaces for a bunch of landscapes.
+			>> Can you reproduce this consistently? This is the first I've heard about this.
+			>> Yes, I can. Not sure if I have something installed incorrectly or what but it'll happen everytime. Here's a gallery with some before/after screens after saving the unofficial oblivion patch and ooo shivering isles in the CSE and doing nothing else:
+			   Also for other esps, I see under cell/lighting that Fog Near will be changed from 0.000000 to 0.000100. I think that one is done to prevent some kind of bug though?
+			   Edit: did the same with ooo's esp and the unofficial shivering isles patch
+			   For the vertext height map, it will always change the last 3 sets of values and nothing else from what i can see. no idea if that's important but i thought i'd mention it
+
 		> Object window columns like Auto calc, Enchantment type, Count don't sort consistently
 			>> Columns not handled by default = 3, 24, 41, 54. Some others are incorrectly handled
 

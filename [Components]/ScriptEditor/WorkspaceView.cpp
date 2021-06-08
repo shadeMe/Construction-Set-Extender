@@ -1046,21 +1046,21 @@ namespace cse
 			ToolBarMessageList->Margin = Padding(0, 0, ToolBarButtonPaddingRegular.Right, 0);
 			ToolBarMessageList->Font = gcnew Font(SystemFonts::DefaultFont->FontFamily, 9.25, FontStyle::Bold);
 			ToolBarMessageList->TextAlign = ContentAlignment::MiddleCenter;
-			ToolBarMessageList->ImageAlign = ContentAlignment::MiddleCenter;
+			ToolBarMessageList->ImageAlign = ContentAlignment::MiddleLeft;
 
 			ToolBarFindList->ToolTipText = "Find/Replace Results";
 			ToolBarFindList->AutoSize = true;
 			ToolBarFindList->Margin = ToolBarButtonPaddingRegular;
 			ToolBarFindList->Font = gcnew Font(SystemFonts::DefaultFont->FontFamily, 9.25, FontStyle::Bold);
 			ToolBarFindList->TextAlign = ContentAlignment::MiddleCenter;
-			ToolBarFindList->ImageAlign = ContentAlignment::MiddleCenter;
+			ToolBarFindList->ImageAlign = ContentAlignment::MiddleLeft;
 
 			ToolBarBookmarkList->ToolTipText = "Bookmarks";
 			ToolBarBookmarkList->AutoSize = true;
 			ToolBarBookmarkList->Margin = Padding(ToolBarButtonPaddingRegular.Left, 0, ToolBarButtonPaddingLarge.Right, 0);
 			ToolBarBookmarkList->Font = gcnew Font(SystemFonts::DefaultFont->FontFamily, 9.25, FontStyle::Bold);
 			ToolBarBookmarkList->TextAlign = ContentAlignment::MiddleCenter;
-			ToolBarBookmarkList->ImageAlign = ContentAlignment::MiddleCenter;
+			ToolBarBookmarkList->ImageAlign = ContentAlignment::MiddleLeft;
 
 			ToolBarDumpScript->ToolTipText = "Dump Script";
 			ToolBarDumpScript->AutoSize = true;

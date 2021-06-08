@@ -84,10 +84,10 @@ namespace cse
 			SAFEDELETE_CLR(ScriptEditorPreferencesSavedHandler);
 			SAFEDELETE_CLR(AutoSaveTimerTickHandler);
 
-			SAFEDELETE_CLR(AutoSaveTimer);
+			SAFEDELETE_CLR(TextEditor);
 			SAFEDELETE_CLR(BackgroundAnalysis);
 			SAFEDELETE_CLR(IntelliSenseModel);
-			SAFEDELETE_CLR(TextEditor);
+			SAFEDELETE_CLR(AutoSaveTimer);
 
 			ModelFactory->Remove(this);
 

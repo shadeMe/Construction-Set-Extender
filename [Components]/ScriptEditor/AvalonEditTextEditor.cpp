@@ -1995,9 +1995,8 @@ namespace cse
 
 			AvalonEditTextEditor::~AvalonEditTextEditor()
 			{
-				ParentModel = nullptr;
-
 				ParentModel->BackgroundSemanticAnalyzer->SemanticAnalysisComplete -= BackgroundAnalyzerAnalysisCompleteHandler;
+				ParentModel = nullptr;
 
 				TextField->Clear();
 				MiddleMouseScrollTimer->Stop();

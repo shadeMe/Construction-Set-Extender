@@ -86,9 +86,9 @@ namespace cse
 			static enum class FlagType
 			{
 				Syncing = 0,
+				Deleted,
 				Uncompiled,
 				Active,
-				Deleted,
 				Default
 			};
 
