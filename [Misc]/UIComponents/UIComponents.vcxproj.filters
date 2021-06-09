@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\UiRefresh">
+      <UniqueIdentifier>{2cda2498-ac34-4b9c-bc6c-8ef762ec4762}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.ico">
@@ -59,6 +62,9 @@
     <ClCompile Include="SESyncUI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ScriptEditor-Workspace.cpp">
+      <Filter>Header Files\UiRefresh</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SEScriptList.h">
@@ -97,6 +103,9 @@
     <ClInclude Include="SESyncUI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ScriptEditor-Workspace.h">
+      <Filter>Header Files\UiRefresh</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app.rc">
@@ -104,9 +113,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="BEReference.resx">
-      <Filter>Resource Files</Filter>
-    </EmbeddedResource>
     <EmbeddedResource Include="SEOptions.resx">
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
@@ -133,6 +139,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SEVariableIndex.resx">
       <Filter>Resource Files</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\[Components]\ScriptEditor\ImagesVS2019.resx">
+      <Filter>Header Files\UiRefresh</Filter>
     </EmbeddedResource>
   </ItemGroup>
 </Project>

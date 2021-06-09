@@ -7,6 +7,7 @@
 #include "UseInfoList.h"
 #include "SESyncUI.h"
 #include "SEOptions.h"
+#include "ScriptEditor-Workspace.h"
 
 using namespace UIComponents;
 
@@ -18,6 +19,6 @@ int main(array<System::String ^> ^args)
 	Application::SetCompatibleTextRenderingDefault(false);
 
 	// Create the main window and run it
-	Application::Run(gcnew OptionsDialog());
+	Application::Run(gcnew ScriptEditorWorkspace());
 	return 0;
 }

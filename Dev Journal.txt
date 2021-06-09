@@ -66,13 +66,10 @@ SE		---->
 
 
 	ENHANCEMENT		=
-		> Title labels for the listviews
-		> Option to move tabs to all directions (fuck around with the other colors, etc)
-		> Change hte bytecode size bar to a circular bar
-		> Move the script type to the top toolbar (and make the UI more intuitive)
+		> Key chords for shortcuts
 		> Integrate the preprocessor/offset viewers into the main text editor control
-		> Prevent the creation of duplicate script editor IDs
 		> Fuzzy search for IntelliSense
+		> Prevent the creation of duplicate script editor IDs
 		> Language server impl for external editors
 
 

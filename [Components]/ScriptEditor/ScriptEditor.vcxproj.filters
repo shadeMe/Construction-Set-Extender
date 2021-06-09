@@ -4,9 +4,6 @@
     <Filter Include="Resources">
       <UniqueIdentifier>{2091f64c-1048-450e-91f9-516e91e2ee98}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resources\Images">
-      <UniqueIdentifier>{0525990c-0428-47fe-b5b0-398637d34c93}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Common">
       <UniqueIdentifier>{8c6b017e-dfea-4c79-be1d-57ff71ad5d1c}</UniqueIdentifier>
     </Filter>
@@ -27,6 +24,12 @@
     </Filter>
     <Filter Include="Components\IntelliSense">
       <UniqueIdentifier>{2e85eed8-5f29-4e81-baee-d6674aa94e59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources\ImagesVS2012">
+      <UniqueIdentifier>{0525990c-0428-47fe-b5b0-398637d34c93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources\ImagesVS2019">
+      <UniqueIdentifier>{b99490d6-f992-4da0-a02e-27f5fdbe860d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -218,6 +221,9 @@
     <EmbeddedResource Include="ImagesModern.resx">
       <Filter>Resources</Filter>
     </EmbeddedResource>
+    <EmbeddedResource Include="ImagesVS2019.resx">
+      <Filter>Resources</Filter>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VersionInfo.rc">
@@ -226,352 +232,580 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Namespace.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\action_add_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\action_add_16xMD.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\AddEvent_5539.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\arrow_Next_16xLG_color.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\arrow_Previous_16xLG_color.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\BindingSource_6844.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\bookmark_001_16xSM.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\bookmark_003_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Bookmark_5776.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\brackets_Curly_16xMD.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\brackets_Square_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\ChangeQueryType_updatequery_273.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\class_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Class_489.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\ico\Clearallrequests_8816.ico">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Clearallrequests_8816.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Clearwindowcontent_6304.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\comment_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Comment_11698.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Compile_191.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Constant_495.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Copy_6524.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\CubePreview.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Delegate_540.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Delegate_8339.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Dependancy_12861.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\Diagram_16XLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\DocumentOutline_5667.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\EnumItem_588.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Annotations\png\Error_red_16x16.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Event_594.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Event_Friend_596.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Event-Protected_597.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\field_16xMD.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Field-Friend_543.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\FieldIcon.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Find_5650.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\FindinFiles_6299.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\FindResults1_6264.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\gear_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\gear_32xMD.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\GenerateChangeScript_5620.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\globe_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\GoToDeclaration_5576.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\GotoNextRow_289_color.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Interface_612.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Interface-Friend_614.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\LinkedServer_12789_16x.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\Member_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Annotations\png\Messages_7234.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\method_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Method_636.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Method-Friend_638.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\module_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Module_648.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Module-Friend_650.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\NavigateBackwards_6270.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\NavigateForward_6271.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\NewBuildDefinition_8952.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\NewFile_6276.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Nextrequest_10302.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Open_6529.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Ordered(Numbered)ListOL_5795.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Paste_6520.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\pencil_005_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Annotations\png\PendingDelete_13298.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\PropertyIcon.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\ReformatSelection_8260.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\RemoveUsingNamespace_10480.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Rename_6779.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\save_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Saveall_6518.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\script_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\SequenceDiagramFile_sequencediagram_13452_16x.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\server_remote_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\snippet_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\snippet_16xMD.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Warning_16xLG_color.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Warning_16xSM_color.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\Symbols_Required_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\TabControl_707.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\type_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Union_534.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\UpdatedJscriptIntelliSense_10740.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\ValueType_547.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\wizard_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\bookmark_002_16xMD.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\brackets_Angled_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Warning_16xMD.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Warning_16xMD_color.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\paperclip_5159_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\ConditionalRule_13134.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\DisassemblyWindow_6536.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\list_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\Loop_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\Loop_16xMD.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\tracepoint_Off_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\arrow_Sync_16xLG.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\SyncContents_5706.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="Images\transparent_161.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Select.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Complete_and_ok_16xLG_color.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="StatusAnnotations_Complete_and_ok_16xLG_color1.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Critical_16xLG_color.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\AppearanceEditor\AppearanceEditor_16x.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ApplicationBehaviorSettings\ApplicationBehaviorSettings_16x.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\CleanData\CleanData_16x.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\FindInFile\FindInFile_16x.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\IntelliSenseDatabase\IntelliSenseDatabase_16x.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ListTime\ListTime_16x.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ParseDynamicValue\ParseDynamicValue_16x.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ValidateDocument\ValidateDocument_16x.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Critical_16xMD_color.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\BrushTool_207.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Annotations\png\Information_blue_6227_16x16.png">
-      <Filter>Resources\Images</Filter>
+      <Filter>Resources\ImagesVS2012</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\AddComment\AddComment_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Asterisk\Asterisk_blue_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Attach\Attach_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Backwards\Backwards_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Bookmark\Bookmark_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\BookmarkMainMenuItem\BookmarkMainMenuItem_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\BuildErrorList\BuildErrorList_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Class\Class_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\CodeReviewDashboard\CodeReviewDashboard_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\CommentCode\CommentCode_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Compile\Compile_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ConditionalLoop\ConditionalLoop_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ConditionalRule\ConditionalRule_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ConditionalRuleIfThen\ConditionalRuleIfThen_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ConfigureDatabaseWizard\ConfigureDatabaseWizard_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Copy\Copy_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\DecisionNode\DecisionNode_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Edit\Edit_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\EncapsulateField\EncapsulateField_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Event\Event_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\EventAdded\EventAdded_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Field\Field_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\FieldAdded\FieldAdded_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Forwards\Forwards_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\GoToDefinition\GoToDefinition_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\GoToNextUncovered\GoToNextUncovered_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\GoToSourceCode\GoToSourceCode_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\GraphBottomToTop\GraphBottomToTop_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\HistoryTable\HistoryTable_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ItemUpdatedAssociation\ItemUpdatedAssociation_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\LocalRegisters\LocalRegisters_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\LocalVariable\LocalVariable_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Loop\Loop_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\MessageQueue\MessageQueue_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Method\Method_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\NestedTreeView\NestedTreeView_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\NewFile\NewFile_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Next\Next_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Object\Object_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ObjectFile\ObjectFile_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\OpenfileDialog\OpenfileDialog_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\OpenFolder\OpenFolder_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\OrderedList\OrderedList_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Paste\Paste_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Previous\Previous_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ProcedureSettings\ProcedureSettings_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Property\Property_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Refactoring\Refactoring_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\RegistrationScript\RegistrationScript_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\RenameField\RenameField_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Save\Save_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\SaveAll\SaveAll_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\SaveAs\SaveAs_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\SaveFileDialogControl\SaveFileDialogControl_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Search\Search_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\SearchAndApps\SearchAndApps_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Select\Select_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\SequenceDiagram\SequenceDiagram_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Settings\Settings_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Snippet\Snippet_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\StateIndicator\StateIndicator_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\StatusCriticalError\StatusCriticalError_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\StatusInformation\StatusInformation_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\StatusInvalid\StatusInvalid_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\StatusOK\StatusOK_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\StatusWarning\StatusWarning_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\StatusWarning\StatusWarning_exp_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\SyncArrow\SyncArrow_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\SyncContent\SyncContent_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\TabPage\TabPage_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="Images\transparent_16.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Trash\Trash_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Type\Type_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\WebDestination\WebDestination_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\WebURL\WebURL_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Wizard\Wizard_16x.png">
+      <Filter>Resources\ImagesVS2019</Filter>
     </Image>
   </ItemGroup>
 </Project>

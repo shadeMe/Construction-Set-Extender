@@ -60,6 +60,7 @@
       </AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <EntryPointSymbol>main</EntryPointSymbol>
+      <EmbedManagedResourceFile>ScriptEditor-Workspace.resx</EmbedManagedResourceFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -77,6 +78,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Reference Include="DevComponents.DotNetBar.Layout">
+      <HintPath>..\..\..\..\..\..\..\..\..\Program Files (x86)\DotNetBar for Windows Forms\DevComponents.DotNetBar.Layout.dll</HintPath>
+    </Reference>
     <Reference Include="DevComponents.DotNetBar2">
       <HintPath>..\..\[Depends]\DevComponents.DotNetBar2.dll</HintPath>
     </Reference>
@@ -95,6 +99,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
+    <ClCompile Include="ScriptEditor-Workspace.cpp" />
     <ClCompile Include="SEFindReplace.cpp" />
     <ClCompile Include="SEOptions.cpp" />
     <ClCompile Include="SERefactorDocumentScript.cpp" />
@@ -113,6 +118,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="ScriptEditor-Workspace.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
     <ClInclude Include="SEFindReplace.h">
       <FileType>CppForm</FileType>
     </ClInclude>
@@ -149,6 +157,10 @@
     <ResourceCompile Include="app.rc" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="..\..\[Components]\ScriptEditor\ImagesVS2019.resx" />
+    <EmbeddedResource Include="ScriptEditor-Workspace.resx">
+      <DependentUpon>ScriptEditor-Workspace.h</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SEFindReplace.resx">
       <DependentUpon>SEFindReplace.h</DependentUpon>
     </EmbeddedResource>
