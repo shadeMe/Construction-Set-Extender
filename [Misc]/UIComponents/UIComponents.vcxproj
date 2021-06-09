@@ -60,7 +60,8 @@
       </AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <EmbedManagedResourceFile>ScriptEditor-Workspace.resx</EmbedManagedResourceFile>
+      <EmbedManagedResourceFile>
+      </EmbedManagedResourceFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -99,7 +100,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
-    <ClCompile Include="ScriptEditor-Workspace.cpp" />
+    <ClCompile Include="ScriptEditorCodeSnippets.cpp" />
+    <ClCompile Include="ScriptEditorPreferences.cpp" />
+    <ClCompile Include="ScriptEditorScriptSync.cpp" />
+    <ClCompile Include="ScriptEditorWorkspace.cpp" />
+    <ClCompile Include="ScriptEditorSelectScripts.cpp" />
     <ClCompile Include="SEFindReplace.cpp" />
     <ClCompile Include="SEOptions.cpp" />
     <ClCompile Include="SERefactorDocumentScript.cpp" />
@@ -118,8 +123,20 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
-    <ClInclude Include="ScriptEditor-Workspace.h">
+    <ClInclude Include="ScriptEditorCodeSnippets.h">
       <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorPreferences.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorScriptSync.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorWorkspace.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorSelectScripts.h">
+      <FileType>CppControl</FileType>
     </ClInclude>
     <ClInclude Include="SEFindReplace.h">
       <FileType>CppForm</FileType>
@@ -157,9 +174,20 @@
     <ResourceCompile Include="app.rc" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="..\..\[Components]\ScriptEditor\ImagesVS2019.resx" />
-    <EmbeddedResource Include="ScriptEditor-Workspace.resx">
-      <DependentUpon>ScriptEditor-Workspace.h</DependentUpon>
+    <EmbeddedResource Include="ScriptEditorCodeSnippets.resx">
+      <DependentUpon>ScriptEditorCodeSnippets.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ScriptEditorPreferences.resx">
+      <DependentUpon>ScriptEditorPreferences.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ScriptEditorScriptSync.resx">
+      <DependentUpon>ScriptEditorScriptSync.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ScriptEditorWorkspace.resx">
+      <DependentUpon>ScriptEditorWorkspace.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ScriptEditorSelectScripts.resx">
+      <DependentUpon>ScriptEditorSelectScripts.h</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SEFindReplace.resx">
       <DependentUpon>SEFindReplace.h</DependentUpon>

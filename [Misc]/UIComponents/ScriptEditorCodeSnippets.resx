@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -117,10 +117,40 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="ToolStripSettingCategories.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>25</value>
-  </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="ToolbarAddSnippet.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAABgSURBVDhP3ZExCsAwDAP9qAx9Yx/s1a1NAokrgQsdSgQ3
+        SVwgFhQzE1W1RG8LGYLjbMHuAh8jkADtYshIAsjy0lu+EzDmIcMFjCxAm/hERk2A4ue5y4egnP8IEr2d
+        I3IBh/DsWJ/eoAoAAAAASUVORK5CYII=
+</value>
+  </data>
+  <data name="ToolbarRemoveSnippet.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1
+        MAAA6mAAADqYAAAXb5JfxUYAAAAJcEhZcwAADsQAAA7EAZUrDhsAAABHSURBVDhPrdChEcAwEAPBbyBt
+        uG83+VSeMT6QywcsOSCgSjKC0cBoYDQwGhiN6u5M3IG9nk/+G5jAYwyMBkYDo4HRwPhe6gBByvyXuYkf
+        bwAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="VariablesToolbarAddVar.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAC/SURBVDhPxZCxDUIxDET/CGzAH4KCPehYgDWoKRgAIVEy
+        AxJTIEpq2g9N2uCzzvmWIaSDk55k2XcXKV1USqkXDkImmHue64KJ5rw7XfN0dVQwY8fbexGWPJbgcnvO
+        l9tdweyLGBv1KfgYnooVdIu9Ui0wQ3zZ9kazoMX/CtwnDoyNwtI+8VsQD3kY14KJsBZKUQjiBk+eb2YK
+        ZoENFE1aRErQCAUK43X5YOR3BYYPGrTVJSYjFui+KTMy5JFd6l49ZevNbkUR/wAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="VariablesToolbarRemoveVar.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAADsSURBVDhPxZKxDcIwEEWzAFImoKR2SckAdCxAgURFxQKs
+        AaKhoqakRKzACkAoEHbj1tw/+SzHthI6iiefk/svziWVc66FtbYmNoT2oK7TPiEUaPLNenu+ueHyyKDG
+        NX8vExWDq93V3Zs3gzoWlQRZUH8MI4JqtmeolzK5IDSkT5brQq+gj/8J0iHSqoAIwhA7gsIEQWQ8CoKu
+        789c1gsGPbp5mNN0HPbhXWhT+gPn5vV0CBxGAw5JjRV9rYFEovDHpRIJ4yR0T2WCFDTJsUUgx+8VpGGs
+        UmczKBELAGp5nZ8EQCQANcEzQdhaq746EuQisgu8tgAAAABJRU5ErkJggg==
+</value>
+  </data>
 </root>

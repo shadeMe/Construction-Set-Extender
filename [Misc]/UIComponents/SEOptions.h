@@ -176,75 +176,75 @@ namespace UIComponents {
 		/// </summary>
 		void InitializeComponent(void)
 		{
-			this->PropertyGrid = (gcnew System::Windows::Forms::PropertyGrid());
-			this->ToolStripSettingCategories = (gcnew System::Windows::Forms::ToolStrip());
-			this->ToolStripLabelCategories = (gcnew System::Windows::Forms::ToolStripLabel());
-			this->LabelCurrentCategory = (gcnew System::Windows::Forms::Label());
-			this->ToolStripSettingCategories->SuspendLayout();
-			this->SuspendLayout();
-			// 
-			// PropertyGrid
-			// 
-			this->PropertyGrid->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
-				| System::Windows::Forms::AnchorStyles::Left)
-				| System::Windows::Forms::AnchorStyles::Right));
-			this->PropertyGrid->Location = System::Drawing::Point(67, 12);
-			this->PropertyGrid->Name = L"PropertyGrid";
-			this->PropertyGrid->Size = System::Drawing::Size(355, 437);
-			this->PropertyGrid->TabIndex = 1;
-			// 
-			// ToolStripSettingCategories
-			// 
-			this->ToolStripSettingCategories->AutoSize = false;
-			this->ToolStripSettingCategories->Dock = System::Windows::Forms::DockStyle::Left;
-			this->ToolStripSettingCategories->GripStyle = System::Windows::Forms::ToolStripGripStyle::Hidden;
-			this->ToolStripSettingCategories->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->ToolStripLabelCategories });
-			this->ToolStripSettingCategories->Location = System::Drawing::Point(0, 0);
-			this->ToolStripSettingCategories->Name = L"ToolStripSettingCategories";
-			this->ToolStripSettingCategories->RenderMode = System::Windows::Forms::ToolStripRenderMode::System;
-			this->ToolStripSettingCategories->Size = System::Drawing::Size(64, 461);
-			this->ToolStripSettingCategories->TabIndex = 2;
-			// 
-			// ToolStripLabelCategories
-			// 
-			this->ToolStripLabelCategories->Name = L"ToolStripLabelCategories";
-			this->ToolStripLabelCategories->Padding = System::Windows::Forms::Padding(5);
-			this->ToolStripLabelCategories->Size = System::Drawing::Size(62, 25);
-			this->ToolStripLabelCategories->Text = L"Categories";
-			// 
-			// LabelCurrentCategory
-			// 
-			this->LabelCurrentCategory->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-			this->LabelCurrentCategory->AutoSize = true;
-			this->LabelCurrentCategory->Font = (gcnew System::Drawing::Font(L"Segoe UI", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-				static_cast<System::Byte>(0)));
-			this->LabelCurrentCategory->Location = System::Drawing::Point(292, 9);
-			this->LabelCurrentCategory->Name = L"LabelCurrentCategory";
-			this->LabelCurrentCategory->Size = System::Drawing::Size(130, 21);
-			this->LabelCurrentCategory->TabIndex = 3;
-			this->LabelCurrentCategory->Text = L"Current Category";
-			this->LabelCurrentCategory->TextAlign = System::Drawing::ContentAlignment::MiddleRight;
-			// 
-			// OptionsDialog
-			// 
-			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
-			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(434, 461);
-			this->Controls->Add(this->LabelCurrentCategory);
-			this->Controls->Add(this->ToolStripSettingCategories);
-			this->Controls->Add(this->PropertyGrid);
-			this->MinimizeBox = false;
-			this->MinimumSize = System::Drawing::Size(450, 500);
-			this->Name = L"OptionsDialog";
-			this->ShowIcon = false;
-			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterParent;
-			this->Text = L"Script Editor Preferences";
-			this->ToolStripSettingCategories->ResumeLayout(false);
-			this->ToolStripSettingCategories->PerformLayout();
-			this->ResumeLayout(false);
-			this->PerformLayout();
+            this->PropertyGrid = (gcnew System::Windows::Forms::PropertyGrid());
+            this->ToolStripSettingCategories = (gcnew System::Windows::Forms::ToolStrip());
+            this->ToolStripLabelCategories = (gcnew System::Windows::Forms::ToolStripLabel());
+            this->LabelCurrentCategory = (gcnew System::Windows::Forms::Label());
+            this->ToolStripSettingCategories->SuspendLayout();
+            this->SuspendLayout();
+            // 
+            // PropertyGrid
+            // 
+            this->PropertyGrid->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
+                | System::Windows::Forms::AnchorStyles::Left)
+                | System::Windows::Forms::AnchorStyles::Right));
+            this->PropertyGrid->Location = System::Drawing::Point(67, 12);
+            this->PropertyGrid->Name = L"PropertyGrid";
+            this->PropertyGrid->Size = System::Drawing::Size(355, 437);
+            this->PropertyGrid->TabIndex = 1;
+            // 
+            // ToolStripSettingCategories
+            // 
+            this->ToolStripSettingCategories->AutoSize = false;
+            this->ToolStripSettingCategories->Dock = System::Windows::Forms::DockStyle::Left;
+            this->ToolStripSettingCategories->GripStyle = System::Windows::Forms::ToolStripGripStyle::Hidden;
+            this->ToolStripSettingCategories->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->ToolStripLabelCategories });
+            this->ToolStripSettingCategories->Location = System::Drawing::Point(0, 0);
+            this->ToolStripSettingCategories->Name = L"ToolStripSettingCategories";
+            this->ToolStripSettingCategories->RenderMode = System::Windows::Forms::ToolStripRenderMode::System;
+            this->ToolStripSettingCategories->Size = System::Drawing::Size(64, 464);
+            this->ToolStripSettingCategories->TabIndex = 2;
+            // 
+            // ToolStripLabelCategories
+            // 
+            this->ToolStripLabelCategories->Name = L"ToolStripLabelCategories";
+            this->ToolStripLabelCategories->Padding = System::Windows::Forms::Padding(5);
+            this->ToolStripLabelCategories->Size = System::Drawing::Size(62, 25);
+            this->ToolStripLabelCategories->Text = L"Categories";
+            // 
+            // LabelCurrentCategory
+            // 
+            this->LabelCurrentCategory->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
+            this->LabelCurrentCategory->AutoSize = true;
+            this->LabelCurrentCategory->Font = (gcnew System::Drawing::Font(L"Segoe UI", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+                static_cast<System::Byte>(0)));
+            this->LabelCurrentCategory->Location = System::Drawing::Point(292, 9);
+            this->LabelCurrentCategory->Name = L"LabelCurrentCategory";
+            this->LabelCurrentCategory->Size = System::Drawing::Size(130, 21);
+            this->LabelCurrentCategory->TabIndex = 3;
+            this->LabelCurrentCategory->Text = L"Current Category";
+            this->LabelCurrentCategory->TextAlign = System::Drawing::ContentAlignment::MiddleRight;
+            // 
+            // OptionsDialog
+            // 
+            this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
+            this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
+            this->ClientSize = System::Drawing::Size(434, 464);
+            this->Controls->Add(this->LabelCurrentCategory);
+            this->Controls->Add(this->ToolStripSettingCategories);
+            this->Controls->Add(this->PropertyGrid);
+            this->MinimizeBox = false;
+            this->MinimumSize = System::Drawing::Size(450, 500);
+            this->Name = L"OptionsDialog";
+            this->ShowIcon = false;
+            this->StartPosition = System::Windows::Forms::FormStartPosition::CenterParent;
+            this->Text = L"Script Editor Preferences";
+            this->ToolStripSettingCategories->ResumeLayout(false);
+            this->ToolStripSettingCategories->PerformLayout();
+            this->ResumeLayout(false);
+            this->PerformLayout();
 
-		}
+        }
 #pragma endregion
 	private: System::Void groupBox1_Enter(System::Object^  sender, System::EventArgs^  e) {
 			 }

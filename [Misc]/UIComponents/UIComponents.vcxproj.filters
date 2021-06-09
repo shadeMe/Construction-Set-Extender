@@ -62,7 +62,19 @@
     <ClCompile Include="SESyncUI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ScriptEditor-Workspace.cpp">
+    <ClCompile Include="ScriptEditorWorkspace.cpp">
+      <Filter>Header Files\UiRefresh</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptEditorSelectScripts.cpp">
+      <Filter>Header Files\UiRefresh</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptEditorScriptSync.cpp">
+      <Filter>Header Files\UiRefresh</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptEditorCodeSnippets.cpp">
+      <Filter>Header Files\UiRefresh</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptEditorPreferences.cpp">
       <Filter>Header Files\UiRefresh</Filter>
     </ClCompile>
   </ItemGroup>
@@ -103,7 +115,19 @@
     <ClInclude Include="SESyncUI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ScriptEditor-Workspace.h">
+    <ClInclude Include="ScriptEditorWorkspace.h">
+      <Filter>Header Files\UiRefresh</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorSelectScripts.h">
+      <Filter>Header Files\UiRefresh</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorScriptSync.h">
+      <Filter>Header Files\UiRefresh</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorCodeSnippets.h">
+      <Filter>Header Files\UiRefresh</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorPreferences.h">
       <Filter>Header Files\UiRefresh</Filter>
     </ClInclude>
   </ItemGroup>
@@ -139,9 +163,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SEVariableIndex.resx">
       <Filter>Resource Files</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\..\[Components]\ScriptEditor\ImagesVS2019.resx">
-      <Filter>Header Files\UiRefresh</Filter>
     </EmbeddedResource>
   </ItemGroup>
 </Project>

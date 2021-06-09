@@ -7,7 +7,7 @@
 #include "UseInfoList.h"
 #include "SESyncUI.h"
 #include "SEOptions.h"
-#include "ScriptEditor-Workspace.h"
+#include "ScriptEditorWorkspace.h"
 
 using namespace UIComponents;
 
