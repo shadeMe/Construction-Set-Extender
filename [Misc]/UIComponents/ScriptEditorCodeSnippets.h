@@ -96,35 +96,35 @@ namespace UIComponents {
             this->SnippetListColumnName = (gcnew BrightIdeasSoftware::OLVColumn());
             this->SnippetListColumnShortcut = (gcnew BrightIdeasSoftware::OLVColumn());
             this->GroupSnippetData = (gcnew DevComponents::DotNetBar::Controls::GroupPanel());
-            this->LabelName = (gcnew DevComponents::DotNetBar::LabelX());
-            this->LabelShortcut = (gcnew DevComponents::DotNetBar::LabelX());
-            this->TextBoxName = (gcnew DevComponents::DotNetBar::Controls::TextBoxX());
-            this->LabelDescription = (gcnew DevComponents::DotNetBar::LabelX());
-            this->TextBoxDescription = (gcnew DevComponents::DotNetBar::Controls::TextBoxX());
-            this->TextBoxShortcut = (gcnew DevComponents::DotNetBar::Controls::TextBoxX());
+            this->ButtonApply = (gcnew DevComponents::DotNetBar::ButtonX());
+            this->GroupCode = (gcnew DevComponents::DotNetBar::Controls::GroupPanel());
+            this->TextBoxCode = (gcnew DevComponents::DotNetBar::Controls::TextBoxX());
             this->GroupVariables = (gcnew DevComponents::DotNetBar::Controls::GroupPanel());
+            this->VariablesList = (gcnew BrightIdeasSoftware::ObjectListView());
+            this->VariablesListColumnName = (gcnew BrightIdeasSoftware::OLVColumn());
+            this->VariablesListColumnType = (gcnew BrightIdeasSoftware::OLVColumn());
             this->VariablesToolbar = (gcnew DevComponents::DotNetBar::Bar());
             this->VariablesToolbarAddVar = (gcnew DevComponents::DotNetBar::ButtonItem());
-            this->VariablesToolbarRemoveVar = (gcnew DevComponents::DotNetBar::ButtonItem());
             this->AddVarMenuInteger = (gcnew DevComponents::DotNetBar::ButtonItem());
             this->AddVarMenuFloat = (gcnew DevComponents::DotNetBar::ButtonItem());
             this->AddVarMenuRef = (gcnew DevComponents::DotNetBar::ButtonItem());
             this->AddVarMenuString = (gcnew DevComponents::DotNetBar::ButtonItem());
             this->AddVarMenuArray = (gcnew DevComponents::DotNetBar::ButtonItem());
-            this->VariablesList = (gcnew BrightIdeasSoftware::ObjectListView());
-            this->VariablesListColumnName = (gcnew BrightIdeasSoftware::OLVColumn());
-            this->VariablesListColumnType = (gcnew BrightIdeasSoftware::OLVColumn());
-            this->GroupCode = (gcnew DevComponents::DotNetBar::Controls::GroupPanel());
-            this->TextBoxCode = (gcnew DevComponents::DotNetBar::Controls::TextBoxX());
+            this->VariablesToolbarRemoveVar = (gcnew DevComponents::DotNetBar::ButtonItem());
+            this->TextBoxShortcut = (gcnew DevComponents::DotNetBar::Controls::TextBoxX());
+            this->TextBoxDescription = (gcnew DevComponents::DotNetBar::Controls::TextBoxX());
+            this->LabelDescription = (gcnew DevComponents::DotNetBar::LabelX());
+            this->TextBoxName = (gcnew DevComponents::DotNetBar::Controls::TextBoxX());
+            this->LabelShortcut = (gcnew DevComponents::DotNetBar::LabelX());
+            this->LabelName = (gcnew DevComponents::DotNetBar::LabelX());
             this->LeftPanel = (gcnew System::Windows::Forms::Panel());
-            this->ButtonApply = (gcnew DevComponents::DotNetBar::ButtonX());
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContainerToolbar))->BeginInit();
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->SnippetsList))->BeginInit();
             this->GroupSnippetData->SuspendLayout();
-            this->GroupVariables->SuspendLayout();
-            (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->VariablesToolbar))->BeginInit();
-            (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->VariablesList))->BeginInit();
             this->GroupCode->SuspendLayout();
+            this->GroupVariables->SuspendLayout();
+            (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->VariablesList))->BeginInit();
+            (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->VariablesToolbar))->BeginInit();
             this->LeftPanel->SuspendLayout();
             this->SuspendLayout();
             // 
@@ -235,236 +235,16 @@ namespace UIComponents {
             this->GroupSnippetData->TabIndex = 2;
             this->GroupSnippetData->Text = L"Snippet Data";
             // 
-            // LabelName
+            // ButtonApply
             // 
-            this->LabelName->AutoSize = true;
-            // 
-            // 
-            // 
-            this->LabelName->BackgroundStyle->CornerType = DevComponents::DotNetBar::eCornerType::Square;
-            this->LabelName->Location = System::Drawing::Point(9, 12);
-            this->LabelName->Name = L"LabelName";
-            this->LabelName->Size = System::Drawing::Size(32, 17);
-            this->LabelName->TabIndex = 0;
-            this->LabelName->Text = L"Name";
-            // 
-            // LabelShortcut
-            // 
-            this->LabelShortcut->AutoSize = true;
-            // 
-            // 
-            // 
-            this->LabelShortcut->BackgroundStyle->CornerType = DevComponents::DotNetBar::eCornerType::Square;
-            this->LabelShortcut->Location = System::Drawing::Point(9, 50);
-            this->LabelShortcut->Name = L"LabelShortcut";
-            this->LabelShortcut->Size = System::Drawing::Size(44, 17);
-            this->LabelShortcut->TabIndex = 1;
-            this->LabelShortcut->Text = L"Shortcut";
-            // 
-            // TextBoxName
-            // 
-            this->TextBoxName->BackColor = System::Drawing::Color::Black;
-            // 
-            // 
-            // 
-            this->TextBoxName->Border->Class = L"TextBoxBorder";
-            this->TextBoxName->Border->CornerType = DevComponents::DotNetBar::eCornerType::Square;
-            this->TextBoxName->DisabledBackColor = System::Drawing::Color::Black;
-            this->TextBoxName->ForeColor = System::Drawing::Color::White;
-            this->TextBoxName->Location = System::Drawing::Point(80, 12);
-            this->TextBoxName->Name = L"TextBoxName";
-            this->TextBoxName->PreventEnterBeep = true;
-            this->TextBoxName->Size = System::Drawing::Size(366, 22);
-            this->TextBoxName->TabIndex = 2;
-            // 
-            // LabelDescription
-            // 
-            this->LabelDescription->AutoSize = true;
-            // 
-            // 
-            // 
-            this->LabelDescription->BackgroundStyle->CornerType = DevComponents::DotNetBar::eCornerType::Square;
-            this->LabelDescription->Location = System::Drawing::Point(9, 87);
-            this->LabelDescription->Name = L"LabelDescription";
-            this->LabelDescription->Size = System::Drawing::Size(58, 17);
-            this->LabelDescription->TabIndex = 3;
-            this->LabelDescription->Text = L"Description";
-            // 
-            // TextBoxDescription
-            // 
-            this->TextBoxDescription->BackColor = System::Drawing::Color::Black;
-            // 
-            // 
-            // 
-            this->TextBoxDescription->Border->Class = L"TextBoxBorder";
-            this->TextBoxDescription->Border->CornerType = DevComponents::DotNetBar::eCornerType::Square;
-            this->TextBoxDescription->DisabledBackColor = System::Drawing::Color::Black;
-            this->TextBoxDescription->ForeColor = System::Drawing::Color::White;
-            this->TextBoxDescription->Location = System::Drawing::Point(80, 87);
-            this->TextBoxDescription->Multiline = true;
-            this->TextBoxDescription->Name = L"TextBoxDescription";
-            this->TextBoxDescription->PreventEnterBeep = true;
-            this->TextBoxDescription->Size = System::Drawing::Size(366, 65);
-            this->TextBoxDescription->TabIndex = 4;
-            // 
-            // TextBoxShortcut
-            // 
-            this->TextBoxShortcut->BackColor = System::Drawing::Color::Black;
-            // 
-            // 
-            // 
-            this->TextBoxShortcut->Border->Class = L"TextBoxBorder";
-            this->TextBoxShortcut->Border->CornerType = DevComponents::DotNetBar::eCornerType::Square;
-            this->TextBoxShortcut->DisabledBackColor = System::Drawing::Color::Black;
-            this->TextBoxShortcut->ForeColor = System::Drawing::Color::White;
-            this->TextBoxShortcut->Location = System::Drawing::Point(80, 50);
-            this->TextBoxShortcut->Name = L"TextBoxShortcut";
-            this->TextBoxShortcut->PreventEnterBeep = true;
-            this->TextBoxShortcut->Size = System::Drawing::Size(366, 22);
-            this->TextBoxShortcut->TabIndex = 5;
-            // 
-            // GroupVariables
-            // 
-            this->GroupVariables->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(45)),
-                static_cast<System::Int32>(static_cast<System::Byte>(48)));
-            this->GroupVariables->CanvasColor = System::Drawing::SystemColors::Control;
-            this->GroupVariables->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::Office2007;
-            this->GroupVariables->Controls->Add(this->VariablesList);
-            this->GroupVariables->Controls->Add(this->VariablesToolbar);
-            this->GroupVariables->DisabledBackColor = System::Drawing::Color::Empty;
-            this->GroupVariables->Location = System::Drawing::Point(9, 158);
-            this->GroupVariables->Name = L"GroupVariables";
-            this->GroupVariables->Size = System::Drawing::Size(434, 159);
-            // 
-            // 
-            // 
-            this->GroupVariables->Style->BackColor2SchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground2;
-            this->GroupVariables->Style->BackColorGradientAngle = 90;
-            this->GroupVariables->Style->BackColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
-            this->GroupVariables->Style->BorderBottom = DevComponents::DotNetBar::eStyleBorderType::Solid;
-            this->GroupVariables->Style->BorderBottomWidth = 1;
-            this->GroupVariables->Style->BorderColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBorder;
-            this->GroupVariables->Style->BorderLeft = DevComponents::DotNetBar::eStyleBorderType::Solid;
-            this->GroupVariables->Style->BorderLeftWidth = 1;
-            this->GroupVariables->Style->BorderRight = DevComponents::DotNetBar::eStyleBorderType::Solid;
-            this->GroupVariables->Style->BorderRightWidth = 1;
-            this->GroupVariables->Style->BorderTop = DevComponents::DotNetBar::eStyleBorderType::Solid;
-            this->GroupVariables->Style->BorderTopWidth = 1;
-            this->GroupVariables->Style->CornerDiameter = 4;
-            this->GroupVariables->Style->CornerType = DevComponents::DotNetBar::eCornerType::Rounded;
-            this->GroupVariables->Style->TextAlignment = DevComponents::DotNetBar::eStyleTextAlignment::Center;
-            this->GroupVariables->Style->TextColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelText;
-            this->GroupVariables->Style->TextLineAlignment = DevComponents::DotNetBar::eStyleTextAlignment::Near;
-            // 
-            // 
-            // 
-            this->GroupVariables->StyleMouseDown->CornerType = DevComponents::DotNetBar::eCornerType::Square;
-            // 
-            // 
-            // 
-            this->GroupVariables->StyleMouseOver->CornerType = DevComponents::DotNetBar::eCornerType::Square;
-            this->GroupVariables->TabIndex = 6;
-            this->GroupVariables->Text = L"Variables";
-            // 
-            // VariablesToolbar
-            // 
-            this->VariablesToolbar->AntiAlias = true;
-            this->VariablesToolbar->Dock = System::Windows::Forms::DockStyle::Left;
-            this->VariablesToolbar->DockOrientation = DevComponents::DotNetBar::eOrientation::Vertical;
-            this->VariablesToolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
-            this->VariablesToolbar->IsMaximized = false;
-            this->VariablesToolbar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(2) {
-                this->VariablesToolbarAddVar,
-                    this->VariablesToolbarRemoveVar
-            });
-            this->VariablesToolbar->ItemSpacing = 5;
-            this->VariablesToolbar->Location = System::Drawing::Point(0, 0);
-            this->VariablesToolbar->Name = L"VariablesToolbar";
-            this->VariablesToolbar->Size = System::Drawing::Size(28, 136);
-            this->VariablesToolbar->Stretch = true;
-            this->VariablesToolbar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-            this->VariablesToolbar->TabIndex = 0;
-            this->VariablesToolbar->TabStop = false;
-            this->VariablesToolbar->Text = L"bar1";
-            // 
-            // VariablesToolbarAddVar
-            // 
-            this->VariablesToolbarAddVar->AutoExpandOnClick = true;
-            this->VariablesToolbarAddVar->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"VariablesToolbarAddVar.Image")));
-            this->VariablesToolbarAddVar->ImagePaddingHorizontal = 10;
-            this->VariablesToolbarAddVar->ImagePaddingVertical = 10;
-            this->VariablesToolbarAddVar->Name = L"VariablesToolbarAddVar";
-            this->VariablesToolbarAddVar->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(5) {
-                this->AddVarMenuInteger,
-                    this->AddVarMenuFloat, this->AddVarMenuRef, this->AddVarMenuString, this->AddVarMenuArray
-            });
-            this->VariablesToolbarAddVar->Text = L"Add Variable...";
-            this->VariablesToolbarAddVar->Tooltip = L"Add Variable...";
-            // 
-            // VariablesToolbarRemoveVar
-            // 
-            this->VariablesToolbarRemoveVar->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"VariablesToolbarRemoveVar.Image")));
-            this->VariablesToolbarRemoveVar->ImagePaddingHorizontal = 10;
-            this->VariablesToolbarRemoveVar->ImagePaddingVertical = 10;
-            this->VariablesToolbarRemoveVar->Name = L"VariablesToolbarRemoveVar";
-            this->VariablesToolbarRemoveVar->Text = L"Remove Variable";
-            this->VariablesToolbarRemoveVar->Tooltip = L"Remove Variable";
-            // 
-            // AddVarMenuInteger
-            // 
-            this->AddVarMenuInteger->Name = L"AddVarMenuInteger";
-            this->AddVarMenuInteger->Text = L"Integer";
-            // 
-            // AddVarMenuFloat
-            // 
-            this->AddVarMenuFloat->Name = L"AddVarMenuFloat";
-            this->AddVarMenuFloat->Text = L"Float";
-            // 
-            // AddVarMenuRef
-            // 
-            this->AddVarMenuRef->Name = L"AddVarMenuRef";
-            this->AddVarMenuRef->Text = L"Reference";
-            // 
-            // AddVarMenuString
-            // 
-            this->AddVarMenuString->Name = L"AddVarMenuString";
-            this->AddVarMenuString->Text = L"String";
-            // 
-            // AddVarMenuArray
-            // 
-            this->AddVarMenuArray->Name = L"AddVarMenuArray";
-            this->AddVarMenuArray->Text = L"Array";
-            // 
-            // VariablesList
-            // 
-            this->VariablesList->AllColumns->Add(this->VariablesListColumnName);
-            this->VariablesList->AllColumns->Add(this->VariablesListColumnType);
-            this->VariablesList->CellEditUseWholeCell = false;
-            this->VariablesList->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(2) {
-                this->VariablesListColumnName,
-                    this->VariablesListColumnType
-            });
-            this->VariablesList->Cursor = System::Windows::Forms::Cursors::Default;
-            this->VariablesList->Dock = System::Windows::Forms::DockStyle::Fill;
-            this->VariablesList->GridLines = true;
-            this->VariablesList->HideSelection = false;
-            this->VariablesList->Location = System::Drawing::Point(28, 0);
-            this->VariablesList->MultiSelect = false;
-            this->VariablesList->Name = L"VariablesList";
-            this->VariablesList->Size = System::Drawing::Size(400, 136);
-            this->VariablesList->TabIndex = 1;
-            this->VariablesList->UseCompatibleStateImageBehavior = false;
-            this->VariablesList->View = System::Windows::Forms::View::Details;
-            // 
-            // VariablesListColumnName
-            // 
-            this->VariablesListColumnName->Text = L"Name";
-            this->VariablesListColumnName->Width = 217;
-            // 
-            // VariablesListColumnType
-            // 
-            this->VariablesListColumnType->Text = L"Data Type";
-            this->VariablesListColumnType->Width = 93;
+            this->ButtonApply->AccessibleRole = System::Windows::Forms::AccessibleRole::PushButton;
+            this->ButtonApply->ColorTable = DevComponents::DotNetBar::eButtonColor::OrangeWithBackground;
+            this->ButtonApply->Location = System::Drawing::Point(339, 576);
+            this->ButtonApply->Name = L"ButtonApply";
+            this->ButtonApply->Size = System::Drawing::Size(101, 28);
+            this->ButtonApply->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+            this->ButtonApply->TabIndex = 8;
+            this->ButtonApply->Text = L"Apply Changes";
             // 
             // GroupCode
             // 
@@ -476,7 +256,7 @@ namespace UIComponents {
             this->GroupCode->DisabledBackColor = System::Drawing::Color::Empty;
             this->GroupCode->Location = System::Drawing::Point(9, 323);
             this->GroupCode->Name = L"GroupCode";
-            this->GroupCode->Size = System::Drawing::Size(434, 232);
+            this->GroupCode->Size = System::Drawing::Size(434, 247);
             // 
             // 
             // 
@@ -523,8 +303,238 @@ namespace UIComponents {
             this->TextBoxCode->Multiline = true;
             this->TextBoxCode->Name = L"TextBoxCode";
             this->TextBoxCode->PreventEnterBeep = true;
-            this->TextBoxCode->Size = System::Drawing::Size(428, 209);
+            this->TextBoxCode->Size = System::Drawing::Size(428, 224);
             this->TextBoxCode->TabIndex = 8;
+            // 
+            // GroupVariables
+            // 
+            this->GroupVariables->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(45)),
+                static_cast<System::Int32>(static_cast<System::Byte>(48)));
+            this->GroupVariables->CanvasColor = System::Drawing::SystemColors::Control;
+            this->GroupVariables->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::Office2007;
+            this->GroupVariables->Controls->Add(this->VariablesList);
+            this->GroupVariables->Controls->Add(this->VariablesToolbar);
+            this->GroupVariables->DisabledBackColor = System::Drawing::Color::Empty;
+            this->GroupVariables->Location = System::Drawing::Point(9, 158);
+            this->GroupVariables->Name = L"GroupVariables";
+            this->GroupVariables->Size = System::Drawing::Size(434, 159);
+            // 
+            // 
+            // 
+            this->GroupVariables->Style->BackColor2SchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground2;
+            this->GroupVariables->Style->BackColorGradientAngle = 90;
+            this->GroupVariables->Style->BackColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
+            this->GroupVariables->Style->BorderBottom = DevComponents::DotNetBar::eStyleBorderType::Solid;
+            this->GroupVariables->Style->BorderBottomWidth = 1;
+            this->GroupVariables->Style->BorderColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBorder;
+            this->GroupVariables->Style->BorderLeft = DevComponents::DotNetBar::eStyleBorderType::Solid;
+            this->GroupVariables->Style->BorderLeftWidth = 1;
+            this->GroupVariables->Style->BorderRight = DevComponents::DotNetBar::eStyleBorderType::Solid;
+            this->GroupVariables->Style->BorderRightWidth = 1;
+            this->GroupVariables->Style->BorderTop = DevComponents::DotNetBar::eStyleBorderType::Solid;
+            this->GroupVariables->Style->BorderTopWidth = 1;
+            this->GroupVariables->Style->CornerDiameter = 4;
+            this->GroupVariables->Style->CornerType = DevComponents::DotNetBar::eCornerType::Rounded;
+            this->GroupVariables->Style->TextAlignment = DevComponents::DotNetBar::eStyleTextAlignment::Center;
+            this->GroupVariables->Style->TextColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelText;
+            this->GroupVariables->Style->TextLineAlignment = DevComponents::DotNetBar::eStyleTextAlignment::Near;
+            // 
+            // 
+            // 
+            this->GroupVariables->StyleMouseDown->CornerType = DevComponents::DotNetBar::eCornerType::Square;
+            // 
+            // 
+            // 
+            this->GroupVariables->StyleMouseOver->CornerType = DevComponents::DotNetBar::eCornerType::Square;
+            this->GroupVariables->TabIndex = 6;
+            this->GroupVariables->Text = L"Variables";
+            // 
+            // VariablesList
+            // 
+            this->VariablesList->AllColumns->Add(this->VariablesListColumnName);
+            this->VariablesList->AllColumns->Add(this->VariablesListColumnType);
+            this->VariablesList->CellEditUseWholeCell = false;
+            this->VariablesList->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(2) {
+                this->VariablesListColumnName,
+                    this->VariablesListColumnType
+            });
+            this->VariablesList->Cursor = System::Windows::Forms::Cursors::Default;
+            this->VariablesList->Dock = System::Windows::Forms::DockStyle::Fill;
+            this->VariablesList->GridLines = true;
+            this->VariablesList->HideSelection = false;
+            this->VariablesList->Location = System::Drawing::Point(0, 29);
+            this->VariablesList->MultiSelect = false;
+            this->VariablesList->Name = L"VariablesList";
+            this->VariablesList->Size = System::Drawing::Size(428, 107);
+            this->VariablesList->TabIndex = 1;
+            this->VariablesList->UseCompatibleStateImageBehavior = false;
+            this->VariablesList->View = System::Windows::Forms::View::Details;
+            // 
+            // VariablesListColumnName
+            // 
+            this->VariablesListColumnName->Text = L"Name";
+            this->VariablesListColumnName->Width = 217;
+            // 
+            // VariablesListColumnType
+            // 
+            this->VariablesListColumnType->Text = L"Data Type";
+            this->VariablesListColumnType->Width = 93;
+            // 
+            // VariablesToolbar
+            // 
+            this->VariablesToolbar->AntiAlias = true;
+            this->VariablesToolbar->Dock = System::Windows::Forms::DockStyle::Top;
+            this->VariablesToolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
+            this->VariablesToolbar->IsMaximized = false;
+            this->VariablesToolbar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(2) {
+                this->VariablesToolbarAddVar,
+                    this->VariablesToolbarRemoveVar
+            });
+            this->VariablesToolbar->ItemSpacing = 5;
+            this->VariablesToolbar->Location = System::Drawing::Point(0, 0);
+            this->VariablesToolbar->Name = L"VariablesToolbar";
+            this->VariablesToolbar->Size = System::Drawing::Size(428, 29);
+            this->VariablesToolbar->Stretch = true;
+            this->VariablesToolbar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+            this->VariablesToolbar->TabIndex = 0;
+            this->VariablesToolbar->TabStop = false;
+            this->VariablesToolbar->Text = L"bar1";
+            // 
+            // VariablesToolbarAddVar
+            // 
+            this->VariablesToolbarAddVar->AutoExpandOnClick = true;
+            this->VariablesToolbarAddVar->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"VariablesToolbarAddVar.Image")));
+            this->VariablesToolbarAddVar->ImagePaddingHorizontal = 10;
+            this->VariablesToolbarAddVar->ImagePaddingVertical = 10;
+            this->VariablesToolbarAddVar->Name = L"VariablesToolbarAddVar";
+            this->VariablesToolbarAddVar->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(5) {
+                this->AddVarMenuInteger,
+                    this->AddVarMenuFloat, this->AddVarMenuRef, this->AddVarMenuString, this->AddVarMenuArray
+            });
+            this->VariablesToolbarAddVar->Text = L"Add Variable...";
+            this->VariablesToolbarAddVar->Tooltip = L"Add Variable...";
+            // 
+            // AddVarMenuInteger
+            // 
+            this->AddVarMenuInteger->Name = L"AddVarMenuInteger";
+            this->AddVarMenuInteger->Text = L"Integer";
+            // 
+            // AddVarMenuFloat
+            // 
+            this->AddVarMenuFloat->Name = L"AddVarMenuFloat";
+            this->AddVarMenuFloat->Text = L"Float";
+            // 
+            // AddVarMenuRef
+            // 
+            this->AddVarMenuRef->Name = L"AddVarMenuRef";
+            this->AddVarMenuRef->Text = L"Reference";
+            // 
+            // AddVarMenuString
+            // 
+            this->AddVarMenuString->Name = L"AddVarMenuString";
+            this->AddVarMenuString->Text = L"String";
+            // 
+            // AddVarMenuArray
+            // 
+            this->AddVarMenuArray->Name = L"AddVarMenuArray";
+            this->AddVarMenuArray->Text = L"Array";
+            // 
+            // VariablesToolbarRemoveVar
+            // 
+            this->VariablesToolbarRemoveVar->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"VariablesToolbarRemoveVar.Image")));
+            this->VariablesToolbarRemoveVar->ImagePaddingHorizontal = 10;
+            this->VariablesToolbarRemoveVar->ImagePaddingVertical = 10;
+            this->VariablesToolbarRemoveVar->Name = L"VariablesToolbarRemoveVar";
+            this->VariablesToolbarRemoveVar->Text = L"Remove Variable";
+            this->VariablesToolbarRemoveVar->Tooltip = L"Remove Variable";
+            // 
+            // TextBoxShortcut
+            // 
+            this->TextBoxShortcut->BackColor = System::Drawing::Color::Black;
+            // 
+            // 
+            // 
+            this->TextBoxShortcut->Border->Class = L"TextBoxBorder";
+            this->TextBoxShortcut->Border->CornerType = DevComponents::DotNetBar::eCornerType::Square;
+            this->TextBoxShortcut->DisabledBackColor = System::Drawing::Color::Black;
+            this->TextBoxShortcut->ForeColor = System::Drawing::Color::White;
+            this->TextBoxShortcut->Location = System::Drawing::Point(80, 50);
+            this->TextBoxShortcut->Name = L"TextBoxShortcut";
+            this->TextBoxShortcut->PreventEnterBeep = true;
+            this->TextBoxShortcut->Size = System::Drawing::Size(366, 22);
+            this->TextBoxShortcut->TabIndex = 5;
+            // 
+            // TextBoxDescription
+            // 
+            this->TextBoxDescription->BackColor = System::Drawing::Color::Black;
+            // 
+            // 
+            // 
+            this->TextBoxDescription->Border->Class = L"TextBoxBorder";
+            this->TextBoxDescription->Border->CornerType = DevComponents::DotNetBar::eCornerType::Square;
+            this->TextBoxDescription->DisabledBackColor = System::Drawing::Color::Black;
+            this->TextBoxDescription->ForeColor = System::Drawing::Color::White;
+            this->TextBoxDescription->Location = System::Drawing::Point(80, 87);
+            this->TextBoxDescription->Multiline = true;
+            this->TextBoxDescription->Name = L"TextBoxDescription";
+            this->TextBoxDescription->PreventEnterBeep = true;
+            this->TextBoxDescription->Size = System::Drawing::Size(366, 65);
+            this->TextBoxDescription->TabIndex = 4;
+            // 
+            // LabelDescription
+            // 
+            this->LabelDescription->AutoSize = true;
+            // 
+            // 
+            // 
+            this->LabelDescription->BackgroundStyle->CornerType = DevComponents::DotNetBar::eCornerType::Square;
+            this->LabelDescription->Location = System::Drawing::Point(9, 87);
+            this->LabelDescription->Name = L"LabelDescription";
+            this->LabelDescription->Size = System::Drawing::Size(58, 17);
+            this->LabelDescription->TabIndex = 3;
+            this->LabelDescription->Text = L"Description";
+            // 
+            // TextBoxName
+            // 
+            this->TextBoxName->BackColor = System::Drawing::Color::Black;
+            // 
+            // 
+            // 
+            this->TextBoxName->Border->Class = L"TextBoxBorder";
+            this->TextBoxName->Border->CornerType = DevComponents::DotNetBar::eCornerType::Square;
+            this->TextBoxName->DisabledBackColor = System::Drawing::Color::Black;
+            this->TextBoxName->ForeColor = System::Drawing::Color::White;
+            this->TextBoxName->Location = System::Drawing::Point(80, 12);
+            this->TextBoxName->Name = L"TextBoxName";
+            this->TextBoxName->PreventEnterBeep = true;
+            this->TextBoxName->Size = System::Drawing::Size(366, 22);
+            this->TextBoxName->TabIndex = 2;
+            // 
+            // LabelShortcut
+            // 
+            this->LabelShortcut->AutoSize = true;
+            // 
+            // 
+            // 
+            this->LabelShortcut->BackgroundStyle->CornerType = DevComponents::DotNetBar::eCornerType::Square;
+            this->LabelShortcut->Location = System::Drawing::Point(9, 50);
+            this->LabelShortcut->Name = L"LabelShortcut";
+            this->LabelShortcut->Size = System::Drawing::Size(44, 17);
+            this->LabelShortcut->TabIndex = 1;
+            this->LabelShortcut->Text = L"Shortcut";
+            // 
+            // LabelName
+            // 
+            this->LabelName->AutoSize = true;
+            // 
+            // 
+            // 
+            this->LabelName->BackgroundStyle->CornerType = DevComponents::DotNetBar::eCornerType::Square;
+            this->LabelName->Location = System::Drawing::Point(9, 12);
+            this->LabelName->Name = L"LabelName";
+            this->LabelName->Size = System::Drawing::Size(32, 17);
+            this->LabelName->TabIndex = 0;
+            this->LabelName->Text = L"Name";
             // 
             // LeftPanel
             // 
@@ -534,17 +544,6 @@ namespace UIComponents {
             this->LeftPanel->Name = L"LeftPanel";
             this->LeftPanel->Size = System::Drawing::Size(286, 632);
             this->LeftPanel->TabIndex = 3;
-            // 
-            // ButtonApply
-            // 
-            this->ButtonApply->AccessibleRole = System::Windows::Forms::AccessibleRole::PushButton;
-            this->ButtonApply->ColorTable = DevComponents::DotNetBar::eButtonColor::OrangeWithBackground;
-            this->ButtonApply->Location = System::Drawing::Point(339, 568);
-            this->ButtonApply->Name = L"ButtonApply";
-            this->ButtonApply->Size = System::Drawing::Size(101, 36);
-            this->ButtonApply->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-            this->ButtonApply->TabIndex = 8;
-            this->ButtonApply->Text = L"Apply Changes";
             // 
             // ScriptEditorCodeSnippets
             // 
@@ -562,10 +561,10 @@ namespace UIComponents {
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->SnippetsList))->EndInit();
             this->GroupSnippetData->ResumeLayout(false);
             this->GroupSnippetData->PerformLayout();
-            this->GroupVariables->ResumeLayout(false);
-            (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->VariablesToolbar))->EndInit();
-            (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->VariablesList))->EndInit();
             this->GroupCode->ResumeLayout(false);
+            this->GroupVariables->ResumeLayout(false);
+            (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->VariablesList))->EndInit();
+            (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->VariablesToolbar))->EndInit();
             this->LeftPanel->ResumeLayout(false);
             this->ResumeLayout(false);
 

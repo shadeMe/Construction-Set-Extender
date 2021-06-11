@@ -102,6 +102,7 @@
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="ScriptEditorCodeSnippets.cpp" />
     <ClCompile Include="ScriptEditorPreferences.cpp" />
+    <ClCompile Include="ScriptEditorRefactorForm.cpp" />
     <ClCompile Include="ScriptEditorScriptSync.cpp" />
     <ClCompile Include="ScriptEditorWorkspace.cpp" />
     <ClCompile Include="ScriptEditorSelectScripts.cpp" />
@@ -127,6 +128,9 @@
       <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="ScriptEditorPreferences.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorRefactorForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="ScriptEditorScriptSync.h">
@@ -179,6 +183,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ScriptEditorPreferences.resx">
       <DependentUpon>ScriptEditorPreferences.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ScriptEditorRefactorForm.resx">
+      <DependentUpon>ScriptEditorRefactorForm.h</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ScriptEditorScriptSync.resx">
       <DependentUpon>ScriptEditorScriptSync.h</DependentUpon>

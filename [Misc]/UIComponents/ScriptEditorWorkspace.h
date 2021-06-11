@@ -232,10 +232,25 @@ private: DevComponents::DotNetBar::LabelItem^ StatusBarColumnNumber;
 private: DevComponents::DotNetBar::CircularProgressItem^ StatusBarScriptBytecodeLength;
 private: DevComponents::DotNetBar::ContextMenuBar^ ContextMenuProvider;
 private: DevComponents::DotNetBar::ButtonItem^ ContextMenuTextEditor;
-private: DevComponents::DotNetBar::ButtonItem^ buttonItem1;
-private: DevComponents::DotNetBar::ButtonItem^ buttonItem2;
-private: DevComponents::DotNetBar::ButtonItem^ buttonItem3;
-private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
+private: DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuCopy;
+private: DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuPaste;
+private: DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuToggleComment;
+private: DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuAddBookmark;
+
+
+
+
+
+private: DevComponents::DotNetBar::ButtonItem^ ToolbarMenuHelp;
+private: DevComponents::DotNetBar::ButtonItem^ HelpMenuWiki;
+private: DevComponents::DotNetBar::ButtonItem^ HelpMenuObseDocs;
+private: DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuOpenPreprocessorImport;
+private: DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuJumpToScript;
+private: DevComponents::DotNetBar::StyleManagerAmbient^ StyleManagerAmbient;
+
+
+
+
 
 
 
@@ -333,14 +348,6 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->DockManager = (gcnew DevComponents::DotNetBar::DotNetBarManager(this->components));
 			this->DockSiteBottom = (gcnew DevComponents::DotNetBar::DockSite());
 			this->BottomDockBar = (gcnew DevComponents::DotNetBar::Bar());
-			this->PanelDockContainerFindResults = (gcnew DevComponents::DotNetBar::PanelDockContainer());
-			this->FindResultsList = (gcnew BrightIdeasSoftware::FastObjectListView());
-			this->FindResultsListColumnLine = (gcnew BrightIdeasSoftware::OLVColumn());
-			this->FindResultsListColumnText = (gcnew BrightIdeasSoftware::OLVColumn());
-			this->FindResultsListColumnHits = (gcnew BrightIdeasSoftware::OLVColumn());
-			this->FindResultsToolbar = (gcnew DevComponents::DotNetBar::Bar());
-			this->FindResultsToolbarLabel = (gcnew DevComponents::DotNetBar::LabelItem());
-			this->FindResultsListToolbarLabelQuery = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->PanelDockContainerGlobalFindResults = (gcnew DevComponents::DotNetBar::PanelDockContainer());
 			this->GlobalFindResultsList = (gcnew BrightIdeasSoftware::TreeListView());
 			this->GlobalFindResultsListColumnCode = (gcnew BrightIdeasSoftware::OLVColumn());
@@ -359,6 +366,14 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->BookmarksToolbar = (gcnew DevComponents::DotNetBar::Bar());
 			this->BookmarksToolbarAdd = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->BookmarksToolbarRemove = (gcnew DevComponents::DotNetBar::ButtonItem());
+			this->PanelDockContainerFindResults = (gcnew DevComponents::DotNetBar::PanelDockContainer());
+			this->FindResultsList = (gcnew BrightIdeasSoftware::FastObjectListView());
+			this->FindResultsListColumnLine = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->FindResultsListColumnText = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->FindResultsListColumnHits = (gcnew BrightIdeasSoftware::OLVColumn());
+			this->FindResultsToolbar = (gcnew DevComponents::DotNetBar::Bar());
+			this->FindResultsToolbarLabel = (gcnew DevComponents::DotNetBar::LabelItem());
+			this->FindResultsListToolbarLabelQuery = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->DockContainerItemMessageList = (gcnew DevComponents::DotNetBar::DockContainerItem());
 			this->DockContainerItemBookmarks = (gcnew DevComponents::DotNetBar::DockContainerItem());
 			this->DockContainerItemFindResults = (gcnew DevComponents::DotNetBar::DockContainerItem());
@@ -406,25 +421,28 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->PanelDocumentContent = (gcnew System::Windows::Forms::Panel());
 			this->ContextMenuProvider = (gcnew DevComponents::DotNetBar::ContextMenuBar());
 			this->ContextMenuTextEditor = (gcnew DevComponents::DotNetBar::ButtonItem());
-			this->buttonItem1 = (gcnew DevComponents::DotNetBar::ButtonItem());
-			this->buttonItem2 = (gcnew DevComponents::DotNetBar::ButtonItem());
-			this->buttonItem3 = (gcnew DevComponents::DotNetBar::ButtonItem());
-			this->buttonItem4 = (gcnew DevComponents::DotNetBar::ButtonItem());
+			this->TextEditorContextMenuCopy = (gcnew DevComponents::DotNetBar::ButtonItem());
+			this->TextEditorContextMenuPaste = (gcnew DevComponents::DotNetBar::ButtonItem());
+			this->TextEditorContextMenuToggleComment = (gcnew DevComponents::DotNetBar::ButtonItem());
+			this->TextEditorContextMenuAddBookmark = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->NavigationBar = (gcnew DevComponents::DotNetBar::CrumbBar());
 			this->StatusBar = (gcnew DevComponents::DotNetBar::Bar());
 			this->StatusBarLineNumber = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->StatusBarColumnNumber = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->StatusBarPreprocessorOutputFlag = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->StatusBarScriptBytecodeLength = (gcnew DevComponents::DotNetBar::CircularProgressItem());
+			this->ToolbarMenuHelp = (gcnew DevComponents::DotNetBar::ButtonItem());
+			this->HelpMenuWiki = (gcnew DevComponents::DotNetBar::ButtonItem());
+			this->HelpMenuObseDocs = (gcnew DevComponents::DotNetBar::ButtonItem());
+			this->TextEditorContextMenuOpenPreprocessorImport = (gcnew DevComponents::DotNetBar::ButtonItem());
+			this->TextEditorContextMenuJumpToScript = (gcnew DevComponents::DotNetBar::ButtonItem());
+			this->StyleManagerAmbient = (gcnew DevComponents::DotNetBar::StyleManagerAmbient(this->components));
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MainTabStrip))->BeginInit();
 			this->MainTabStrip->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContainerMainToolbar))->BeginInit();
 			this->DockSiteBottom->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->BottomDockBar))->BeginInit();
 			this->BottomDockBar->SuspendLayout();
-			this->PanelDockContainerFindResults->SuspendLayout();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->FindResultsList))->BeginInit();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->FindResultsToolbar))->BeginInit();
 			this->PanelDockContainerGlobalFindResults->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->GlobalFindResultsList))->BeginInit();
 			this->PanelDockContainerMessageList->SuspendLayout();
@@ -432,6 +450,9 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->PanelDockContainerBookmarks->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->BookmarksList))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->BookmarksToolbar))->BeginInit();
+			this->PanelDockContainerFindResults->SuspendLayout();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->FindResultsList))->BeginInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->FindResultsToolbar))->BeginInit();
 			this->DockSiteLeftEx->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->LeftDockBar))->BeginInit();
 			this->LeftDockBar->SuspendLayout();
@@ -492,7 +513,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->MainTabStrip->SelectedTabFont = (gcnew System::Drawing::Font(L"Segoe UI", 9, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->MainTabStrip->SelectedTabIndex = 0;
-			this->MainTabStrip->Size = System::Drawing::Size(737, 27);
+			this->MainTabStrip->Size = System::Drawing::Size(895, 27);
 			this->MainTabStrip->TabFont = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->MainTabStrip->TabIndex = 1;
@@ -505,7 +526,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->superTabControlPanel1->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->superTabControlPanel1->Location = System::Drawing::Point(0, 30);
 			this->superTabControlPanel1->Name = L"superTabControlPanel1";
-			this->superTabControlPanel1->Size = System::Drawing::Size(737, 0);
+			this->superTabControlPanel1->Size = System::Drawing::Size(895, 0);
 			this->superTabControlPanel1->TabIndex = 0;
 			this->superTabControlPanel1->TabItem = this->DummyTabItem;
 			//
@@ -548,10 +569,11 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->ContainerMainToolbar->Dock = System::Windows::Forms::DockStyle::Top;
 			this->ContainerMainToolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
 			this->ContainerMainToolbar->IsMaximized = false;
-			this->ContainerMainToolbar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(11) {
+			this->ContainerMainToolbar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(12) {
 				this->ToolbarNewScript,
 					this->ToolbarOpenScript, this->ToolbarSaveScript, this->ToolbarSaveAllScripts, this->ToolbarPreviousScript, this->ToolbarNextScript,
-					this->ToolbarLabelScriptType, this->ToolbarScriptTypeDropdown, this->ToolbarMenuEdit, this->ToolbarMenuView, this->ToolbarMenuTools
+					this->ToolbarLabelScriptType, this->ToolbarScriptTypeDropdown, this->ToolbarMenuEdit, this->ToolbarMenuView, this->ToolbarMenuTools,
+					this->ToolbarMenuHelp
 			});
 			this->ContainerMainToolbar->ItemSpacing = 4;
 			this->ContainerMainToolbar->Location = System::Drawing::Point(0, 27);
@@ -561,7 +583,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->ContainerMainToolbar->PaddingLeft = 5;
 			this->ContainerMainToolbar->PaddingRight = 5;
 			this->ContainerMainToolbar->PaddingTop = 5;
-			this->ContainerMainToolbar->Size = System::Drawing::Size(737, 37);
+			this->ContainerMainToolbar->Size = System::Drawing::Size(895, 37);
 			this->ContainerMainToolbar->Stretch = true;
 			this->ContainerMainToolbar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->ContainerMainToolbar->TabIndex = 2;
@@ -569,6 +591,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			//
 			// ToolbarNewScript
 			//
+			this->ToolbarNewScript->AlternateShortCutText = L"aasds";
 			this->ToolbarNewScript->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolbarNewScript.Image")));
 			this->ToolbarNewScript->ImagePaddingHorizontal = 15;
 			this->ToolbarNewScript->ImagePaddingVertical = 10;
@@ -703,6 +726,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			//
 			// EditMenuGoToOffset
 			//
+			this->EditMenuGoToOffset->AlternateShortCutText = L"Ctrl + E";
 			this->EditMenuGoToOffset->Name = L"EditMenuGoToOffset";
 			this->EditMenuGoToOffset->Text = L"Go To &Offset";
 			//
@@ -716,7 +740,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			//
 			// EditMenuToggleComment
 			//
-			this->EditMenuToggleComment->AlternateShortCutText = L"Ctrl + Q";
+			this->EditMenuToggleComment->AlternateShortCutText = L"Ctrl + Q/W";
 			this->EditMenuToggleComment->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"EditMenuToggleComment.Image")));
 			this->EditMenuToggleComment->Name = L"EditMenuToggleComment";
 			this->EditMenuToggleComment->Text = L"Toggle &Comment";
@@ -997,12 +1021,12 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->DockSiteBottom->Dock = System::Windows::Forms::DockStyle::Bottom;
 			this->DockSiteBottom->DocumentDockContainer = (gcnew DevComponents::DotNetBar::DocumentDockContainer(gcnew cli::array< DevComponents::DotNetBar::DocumentBaseContainer^  >(1) {
 				(cli::safe_cast<DevComponents::DotNetBar::DocumentBaseContainer^>((gcnew DevComponents::DotNetBar::DocumentBarContainer(this->BottomDockBar,
-					737, 156))))
+					895, 195))))
 			}, DevComponents::DotNetBar::eOrientation::Vertical));
 			this->DockSiteBottom->ForeColor = System::Drawing::Color::White;
-			this->DockSiteBottom->Location = System::Drawing::Point(0, 675);
+			this->DockSiteBottom->Location = System::Drawing::Point(0, 636);
 			this->DockSiteBottom->Name = L"DockSiteBottom";
-			this->DockSiteBottom->Size = System::Drawing::Size(737, 161);
+			this->DockSiteBottom->Size = System::Drawing::Size(895, 200);
 			this->DockSiteBottom->TabIndex = 7;
 			this->DockSiteBottom->TabStop = false;
 			//
@@ -1016,10 +1040,10 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->BottomDockBar->CanDockTop = false;
 			this->BottomDockBar->CanHide = true;
 			this->BottomDockBar->CloseSingleTab = true;
-			this->BottomDockBar->Controls->Add(this->PanelDockContainerGlobalFindResults);
-			this->BottomDockBar->Controls->Add(this->PanelDockContainerMessageList);
 			this->BottomDockBar->Controls->Add(this->PanelDockContainerBookmarks);
+			this->BottomDockBar->Controls->Add(this->PanelDockContainerMessageList);
 			this->BottomDockBar->Controls->Add(this->PanelDockContainerFindResults);
+			this->BottomDockBar->Controls->Add(this->PanelDockContainerGlobalFindResults);
 			this->BottomDockBar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->BottomDockBar->GrabHandleStyle = DevComponents::DotNetBar::eGrabHandleStyle::Caption;
@@ -1031,106 +1055,13 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->BottomDockBar->LayoutType = DevComponents::DotNetBar::eLayoutType::DockContainer;
 			this->BottomDockBar->Location = System::Drawing::Point(0, 5);
 			this->BottomDockBar->Name = L"BottomDockBar";
-			this->BottomDockBar->SelectedDockTab = 3;
-			this->BottomDockBar->Size = System::Drawing::Size(737, 156);
+			this->BottomDockBar->SelectedDockTab = 1;
+			this->BottomDockBar->Size = System::Drawing::Size(895, 195);
 			this->BottomDockBar->Stretch = true;
 			this->BottomDockBar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->BottomDockBar->TabIndex = 0;
 			this->BottomDockBar->TabStop = false;
-			this->BottomDockBar->Text = L"Find in Tabs Results";
-			//
-			// PanelDockContainerFindResults
-			//
-			this->PanelDockContainerFindResults->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-			this->PanelDockContainerFindResults->Controls->Add(this->FindResultsList);
-			this->PanelDockContainerFindResults->Controls->Add(this->FindResultsToolbar);
-			this->PanelDockContainerFindResults->DisabledBackColor = System::Drawing::Color::Empty;
-			this->PanelDockContainerFindResults->Location = System::Drawing::Point(3, 23);
-			this->PanelDockContainerFindResults->Name = L"PanelDockContainerFindResults";
-			this->PanelDockContainerFindResults->Size = System::Drawing::Size(731, 105);
-			this->PanelDockContainerFindResults->Style->Alignment = System::Drawing::StringAlignment::Center;
-			this->PanelDockContainerFindResults->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
-			this->PanelDockContainerFindResults->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
-			this->PanelDockContainerFindResults->Style->GradientAngle = 90;
-			this->PanelDockContainerFindResults->TabIndex = 9;
-			//
-			// FindResultsList
-			//
-			this->FindResultsList->AllColumns->Add(this->FindResultsListColumnLine);
-			this->FindResultsList->AllColumns->Add(this->FindResultsListColumnText);
-			this->FindResultsList->AllColumns->Add(this->FindResultsListColumnHits);
-			this->FindResultsList->BackColor = System::Drawing::Color::Black;
-			this->FindResultsList->CellEditUseWholeCell = false;
-			this->FindResultsList->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(3) {
-				this->FindResultsListColumnLine,
-					this->FindResultsListColumnText, this->FindResultsListColumnHits
-			});
-			this->FindResultsList->Cursor = System::Windows::Forms::Cursors::Default;
-			this->FindResultsList->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->FindResultsList->EmptyListMsg = L"Doesn\'t look like anything to me...";
-			this->FindResultsList->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75F, System::Drawing::FontStyle::Regular,
-				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
-			this->FindResultsList->ForeColor = System::Drawing::Color::White;
-			this->FindResultsList->FullRowSelect = true;
-			this->FindResultsList->GridLines = true;
-			this->FindResultsList->HideSelection = false;
-			this->FindResultsList->Location = System::Drawing::Point(0, 19);
-			this->FindResultsList->MultiSelect = false;
-			this->FindResultsList->Name = L"FindResultsList";
-			this->FindResultsList->ShowGroups = false;
-			this->FindResultsList->Size = System::Drawing::Size(731, 86);
-			this->FindResultsList->TabIndex = 2;
-			this->FindResultsList->UseCompatibleStateImageBehavior = false;
-			this->FindResultsList->View = System::Windows::Forms::View::Details;
-			this->FindResultsList->VirtualMode = true;
-			//
-			// FindResultsListColumnLine
-			//
-			this->FindResultsListColumnLine->MaximumWidth = 40;
-			this->FindResultsListColumnLine->MinimumWidth = 50;
-			this->FindResultsListColumnLine->Text = L"Line";
-			this->FindResultsListColumnLine->Width = 50;
-			//
-			// FindResultsListColumnText
-			//
-			this->FindResultsListColumnText->MinimumWidth = 500;
-			this->FindResultsListColumnText->Text = L"Code";
-			this->FindResultsListColumnText->Width = 779;
-			//
-			// FindResultsListColumnHits
-			//
-			this->FindResultsListColumnHits->MaximumWidth = 40;
-			this->FindResultsListColumnHits->Text = L"Hits";
-			this->FindResultsListColumnHits->Width = 40;
-			//
-			// FindResultsToolbar
-			//
-			this->FindResultsToolbar->AntiAlias = true;
-			this->FindResultsToolbar->Dock = System::Windows::Forms::DockStyle::Top;
-			this->FindResultsToolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
-			this->FindResultsToolbar->IsMaximized = false;
-			this->FindResultsToolbar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(2) {
-				this->FindResultsToolbarLabel,
-					this->FindResultsListToolbarLabelQuery
-			});
-			this->FindResultsToolbar->Location = System::Drawing::Point(0, 0);
-			this->FindResultsToolbar->Name = L"FindResultsToolbar";
-			this->FindResultsToolbar->Size = System::Drawing::Size(731, 19);
-			this->FindResultsToolbar->Stretch = true;
-			this->FindResultsToolbar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-			this->FindResultsToolbar->TabIndex = 0;
-			this->FindResultsToolbar->TabStop = false;
-			this->FindResultsToolbar->Text = L"bar1";
-			//
-			// FindResultsToolbarLabel
-			//
-			this->FindResultsToolbarLabel->Name = L"FindResultsToolbarLabel";
-			this->FindResultsToolbarLabel->Text = L"Query :";
-			//
-			// FindResultsListToolbarLabelQuery
-			//
-			this->FindResultsListToolbarLabelQuery->Name = L"FindResultsListToolbarLabelQuery";
-			this->FindResultsListToolbarLabelQuery->Text = L"Last Find/Replace Operation";
+			this->BottomDockBar->Text = L"Bookmarks";
 			//
 			// PanelDockContainerGlobalFindResults
 			//
@@ -1139,7 +1070,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->PanelDockContainerGlobalFindResults->DisabledBackColor = System::Drawing::Color::Empty;
 			this->PanelDockContainerGlobalFindResults->Location = System::Drawing::Point(3, 23);
 			this->PanelDockContainerGlobalFindResults->Name = L"PanelDockContainerGlobalFindResults";
-			this->PanelDockContainerGlobalFindResults->Size = System::Drawing::Size(731, 105);
+			this->PanelDockContainerGlobalFindResults->Size = System::Drawing::Size(889, 144);
 			this->PanelDockContainerGlobalFindResults->Style->Alignment = System::Drawing::StringAlignment::Center;
 			this->PanelDockContainerGlobalFindResults->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
 			this->PanelDockContainerGlobalFindResults->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
@@ -1169,7 +1100,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->GlobalFindResultsList->MultiSelect = false;
 			this->GlobalFindResultsList->Name = L"GlobalFindResultsList";
 			this->GlobalFindResultsList->ShowGroups = false;
-			this->GlobalFindResultsList->Size = System::Drawing::Size(731, 105);
+			this->GlobalFindResultsList->Size = System::Drawing::Size(889, 144);
 			this->GlobalFindResultsList->TabIndex = 0;
 			this->GlobalFindResultsList->UseCompatibleStateImageBehavior = false;
 			this->GlobalFindResultsList->View = System::Windows::Forms::View::Details;
@@ -1202,7 +1133,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->PanelDockContainerMessageList->DisabledBackColor = System::Drawing::Color::Empty;
 			this->PanelDockContainerMessageList->Location = System::Drawing::Point(3, 23);
 			this->PanelDockContainerMessageList->Name = L"PanelDockContainerMessageList";
-			this->PanelDockContainerMessageList->Size = System::Drawing::Size(731, 105);
+			this->PanelDockContainerMessageList->Size = System::Drawing::Size(889, 144);
 			this->PanelDockContainerMessageList->Style->Alignment = System::Drawing::StringAlignment::Center;
 			this->PanelDockContainerMessageList->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
 			this->PanelDockContainerMessageList->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
@@ -1234,7 +1165,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->MessagesList->MultiSelect = false;
 			this->MessagesList->Name = L"MessagesList";
 			this->MessagesList->ShowGroups = false;
-			this->MessagesList->Size = System::Drawing::Size(731, 105);
+			this->MessagesList->Size = System::Drawing::Size(889, 144);
 			this->MessagesList->TabIndex = 0;
 			this->MessagesList->UseCompatibleStateImageBehavior = false;
 			this->MessagesList->View = System::Windows::Forms::View::Details;
@@ -1252,7 +1183,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->MessageListColumnLine->MaximumWidth = 40;
 			this->MessageListColumnLine->MinimumWidth = 50;
 			this->MessageListColumnLine->Text = L"Line";
-			this->MessageListColumnLine->Width = 50;
+			this->MessageListColumnLine->Width = 40;
 			//
 			// MessageListColumnText
 			//
@@ -1274,7 +1205,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->PanelDockContainerBookmarks->DisabledBackColor = System::Drawing::Color::Empty;
 			this->PanelDockContainerBookmarks->Location = System::Drawing::Point(3, 23);
 			this->PanelDockContainerBookmarks->Name = L"PanelDockContainerBookmarks";
-			this->PanelDockContainerBookmarks->Size = System::Drawing::Size(731, 105);
+			this->PanelDockContainerBookmarks->Size = System::Drawing::Size(889, 144);
 			this->PanelDockContainerBookmarks->Style->Alignment = System::Drawing::StringAlignment::Center;
 			this->PanelDockContainerBookmarks->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
 			this->PanelDockContainerBookmarks->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
@@ -1304,7 +1235,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->BookmarksList->MultiSelect = false;
 			this->BookmarksList->Name = L"BookmarksList";
 			this->BookmarksList->ShowGroups = false;
-			this->BookmarksList->Size = System::Drawing::Size(703, 105);
+			this->BookmarksList->Size = System::Drawing::Size(861, 144);
 			this->BookmarksList->TabIndex = 1;
 			this->BookmarksList->UseCompatibleStateImageBehavior = false;
 			this->BookmarksList->View = System::Windows::Forms::View::Details;
@@ -1315,13 +1246,13 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->BookmarksColumnLine->MaximumWidth = 40;
 			this->BookmarksColumnLine->MinimumWidth = 50;
 			this->BookmarksColumnLine->Text = L"Line";
-			this->BookmarksColumnLine->Width = 40;
+			this->BookmarksColumnLine->Width = 50;
 			//
 			// BookmarksColumnText
 			//
 			this->BookmarksColumnText->MinimumWidth = 500;
 			this->BookmarksColumnText->Text = L"Text";
-			this->BookmarksColumnText->Width = 808;
+			this->BookmarksColumnText->Width = 757;
 			//
 			// BookmarksToolbar
 			//
@@ -1339,7 +1270,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->BookmarksToolbar->ItemSpacing = 5;
 			this->BookmarksToolbar->Location = System::Drawing::Point(0, 0);
 			this->BookmarksToolbar->Name = L"BookmarksToolbar";
-			this->BookmarksToolbar->Size = System::Drawing::Size(28, 105);
+			this->BookmarksToolbar->Size = System::Drawing::Size(28, 144);
 			this->BookmarksToolbar->Stretch = true;
 			this->BookmarksToolbar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->BookmarksToolbar->TabIndex = 0;
@@ -1363,6 +1294,99 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->BookmarksToolbarRemove->Name = L"BookmarksToolbarRemove";
 			this->BookmarksToolbarRemove->Text = L"Remove Bookmark";
 			this->BookmarksToolbarRemove->Tooltip = L"Remove Bookmark";
+			//
+			// PanelDockContainerFindResults
+			//
+			this->PanelDockContainerFindResults->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+			this->PanelDockContainerFindResults->Controls->Add(this->FindResultsList);
+			this->PanelDockContainerFindResults->Controls->Add(this->FindResultsToolbar);
+			this->PanelDockContainerFindResults->DisabledBackColor = System::Drawing::Color::Empty;
+			this->PanelDockContainerFindResults->Location = System::Drawing::Point(3, 23);
+			this->PanelDockContainerFindResults->Name = L"PanelDockContainerFindResults";
+			this->PanelDockContainerFindResults->Size = System::Drawing::Size(889, 144);
+			this->PanelDockContainerFindResults->Style->Alignment = System::Drawing::StringAlignment::Center;
+			this->PanelDockContainerFindResults->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
+			this->PanelDockContainerFindResults->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
+			this->PanelDockContainerFindResults->Style->GradientAngle = 90;
+			this->PanelDockContainerFindResults->TabIndex = 9;
+			//
+			// FindResultsList
+			//
+			this->FindResultsList->AllColumns->Add(this->FindResultsListColumnLine);
+			this->FindResultsList->AllColumns->Add(this->FindResultsListColumnText);
+			this->FindResultsList->AllColumns->Add(this->FindResultsListColumnHits);
+			this->FindResultsList->BackColor = System::Drawing::Color::Black;
+			this->FindResultsList->CellEditUseWholeCell = false;
+			this->FindResultsList->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(3) {
+				this->FindResultsListColumnLine,
+					this->FindResultsListColumnText, this->FindResultsListColumnHits
+			});
+			this->FindResultsList->Cursor = System::Windows::Forms::Cursors::Default;
+			this->FindResultsList->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->FindResultsList->EmptyListMsg = L"Doesn\'t look like anything to me...";
+			this->FindResultsList->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75F, System::Drawing::FontStyle::Regular,
+				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+			this->FindResultsList->ForeColor = System::Drawing::Color::White;
+			this->FindResultsList->FullRowSelect = true;
+			this->FindResultsList->GridLines = true;
+			this->FindResultsList->HideSelection = false;
+			this->FindResultsList->Location = System::Drawing::Point(0, 19);
+			this->FindResultsList->MultiSelect = false;
+			this->FindResultsList->Name = L"FindResultsList";
+			this->FindResultsList->ShowGroups = false;
+			this->FindResultsList->Size = System::Drawing::Size(889, 125);
+			this->FindResultsList->TabIndex = 2;
+			this->FindResultsList->UseCompatibleStateImageBehavior = false;
+			this->FindResultsList->View = System::Windows::Forms::View::Details;
+			this->FindResultsList->VirtualMode = true;
+			//
+			// FindResultsListColumnLine
+			//
+			this->FindResultsListColumnLine->MaximumWidth = 40;
+			this->FindResultsListColumnLine->MinimumWidth = 50;
+			this->FindResultsListColumnLine->Text = L"Line";
+			this->FindResultsListColumnLine->Width = 40;
+			//
+			// FindResultsListColumnText
+			//
+			this->FindResultsListColumnText->MinimumWidth = 500;
+			this->FindResultsListColumnText->Text = L"Code";
+			this->FindResultsListColumnText->Width = 779;
+			//
+			// FindResultsListColumnHits
+			//
+			this->FindResultsListColumnHits->MaximumWidth = 40;
+			this->FindResultsListColumnHits->Text = L"Hits";
+			this->FindResultsListColumnHits->Width = 40;
+			//
+			// FindResultsToolbar
+			//
+			this->FindResultsToolbar->AntiAlias = true;
+			this->FindResultsToolbar->Dock = System::Windows::Forms::DockStyle::Top;
+			this->FindResultsToolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
+			this->FindResultsToolbar->IsMaximized = false;
+			this->FindResultsToolbar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(2) {
+				this->FindResultsToolbarLabel,
+					this->FindResultsListToolbarLabelQuery
+			});
+			this->FindResultsToolbar->Location = System::Drawing::Point(0, 0);
+			this->FindResultsToolbar->Name = L"FindResultsToolbar";
+			this->FindResultsToolbar->Size = System::Drawing::Size(889, 19);
+			this->FindResultsToolbar->Stretch = true;
+			this->FindResultsToolbar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+			this->FindResultsToolbar->TabIndex = 0;
+			this->FindResultsToolbar->TabStop = false;
+			this->FindResultsToolbar->Text = L"bar1";
+			//
+			// FindResultsToolbarLabel
+			//
+			this->FindResultsToolbarLabel->Name = L"FindResultsToolbarLabel";
+			this->FindResultsToolbarLabel->Text = L"Query :";
+			//
+			// FindResultsListToolbarLabelQuery
+			//
+			this->FindResultsListToolbarLabelQuery->Name = L"FindResultsListToolbarLabelQuery";
+			this->FindResultsListToolbarLabelQuery->Text = L"Last Find/Replace Operation";
 			//
 			// DockContainerItemMessageList
 			//
@@ -1397,12 +1421,12 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->DockSiteLeftEx->Dock = System::Windows::Forms::DockStyle::Left;
 			this->DockSiteLeftEx->DocumentDockContainer = (gcnew DevComponents::DotNetBar::DocumentDockContainer(gcnew cli::array< DevComponents::DotNetBar::DocumentBaseContainer^  >(1) {
 				(cli::safe_cast<DevComponents::DotNetBar::DocumentBaseContainer^>((gcnew DevComponents::DotNetBar::DocumentBarContainer(this->LeftDockBar,
-					88, 611))))
+					88, 572))))
 			}, DevComponents::DotNetBar::eOrientation::Horizontal));
 			this->DockSiteLeftEx->ForeColor = System::Drawing::Color::White;
 			this->DockSiteLeftEx->Location = System::Drawing::Point(0, 64);
 			this->DockSiteLeftEx->Name = L"DockSiteLeftEx";
-			this->DockSiteLeftEx->Size = System::Drawing::Size(93, 611);
+			this->DockSiteLeftEx->Size = System::Drawing::Size(93, 572);
 			this->DockSiteLeftEx->TabIndex = 4;
 			this->DockSiteLeftEx->TabStop = false;
 			//
@@ -1424,7 +1448,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->LeftDockBar->LayoutType = DevComponents::DotNetBar::eLayoutType::DockContainer;
 			this->LeftDockBar->Location = System::Drawing::Point(0, 0);
 			this->LeftDockBar->Name = L"LeftDockBar";
-			this->LeftDockBar->Size = System::Drawing::Size(88, 611);
+			this->LeftDockBar->Size = System::Drawing::Size(88, 572);
 			this->LeftDockBar->Stretch = true;
 			this->LeftDockBar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->LeftDockBar->TabIndex = 1;
@@ -1438,7 +1462,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->PanelDockContainerOutline->DisabledBackColor = System::Drawing::Color::Empty;
 			this->PanelDockContainerOutline->Location = System::Drawing::Point(3, 23);
 			this->PanelDockContainerOutline->Name = L"PanelDockContainerOutline";
-			this->PanelDockContainerOutline->Size = System::Drawing::Size(82, 585);
+			this->PanelDockContainerOutline->Size = System::Drawing::Size(82, 546);
 			this->PanelDockContainerOutline->Style->Alignment = System::Drawing::StringAlignment::Center;
 			this->PanelDockContainerOutline->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
 			this->PanelDockContainerOutline->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
@@ -1455,7 +1479,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->OutlineTreeView->Location = System::Drawing::Point(0, 0);
 			this->OutlineTreeView->Name = L"OutlineTreeView";
 			this->OutlineTreeView->ShowGroups = false;
-			this->OutlineTreeView->Size = System::Drawing::Size(82, 585);
+			this->OutlineTreeView->Size = System::Drawing::Size(82, 546);
 			this->OutlineTreeView->TabIndex = 0;
 			this->OutlineTreeView->UseCompatibleStateImageBehavior = false;
 			this->OutlineTreeView->View = System::Windows::Forms::View::Details;
@@ -1476,12 +1500,12 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->DockSiteRightEx->Dock = System::Windows::Forms::DockStyle::Right;
 			this->DockSiteRightEx->DocumentDockContainer = (gcnew DevComponents::DotNetBar::DocumentDockContainer(gcnew cli::array< DevComponents::DotNetBar::DocumentBaseContainer^  >(1) {
 				(cli::safe_cast<DevComponents::DotNetBar::DocumentBaseContainer^>((gcnew DevComponents::DotNetBar::DocumentBarContainer(this->RightDockBar,
-					172, 611))))
+					172, 572))))
 			}, DevComponents::DotNetBar::eOrientation::Vertical));
 			this->DockSiteRightEx->ForeColor = System::Drawing::Color::White;
-			this->DockSiteRightEx->Location = System::Drawing::Point(560, 64);
+			this->DockSiteRightEx->Location = System::Drawing::Point(718, 64);
 			this->DockSiteRightEx->Name = L"DockSiteRightEx";
-			this->DockSiteRightEx->Size = System::Drawing::Size(177, 611);
+			this->DockSiteRightEx->Size = System::Drawing::Size(177, 572);
 			this->DockSiteRightEx->TabIndex = 5;
 			this->DockSiteRightEx->TabStop = false;
 			//
@@ -1503,7 +1527,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->RightDockBar->LayoutType = DevComponents::DotNetBar::eLayoutType::DockContainer;
 			this->RightDockBar->Location = System::Drawing::Point(5, 0);
 			this->RightDockBar->Name = L"RightDockBar";
-			this->RightDockBar->Size = System::Drawing::Size(172, 611);
+			this->RightDockBar->Size = System::Drawing::Size(172, 572);
 			this->RightDockBar->Stretch = true;
 			this->RightDockBar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->RightDockBar->TabIndex = 0;
@@ -1517,7 +1541,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->PanelDockContainerFindReplace->DisabledBackColor = System::Drawing::Color::Empty;
 			this->PanelDockContainerFindReplace->Location = System::Drawing::Point(3, 23);
 			this->PanelDockContainerFindReplace->Name = L"PanelDockContainerFindReplace";
-			this->PanelDockContainerFindReplace->Size = System::Drawing::Size(166, 585);
+			this->PanelDockContainerFindReplace->Size = System::Drawing::Size(166, 546);
 			this->PanelDockContainerFindReplace->Style->Alignment = System::Drawing::StringAlignment::Center;
 			this->PanelDockContainerFindReplace->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
 			this->PanelDockContainerFindReplace->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
@@ -1548,7 +1572,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 				this->FindWindowLCIFindDropdown,
 					this->FindWindowLCIReplaceDropdown, this->FindWindowLCILookIn, this->FindWindowLayoutGroupSettings, this->FindWindowLayouyGroupButtons
 			});
-			this->FindWindowLayoutControl->Size = System::Drawing::Size(166, 585);
+			this->FindWindowLayoutControl->Size = System::Drawing::Size(166, 546);
 			this->FindWindowLayoutControl->TabIndex = 19;
 			//
 			// FindWindowDropdownFind
@@ -1836,7 +1860,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->DockSiteBottomEx->ForeColor = System::Drawing::Color::White;
 			this->DockSiteBottomEx->Location = System::Drawing::Point(0, 836);
 			this->DockSiteBottomEx->Name = L"DockSiteBottomEx";
-			this->DockSiteBottomEx->Size = System::Drawing::Size(737, 0);
+			this->DockSiteBottomEx->Size = System::Drawing::Size(895, 0);
 			this->DockSiteBottomEx->TabIndex = 11;
 			this->DockSiteBottomEx->TabStop = false;
 			//
@@ -1860,7 +1884,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 				static_cast<System::Int32>(static_cast<System::Byte>(48)));
 			this->DockSiteRight->Dock = System::Windows::Forms::DockStyle::Right;
 			this->DockSiteRight->ForeColor = System::Drawing::Color::White;
-			this->DockSiteRight->Location = System::Drawing::Point(737, 64);
+			this->DockSiteRight->Location = System::Drawing::Point(895, 64);
 			this->DockSiteRight->Name = L"DockSiteRight";
 			this->DockSiteRight->Size = System::Drawing::Size(0, 772);
 			this->DockSiteRight->TabIndex = 9;
@@ -1876,7 +1900,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->DockSiteTopEx->ForeColor = System::Drawing::Color::White;
 			this->DockSiteTopEx->Location = System::Drawing::Point(0, 64);
 			this->DockSiteTopEx->Name = L"DockSiteTopEx";
-			this->DockSiteTopEx->Size = System::Drawing::Size(737, 0);
+			this->DockSiteTopEx->Size = System::Drawing::Size(895, 0);
 			this->DockSiteTopEx->TabIndex = 10;
 			this->DockSiteTopEx->TabStop = false;
 			//
@@ -1891,7 +1915,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->DockSiteTop->ForeColor = System::Drawing::Color::White;
 			this->DockSiteTop->Location = System::Drawing::Point(0, 64);
 			this->DockSiteTop->Name = L"DockSiteTop";
-			this->DockSiteTop->Size = System::Drawing::Size(737, 0);
+			this->DockSiteTop->Size = System::Drawing::Size(895, 0);
 			this->DockSiteTop->TabIndex = 6;
 			this->DockSiteTop->TabStop = false;
 			//
@@ -1904,12 +1928,12 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->DockSiteCenter->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->DockSiteCenter->DocumentDockContainer = (gcnew DevComponents::DotNetBar::DocumentDockContainer(gcnew cli::array< DevComponents::DotNetBar::DocumentBaseContainer^  >(1) {
 				(cli::safe_cast<DevComponents::DotNetBar::DocumentBaseContainer^>((gcnew DevComponents::DotNetBar::DocumentBarContainer(this->CenterDockBar,
-					467, 611))))
+					625, 572))))
 			}, DevComponents::DotNetBar::eOrientation::Horizontal));
 			this->DockSiteCenter->ForeColor = System::Drawing::Color::White;
 			this->DockSiteCenter->Location = System::Drawing::Point(93, 64);
 			this->DockSiteCenter->Name = L"DockSiteCenter";
-			this->DockSiteCenter->Size = System::Drawing::Size(467, 611);
+			this->DockSiteCenter->Size = System::Drawing::Size(625, 572);
 			this->DockSiteCenter->TabIndex = 12;
 			this->DockSiteCenter->TabStop = false;
 			//
@@ -1938,7 +1962,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->CenterDockBar->LayoutType = DevComponents::DotNetBar::eLayoutType::DockContainer;
 			this->CenterDockBar->Location = System::Drawing::Point(0, 0);
 			this->CenterDockBar->Name = L"CenterDockBar";
-			this->CenterDockBar->Size = System::Drawing::Size(467, 611);
+			this->CenterDockBar->Size = System::Drawing::Size(625, 572);
 			this->CenterDockBar->Stretch = true;
 			this->CenterDockBar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->CenterDockBar->TabIndex = 0;
@@ -1954,7 +1978,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->PanelDocumentContent->ForeColor = System::Drawing::Color::White;
 			this->PanelDocumentContent->Location = System::Drawing::Point(0, 22);
 			this->PanelDocumentContent->Name = L"PanelDocumentContent";
-			this->PanelDocumentContent->Size = System::Drawing::Size(467, 589);
+			this->PanelDocumentContent->Size = System::Drawing::Size(625, 550);
 			this->PanelDocumentContent->TabIndex = 10;
 			//
 			// ContextMenuProvider
@@ -1976,31 +2000,41 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			//
 			this->ContextMenuTextEditor->AutoExpandOnClick = true;
 			this->ContextMenuTextEditor->Name = L"ContextMenuTextEditor";
-			this->ContextMenuTextEditor->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(4) {
-				this->buttonItem1,
-					this->buttonItem2, this->buttonItem3, this->buttonItem4
+			this->ContextMenuTextEditor->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(6) {
+				this->TextEditorContextMenuCopy,
+					this->TextEditorContextMenuPaste, this->TextEditorContextMenuToggleComment, this->TextEditorContextMenuAddBookmark, this->TextEditorContextMenuOpenPreprocessorImport,
+					this->TextEditorContextMenuJumpToScript
 			});
 			this->ContextMenuTextEditor->Text = L"TE";
 			//
-			// buttonItem1
+			// TextEditorContextMenuCopy
 			//
-			this->buttonItem1->Name = L"buttonItem1";
-			this->buttonItem1->Text = L"New Item";
+			this->TextEditorContextMenuCopy->AlternateShortCutText = L"Ctrl + C";
+			this->TextEditorContextMenuCopy->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"TextEditorContextMenuCopy.Image")));
+			this->TextEditorContextMenuCopy->Name = L"TextEditorContextMenuCopy";
+			this->TextEditorContextMenuCopy->Text = L"Copy";
 			//
-			// buttonItem2
+			// TextEditorContextMenuPaste
 			//
-			this->buttonItem2->Name = L"buttonItem2";
-			this->buttonItem2->Text = L"New Item";
+			this->TextEditorContextMenuPaste->AlternateShortCutText = L"Ctrl + V";
+			this->TextEditorContextMenuPaste->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"TextEditorContextMenuPaste.Image")));
+			this->TextEditorContextMenuPaste->Name = L"TextEditorContextMenuPaste";
+			this->TextEditorContextMenuPaste->Text = L"Paste";
 			//
-			// buttonItem3
+			// TextEditorContextMenuToggleComment
 			//
-			this->buttonItem3->Name = L"buttonItem3";
-			this->buttonItem3->Text = L"New Item";
+			this->TextEditorContextMenuToggleComment->AlternateShortCutText = L"Ctrl + Q/W";
+			this->TextEditorContextMenuToggleComment->BeginGroup = true;
+			this->TextEditorContextMenuToggleComment->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"TextEditorContextMenuToggleComment.Image")));
+			this->TextEditorContextMenuToggleComment->Name = L"TextEditorContextMenuToggleComment";
+			this->TextEditorContextMenuToggleComment->Text = L"Toggle Comment";
 			//
-			// buttonItem4
+			// TextEditorContextMenuAddBookmark
 			//
-			this->buttonItem4->Name = L"buttonItem4";
-			this->buttonItem4->Text = L"New Item";
+			this->TextEditorContextMenuAddBookmark->AlternateShortCutText = L"Ctrl + B";
+			this->TextEditorContextMenuAddBookmark->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"TextEditorContextMenuAddBookmark.Image")));
+			this->TextEditorContextMenuAddBookmark->Name = L"TextEditorContextMenuAddBookmark";
+			this->TextEditorContextMenuAddBookmark->Text = L"Add Bookmark";
 			//
 			// NavigationBar
 			//
@@ -2018,7 +2052,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->NavigationBar->Location = System::Drawing::Point(0, 0);
 			this->NavigationBar->Name = L"NavigationBar";
 			this->NavigationBar->PathSeparator = L";";
-			this->NavigationBar->Size = System::Drawing::Size(467, 22);
+			this->NavigationBar->Size = System::Drawing::Size(625, 22);
 			this->NavigationBar->Style = DevComponents::DotNetBar::eCrumbBarStyle::Office2007;
 			this->NavigationBar->TabIndex = 9;
 			//
@@ -2041,7 +2075,7 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->StatusBar->PaddingLeft = 15;
 			this->StatusBar->PaddingRight = 15;
 			this->StatusBar->PaddingTop = 2;
-			this->StatusBar->Size = System::Drawing::Size(737, 30);
+			this->StatusBar->Size = System::Drawing::Size(895, 30);
 			this->StatusBar->Stretch = true;
 			this->StatusBar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->StatusBar->TabIndex = 13;
@@ -2074,11 +2108,44 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->StatusBarScriptBytecodeLength->TextPadding->Left = 5;
 			this->StatusBarScriptBytecodeLength->TextPadding->Right = 5;
 			//
+			// ToolbarMenuHelp
+			//
+			this->ToolbarMenuHelp->AutoExpandOnClick = true;
+			this->ToolbarMenuHelp->Name = L"ToolbarMenuHelp";
+			this->ToolbarMenuHelp->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(2) {
+				this->HelpMenuWiki,
+					this->HelpMenuObseDocs
+			});
+			this->ToolbarMenuHelp->Text = L"&HELP";
+			//
+			// HelpMenuWiki
+			//
+			this->HelpMenuWiki->Name = L"HelpMenuWiki";
+			this->HelpMenuWiki->Text = L"Wiki";
+			//
+			// HelpMenuObseDocs
+			//
+			this->HelpMenuObseDocs->Name = L"HelpMenuObseDocs";
+			this->HelpMenuObseDocs->Text = L"OBSE Manual";
+			//
+			// TextEditorContextMenuOpenPreprocessorImport
+			//
+			this->TextEditorContextMenuOpenPreprocessorImport->BeginGroup = true;
+			this->TextEditorContextMenuOpenPreprocessorImport->Name = L"TextEditorContextMenuOpenPreprocessorImport";
+			this->TextEditorContextMenuOpenPreprocessorImport->Text = L"Open Preprocessor Import File";
+			//
+			// TextEditorContextMenuJumpToScript
+			//
+			this->TextEditorContextMenuJumpToScript->AlternateShortCutText = L"Ctrl + |";
+			this->TextEditorContextMenuJumpToScript->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"TextEditorContextMenuJumpToScript.Image")));
+			this->TextEditorContextMenuJumpToScript->Name = L"TextEditorContextMenuJumpToScript";
+			this->TextEditorContextMenuJumpToScript->Text = L"Jump to Attached Script";
+			//
 			// ScriptEditorWorkspace
 			//
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(737, 866);
+			this->ClientSize = System::Drawing::Size(895, 866);
 			this->Controls->Add(this->DockSiteCenter);
 			this->Controls->Add(this->DockSiteRightEx);
 			this->Controls->Add(this->DockSiteLeftEx);
@@ -2102,9 +2169,6 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->DockSiteBottom->ResumeLayout(false);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->BottomDockBar))->EndInit();
 			this->BottomDockBar->ResumeLayout(false);
-			this->PanelDockContainerFindResults->ResumeLayout(false);
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->FindResultsList))->EndInit();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->FindResultsToolbar))->EndInit();
 			this->PanelDockContainerGlobalFindResults->ResumeLayout(false);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->GlobalFindResultsList))->EndInit();
 			this->PanelDockContainerMessageList->ResumeLayout(false);
@@ -2112,6 +2176,9 @@ private: DevComponents::DotNetBar::ButtonItem^ buttonItem4;
 			this->PanelDockContainerBookmarks->ResumeLayout(false);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->BookmarksList))->EndInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->BookmarksToolbar))->EndInit();
+			this->PanelDockContainerFindResults->ResumeLayout(false);
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->FindResultsList))->EndInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->FindResultsToolbar))->EndInit();
 			this->DockSiteLeftEx->ResumeLayout(false);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->LeftDockBar))->EndInit();
 			this->LeftDockBar->ResumeLayout(false);

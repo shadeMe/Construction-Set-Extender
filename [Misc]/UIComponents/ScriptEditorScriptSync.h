@@ -38,18 +38,18 @@ namespace UIComponents {
 
 	protected:
 
-	private: System::Windows::Forms::ToolStripMenuItem^ OpenSyncedFileToolStripMenuItem;
-	private: System::Windows::Forms::ToolStripMenuItem^ OpenLogToolStripMenuItem;
-	private: System::Windows::Forms::ToolStripSeparator^ ToolStripSeparator1;
-	private: System::Windows::Forms::ToolStripMenuItem^ SyncFromDiskToolStripMenuItem;
-	private: System::Windows::Forms::ToolStripMenuItem^ SyncToDiskToolStripMenuItem;
-	private: System::Windows::Forms::ContextMenuStrip^ LVSyncedStripsContextMenu;
+
+
+
+
+
+
 	private: BrightIdeasSoftware::OLVColumn^ ColLastSyncTime;
 	private: BrightIdeasSoftware::OLVColumn^ ColScriptName;
 	private: DevComponents::DotNetBar::LabelX^ LabelSelectedScriptLog;
 	private: BrightIdeasSoftware::FastObjectListView^ ListViewSyncedScripts;
-	private: DevComponents::DotNetBar::ButtonX^ ButtonSelectScripts;
-	private: DevComponents::DotNetBar::LabelX^ LabelScriptsToSync;
+
+
 	private: DevComponents::DotNetBar::ButtonX^ ButtonStartStopSync;
 
 
@@ -78,6 +78,14 @@ namespace UIComponents {
 	private: DevComponents::Editors::IntegerInput^ NumericAutoSyncSeconds;
 	private: DevComponents::DotNetBar::Controls::TextBoxX^ TextBoxSelectedScriptLog;
 	private: DevComponents::DotNetBar::Controls::TextBoxX^ TextBoxWorkingDir;
+    private: DevComponents::DotNetBar::PanelEx^ LeftPanel;
+    private: DevComponents::DotNetBar::Bar^ Toolbar;
+    private: DevComponents::DotNetBar::ButtonItem^ ToolbarSyncToDisk;
+	private: DevComponents::DotNetBar::LabelItem^ ToolbarLabelSyncedScripts;
+	private: DevComponents::DotNetBar::ButtonItem^ ToolbarSelectScripts;
+	private: DevComponents::DotNetBar::ButtonItem^ ToolbarSyncFromDisk;
+	private: DevComponents::DotNetBar::ButtonItem^ ToolbarOpenLog;
+	private: DevComponents::DotNetBar::ButtonItem^ ToolbarOpenSyncedFile;
 
 	private: System::ComponentModel::IContainer^ components;
 
@@ -94,20 +102,12 @@ namespace UIComponents {
 		/// </summary>
 		void InitializeComponent(void)
 		{
-            this->components = (gcnew System::ComponentModel::Container());
+            System::ComponentModel::ComponentResourceManager^ resources = (gcnew System::ComponentModel::ComponentResourceManager(ScriptEditorScriptSync::typeid));
             this->ButtonOpenWorkingDir = (gcnew DevComponents::DotNetBar::ButtonX());
-            this->OpenSyncedFileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-            this->OpenLogToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-            this->ToolStripSeparator1 = (gcnew System::Windows::Forms::ToolStripSeparator());
-            this->SyncFromDiskToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-            this->SyncToDiskToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-            this->LVSyncedStripsContextMenu = (gcnew System::Windows::Forms::ContextMenuStrip(this->components));
             this->ColLastSyncTime = (gcnew BrightIdeasSoftware::OLVColumn());
             this->ColScriptName = (gcnew BrightIdeasSoftware::OLVColumn());
             this->LabelSelectedScriptLog = (gcnew DevComponents::DotNetBar::LabelX());
             this->ListViewSyncedScripts = (gcnew BrightIdeasSoftware::FastObjectListView());
-            this->ButtonSelectScripts = (gcnew DevComponents::DotNetBar::ButtonX());
-            this->LabelScriptsToSync = (gcnew DevComponents::DotNetBar::LabelX());
             this->ButtonStartStopSync = (gcnew DevComponents::DotNetBar::ButtonX());
             this->ButtonSelectWorkingDir = (gcnew DevComponents::DotNetBar::ButtonX());
             this->FolderDlgWorkingDir = (gcnew System::Windows::Forms::FolderBrowserDialog());
@@ -123,11 +123,20 @@ namespace UIComponents {
             this->CheckboxAutoSync = (gcnew System::Windows::Forms::CheckBox());
             this->TextBoxSelectedScriptLog = (gcnew DevComponents::DotNetBar::Controls::TextBoxX());
             this->TextBoxWorkingDir = (gcnew DevComponents::DotNetBar::Controls::TextBoxX());
-            this->LVSyncedStripsContextMenu->SuspendLayout();
+            this->LeftPanel = (gcnew DevComponents::DotNetBar::PanelEx());
+            this->Toolbar = (gcnew DevComponents::DotNetBar::Bar());
+            this->ToolbarLabelSyncedScripts = (gcnew DevComponents::DotNetBar::LabelItem());
+            this->ToolbarSelectScripts = (gcnew DevComponents::DotNetBar::ButtonItem());
+            this->ToolbarSyncToDisk = (gcnew DevComponents::DotNetBar::ButtonItem());
+            this->ToolbarSyncFromDisk = (gcnew DevComponents::DotNetBar::ButtonItem());
+            this->ToolbarOpenLog = (gcnew DevComponents::DotNetBar::ButtonItem());
+            this->ToolbarOpenSyncedFile = (gcnew DevComponents::DotNetBar::ButtonItem());
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewSyncedScripts))->BeginInit();
             this->GroupSyncSettings->SuspendLayout();
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->NumericAutoSyncSeconds))->BeginInit();
             this->GroupStartupFileHandling->SuspendLayout();
+            this->LeftPanel->SuspendLayout();
+            (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->Toolbar))->BeginInit();
             this->SuspendLayout();
             // 
             // ButtonOpenWorkingDir
@@ -139,57 +148,17 @@ namespace UIComponents {
             this->ButtonOpenWorkingDir->TabIndex = 24;
             this->ButtonOpenWorkingDir->Text = L"Open";
             // 
-            // OpenSyncedFileToolStripMenuItem
-            // 
-            this->OpenSyncedFileToolStripMenuItem->Name = L"OpenSyncedFileToolStripMenuItem";
-            this->OpenSyncedFileToolStripMenuItem->Size = System::Drawing::Size(140, 22);
-            this->OpenSyncedFileToolStripMenuItem->Text = L"Open Synced File";
-            // 
-            // OpenLogToolStripMenuItem
-            // 
-            this->OpenLogToolStripMenuItem->Name = L"OpenLogToolStripMenuItem";
-            this->OpenLogToolStripMenuItem->Size = System::Drawing::Size(140, 22);
-            this->OpenLogToolStripMenuItem->Text = L"Open Log";
-            // 
-            // ToolStripSeparator1
-            // 
-            this->ToolStripSeparator1->Name = L"ToolStripSeparator1";
-            this->ToolStripSeparator1->Size = System::Drawing::Size(137, 6);
-            // 
-            // SyncFromDiskToolStripMenuItem
-            // 
-            this->SyncFromDiskToolStripMenuItem->Name = L"SyncFromDiskToolStripMenuItem";
-            this->SyncFromDiskToolStripMenuItem->Size = System::Drawing::Size(140, 22);
-            this->SyncFromDiskToolStripMenuItem->Text = L"Sync From Disk";
-            // 
-            // SyncToDiskToolStripMenuItem
-            // 
-            this->SyncToDiskToolStripMenuItem->Name = L"SyncToDiskToolStripMenuItem";
-            this->SyncToDiskToolStripMenuItem->Size = System::Drawing::Size(140, 22);
-            this->SyncToDiskToolStripMenuItem->Text = L"Sync To Disk";
-            // 
-            // LVSyncedStripsContextMenu
-            // 
-            this->LVSyncedStripsContextMenu->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(5) {
-                this->SyncToDiskToolStripMenuItem,
-                    this->SyncFromDiskToolStripMenuItem, this->ToolStripSeparator1, this->OpenLogToolStripMenuItem, this->OpenSyncedFileToolStripMenuItem
-            });
-            this->LVSyncedStripsContextMenu->Name = L"LVSyncedStripsContextMenu";
-            this->LVSyncedStripsContextMenu->RenderMode = System::Windows::Forms::ToolStripRenderMode::System;
-            this->LVSyncedStripsContextMenu->ShowImageMargin = false;
-            this->LVSyncedStripsContextMenu->Size = System::Drawing::Size(141, 98);
-            // 
             // ColLastSyncTime
             // 
             this->ColLastSyncTime->Sortable = false;
             this->ColLastSyncTime->Text = L"Last Sync Attempt Time";
-            this->ColLastSyncTime->Width = 160;
+            this->ColLastSyncTime->Width = 152;
             // 
             // ColScriptName
             // 
             this->ColScriptName->Sortable = false;
             this->ColScriptName->Text = L"EditorID";
-            this->ColScriptName->Width = 211;
+            this->ColScriptName->Width = 195;
             // 
             // LabelSelectedScriptLog
             // 
@@ -218,50 +187,26 @@ namespace UIComponents {
                     this->ColLastSyncTime
             });
             this->ListViewSyncedScripts->Cursor = System::Windows::Forms::Cursors::Default;
+            this->ListViewSyncedScripts->Dock = System::Windows::Forms::DockStyle::Fill;
             this->ListViewSyncedScripts->ForeColor = System::Drawing::Color::White;
             this->ListViewSyncedScripts->FullRowSelect = true;
             this->ListViewSyncedScripts->GridLines = true;
             this->ListViewSyncedScripts->HideSelection = false;
-            this->ListViewSyncedScripts->Location = System::Drawing::Point(15, 37);
+            this->ListViewSyncedScripts->Location = System::Drawing::Point(0, 37);
             this->ListViewSyncedScripts->Name = L"ListViewSyncedScripts";
             this->ListViewSyncedScripts->ShowGroups = false;
-            this->ListViewSyncedScripts->Size = System::Drawing::Size(396, 331);
+            this->ListViewSyncedScripts->Size = System::Drawing::Size(400, 323);
             this->ListViewSyncedScripts->TabIndex = 21;
             this->ListViewSyncedScripts->UseCompatibleStateImageBehavior = false;
             this->ListViewSyncedScripts->View = System::Windows::Forms::View::Details;
             this->ListViewSyncedScripts->VirtualMode = true;
             // 
-            // ButtonSelectScripts
-            // 
-            this->ButtonSelectScripts->AccessibleRole = System::Windows::Forms::AccessibleRole::PushButton;
-            this->ButtonSelectScripts->Location = System::Drawing::Point(345, 6);
-            this->ButtonSelectScripts->Name = L"ButtonSelectScripts";
-            this->ButtonSelectScripts->Size = System::Drawing::Size(67, 21);
-            this->ButtonSelectScripts->TabIndex = 20;
-            this->ButtonSelectScripts->Text = L"Select...";
-            // 
-            // LabelScriptsToSync
-            // 
-            this->LabelScriptsToSync->AutoSize = true;
-            this->LabelScriptsToSync->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)),
-                static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(48)));
-            // 
-            // 
-            // 
-            this->LabelScriptsToSync->BackgroundStyle->CornerType = DevComponents::DotNetBar::eCornerType::Square;
-            this->LabelScriptsToSync->ForeColor = System::Drawing::Color::White;
-            this->LabelScriptsToSync->Location = System::Drawing::Point(12, 10);
-            this->LabelScriptsToSync->Name = L"LabelScriptsToSync";
-            this->LabelScriptsToSync->Size = System::Drawing::Size(72, 17);
-            this->LabelScriptsToSync->TabIndex = 19;
-            this->LabelScriptsToSync->Text = L"Synced Scripts";
-            // 
             // ButtonStartStopSync
             // 
             this->ButtonStartStopSync->AccessibleRole = System::Windows::Forms::AccessibleRole::PushButton;
-            this->ButtonStartStopSync->Location = System::Drawing::Point(15, 374);
+            this->ButtonStartStopSync->Location = System::Drawing::Point(12, 374);
             this->ButtonStartStopSync->Name = L"ButtonStartStopSync";
-            this->ButtonStartStopSync->Size = System::Drawing::Size(396, 32);
+            this->ButtonStartStopSync->Size = System::Drawing::Size(400, 32);
             this->ButtonStartStopSync->TabIndex = 18;
             this->ButtonStartStopSync->Text = L"Start Syncing";
             // 
@@ -520,39 +465,138 @@ namespace UIComponents {
             this->TextBoxWorkingDir->Size = System::Drawing::Size(180, 22);
             this->TextBoxWorkingDir->TabIndex = 28;
             // 
+            // LeftPanel
+            // 
+            this->LeftPanel->CanvasColor = System::Drawing::SystemColors::Control;
+            this->LeftPanel->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+            this->LeftPanel->Controls->Add(this->ListViewSyncedScripts);
+            this->LeftPanel->Controls->Add(this->Toolbar);
+            this->LeftPanel->DisabledBackColor = System::Drawing::Color::Empty;
+            this->LeftPanel->Location = System::Drawing::Point(12, 6);
+            this->LeftPanel->Name = L"LeftPanel";
+            this->LeftPanel->Size = System::Drawing::Size(400, 360);
+            this->LeftPanel->Style->Alignment = System::Drawing::StringAlignment::Center;
+            this->LeftPanel->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
+            this->LeftPanel->Style->Border = DevComponents::DotNetBar::eBorderType::SingleLine;
+            this->LeftPanel->Style->BorderColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBorder;
+            this->LeftPanel->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelText;
+            this->LeftPanel->Style->GradientAngle = 90;
+            this->LeftPanel->TabIndex = 29;
+            // 
+            // Toolbar
+            // 
+            this->Toolbar->AntiAlias = true;
+            this->Toolbar->Dock = System::Windows::Forms::DockStyle::Top;
+            this->Toolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
+            this->Toolbar->IsMaximized = false;
+            this->Toolbar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(6) {
+                this->ToolbarLabelSyncedScripts,
+                    this->ToolbarSelectScripts, this->ToolbarSyncToDisk, this->ToolbarSyncFromDisk, this->ToolbarOpenLog, this->ToolbarOpenSyncedFile
+            });
+            this->Toolbar->ItemSpacing = 5;
+            this->Toolbar->Location = System::Drawing::Point(0, 0);
+            this->Toolbar->Name = L"Toolbar";
+            this->Toolbar->PaddingBottom = 5;
+            this->Toolbar->PaddingLeft = 5;
+            this->Toolbar->PaddingRight = 5;
+            this->Toolbar->PaddingTop = 5;
+            this->Toolbar->Size = System::Drawing::Size(400, 37);
+            this->Toolbar->Stretch = true;
+            this->Toolbar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+            this->Toolbar->TabIndex = 22;
+            this->Toolbar->TabStop = false;
+            this->Toolbar->Text = L"bar1";
+            // 
+            // ToolbarLabelSyncedScripts
+            // 
+            this->ToolbarLabelSyncedScripts->Name = L"ToolbarLabelSyncedScripts";
+            this->ToolbarLabelSyncedScripts->Text = L"Synced Scripts";
+            // 
+            // ToolbarSelectScripts
+            // 
+            this->ToolbarSelectScripts->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolbarSelectScripts.Image")));
+            this->ToolbarSelectScripts->ImagePaddingHorizontal = 10;
+            this->ToolbarSelectScripts->ImagePaddingVertical = 10;
+            this->ToolbarSelectScripts->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
+            this->ToolbarSelectScripts->Name = L"ToolbarSelectScripts";
+            this->ToolbarSelectScripts->Text = L"Select Scripts...";
+            this->ToolbarSelectScripts->Tooltip = L"Select Scripts...";
+            // 
+            // ToolbarSyncToDisk
+            // 
+            this->ToolbarSyncToDisk->BeginGroup = true;
+            this->ToolbarSyncToDisk->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolbarSyncToDisk.Image")));
+            this->ToolbarSyncToDisk->ImagePaddingHorizontal = 10;
+            this->ToolbarSyncToDisk->ImagePaddingVertical = 10;
+            this->ToolbarSyncToDisk->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
+            this->ToolbarSyncToDisk->Name = L"ToolbarSyncToDisk";
+            this->ToolbarSyncToDisk->Text = L"Sync to Disk";
+            this->ToolbarSyncToDisk->Tooltip = L"Sync to Disk";
+            // 
+            // ToolbarSyncFromDisk
+            // 
+            this->ToolbarSyncFromDisk->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolbarSyncFromDisk.Image")));
+            this->ToolbarSyncFromDisk->ImagePaddingHorizontal = 10;
+            this->ToolbarSyncFromDisk->ImagePaddingVertical = 10;
+            this->ToolbarSyncFromDisk->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
+            this->ToolbarSyncFromDisk->Name = L"ToolbarSyncFromDisk";
+            this->ToolbarSyncFromDisk->Text = L"Sync from Disk";
+            this->ToolbarSyncFromDisk->Tooltip = L"Sync from Disk";
+            // 
+            // ToolbarOpenLog
+            // 
+            this->ToolbarOpenLog->BeginGroup = true;
+            this->ToolbarOpenLog->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolbarOpenLog.Image")));
+            this->ToolbarOpenLog->ImagePaddingHorizontal = 10;
+            this->ToolbarOpenLog->ImagePaddingVertical = 10;
+            this->ToolbarOpenLog->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
+            this->ToolbarOpenLog->Name = L"ToolbarOpenLog";
+            this->ToolbarOpenLog->Text = L"Open Log";
+            this->ToolbarOpenLog->Tooltip = L"Open Log";
+            // 
+            // ToolbarOpenSyncedFile
+            // 
+            this->ToolbarOpenSyncedFile->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolbarOpenSyncedFile.Image")));
+            this->ToolbarOpenSyncedFile->ImagePaddingHorizontal = 10;
+            this->ToolbarOpenSyncedFile->ImagePaddingVertical = 10;
+            this->ToolbarOpenSyncedFile->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
+            this->ToolbarOpenSyncedFile->Name = L"ToolbarOpenSyncedFile";
+            this->ToolbarOpenSyncedFile->Text = L"Open Synced File";
+            this->ToolbarOpenSyncedFile->Tooltip = L"Open Synced File";
+            // 
             // ScriptEditorScriptSync
             // 
             this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
             this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
             this->ClientSize = System::Drawing::Size(852, 413);
+            this->Controls->Add(this->LeftPanel);
             this->Controls->Add(this->TextBoxWorkingDir);
             this->Controls->Add(this->TextBoxSelectedScriptLog);
             this->Controls->Add(this->GroupSyncSettings);
             this->Controls->Add(this->ButtonOpenWorkingDir);
             this->Controls->Add(this->LabelSelectedScriptLog);
-            this->Controls->Add(this->ListViewSyncedScripts);
-            this->Controls->Add(this->ButtonSelectScripts);
-            this->Controls->Add(this->LabelScriptsToSync);
             this->Controls->Add(this->ButtonStartStopSync);
             this->Controls->Add(this->ButtonSelectWorkingDir);
             this->Controls->Add(this->LabelWorkingDir);
             this->DoubleBuffered = true;
-            this->ForeColor = System::Drawing::Color::White;
             this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedDialog;
             this->MaximizeBox = false;
             this->Name = L"ScriptEditorScriptSync";
             this->Text = L"Sync Scripts To Disk";
-            this->LVSyncedStripsContextMenu->ResumeLayout(false);
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewSyncedScripts))->EndInit();
             this->GroupSyncSettings->ResumeLayout(false);
             this->GroupSyncSettings->PerformLayout();
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->NumericAutoSyncSeconds))->EndInit();
             this->GroupStartupFileHandling->ResumeLayout(false);
             this->GroupStartupFileHandling->PerformLayout();
+            this->LeftPanel->ResumeLayout(false);
+            (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->Toolbar))->EndInit();
             this->ResumeLayout(false);
             this->PerformLayout();
 
         }
 #pragma endregion
-	};
+	private: System::Void labelItem1_Click(System::Object^ sender, System::EventArgs^ e) {
+	}
+};
 }

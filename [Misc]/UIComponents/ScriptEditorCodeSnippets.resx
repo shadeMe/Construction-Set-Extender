@@ -120,10 +120,10 @@
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="ToolbarAddSnippet.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAABgSURBVDhP3ZExCsAwDAP9qAx9Yx/s1a1NAokrgQsdSgQ3
-        SVwgFhQzE1W1RG8LGYLjbMHuAh8jkADtYshIAsjy0lu+EzDmIcMFjCxAm/hERk2A4ue5y4egnP8IEr2d
-        I3IBh/DsWJ/eoAoAAAAASUVORK5CYII=
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        xAAADsQBlSsOGwAAAGBJREFUOE/dkTEKwDAMA/2oDH1jH+zVrU0CiSuBCx1KBDdJXCAWFDMTVbVEbwsZ
+        guNswe4CHyOQAO1iyEgCyPLSW74TMOYhwwWMLECb+ERGTYDi57nLh6Cc/wgSvZ0jcgGH8OxYn96gCgAA
+        AABJRU5ErkJggg==
 </value>
   </data>
   <data name="ToolbarRemoveSnippet.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
@@ -136,21 +136,21 @@
   </data>
   <data name="VariablesToolbarAddVar.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAC/SURBVDhPxZCxDUIxDET/CGzAH4KCPehYgDWoKRgAIVEy
-        AxJTIEpq2g9N2uCzzvmWIaSDk55k2XcXKV1USqkXDkImmHue64KJ5rw7XfN0dVQwY8fbexGWPJbgcnvO
-        l9tdweyLGBv1KfgYnooVdIu9Ui0wQ3zZ9kazoMX/CtwnDoyNwtI+8VsQD3kY14KJsBZKUQjiBk+eb2YK
-        ZoENFE1aRErQCAUK43X5YOR3BYYPGrTVJSYjFui+KTMy5JFd6l49ZevNbkUR/wAAAABJRU5ErkJggg==
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        xAAADsQBlSsOGwAAAL9JREFUOE/FkLENQjEMRP8IbMAfgoI96FiANagpGAAhUTIDElMgSmraD03a4LPO
+        +ZYhpIOTnmTZdxcpXVRKqRcOQiaYe57rgonmvDtd83R1VDBjx9t7EZY8luBye86X213B7IsYG/Up+Bie
+        ihV0i71SLTBDfNn2RrOgxf8K3CcOjI3C0j7xWxAPeRjXgomwFkpRCOIGT55vZgpmgQ0UTVpEStAIBQrj
+        dflg5HcFhg8atNUlJiMW6L4pMzLkkV3qXj1l681uRRH/AAAAAElFTkSuQmCC
 </value>
   </data>
   <data name="VariablesToolbarRemoveVar.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAADsSURBVDhPxZKxDcIwEEWzAFImoKR2SckAdCxAgURFxQKs
-        AaKhoqakRKzACkAoEHbj1tw/+SzHthI6iiefk/svziWVc66FtbYmNoT2oK7TPiEUaPLNenu+ueHyyKDG
-        NX8vExWDq93V3Zs3gzoWlQRZUH8MI4JqtmeolzK5IDSkT5brQq+gj/8J0iHSqoAIwhA7gsIEQWQ8CoKu
-        789c1gsGPbp5mNN0HPbhXWhT+gPn5vV0CBxGAw5JjRV9rYFEovDHpRIJ4yR0T2WCFDTJsUUgx+8VpGGs
-        UmczKBELAGp5nZ8EQCQANcEzQdhaq746EuQisgu8tgAAAABJRU5ErkJggg==
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        xAAADsQBlSsOGwAAAOxJREFUOE/FkrENwjAQRbMAUiagpHZJyQB0LECBREXFAqwBoqGipqRErMAKQCgQ
+        duPW3D/5LMe2EjqKJ5+T+y/OJZVzroW1tiY2hPagrtM+IRRo8s16e7654fLIoMY1fy8TFYOr3dXdmzeD
+        OhaVBFlQfwwjgmq2Z6iXMrkgNKRPlutCr6CP/wnSIdKqgAjCEDuCwgRBZDwKgq7vz1zWCwY9unmY03Qc
+        9uFdaFP6A+fm9XQIHEYDDkmNFX2tgUSi8MelEgnjJHRPZYIUNMmxRSDH7xWkYaxSZzMoEQsAanmdnwRA
+        JAA1wTNB2FqrvjoS5CKyC7y2AAAAAElFTkSuQmCC
 </value>
   </data>
 </root>
