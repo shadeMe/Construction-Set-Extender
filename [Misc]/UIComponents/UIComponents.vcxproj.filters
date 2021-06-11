@@ -13,7 +13,7 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\UiRefresh">
+    <Filter Include="Header Files\ScriptEditor">
       <UniqueIdentifier>{2cda2498-ac34-4b9c-bc6c-8ef762ec4762}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -32,69 +32,36 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SEScriptList.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SEOptions.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="TagBrowser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="UseInfoList.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SERefactorUDF.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SERefactorDocumentScript.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SEFindReplace.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SESnippetManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SEVariableIndex.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SESyncUI.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ScriptEditorWorkspace.cpp">
-      <Filter>Header Files\UiRefresh</Filter>
+      <Filter>Header Files\ScriptEditor</Filter>
     </ClCompile>
     <ClCompile Include="ScriptEditorSelectScripts.cpp">
-      <Filter>Header Files\UiRefresh</Filter>
+      <Filter>Header Files\ScriptEditor</Filter>
     </ClCompile>
     <ClCompile Include="ScriptEditorScriptSync.cpp">
-      <Filter>Header Files\UiRefresh</Filter>
+      <Filter>Header Files\ScriptEditor</Filter>
     </ClCompile>
     <ClCompile Include="ScriptEditorCodeSnippets.cpp">
-      <Filter>Header Files\UiRefresh</Filter>
+      <Filter>Header Files\ScriptEditor</Filter>
     </ClCompile>
     <ClCompile Include="ScriptEditorPreferences.cpp">
-      <Filter>Header Files\UiRefresh</Filter>
+      <Filter>Header Files\ScriptEditor</Filter>
     </ClCompile>
     <ClCompile Include="ScriptEditorRefactorForm.cpp">
-      <Filter>Header Files\UiRefresh</Filter>
+      <Filter>Header Files\ScriptEditor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SEScriptList.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SEOptions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="TagBrowser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UseInfoList.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SERefactorUDF.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
@@ -103,38 +70,23 @@
     <ClInclude Include="stdafx.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="SERefactorDocumentScript.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SEFindReplace.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SESnippetManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SEVariableIndex.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SESyncUI.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ScriptEditorWorkspace.h">
-      <Filter>Header Files\UiRefresh</Filter>
+      <Filter>Header Files\ScriptEditor</Filter>
     </ClInclude>
     <ClInclude Include="ScriptEditorSelectScripts.h">
-      <Filter>Header Files\UiRefresh</Filter>
+      <Filter>Header Files\ScriptEditor</Filter>
     </ClInclude>
     <ClInclude Include="ScriptEditorScriptSync.h">
-      <Filter>Header Files\UiRefresh</Filter>
+      <Filter>Header Files\ScriptEditor</Filter>
     </ClInclude>
     <ClInclude Include="ScriptEditorCodeSnippets.h">
-      <Filter>Header Files\UiRefresh</Filter>
+      <Filter>Header Files\ScriptEditor</Filter>
     </ClInclude>
     <ClInclude Include="ScriptEditorPreferences.h">
-      <Filter>Header Files\UiRefresh</Filter>
+      <Filter>Header Files\ScriptEditor</Filter>
     </ClInclude>
     <ClInclude Include="ScriptEditorRefactorForm.h">
-      <Filter>Header Files\UiRefresh</Filter>
+      <Filter>Header Files\ScriptEditor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

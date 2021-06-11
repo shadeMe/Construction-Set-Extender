@@ -1,12 +1,7 @@
 // UIComponents.cpp : main project file.
 
 #include "stdafx.h"
-#include "SESnippetManager.h"
-#include "SEScriptList.h"
-#include "SEVariableIndex.h"
 #include "UseInfoList.h"
-#include "SESyncUI.h"
-#include "SEOptions.h"
 #include "ScriptEditorWorkspace.h"
 
 using namespace UIComponents;

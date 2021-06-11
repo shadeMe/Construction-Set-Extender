@@ -15,6 +15,7 @@
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <Keyword>ManagedCProj</Keyword>
     <RootNamespace>UIComponents</RootNamespace>
+    <ProjectName>ManagedUiComponents</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -106,14 +107,6 @@
     <ClCompile Include="ScriptEditorScriptSync.cpp" />
     <ClCompile Include="ScriptEditorWorkspace.cpp" />
     <ClCompile Include="ScriptEditorSelectScripts.cpp" />
-    <ClCompile Include="SEFindReplace.cpp" />
-    <ClCompile Include="SEOptions.cpp" />
-    <ClCompile Include="SERefactorDocumentScript.cpp" />
-    <ClCompile Include="SERefactorUDF.cpp" />
-    <ClCompile Include="SEScriptList.cpp" />
-    <ClCompile Include="SESnippetManager.cpp" />
-    <ClCompile Include="SESyncUI.cpp" />
-    <ClCompile Include="SEVariableIndex.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -141,30 +134,6 @@
     </ClInclude>
     <ClInclude Include="ScriptEditorSelectScripts.h">
       <FileType>CppControl</FileType>
-    </ClInclude>
-    <ClInclude Include="SEFindReplace.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
-    <ClInclude Include="SEOptions.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
-    <ClInclude Include="SERefactorDocumentScript.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
-    <ClInclude Include="SERefactorUDF.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
-    <ClInclude Include="SEScriptList.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
-    <ClInclude Include="SESnippetManager.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
-    <ClInclude Include="SESyncUI.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
-    <ClInclude Include="SEVariableIndex.h">
-      <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="TagBrowser.h">
@@ -195,30 +164,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ScriptEditorSelectScripts.resx">
       <DependentUpon>ScriptEditorSelectScripts.h</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SEFindReplace.resx">
-      <DependentUpon>SEFindReplace.h</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SEOptions.resx">
-      <DependentUpon>SEOptions.h</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SERefactorDocumentScript.resx">
-      <DependentUpon>SERefactorDocumentScript.h</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SERefactorUDF.resx">
-      <DependentUpon>SERefactorUDF.h</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SEScriptList.resx">
-      <DependentUpon>SEScriptList.h</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SESnippetManager.resx">
-      <DependentUpon>SESnippetManager.h</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SESyncUI.resx">
-      <DependentUpon>SESyncUI.h</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SEVariableIndex.resx">
-      <DependentUpon>SEVariableIndex.h</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="TagBrowser.resx">
       <DependentUpon>TagBrowser.h</DependentUpon>
