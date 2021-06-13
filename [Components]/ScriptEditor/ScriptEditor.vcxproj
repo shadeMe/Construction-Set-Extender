@@ -210,6 +210,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="NumberedRichTextBox.cpp" />
     <ClCompile Include="Preferences.cpp" />
     <ClCompile Include="RefactorTools.cpp" />
+    <ClCompile Include="ScriptEditorViewImplComponents.cpp" />
     <ClCompile Include="SelectScriptDialog.cpp" />
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="ScriptSync.cpp" />
@@ -234,6 +235,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="IntelliSenseInterfaceModel.h" />
     <ClInclude Include="IntelliSenseInterfaceView.h" />
     <ClInclude Include="IntelliSenseItem.h" />
+    <ClInclude Include="Macros.h" />
     <ClInclude Include="RefactorTools.h" />
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h" />
     <ClInclude Include="..\..\[Common]\IncludesCLR.h" />
@@ -244,6 +246,9 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="AvalonEditXSHD.h" />
     <ClInclude Include="NumberedRichTextBox.h" />
     <ClInclude Include="Preferences.h" />
+    <ClInclude Include="IScriptEditorModel.h" />
+    <ClInclude Include="IScriptEditorView.h" />
+    <ClInclude Include="ScriptEditorViewImplComponents.h" />
     <ClInclude Include="SelectScriptDialog.h" />
     <ClInclude Include="ScriptSync.h" />
     <ClInclude Include="ScriptTextEditorInterface.h" />

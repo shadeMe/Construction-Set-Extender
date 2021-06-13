@@ -31,6 +31,9 @@
     <Filter Include="Resources\ImagesVS2019">
       <UniqueIdentifier>{b99490d6-f992-4da0-a02e-27f5fdbe860d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Components\[REWRITE]">
+      <UniqueIdentifier>{1760e6ed-10aa-475f-a518-e08871bf8bd5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\[Common]\ListViewUtilities.cpp">
@@ -111,6 +114,9 @@
     </ClCompile>
     <ClCompile Include="WorkspaceView.cpp">
       <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptEditorViewImplComponents.cpp">
+      <Filter>Components\[REWRITE]</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -215,6 +221,18 @@
     </ClInclude>
     <ClInclude Include="WorkspaceViewInterface.h">
       <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="IScriptEditorView.h">
+      <Filter>Components\[REWRITE]</Filter>
+    </ClInclude>
+    <ClInclude Include="IScriptEditorModel.h">
+      <Filter>Components\[REWRITE]</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorViewImplComponents.h">
+      <Filter>Components\[REWRITE]</Filter>
+    </ClInclude>
+    <ClInclude Include="Macros.h">
+      <Filter>Components\[REWRITE]</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

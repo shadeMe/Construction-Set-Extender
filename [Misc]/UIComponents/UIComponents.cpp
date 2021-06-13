@@ -14,6 +14,7 @@ int main(array<System::String ^> ^args)
 	Application::SetCompatibleTextRenderingDefault(false);
 
 	// Create the main window and run it
-	Application::Run(gcnew ScriptEditorWorkspace());
+	auto Form = gcnew ScriptEditorWorkspace();
+	Application::Run(Form);
 	return 0;
 }

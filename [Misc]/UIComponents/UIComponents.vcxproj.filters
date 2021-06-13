@@ -1,10 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
@@ -23,21 +19,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="UIComponents.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AssemblyInfo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TagBrowser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="UseInfoList.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ScriptEditorWorkspace.cpp">
       <Filter>Header Files\ScriptEditor</Filter>
     </ClCompile>
@@ -56,6 +37,11 @@
     <ClCompile Include="ScriptEditorRefactorForm.cpp">
       <Filter>Header Files\ScriptEditor</Filter>
     </ClCompile>
+    <ClCompile Include="AssemblyInfo.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="TagBrowser.cpp" />
+    <ClCompile Include="UIComponents.cpp" />
+    <ClCompile Include="UseInfoList.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TagBrowser.h">
@@ -95,31 +81,10 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="SEOptions.resx">
-      <Filter>Resource Files</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SEScriptList.resx">
-      <Filter>Resource Files</Filter>
-    </EmbeddedResource>
     <EmbeddedResource Include="TagBrowser.resx">
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
     <EmbeddedResource Include="UseInfoList.resx">
-      <Filter>Resource Files</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SERefactorUDF.resx">
-      <Filter>Resource Files</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SERefactorDocumentScript.resx">
-      <Filter>Resource Files</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SEFindReplace.resx">
-      <Filter>Resource Files</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SESnippetManager.resx">
-      <Filter>Resource Files</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SEVariableIndex.resx">
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
   </ItemGroup>
