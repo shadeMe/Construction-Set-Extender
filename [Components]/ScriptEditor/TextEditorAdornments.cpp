@@ -52,7 +52,7 @@ namespace cse
 			if (Visible == false)
 				return;
 
-			DataStore = gcnew obScriptParsing::Structurizer(Data, gcnew obScriptParsing::Structurizer::GetLineText(BoundParent, &IScriptTextEditor::GetText), BoundParent->CurrentLine);
+			DataStore = gcnew obScriptParsing::Structurizer(Data, gcnew obScriptParsing::Structurizer::GetLineText(BoundParent, &ITextEditor::GetText), BoundParent->CurrentLine);
 			if (DataStore->Valid)
 			{
 				Root->Text = Data->Name;
@@ -180,7 +180,7 @@ namespace cse
 			}
 		}
 
-		void ScopeBreadcrumbManager::Bind(IScriptTextEditor ^ Parent, scriptEditor::IBackgroundSemanticAnalyzer^ BackgroundAnalyzer)
+		void ScopeBreadcrumbManager::Bind(ITextEditor ^ Parent, scriptEditor::IBackgroundSemanticAnalyzer^ BackgroundAnalyzer)
 		{
 			Debug::Assert(Bound == false);
 
@@ -241,7 +241,7 @@ namespace cse
 			}
 		}
 
-		ScopeBreadcrumbManager::CrumbData::CrumbData(IScriptTextEditor ^ Parent, obScriptParsing::Structurizer::Node ^ Scope) :
+		ScopeBreadcrumbManager::CrumbData::CrumbData(ITextEditor ^ Parent, obScriptParsing::Structurizer::Node ^ Scope) :
 			Parent(Parent),
 			Scope(Scope)
 		{

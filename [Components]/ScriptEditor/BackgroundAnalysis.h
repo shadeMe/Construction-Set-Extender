@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ScriptTextEditorInterface.h"
+#include "ITextEditor.h"
 #include "SemanticAnalysis.h"
 #include "WorkspaceModelInterface.h"
 

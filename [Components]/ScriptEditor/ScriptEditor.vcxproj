@@ -142,6 +142,9 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Reference Include="DevComponents.DotNetBar.Layout">
+      <HintPath>..\..\[Depends]\DevComponents.DotNetBar.Layout.dll</HintPath>
+    </Reference>
     <Reference Include="DevComponents.DotNetBar2">
       <HintPath>..\..\[Depends]\DevComponents.DotNetBar2.dll</HintPath>
     </Reference>
@@ -200,24 +203,29 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="AuxiliaryTextEditor.cpp" />
     <ClCompile Include="AvalonEditComponents.cpp" />
     <ClCompile Include="AvalonEditTextEditor.cpp" />
-    <ClCompile Include="AvalonEditXSHD.cpp" />
+    <ClCompile Include="AvalonEditSyntaxHighlighting.cpp" />
     <ClCompile Include="BackgroundAnalysis.cpp" />
     <ClCompile Include="FindReplaceDialog.cpp" />
     <ClCompile Include="IntelliSenseDatabase.cpp" />
     <ClCompile Include="IntelliSenseInterfaceModel.cpp" />
     <ClCompile Include="IntelliSenseInterfaceView.cpp" />
     <ClCompile Include="IntelliSenseItem.cpp" />
+    <ClCompile Include="IScriptEditorModel.cpp" />
+    <ClCompile Include="ITextEditor.cpp" />
     <ClCompile Include="NumberedRichTextBox.cpp" />
     <ClCompile Include="Preferences.cpp" />
     <ClCompile Include="RefactorTools.cpp" />
+    <ClCompile Include="ScriptEditorModelImpl.cpp" />
+    <ClCompile Include="ScriptEditorModelImplComponents.cpp" />
+    <ClCompile Include="ScriptEditorViewImpl.cpp" />
     <ClCompile Include="ScriptEditorViewImplComponents.cpp" />
     <ClCompile Include="SelectScriptDialog.cpp" />
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="ScriptSync.cpp" />
-    <ClCompile Include="ScriptTextEditorInterface.cpp" />
     <ClCompile Include="SemanticAnalysis.cpp" />
     <ClCompile Include="SnippetManager.cpp" />
     <ClCompile Include="TextEditorAdornments.cpp" />
+    <ClCompile Include="TextEditorFactory.cpp" />
     <ClCompile Include="WorkspaceModel.cpp" />
     <ClCompile Include="WorkspaceModelComponents.cpp" />
     <ClCompile Include="WorkspaceView.cpp" />
@@ -235,6 +243,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="IntelliSenseInterfaceModel.h" />
     <ClInclude Include="IntelliSenseInterfaceView.h" />
     <ClInclude Include="IntelliSenseItem.h" />
+    <ClInclude Include="IScriptEditorController.h" />
     <ClInclude Include="Macros.h" />
     <ClInclude Include="RefactorTools.h" />
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h" />
@@ -243,21 +252,25 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="..\..\[Common]\MiscUtilities.h" />
     <ClInclude Include="AuxiliaryTextEditor.h" />
     <ClInclude Include="AvalonEditTextEditor.h" />
-    <ClInclude Include="AvalonEditXSHD.h" />
+    <ClInclude Include="AvalonEditSyntaxHighlighting.h" />
     <ClInclude Include="NumberedRichTextBox.h" />
     <ClInclude Include="Preferences.h" />
     <ClInclude Include="IScriptEditorModel.h" />
     <ClInclude Include="IScriptEditorView.h" />
+    <ClInclude Include="ScriptEditorModelImpl.h" />
+    <ClInclude Include="ScriptEditorModelImplComponents.h" />
+    <ClInclude Include="ScriptEditorViewImpl.h" />
     <ClInclude Include="ScriptEditorViewImplComponents.h" />
     <ClInclude Include="SelectScriptDialog.h" />
     <ClInclude Include="ScriptSync.h" />
-    <ClInclude Include="ScriptTextEditorInterface.h" />
+    <ClInclude Include="ITextEditor.h" />
     <ClInclude Include="Exports.h" />
     <ClInclude Include="Globals.h" />
     <ClInclude Include="Prefix.h" />
     <ClInclude Include="SemanticAnalysis.h" />
     <ClInclude Include="SnippetManager.h" />
     <ClInclude Include="TextEditorAdornments.h" />
+    <ClInclude Include="TextEditorFactory.h" />
     <ClInclude Include="WorkspaceModel.h" />
     <ClInclude Include="WorkspaceModelComponents.h" />
     <ClInclude Include="WorkspaceModelInterface.h" />
@@ -265,6 +278,14 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="WorkspaceViewInterface.h" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorCodeSnippets.resx" />
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorPreferences.resx" />
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorRefactorForm.resx" />
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorScriptSync.resx" />
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorSelectScripts.resx" />
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorWorkspace.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="ImagesModern.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>

@@ -4,121 +4,136 @@
 
 namespace cse
 {
-	namespace intellisense
+
+
+namespace scriptEditor
+{
+
+
+namespace intellisense
+{
+
+
+using namespace System::Runtime::Serialization;
+
+[DataContract]
+ref class CodeSnippet
+{
+public:
+	[DataContract]
+	ref struct VariableInfo
 	{
-		using namespace System::Runtime::Serialization;
+		[DataMember]
+		String^													Name;
+		[DataMember]
+		obScriptParsing::Variable::DataType			Type;
 
-		[DataContract]
-		ref class CodeSnippet
-		{
-		public:
-			[DataContract]
-			ref struct VariableInfo
-			{
-				[DataMember]
-				String^													Name;
-				[DataMember]
-				obScriptParsing::Variable::DataType			Type;
+		VariableInfo(String^ Name, obScriptParsing::Variable::DataType Type);
+	};
 
-				VariableInfo(String^ Name, obScriptParsing::Variable::DataType Type);
-			};
+	[DataMember]
+	String^						Name;
+	[DataMember]
+	String^						Shorthand;
+	[DataMember]
+	String^						Description;
+	[DataMember]
+	List<VariableInfo^>^		Variables;
+	[DataMember]
+	String^						Code;
 
-			[DataMember]
-			String^						Name;
-			[DataMember]
-			String^						Shorthand;
-			[DataMember]
-			String^						Description;
-			[DataMember]
-			List<VariableInfo^>^		Variables;
-			[DataMember]
-			String^						Code;
+	CodeSnippet();
+	~CodeSnippet();
 
-			CodeSnippet();
-			~CodeSnippet();
+	void						AddVariable(String^ Name, obScriptParsing::Variable::DataType Type);
+	void						AddVariable(VariableInfo^ Var);
+	void						RemoveVariable(VariableInfo^ Var);
+	VariableInfo^				LookupVariable(String^ Name);
 
-			void						AddVariable(String^ Name, obScriptParsing::Variable::DataType Type);
-			void						AddVariable(VariableInfo^ Var);
-			void						RemoveVariable(VariableInfo^ Var);
-			VariableInfo^				LookupVariable(String^ Name);
+	void						Save(String^ Path);
+	static CodeSnippet^			Load(String^ FullPath);
+};
 
-			void						Save(String^ Path);
-			static CodeSnippet^			Load(String^ FullPath);
-		};
+ref class CodeSnippetCollection
+{
+public:
+	List<CodeSnippet^>^			LoadedSnippets;
 
-		ref class CodeSnippetCollection
-		{
-		public:
-			List<CodeSnippet^>^			LoadedSnippets;
+	CodeSnippetCollection();
+	CodeSnippetCollection(List<CodeSnippet^>^ Source);
+	~CodeSnippetCollection();
 
-			CodeSnippetCollection();
-			CodeSnippetCollection(List<CodeSnippet^>^ Source);
-			~CodeSnippetCollection();
+	void						Add(CodeSnippet^ In);
+	void						Remove(CodeSnippet^ In);
+	CodeSnippet^				Lookup(String^ Name);
 
-			void						Add(CodeSnippet^ In);
-			void						Remove(CodeSnippet^ In);
-			CodeSnippet^				Lookup(String^ Name);
+	void						Save(String^ SnippetDirectory);
+	void						Load(String^ SnippetDirectory);
+};
 
-			void						Save(String^ SnippetDirectory);
-			void						Load(String^ SnippetDirectory);
-		};
+ref class CodeSnippetManagerDialog : public System::Windows::Forms::Form
+{
+	System::ComponentModel::IContainer^		components;
 
-		ref class CodeSnippetManagerDialog : public System::Windows::Forms::Form
-		{
-			System::ComponentModel::IContainer^		components;
+	GroupBox^								GroupSnippetData;
+	Button^									ButtonApply;
 
-			GroupBox^								GroupSnippetData;
-			Button^									ButtonApply;
+	TextBox^								SnippetCodeBox;
+	TextBox^								SnippetDescBox;
+	TextBox^								SnippetShorthandBox;
+	TextBox^								SnippetNameBox;
+	Label^									LabelCode;
+	Label^									LabelVariables;
+	Label^									LabelDescription;
+	Label^									LabelShorthand;
+	Label^									LabelName;
 
-			TextBox^								SnippetCodeBox;
-			TextBox^								SnippetDescBox;
-			TextBox^								SnippetShorthandBox;
-			TextBox^								SnippetNameBox;
-			Label^									LabelCode;
-			Label^									LabelVariables;
-			Label^									LabelDescription;
-			Label^									LabelShorthand;
-			Label^									LabelName;
+	ListView^								SnippetVarList;
+	ColumnHeader^							SnippetVarListCHName;
+	ColumnHeader^							SnippetVarListCHType;
 
-			ListView^								SnippetVarList;
-			ColumnHeader^							SnippetVarListCHName;
-			ColumnHeader^							SnippetVarListCHType;
+	System::Windows::Forms::ContextMenuStrip^		SnippetListContextMenu;
+	ToolStripMenuItem^								SnippetListCMAddSnippet;
+	ToolStripMenuItem^								SnippetListCMRemoveSnippet;
 
-			System::Windows::Forms::ContextMenuStrip^		SnippetListContextMenu;
-			ToolStripMenuItem^								SnippetListCMAddSnippet;
-			ToolStripMenuItem^								SnippetListCMRemoveSnippet;
+	System::Windows::Forms::ContextMenuStrip^		VarListContextMenu;
+	ToolStripMenuItem^								VarListCMAddVariable;
+	ToolStripMenuItem^								VarListCMRemoveVariable;
+	ToolStripMenuItem^								VarListCMAddVarInt;
+	ToolStripMenuItem^								VarListCMAddVarFloat;
+	ToolStripMenuItem^								VarListCMAddVarRef;
+	ToolStripMenuItem^								VarListCMAddVarString;
+	ToolStripMenuItem^								VarListCMAddVarArray;
 
-			System::Windows::Forms::ContextMenuStrip^		VarListContextMenu;
-			ToolStripMenuItem^								VarListCMAddVariable;
-			ToolStripMenuItem^								VarListCMRemoveVariable;
-			ToolStripMenuItem^								VarListCMAddVarInt;
-			ToolStripMenuItem^								VarListCMAddVarFloat;
-			ToolStripMenuItem^								VarListCMAddVarRef;
-			ToolStripMenuItem^								VarListCMAddVarString;
-			ToolStripMenuItem^								VarListCMAddVarArray;
+	ListView^								SnippetList;
+	ColumnHeader^							SnippetListCHName;
+	ColumnHeader^							SnippetListCHShorthand;
 
-			ListView^								SnippetList;
-			ColumnHeader^							SnippetListCHName;
-			ColumnHeader^							SnippetListCHShorthand;
+	void									InitializeComponent();
 
-			void									InitializeComponent();
+	void									ButtonApply_Click(Object^ Sender, EventArgs^ E);
+	void									SnippetListCMAddSnippet_Click(Object^ Sender, EventArgs^ E);
+	void									SnippetListCMRemoveSnippet_Click(Object^ Sender, EventArgs^ E);
+	void									VarListCMAddVariable_Click(Object^ Sender, EventArgs^ E);
+	void									VarListCMRemoveVariable_Click(Object^ Sender, EventArgs^ E);
+	void									SnippetList_SelectedIndexChanged(Object^ Sender, EventArgs^ E);
+	void									SnippetList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
 
-			void									ButtonApply_Click(Object^ Sender, EventArgs^ E);
-			void									SnippetListCMAddSnippet_Click(Object^ Sender, EventArgs^ E);
-			void									SnippetListCMRemoveSnippet_Click(Object^ Sender, EventArgs^ E);
-			void									VarListCMAddVariable_Click(Object^ Sender, EventArgs^ E);
-			void									VarListCMRemoveVariable_Click(Object^ Sender, EventArgs^ E);
-			void									SnippetList_SelectedIndexChanged(Object^ Sender, EventArgs^ E);
-			void									SnippetList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
+	void									PopulateSnippetList();
+	void									SetSnippetData(CodeSnippet^ Snippet, ListViewItem^ LVItem);
+	void									GetSnippetData(CodeSnippet^ Snippet);
+public:
+	CodeSnippetManagerDialog(CodeSnippetCollection^ Data);
+	~CodeSnippetManagerDialog();
 
-			void									PopulateSnippetList();
-			void									SetSnippetData(CodeSnippet^ Snippet, ListViewItem^ LVItem);
-			void									GetSnippetData(CodeSnippet^ Snippet);
-		public:
-			CodeSnippetManagerDialog(CodeSnippetCollection^ Data);
-			~CodeSnippetManagerDialog();
+	property CodeSnippetCollection^			WorkingCopy;
+};
 
-			property CodeSnippetCollection^			WorkingCopy;
-		};
-	}
-}
+
+} // namespace intelliSense
+
+
+} // namespace scriptEditor
+
+
+} // namespace cse

@@ -1,6 +1,5 @@
 #pragma once
 
-#define ImplPropertyGetSetSimple(Type, BackingStoreName) virtual Type get() { return BackingStoreName; } virtual void set(Type v) { BackingStoreName = v; }
 #define ImplPropertyGetSimple(Type, BackingStoreName) virtual Type get() { return BackingStoreName; }
 #define ImplPropertySetSimple(Type, BackingStoreName) virtual void set(Type v) { BackingStoreName = v; }
 #define ImplPropertySetInvalid(Type) virtual void set(Type v) { throw gcnew InvalidOperationException("Getter-only property!"); }

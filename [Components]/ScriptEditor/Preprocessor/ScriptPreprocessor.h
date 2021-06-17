@@ -2,7 +2,7 @@
 
 namespace cse
 {
-	ref class ScriptParser;
+	ref class obScriptParsing::LineTokenizer;
 	ref class Preprocessor;
 
 	namespace scriptPreprocessor

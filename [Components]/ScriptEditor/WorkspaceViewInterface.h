@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Globals.h"
-#include "ScriptTextEditorInterface.h"
+#include "ITextEditor.h"
 #include "TextEditorAdornments.h"
 
 namespace cse
@@ -19,7 +19,7 @@ namespace cse
 								Controller;
 			property intellisense::IIntelliSenseInterfaceView^
 								IntelliSenseInterfaceView;
-			property textEditors::ScopeBreadcrumbManager^
+			property textEditor::ScopeBreadcrumbManager^
 								BreadcrumbManager;
 			property IntPtr		WindowHandle;
 			property bool		Enabled;
@@ -60,8 +60,8 @@ namespace cse
 			void DetachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
 			void BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
 			void Jump(IWorkspaceView^ View, IWorkspaceModel^ From, String^ ScriptEditorID);
-			int	 FindReplace(IWorkspaceView^ View, textEditors::IScriptTextEditor::FindReplaceOperation Operation,
-				 			 String^ Query, String^ Replacement, textEditors::IScriptTextEditor::FindReplaceOptions Options, bool Global);
+			int	 FindReplace(IWorkspaceView^ View, textEditor::ITextEditor::eFindReplaceOperation Operation,
+				 			 String^ Query, String^ Replacement, textEditor::ITextEditor::FindReplaceOptions Options, bool Global);
 			void ShowOutline(IWorkspaceView^ View, obScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model);
 			void Redraw(IWorkspaceView^ View);
 			void NewTab(IWorkspaceView^ View, NewTabOperationArgs^ E);

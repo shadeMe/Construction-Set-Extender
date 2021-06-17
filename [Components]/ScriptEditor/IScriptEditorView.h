@@ -1,12 +1,6 @@
 #pragma once
 #include "IIntelliSenseInterface.h"
 
-/*
-* *		Multiple View interfaces for all the user-facing aspects of the model being presented to the user
-**		View exposes an abstracted set of events encompasing all user interactions with it
-**		Same with the model
-***		Control binds teh two together by subscribing to both sets of event and performing all teh interaction logic
-*/
 namespace cse
 {
 
@@ -26,7 +20,9 @@ namespace components
 {
 
 
-enum class eComponentType
+// the access specifier is to disambiguate CLR enums from C++11 enums
+// https://docs.microsoft.com/en-us/cpp/dotnet/how-to-define-and-consume-enums-in-cpp-cli?view=msvc-160#operators-and-enums
+public enum class eComponentType
 {
 	None,
 	Form,
@@ -216,6 +212,8 @@ interface class IObjectListView : public IViewComponent
 	property Collections::IList^ SelectedObjects;
 
 	void SetObjects(Collections::IEnumerable^ Collection, bool PreserveState);
+	IObjectListViewColumn^ AllocateNewColumn();
+	void AddColumn(IObjectListViewColumn^ Column);
 	List<IObjectListViewColumn^>^ GetColumns();
 	void SetCanExpandGetter(CanExpandGetter^ Delegate);
 	void SetChildrenGetter(ChildrenGetter^ Delegate);
@@ -288,11 +286,15 @@ interface class IContainer : public IViewComponent
 } // namespace components
 
 
-enum class eViewRole
+public enum class eViewRole
 {
 	None,
 	MainWindow,
+
 	MainTabStrip,
+	MainTabStrip_NewTab,
+	MainTabStrip_NewTab_NewScript,
+	MainTabStrip_NewTab_ExistingScript,
 
 	MainToolbar_NewScript,
 	MainToolbar_OpenScript,
@@ -325,14 +327,7 @@ enum class eViewRole
 	MainToolbar_Tools_AttachScript,
 	MainToolbar_Tools_RecompileScriptDependencies,
 	MainToolbar_Tools_DocumentScript,
-	MainToolbar_Tools_RenameVariables,
 	MainToolbar_Tools_ModifyVariableIndices,
-
-	MainToolbar_Tools_AddVar_Integer,
-	MainToolbar_Tools_AddVar_Float,
-	MainToolbar_Tools_AddVar_Reference,
-	MainToolbar_Tools_AddVar_String,
-	MainToolbar_Tools_AddVar_Array,
 
 	MainToolbar_Tools_Import_IntoCurrentScript,
 	MainToolbar_Tools_Import_IntoTabs,
@@ -361,9 +356,10 @@ enum class eViewRole
 	FindReplace_MatchCase,
 	FindReplace_MatchWholeWord,
 	FindReplace_UseRegEx,
-	FindReplace_Find,
-	FindReplace_Replace,
-	FindReplace_CountMatches,
+	FindReplace_IgnoreComments,
+	FindReplace_FindButton,
+	FindReplace_ReplaceButton,
+	FindReplace_CountMatchesButton,
 
 	Messages_DockPanel,
 	Messages_ListView,
@@ -384,12 +380,20 @@ enum class eViewRole
 	OutlineView_TreeView,
 
 	NavigationBar,
-
 	TextEditor_ViewPortContainer,
+
+	TextEditor_ContextMenu,
 	TextEditor_ContextMenu_Copy,
 	TextEditor_ContextMenu_Paste,
 	TextEditor_ContextMenu_ToggleComment,
 	TextEditor_ContextMenu_AddBookmark,
+
+	TextEditor_ContextMenu_AddVar_Integer,
+	TextEditor_ContextMenu_AddVar_Float,
+	TextEditor_ContextMenu_AddVar_Reference,
+	TextEditor_ContextMenu_AddVar_String,
+	TextEditor_ContextMenu_AddVar_Array,
+
 	TextEditor_ContextMenu_OpenPreprocessorImportFile,
 	TextEditor_ContextMenu_JumpToAttachedScript,
 };
@@ -397,11 +401,11 @@ enum class eViewRole
 
 using namespace components;
 
-interface class ScriptEditorView
+interface class IScriptEditorView
 {
 	property intellisense::IIntelliSenseInterfaceView^ IntelliSenseView;
 
-	delegate void EventHandler(ScriptEditorView^ Sender, ViewComponentEvent^ E);
+	delegate void EventHandler(IScriptEditorView^ Sender, ViewComponentEvent^ E);
 
 	event EventHandler^ ComponentEvent;
 

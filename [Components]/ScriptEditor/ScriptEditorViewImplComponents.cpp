@@ -87,6 +87,22 @@ Form::~Form()
 	Source = nullptr;
 }
 
+Rectangle Form::Bounds::get()
+{
+	if (Source->WindowState == FormWindowState::Normal)
+		return Source->Bounds;
+	else
+		return Source->RestoreBounds;
+}
+
+void Form::Bounds::set(Rectangle v)
+{
+	if (Source->WindowState == FormWindowState::Normal)
+		Source->Bounds = v;
+	else
+		throw gcnew InvalidOperationException("Cannot set form bounds when maximised or minimised");
+}
+
 void Form::BeginUpdate()
 {
 	Source->SuspendLayout();
@@ -692,8 +708,8 @@ void TabStrip::SelectPreviousTab()
 ObjectListViewColumn::ObjectListViewColumn(BrightIdeasSoftware::OLVColumn^ Source, IObjectListView^ ParentListView)
 	: ViewComponent(eComponentType::ObjectListViewColumn, eViewRole::None, nullptr)
 {
-	this->Source = Source;
-	this->ParentListView = ParentListView;
+	this->Source_ = Source;
+	this->ParentListView_ = ParentListView;
 
 	DelegateAspectGetter = nullptr;
 	DelegateAspectToStringGetter = nullptr;
@@ -708,47 +724,60 @@ ObjectListViewColumn::~ObjectListViewColumn()
 {
 	if (DelegateAspectGetter != nullptr)
 	{
-		Source->AspectGetter = nullptr;
+		Source_->AspectGetter = nullptr;
 		DelegateAspectGetter = nullptr;
 	}
 
 	if (DelegateAspectToStringGetter != nullptr)
 	{
-		Source->AspectToStringConverter = nullptr;
+		Source_->AspectToStringConverter = nullptr;
 		DelegateAspectToStringGetter = nullptr;
 	}
 
 	if (DelegateImageGetter != nullptr)
 	{
-		Source->ImageGetter = nullptr;
+		Source_->ImageGetter = nullptr;
 		DelegateImageGetter = nullptr;
 	}
 
-	ParentListView = nullptr;
+	ParentListView_ = nullptr;
 
 	SAFEDELETE_CLR(DelegateWrapperAspectGetter);
 	SAFEDELETE_CLR(DelegateWrapperAspectToStringConverter);
 	SAFEDELETE_CLR(DelegateWrapperImageGetter);
 
-	Source = nullptr;
+	Source_ = nullptr;
 }
 
 void ObjectListViewColumn::SetAspectGetter(IObjectListViewColumn::AspectGetter^ Delegate)
 {
 	DelegateAspectGetter = Delegate;
-	Source->AspectGetter = DelegateWrapperAspectGetter;
+	Source_->AspectGetter = DelegateWrapperAspectGetter;
 }
 
 void ObjectListViewColumn::SetAspectToStringGetter(IObjectListViewColumn::AspectToStringGetter^ Delegate)
 {
 	DelegateAspectToStringGetter = Delegate;
-	Source->AspectToStringConverter = DelegateWrapperAspectToStringConverter;
+	Source_->AspectToStringConverter = DelegateWrapperAspectToStringConverter;
 }
 
 void ObjectListViewColumn::SetImageGetter(IObjectListViewColumn::ImageGetter^ Delegate)
 {
 	DelegateImageGetter = Delegate;
-	Source->ImageGetter = DelegateWrapperImageGetter;
+	Source_->ImageGetter = DelegateWrapperImageGetter;
+}
+
+ObjectListViewColumn^ ObjectListViewColumn::FromOLVColumn(BrightIdeasSoftware::OLVColumn^ Column)
+{
+	return safe_cast<ObjectListViewColumn^>(Column->Tag);
+}
+
+ObjectListViewColumn^ ObjectListViewColumn::New(IObjectListView^ Parent)
+{
+	auto Source = gcnew BrightIdeasSoftware::OLVColumn;
+	auto Wrapper = gcnew ObjectListViewColumn(Source, Parent);
+	Source->Tag = Wrapper;
+	return Wrapper;
 }
 
 System::Object^ ObjectListViewColumn::Wrapper_AspectGetter(Object^ Model)
@@ -820,12 +849,31 @@ ObjectListView::~ObjectListView()
 	SAFEDELETE_CLR(DelegateWrapperCanExpandGetter);
 	SAFEDELETE_CLR(DelegateWrapperChildrenGetter);
 
+	for each (auto Column in Source->AllColumns)
+	{
+		auto ColumnItem = ObjectListViewColumn::FromOLVColumn(Column);
+		delete ColumnItem;
+	}
+
 	Source = nullptr;
 }
 
 void ObjectListView::SetObjects(System::Collections::IEnumerable^ Collection, bool PreserveState)
 {
 	Source->SetObjects(Collection, PreserveState);
+}
+
+IObjectListViewColumn^ ObjectListView::AllocateNewColumn()
+{
+	return ObjectListViewColumn::New(this);
+}
+
+void ObjectListView::AddColumn(IObjectListViewColumn^ Column)
+{
+	auto ColData = safe_cast<ObjectListViewColumn^>(Column);
+
+	Source->AllColumns->Add(ColData->Source);
+	Source->Columns->Add(ColData->Source);
 }
 
 List<IObjectListViewColumn^>^ ObjectListView::GetColumns()
@@ -849,7 +897,7 @@ void ObjectListView::SetChildrenGetter(IObjectListView::ChildrenGetter^ Delegate
 }
 
 
-CircularProgress::CircularProgress(DotNetBar::Controls::CircularProgress^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter)
+CircularProgress::CircularProgress(DotNetBar::CircularProgressItem^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter)
 	: ViewComponent(eComponentType::CircularProgress, ViewRole, EventRouter)
 {
 	this->Source = Source;

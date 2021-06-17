@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SemanticAnalysis.h"
-#include "ScriptTextEditorInterface.h"
+#include "ITextEditor.h"
 #include "BackgroundAnalysis.h"
 
 namespace cse
@@ -19,15 +19,15 @@ namespace cse
 		protected:
 			ref struct CrumbData
 			{
-				IScriptTextEditor^						Parent;
+				ITextEditor^						Parent;
 				obScriptParsing::Structurizer::Node^	Scope;
 
-				CrumbData(IScriptTextEditor^ Parent, obScriptParsing::Structurizer::Node^ Scope);
+				CrumbData(ITextEditor^ Parent, obScriptParsing::Structurizer::Node^ Scope);
 
 				void									Jump();
 			};
 
-			IScriptTextEditor^							BoundParent;
+			ITextEditor^							BoundParent;
 			scriptEditor::IBackgroundSemanticAnalyzer^	BackgroundAnalyzer;
 			DevComponents::DotNetBar::CrumbBar^			Bar;
 			obScriptParsing::Structurizer^				DataStore;
@@ -67,7 +67,7 @@ namespace cse
 				virtual void set(bool e) { Bar->Visible = e; }
 			}
 
-			void										Bind(IScriptTextEditor^ Parent, scriptEditor::IBackgroundSemanticAnalyzer^ BackgroundAnalyzer);
+			void										Bind(ITextEditor^ Parent, scriptEditor::IBackgroundSemanticAnalyzer^ BackgroundAnalyzer);
 			void										Unbind();
 
 			void										RefreshCrumbs();

@@ -35,12 +35,12 @@ namespace cse
 			AutoSaveTimer->Interval = preferences::SettingsHolder::Get()->Backup->AutoRecoveryInterval * 1000 * 60;
 
 			BackgroundAnalysis = gcnew ScriptBackgroundAnalysis(this);
-			TextEditor = gcnew textEditors::avalonEditor::AvalonEditTextEditor(this);
+			TextEditor = gcnew textEditor::avalonEdit::AvalonEditTextEditor(this);
 			IntelliSenseModel = gcnew intellisense::IntelliSenseInterfaceModel(TextEditor);
 
 			TextEditorKeyDownHandler = gcnew KeyEventHandler(this, &ConcreteWorkspaceModel::TextEditor_KeyDown);
-			TextEditorScriptModifiedHandler = gcnew textEditors::TextEditorScriptModifiedEventHandler(this, &ConcreteWorkspaceModel::TextEditor_ScriptModified);
-			TextEditorMouseClickHandler = gcnew textEditors::TextEditorMouseClickEventHandler(this, &ConcreteWorkspaceModel::TextEditor_MouseClick);
+			TextEditorScriptModifiedHandler = gcnew textEditor::TextEditorScriptModifiedEventHandler(this, &ConcreteWorkspaceModel::TextEditor_ScriptModified);
+			TextEditorMouseClickHandler = gcnew textEditor::TextEditorMouseClickEventHandler(this, &ConcreteWorkspaceModel::TextEditor_MouseClick);
 			TextEditorLineAnchorInvalidatedHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::TextEditor_LineAnchorInvalidated);
 			ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ScriptEditorPreferences_Saved);
 			AutoSaveTimerTickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::AutoSaveTimer_Tick);
@@ -122,12 +122,12 @@ namespace cse
 				BoundParent->Controller->BubbleKeyDownEvent(BoundParent, E);
 		}
 
-		void ConcreteWorkspaceModel::TextEditor_ScriptModified(Object^ Sender, textEditors::TextEditorScriptModifiedEventArgs^ E)
+		void ConcreteWorkspaceModel::TextEditor_ScriptModified(Object^ Sender, textEditor::TextEditorScriptModifiedEventArgs^ E)
 		{
 			OnStateChangedDirty(E->ModifiedStatus);
 		}
 
-		void ConcreteWorkspaceModel::TextEditor_MouseClick(Object^ Sender, textEditors::TextEditorMouseClickEventArgs^ E)
+		void ConcreteWorkspaceModel::TextEditor_MouseClick(Object^ Sender, textEditor::TextEditorMouseClickEventArgs^ E)
 		{
 			if (Control::ModifierKeys == Keys::Control && E->Button == MouseButtons::Left)
 			{
@@ -138,7 +138,7 @@ namespace cse
 			}
 		}
 
-		generic <typename T> where T : textEditors::ILineAnchor
+		generic <typename T> where T : textEditor::ILineAnchor
 		bool RemoveInvalidatedAnchors(List<T>^ Source)
 		{
 			auto Invalidated = gcnew List<T>;
@@ -1129,11 +1129,11 @@ namespace cse
 			Concrete->TextEditor->SaveScriptToDisk(PathToFile, PathIncludesFileName, Concrete->LongDescription, Extension);
 		}
 
-		textEditors::IScriptTextEditor::FindReplaceResult^ ConcreteWorkspaceModelController::FindReplace(IWorkspaceModel^ Model,
-																						textEditors::IScriptTextEditor::FindReplaceOperation Operation,
+		textEditor::ITextEditor::FindReplaceResult^ ConcreteWorkspaceModelController::FindReplace(IWorkspaceModel^ Model,
+																						textEditor::ITextEditor::eFindReplaceOperation Operation,
 																						String^ Query,
 																						String^ Replacement,
-																						textEditors::IScriptTextEditor::FindReplaceOptions Options)
+																						textEditor::ITextEditor::FindReplaceOptions Options)
 		{
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;

@@ -93,9 +93,9 @@ void InstantiateEditorAndHighlight(componentDLLInterface::ScriptData* Initialize
 
 	New->AssociateModel(Model, true);
 	New->Controller->FindReplace(New,
-								 cse::textEditors::IScriptTextEditor::FindReplaceOperation::Find,
+								 cse::textEditors::ITextEditor::eFindReplaceOperation::Find,
 								 gcnew String(SearchQuery), "",
-								 cse::textEditors::IScriptTextEditor::FindReplaceOptions::CaseInsensitive,
+								 cse::textEditors::ITextEditor::FindReplaceOptions::CaseInsensitive,
 								 false);
 }
 
@@ -121,9 +121,9 @@ void InstantiateEditorsAndHighlight(componentDLLInterface::ScriptData** Initiali
 	}
 
 	New->Controller->FindReplace(New,
-								 cse::textEditors::IScriptTextEditor::FindReplaceOperation::Find,
+								 cse::textEditors::ITextEditor::eFindReplaceOperation::Find,
 								 gcnew String(SearchQuery), "",
-								 cse::textEditors::IScriptTextEditor::FindReplaceOptions::CaseInsensitive,
+								 cse::textEditors::ITextEditor::FindReplaceOptions::CaseInsensitive,
 								 true);
 
 	nativeWrapper::g_CSEInterfaceTable->DeleteData(InitializerScripts, true);

@@ -604,7 +604,7 @@ namespace cse
 				auto TopItem = safe_cast<FindReplaceAllResults^>(E);
 				switch (TopItem->Operation)
 				{
-				case textEditors::IScriptTextEditor::FindReplaceOperation::Replace:
+				case textEditor::ITextEditor::FindReplaceOperation::Replace:
 					return "Replace \"" + TopItem->Query + "\" with \"" + TopItem->Replacement + "\" (" + TopItem->TotalHitCount + " hits in " + TopItem->ScriptsWithHits->Count + " script(s))";
 				default:
 					return "Search \"" + TopItem->Query + "\" (" + TopItem->TotalHitCount + " hits in " + TopItem->ScriptsWithHits->Count + " script(s))";
@@ -617,9 +617,9 @@ namespace cse
 				return "Script " + PerScript->ParentDescription;
 			}
 
-			if (E->GetType() == textEditors::IScriptTextEditor::FindReplaceResult::HitData::typeid)
+			if (E->GetType() == textEditor::ITextEditor::FindReplaceResult::HitData::typeid)
 			{
-				auto PerLine = safe_cast<textEditors::IScriptTextEditor::FindReplaceResult::HitData^>(E);
+				auto PerLine = safe_cast<textEditor::ITextEditor::FindReplaceResult::HitData^>(E);
 				return PerLine->Text;
 			}
 
@@ -628,10 +628,10 @@ namespace cse
 
 		System::Object^ FindReplaceAllResults::LineAspectGetter(Object^ E)
 		{
-			if (E->GetType() != textEditors::IScriptTextEditor::FindReplaceResult::HitData::typeid)
+			if (E->GetType() != textEditor::ITextEditor::FindReplaceResult::HitData::typeid)
 				return String::Empty;
 
-			auto Model = safe_cast<textEditors::IScriptTextEditor::FindReplaceResult::HitData^>(E);
+			auto Model = safe_cast<textEditor::ITextEditor::FindReplaceResult::HitData^>(E);
 			return Model->Line;
 		}
 
@@ -643,9 +643,9 @@ namespace cse
 				return PerScript->TotalHitCount;
 			}
 
-			if (E->GetType() == textEditors::IScriptTextEditor::FindReplaceResult::HitData::typeid)
+			if (E->GetType() == textEditor::ITextEditor::FindReplaceResult::HitData::typeid)
 			{
-				auto PerLine = safe_cast<textEditors::IScriptTextEditor::FindReplaceResult::HitData^>(E);
+				auto PerLine = safe_cast<textEditor::ITextEditor::FindReplaceResult::HitData^>(E);
 				return PerLine->Hits;
 			}
 
@@ -849,8 +849,8 @@ namespace cse
 			Color HighlightColor = Color::Maroon;
 			Font^ CustomFont = safe_cast<Font^>(preferences::SettingsHolder::Get()->Appearance->TextFont->Clone());
 
-			OffsetTextViewer = gcnew textEditors::ScriptOffsetViewer(CustomFont, ForegroundColor, BackgroundColor, HighlightColor, WorkspaceSplitter->Panel1);
-			PreprocessorTextViewer = gcnew textEditors::SimpleTextViewer(CustomFont, ForegroundColor, BackgroundColor, HighlightColor, WorkspaceSplitter->Panel1);
+			OffsetTextViewer = gcnew textEditor::ScriptOffsetViewer(CustomFont, ForegroundColor, BackgroundColor, HighlightColor, WorkspaceSplitter->Panel1);
+			PreprocessorTextViewer = gcnew textEditor::SimpleTextViewer(CustomFont, ForegroundColor, BackgroundColor, HighlightColor, WorkspaceSplitter->Panel1);
 			IntelliSenseView = gcnew intellisense::IntelliSenseInterfaceView;
 			TabStripFilter = gcnew WorkspaceViewTabFilter(this);
 
@@ -875,7 +875,7 @@ namespace cse
 			ScopeCrumbBar->Padding = Padding(20, 0, 20, 0);
 	//		ScopeCrumbBar->ResetBackgroundStyle();
 
-			ScopeCrumbManager = gcnew textEditors::ScopeBreadcrumbManager(ScopeCrumbBar);
+			ScopeCrumbManager = gcnew textEditor::ScopeBreadcrumbManager(ScopeCrumbBar);
 
 			SetupControlImage(ToolBarNewScript);
 			SetupControlImage(ToolBarOpenScript);
@@ -2466,9 +2466,9 @@ namespace cse
 			Object^ Selection = GlobalFindList->SelectedObject;
 			if (Selection)
 			{
-				if (Selection->GetType() == textEditors::IScriptTextEditor::FindReplaceResult::HitData::typeid)
+				if (Selection->GetType() == textEditor::ITextEditor::FindReplaceResult::HitData::typeid)
 				{
-					textEditors::IScriptTextEditor::FindReplaceResult::HitData^ Data = (textEditors::IScriptTextEditor::FindReplaceResult::HitData^)Selection;
+					textEditor::ITextEditor::FindReplaceResult::HitData^ Data = (textEditor::ITextEditor::FindReplaceResult::HitData^)Selection;
 					FindReplaceAllResults::PerScriptData^ ParentData = (FindReplaceAllResults::PerScriptData^)GlobalFindList->GetParent(Selection);
 
 					if (ParentData->ParentModel)
@@ -3477,8 +3477,8 @@ namespace cse
 			}
 		}
 
-		int ConcreteWorkspaceViewController::FindReplace(IWorkspaceView^ View, textEditors::IScriptTextEditor::FindReplaceOperation Operation,
-														  String^ Query, String^ Replacement, textEditors::IScriptTextEditor::FindReplaceOptions Options, bool Global)
+		int ConcreteWorkspaceViewController::FindReplace(IWorkspaceView^ View, textEditor::ITextEditor::eFindReplaceOperation Operation,
+														  String^ Query, String^ Replacement, textEditor::ITextEditor::FindReplaceOptions Options, bool Global)
 		{
 			Debug::Assert(View != nullptr);
 			ConcreteWorkspaceView^ Concrete = (ConcreteWorkspaceView^)View;
@@ -3497,7 +3497,7 @@ namespace cse
 				for each (auto Itr in Concrete->AssociatedModels)
 				{
 					IWorkspaceModel^ Model = Itr.Key;
-					textEditors::IScriptTextEditor::FindReplaceResult^ Result = Concrete->ModelController()->FindReplace(Model,
+					textEditor::ITextEditor::FindReplaceResult^ Result = Concrete->ModelController()->FindReplace(Model,
 																														 Operation,
 																														 Query,
 																														 Replacement,
@@ -3525,12 +3525,12 @@ namespace cse
 			}
 			else
 			{
-				textEditors::IScriptTextEditor::FindReplaceResult^ Result = Concrete->GetActiveModel()->Controller->FindReplace(Concrete->GetActiveModel(),
+				textEditor::ITextEditor::FindReplaceResult^ Result = Concrete->GetActiveModel()->Controller->FindReplace(Concrete->GetActiveModel(),
 																																Operation,
 																																Query,
 																																Replacement,
 																																Options);
-				if (Result->TotalHitCount && Operation != textEditors::IScriptTextEditor::FindReplaceOperation::CountMatches)
+				if (Result->TotalHitCount && Operation != textEditor::ITextEditor::eFindReplaceOperation::CountMatches)
 					Concrete->ShowFindResultList();
 
 				return Result->TotalHitCount;

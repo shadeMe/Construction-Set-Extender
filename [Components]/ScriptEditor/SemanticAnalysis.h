@@ -341,50 +341,47 @@ namespace cse
 				enum class NodeType
 				{
 					Invalid,
-
 					VariableDeclaration,
 					ScriptBlock,
 					BasicConditionalBlock,
 					LoopBlock
 				};
 
-				String^							Description;
-				NodeType						Type;
-				UInt32							StartLine;
-				UInt32							EndLine;
-				List<Node^>^					Children;
+				String^ Description;
+				NodeType Type;
+				UInt32 StartLine;
+				UInt32 EndLine;
+				List<Node^>^ Children;
 
 				Node(NodeType Type, UInt32 StartLine, UInt32 EndLine, String^ Desc);
 			};
 
-			delegate String^					GetLineText(UInt32 Line);
+			delegate String^ GetLineText(UInt32 Line);
 		private:
-			AnalysisData^						InputData;
-			List<Node^>^						ParsedTree;
-			GetLineText^						FetchLineText;
-			UInt32								CurrentLine;
+			AnalysisData^ InputData;
+			List<Node^>^ ParsedTree;
+			GetLineText^ FetchLineText;
+			UInt32 CurrentLine;
 
-			void								ParseStructure();
-			void								ParseControlBlock(ControlBlock^ Block, Node^ Parent);
-			Node^								GetContainingNode(Node^ Source, UInt32 Line, Node^ LastHit);
+			void ParseStructure();
+			void ParseControlBlock(ControlBlock^ Block, Node^ Parent);
+			Node^ GetContainingNode(Node^ Source, UInt32 Line, Node^ LastHit);
 		public:
 			Structurizer(AnalysisData^ Input, GetLineText^ Delegate, UInt32 CurrentLine);
 
-
-			property List<Node^>^				Output
+			property String^ RootName
 			{
-				virtual List<Node^>^ get() { return ParsedTree; }
+				String^ get() { return InputData->Name; }
+			}
+			property List<Node^>^ Output
+			{
+				List<Node^>^ get() { return ParsedTree; }
 			}
 
-			property bool						Valid;
-			property Node^						CurrentScope;
+			property bool Valid;
+			property Node^ CurrentScope;
 
-			Node^								GetContainingNode(UInt32 Line);
+			Node^ GetContainingNode(UInt32 Line);
 		};
 	};
-
-#ifdef CSE_SE
-	typedef obScriptParsing::LineTokenizer						ScriptParser;
-	typedef obScriptParsing::AnalysisData::UserMessage		ScriptErrorMessage;
-#endif
 }

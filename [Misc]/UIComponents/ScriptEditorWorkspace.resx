@@ -355,15 +355,6 @@
         AAAASUVORK5CYII=
 </value>
   </data>
-  <data name="ToolsMenuRenameVars.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        xAAADsQBlSsOGwAAAMRJREFUOE/FkLENwjAQRTMCG5BZvAIdC7AGEzAAQqJkBiSmQJTUtIbG7eH/dT+y
-        jSBAASc92fHdf07StZVS6jPbjDnY996uysx8lwtDPmzr/cmmix3BHmfeq0QU4NCbQ3C+OtjxfCHYlyLP
-        siR4CF7jjUjQzTbkqUAD7c06F6OCMf4nKH5i9CxLgqif+CqIi1okmGSWmUHUBNHDjIUQGNRKgcqHKHIY
-        9DY/FSgMKsE7VQrw/FsBQqUAfCxQWOtXb1BiZt0dNCPor1ylF18AAAAASUVORK5CYII=
-</value>
-  </data>
   <data name="ToolsMenuModifyVarIndices.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
@@ -373,15 +364,6 @@
         GBSczLug393Y3MEBn0HFKMgCvkxkByfvwM8gfYGQrBJ0iMP6hi8wbgJywxN3UJtfgmSB+AJatNYWC5or
         i4tBwcl8CBbHO/+A9wtRUAReiK8OCshHaO/Igs7VcR83BOc9JIZwUGEAgPYEDD0ScQxkNbYAAAAASUVO
         RK5CYII=
-</value>
-  </data>
-  <data name="ToolsMenuAddVar.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        xAAADsQBlSsOGwAAAL9JREFUOE/FkLENQjEMRP8IbMAfgoI96FiANagpGAAhUTIDElMgSmraD03a4LPO
-        +ZYhpIOTnmTZdxcpXVRKqRcOQiaYe57rgonmvDtd83R1VDBjx9t7EZY8luBye86X213B7IsYG/Up+Bie
-        ihV0i71SLTBDfNn2RrOgxf8K3CcOjI3C0j7xWxAPeRjXgomwFkpRCOIGT55vZgpmgQ0UTVpEStAIBQrj
-        dflg5HcFhg8atNUlJiMW6L4pMzLkkV3qXj1l681uRRH/AAAAAElFTkSuQmCC
 </value>
   </data>
   <data name="ToolsMenuCompileActiveFileScripts.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
@@ -429,11 +411,17 @@
         AAAASUVORK5CYII=
 </value>
   </data>
+  <data name="TextEditorContextMenuAddVar.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        xAAADsQBlSsOGwAAAL9JREFUOE/FkLENQjEMRP8IbMAfgoI96FiANagpGAAhUTIDElMgSmraD03a4LPO
+        +ZYhpIOTnmTZdxcpXVRKqRcOQiaYe57rgonmvDtd83R1VDBjx9t7EZY8luBye86X213B7IsYG/Up+Bie
+        ihV0i71SLTBDfNn2RrOgxf8K3CcOjI3C0j7xWxAPeRjXgomwFkpRCOIGT55vZgpmgQ0UTVpEStAIBQrj
+        dflg5HcFhg8atNUlJiMW6L4pMzLkkV3qXj1l681uRRH/AAAAAElFTkSuQmCC
+</value>
+  </data>
   <metadata name="DockManager.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>143, 3</value>
-  </metadata>
-  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>34</value>
   </metadata>
   <data name="BookmarksToolbarAdd.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -451,35 +439,9 @@
         bwAAAABJRU5ErkJggg==
 </value>
   </data>
-  <data name="FindWindowButtonFind.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        xAAADsQBlSsOGwAAAXZJREFUOE+dkrFqwmAUhYNurh18jA4+QhbR3SVDMmYVXJUUAj5AB5csBurwt5Og
-        gx2cpO3gEzRLWrBbtUHEoXJ7TvwllMRCPfARvDnn+v/3xjin3W5XAjZYgD04gAj0wZW2FQuGCpgul0vp
-        dDpSr9fFNE1xHEeUUrLdbld4f63teeFlOJlMpNlsShiGEr1G8ha/y2z2KLZtS7fbPTXJnwTFWhzH0mg0
-        5PnpRTbrr1+sVh9pE54E3r6OZWIxCALxPC8XPsGT8DrwRjqWCUXV6/XkXj0Uhgmvw5nAe9CxTCiOfN+X
-        4TAsDBPOhIOFd69jmVBsj8djcV1X1p+bwgYcLLcD70LHMqFYTZLkYFmWDAaDXBMOltvhiuG1dewoFMrg
-        bj6fp1tgE56E/8iZeN5NWueK4ZuCko7mw3zyJLwOZ8LBcjtcMXwhqOhocZi/QRW0wQgowM+4pmNHoXAu
-        XNaWvwVjcHGYgvm71WpdFqYQuGUTEPw7bBjGD/7P/+8HiloYAAAAAElFTkSuQmCC
-</value>
-  </data>
-  <data name="FindWindowButtonReplace.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        xAAADsQBlSsOGwAAAMpJREFUOE9jIAV8//HjPwxDhSAAKJAAxO+RFeDCzs7OKHyQZgMgfm9SvPY/e8gc
-        FAxSANIAw9j4IAPe7z7/EKzh1M3ncJORMboByDTYXzADQGywIBQgK8RrAMz5iZP2YzUAhrHxwYrE4haB
-        DQDRID4pGGTAfJDfVTNXwMMA2RZsGKwRBmAmEYuxGoBuAy6M1wAQDcPIGpDFkGmodlQXICtG1oDOB9FQ
-        7aguQKbR2ch8EA3VTroXYBiqnfRAhGpDAGRTicFQbVDAwAAASfWMDM9+00oAAAAASUVORK5CYII=
-</value>
-  </data>
-  <data name="FindWindowButtonCountMatches.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        xAAADsQBlSsOGwAAAIBJREFUOE+dj10KgDAMg3e23f8u6stelUiDXcl+auFjJkvDLHFaa/cMi40HoVqr
-        JFVwHlfH7wLoGbb2DcxYAK1IFVATWQBjxlYBLhSpAh/0YeUtnx2RBRA0+D3SwxfQWGmcBLr7dxXwHrVH
-        FvgAof8uxPEBnERpW+kHF7vYik0pD337b4wYh6/wAAAAAElFTkSuQmCC
-</value>
-  </data>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>34</value>
+  </metadata>
   <data name="TextEditorContextMenuCopy.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
@@ -523,6 +485,35 @@
         gLnh+pD3p2tVbkQW9B+vlHozVZJtmBsVBXnJFK3/yky3WhCiQBLHsVWGUyqQcKCTJMnb8zyrDGqigUNz
         Ob1JBiXJwKG2nG6TQWlh4GBopn+TQW2Dg/oPxPRfMqhtcFh+ia8yETkfqfTmjVw2u+MAAAAASUVORK5C
         YII=
+</value>
+  </data>
+  <data name="FindWindowButtonFind.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        xAAADsQBlSsOGwAAAXZJREFUOE+dkrFqwmAUhYNurh18jA4+QhbR3SVDMmYVXJUUAj5AB5csBurwt5Og
+        gx2cpO3gEzRLWrBbtUHEoXJ7TvwllMRCPfARvDnn+v/3xjin3W5XAjZYgD04gAj0wZW2FQuGCpgul0vp
+        dDpSr9fFNE1xHEeUUrLdbld4f63teeFlOJlMpNlsShiGEr1G8ha/y2z2KLZtS7fbPTXJnwTFWhzH0mg0
+        5PnpRTbrr1+sVh9pE54E3r6OZWIxCALxPC8XPsGT8DrwRjqWCUXV6/XkXj0Uhgmvw5nAe9CxTCiOfN+X
+        4TAsDBPOhIOFd69jmVBsj8djcV1X1p+bwgYcLLcD70LHMqFYTZLkYFmWDAaDXBMOltvhiuG1dewoFMrg
+        bj6fp1tgE56E/8iZeN5NWueK4ZuCko7mw3zyJLwOZ8LBcjtcMXwhqOhocZi/QRW0wQgowM+4pmNHoXAu
+        XNaWvwVjcHGYgvm71WpdFqYQuGUTEPw7bBjGD/7P/+8HiloYAAAAAElFTkSuQmCC
+</value>
+  </data>
+  <data name="FindWindowButtonReplace.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        xAAADsQBlSsOGwAAAMpJREFUOE9jIAV8//HjPwxDhSAAKJAAxO+RFeDCzs7OKHyQZgMgfm9SvPY/e8gc
+        FAxSANIAw9j4IAPe7z7/EKzh1M3ncJORMboByDTYXzADQGywIBQgK8RrAMz5iZP2YzUAhrHxwYrE4haB
+        DQDRID4pGGTAfJDfVTNXwMMA2RZsGKwRBmAmEYuxGoBuAy6M1wAQDcPIGpDFkGmodlQXICtG1oDOB9FQ
+        7aguQKbR2ch8EA3VTroXYBiqnfRAhGpDAGRTicFQbVDAwAAASfWMDM9+00oAAAAASUVORK5CYII=
+</value>
+  </data>
+  <data name="FindWindowButtonCountMatches.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        xAAADsQBlSsOGwAAAIBJREFUOE+dj10KgDAMg3e23f8u6stelUiDXcl+auFjJkvDLHFaa/cMi40HoVqr
+        JFVwHlfH7wLoGbb2DcxYAK1IFVATWQBjxlYBLhSpAh/0YeUtnx2RBRA0+D3SwxfQWGmcBLr7dxXwHrVH
+        FvgAof8uxPEBnERpW+kHF7vYik0pD337b4wYh6/wAAAAAElFTkSuQmCC
 </value>
   </data>
 </root>

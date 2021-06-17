@@ -71,9 +71,9 @@ namespace cse
 			virtual void	LoadFromDisk(IWorkspaceModel^ Model, String^ PathToFile);
 			virtual void	SaveToDisk(IWorkspaceModel^ Model, String^ PathToFile, bool PathIncludesFileName, String^ Extension);
 
-			virtual textEditors::IScriptTextEditor::FindReplaceResult^
-							FindReplace(IWorkspaceModel^ Model, textEditors::IScriptTextEditor::FindReplaceOperation Operation,
-										String^ Query, String^ Replacement, textEditors::IScriptTextEditor::FindReplaceOptions Options);
+			virtual textEditor::ITextEditor::FindReplaceResult^
+							FindReplace(IWorkspaceModel^ Model, textEditor::ITextEditor::eFindReplaceOperation Operation,
+										String^ Query, String^ Replacement, textEditor::ITextEditor::FindReplaceOptions Options);
 
 			virtual bool	GetOffsetViewerData(IWorkspaceModel^ Model, String^% OutText, void** OutBytecode, UInt32% OutLength);
 			virtual bool	ApplyRefactor(IWorkspaceModel^ Model, IWorkspaceModel::RefactorOperation Operation, Object^ Arg);
@@ -106,17 +106,15 @@ namespace cse
 			KeyEventHandler^ TextEditorKeyDownHandler;
 			EventHandler^	 AutoSaveTimerTickHandler;
 			EventHandler^	 ScriptEditorPreferencesSavedHandler;
-			textEditors::TextEditorScriptModifiedEventHandler^
-							 TextEditorScriptModifiedHandler;
-			textEditors::TextEditorMouseClickEventHandler^
-							 TextEditorMouseClickHandler;
+			textEditor::TextEditorScriptModifiedEventHandler^ TextEditorScriptModifiedHandler;
+			textEditor::TextEditorMouseClickEventHandler^ TextEditorMouseClickHandler;
 			EventHandler^	 TextEditorLineAnchorInvalidatedHandler;
 			SemanticAnalysisCompleteEventHandler^
 							BackgroundAnalyzerAnalysisCompleteHandler;
 
 			void	TextEditor_KeyDown(Object^ Sender, KeyEventArgs^ E);
-			void	TextEditor_ScriptModified(Object^ Sender, textEditors::TextEditorScriptModifiedEventArgs^ E);
-			void	TextEditor_MouseClick(Object^ Sender, textEditors::TextEditorMouseClickEventArgs^ E);
+			void	TextEditor_ScriptModified(Object^ Sender, textEditor::TextEditorScriptModifiedEventArgs^ E);
+			void	TextEditor_MouseClick(Object^ Sender, textEditor::TextEditorMouseClickEventArgs^ E);
 			void	TextEditor_LineAnchorInvalidated(Object^ Sender, EventArgs^ E);
 			void	BackgroundAnalysis_AnalysisComplete(Object^ Sender, scriptEditor::SemanticAnalysisCompleteEventArgs^ E);
 			void	ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
@@ -143,10 +141,9 @@ namespace cse
 			void	EndScriptCompilation(CompilationData^ Data);
 
 			void	InitializeTextEditor(String^ RawScriptText);
-			ScriptBookmark^
-					LookupBookmark(UInt32 Line, String^ Text);
+			ScriptBookmark^ LookupBookmark(UInt32 Line, String^ Text);
 		public:
-			textEditors::IScriptTextEditor^
+			textEditor::ITextEditor^
 							TextEditor;
 			intellisense::IIntelliSenseInterfaceModel^
 							IntelliSenseModel;

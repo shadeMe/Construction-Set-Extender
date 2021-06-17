@@ -1,5 +1,4 @@
 #pragma once
-
 #include "Macros.h"
 #include "IScriptEditorView.h"
 
@@ -18,6 +17,7 @@ namespace viewImpl
 
 namespace components
 {
+
 
 using namespace cse::scriptEditor::view;
 using namespace DevComponents;
@@ -72,7 +72,11 @@ public:
 	virtual ~Form();
 
 	ImplPropertySimple(String^, Text, Source->Text);
-	ImplPropertySimple(Rectangle, Bounds, Source->Bounds);
+	property Rectangle Bounds
+	{
+		virtual Rectangle get();
+		virtual void set(Rectangle v);
+	}
 
 	virtual void BeginUpdate();
 	virtual void EndUpdate();
@@ -234,8 +238,8 @@ public:
 
 ref class ObjectListViewColumn : public ViewComponent, IObjectListViewColumn
 {
-	BrightIdeasSoftware::OLVColumn^ Source;
-	IObjectListView^ ParentListView;
+	BrightIdeasSoftware::OLVColumn^ Source_;
+	IObjectListView^ ParentListView_;
 
 	IObjectListViewColumn::AspectGetter^ DelegateAspectGetter;
 	IObjectListViewColumn::AspectToStringGetter^ DelegateAspectToStringGetter;
@@ -252,13 +256,17 @@ public:
 	ObjectListViewColumn(BrightIdeasSoftware::OLVColumn^ Source, IObjectListView^ ParentListView);
 	virtual ~ObjectListViewColumn();
 
-	ImplPropertyGetOnly(int, Index, Source->Index);
-	ImplPropertySimple(String^, Text, Source->Text);
-	ImplPropertyGetOnly(IObjectListView^, Parent, ParentListView);
+	ImplPropertyGetOnly(int, Index, Source_->Index);
+	ImplPropertySimple(String^, Text, Source_->Text);
+	ImplPropertyGetOnly(IObjectListView^, Parent, ParentListView_);
+	ImplPropertyGetOnly(BrightIdeasSoftware::OLVColumn^, Source, Source_);
 
 	virtual void SetAspectGetter(IObjectListViewColumn::AspectGetter^ Delegate);
 	virtual void SetAspectToStringGetter(IObjectListViewColumn::AspectToStringGetter^ Delegate);
 	virtual void SetImageGetter(IObjectListViewColumn::ImageGetter^ Delegate);
+
+	static ObjectListViewColumn^ FromOLVColumn(BrightIdeasSoftware::OLVColumn^ Column);
+	static ObjectListViewColumn^ New(IObjectListView^ Parent);
 };
 
 
@@ -284,6 +292,8 @@ public:
 	ImplPropertySimple(System::Collections::IList^, SelectedObjects, Source->SelectedObjects);
 
 	virtual void SetObjects(System::Collections::IEnumerable^ Collection, bool PreserveState);
+	virtual IObjectListViewColumn^ AllocateNewColumn();
+	virtual void AddColumn(IObjectListViewColumn^ Column);
 	virtual List<IObjectListViewColumn^>^ GetColumns();
 	virtual void SetCanExpandGetter(IObjectListView::CanExpandGetter^ Delegate);
 	virtual void SetChildrenGetter(IObjectListView::ChildrenGetter^ Delegate);
@@ -292,9 +302,9 @@ public:
 
 ref class CircularProgress : public ViewComponent, ICircularProgress
 {
-	DotNetBar::Controls::CircularProgress^ Source;
+	DotNetBar::CircularProgressItem^ Source;
 public:
-	CircularProgress(DotNetBar::Controls::CircularProgress^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);
+	CircularProgress(DotNetBar::CircularProgressItem^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);
 	virtual ~CircularProgress();
 
 	ImplPropertySimple(String^, Text, Source->Text);

@@ -58,8 +58,8 @@ namespace cse
 			virtual void	BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
 
 			virtual void	Jump(IWorkspaceView^ View, IWorkspaceModel^ From, String^ ScriptEditorID);
-			virtual int		FindReplace(IWorkspaceView^ View, textEditors::IScriptTextEditor::FindReplaceOperation Operation,
-										String^ Query, String^ Replacement, textEditors::IScriptTextEditor::FindReplaceOptions Options, bool Global);
+			virtual int		FindReplace(IWorkspaceView^ View, textEditor::ITextEditor::eFindReplaceOperation Operation,
+										String^ Query, String^ Replacement, textEditor::ITextEditor::FindReplaceOptions Options, bool Global);
 			virtual void	ShowOutline(IWorkspaceView^ View, obScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model);
 
 			virtual void	Redraw(IWorkspaceView^ View);
@@ -174,9 +174,9 @@ namespace cse
 			{
 				IWorkspaceModel^										ParentModel;
 				String^													ParentDescription;
-				textEditors::IScriptTextEditor::FindReplaceResult^		Results;
+				textEditor::ITextEditor::FindReplaceResult^		Results;
 
-				PerScriptData(IWorkspaceModel^ Parent, textEditors::IScriptTextEditor::FindReplaceResult^ Data)
+				PerScriptData(IWorkspaceModel^ Parent, textEditor::ITextEditor::FindReplaceResult^ Data)
 				{
 					ParentModel = Parent;
 					ParentDescription = ParentModel->LongDescription;
@@ -189,23 +189,23 @@ namespace cse
 				}
 			};
 
-			textEditors::IScriptTextEditor::FindReplaceOperation		Operation;
+			textEditor::ITextEditor::eFindReplaceOperation		Operation;
 			String^														Query;
 			String^														Replacement;
-			textEditors::IScriptTextEditor::FindReplaceOptions			Options;
+			textEditor::ITextEditor::FindReplaceOptions			Options;
 
 			List<PerScriptData^>^										ScriptsWithHits;
 
 			FindReplaceAllResults()
 			{
-				Operation = textEditors::IScriptTextEditor::FindReplaceOperation::CountMatches;
+				Operation = textEditor::ITextEditor::eFindReplaceOperation::CountMatches;
 				Query = "";
 				Replacement = "";
-				Options = textEditors::IScriptTextEditor::FindReplaceOptions::None;
+				Options = textEditor::ITextEditor::FindReplaceOptions::None;
 				ScriptsWithHits = gcnew List<PerScriptData^>;
 			}
 
-			void Add(IWorkspaceModel^ Model, textEditors::IScriptTextEditor::FindReplaceResult^ Data)
+			void Add(IWorkspaceModel^ Model, textEditor::ITextEditor::FindReplaceResult^ Data)
 			{
 				Debug::Assert(Data->HasError == false);
 				ScriptsWithHits->Add(gcnew PerScriptData(Model, Data));
@@ -422,11 +422,11 @@ namespace cse
 			TreeListView^							GlobalFindList;
 			Label^									SpoilerText;
 
-			textEditors::ScriptOffsetViewer^		OffsetTextViewer;
-			textEditors::SimpleTextViewer^			PreprocessorTextViewer;
+			textEditor::ScriptOffsetViewer^		OffsetTextViewer;
+			textEditor::SimpleTextViewer^			PreprocessorTextViewer;
 
 			DotNetBar::CrumbBar^					ScopeCrumbBar;
-			textEditors::ScopeBreadcrumbManager^	ScopeCrumbManager;
+			textEditor::ScopeBreadcrumbManager^	ScopeCrumbManager;
 
 			FindReplaceDialog^						FindReplaceBox;
 			intellisense::IIntelliSenseInterfaceView^
@@ -506,10 +506,10 @@ namespace cse
 				intellisense::IIntelliSenseInterfaceView^ get() { return IntelliSenseView; }
 				void set(intellisense::IIntelliSenseInterfaceView^ e) {}
 			}
-			virtual property textEditors::ScopeBreadcrumbManager^ BreadcrumbManager
+			virtual property textEditor::ScopeBreadcrumbManager^ BreadcrumbManager
 			{
-				textEditors::ScopeBreadcrumbManager^ get() { return ScopeCrumbManager; }
-				void set(textEditors::ScopeBreadcrumbManager^ e) {}
+				textEditor::ScopeBreadcrumbManager^ get() { return ScopeCrumbManager; }
+				void set(textEditor::ScopeBreadcrumbManager^ e) {}
 			}
 			virtual property IWorkspaceViewController^ Controller
 			{

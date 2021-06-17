@@ -255,7 +255,7 @@ namespace cse
 
 			CacheComboBoxStrings();
 			ParentView->Controller->FindReplace(ParentView,
-												textEditors::IScriptTextEditor::FindReplaceOperation::Find,
+												textEditor::ITextEditor::eFindReplaceOperation::Find,
 												Query,
 												"",
 												GetSelectedOptions(),
@@ -271,7 +271,7 @@ namespace cse
 
 			CacheComboBoxStrings();
 			ParentView->Controller->FindReplace(ParentView,
-												textEditors::IScriptTextEditor::FindReplaceOperation::Replace,
+												textEditor::ITextEditor::eFindReplaceOperation::Replace,
 												Query,
 												Replacement,
 												GetSelectedOptions(),
@@ -286,7 +286,7 @@ namespace cse
 
 			CacheComboBoxStrings();
 			ParentView->Controller->FindReplace(ParentView,
-												textEditors::IScriptTextEditor::FindReplaceOperation::Find,
+												textEditor::ITextEditor::eFindReplaceOperation::Find,
 												Query,
 												"",
 												GetSelectedOptions(),
@@ -302,7 +302,7 @@ namespace cse
 
 			CacheComboBoxStrings();
 			ParentView->Controller->FindReplace(ParentView,
-												textEditors::IScriptTextEditor::FindReplaceOperation::Replace,
+												textEditor::ITextEditor::eFindReplaceOperation::Replace,
 												Query,
 												Replacement,
 												GetSelectedOptions(),
@@ -317,7 +317,7 @@ namespace cse
 
 			CacheComboBoxStrings();
 			int Hits = ParentView->Controller->FindReplace(ParentView,
-														   textEditors::IScriptTextEditor::FindReplaceOperation::CountMatches,
+														   textEditor::ITextEditor::eFindReplaceOperation::CountMatches,
 														   Query,
 														   "",
 														   GetSelectedOptions(),
@@ -433,19 +433,19 @@ namespace cse
 			QueryBox->Focus();
 		}
 
-		textEditors::IScriptTextEditor::FindReplaceOptions FindReplaceDialog::GetSelectedOptions()
+		textEditor::ITextEditor::FindReplaceOptions FindReplaceDialog::GetSelectedOptions()
 		{
-			textEditors::IScriptTextEditor::FindReplaceOptions Options = (textEditors::IScriptTextEditor::FindReplaceOptions)0;
+			textEditor::ITextEditor::FindReplaceOptions Options = (textEditor::ITextEditor::FindReplaceOptions)0;
 			if (CaseInsensitiveSearch->Checked)
-				Options = Options | textEditors::IScriptTextEditor::FindReplaceOptions::CaseInsensitive;
+				Options = Options | textEditor::ITextEditor::FindReplaceOptions::CaseInsensitive;
 			if (MatchWholeWord->Checked)
-				Options = Options | textEditors::IScriptTextEditor::FindReplaceOptions::MatchWholeWord;
+				Options = Options | textEditor::ITextEditor::FindReplaceOptions::MatchWholeWord;
 			if (UseRegEx->Checked)
-				Options = Options | textEditors::IScriptTextEditor::FindReplaceOptions::RegEx;
+				Options = Options | textEditor::ITextEditor::FindReplaceOptions::RegEx;
 			if (InSelection->Checked)
-				Options = Options | textEditors::IScriptTextEditor::FindReplaceOptions::InSelection;
+				Options = Options | textEditor::ITextEditor::FindReplaceOptions::InSelection;
 			if (IgnoreComments->Checked)
-				Options = Options | textEditors::IScriptTextEditor::FindReplaceOptions::IgnoreComments;
+				Options = Options | textEditor::ITextEditor::FindReplaceOptions::IgnoreComments;
 
 			return Options;
 		}

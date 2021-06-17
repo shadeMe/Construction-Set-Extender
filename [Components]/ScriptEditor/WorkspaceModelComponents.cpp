@@ -13,7 +13,7 @@ namespace cse
 
 		void ScriptTextMetadataHelper::SeparateScriptTextFromMetadataBlock(String^ RawScriptText, String^% OutScriptText, String^% OutMetadata)
 		{
-			ScriptParser^ TextParser = gcnew ScriptParser();
+			obScriptParsing::LineTokenizer^ TextParser = gcnew obScriptParsing::LineTokenizer();
 			StringReader^ StringParser = gcnew StringReader(RawScriptText);
 			String^ ReadLine = StringParser->ReadLine();
 			String^ CSEBlock = "";
@@ -64,7 +64,7 @@ namespace cse
 			String^ MetadataBlock = "";
 			SeparateScriptTextFromMetadataBlock(RawScriptText, OutScriptText, MetadataBlock);
 
-			ScriptParser^ TextParser = gcnew ScriptParser();
+			obScriptParsing::LineTokenizer^ TextParser = gcnew obScriptParsing::LineTokenizer();
 			StringReader^ StringParser = gcnew StringReader(MetadataBlock);
 			String^ ReadLine = StringParser->ReadLine();
 

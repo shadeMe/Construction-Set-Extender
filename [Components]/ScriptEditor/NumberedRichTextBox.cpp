@@ -453,7 +453,7 @@ namespace cse
 					UInt32 ScriptOffset = 0, CurrentOffset = 0, SkipOffset = 0;
 
 					array<String^>^ Lines = TextField->Text->Split('\n');
-					ScriptParser^ TextParser = gcnew ScriptParser();
+					obScriptParsing::LineTokenizer^ TextParser = gcnew obScriptParsing::LineTokenizer();
 					for each (String^% Itr in Lines)
 					{
 						TextParser->Tokenize(Itr, false);

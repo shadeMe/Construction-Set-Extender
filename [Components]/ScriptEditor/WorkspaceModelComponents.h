@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ScriptTextEditorInterface.h"
+#include "ITextEditor.h"
 #include "SemanticAnalysis.h"
 #include "Globals.h"
 
@@ -32,13 +32,13 @@ namespace cse
 			}
 		};
 
-		ref struct ScriptLineAnnotation : public textEditors::ILineAnchor
+		ref struct ScriptLineAnnotation : public textEditor::ILineAnchor
 		{
 		protected:
-			textEditors::ILineAnchor^ Anchor_;
+			textEditor::ILineAnchor^ Anchor_;
 			String^ Text_;
 		public:
-			ScriptLineAnnotation(textEditors::ILineAnchor^ Anchor, String^ Text)
+			ScriptLineAnnotation(textEditor::ILineAnchor^ Anchor, String^ Text)
 			{
 				Anchor_ = Anchor;
 				Text_ = Text;
@@ -93,7 +93,7 @@ namespace cse
 			MessageType		Type_;
 			MessageSource	Source_;
 		public:
-			ScriptDiagnosticMessage(textEditors::ILineAnchor^ Anchor,
+			ScriptDiagnosticMessage(textEditor::ILineAnchor^ Anchor,
 									String^ Message,
 									MessageType Type,
 									MessageSource Source)
@@ -117,7 +117,7 @@ namespace cse
 		ref struct ScriptBookmark : public ScriptLineAnnotation
 		{
 		public:
-			ScriptBookmark(textEditors::ILineAnchor^ Anchor, String^ Description)
+			ScriptBookmark(textEditor::ILineAnchor^ Anchor, String^ Description)
 				: ScriptLineAnnotation(Anchor, Description) {}
 		};
 
@@ -125,7 +125,7 @@ namespace cse
 		{
 			UInt32 Hits_;
 		public:
-			ScriptFindResult(textEditors::ILineAnchor^ Anchor, String^ Description, UInt32 Hits)
+			ScriptFindResult(textEditor::ILineAnchor^ Anchor, String^ Description, UInt32 Hits)
 				: ScriptLineAnnotation(Anchor, Description), Hits_(Hits) {}
 
 			property UInt32 Hits

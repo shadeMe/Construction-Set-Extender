@@ -55,7 +55,7 @@
     <ClCompile Include="AvalonEditTextEditor.cpp">
       <Filter>Components\TextEditors\AvalonEdit</Filter>
     </ClCompile>
-    <ClCompile Include="AvalonEditXSHD.cpp">
+    <ClCompile Include="AvalonEditSyntaxHighlighting.cpp">
       <Filter>Components\TextEditors\AvalonEdit</Filter>
     </ClCompile>
     <ClCompile Include="AuxiliaryTextEditor.cpp">
@@ -100,9 +100,6 @@
     <ClCompile Include="Preferences.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="ScriptTextEditorInterface.cpp">
-      <Filter>Components\TextEditors</Filter>
-    </ClCompile>
     <ClCompile Include="BackgroundAnalysis.cpp">
       <Filter>Components</Filter>
     </ClCompile>
@@ -118,6 +115,22 @@
     <ClCompile Include="ScriptEditorViewImplComponents.cpp">
       <Filter>Components\[REWRITE]</Filter>
     </ClCompile>
+    <ClCompile Include="ScriptEditorViewImpl.cpp">
+      <Filter>Components\[REWRITE]</Filter>
+    </ClCompile>
+    <ClCompile Include="IScriptEditorModel.cpp">
+      <Filter>Components\[REWRITE]</Filter>
+    </ClCompile>
+    <ClCompile Include="ITextEditor.cpp">
+      <Filter>Components\[REWRITE]</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptEditorModelImpl.cpp">
+      <Filter>Components\[REWRITE]</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptEditorModelImplComponents.cpp">
+      <Filter>Components\[REWRITE]</Filter>
+    </ClCompile>
+    <ClCompile Include="TextEditorFactory.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h">
@@ -147,7 +160,7 @@
     <ClInclude Include="..\..\[Common]\IncludesCLR.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="AvalonEditXSHD.h">
+    <ClInclude Include="AvalonEditSyntaxHighlighting.h">
       <Filter>Components\TextEditors\AvalonEdit</Filter>
     </ClInclude>
     <ClInclude Include="AvalonEditComponents.h">
@@ -162,7 +175,7 @@
     <ClInclude Include="AuxiliaryTextEditor.h">
       <Filter>Components\TextEditors</Filter>
     </ClInclude>
-    <ClInclude Include="ScriptTextEditorInterface.h">
+    <ClInclude Include="ITextEditor.h">
       <Filter>Components\TextEditors</Filter>
     </ClInclude>
     <ClInclude Include="FindReplaceDialog.h">
@@ -234,12 +247,43 @@
     <ClInclude Include="Macros.h">
       <Filter>Components\[REWRITE]</Filter>
     </ClInclude>
+    <ClInclude Include="ScriptEditorViewImpl.h">
+      <Filter>Components\[REWRITE]</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorModelImpl.h">
+      <Filter>Components\[REWRITE]</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorModelImplComponents.h">
+      <Filter>Components\[REWRITE]</Filter>
+    </ClInclude>
+    <ClInclude Include="TextEditorFactory.h" />
+    <ClInclude Include="IScriptEditorController.h">
+      <Filter>Components\[REWRITE]</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ImagesModern.resx">
       <Filter>Resources</Filter>
     </EmbeddedResource>
     <EmbeddedResource Include="ImagesVS2019.resx">
+      <Filter>Resources</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorCodeSnippets.resx">
+      <Filter>Resources</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorPreferences.resx">
+      <Filter>Resources</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorRefactorForm.resx">
+      <Filter>Resources</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorScriptSync.resx">
+      <Filter>Resources</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorSelectScripts.resx">
+      <Filter>Resources</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorWorkspace.resx">
       <Filter>Resources</Filter>
     </EmbeddedResource>
   </ItemGroup>
