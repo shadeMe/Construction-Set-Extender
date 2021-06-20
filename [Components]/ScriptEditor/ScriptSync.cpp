@@ -261,24 +261,24 @@ namespace cse
 				OutHasDirectives = PreprocessorData->ContainsDirectives;
 
 				auto AnalysisParams = gcnew obScriptParsing::AnalysisData::Params;
-				AnalysisParams->Ops = obScriptParsing::AnalysisData::Operation::FillVariables
-									| obScriptParsing::AnalysisData::Operation::FillControlBlocks
-									| obScriptParsing::AnalysisData::Operation::PerformBasicValidation;
+				AnalysisParams->Ops = obScriptParsing::AnalysisData::eOperation::FillVariables
+									| obScriptParsing::AnalysisData::eOperation::FillControlBlocks
+									| obScriptParsing::AnalysisData::eOperation::PerformBasicValidation;
 
 				if (preferences::SettingsHolder::Get()->Validator->CheckVarCommandNameCollisions)
-					AnalysisParams->Ops = AnalysisParams->Ops | obScriptParsing::AnalysisData::Operation::CheckVariableNameCommandCollisions;
+					AnalysisParams->Ops = AnalysisParams->Ops | obScriptParsing::AnalysisData::eOperation::CheckVariableNameCommandCollisions;
 				if (preferences::SettingsHolder::Get()->Validator->CheckVarFormNameCollisions)
-					AnalysisParams->Ops = AnalysisParams->Ops | obScriptParsing::AnalysisData::Operation::CheckVariableNameFormCollisions;
+					AnalysisParams->Ops = AnalysisParams->Ops | obScriptParsing::AnalysisData::eOperation::CheckVariableNameFormCollisions;
 				if (preferences::SettingsHolder::Get()->Validator->CountVariableRefs)
-					AnalysisParams->Ops = AnalysisParams->Ops | obScriptParsing::AnalysisData::Operation::CountVariableReferences;
+					AnalysisParams->Ops = AnalysisParams->Ops | obScriptParsing::AnalysisData::eOperation::CountVariableReferences;
 				if (preferences::SettingsHolder::Get()->Validator->NoQuestVariableRefCounting)
-					AnalysisParams->Ops = AnalysisParams->Ops | obScriptParsing::AnalysisData::Operation::SuppressQuestVariableRefCount;
+					AnalysisParams->Ops = AnalysisParams->Ops | obScriptParsing::AnalysisData::eOperation::SuppressQuestVariableRefCount;
 
-				AnalysisParams->Type = obScriptParsing::ScriptType::Object;
+				AnalysisParams->Type = obScriptParsing::eScriptType::Object;
 				if (Script->Type == componentDLLInterface::ScriptData::kScriptType_Magic)
-					AnalysisParams->Type = obScriptParsing::ScriptType::MagicEffect;
+					AnalysisParams->Type = obScriptParsing::eScriptType::MagicEffect;
 				else if (Script->Type == componentDLLInterface::ScriptData::kScriptType_Quest)
-					AnalysisParams->Type = obScriptParsing::ScriptType::Quest;
+					AnalysisParams->Type = obScriptParsing::eScriptType::Quest;
 
 				AnalysisParams->ScriptText = OutPreprocessedText;
 				AnalysisParams->ScriptCommandIdentifiers = intellisense::IntelliSenseBackend::Get()->CreateIndentifierSnapshot(

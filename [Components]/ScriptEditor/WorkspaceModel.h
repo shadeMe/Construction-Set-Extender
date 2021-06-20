@@ -71,9 +71,9 @@ namespace cse
 			virtual void	LoadFromDisk(IWorkspaceModel^ Model, String^ PathToFile);
 			virtual void	SaveToDisk(IWorkspaceModel^ Model, String^ PathToFile, bool PathIncludesFileName, String^ Extension);
 
-			virtual textEditor::ITextEditor::FindReplaceResult^
-							FindReplace(IWorkspaceModel^ Model, textEditor::ITextEditor::eFindReplaceOperation Operation,
-										String^ Query, String^ Replacement, textEditor::ITextEditor::FindReplaceOptions Options);
+			virtual textEditor::FindReplaceResult^
+							FindReplace(IWorkspaceModel^ Model, textEditor::eFindReplaceOperation Operation,
+										String^ Query, String^ Replacement, textEditor::eFindReplaceOptions Options);
 
 			virtual bool	GetOffsetViewerData(IWorkspaceModel^ Model, String^% OutText, void** OutBytecode, UInt32% OutLength);
 			virtual bool	ApplyRefactor(IWorkspaceModel^ Model, IWorkspaceModel::RefactorOperation Operation, Object^ Arg);

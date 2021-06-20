@@ -8,7 +8,7 @@ namespace cse
 {
 	namespace textEditors
 	{
-		Image^ ScopeBreadcrumbManager::GetScopeIcon(obScriptParsing::Structurizer::Node::NodeType Type)
+		Image^ ScopeBreadcrumbManager::GetScopeIcon(obScriptParsing::Structurizer::Node::eNodeType Type)
 		{
 			if (DefaultIcon == nullptr)
 				DefaultIcon = Globals::ImageResources()->CreateImage("AvalonEditStructureVisualizer");
@@ -56,7 +56,7 @@ namespace cse
 			if (DataStore->Valid)
 			{
 				Root->Text = Data->Name;
-				Root->Tag = gcnew CrumbData(BoundParent, gcnew obScriptParsing::Structurizer::Node(obScriptParsing::Structurizer::Node::NodeType::Invalid, 1, 1, Data->Name));
+				Root->Tag = gcnew CrumbData(BoundParent, gcnew obScriptParsing::Structurizer::Node(obScriptParsing::Structurizer::Node::eNodeType::Invalid, 1, 1, Data->Name));
 
 				for each (auto Itr in DataStore->Output)
 					CreateNewCrumb(Itr, Root, false);
@@ -145,7 +145,7 @@ namespace cse
 
 			Root = gcnew DotNetBar::CrumbBarItem();
 			Root->ForeColor = Control::DefaultForeColor;
-			Root->Image = GetScopeIcon(obScriptParsing::Structurizer::Node::NodeType::Invalid);
+			Root->Image = GetScopeIcon(obScriptParsing::Structurizer::Node::eNodeType::Invalid);
 
 			ParentLineChangedHandler = gcnew EventHandler(this, &ScopeBreadcrumbManager::Parent_LineChanged);
 			ParentBGAnalysisCompleteHandler = gcnew scriptEditor::SemanticAnalysisCompleteEventHandler(this, &ScopeBreadcrumbManager::Parent_BackgroundAnalysisComplete);

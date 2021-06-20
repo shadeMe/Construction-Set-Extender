@@ -41,6 +41,110 @@ ViewComponent::~ViewComponent()
 	EventRouter = nullptr;
 }
 
+IForm^ ViewComponent::AsForm()
+{
+	if (Type_ != eComponentType::Form)
+		return nullptr;
+
+	return safe_cast<IForm^>(this);
+}
+
+IButton^ ViewComponent::AsButton()
+{
+	if (Type_ != eComponentType::Button)
+		return nullptr;
+
+	return safe_cast<IButton^>(this);
+}
+
+IComboBox^ ViewComponent::AsComboBox()
+{
+	if (Type_ != eComponentType::ComboBox)
+		return nullptr;
+
+	return safe_cast<IComboBox^>(this);
+}
+
+ILabel^ ViewComponent::AsLabel()
+{
+	if (Type_ != eComponentType::Label)
+		return nullptr;
+
+	return safe_cast<ILabel^>(this);
+}
+
+ITabStrip^ ViewComponent::AsTabStrip()
+{
+	if (Type_ != eComponentType::TabStrip)
+		return nullptr;
+
+	return safe_cast<ITabStrip^>(this);
+}
+
+ITabStripItem^ ViewComponent::AsTabStripItem()
+{
+	if (Type_ != eComponentType::TabStripItem)
+		return nullptr;
+
+	return safe_cast<ITabStripItem^>(this);
+}
+
+IObjectListView^ ViewComponent::AsObjectListView()
+{
+	if (Type_ != eComponentType::ObjectListView)
+		return nullptr;
+
+	return safe_cast<IObjectListView^>(this);
+}
+
+IObjectListViewColumn^ ViewComponent::AsObjectListViewColumn()
+{
+	if (Type_ != eComponentType::ObjectListViewColumn)
+		return nullptr;
+
+	return safe_cast<IObjectListViewColumn^>(this);
+}
+
+ICircularProgress^ ViewComponent::AsCircularProgress()
+{
+	if (Type_ != eComponentType::CircularProgress)
+		return nullptr;
+
+	return safe_cast<ICircularProgress^>(this);
+}
+
+IDockablePane^ ViewComponent::AsDockablePane()
+{
+	if (Type_ != eComponentType::DockablePane)
+		return nullptr;
+
+	return safe_cast<IDockablePane^>(this);
+}
+
+ICrumbBar^ ViewComponent::AsCrumbBar()
+{
+	if (Type_ != eComponentType::CrumbBar)
+		return nullptr;
+
+	return safe_cast<ICrumbBar^>(this);
+}
+
+ICrumbBarItem^ ViewComponent::AsCrumbBarItem()
+{
+	if (Type_ != eComponentType::CrumbBarItem)
+		return nullptr;
+
+	return safe_cast<ICrumbBarItem^>(this);
+}
+
+IContainer^ ViewComponent::AsContainer()
+{
+	if (Type_ != eComponentType::Container)
+		return nullptr;
+
+	return safe_cast<IContainer^>(this);
+}
+
 ViewComponent^ ViewComponent::FromControl(Control^ Control)
 {
 	return safe_cast<ViewComponent^>(Control->Tag);
@@ -380,20 +484,27 @@ void ComboBox::Handler_SelectedIndexChanged(Object^ Sender, EventArgs^ E)
 	{
 	case eSourceType::ComboBoxItem:
 		EventArgs->SelectedItem = ComboBoxItem->SelectedItem;
-		EventArgs->SelectedItemText = ComboBoxItem->SelectedText;
 		break;
 	case eSourceType::ComboBoxEx:
 		EventArgs->SelectedItem = ComboBoxEx->SelectedItem;
-		EventArgs->SelectedItemText = ComboBoxEx->SelectedText;
 		break;
 	}
 
 	RaiseEvent(IComboBox::eEvent::SelectionChanged, EventArgs);
 }
 
+void ComboBox::Handler_KeyDown(Object^ Sender, KeyEventArgs^ E)
+{
+	auto EventArgs = gcnew IComboBox::KeyDownEventArgs;
+	EventArgs->KeyEvent = E;
+
+	RaiseEvent(IComboBox::eEvent::KeyDown, EventArgs);
+}
+
 void ComboBox::InitEventHandlers()
 {
 	DelegateSelectedIndexChanged = gcnew EventHandler(this, &ComboBox::Handler_SelectedIndexChanged);
+	DelegateKeyDown = gcnew KeyEventHandler(this, &ComboBox::Handler_KeyDown);
 
 	switch (SourceType)
 	{
@@ -402,6 +513,7 @@ void ComboBox::InitEventHandlers()
 		break;
 	case eSourceType::ComboBoxEx:
 		ComboBoxEx->SelectedIndexChanged += DelegateSelectedIndexChanged;
+		ComboBoxEx->KeyDown += DelegateKeyDown;
 		break;
 	}
 }
@@ -415,20 +527,22 @@ void ComboBox::DeinitEventHandlers()
 		break;
 	case eSourceType::ComboBoxEx:
 		ComboBoxEx->SelectedIndexChanged -= DelegateSelectedIndexChanged;
+		ComboBoxEx->KeyDown -= DelegateKeyDown;
 		break;
 	}
 
 	SAFEDELETE_CLR(DelegateSelectedIndexChanged);
+	SAFEDELETE_CLR(DelegateKeyDown);
 }
 
-System::String^ ComboBox::GetterSelectionText()
+System::String^ ComboBox::GetterText()
 {
 	switch (SourceType)
 	{
 	case eSourceType::ComboBoxItem:
-		return ComboBoxItem->SelectedText;
+		return ComboBoxItem->Text;
 	case eSourceType::ComboBoxEx:
-		return ComboBoxEx->SelectedText;
+		return ComboBoxEx->Text;
 	}
 
 	return nullptr;
@@ -447,15 +561,15 @@ System::Object^ ComboBox::GetterSelection()
 	return nullptr;
 }
 
-void ComboBox::SetterSelectionText(String^ Value)
+void ComboBox::SetterText(String^ Value)
 {
 	switch (SourceType)
 	{
 	case eSourceType::ComboBoxItem:
-		ComboBoxItem->SelectedText = Value;
+		ComboBoxItem->Text = Value;
 		break;
 	case eSourceType::ComboBoxEx:
-		ComboBoxEx->SelectedText = Value;
+		ComboBoxEx->Text = Value;
 		break;
 	}
 }
@@ -496,7 +610,7 @@ ComboBox::~ComboBox()
 	ComboBoxItem = nullptr;
 }
 
-void ComboBox::AddDropdownItem(String^ NewItem)
+void ComboBox::AddDropdownItem(Object^ NewItem)
 {
 	switch (SourceType)
 	{
@@ -522,8 +636,8 @@ void ComboBox::ClearDropdownItems()
 	}
 }
 
-Label::Label(DotNetBar::LabelItem^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter)
-	: ViewComponent(eComponentType::Label, ViewRole, EventRouter)
+Label::Label(DotNetBar::LabelItem^ Source, eViewRole ViewRole)
+	: ViewComponent(eComponentType::Label, ViewRole, nullptr)
 {
 	this->Source = Source;
 }
@@ -533,10 +647,11 @@ Label::~Label()
 	Source = nullptr;
 }
 
-TabStripItem::TabStripItem(DotNetBar::SuperTabItem^ Source)
+TabStripItem::TabStripItem(DotNetBar::SuperTabItem^ Source, ITabStrip^ ParentTabStrip)
 	: ViewComponent(eComponentType::TabStripItem, eViewRole::None, nullptr)
 {
 	this->Source_ = Source;
+	this->ParentTabStrip_ = ParentTabStrip;
 	Tag_ = nullptr;
 }
 
@@ -544,6 +659,7 @@ TabStripItem::~TabStripItem()
 {
 	Tag_ = nullptr;
 	Source_ = nullptr;
+	ParentTabStrip_ = nullptr;
 }
 
 TabStripItem^ TabStripItem::FromSuperTabItem(SuperTabItem^ SuperTabItem)
@@ -551,10 +667,10 @@ TabStripItem^ TabStripItem::FromSuperTabItem(SuperTabItem^ SuperTabItem)
 	return safe_cast<TabStripItem^>(SuperTabItem->Tag);
 }
 
-TabStripItem^ TabStripItem::New()
+TabStripItem^ TabStripItem::New(ITabStrip^ ParentTabStrip)
 {
 	auto Source = gcnew SuperTabItem;
-	auto Wrapper = gcnew TabStripItem(Source);
+	auto Wrapper = gcnew TabStripItem(Source, ParentTabStrip);
 	Source->Tag = Wrapper;
 	return Wrapper;
 }
@@ -622,6 +738,8 @@ TabStrip::TabStrip(DotNetBar::SuperTabControl^ Source, eViewRole ViewRole, ViewC
 	Source->SelectedTabChanged += DelegateSelectedTabChanged;
 	Source->TabStripMouseClick += DelegateTabStripMouseClick;
 	Source->TabMoving += DelegateTabMoving;
+
+	Source->TabStrip->Tag = this;
 }
 
 TabStrip::~TabStrip()
@@ -636,6 +754,7 @@ TabStrip::~TabStrip()
 	SAFEDELETE_CLR(DelegateTabStripMouseClick);
 	SAFEDELETE_CLR(DelegateTabMoving);
 
+	Source->TabStrip->Tag = nullptr;
 	Source = nullptr;
 }
 
@@ -656,7 +775,7 @@ void TabStrip::ActiveTab::set(ITabStripItem^ v)
 
 ITabStripItem^ TabStrip::AllocateNewTab()
 {
-	return TabStripItem::New();
+	return TabStripItem::New(this);
 }
 
 void TabStrip::AddTab(ITabStripItem^ Tab)
@@ -800,6 +919,8 @@ void ObjectListView::Handler_ItemActivate(Object^ Sender, EventArgs^ E)
 {
 	auto EventArgs = gcnew IObjectListView::ItemActivateEventArgs;
 	EventArgs->ItemModel = Source->SelectedObject;
+	if (Source->GetType() == BrightIdeasSoftware::TreeListView::typeid)
+		EventArgs->ParentItemModel = safe_cast<BrightIdeasSoftware::TreeListView^>(Source)->GetParent(EventArgs->ItemModel);
 
 	RaiseEvent(IObjectListView::eEvent::ItemActivate, EventArgs);
 }
@@ -886,19 +1007,25 @@ List<IObjectListViewColumn^>^ ObjectListView::GetColumns()
 
 void ObjectListView::SetCanExpandGetter(IObjectListView::CanExpandGetter^ Delegate)
 {
+	if (Source->GetType() != BrightIdeasSoftware::TreeListView::typeid)
+		throw gcnew InvalidOperationException("Can only be called on a tree listview");
+
 	DelegateCanExpandGetter = Delegate;
 	safe_cast<BrightIdeasSoftware::TreeListView^>(Source)->CanExpandGetter = DelegateWrapperCanExpandGetter;
 }
 
 void ObjectListView::SetChildrenGetter(IObjectListView::ChildrenGetter^ Delegate)
 {
+	if (Source->GetType() != BrightIdeasSoftware::TreeListView::typeid)
+		throw gcnew InvalidOperationException("Can only be called on a tree listview");
+
 	DelegateChildrenGetter = Delegate;
 	safe_cast<BrightIdeasSoftware::TreeListView^>(Source)->ChildrenGetter = DelegateWrapperChildrenGetter;
 }
 
 
-CircularProgress::CircularProgress(DotNetBar::CircularProgressItem^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter)
-	: ViewComponent(eComponentType::CircularProgress, ViewRole, EventRouter)
+CircularProgress::CircularProgress(DotNetBar::CircularProgressItem^ Source, eViewRole ViewRole)
+	: ViewComponent(eComponentType::CircularProgress, ViewRole, nullptr)
 {
 	this->Source = Source;
 }
@@ -908,8 +1035,8 @@ CircularProgress::~CircularProgress()
 	Source = nullptr;
 }
 
-DockablePane::DockablePane(DockContainerItem^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter)
-	: ViewComponent(eComponentType::DockablePane, ViewRole, EventRouter)
+DockablePane::DockablePane(DockContainerItem^ Source, eViewRole ViewRole)
+	: ViewComponent(eComponentType::DockablePane, ViewRole, nullptr)
 {
 	this->Source = Source;
 }

@@ -484,19 +484,19 @@ namespace cse
 		bool ConcreteWorkspaceModel::Sanitize()
 		{
 			obScriptParsing::Sanitizer^ Agent = gcnew obScriptParsing::Sanitizer(TextEditor->GetText());
-			obScriptParsing::Sanitizer::Operation Operation;
+			obScriptParsing::Sanitizer::eOperation Operation;
 
 			if (preferences::SettingsHolder::Get()->Sanitizer->NormalizeIdentifiers)
-				Operation = Operation | obScriptParsing::Sanitizer::Operation::AnnealCasing;
+				Operation = Operation | obScriptParsing::Sanitizer::eOperation::AnnealCasing;
 
 			if (preferences::SettingsHolder::Get()->Sanitizer->PrefixIfElseIfWithEval)
-				Operation = Operation | obScriptParsing::Sanitizer::Operation::EvalifyIfs;
+				Operation = Operation | obScriptParsing::Sanitizer::eOperation::EvalifyIfs;
 
 			if (preferences::SettingsHolder::Get()->Sanitizer->ApplyCompilerOverride)
-				Operation = Operation | obScriptParsing::Sanitizer::Operation::CompilerOverrideBlocks;
+				Operation = Operation | obScriptParsing::Sanitizer::eOperation::CompilerOverrideBlocks;
 
 			if (preferences::SettingsHolder::Get()->Sanitizer->IndentLines)
-				Operation = Operation | obScriptParsing::Sanitizer::Operation::IndentLines;
+				Operation = Operation | obScriptParsing::Sanitizer::eOperation::IndentLines;
 
 			bool Result = Agent->SanitizeScriptText(Operation, gcnew obScriptParsing::Sanitizer::GetSanitizedIdentifier(GetSanitizedIdentifier));
 			if (Result)
@@ -1129,11 +1129,11 @@ namespace cse
 			Concrete->TextEditor->SaveScriptToDisk(PathToFile, PathIncludesFileName, Concrete->LongDescription, Extension);
 		}
 
-		textEditor::ITextEditor::FindReplaceResult^ ConcreteWorkspaceModelController::FindReplace(IWorkspaceModel^ Model,
-																						textEditor::ITextEditor::eFindReplaceOperation Operation,
+		textEditor::FindReplaceResult^ ConcreteWorkspaceModelController::FindReplace(IWorkspaceModel^ Model,
+																						textEditor::eFindReplaceOperation Operation,
 																						String^ Query,
 																						String^ Replacement,
-																						textEditor::ITextEditor::FindReplaceOptions Options)
+																						textEditor::eFindReplaceOptions Options)
 		{
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;

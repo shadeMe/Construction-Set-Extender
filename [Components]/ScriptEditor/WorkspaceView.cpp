@@ -617,9 +617,9 @@ namespace cse
 				return "Script " + PerScript->ParentDescription;
 			}
 
-			if (E->GetType() == textEditor::ITextEditor::FindReplaceResult::HitData::typeid)
+			if (E->GetType() == textEditor::FindReplaceResult::HitData::typeid)
 			{
-				auto PerLine = safe_cast<textEditor::ITextEditor::FindReplaceResult::HitData^>(E);
+				auto PerLine = safe_cast<textEditor::FindReplaceResult::HitData^>(E);
 				return PerLine->Text;
 			}
 
@@ -628,10 +628,10 @@ namespace cse
 
 		System::Object^ FindReplaceAllResults::LineAspectGetter(Object^ E)
 		{
-			if (E->GetType() != textEditor::ITextEditor::FindReplaceResult::HitData::typeid)
+			if (E->GetType() != textEditor::FindReplaceResult::HitData::typeid)
 				return String::Empty;
 
-			auto Model = safe_cast<textEditor::ITextEditor::FindReplaceResult::HitData^>(E);
+			auto Model = safe_cast<textEditor::FindReplaceResult::HitData^>(E);
 			return Model->Line;
 		}
 
@@ -643,9 +643,9 @@ namespace cse
 				return PerScript->TotalHitCount;
 			}
 
-			if (E->GetType() == textEditor::ITextEditor::FindReplaceResult::HitData::typeid)
+			if (E->GetType() == textEditor::FindReplaceResult::HitData::typeid)
 			{
-				auto PerLine = safe_cast<textEditor::ITextEditor::FindReplaceResult::HitData^>(E);
+				auto PerLine = safe_cast<textEditor::FindReplaceResult::HitData^>(E);
 				return PerLine->Hits;
 			}
 
@@ -2466,9 +2466,9 @@ namespace cse
 			Object^ Selection = GlobalFindList->SelectedObject;
 			if (Selection)
 			{
-				if (Selection->GetType() == textEditor::ITextEditor::FindReplaceResult::HitData::typeid)
+				if (Selection->GetType() == textEditor::FindReplaceResult::HitData::typeid)
 				{
-					textEditor::ITextEditor::FindReplaceResult::HitData^ Data = (textEditor::ITextEditor::FindReplaceResult::HitData^)Selection;
+					textEditor::FindReplaceResult::HitData^ Data = (textEditor::FindReplaceResult::HitData^)Selection;
 					FindReplaceAllResults::PerScriptData^ ParentData = (FindReplaceAllResults::PerScriptData^)GlobalFindList->GetParent(Selection);
 
 					if (ParentData->ParentModel)
@@ -3477,8 +3477,8 @@ namespace cse
 			}
 		}
 
-		int ConcreteWorkspaceViewController::FindReplace(IWorkspaceView^ View, textEditor::ITextEditor::eFindReplaceOperation Operation,
-														  String^ Query, String^ Replacement, textEditor::ITextEditor::FindReplaceOptions Options, bool Global)
+		int ConcreteWorkspaceViewController::FindReplace(IWorkspaceView^ View, textEditor::eFindReplaceOperation Operation,
+														  String^ Query, String^ Replacement, textEditor::eFindReplaceOptions Options, bool Global)
 		{
 			Debug::Assert(View != nullptr);
 			ConcreteWorkspaceView^ Concrete = (ConcreteWorkspaceView^)View;
@@ -3497,7 +3497,7 @@ namespace cse
 				for each (auto Itr in Concrete->AssociatedModels)
 				{
 					IWorkspaceModel^ Model = Itr.Key;
-					textEditor::ITextEditor::FindReplaceResult^ Result = Concrete->ModelController()->FindReplace(Model,
+					textEditor::FindReplaceResult^ Result = Concrete->ModelController()->FindReplace(Model,
 																														 Operation,
 																														 Query,
 																														 Replacement,
@@ -3505,7 +3505,7 @@ namespace cse
 					if (Result->HasError)
 						break;
 
-					if (Result->TotalHitCount)
+					if (Result->TotalHits)
 						GlobalResult->Add(Model, Result);
 				}
 
@@ -3525,15 +3525,15 @@ namespace cse
 			}
 			else
 			{
-				textEditor::ITextEditor::FindReplaceResult^ Result = Concrete->GetActiveModel()->Controller->FindReplace(Concrete->GetActiveModel(),
+				textEditor::FindReplaceResult^ Result = Concrete->GetActiveModel()->Controller->FindReplace(Concrete->GetActiveModel(),
 																																Operation,
 																																Query,
 																																Replacement,
 																																Options);
-				if (Result->TotalHitCount && Operation != textEditor::ITextEditor::eFindReplaceOperation::CountMatches)
+				if (Result->TotalHits && Operation != textEditor::eFindReplaceOperation::CountMatches)
 					Concrete->ShowFindResultList();
 
-				return Result->TotalHitCount;
+				return Result->TotalHits;
 			}
 		}
 

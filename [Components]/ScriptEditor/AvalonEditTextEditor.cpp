@@ -99,7 +99,7 @@ int AvalonEditTextEditor::PerformFindReplaceOperationOnSegment(System::Text::Reg
 																ITextEditor::eFindReplaceOperation Operation,
 																AvalonEdit::Document::DocumentLine^ Line,
 																String^ Replacement,
-																ITextEditor::FindReplaceOptions Options)
+																ITextEditor::eFindReplaceOptions Options)
 {
 	int Hits = 0, SearchStartOffset = 0;
 	String^ CurrentLine = TextField->Document->GetText(Line);
@@ -117,7 +117,7 @@ int AvalonEditTextEditor::PerformFindReplaceOperationOnSegment(System::Text::Reg
 					int Offset = Line->Offset + Itr->Index, Length = Itr->Length;
 					Hits++;
 
-					if (Options.HasFlag(ITextEditor::FindReplaceOptions::IgnoreComments) == false || GetCharIndexInsideCommentSegment(Offset) == false)
+					if (Options.HasFlag(ITextEditor::eFindReplaceOptions::IgnoreComments) == false || GetCharIndexInsideCommentSegment(Offset) == false)
 					{
 						if (Operation == ITextEditor::eFindReplaceOperation::Replace)
 						{
@@ -1087,81 +1087,79 @@ void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::In
 	if (IsMiddleMouseScrolling)
 		StopMiddleMouseScroll();
 
-	bool IntelliSenseHandled = RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::Event::KeyDown, E, nullptr);
-	if (IntelliSenseHandled == false)
-	{
-		switch (E->Key)
-		{
-		case System::Windows::Input::Key::F:
-			{
-				bool Default = preferences::SettingsHolder::Get()->FindReplace->ShowInlineSearchPanel;
-				if (Default && E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control ||
-					(Default == false && E->KeyboardDevice->Modifiers.HasFlag(System::Windows::Input::ModifierKeys::Control) &&
-					E->KeyboardDevice->Modifiers.HasFlag(System::Windows::Input::ModifierKeys::Shift)))
-				{
-					HandleKeyEventForKey(E->Key);
-					E->Handled = true;
-				}
-
-				if (E->Handled)
-					ToggleSearchPanel(true);
-			}
-
-			break;
-		case System::Windows::Input::Key::Escape:
-			LineTracker->ClearFindResultSegments();
-			ToggleSearchPanel(false);
-
-			break;
-		case System::Windows::Input::Key::Up:
-			if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
-			{
-				SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::SuppressAlways);
-
-				MoveTextSegment(TextField->Document->GetLineByOffset(Caret), eMoveSegmentDirection::Up);
-
-				SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::Propagate);
-
-				HandleKeyEventForKey(E->Key);
-				E->Handled = true;
-			}
-
-			break;
-		case System::Windows::Input::Key::Down:
-			if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
-			{
-				SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::SuppressAlways);
-
-				MoveTextSegment(TextField->Document->GetLineByOffset(Caret), eMoveSegmentDirection::Down);
-
-				SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::Propagate);
-
-				HandleKeyEventForKey(E->Key);
-				E->Handled = true;
-			}
-
-			break;
-		case System::Windows::Input::Key::Z:
-		case System::Windows::Input::Key::Y:
-			if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
-				SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::SuppressOnce);
-
-			break;
-		}
-	}
-	else
+	// return early if someone further up the event chain handled the event
+	if (OnKeyDown(E))
 	{
 		HandleKeyEventForKey(E->Key);
 		E->Handled = true;
+		return;
 	}
 
-	if (E->Handled == false)
+	if (RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::Event::KeyDown, E, nullptr))
 	{
-		if (OnKeyDown(E))
+		HandleKeyEventForKey(E->Key);
+		E->Handled = true;
+		return;
+	}
+
+
+	switch (E->Key)
+	{
+	case System::Windows::Input::Key::F:
+	{
+		bool Default = preferences::SettingsHolder::Get()->FindReplace->ShowInlineSearchPanel;
+		if (Default && E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control ||
+			(Default == false && E->KeyboardDevice->Modifiers.HasFlag(System::Windows::Input::ModifierKeys::Control) &&
+				E->KeyboardDevice->Modifiers.HasFlag(System::Windows::Input::ModifierKeys::Shift)))
 		{
 			HandleKeyEventForKey(E->Key);
 			E->Handled = true;
 		}
+
+		if (E->Handled)
+			ToggleSearchPanel(true);
+	}
+
+	break;
+	case System::Windows::Input::Key::Escape:
+		LineTracker->ClearFindResultSegments();
+		ToggleSearchPanel(false);
+
+		break;
+	case System::Windows::Input::Key::Up:
+		if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
+		{
+			SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::SuppressAlways);
+
+			MoveTextSegment(TextField->Document->GetLineByOffset(Caret), eMoveSegmentDirection::Up);
+
+			SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::Propagate);
+
+			HandleKeyEventForKey(E->Key);
+			E->Handled = true;
+		}
+
+		break;
+	case System::Windows::Input::Key::Down:
+		if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
+		{
+			SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::SuppressAlways);
+
+			MoveTextSegment(TextField->Document->GetLineByOffset(Caret), eMoveSegmentDirection::Down);
+
+			SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::Propagate);
+
+			HandleKeyEventForKey(E->Key);
+			E->Handled = true;
+		}
+
+		break;
+	case System::Windows::Input::Key::Z:
+	case System::Windows::Input::Key::Y:
+		if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
+			SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::SuppressOnce);
+
+		break;
 	}
 }
 
@@ -1925,7 +1923,7 @@ void AvalonEditTextEditor::SaveScriptToDisk(String^ Path, bool PathIncludesFileN
 }
 
 ITextEditor::FindReplaceResult^ AvalonEditTextEditor::FindReplace(ITextEditor::eFindReplaceOperation Operation,
-																		String^ Query, String^ Replacement, ITextEditor::FindReplaceOptions Options)
+																		String^ Query, String^ Replacement, ITextEditor::eFindReplaceOptions Options)
 {
 	ITextEditor::FindReplaceResult^ Result = gcnew ITextEditor::FindReplaceResult;
 
@@ -1939,17 +1937,17 @@ ITextEditor::FindReplaceResult^ AvalonEditTextEditor::FindReplace(ITextEditor::e
 	{
 		String^ Pattern = "";
 
-		if (Options.HasFlag(ITextEditor::FindReplaceOptions::RegEx))
+		if (Options.HasFlag(ITextEditor::eFindReplaceOptions::RegEx))
 			Pattern = Query;
 		else
 		{
 			Pattern = System::Text::RegularExpressions::Regex::Escape(Query);
-			if (Options.HasFlag(ITextEditor::FindReplaceOptions::MatchWholeWord))
+			if (Options.HasFlag(ITextEditor::eFindReplaceOptions::MatchWholeWord))
 				Pattern = "\\b" + Pattern + "\\b";
 		}
 
 		System::Text::RegularExpressions::Regex^ Parser = nullptr;
-		if (Options.HasFlag(ITextEditor::FindReplaceOptions::CaseInsensitive))
+		if (Options.HasFlag(ITextEditor::eFindReplaceOptions::CaseInsensitive))
 		{
 			Parser = gcnew System::Text::RegularExpressions::Regex(Pattern,
 																	System::Text::RegularExpressions::RegexOptions::IgnoreCase | System::Text::RegularExpressions::RegexOptions::Singleline);
@@ -1962,7 +1960,7 @@ ITextEditor::FindReplaceResult^ AvalonEditTextEditor::FindReplace(ITextEditor::e
 
 		AvalonEdit::Editing::Selection^ TextSelection = TextField->TextArea->Selection;
 
-		if (Options.HasFlag(ITextEditor::FindReplaceOptions::InSelection))
+		if (Options.HasFlag(ITextEditor::eFindReplaceOptions::InSelection))
 		{
 			if (TextSelection->IsEmpty == false)
 			{

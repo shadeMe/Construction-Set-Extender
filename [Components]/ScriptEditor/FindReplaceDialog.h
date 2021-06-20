@@ -47,7 +47,7 @@ namespace cse
 			void										FindReplaceBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
 
 			void													CacheComboBoxStrings();
-			textEditor::ITextEditor::FindReplaceOptions		GetSelectedOptions();
+			textEditor::eFindReplaceOptions		GetSelectedOptions();
 
 			void										LoadOptions();
 			void										SaveOptions();

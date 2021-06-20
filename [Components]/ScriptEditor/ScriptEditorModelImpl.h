@@ -88,7 +88,7 @@ ref class ScriptDocument : public IScriptDocument
 
 	void ClearBookmarks();
 
-	void AddFindResult(UInt32 Line, String^ PreviewText, UInt32 Hits);
+	void AddFindResult(String^ Query, UInt32 Line, String^ PreviewText, UInt32 Hits);
 	void ClearFindResults();
 
 	String^ LoadAutoRecoveryCache();
@@ -148,8 +148,18 @@ ref class ScriptEditorDocumentModel : public IScriptEditorModel
 {
 	List<ScriptDocument^>^ ScriptDocuments;
 	ScriptDocument^ ActiveScriptDocument;
+	IScriptEditorModel::ActiveDocumentActionCollection^ ActiveActions;
+	bool SettingActiveScriptDocument;
 
 	void SetActiveScriptDocument(ScriptDocument^ New);
+
+	bool ValidateCommonActionPreconditions();
+	void ActiveAction_Copy();
+	void ActiveAction_Paste();
+	void ActiveAction_Comment();
+	void ActiveAction_Uncomment();
+	void ActiveAction_AddBookmark(Object^ Params);
+	void ActiveAction_GoToLine(Object^ Params);
 public:
 	ScriptEditorDocumentModel();
 	virtual ~ScriptEditorDocumentModel();
@@ -159,7 +169,12 @@ public:
 		virtual List<IScriptDocument^>^ get();
 		ImplPropertySetInvalid(List<IScriptDocument^>^);
 	}
-	ImplPropertyGetOnly(IScriptDocument^, ActiveDocument, ActiveScriptDocument);
+	property IScriptDocument^ ActiveDocument
+	{
+		virtual IScriptDocument^ get();
+		virtual void set(IScriptDocument^ v);
+	}
+	ImplPropertyGetOnly(IScriptEditorModel::ActiveDocumentActionCollection^, ActiveDocumentActions, ActiveActions);
 
 	virtual event IScriptEditorModel::ActiveDocumentChangedEventHandler^ ActiveDocumentChanged;
 

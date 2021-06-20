@@ -39,55 +39,50 @@ interface class ILineAnchor
 	property bool Valid;
 };
 
+static enum class eFindReplaceOperation
+{
+	Find,
+	Replace,
+	CountMatches
+};
+
+[Flags]
+static enum class eFindReplaceOptions
+{
+	None			= 0,
+	InSelection		= 1 << 0,
+	MatchWholeWord	= 1 << 1,
+	CaseInsensitive	= 1 << 2,
+	RegEx			= 1 << 3,
+	IgnoreComments	= 1 << 4
+};
+
+ref struct FindReplaceResult
+{
+	ref struct HitData
+	{
+		UInt32 Line;
+		String^ Text;		// the line's text after replacement
+		UInt32 Hits;		// no of hits in the line
+
+		HitData(UInt32 Line, String^ Text, UInt32 Hits);
+	};
+
+	List<HitData^>^ Hits;
+	bool HasError;
+
+	FindReplaceResult();
+
+	property int TotalHits
+	{
+		int get();
+	}
+
+	void Add(UInt32 Line, String^ Text, UInt32 HitsInLine);
+};
 
 interface class ITextEditor : public intellisense::IIntelliSenseInterfaceConsumer
 {
-	static enum class eFindReplaceOperation
-	{
-		Find,
-		Replace,
-		CountMatches
-	};
-
-	[Flags]
-	static enum class FindReplaceOptions
-	{
-		None			= 0,
-		InSelection		= 1 << 0,
-		MatchWholeWord	= 1 << 1,
-		CaseInsensitive	= 1 << 2,
-		RegEx			= 1 << 3,
-		IgnoreComments	= 1 << 4
-	};
-
-	ref struct FindReplaceResult
-	{
-		ref struct HitData
-		{
-			UInt32 Line;
-			String^ Text;		// the line's text after replacement
-			UInt32 Hits;		// no of hits in the line
-
-			HitData(UInt32 Line, String^ Text, UInt32 Hits);
-		};
-
-		List<HitData^>^ Hits;
-		bool HasError;
-
-		FindReplaceResult();
-
-		property int TotalHitCount
-		{
-			int get();
-		}
-
-		void Add(UInt32 Line, String^ Text, UInt32 HitsInLine);
-	};
-
-	event intellisense::IntelliSenseInputEventHandler^ IntelliSenseInput;
-	event intellisense::IntelliSenseInsightHoverEventHandler^ IntelliSenseInsightHover;
-	event intellisense::IntelliSenseContextChangeEventHandler^ IntelliSenseContextChange;
-
 	event TextEditorScriptModifiedEventHandler^ ScriptModified;
 	event KeyEventHandler^ KeyDown;
 	event TextEditorMouseClickEventHandler^ MouseClick;
@@ -104,7 +99,7 @@ interface class ITextEditor : public intellisense::IIntelliSenseInterfaceConsume
 	property bool Modified;
 
 	// methods
-	void Bind();		// called when the parent model is bound to a view, i.e., when the text editor is activated
+	void Bind();	// called when the parent model is bound to a view, i.e., when the text editor is activated
 	void Unbind();	// opposite of the above
 
 	String^ GetText();
@@ -124,7 +119,7 @@ interface class ITextEditor : public intellisense::IIntelliSenseInterfaceConsume
 	void LoadFileFromDisk(String^ Path);
 	void SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ DefaultName, String^ DefaultExtension);
 
-	FindReplaceResult^ FindReplace(eFindReplaceOperation Operation, String^ Query, String^ Replacement, FindReplaceOptions Options);
+	FindReplaceResult^ FindReplace(eFindReplaceOperation Operation, String^ Query, String^ Replacement, eFindReplaceOptions Options);
 
 	void BeginUpdate(void);
 	void EndUpdate(bool FlagModification);
@@ -134,6 +129,13 @@ interface class ITextEditor : public intellisense::IIntelliSenseInterfaceConsume
 
 	void InitializeState(String^ ScriptText, int CaretPosition);
 	ILineAnchor^ CreateLineAnchor(UInt32 Line);
+
+	void InvokeDefaultCopy();
+	void InvokeDefaultPaste();
+	void CommentLine(UInt32 Line);
+	void CommentSelection();
+	void UncommentLine(UInt32 Line);
+	void UncommentSelection();
 };
 
 

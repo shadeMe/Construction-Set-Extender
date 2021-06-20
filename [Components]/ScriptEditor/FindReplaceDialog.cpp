@@ -255,7 +255,7 @@ namespace cse
 
 			CacheComboBoxStrings();
 			ParentView->Controller->FindReplace(ParentView,
-												textEditor::ITextEditor::eFindReplaceOperation::Find,
+												textEditor::eFindReplaceOperation::Find,
 												Query,
 												"",
 												GetSelectedOptions(),
@@ -271,7 +271,7 @@ namespace cse
 
 			CacheComboBoxStrings();
 			ParentView->Controller->FindReplace(ParentView,
-												textEditor::ITextEditor::eFindReplaceOperation::Replace,
+												textEditor::eFindReplaceOperation::Replace,
 												Query,
 												Replacement,
 												GetSelectedOptions(),
@@ -286,7 +286,7 @@ namespace cse
 
 			CacheComboBoxStrings();
 			ParentView->Controller->FindReplace(ParentView,
-												textEditor::ITextEditor::eFindReplaceOperation::Find,
+												textEditor::eFindReplaceOperation::Find,
 												Query,
 												"",
 												GetSelectedOptions(),
@@ -302,7 +302,7 @@ namespace cse
 
 			CacheComboBoxStrings();
 			ParentView->Controller->FindReplace(ParentView,
-												textEditor::ITextEditor::eFindReplaceOperation::Replace,
+												textEditor::eFindReplaceOperation::Replace,
 												Query,
 												Replacement,
 												GetSelectedOptions(),
@@ -317,7 +317,7 @@ namespace cse
 
 			CacheComboBoxStrings();
 			int Hits = ParentView->Controller->FindReplace(ParentView,
-														   textEditor::ITextEditor::eFindReplaceOperation::CountMatches,
+														   textEditor::eFindReplaceOperation::CountMatches,
 														   Query,
 														   "",
 														   GetSelectedOptions(),
@@ -433,19 +433,19 @@ namespace cse
 			QueryBox->Focus();
 		}
 
-		textEditor::ITextEditor::FindReplaceOptions FindReplaceDialog::GetSelectedOptions()
+		textEditor::eFindReplaceOptions FindReplaceDialog::GetSelectedOptions()
 		{
-			textEditor::ITextEditor::FindReplaceOptions Options = (textEditor::ITextEditor::FindReplaceOptions)0;
+			textEditor::eFindReplaceOptions Options = (textEditor::eFindReplaceOptions)0;
 			if (CaseInsensitiveSearch->Checked)
-				Options = Options | textEditor::ITextEditor::FindReplaceOptions::CaseInsensitive;
+				Options = Options | textEditor::eFindReplaceOptions::CaseInsensitive;
 			if (MatchWholeWord->Checked)
-				Options = Options | textEditor::ITextEditor::FindReplaceOptions::MatchWholeWord;
+				Options = Options | textEditor::eFindReplaceOptions::MatchWholeWord;
 			if (UseRegEx->Checked)
-				Options = Options | textEditor::ITextEditor::FindReplaceOptions::RegEx;
+				Options = Options | textEditor::eFindReplaceOptions::RegEx;
 			if (InSelection->Checked)
-				Options = Options | textEditor::ITextEditor::FindReplaceOptions::InSelection;
+				Options = Options | textEditor::eFindReplaceOptions::InSelection;
 			if (IgnoreComments->Checked)
-				Options = Options | textEditor::ITextEditor::FindReplaceOptions::IgnoreComments;
+				Options = Options | textEditor::eFindReplaceOptions::IgnoreComments;
 
 			return Options;
 		}

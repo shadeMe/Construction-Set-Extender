@@ -164,12 +164,12 @@ namespace cse
 		Good = false;
 	}
 
-	obScriptParsing::ScriptTokenType obScriptParsing::LineTokenizer::GetFirstTokenType(void)
+	obScriptParsing::eScriptTokenType obScriptParsing::LineTokenizer::GetFirstTokenType(void)
 	{
 		if (Good)
 			return GetScriptTokenType(Tokens[0]);
 		else
-			return ScriptTokenType::None;
+			return eScriptTokenType::None;
 	}
 
 	int obScriptParsing::LineTokenizer::GetCommentTokenIndex(int SearchEndIndex)
@@ -228,53 +228,53 @@ namespace cse
 		return false;
 	}
 
-	obScriptParsing::ScriptTokenType obScriptParsing::LineTokenizer::GetScriptTokenType(String^ ScriptToken)
+	obScriptParsing::eScriptTokenType obScriptParsing::LineTokenizer::GetScriptTokenType(String^ ScriptToken)
 	{
-		ScriptTokenType Result = ScriptTokenType::None;
+		eScriptTokenType Result = eScriptTokenType::None;
 		if (ScriptToken->Length)
 		{
 			if (!String::Compare(ScriptToken, "scn", true) || !String::Compare(ScriptToken, "scriptName", true))
-				Result = ScriptTokenType::ScriptName;
+				Result = eScriptTokenType::ScriptName;
 			else if (Variable::GetVariableDataType(ScriptToken) != Variable::DataType::None)
-				Result = ScriptTokenType::Variable;
+				Result = eScriptTokenType::Variable;
 			else if (ScriptToken[0] == ';')
-				Result = ScriptTokenType::Comment;
+				Result = eScriptTokenType::Comment;
 			else if (!String::Compare(ScriptToken, "begin", true))
-				Result = ScriptTokenType::Begin;
+				Result = eScriptTokenType::Begin;
 			else if (!String::Compare(ScriptToken, "end", true))
-				Result = ScriptTokenType::End;
+				Result = eScriptTokenType::End;
 			else if (!String::Compare(ScriptToken, "while", true))
-				Result = ScriptTokenType::While;
+				Result = eScriptTokenType::While;
 			else if (!String::Compare(ScriptToken, "foreach", true))
-				Result = ScriptTokenType::ForEach;
+				Result = eScriptTokenType::ForEach;
 			else if (!String::Compare(ScriptToken, "loop", true))
-				Result = ScriptTokenType::Loop;
+				Result = eScriptTokenType::Loop;
 			else if (!String::Compare(ScriptToken, "if", true))
-				Result = ScriptTokenType::If;
+				Result = eScriptTokenType::If;
 			else if (!String::Compare(ScriptToken, "elseif", true))
-				Result = ScriptTokenType::ElseIf;
+				Result = eScriptTokenType::ElseIf;
 			else if (!String::Compare(ScriptToken, "else", true))
-				Result = ScriptTokenType::Else;
+				Result = eScriptTokenType::Else;
 			else if (!String::Compare(ScriptToken, "endif", true))
-				Result = ScriptTokenType::EndIf;
+				Result = eScriptTokenType::EndIf;
 			else if (!String::Compare(ScriptToken, "return", true))
-				Result = ScriptTokenType::Return;
+				Result = eScriptTokenType::Return;
 			else if (!String::Compare(ScriptToken, "setfunctionvalue", true))
-				Result = ScriptTokenType::SetFunctionValue;
+				Result = eScriptTokenType::SetFunctionValue;
 			else if (!String::Compare(ScriptToken, "set", true))
-				Result = ScriptTokenType::Set;
+				Result = eScriptTokenType::Set;
 			else if (!String::Compare(ScriptToken, "let", true))
-				Result = ScriptTokenType::Let;
+				Result = eScriptTokenType::Let;
 			else if (!String::Compare(ScriptToken, "call", true))
-				Result = ScriptTokenType::Call;
+				Result = eScriptTokenType::Call;
 			else if (!String::Compare(ScriptToken, "player", true) || !String::Compare(ScriptToken, "playerref", true))
-				Result = ScriptTokenType::Player;
+				Result = eScriptTokenType::Player;
 			else if (!String::Compare(ScriptToken, "seteventhandler", true))
-				Result = ScriptTokenType::SetEventHandler;
+				Result = eScriptTokenType::SetEventHandler;
 			else if (!String::Compare(ScriptToken, "removeeventhandler", true))
-				Result = ScriptTokenType::RemoveEventHandler;
+				Result = eScriptTokenType::RemoveEventHandler;
 			else if (!String::Compare(ScriptToken, "dispatchevent", true))
-				Result = ScriptTokenType::DispatchEvent;
+				Result = eScriptTokenType::DispatchEvent;
 		}
 
 		return Result;
@@ -390,7 +390,7 @@ namespace cse
 		}
 	}
 
-	obScriptParsing::ControlBlock::ControlBlock(ControlBlockType Type, UInt32 Start, UInt32 Indents, ControlBlock^ Parent) :
+	obScriptParsing::ControlBlock::ControlBlock(eControlBlockType Type, UInt32 Start, UInt32 Indents, ControlBlock^ Parent) :
 		Type(Type), StartLine(Start), EndLine(0), IndentLevel(Indents), Parent(Parent), BasicBlock(true), OuterEndLine(0),
 		ChildBlocks(gcnew List<ControlBlock^>)
 	{
@@ -403,64 +403,64 @@ namespace cse
 		return EndLine == 0;
 	}
 
-	obScriptParsing::ScriptBlock::ScriptBlock(UInt32 Start, UInt32 Indents, ScriptBlockType Type, bool Override) :
-		ControlBlock(ControlBlockType::ScriptBlock, Start, Indents, nullptr), SBAttribute(ScriptBlockAttribute::None), SBType(Type), CompilerOverride(Override)
+	obScriptParsing::ScriptBlock::ScriptBlock(UInt32 Start, UInt32 Indents, eScriptBlockType Type, bool Override) :
+		ControlBlock(eControlBlockType::ScriptBlock, Start, Indents, nullptr), ScriptBlockAttribute(eScriptBlockAttribute::None), ScriptBlockType(Type), CompilerOverride(Override)
 	{
-		switch (SBType)
+		switch (ScriptBlockType)
 		{
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnActivate:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnActorEquip:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnActorUnequip:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnAdd:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnAlarm:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnAlarmVictim:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnDeath:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnDrop:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnEquip:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnHit:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnHitWith:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnKnockout:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnLoad:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnMagicEffectHit:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnMurder:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnPackageChange:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnPackageDone:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnPackageStart:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnReset:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnSell:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnTrigger:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnTriggerActor:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnTriggerMob:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnUnequip:
-			SBAttribute = ScriptBlockAttribute::ReferenceSpecific;
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnActivate:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnActorEquip:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnActorUnequip:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnAdd:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnAlarm:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnAlarmVictim:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnDeath:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnDrop:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnEquip:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnHit:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnHitWith:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnKnockout:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnLoad:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnMagicEffectHit:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnMurder:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnPackageChange:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnPackageDone:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnPackageStart:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnReset:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnSell:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnTrigger:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnTriggerActor:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnTriggerMob:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnUnequip:
+			ScriptBlockAttribute = eScriptBlockAttribute::ReferenceSpecific;
 			break;
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::ScriptEffectFinish:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::ScriptEffectStart:
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::ScriptEffectUpdate:
-			SBAttribute = ScriptBlockAttribute::MagicEffect;
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::ScriptEffectFinish:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::ScriptEffectStart:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::ScriptEffectUpdate:
+			ScriptBlockAttribute = eScriptBlockAttribute::MagicEffect;
 			break;
 		default:
-			SBAttribute = ScriptBlockAttribute::Universal;
+			ScriptBlockAttribute = eScriptBlockAttribute::Universal;
 			break;
 		}
 	}
 
-	bool obScriptParsing::ScriptBlock::IsBlockValid(ScriptType Type)
+	bool obScriptParsing::ScriptBlock::IsBlockValid(eScriptType Type)
 	{
 		bool Result = true;
 
 		switch (Type)
 		{
-		case ScriptType::MagicEffect:
-			if (SBAttribute == ScriptBlockAttribute::ReferenceSpecific)
+		case eScriptType::MagicEffect:
+			if (ScriptBlockAttribute == eScriptBlockAttribute::ReferenceSpecific)
 				Result = false;
 			break;
-		case ScriptType::Object:
-			if (SBAttribute == ScriptBlockAttribute::MagicEffect)
+		case eScriptType::Object:
+			if (ScriptBlockAttribute == eScriptBlockAttribute::MagicEffect)
 				Result = false;
 			break;
-		case ScriptType::Quest:
-			if (SBAttribute != ScriptBlockAttribute::Universal)
+		case eScriptType::Quest:
+			if (ScriptBlockAttribute != eScriptBlockAttribute::Universal)
 				Result = false;
 			break;
 		}
@@ -468,73 +468,73 @@ namespace cse
 		return Result;
 	}
 
-	obScriptParsing::ScriptBlock::ScriptBlockType obScriptParsing::ScriptBlock::GetScriptBlockType(String^ TypeToken)
+	obScriptParsing::ScriptBlock::eScriptBlockType obScriptParsing::ScriptBlock::GetScriptBlockType(String^ TypeToken)
 	{
 		if (TypeToken->Length && TypeToken[0] == '_')
 			TypeToken = TypeToken->Substring(1);
 
 		if (!String::Compare(TypeToken, "GameMode", true))
-			return ScriptBlockType::GameMode;
+			return eScriptBlockType::GameMode;
 		else if (!String::Compare(TypeToken, "MenuMode", true))
-			return ScriptBlockType::MenuMode;
+			return eScriptBlockType::MenuMode;
 		else if (!String::Compare(TypeToken, "OnActivate", true))
-			return ScriptBlockType::OnActivate;
+			return eScriptBlockType::OnActivate;
 		else if (!String::Compare(TypeToken, "OnActorEquip", true))
-			return ScriptBlockType::OnActorEquip;
+			return eScriptBlockType::OnActorEquip;
 		else if (!String::Compare(TypeToken, "OnActorUnequip", true))
-			return ScriptBlockType::OnActorUnequip;
+			return eScriptBlockType::OnActorUnequip;
 		else if (!String::Compare(TypeToken, "OnAdd", true))
-			return ScriptBlockType::OnAdd;
+			return eScriptBlockType::OnAdd;
 		else if (!String::Compare(TypeToken, "OnAlarm", true))
-			return ScriptBlockType::OnAlarm;
+			return eScriptBlockType::OnAlarm;
 		else if (!String::Compare(TypeToken, "OnAlarmVictim", true))
-			return ScriptBlockType::OnAlarmVictim;
+			return eScriptBlockType::OnAlarmVictim;
 		else if (!String::Compare(TypeToken, "OnDeath", true))
-			return ScriptBlockType::OnDeath;
+			return eScriptBlockType::OnDeath;
 		else if (!String::Compare(TypeToken, "OnDrop", true))
-			return ScriptBlockType::OnDrop;
+			return eScriptBlockType::OnDrop;
 		else if (!String::Compare(TypeToken, "OnEquip", true))
-			return ScriptBlockType::OnEquip;
+			return eScriptBlockType::OnEquip;
 		else if (!String::Compare(TypeToken, "OnHit", true))
-			return ScriptBlockType::OnHit;
+			return eScriptBlockType::OnHit;
 		else if (!String::Compare(TypeToken, "OnHitWith", true))
-			return ScriptBlockType::OnHitWith;
+			return eScriptBlockType::OnHitWith;
 		else if (!String::Compare(TypeToken, "OnKnockout", true))
-			return ScriptBlockType::OnKnockout;
+			return eScriptBlockType::OnKnockout;
 		else if (!String::Compare(TypeToken, "OnLoad", true))
-			return ScriptBlockType::OnLoad;
+			return eScriptBlockType::OnLoad;
 		else if (!String::Compare(TypeToken, "OnMagicEffectHit", true))
-			return ScriptBlockType::OnMagicEffectHit;
+			return eScriptBlockType::OnMagicEffectHit;
 		else if (!String::Compare(TypeToken, "OnMurder", true))
-			return ScriptBlockType::OnMurder;
+			return eScriptBlockType::OnMurder;
 		else if (!String::Compare(TypeToken, "OnPackageChange", true))
-			return ScriptBlockType::OnPackageChange;
+			return eScriptBlockType::OnPackageChange;
 		else if (!String::Compare(TypeToken, "OnPackageDone", true))
-			return ScriptBlockType::OnPackageDone;
+			return eScriptBlockType::OnPackageDone;
 		else if (!String::Compare(TypeToken, "OnPackageStart", true))
-			return ScriptBlockType::OnPackageStart;
+			return eScriptBlockType::OnPackageStart;
 		else if (!String::Compare(TypeToken, "OnReset", true))
-			return ScriptBlockType::OnReset;
+			return eScriptBlockType::OnReset;
 		else if (!String::Compare(TypeToken, "OnSell", true))
-			return ScriptBlockType::OnSell;
+			return eScriptBlockType::OnSell;
 		else if (!String::Compare(TypeToken, "OnTrigger", true))
-			return ScriptBlockType::OnTrigger;
+			return eScriptBlockType::OnTrigger;
 		else if (!String::Compare(TypeToken, "OnTriggerActor", true))
-			return ScriptBlockType::OnTriggerActor;
+			return eScriptBlockType::OnTriggerActor;
 		else if (!String::Compare(TypeToken, "OnTriggerMob", true))
-			return ScriptBlockType::OnTriggerMob;
+			return eScriptBlockType::OnTriggerMob;
 		else if (!String::Compare(TypeToken, "OnUnequip", true))
-			return ScriptBlockType::OnUnequip;
+			return eScriptBlockType::OnUnequip;
 		else if (!String::Compare(TypeToken, "ScriptEffectFinish", true))
-			return ScriptBlockType::ScriptEffectFinish;
+			return eScriptBlockType::ScriptEffectFinish;
 		else if (!String::Compare(TypeToken, "ScriptEffectStart", true))
-			return ScriptBlockType::ScriptEffectStart;
+			return eScriptBlockType::ScriptEffectStart;
 		else if (!String::Compare(TypeToken, "ScriptEffectUpdate", true))
-			return ScriptBlockType::ScriptEffectUpdate;
+			return eScriptBlockType::ScriptEffectUpdate;
 		else if (!String::Compare(TypeToken, "Function", true))
-			return ScriptBlockType::Function;
+			return eScriptBlockType::Function;
 		else
-			return ScriptBlockType::None;
+			return eScriptBlockType::None;
 	}
 
 	bool obScriptParsing::ScriptBlock::HasCompilerOverride(String^ TypeToken)
@@ -545,69 +545,69 @@ namespace cse
 			return false;
 	}
 
-	String^ obScriptParsing::ScriptBlock::GetScriptBlockTypeToken(ScriptBlockType Type)
+	String^ obScriptParsing::ScriptBlock::GetScriptBlockTypeToken(eScriptBlockType Type)
 	{
 		switch (Type)
 		{
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::GameMode:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::GameMode:
 			return "GameMode";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::MenuMode:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::MenuMode:
 			return "MenuMode";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnActivate:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnActivate:
 			return "OnActivate";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnActorEquip:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnActorEquip:
 			return "OnActorEquip";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnActorUnequip:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnActorUnequip:
 			return "OnActorUnequip";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnAdd:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnAdd:
 			return "OnAdd";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnAlarm:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnAlarm:
 			return "OnAlarm";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnAlarmVictim:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnAlarmVictim:
 			return "OnAlarmVictim";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnDeath:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnDeath:
 			return "OnDeath";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnDrop:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnDrop:
 			return "OnDrop";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnEquip:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnEquip:
 			return "OnEquip";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnHit:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnHit:
 			return "OnHit";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnHitWith:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnHitWith:
 			return "OnHitWith";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnKnockout:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnKnockout:
 			return "OnKnockout";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnLoad:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnLoad:
 			return "OnLoad";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnMagicEffectHit:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnMagicEffectHit:
 			return "OnMagicEffectHit";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnMurder:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnMurder:
 			return "OnMurder";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnPackageChange:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnPackageChange:
 			return "OnPackageChange";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnPackageDone:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnPackageDone:
 			return "OnPackageDone";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnPackageStart:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnPackageStart:
 			return "OnPackageStart";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnReset:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnReset:
 			return "OnReset";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnSell:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnSell:
 			return "OnSell";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnTrigger:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnTrigger:
 			return "OnTrigger";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnTriggerActor:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnTriggerActor:
 			return "OnTriggerActor";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnTriggerMob:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnTriggerMob:
 			return "OnTriggerMob";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::OnUnequip:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::OnUnequip:
 			return "OnUnequip";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::ScriptEffectFinish:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::ScriptEffectFinish:
 			return "ScriptEffectFinish";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::ScriptEffectStart:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::ScriptEffectStart:
 			return "ScriptEffectStart";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::ScriptEffectUpdate:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::ScriptEffectUpdate:
 			return "ScriptEffectUpdate";
-		case cse::obScriptParsing::ScriptBlock::ScriptBlockType::Function:
+		case cse::obScriptParsing::ScriptBlock::eScriptBlockType::Function:
 			return "Function";
 		default:
 			return "None";
@@ -628,7 +628,7 @@ namespace cse
 		ControlBlocks = gcnew List<ControlBlock^>();
 		MalformedStructure = false;
 		FirstStructuralErrorLine = 0;
-		UDF = false;
+		IsUDF = false;
 		UDFResult = nullptr;
 		UDFAmbiguousResult = false;
 		AnalysisMessages = gcnew List<UserMessage^>();
@@ -652,7 +652,7 @@ namespace cse
 
 		LineTokenizer^ Parser = gcnew LineTokenizer();
 		LineTrackingStringReader^ Reader = gcnew LineTrackingStringReader(ScriptText);
-		Stack<ControlBlock::ControlBlockType>^ StructureStack = gcnew Stack<ControlBlock::ControlBlockType>();
+		Stack<ControlBlock::eControlBlockType>^ StructureStack = gcnew Stack<ControlBlock::eControlBlockType>();
 		Stack<ControlBlock^>^ BlockStack = gcnew Stack<ControlBlock^>();
 		Stack<ControlBlock^>^ IfStack = gcnew Stack<ControlBlock^>();
 		bool SaveDefinitionComments = false;
@@ -665,7 +665,7 @@ namespace cse
 		Profiler->Start();
 #endif // !NDEBUG
 
-		if (Operations.HasFlag(Operation::FillVariables))
+		if (Operations.HasFlag(eOperation::FillVariables))
 		{
 			Variables->Clear();
 			UDFResult = nullptr;
@@ -673,20 +673,20 @@ namespace cse
 			NextVariableLine = 0;
 		}
 
-		if (Operations.HasFlag(Operation::FillControlBlocks))
+		if (Operations.HasFlag(eOperation::FillControlBlocks))
 		{
 			ControlBlocks->Clear();
-			UDF = false;
+			IsUDF = false;
 			MalformedStructure = false;
 			FirstStructuralErrorLine = 0;
 		}
 
-		if (Operations.HasFlag(Operation::PerformBasicValidation))
+		if (Operations.HasFlag(eOperation::PerformBasicValidation))
 		{
 			AnalysisMessages->Clear();
 		}
 
-		StructureStack->Push(ControlBlock::ControlBlockType::None);
+		StructureStack->Push(ControlBlock::eControlBlockType::None);
 
 		for (String^ ReadLine = Reader->ReadLine(); ReadLine != nullptr; ReadLine = Reader->ReadLine())
 		{
@@ -695,7 +695,7 @@ namespace cse
 			Parser->Tokenize(ReadLine, false);
 			if (Parser->Valid)
 			{
-				if (SaveDefinitionComments && Parser->GetFirstTokenType() == ScriptTokenType::Comment)
+				if (SaveDefinitionComments && Parser->GetFirstTokenType() == eScriptTokenType::Comment)
 				{
 					Description += ReadLine->Substring(Parser->Indices[0] + 1)->Trim() + "\n";
 					NextVariableLine = CurrentLine + 1;
@@ -703,16 +703,16 @@ namespace cse
 
 				String^ FirstToken = Parser->Tokens[0];
 				String^ SecondToken = (Parser->TokenCount > 1) ? Parser->Tokens[1] : "";
-				ScriptTokenType FirstTokenType = Parser->GetFirstTokenType();
+				eScriptTokenType FirstTokenType = Parser->GetFirstTokenType();
 				bool EncounteredProblem = false;
 				bool RetokenizeCurrentLine = false;
 
 				switch (FirstTokenType)
 				{
-				case cse::obScriptParsing::ScriptTokenType::ScriptName:
+				case cse::obScriptParsing::eScriptTokenType::ScriptName:
 					SaveDefinitionComments = true;
 
-					if (Operations.HasFlag(Operation::PerformBasicValidation))
+					if (Operations.HasFlag(eOperation::PerformBasicValidation))
 					{
 						if (Name != "")
 							LogCriticalAnalysisMessage(CurrentLine, "Redeclaration of script name."), EncounteredProblem = true;
@@ -726,7 +726,7 @@ namespace cse
 					NextVariableLine = CurrentLine + 1;
 
 					break;
-				case cse::obScriptParsing::ScriptTokenType::Variable:
+				case cse::obScriptParsing::eScriptTokenType::Variable:
 					SaveDefinitionComments = false;
 
 					if (SecondToken != "")
@@ -740,19 +740,19 @@ namespace cse
 							Comment = (Parser->Indices->Count > 0) ? Comment->Substring(Parser->Indices[0]) : Comment;
 						}
 
-						if (Operations.HasFlag(Operation::PerformBasicValidation))
+						if (Operations.HasFlag(eOperation::PerformBasicValidation))
 						{
-							if (StructureStack->Peek() != ControlBlock::ControlBlockType::None)
+							if (StructureStack->Peek() != ControlBlock::eControlBlockType::None)
 								LogCriticalAnalysisMessage(CurrentLine, "Variable declared inside a script block."), EncounteredProblem = true;
 
 							Variable^ Existing = LookupVariable(SecondToken);
 							if (Existing != nullptr)
 								LogCriticalAnalysisMessage(CurrentLine, "Variable redeclaration. Previous declaration was at line " + Existing->Line), EncounteredProblem = true;
 
-							if (Operations.HasFlag(Operation::CheckVariableNameFormCollisions) && FormIdentifiers->Contains(SecondToken))
+							if (Operations.HasFlag(eOperation::CheckVariableNameFormCollisions) && FormIdentifiers->Contains(SecondToken))
 								LogCriticalAnalysisMessage(CurrentLine, "The identifier " + SecondToken + " has already been assigned to a record."), EncounteredProblem = true;
 
-							if (Operations.HasFlag(Operation::CheckVariableNameCommandCollisions) && ScriptCommandIdentifiers->Contains(SecondToken))
+							if (Operations.HasFlag(eOperation::CheckVariableNameCommandCollisions) && ScriptCommandIdentifiers->Contains(SecondToken))
 								LogCriticalAnalysisMessage(CurrentLine, "The identifier " + SecondToken + " is reserved for a script command."), EncounteredProblem = true;
 						}
 
@@ -763,19 +763,19 @@ namespace cse
 					}
 
 					break;
-				case cse::obScriptParsing::ScriptTokenType::Begin:
+				case cse::obScriptParsing::eScriptTokenType::Begin:
 					SaveDefinitionComments = false;
 					NextVariableLine = CurrentLine - 1;
 
-					if (Operations.HasFlag(Operation::FillControlBlocks))
+					if (Operations.HasFlag(eOperation::FillControlBlocks))
 					{
-						if (StructureStack->Peek() != ControlBlock::ControlBlockType::None)
+						if (StructureStack->Peek() != ControlBlock::eControlBlockType::None)
 						{
 							EncounteredProblem = true;
 							MalformedStructure = true;
 							FirstStructuralErrorLine = CurrentLine;
 
-							if (Operations.HasFlag(Operation::PerformBasicValidation))
+							if (Operations.HasFlag(eOperation::PerformBasicValidation))
 								LogCriticalAnalysisMessage(CurrentLine, "Nested Begin block.");
 						}
 						else
@@ -783,12 +783,12 @@ namespace cse
 							ScriptBlock^ NewBlock = gcnew ScriptBlock(CurrentLine, 1,
 																	  ScriptBlock::GetScriptBlockType(SecondToken),
 																	  ScriptBlock::HasCompilerOverride(SecondToken));
-							StructureStack->Push(ControlBlock::ControlBlockType::ScriptBlock);
+							StructureStack->Push(ControlBlock::eControlBlockType::ScriptBlock);
 							BlockStack->Push(NewBlock);
 							ControlBlocks->Add(NewBlock);
-							UDF = NewBlock->SBType == ScriptBlock::ScriptBlockType::Function;
+							IsUDF = NewBlock->ScriptBlockType == ScriptBlock::eScriptBlockType::Function;
 
-							if (Operations.HasFlag(Operation::FillUDFData) && UDF)
+							if (Operations.HasFlag(eOperation::FillUDFData) && IsUDF)
 							{
 								int FirstIdx = ReadLine->IndexOf("{");
 								int ParamIdx = 0;
@@ -811,19 +811,19 @@ namespace cse
 					}
 
 					break;
-				case cse::obScriptParsing::ScriptTokenType::End:
-					if (Operations.HasFlag(Operation::FillControlBlocks))
+				case cse::obScriptParsing::eScriptTokenType::End:
+					if (Operations.HasFlag(eOperation::FillControlBlocks))
 					{
-						if (Operations.HasFlag(Operation::PerformBasicValidation) && Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';')
+						if (Operations.HasFlag(eOperation::PerformBasicValidation) && Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';')
 							LogAnalysisMessage(CurrentLine, "Redundant expression beyond block end specifier.");
 
-						if (StructureStack->Peek() != ControlBlock::ControlBlockType::ScriptBlock)
+						if (StructureStack->Peek() != ControlBlock::eControlBlockType::ScriptBlock)
 						{
 							EncounteredProblem = true;
 							MalformedStructure = true;
 							FirstStructuralErrorLine = CurrentLine;
 
-							if (Operations.HasFlag(Operation::PerformBasicValidation))
+							if (Operations.HasFlag(eOperation::PerformBasicValidation))
 								LogCriticalAnalysisMessage(CurrentLine, "Mismatching block.");
 						}
 						else
@@ -834,25 +834,25 @@ namespace cse
 					}
 
 					break;
-				case cse::obScriptParsing::ScriptTokenType::While:
-				case cse::obScriptParsing::ScriptTokenType::ForEach:
-					if (Operations.HasFlag(Operation::FillControlBlocks))
+				case cse::obScriptParsing::eScriptTokenType::While:
+				case cse::obScriptParsing::eScriptTokenType::ForEach:
+					if (Operations.HasFlag(eOperation::FillControlBlocks))
 					{
-						if (StructureStack->Peek() == ControlBlock::ControlBlockType::None)
+						if (StructureStack->Peek() == ControlBlock::eControlBlockType::None)
 						{
 							EncounteredProblem = true;
 							MalformedStructure = true;
 							FirstStructuralErrorLine = CurrentLine;
 
-							if (Operations.HasFlag(Operation::PerformBasicValidation))
+							if (Operations.HasFlag(eOperation::PerformBasicValidation))
 								LogCriticalAnalysisMessage(CurrentLine, "Control block declared outside script block.");
 						}
 						else
 						{
 							ControlBlock^ Parent = BlockStack->Peek();
-							ControlBlock::ControlBlockType BlockType = ControlBlock::ControlBlockType::While;
-							if (FirstTokenType == ScriptTokenType::ForEach)
-								BlockType = ControlBlock::ControlBlockType::ForEach;
+							ControlBlock::eControlBlockType BlockType = ControlBlock::eControlBlockType::While;
+							if (FirstTokenType == eScriptTokenType::ForEach)
+								BlockType = ControlBlock::eControlBlockType::ForEach;
 
 							ControlBlock^ NewBlock = gcnew ControlBlock(BlockType, CurrentLine,
 																		Parent->IndentLevel + 1, Parent);
@@ -864,20 +864,20 @@ namespace cse
 					}
 
 					break;
-				case cse::obScriptParsing::ScriptTokenType::Loop:
-					if (Operations.HasFlag(Operation::FillControlBlocks))
+				case cse::obScriptParsing::eScriptTokenType::Loop:
+					if (Operations.HasFlag(eOperation::FillControlBlocks))
 					{
-						if (Operations.HasFlag(Operation::PerformBasicValidation) && Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';')
+						if (Operations.HasFlag(eOperation::PerformBasicValidation) && Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';')
 							LogAnalysisMessage(CurrentLine, "Redundant expression beyond block end specifier.");
 
-						if (StructureStack->Peek() != ControlBlock::ControlBlockType::While &&
-							StructureStack->Peek() != ControlBlock::ControlBlockType::ForEach)
+						if (StructureStack->Peek() != ControlBlock::eControlBlockType::While &&
+							StructureStack->Peek() != ControlBlock::eControlBlockType::ForEach)
 						{
 							EncounteredProblem = true;
 							MalformedStructure = true;
 							FirstStructuralErrorLine = CurrentLine;
 
-							if (Operations.HasFlag(Operation::PerformBasicValidation))
+							if (Operations.HasFlag(eOperation::PerformBasicValidation))
 								LogCriticalAnalysisMessage(CurrentLine, "Mismatching block.");
 						}
 						else
@@ -888,33 +888,33 @@ namespace cse
 					}
 
 					break;
-				case cse::obScriptParsing::ScriptTokenType::If:
-					if (Operations.HasFlag(Operation::FillControlBlocks))
+				case cse::obScriptParsing::eScriptTokenType::If:
+					if (Operations.HasFlag(eOperation::FillControlBlocks))
 					{
-						if (StructureStack->Peek() == ControlBlock::ControlBlockType::None)
+						if (StructureStack->Peek() == ControlBlock::eControlBlockType::None)
 						{
 							EncounteredProblem = true;
 							MalformedStructure = true;
 							FirstStructuralErrorLine = CurrentLine;
 
-							if (Operations.HasFlag(Operation::PerformBasicValidation))
+							if (Operations.HasFlag(eOperation::PerformBasicValidation))
 								LogCriticalAnalysisMessage(CurrentLine, "Control block declared outside script block.");
 						}
 						else
 						{
-							if (Operations.HasFlag(Operation::PerformBasicValidation) && (Parser->TokenCount < 2 || Parser->Tokens[1][0] == ';'))
+							if (Operations.HasFlag(eOperation::PerformBasicValidation) && (Parser->TokenCount < 2 || Parser->Tokens[1][0] == ';'))
 								LogCriticalAnalysisMessage(CurrentLine, "Invalid condition."), EncounteredProblem = true;
 
 							ControlBlock^ Parent = BlockStack->Peek();
-							ControlBlock^ NewBlock = gcnew ControlBlock(ControlBlock::ControlBlockType::If, CurrentLine,
+							ControlBlock^ NewBlock = gcnew ControlBlock(ControlBlock::eControlBlockType::If, CurrentLine,
 																		Parent->IndentLevel + 1, Parent);
 
-							StructureStack->Push(ControlBlock::ControlBlockType::If);
+							StructureStack->Push(ControlBlock::eControlBlockType::If);
 							BlockStack->Push(NewBlock);
 							IfStack->Push(NewBlock);
 							ControlBlocks->Add(NewBlock);
 
-							if (Operations.HasFlag(Operation::PerformBasicValidation))
+							if (Operations.HasFlag(eOperation::PerformBasicValidation))
 							{
 								String^ Condition = ReadLine->Substring(Parser->Indices[0] + Parser->Tokens[0]->Length);
 								if (ParseConditionExpression(CurrentLine, Condition) == false)
@@ -924,29 +924,29 @@ namespace cse
 					}
 
 					break;
-				case cse::obScriptParsing::ScriptTokenType::ElseIf:
-				case cse::obScriptParsing::ScriptTokenType::Else:
-					if (Operations.HasFlag(Operation::FillControlBlocks))
+				case cse::obScriptParsing::eScriptTokenType::ElseIf:
+				case cse::obScriptParsing::eScriptTokenType::Else:
+					if (Operations.HasFlag(eOperation::FillControlBlocks))
 					{
-						if (Operations.HasFlag(Operation::PerformBasicValidation) && FirstTokenType == ScriptTokenType::ElseIf &&
+						if (Operations.HasFlag(eOperation::PerformBasicValidation) && FirstTokenType == eScriptTokenType::ElseIf &&
 							(Parser->TokenCount < 2 || Parser->Tokens[1][0] == ';'))
 						{
 							LogCriticalAnalysisMessage(CurrentLine, "Invalid condition.");
 							EncounteredProblem = true;
 						}
-						if (Operations.HasFlag(Operation::PerformBasicValidation) && FirstTokenType == ScriptTokenType::Else &&
+						if (Operations.HasFlag(eOperation::PerformBasicValidation) && FirstTokenType == eScriptTokenType::Else &&
 							(Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';'))
 						{
 							LogAnalysisMessage(CurrentLine, "Redundant expression beyond Else specifier.");
 						}
 
-						if (StructureStack->Peek() != ControlBlock::ControlBlockType::If && StructureStack->Peek() != ControlBlock::ControlBlockType::ElseIf)
+						if (StructureStack->Peek() != ControlBlock::eControlBlockType::If && StructureStack->Peek() != ControlBlock::eControlBlockType::ElseIf)
 						{
 							EncounteredProblem = true;
 							MalformedStructure = true;
 							FirstStructuralErrorLine = CurrentLine;
 
-							if (Operations.HasFlag(Operation::PerformBasicValidation))
+							if (Operations.HasFlag(eOperation::PerformBasicValidation))
 								LogCriticalAnalysisMessage(CurrentLine, "Mismatching block.");
 						}
 						else
@@ -956,9 +956,9 @@ namespace cse
 							PrevBlock->EndLine = CurrentLine;
 							PrevBlock->BasicBlock = false;
 
-							ControlBlock::ControlBlockType BlockType = ControlBlock::ControlBlockType::ElseIf;
-							if (FirstTokenType == ScriptTokenType::Else)
-								BlockType = ControlBlock::ControlBlockType::Else;
+							ControlBlock::eControlBlockType BlockType = ControlBlock::eControlBlockType::ElseIf;
+							if (FirstTokenType == eScriptTokenType::Else)
+								BlockType = ControlBlock::eControlBlockType::Else;
 
 							ControlBlock^ NewBlock = gcnew ControlBlock(BlockType, CurrentLine,
 																		PrevBlock->IndentLevel, PrevBlock->Parent);
@@ -967,7 +967,7 @@ namespace cse
 							BlockStack->Push(NewBlock);
 							ControlBlocks->Add(NewBlock);
 
-							if (BlockType == ControlBlock::ControlBlockType::ElseIf && Operations.HasFlag(Operation::PerformBasicValidation))
+							if (BlockType == ControlBlock::eControlBlockType::ElseIf && Operations.HasFlag(eOperation::PerformBasicValidation))
 							{
 								String^ Condition = ReadLine->Substring(Parser->Indices[0] + Parser->Tokens[0]->Length);
 								if (ParseConditionExpression(CurrentLine, Condition) == false)
@@ -977,27 +977,27 @@ namespace cse
 					}
 
 					break;
-				case cse::obScriptParsing::ScriptTokenType::EndIf:
-					if (Operations.HasFlag(Operation::FillControlBlocks))
+				case cse::obScriptParsing::eScriptTokenType::EndIf:
+					if (Operations.HasFlag(eOperation::FillControlBlocks))
 					{
-						if (Operations.HasFlag(Operation::PerformBasicValidation) && Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';')
+						if (Operations.HasFlag(eOperation::PerformBasicValidation) && Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';')
 							LogAnalysisMessage(CurrentLine, "Redundant expression beyond block end specifier.");
 
-						if (StructureStack->Peek() != ControlBlock::ControlBlockType::If &&
-							StructureStack->Peek() != ControlBlock::ControlBlockType::ElseIf &&
-							StructureStack->Peek() != ControlBlock::ControlBlockType::Else)
+						if (StructureStack->Peek() != ControlBlock::eControlBlockType::If &&
+							StructureStack->Peek() != ControlBlock::eControlBlockType::ElseIf &&
+							StructureStack->Peek() != ControlBlock::eControlBlockType::Else)
 						{
 							EncounteredProblem = true;
 							MalformedStructure = true;
 							FirstStructuralErrorLine = CurrentLine;
 
-							if (Operations.HasFlag(Operation::PerformBasicValidation))
+							if (Operations.HasFlag(eOperation::PerformBasicValidation))
 								LogCriticalAnalysisMessage(CurrentLine, "Mismatching block.");
 						}
 						else
 						{
 							ControlBlock^ Block = BlockStack->Pop();
-							if (StructureStack->Peek() != ControlBlock::ControlBlockType::If)
+							if (StructureStack->Peek() != ControlBlock::eControlBlockType::If)
 								Block->BasicBlock = false;
 
 							StructureStack->Pop();
@@ -1009,13 +1009,13 @@ namespace cse
 					}
 
 					break;
-				case cse::obScriptParsing::ScriptTokenType::Return:
-					if (Operations.HasFlag(Operation::PerformBasicValidation) && Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';')
+				case cse::obScriptParsing::eScriptTokenType::Return:
+					if (Operations.HasFlag(eOperation::PerformBasicValidation) && Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';')
 						LogAnalysisMessage(CurrentLine, "Redundant expression beyond block end specifier.");
 
 					break;
-				case cse::obScriptParsing::ScriptTokenType::SetFunctionValue:
-					if (Operations.HasFlag(Operation::FillUDFData))
+				case cse::obScriptParsing::eScriptTokenType::SetFunctionValue:
+					if (Operations.HasFlag(eOperation::FillUDFData))
 					{
 						Variable^ Existing = LookupVariable(SecondToken);
 						if (Existing)
@@ -1025,7 +1025,7 @@ namespace cse
 					}
 
 					break;
-				case cse::obScriptParsing::ScriptTokenType::Comment:
+				case cse::obScriptParsing::eScriptTokenType::Comment:
 					// break early to save the script description
 					break;
 				default:
@@ -1033,10 +1033,10 @@ namespace cse
 					break;
 				}
 
-				if (Operations.HasFlag(Operation::PerformBasicValidation) && Operations.HasFlag(Operation::CountVariableReferences))
+				if (Operations.HasFlag(eOperation::PerformBasicValidation) && Operations.HasFlag(eOperation::CountVariableReferences))
 				{
 					UInt32 Count = 0;
-					if (FirstTokenType != ScriptTokenType::Variable)
+					if (FirstTokenType != eScriptTokenType::Variable)
 					{
 						if (RetokenizeCurrentLine)
 							Parser->Tokenize(ReadLine, false);
@@ -1064,18 +1064,18 @@ namespace cse
 			if (Itr->IsMalformed())
 			{
 				MalformedStructure = true;
-				if (Operations.HasFlag(Operation::PerformBasicValidation))
+				if (Operations.HasFlag(eOperation::PerformBasicValidation))
 					LogCriticalAnalysisMessage(Itr->StartLine, "Missing block end specifier.");
 			}
 		}
 
-		if (Operations.HasFlag(Operation::PerformBasicValidation))
+		if (Operations.HasFlag(eOperation::PerformBasicValidation))
 		{
 			for each (Variable^ Itr in Variables)
 			{
-				if (Operations.HasFlag(Operation::CountVariableReferences))
+				if (Operations.HasFlag(eOperation::CountVariableReferences))
 				{
-					if (Itr->RefCount == 0 && (Type != ScriptType::Quest || Operations.HasFlag(Operation::SuppressQuestVariableRefCount) == false))
+					if (Itr->RefCount == 0 && (Type != eScriptType::Quest || Operations.HasFlag(eOperation::SuppressQuestVariableRefCount) == false))
 						LogAnalysisMessage(Itr->Line, "Variable " + Itr->Name + " unreferenced in local context.");
 				}
 
@@ -1087,7 +1087,7 @@ namespace cse
 			}
 		}
 
-		if (Operations.HasFlag(Operation::PerformBasicValidation))
+		if (Operations.HasFlag(eOperation::PerformBasicValidation))
 		{
 			for each (ControlBlock^ Itr in ControlBlocks)
 			{
@@ -1128,7 +1128,7 @@ namespace cse
 		Copy->ControlBlocks = gcnew List<ControlBlock ^>(this->ControlBlocks);
 		Copy->MalformedStructure = this->MalformedStructure;
 		Copy->FirstStructuralErrorLine = this->FirstStructuralErrorLine;
-		Copy->UDF = this->UDF;
+		Copy->IsUDF = this->IsUDF;
 		Copy->UDFResult = this->UDFResult;
 		Copy->UDFAmbiguousResult = this->UDFAmbiguousResult;
 		Copy->AnalysisMessages = gcnew List<UserMessage ^>(this->AnalysisMessages);
@@ -1231,12 +1231,12 @@ namespace cse
 	{
 		auto Params = gcnew AnalysisData::Params;
 		Params->ScriptText = InputText;
-		Params->Ops = AnalysisData::Operation::FillControlBlocks;
+		Params->Ops = AnalysisData::eOperation::FillControlBlocks;
 
 		Data->PerformAnalysis(Params);
 	}
 
-	bool obScriptParsing::Sanitizer::SanitizeScriptText(Operation Operations, GetSanitizedIdentifier^ Delegate)
+	bool obScriptParsing::Sanitizer::SanitizeScriptText(eOperation Operations, GetSanitizedIdentifier^ Delegate)
 	{
 		if (Data->MalformedStructure)
 			return false;
@@ -1253,7 +1253,7 @@ namespace cse
 			if (Parser->Tokenize(SanitizedLine, false) == false)
 				SanitizedLine = "";
 
-			if (Operations.HasFlag(Operation::IndentLines))
+			if (Operations.HasFlag(eOperation::IndentLines))
 			{
 				if (Parser->Tokenize(ReadLine, false))
 				{
@@ -1267,9 +1267,9 @@ namespace cse
 			}
 
 			ControlBlock^ CurrentBlock = Data->GetBlockStartingAt(CurrentLine);
-			if (CurrentBlock && (CurrentBlock->Type == ControlBlock::ControlBlockType::If || CurrentBlock->Type == ControlBlock::ControlBlockType::ElseIf))
+			if (CurrentBlock && (CurrentBlock->Type == ControlBlock::eControlBlockType::If || CurrentBlock->Type == ControlBlock::eControlBlockType::ElseIf))
 			{
-				if (Operations.HasFlag(Operation::EvalifyIfs))
+				if (Operations.HasFlag(eOperation::EvalifyIfs))
 				{
 					if (Parser->Tokenize(SanitizedLine, false) && Parser->TokenCount > 1)
 					{
@@ -1282,9 +1282,9 @@ namespace cse
 				}
 			}
 
-			if (Operations.HasFlag(Operation::CompilerOverrideBlocks))
+			if (Operations.HasFlag(eOperation::CompilerOverrideBlocks))
 			{
-				if (CurrentBlock && CurrentBlock->Type == ControlBlock::ControlBlockType::ScriptBlock)
+				if (CurrentBlock && CurrentBlock->Type == ControlBlock::eControlBlockType::ScriptBlock)
 				{
 					ScriptBlock^ BeginBlock = (ScriptBlock^)CurrentBlock;
 					if (BeginBlock->CompilerOverride == false)
@@ -1298,7 +1298,7 @@ namespace cse
 				}
 			}
 
-			if (Operations.HasFlag(Operation::AnnealCasing))
+			if (Operations.HasFlag(eOperation::AnnealCasing))
 			{
 				Parser->Tokenize(SanitizedLine, true);
 				if (Parser->Valid)
@@ -1353,19 +1353,19 @@ namespace cse
 			{
 				switch (Parser->GetFirstTokenType())
 				{
-				case ScriptTokenType::Begin:
-				case ScriptTokenType::If:
-				case ScriptTokenType::ForEach:
-				case ScriptTokenType::While:
+				case eScriptTokenType::Begin:
+				case eScriptTokenType::If:
+				case eScriptTokenType::ForEach:
+				case eScriptTokenType::While:
 					IndentCount++;
 					break;
-				case ScriptTokenType::ElseIf:
-				case ScriptTokenType::Else:
+				case eScriptTokenType::ElseIf:
+				case eScriptTokenType::Else:
 					CurrentIndentCount--;
 					break;
-				case ScriptTokenType::End:
-				case ScriptTokenType::EndIf:
-				case ScriptTokenType::Loop:
+				case eScriptTokenType::End:
+				case eScriptTokenType::EndIf:
+				case eScriptTokenType::Loop:
 					IndentCount--;
 					CurrentIndentCount--;
 					break;
@@ -1445,11 +1445,11 @@ namespace cse
 			String^ FirstToken = Parser->Tokens[0];
 			String^ SecondToken = (Parser->Tokens->Count > 1) ? Parser->Tokens[1] : "";
 
-			obScriptParsing::ScriptTokenType Type = Parser->GetScriptTokenType(FirstToken);
+			obScriptParsing::eScriptTokenType Type = Parser->GetScriptTokenType(FirstToken);
 
 			switch (Type)
 			{
-			case obScriptParsing::ScriptTokenType::Variable:
+			case obScriptParsing::eScriptTokenType::Variable:
 				{
 					if (SkippedDescription == false)
 					{
@@ -1468,15 +1468,15 @@ namespace cse
 				}
 
 				break;
-			case obScriptParsing::ScriptTokenType::ScriptName:
+			case obScriptParsing::eScriptTokenType::ScriptName:
 				ScriptName = SecondToken;
 				break;
-			case obScriptParsing::ScriptTokenType::Comment:
+			case obScriptParsing::eScriptTokenType::Comment:
 				if (SkippedDescription)
 					DocumentedText += ReadLine + "\n";
 
 				break;
-			case obScriptParsing::ScriptTokenType::Begin:
+			case obScriptParsing::eScriptTokenType::Begin:
 				if (SkippedDescription == false)
 				{
 					SkippedDescription = true;
@@ -1504,7 +1504,7 @@ namespace cse
 		DocumentedText = DocumentedText->Substring(0, DocumentedText->Length - 1);
 	}
 
-	obScriptParsing::Structurizer::Node::Node(NodeType Type, UInt32 StartLine, UInt32 EndLine, String^ Desc) :
+	obScriptParsing::Structurizer::Node::Node(eNodeType Type, UInt32 StartLine, UInt32 EndLine, String^ Desc) :
 		Type(Type), StartLine(StartLine), EndLine(EndLine), Children(gcnew List<Node^>)
 	{
 		Description = Desc;
@@ -1559,7 +1559,7 @@ namespace cse
 			{
 				Variable^ First = InputData->Variables[0];
 				Variable^ Last = InputData->Variables[InputData->Variables->Count - 1];
-				ParsedTree->Add(gcnew Node(Node::NodeType::VariableDeclaration, First->Line, Last->Line, "Variable Declarations"));
+				ParsedTree->Add(gcnew Node(Node::eNodeType::VariableDeclaration, First->Line, Last->Line, "Variable Declarations"));
 			}
 
 			for each (auto Itr in InputData->ControlBlocks)
@@ -1570,7 +1570,7 @@ namespace cse
 				ScriptBlock^ BeginBlock = (ScriptBlock^)Itr;
 				if (BeginBlock)
 				{
-					Node^ MainBlock = gcnew Node(Node::NodeType::ScriptBlock,
+					Node^ MainBlock = gcnew Node(Node::eNodeType::ScriptBlock,
 												 BeginBlock->StartLine,
 												 BeginBlock->EndLine,
 												 FetchLineText(BeginBlock->StartLine));
@@ -1590,18 +1590,18 @@ namespace cse
 		Node^ CurrentBlock = nullptr;
 		switch (Block->Type)
 		{
-		case obScriptParsing::ControlBlock::ControlBlockType::ScriptBlock:
+		case obScriptParsing::ControlBlock::eControlBlockType::ScriptBlock:
 			CurrentBlock = Parent;
 			break;
-		case obScriptParsing::ControlBlock::ControlBlockType::If:
-		case obScriptParsing::ControlBlock::ControlBlockType::ElseIf:
-		case obScriptParsing::ControlBlock::ControlBlockType::Else:
-			CurrentBlock = gcnew Node(Node::NodeType::BasicConditionalBlock, Block->StartLine, Block->EndLine, FetchLineText(Block->StartLine));
+		case obScriptParsing::ControlBlock::eControlBlockType::If:
+		case obScriptParsing::ControlBlock::eControlBlockType::ElseIf:
+		case obScriptParsing::ControlBlock::eControlBlockType::Else:
+			CurrentBlock = gcnew Node(Node::eNodeType::BasicConditionalBlock, Block->StartLine, Block->EndLine, FetchLineText(Block->StartLine));
 			Parent->Children->Add(CurrentBlock);
 			break;
-		case obScriptParsing::ControlBlock::ControlBlockType::While:
-		case obScriptParsing::ControlBlock::ControlBlockType::ForEach:
-			CurrentBlock = gcnew Node(Node::NodeType::LoopBlock, Block->StartLine, Block->EndLine, FetchLineText(Block->StartLine));
+		case obScriptParsing::ControlBlock::eControlBlockType::While:
+		case obScriptParsing::ControlBlock::eControlBlockType::ForEach:
+			CurrentBlock = gcnew Node(Node::eNodeType::LoopBlock, Block->StartLine, Block->EndLine, FetchLineText(Block->StartLine));
 			Parent->Children->Add(CurrentBlock);
 			break;
 		default:

@@ -55,6 +55,20 @@ public:
 		ImplPropertySetInvalid(eViewRole);
 	}
 
+	virtual IForm^ AsForm();
+	virtual IButton^ AsButton();
+	virtual IComboBox^ AsComboBox();
+	virtual ILabel^ AsLabel();
+	virtual ITabStrip^ AsTabStrip();
+	virtual ITabStripItem^ AsTabStripItem();
+	virtual IObjectListView^ AsObjectListView();
+	virtual IObjectListViewColumn^ AsObjectListViewColumn();
+	virtual ICircularProgress^ AsCircularProgress();
+	virtual IDockablePane^ AsDockablePane();
+	virtual ICrumbBar^ AsCrumbBar();
+	virtual ICrumbBarItem^ AsCrumbBarItem();
+	virtual IContainer^ AsContainer();
+
 	static ViewComponent^ FromControl(Control^ Control);
 };
 
@@ -147,16 +161,18 @@ ref class ComboBox : public ViewComponent, IComboBox
 	eSourceType SourceType;
 
 	EventHandler^ DelegateSelectedIndexChanged;
+	KeyEventHandler^ DelegateKeyDown;
 
 	void Handler_SelectedIndexChanged(Object^ Sender, EventArgs^ E);
+	void Handler_KeyDown(Object^ Sender, KeyEventArgs^ E);
 
 	void InitEventHandlers();
 	void DeinitEventHandlers();
 
-	String^ GetterSelectionText();
+	String^ GetterText();
 	Object^ GetterSelection();
 
-	void SetterSelectionText(String^ Value);
+	void SetterText(String^ Value);
 	void SetterSelection(Object^ Value);
 public:
 	ComboBox(DotNetBar::ComboBoxItem^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);
@@ -164,9 +180,9 @@ public:
 	virtual ~ComboBox();
 
 	ImplPropertyWithAccessors(Object^, Selection);
-	ImplPropertyWithAccessors(String^, SelectionText);
+	ImplPropertyWithAccessors(String^, Text);
 
-	virtual void AddDropdownItem(String^ NewItem);
+	virtual void AddDropdownItem(Object^ NewItem);
 	virtual void ClearDropdownItems();
 };
 
@@ -175,7 +191,7 @@ ref class Label : public ViewComponent, ILabel
 {
 	LabelItem^ Source;
 public:
-	Label(DotNetBar::LabelItem^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);
+	Label(DotNetBar::LabelItem^ Source, eViewRole ViewRole);
 	virtual ~Label();
 
 	ImplPropertySimple(String^, Text, Source->Text);
@@ -186,8 +202,9 @@ ref class TabStripItem : public ViewComponent, ITabStripItem
 {
 	SuperTabItem^ Source_;
 	Object^ Tag_;
+	ITabStrip^ ParentTabStrip_;
 public:
-	TabStripItem(DotNetBar::SuperTabItem^ Source);
+	TabStripItem(DotNetBar::SuperTabItem^ Source, ITabStrip^ ParentTabStrip);
 	virtual ~TabStripItem();
 
 	ImplPropertySimple(String^, Text, Source_->Text);
@@ -195,15 +212,17 @@ public:
 	ImplPropertySimple(Drawing::Image^, Image, Source_->Image);
 	ImplPropertySimple(Object^, Tag, Tag_);
 	ImplPropertyGetOnly(SuperTabItem^, Source, Source_);
+	ImplPropertyGetOnly(ITabStrip^, Parent, ParentTabStrip_);
 
 	static TabStripItem^ FromSuperTabItem(SuperTabItem^ SuperTabItem);
-	static TabStripItem^ New();
+	static TabStripItem^ New(ITabStrip^ ParentTabStrip);
 };
 
 
 ref class TabStrip : public ViewComponent, ITabStrip
 {
 	SuperTabControl^ Source;
+	IScriptEditorView^ Parent_;
 
 	EventHandler<DotNetBar::SuperTabStripTabItemCloseEventArgs^>^ DelegateTabItemClose;
 	EventHandler<DotNetBar::SuperTabStripSelectedTabChangedEventArgs^>^ DelegateSelectedTabChanged;
@@ -226,6 +245,7 @@ public:
 		virtual ITabStripItem^ get();
 		virtual void set(ITabStripItem^ v);
 	}
+	ImplPropertySimple(IScriptEditorView^, Parent, Parent_);
 
 	virtual ITabStripItem^ AllocateNewTab();
 	virtual void AddTab(ITabStripItem^ Tab);
@@ -304,7 +324,7 @@ ref class CircularProgress : public ViewComponent, ICircularProgress
 {
 	DotNetBar::CircularProgressItem^ Source;
 public:
-	CircularProgress(DotNetBar::CircularProgressItem^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);
+	CircularProgress(DotNetBar::CircularProgressItem^ Source, eViewRole ViewRole);
 	virtual ~CircularProgress();
 
 	ImplPropertySimple(String^, Text, Source->Text);
@@ -318,7 +338,7 @@ ref class DockablePane : public ViewComponent, IDockablePane
 {
 	DockContainerItem^ Source;
 public:
-	DockablePane(DockContainerItem^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);
+	DockablePane(DockContainerItem^ Source, eViewRole ViewRole);
 	virtual ~DockablePane();
 
 	property bool Visible

@@ -390,7 +390,7 @@ void IntelliSenseInterfaceModel::UpdateContext(IntelliSenseContextChangeEventArg
 	{
 		switch (obScriptParsing::LineTokenizer::GetScriptTokenType(UsingPreviousToken ? PreviousToken : CurrentToken))
 		{
-		case obScriptParsing::ScriptTokenType::Call:
+		case obScriptParsing::eScriptTokenType::Call:
 			if ((UsingPreviousToken ? PreviousTokenDelimiter : CurrentTokenDelimiter) == ' ')
 			{
 				Context->Operation = IntelliSenseModelContext::OperationType::Call;
@@ -398,8 +398,8 @@ void IntelliSenseInterfaceModel::UpdateContext(IntelliSenseContextChangeEventArg
 				ResolvedOp = PossibleOperationInvocation;
 			}
 			break;
-		case obScriptParsing::ScriptTokenType::Set:
-		case obScriptParsing::ScriptTokenType::Let:
+		case obScriptParsing::eScriptTokenType::Set:
+		case obScriptParsing::eScriptTokenType::Let:
 			if ((UsingPreviousToken ? PreviousTokenDelimiter : CurrentTokenDelimiter) == ' ')
 			{
 				Context->Operation = IntelliSenseModelContext::OperationType::Assign;

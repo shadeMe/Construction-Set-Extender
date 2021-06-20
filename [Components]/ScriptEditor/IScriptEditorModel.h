@@ -4,6 +4,7 @@
 #include "ITextEditor.h"
 #include "IIntelliSenseInterface.h"
 #include "SemanticAnalysis.h"
+#include "Utilities.h"
 
 namespace cse
 {
@@ -97,11 +98,13 @@ public:
 
 ref struct ScriptFindResult : public ScriptLineAnnotation
 {
+	String^ Query_;
 	UInt32 Hits_;
 public:
-	ScriptFindResult(textEditor::ILineAnchor^ Anchor, String^ Description, UInt32 Hits);
+	ScriptFindResult(textEditor::ILineAnchor^ Anchor, String^ Text, UInt32 Hits, String^ Query);
 
 	ImplPropertyGetOnly(UInt32, Hits, Hits_);
+	ImplPropertyGetOnly(String^, Query, Query_);
 };
 
 
@@ -171,6 +174,8 @@ interface class INavigationHelper
 	delegate void NavigationChangedEventHandler(Object^ Sender, NavigationChangedEventArgs^ E);
 
 	event NavigationChangedEventHandler^ NavigationChanged;
+
+	obScriptParsing::Structurizer^ GenerateStructureData(obScriptParsing::AnalysisData^ AnalysisData);
 };
 
 
@@ -271,8 +276,32 @@ interface class IScriptEditorModel
 	};
 	delegate void ActiveDocumentChangedEventHandler(Object^ Sender, ActiveDocumentChangedEventArgs^ E);
 
+	ref struct ActiveDocumentActionCollection
+	{
+		ref struct AddBookmarkParams
+		{
+			String^ BookmarkDescription;
+		};
+
+		ref struct GoToLineParams
+		{
+			UInt32 Line;
+		};
+
+		property BasicAction^ Copy;
+		property BasicAction^ Paste;
+		property BasicAction^ Comment;
+		property BasicAction^ Uncomment;
+		property ParameterizedAction^ AddBookmark;
+		property ParameterizedAction^ GoToLine;
+
+		ActiveDocumentActionCollection();
+		~ActiveDocumentActionCollection();
+	};
+
 	property List<IScriptDocument^>^ Documents;
 	property IScriptDocument^ ActiveDocument;
+	property ActiveDocumentActionCollection^ ActiveDocumentActions;
 
 	event ActiveDocumentChangedEventHandler^ ActiveDocumentChanged;
 

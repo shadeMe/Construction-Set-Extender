@@ -15,7 +15,7 @@ namespace cse
 			static int									InstanceCounter = 0;
 			static Image^								DefaultIcon = nullptr;
 
-			static Image^								GetScopeIcon(obScriptParsing::Structurizer::Node::NodeType Type);
+			static Image^								GetScopeIcon(obScriptParsing::Structurizer::Node::eNodeType Type);
 		protected:
 			ref struct CrumbData
 			{

@@ -1,22 +1,21 @@
 #pragma once
 #include "[Common]\IncludesCLR.h"
 
-using namespace System::Runtime::Serialization;
 
 namespace cse
 {
 	class ByteCodeParser
 	{
 	protected:
-		static UInt32										Read16(Array^% Data, UInt32% CurrentOffset);
-		static bool											LineHasData(String^% Line);
+		static UInt32 Read16(Array^% Data, UInt32% CurrentOffset);
+		static bool LineHasData(String^% Line);
 	public:
-		static UInt32										GetOffsetForLine(String^% Line, Array^% Data, UInt32% CurrentOffset);
+		static UInt32 GetOffsetForLine(String^% Line, Array^% Data, UInt32% CurrentOffset);
 	};
 
 	namespace obScriptParsing
 	{
-		static enum	class ScriptType
+		static enum	class eScriptType
 		{
 			None = 0,
 			Object,
@@ -24,7 +23,7 @@ namespace cse
 			MagicEffect
 		};
 
-		static enum	class ScriptTokenType
+		static enum	class eScriptTokenType
 		{
 			None = 0,
 			ScriptName,
@@ -52,19 +51,19 @@ namespace cse
 
 		ref class LineTokenizer
 		{
-			bool					Good;
-			String^					ReferenceDelimiters;
-			String^					ReferenceControlChars;
+			bool Good;
+			String^ ReferenceDelimiters;
+			String^ ReferenceControlChars;
 		public:
-			List<String^>^			Tokens;
-			List<UInt32>^			Indices;					// the position of each token relative to its parent line
-			List<Char>^				Delimiters;
+			List<String^>^ Tokens;
+			List<UInt32>^ Indices;					// the position of each token relative to its parent line
+			List<Char>^ Delimiters;
 
-			property UInt32			TokenCount
+			property UInt32 TokenCount
 			{
 				virtual UInt32 get() { return Tokens->Count; }
 			}
-			property bool			Valid
+			property bool Valid
 			{
 				virtual bool get() { return Good; }
 			}
@@ -73,59 +72,59 @@ namespace cse
 			LineTokenizer(String^ InputDelimiters);
 			LineTokenizer(String^ InputDelimiters, String^ InputControlChars);
 
-			bool						Tokenize(String^ Source, bool CollectEmptyTokens);
-			void						ResetState();
+			bool Tokenize(String^ Source, bool CollectEmptyTokens);
+			void ResetState();
 
-			ScriptTokenType				GetFirstTokenType(void);
-			int							GetCommentTokenIndex(int SearchEndIndex);		// returns the index of the token that contains the comment delimiter. argument specifies the end token index for the search (pass -1 for full search)
-			int							GetTokenIndex(String^ Source);					// returns the token index corresponding to the first match
-			bool						IsIndexInsideString(int Index);
+			eScriptTokenType GetFirstTokenType(void);
+			int GetCommentTokenIndex(int SearchEndIndex);		// returns the index of the token that contains the comment delimiter. argument specifies the end token index for the search (pass -1 for full search)
+			int GetTokenIndex(String^ Source);					// returns the token index corresponding to the first match
+			bool IsIndexInsideString(int Index);
 
-			static ScriptTokenType		GetScriptTokenType(String^ ScriptToken);
-			static bool					GetIndexInsideString(String^ Source, int Index);	// returns true if the index follows a " character or if it is wrapped b'ween two
-			static bool					HasIllegalChar(String^ Source, String^ Includes, String^ Excludes);
+			static eScriptTokenType GetScriptTokenType(String^ ScriptToken);
+			static bool GetIndexInsideString(String^ Source, int Index);	// returns true if the index follows a " character or if it is wrapped b'ween two
+			static bool HasIllegalChar(String^ Source, String^ Includes, String^ Excludes);
 
-			static String^			DefaultDelimiters = "., (){}[]\t\r\n";
-			static String^			DefaultControlChars = " \t";
+			static String^ DefaultDelimiters = "., (){}[]\t\r\n";
+			static String^ DefaultControlChars = " \t";
 		};
 
 		ref struct Variable
 		{
-			[DataContract]
+			[System::Runtime::Serialization::DataContract]
 			static enum class DataType
 			{
-				[EnumMember]
+				[System::Runtime::Serialization::EnumMember]
 				None = 0,
-				[EnumMember]
+				[System::Runtime::Serialization::EnumMember]
 				Integer,
-				[EnumMember]
+				[System::Runtime::Serialization::EnumMember]
 				Float,
-				[EnumMember]
+				[System::Runtime::Serialization::EnumMember]
 				Ref,
-				[EnumMember]
+				[System::Runtime::Serialization::EnumMember]
 				StringVar,
-				[EnumMember]
+				[System::Runtime::Serialization::EnumMember]
 				ArrayVar
 			};
 
-			String^		Name;
-			String^		Comment;
-			DataType	Type;
-			bool		UDFParameter;
-			UInt32		ParameterIndex;		// index of the variable in the UDF parameter list (0-9)
-			UInt32		Line;
-			UInt32		RefCount;
+			String^ Name;
+			String^ Comment;
+			DataType Type;
+			bool UDFParameter;
+			UInt32 ParameterIndex;		// index of the variable in the UDF parameter list (0-9)
+			UInt32 Line;
+			UInt32 RefCount;
 
 			Variable(String^ Name, DataType Type, String^ Comment, UInt32 Line);
 
-			static Variable::DataType				GetVariableDataType(String^ TypeToken);
-			static String^							GetVariableDataTypeToken(Variable::DataType Type);
-			static String^							GetVariableDataTypeDescription(Variable::DataType Type);
+			static Variable::DataType GetVariableDataType(String^ TypeToken);
+			static String^ GetVariableDataTypeToken(Variable::DataType Type);
+			static String^ GetVariableDataTypeDescription(Variable::DataType Type);
 		};
 
 		ref struct ControlBlock
 		{
-			static enum	class ControlBlockType
+			static enum	class eControlBlockType
 			{
 				None = 0,
 				ScriptBlock,
@@ -136,23 +135,23 @@ namespace cse
 				ForEach
 			};
 
-			ControlBlockType		Type;
-			UInt32					StartLine;
-			UInt32					EndLine;				// line with the block end specifier
-			UInt32					IndentLevel;			// indent count for the block's contents
-			ControlBlock^			Parent;					// nullptr for script blocks
-			bool					BasicBlock;				// set to true for all blocks except IFs with ELSE/ELSEIF clauses
-			UInt32					OuterEndLine;			// set to the ENDIF line for IF's with ELSE/ELSEIF clauses
-			List<ControlBlock^>^	ChildBlocks;
+			eControlBlockType Type;
+			UInt32 StartLine;
+			UInt32 EndLine;				// line with the block end specifier
+			UInt32 IndentLevel;			// indent count for the block's contents
+			ControlBlock^ Parent;		// nullptr for script blocks
+			bool BasicBlock;			// set to true for all blocks except IFs with ELSE/ELSEIF clauses
+			UInt32 OuterEndLine;		// set to the ENDIF line for IF's with ELSE/ELSEIF clauses
+			List<ControlBlock^>^ ChildBlocks;
 
-			ControlBlock(ControlBlockType Type, UInt32 Start, UInt32 Indents, ControlBlock^ Parent);
+			ControlBlock(eControlBlockType Type, UInt32 Start, UInt32 Indents, ControlBlock^ Parent);
 
-			bool					IsMalformed();
+			bool IsMalformed();
 		};
 
 		ref struct ScriptBlock : public ControlBlock
 		{
-			static enum	class ScriptBlockAttribute
+			static enum	class eScriptBlockAttribute
 			{
 				None = 0,
 				Universal,
@@ -160,7 +159,7 @@ namespace cse
 				MagicEffect
 			};
 
-			static enum class ScriptBlockType
+			static enum class eScriptBlockType
 			{
 				None = 0,
 				GameMode,
@@ -195,48 +194,49 @@ namespace cse
 				Function,
 			};
 
-			ScriptBlockAttribute	SBAttribute;
-			ScriptBlockType			SBType;
-			bool					CompilerOverride;
+			eScriptBlockAttribute ScriptBlockAttribute;
+			eScriptBlockType ScriptBlockType;
+			bool CompilerOverride;
 
-			ScriptBlock(UInt32 Start, UInt32 Indents, ScriptBlockType Type, bool Override);
+			ScriptBlock(UInt32 Start, UInt32 Indents, eScriptBlockType Type, bool Override);
 
-			bool							IsBlockValid(ScriptType Type);
+			bool IsBlockValid(eScriptType Type);
 
-			static ScriptBlockType			GetScriptBlockType(String^ TypeToken);
-			static String^					GetScriptBlockTypeToken(ScriptBlockType Type);
-			static bool						HasCompilerOverride(String^ TypeToken);
+			static eScriptBlockType GetScriptBlockType(String^ TypeToken);
+			static String^ GetScriptBlockTypeToken(eScriptBlockType Type);
+			static bool HasCompilerOverride(String^ TypeToken);
 		};
 
 		ref struct AnalysisData
 		{
 			ref struct UserMessage
 			{
-				UInt32				Line;
-				String^				Message;
-				bool				Critical;
+				UInt32 Line;
+				String^ Message;
+				bool Critical;
 
 				UserMessage(UInt32 Line, String^ Message, bool Critical);
 			};
 
-			String^					Name;
-			String^					Description;
-			List<Variable^>^		Variables;
-			UInt32					NextVariableLine;			// line where the next variable can be inserted
-			List<ControlBlock^>^	ControlBlocks;
-			bool					MalformedStructure;
-			UInt32					FirstStructuralErrorLine;
-			bool					UDF;
-			Variable^				UDFResult;
-			bool					UDFAmbiguousResult;
-			List<UserMessage^>^		AnalysisMessages;
-			property bool			HasCriticalMessages
+			String^ Name;
+			String^ Description;
+			List<Variable^>^ Variables;
+			UInt32 NextVariableLine;			// line where the next variable can be inserted
+			List<ControlBlock^>^ ControlBlocks;
+			bool MalformedStructure;
+			UInt32 FirstStructuralErrorLine;
+			bool IsUDF;
+			Variable^ UDFResult;
+			bool UDFAmbiguousResult;
+			List<UserMessage^>^ AnalysisMessages;
+
+			property bool HasCriticalMessages
 			{
 				virtual bool get() { return GetHasCriticalMessages(); }
 			}
 
 			[Flags]
-			static enum class Operation
+			static enum class eOperation
 			{
 				None = 0,
 				FillVariables = 1 << 0,
@@ -252,19 +252,17 @@ namespace cse
 
 			ref struct Params
 			{
-				property String^			ScriptText;
-				property ScriptType			Type;
-				property Operation			Ops;
-				property System::Collections::Generic::HashSet<String^>^
-											ScriptCommandIdentifiers;
-				property System::Collections::Generic::HashSet<String^>^
-											FormIdentifiers;
+				property String^ ScriptText;
+				property eScriptType Type;
+				property eOperation Ops;
+				property System::Collections::Generic::HashSet<String^>^ ScriptCommandIdentifiers;
+				property System::Collections::Generic::HashSet<String^>^ FormIdentifiers;
 
 				Params()
 				{
 					ScriptText = "";
-					Type = ScriptType::None;
-					Ops = Operation::None;
+					Type = eScriptType::None;
+					Ops = eOperation::None;
 					ScriptCommandIdentifiers = gcnew System::Collections::Generic::HashSet<String^>;
 					FormIdentifiers = gcnew System::Collections::Generic::HashSet<String^>;
 				}
@@ -273,30 +271,30 @@ namespace cse
 			AnalysisData();
 			~AnalysisData();
 
-			void				PerformAnalysis(Params^ Parameters);
+			void PerformAnalysis(Params^ Parameters);
 
-			ControlBlock^		GetBlockStartingAt(UInt32 Line);
-			ControlBlock^		GetBlockEndingAt(UInt32 Line);
-			UInt32				GetLineIndentLevel(UInt32 Line);
-			Variable^			LookupVariable(String^ VarName);
-			AnalysisData^		Clone();
+			ControlBlock^ GetBlockStartingAt(UInt32 Line);
+			ControlBlock^ GetBlockEndingAt(UInt32 Line);
+			UInt32 GetLineIndentLevel(UInt32 Line);
+			Variable^ LookupVariable(String^ VarName);
+			AnalysisData^ Clone();
 		private:
-			void				LogAnalysisMessage(UInt32 Line, String^ Message);
-			void				LogCriticalAnalysisMessage(UInt32 Line, String^ Message);
-			bool				GetHasCriticalMessages();
-			bool				ParseConditionExpression(UInt32 Line, String^ Expression);
+			void LogAnalysisMessage(UInt32 Line, String^ Message);
+			void LogCriticalAnalysisMessage(UInt32 Line, String^ Message);
+			bool GetHasCriticalMessages();
+			bool ParseConditionExpression(UInt32 Line, String^ Expression);
 		};
 
 		ref class Sanitizer
 		{
-			String^								InputText;
-			AnalysisData^						Data;
-			String^								SanitizedText;
+			String^ InputText;
+			AnalysisData^ Data;
+			String^ SanitizedText;
 		public:
 			Sanitizer(String^ Source);
 
 			[Flags]
-			static enum class Operation
+			static enum class eOperation
 			{
 				IndentLines = 1 << 0,
 				AnnealCasing = 1 << 1,
@@ -304,33 +302,33 @@ namespace cse
 				CompilerOverrideBlocks = 1 << 3,
 			};
 
-			property String^					Output
+			property String^ Output
 			{
 				virtual String^	get() { return SanitizedText; }
 			}
 
-			delegate String^					GetSanitizedIdentifier(String^ Identifier);
+			delegate String^ GetSanitizedIdentifier(String^ Identifier);
 
-			bool								SanitizeScriptText(Operation Operations, GetSanitizedIdentifier^ Delegate);		// returns false if unsuccessful
+			bool SanitizeScriptText(eOperation Operations, GetSanitizedIdentifier^ Delegate);		// returns false if unsuccessful
 
-			static String^						PerformLocalizedIndenting(String^ Source, UInt32 DefaultIndentLevel);
+			static String^ PerformLocalizedIndenting(String^ Source, UInt32 DefaultIndentLevel);
 		};
 
 		ref class Documenter
 		{
-			String^								InputText;
-			String^								DocumentedText;
+			String^ InputText;
+			String^ DocumentedText;
 
-			String^								GetVariableDescription(String^ Identifier, Dictionary<String^, String^>^ Descriptions);
+			String^ GetVariableDescription(String^ Identifier, Dictionary<String^, String^>^ Descriptions);
 		public:
 			Documenter(String^ Source);
 
-			property String^					Output
+			property String^ Output
 			{
 				virtual String^	get() { return DocumentedText; }
 			}
 
-			void								Document(String^ ScriptDescription, Dictionary<String^, String^>^ VariableDescriptions);
+			void Document(String^ ScriptDescription, Dictionary<String^, String^>^ VariableDescriptions);
 		};
 
 		ref class Structurizer
@@ -338,7 +336,7 @@ namespace cse
 		public:
 			ref struct Node
 			{
-				enum class NodeType
+				enum class eNodeType
 				{
 					Invalid,
 					VariableDeclaration,
@@ -348,12 +346,12 @@ namespace cse
 				};
 
 				String^ Description;
-				NodeType Type;
+				eNodeType Type;
 				UInt32 StartLine;
 				UInt32 EndLine;
 				List<Node^>^ Children;
 
-				Node(NodeType Type, UInt32 StartLine, UInt32 EndLine, String^ Desc);
+				Node(eNodeType Type, UInt32 StartLine, UInt32 EndLine, String^ Desc);
 			};
 
 			delegate String^ GetLineText(UInt32 Line);

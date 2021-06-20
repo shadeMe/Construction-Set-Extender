@@ -56,7 +56,7 @@ namespace cse
 
 				bool		Dirty;
 				UInt32		ByteCodeSize;		// in bytes
-				ScriptType	ScriptType;
+				eScriptType	ScriptType;
 				String^		ShortDescription;
 				String^		LongDescription;
 				List<ScriptDiagnosticMessage^>^
@@ -134,9 +134,9 @@ namespace cse
 			void	LoadFromDisk(IWorkspaceModel^ Model, String^ PathToFile);
 			void	SaveToDisk(IWorkspaceModel^ Model, String^ PathToFile, bool PathIncludesFileName, String^ Extension);
 
-			textEditor::ITextEditor::FindReplaceResult^
-					FindReplace(IWorkspaceModel^ Model, textEditor::ITextEditor::eFindReplaceOperation Operation,
-								String^ Query, String^ Replacement, textEditor::ITextEditor::FindReplaceOptions Options);
+			textEditor::FindReplaceResult^
+					FindReplace(IWorkspaceModel^ Model, textEditor::eFindReplaceOperation Operation,
+								String^ Query, String^ Replacement, textEditor::eFindReplaceOptions Options);
 
 
 			bool	GetOffsetViewerData(IWorkspaceModel^ Model, String^% OutText, void** OutBytecode, UInt32% OutLength); // returns false if the operation's invalid (unsaved changes)

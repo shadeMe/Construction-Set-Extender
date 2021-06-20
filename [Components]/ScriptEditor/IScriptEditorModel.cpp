@@ -53,8 +53,8 @@ ScriptBookmark::ScriptBookmark(textEditor::ILineAnchor^ Anchor, String^ Descript
 {
 }
 
-ScriptFindResult::ScriptFindResult(textEditor::ILineAnchor^ Anchor, String^ Description, UInt32 Hits)
-	: ScriptLineAnnotation(Anchor, Description), Hits_(Hits)
+ScriptFindResult::ScriptFindResult(textEditor::ILineAnchor^ Anchor, String^ Description, UInt32 Hits, String^ Query)
+	: ScriptLineAnnotation(Anchor, Description), Hits_(Hits), Query_(Query)
 {
 }
 
@@ -224,6 +224,27 @@ IScriptEditorModel::ActiveDocumentChangedEventArgs::ActiveDocumentChangedEventAr
 	OldValue = Old;
 	NewValue = New;
 }
+
+IScriptEditorModel::ActiveDocumentActionCollection::ActiveDocumentActionCollection()
+{
+	Copy = gcnew BasicAction("Copy", "Copies the current selection or line");
+	Paste = gcnew BasicAction("Paste", "Pastes the contents of the clipboard at the caret location");
+	Comment = gcnew BasicAction("Comment", "Comments the current selection or line");
+	Uncomment = gcnew BasicAction("Uncomment", "Uncomments the current selection or line");
+	AddBookmark = gcnew ParameterizedAction("Add Bookmark", "Adds a new bookmark at the current line");
+	GoToLine = gcnew ParameterizedAction("Go to Line", "Jumps to a given line in the document");
+}
+
+IScriptEditorModel::ActiveDocumentActionCollection::~ActiveDocumentActionCollection()
+{
+	SAFEDELETE_CLR(Copy);
+	SAFEDELETE_CLR(Paste);
+	SAFEDELETE_CLR(Comment);
+	SAFEDELETE_CLR(Uncomment);
+	SAFEDELETE_CLR(AddBookmark);
+	SAFEDELETE_CLR(GoToLine);
+}
+
 
 } // namespace model
 

@@ -504,9 +504,9 @@ IntelliSenseItemScript::IntelliSenseItemScript(componentDLLInterface::ScriptData
 	auto AnalysisParams = gcnew obScriptParsing::AnalysisData::Params;
 
 	AnalysisParams->ScriptText = gcnew String(ScriptData->Text);
-	AnalysisParams->Ops = obScriptParsing::AnalysisData::Operation::FillVariables |
-						obScriptParsing::AnalysisData::Operation::FillControlBlocks |
-						obScriptParsing::AnalysisData::Operation::FillUDFData;
+	AnalysisParams->Ops = obScriptParsing::AnalysisData::eOperation::FillVariables |
+						obScriptParsing::AnalysisData::eOperation::FillControlBlocks |
+						obScriptParsing::AnalysisData::eOperation::FillUDFData;
 
 
 	InitialAnalysisData->PerformAnalysis(AnalysisParams);
@@ -561,7 +561,7 @@ IntelliSenseItemUserFunction::IntelliSenseItemUserFunction(componentDLLInterface
 		ParameterIndices->Add(-1);
 	ReturnVarIndex = kReturnVarIdxNone;
 
-	Debug::Assert(InitialAnalysisData->UDF == true);
+	Debug::Assert(InitialAnalysisData->IsUDF == true);
 
 	int VarIdx = 0, NumParams = 0;
 	for each (obScriptParsing::Variable ^ Itr in InitialAnalysisData->Variables)

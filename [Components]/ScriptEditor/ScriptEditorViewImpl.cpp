@@ -701,12 +701,6 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->ToolsMenuDocumentScript->Name = L"ToolsMenuDocumentScript";
 	this->ToolsMenuDocumentScript->Text = L"Doc&ument Script...";
 	//
-	// ToolsMenuRenameVars
-	//
-	this->ToolsMenuRenameVars->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolsMenuRenameVars.Image")));
-	this->ToolsMenuRenameVars->Name = L"ToolsMenuRenameVars";
-	this->ToolsMenuRenameVars->Text = L"Re&name Variables...";
-	//
 	// ToolsMenuModifyVarIndices
 	//
 	this->ToolsMenuModifyVarIndices->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolsMenuModifyVarIndices.Image")));
@@ -2128,12 +2122,14 @@ void ScriptEditorWorkspace::InitializeViewComponents()
 	SetupViewComponentButton(ToolbarSaveAllScripts, eViewRole::MainToolbar_SaveAllScripts);
 	SetupViewComponentComboBox(ToolbarScriptTypeDropdown, eViewRole::MainToolbar_ScriptTypeDropdown);
 
+	SetupViewComponentButton(ToolbarMenuEdit, eViewRole::MainToolbar_Edit);
 	SetupViewComponentButton(EditMenuFindReplace, eViewRole::MainToolbar_Edit_FindReplace);
 	SetupViewComponentButton(EditMenuGoToLine, eViewRole::MainToolbar_Edit_GoToLine);
 	SetupViewComponentButton(EditMenuGoToOffset, eViewRole::MainToolbar_Edit_GoToOffset);
 	SetupViewComponentButton(EditMenuAddBookmark, eViewRole::MainToolbar_Edit_AddBookmark);
 	SetupViewComponentButton(EditMenuToggleComment, eViewRole::MainToolbar_Edit_ToggleComment);
 
+	SetupViewComponentButton(ToolbarMenuView, eViewRole::MainToolbar_View);
 	SetupViewComponentButton(ViewMenuPreprocessorOutput, eViewRole::MainToolbar_View_PreprocessorOutput);
 	SetupViewComponentButton(ViewMenuBytecodeOffsets, eViewRole::MainToolbar_View_BytecodeOffsets);
 	SetupViewComponentButton(ViewMenuIconMargin, eViewRole::MainToolbar_View_IconMargin);
@@ -2145,6 +2141,7 @@ void ScriptEditorWorkspace::InitializeViewComponents()
 	SetupViewComponentButton(ViewMenuNavBreadcrumb, eViewRole::MainToolbar_View_NavigationBar);
 	SetupViewComponentButton(ViewMenuDarkMode, eViewRole::MainToolbar_View_DarkMode);
 
+	SetupViewComponentButton(ToolbarMenuTools, eViewRole::MainToolbar_Tools);
 	SetupViewComponentButton(ToolsMenuSanitiseScript, eViewRole::MainToolbar_Tools_SanitiseScript);
 	SetupViewComponentButton(ToolsMenuAttachScript, eViewRole::MainToolbar_Tools_AttachScript);
 	SetupViewComponentButton(ToolsMenuCompileDepends, eViewRole::MainToolbar_Tools_RecompileScriptDependencies);

@@ -87,7 +87,7 @@ void ScriptDocument::ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E)
 
 void ScriptDocument::OnStateChangedDirty(bool Modified)
 {
-	auto E = gcnew IScriptDocument::StateChangeEventArgs(this);
+	auto E = gcnew IScriptDocument::StateChangeEventArgs;
 	E->EventType = IScriptDocument::StateChangeEventArgs::eEventType::Dirty;
 	E->Dirty = Modified;
 	StateChanged(this, E);
@@ -95,7 +95,7 @@ void ScriptDocument::OnStateChangedDirty(bool Modified)
 
 void ScriptDocument::OnStateChangedBytecodeLength(UInt16 Size)
 {
-	auto E = gcnew IScriptDocument::StateChangeEventArgs(this);
+	auto E = gcnew IScriptDocument::StateChangeEventArgs;
 	E->EventType = IScriptDocument::StateChangeEventArgs::eEventType::BytecodeLength;
 	E->BytecodeLength = Size;
 	StateChanged(this, E);
@@ -103,7 +103,7 @@ void ScriptDocument::OnStateChangedBytecodeLength(UInt16 Size)
 
 void ScriptDocument::OnStateChangedType(IScriptDocument::eScriptType Type)
 {
-	auto E = gcnew IScriptDocument::StateChangeEventArgs(this);
+	auto E = gcnew IScriptDocument::StateChangeEventArgs;
 	E->EventType = IScriptDocument::StateChangeEventArgs::eEventType::ScriptType;
 	E->ScriptType = Type;
 	StateChanged(this, E);
@@ -111,7 +111,7 @@ void ScriptDocument::OnStateChangedType(IScriptDocument::eScriptType Type)
 
 void ScriptDocument::OnStateChangedEditorIdAndFormId(String^ EditorId, UInt32 FormId)
 {
-	auto E = gcnew IScriptDocument::StateChangeEventArgs(this);
+	auto E = gcnew IScriptDocument::StateChangeEventArgs;
 	E->EventType = IScriptDocument::StateChangeEventArgs::eEventType::EditorIdAndFormId;
 	E->EditorId = EditorId;
 	E->FormId = FormId;
@@ -123,7 +123,7 @@ void ScriptDocument::OnStateChangedMessages()
 	if (ActiveBatchUpdateSource == eBatchUpdateSource::Messages)
 		return;
 
-	auto E = gcnew IScriptDocument::StateChangeEventArgs(this);
+	auto E = gcnew IScriptDocument::StateChangeEventArgs;
 	E->EventType = IScriptDocument::StateChangeEventArgs::eEventType::Messages;
 	E->Messages = Messages;
 	StateChanged(this, E);
@@ -134,7 +134,7 @@ void ScriptDocument::OnStateChangedBookmarks()
 	if (ActiveBatchUpdateSource == eBatchUpdateSource::Bookmarks)
 		return;
 
-	auto E = gcnew IScriptDocument::StateChangeEventArgs(this);
+	auto E = gcnew IScriptDocument::StateChangeEventArgs;
 	E->EventType = IScriptDocument::StateChangeEventArgs::eEventType::Bookmarks;
 	E->Bookmarks = Bookmarks;
 	StateChanged(this, E);
@@ -145,7 +145,7 @@ void ScriptDocument::OnStateChangedFindResults()
 	if (ActiveBatchUpdateSource == eBatchUpdateSource::FindResults)
 		return;
 
-	auto E = gcnew IScriptDocument::StateChangeEventArgs(this);
+	auto E = gcnew IScriptDocument::StateChangeEventArgs;
 	E->EventType = IScriptDocument::StateChangeEventArgs::eEventType::FindResults;
 	E->FindResults = FindResults;
 	StateChanged(this, E);
@@ -358,13 +358,13 @@ void ScriptDocument::ClearBookmarks()
 	OnStateChangedBookmarks();
 }
 
-void ScriptDocument::AddFindResult(UInt32 Line, String^ PreviewText, UInt32 Hits)
+void ScriptDocument::AddFindResult(String^ Query, UInt32 Line, String^ PreviewText, UInt32 Hits)
 {
 	if (Line > TextEditor->LineCount)
 		Line = TextEditor->LineCount;
 
 	auto LineAnchor = TextEditor->CreateLineAnchor(Line);
-	auto NewFindResult= gcnew ScriptFindResult(LineAnchor, PreviewText->Replace("\t", ""), Hits);
+	auto NewFindResult= gcnew ScriptFindResult(LineAnchor, PreviewText->Replace("\t", ""), Hits, Query);
 	FindResults->Add(NewFindResult);
 	OnStateChangedFindResults();
 }
@@ -724,16 +724,93 @@ System::DateTime ScriptDocument::GetAutoRecoveryFileLastWriteTimestamp()
 
 void ScriptEditorDocumentModel::SetActiveScriptDocument(ScriptDocument^ New)
 {
+	if (SettingActiveScriptDocument)
+	{
+		// the only type of reentrant call we expect is one where the new active document is the same as the current
+		// this can potentially arise if there is a loop in the event chain connecting the model and the view
+		// only such cases can be safely ignored
+		Debug::Assert(New == ActiveScriptDocument);
+		return;
+	}
+
+	SettingActiveScriptDocument = true;
 	auto EventArgs = gcnew IScriptEditorModel::ActiveDocumentChangedEventArgs(ActiveScriptDocument, New);
 
 	ActiveScriptDocument = New;
 	ActiveDocumentChanged(this, EventArgs);
+	SettingActiveScriptDocument = false;
 }
+
+bool ScriptEditorDocumentModel::ValidateCommonActionPreconditions()
+{
+	if (ActiveDocument == nullptr)
+		return false;
+}
+
+void ScriptEditorDocumentModel::ActiveAction_Copy()
+{
+	if (!ValidateCommonActionPreconditions())
+		return;
+
+	ActiveDocument->TextEditor->InvokeDefaultCopy();
+}
+
+void ScriptEditorDocumentModel::ActiveAction_Paste()
+{
+	if (!ValidateCommonActionPreconditions())
+		return;
+
+	ActiveDocument->TextEditor->InvokeDefaultPaste();
+}
+
+void ScriptEditorDocumentModel::ActiveAction_Comment()
+{
+	if (!ValidateCommonActionPreconditions())
+		return;
+
+	ActiveDocument->TextEditor->CommentSelection();
+}
+
+void ScriptEditorDocumentModel::ActiveAction_Uncomment()
+{
+	if (!ValidateCommonActionPreconditions())
+		return;
+
+	ActiveDocument->TextEditor->UncommentSelection();
+}
+
+void ScriptEditorDocumentModel::ActiveAction_AddBookmark(Object^ Params)
+{
+	if (!ValidateCommonActionPreconditions())
+		return;
+
+	auto ActionParam = safe_cast<IScriptEditorModel::ActiveDocumentActionCollection::AddBookmarkParams^>(Params);
+	ActiveDocument->AddBookmark(ActiveDocument->TextEditor->CurrentLine, ActionParam->BookmarkDescription);
+}
+
+void ScriptEditorDocumentModel::ActiveAction_GoToLine(Object^ Params)
+{
+	if (!ValidateCommonActionPreconditions())
+		return;
+
+	auto ActionParam = safe_cast<IScriptEditorModel::ActiveDocumentActionCollection::GoToLineParams^>(Params);
+	ActiveDocument->TextEditor->ScrollToLine(ActionParam->Line);
+}
+
 
 ScriptEditorDocumentModel::ScriptEditorDocumentModel()
 {
 	ScriptDocuments = gcnew List<ScriptDocument^>;
 	ActiveScriptDocument = nullptr;
+	SettingActiveScriptDocument = false;
+
+	ActiveActions = gcnew IScriptEditorModel::ActiveDocumentActionCollection;
+	ActiveActions->Copy->Delegate = gcnew ActionDelegate(this, &ScriptEditorDocumentModel::ActiveAction_Copy);
+	ActiveActions->Paste->Delegate = gcnew ActionDelegate(this, &ScriptEditorDocumentModel::ActiveAction_Paste);
+	ActiveActions->Comment->Delegate = gcnew ActionDelegate(this, &ScriptEditorDocumentModel::ActiveAction_Comment);
+	ActiveActions->Uncomment->Delegate = gcnew ActionDelegate(this, &ScriptEditorDocumentModel::ActiveAction_Uncomment);
+	ActiveActions->AddBookmark->Delegate = gcnew ParameterizedActionDelegate(this, &ScriptEditorDocumentModel::ActiveAction_AddBookmark);
+	ActiveActions->GoToLine->Delegate = gcnew ParameterizedActionDelegate(this, &ScriptEditorDocumentModel::ActiveAction_GoToLine);
 }
 
 ScriptEditorDocumentModel::~ScriptEditorDocumentModel()
@@ -743,6 +820,7 @@ ScriptEditorDocumentModel::~ScriptEditorDocumentModel()
 
 	ActiveScriptDocument = nullptr;
 	ScriptDocuments->Clear();
+	SAFEDELETE_CLR(ActiveActions);
 }
 
 IScriptDocument^ ScriptEditorDocumentModel::AllocateNewDocument()
@@ -801,6 +879,15 @@ IScriptDocument^ ScriptEditorDocumentModel::LookupDocument(String^ EditorId)
 	return nullptr;
 }
 
+IScriptDocument^ ScriptEditorDocumentModel::ActiveDocument::get()
+{
+	return ActiveScriptDocument;
+}
+
+void ScriptEditorDocumentModel::ActiveDocument::set(IScriptDocument^ v)
+{
+	SetActiveScriptDocument(safe_cast<ScriptDocument^>(v));
+}
 
 } // namespace modelImpl
 

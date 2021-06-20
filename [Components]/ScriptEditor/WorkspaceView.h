@@ -58,8 +58,8 @@ namespace cse
 			virtual void	BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
 
 			virtual void	Jump(IWorkspaceView^ View, IWorkspaceModel^ From, String^ ScriptEditorID);
-			virtual int		FindReplace(IWorkspaceView^ View, textEditor::ITextEditor::eFindReplaceOperation Operation,
-										String^ Query, String^ Replacement, textEditor::ITextEditor::FindReplaceOptions Options, bool Global);
+			virtual int		FindReplace(IWorkspaceView^ View, textEditor::eFindReplaceOperation Operation,
+										String^ Query, String^ Replacement, textEditor::eFindReplaceOptions Options, bool Global);
 			virtual void	ShowOutline(IWorkspaceView^ View, obScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model);
 
 			virtual void	Redraw(IWorkspaceView^ View);
@@ -174,9 +174,9 @@ namespace cse
 			{
 				IWorkspaceModel^										ParentModel;
 				String^													ParentDescription;
-				textEditor::ITextEditor::FindReplaceResult^		Results;
+				textEditor::FindReplaceResult^		Results;
 
-				PerScriptData(IWorkspaceModel^ Parent, textEditor::ITextEditor::FindReplaceResult^ Data)
+				PerScriptData(IWorkspaceModel^ Parent, textEditor::FindReplaceResult^ Data)
 				{
 					ParentModel = Parent;
 					ParentDescription = ParentModel->LongDescription;
@@ -185,27 +185,27 @@ namespace cse
 
 				property int TotalHitCount
 				{
-					int get() { return Results->TotalHitCount; }
+					int get() { return Results->TotalHits; }
 				}
 			};
 
-			textEditor::ITextEditor::eFindReplaceOperation		Operation;
+			textEditor::eFindReplaceOperation		Operation;
 			String^														Query;
 			String^														Replacement;
-			textEditor::ITextEditor::FindReplaceOptions			Options;
+			textEditor::eFindReplaceOptions			Options;
 
 			List<PerScriptData^>^										ScriptsWithHits;
 
 			FindReplaceAllResults()
 			{
-				Operation = textEditor::ITextEditor::eFindReplaceOperation::CountMatches;
+				Operation = textEditor::eFindReplaceOperation::CountMatches;
 				Query = "";
 				Replacement = "";
-				Options = textEditor::ITextEditor::FindReplaceOptions::None;
+				Options = textEditor::eFindReplaceOptions::None;
 				ScriptsWithHits = gcnew List<PerScriptData^>;
 			}
 
-			void Add(IWorkspaceModel^ Model, textEditor::ITextEditor::FindReplaceResult^ Data)
+			void Add(IWorkspaceModel^ Model, textEditor::FindReplaceResult^ Data)
 			{
 				Debug::Assert(Data->HasError == false);
 				ScriptsWithHits->Add(gcnew PerScriptData(Model, Data));
@@ -218,7 +218,7 @@ namespace cse
 					int Count = 0;
 
 					for each (auto Instance in ScriptsWithHits)
-						Count += Instance->Results->TotalHitCount;
+						Count += Instance->Results->TotalHits;
 
 					return Count;
 				}

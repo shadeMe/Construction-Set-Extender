@@ -533,19 +533,19 @@ void ObScriptIndentStrategy::CalculateIndentsTillCurrentLine(AvalonEdit::Documen
 		{
 			switch (Parser->GetFirstTokenType())
 			{
-			case obScriptParsing::ScriptTokenType::Begin:
-			case obScriptParsing::ScriptTokenType::If:
-			case obScriptParsing::ScriptTokenType::ForEach:
-			case obScriptParsing::ScriptTokenType::While:
+			case obScriptParsing::eScriptTokenType::Begin:
+			case obScriptParsing::eScriptTokenType::If:
+			case obScriptParsing::eScriptTokenType::ForEach:
+			case obScriptParsing::eScriptTokenType::While:
 				++RunningIndentCount;
 				break;
-			case obScriptParsing::ScriptTokenType::ElseIf:
-			case obScriptParsing::ScriptTokenType::Else:
+			case obScriptParsing::eScriptTokenType::ElseIf:
+			case obScriptParsing::eScriptTokenType::Else:
 				--CurrentLineIndents;
 				break;
-			case obScriptParsing::ScriptTokenType::End:
-			case obScriptParsing::ScriptTokenType::EndIf:
-			case obScriptParsing::ScriptTokenType::Loop:
+			case obScriptParsing::eScriptTokenType::End:
+			case obScriptParsing::eScriptTokenType::EndIf:
+			case obScriptParsing::eScriptTokenType::Loop:
 				--RunningIndentCount;
 				--CurrentLineIndents;
 				break;

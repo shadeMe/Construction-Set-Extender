@@ -60,8 +60,8 @@ namespace cse
 			void DetachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
 			void BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
 			void Jump(IWorkspaceView^ View, IWorkspaceModel^ From, String^ ScriptEditorID);
-			int	 FindReplace(IWorkspaceView^ View, textEditor::ITextEditor::eFindReplaceOperation Operation,
-				 			 String^ Query, String^ Replacement, textEditor::ITextEditor::FindReplaceOptions Options, bool Global);
+			int	 FindReplace(IWorkspaceView^ View, textEditor::eFindReplaceOperation Operation,
+				 			 String^ Query, String^ Replacement, textEditor::eFindReplaceOptions Options, bool Global);
 			void ShowOutline(IWorkspaceView^ View, obScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model);
 			void Redraw(IWorkspaceView^ View);
 			void NewTab(IWorkspaceView^ View, NewTabOperationArgs^ E);

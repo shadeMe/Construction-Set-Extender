@@ -196,9 +196,9 @@ namespace UIComponents {
 	private: DevComponents::DotNetBar::Controls::CheckBoxX^ FindWindowCheckboxUseRegEx;
 	private: DevComponents::DotNetBar::Controls::CheckBoxX^ FindWindowCheckBoxMatchWholeWord;
 	private: DevComponents::DotNetBar::Controls::ComboBoxEx^ FindWindowComboLookIn;
-	private: DevComponents::Editors::ComboItem^ FindWindowDropdownLookInSelection;
-	private: DevComponents::Editors::ComboItem^ FindWindowDropdownLookInCurrentScript;
-	private: DevComponents::Editors::ComboItem^ FindWindowDropdownLookInAllOpenScripts;
+
+
+
 	private: DevComponents::DotNetBar::ButtonX^ FindWindowButtonFind;
 	private: DevComponents::DotNetBar::ButtonX^ FindWindowButtonReplace;
 	private: DevComponents::DotNetBar::ButtonX^ FindWindowButtonCountMatches;
@@ -258,6 +258,7 @@ namespace UIComponents {
 	private: DevComponents::DotNetBar::Controls::CheckBoxX^ FindWindowCheckBoxIgnoreComments;
 
 	private: DevComponents::DotNetBar::Layout::LayoutControlItem^ FindWindowLCIIgnoreComments;
+private: DevComponents::DotNetBar::LabelItem^ StatusBarCurrentMessage;
 
 
 
@@ -406,9 +407,6 @@ namespace UIComponents {
 			this->FindWindowDropdownFind = (gcnew DevComponents::DotNetBar::Controls::ComboBoxEx());
 			this->FindWindowDropdownReplace = (gcnew DevComponents::DotNetBar::Controls::ComboBoxEx());
 			this->FindWindowComboLookIn = (gcnew DevComponents::DotNetBar::Controls::ComboBoxEx());
-			this->FindWindowDropdownLookInSelection = (gcnew DevComponents::Editors::ComboItem());
-			this->FindWindowDropdownLookInCurrentScript = (gcnew DevComponents::Editors::ComboItem());
-			this->FindWindowDropdownLookInAllOpenScripts = (gcnew DevComponents::Editors::ComboItem());
 			this->FindWindowCheckboxMatchCase = (gcnew DevComponents::DotNetBar::Controls::CheckBoxX());
 			this->FindWindowCheckboxUseRegEx = (gcnew DevComponents::DotNetBar::Controls::CheckBoxX());
 			this->FindWindowCheckBoxMatchWholeWord = (gcnew DevComponents::DotNetBar::Controls::CheckBoxX());
@@ -451,6 +449,7 @@ namespace UIComponents {
 			this->StatusBarColumnNumber = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->StatusBarPreprocessorOutputFlag = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->StatusBarScriptBytecodeLength = (gcnew DevComponents::DotNetBar::CircularProgressItem());
+			this->StatusBarCurrentMessage = (gcnew DevComponents::DotNetBar::LabelItem());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MainTabStrip))->BeginInit();
 			this->MainTabStrip->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContainerMainToolbar))->BeginInit();
@@ -1069,7 +1068,7 @@ namespace UIComponents {
 								221, 193))))
 			}, DevComponents::DotNetBar::eOrientation::Horizontal));
 			this->DockSiteBottom->ForeColor = System::Drawing::Color::White;
-			this->DockSiteBottom->Location = System::Drawing::Point(0, 664);
+			this->DockSiteBottom->Location = System::Drawing::Point(0, 666);
 			this->DockSiteBottom->Name = L"DockSiteBottom";
 			this->DockSiteBottom->Size = System::Drawing::Size(1030, 200);
 			this->DockSiteBottom->TabIndex = 7;
@@ -1436,12 +1435,12 @@ namespace UIComponents {
 			this->DockSiteLeftEx->Dock = System::Windows::Forms::DockStyle::Left;
 			this->DockSiteLeftEx->DocumentDockContainer = (gcnew DevComponents::DotNetBar::DocumentDockContainer(gcnew cli::array< DevComponents::DotNetBar::DocumentBaseContainer^  >(1) {
 				(cli::safe_cast<DevComponents::DotNetBar::DocumentBaseContainer^>((gcnew DevComponents::DotNetBar::DocumentBarContainer(this->DockableBarOutlineView,
-					156, 597))))
+					156, 599))))
 			}, DevComponents::DotNetBar::eOrientation::Horizontal));
 			this->DockSiteLeftEx->ForeColor = System::Drawing::Color::White;
 			this->DockSiteLeftEx->Location = System::Drawing::Point(0, 67);
 			this->DockSiteLeftEx->Name = L"DockSiteLeftEx";
-			this->DockSiteLeftEx->Size = System::Drawing::Size(163, 597);
+			this->DockSiteLeftEx->Size = System::Drawing::Size(163, 599);
 			this->DockSiteLeftEx->TabIndex = 4;
 			this->DockSiteLeftEx->TabStop = false;
 			// 
@@ -1466,7 +1465,7 @@ namespace UIComponents {
 			this->DockableBarOutlineView->LayoutType = DevComponents::DotNetBar::eLayoutType::DockContainer;
 			this->DockableBarOutlineView->Location = System::Drawing::Point(0, 0);
 			this->DockableBarOutlineView->Name = L"DockableBarOutlineView";
-			this->DockableBarOutlineView->Size = System::Drawing::Size(156, 597);
+			this->DockableBarOutlineView->Size = System::Drawing::Size(156, 599);
 			this->DockableBarOutlineView->Stretch = true;
 			this->DockableBarOutlineView->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->DockableBarOutlineView->TabIndex = 0;
@@ -1480,7 +1479,7 @@ namespace UIComponents {
 			this->PanelDockContainerOutline->DisabledBackColor = System::Drawing::Color::Empty;
 			this->PanelDockContainerOutline->Location = System::Drawing::Point(3, 23);
 			this->PanelDockContainerOutline->Name = L"PanelDockContainerOutline";
-			this->PanelDockContainerOutline->Size = System::Drawing::Size(150, 571);
+			this->PanelDockContainerOutline->Size = System::Drawing::Size(150, 573);
 			this->PanelDockContainerOutline->Style->Alignment = System::Drawing::StringAlignment::Center;
 			this->PanelDockContainerOutline->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
 			this->PanelDockContainerOutline->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
@@ -1497,7 +1496,7 @@ namespace UIComponents {
 			this->OutlineTreeView->Location = System::Drawing::Point(0, 0);
 			this->OutlineTreeView->Name = L"OutlineTreeView";
 			this->OutlineTreeView->ShowGroups = false;
-			this->OutlineTreeView->Size = System::Drawing::Size(150, 571);
+			this->OutlineTreeView->Size = System::Drawing::Size(150, 573);
 			this->OutlineTreeView->TabIndex = 0;
 			this->OutlineTreeView->UseCompatibleStateImageBehavior = false;
 			this->OutlineTreeView->View = System::Windows::Forms::View::Details;
@@ -1518,12 +1517,12 @@ namespace UIComponents {
 			this->DockSiteRightEx->Dock = System::Windows::Forms::DockStyle::Right;
 			this->DockSiteRightEx->DocumentDockContainer = (gcnew DevComponents::DotNetBar::DocumentDockContainer(gcnew cli::array< DevComponents::DotNetBar::DocumentBaseContainer^  >(1) {
 				(cli::safe_cast<DevComponents::DotNetBar::DocumentBaseContainer^>((gcnew DevComponents::DotNetBar::DocumentBarContainer(this->DockableBarFindReplace,
-					288, 597))))
+					288, 599))))
 			}, DevComponents::DotNetBar::eOrientation::Vertical));
 			this->DockSiteRightEx->ForeColor = System::Drawing::Color::White;
 			this->DockSiteRightEx->Location = System::Drawing::Point(735, 67);
 			this->DockSiteRightEx->Name = L"DockSiteRightEx";
-			this->DockSiteRightEx->Size = System::Drawing::Size(295, 597);
+			this->DockSiteRightEx->Size = System::Drawing::Size(295, 599);
 			this->DockSiteRightEx->TabIndex = 5;
 			this->DockSiteRightEx->TabStop = false;
 			// 
@@ -1549,7 +1548,7 @@ namespace UIComponents {
 			this->DockableBarFindReplace->Location = System::Drawing::Point(7, 0);
 			this->DockableBarFindReplace->MinimumSize = System::Drawing::Size(300, 320);
 			this->DockableBarFindReplace->Name = L"DockableBarFindReplace";
-			this->DockableBarFindReplace->Size = System::Drawing::Size(300, 597);
+			this->DockableBarFindReplace->Size = System::Drawing::Size(300, 599);
 			this->DockableBarFindReplace->Stretch = true;
 			this->DockableBarFindReplace->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->DockableBarFindReplace->TabIndex = 0;
@@ -1563,7 +1562,7 @@ namespace UIComponents {
 			this->PanelDockContainerFindReplace->DisabledBackColor = System::Drawing::Color::Empty;
 			this->PanelDockContainerFindReplace->Location = System::Drawing::Point(3, 23);
 			this->PanelDockContainerFindReplace->Name = L"PanelDockContainerFindReplace";
-			this->PanelDockContainerFindReplace->Size = System::Drawing::Size(282, 571);
+			this->PanelDockContainerFindReplace->Size = System::Drawing::Size(282, 573);
 			this->PanelDockContainerFindReplace->Style->Alignment = System::Drawing::StringAlignment::Center;
 			this->PanelDockContainerFindReplace->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
 			this->PanelDockContainerFindReplace->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
@@ -1595,7 +1594,7 @@ namespace UIComponents {
 				this->FindWindowLCIFindDropdown,
 					this->FindWindowLCIReplaceDropdown, this->FindWindowLCILookIn, this->FindWindowLayoutGroupSettings, this->FindWindowLayouyGroupButtons
 			});
-			this->FindWindowLayoutControl->Size = System::Drawing::Size(282, 571);
+			this->FindWindowLayoutControl->Size = System::Drawing::Size(282, 573);
 			this->FindWindowLayoutControl->TabIndex = 19;
 			// 
 			// FindWindowDropdownFind
@@ -1630,28 +1629,12 @@ namespace UIComponents {
 			this->FindWindowComboLookIn->ForeColor = System::Drawing::Color::White;
 			this->FindWindowComboLookIn->FormattingEnabled = true;
 			this->FindWindowComboLookIn->ItemHeight = 17;
-			this->FindWindowComboLookIn->Items->AddRange(gcnew cli::array< System::Object^  >(3) {
-				this->FindWindowDropdownLookInSelection,
-					this->FindWindowDropdownLookInCurrentScript, this->FindWindowDropdownLookInAllOpenScripts
-			});
 			this->FindWindowComboLookIn->Location = System::Drawing::Point(50, 64);
 			this->FindWindowComboLookIn->Margin = System::Windows::Forms::Padding(0);
 			this->FindWindowComboLookIn->Name = L"FindWindowComboLookIn";
 			this->FindWindowComboLookIn->Size = System::Drawing::Size(228, 23);
 			this->FindWindowComboLookIn->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->FindWindowComboLookIn->TabIndex = 2;
-			// 
-			// FindWindowDropdownLookInSelection
-			// 
-			this->FindWindowDropdownLookInSelection->Text = L"Selection (Current Script)";
-			// 
-			// FindWindowDropdownLookInCurrentScript
-			// 
-			this->FindWindowDropdownLookInCurrentScript->Text = L"Entire Text (Current Script)";
-			// 
-			// FindWindowDropdownLookInAllOpenScripts
-			// 
-			this->FindWindowDropdownLookInAllOpenScripts->Text = L"Entire Text (All Open Scripts)";
 			// 
 			// FindWindowCheckboxMatchCase
 			// 
@@ -1896,7 +1879,7 @@ namespace UIComponents {
 				static_cast<System::Int32>(static_cast<System::Byte>(48)));
 			this->DockSiteBottomEx->Dock = System::Windows::Forms::DockStyle::Bottom;
 			this->DockSiteBottomEx->ForeColor = System::Drawing::Color::White;
-			this->DockSiteBottomEx->Location = System::Drawing::Point(0, 864);
+			this->DockSiteBottomEx->Location = System::Drawing::Point(0, 866);
 			this->DockSiteBottomEx->Name = L"DockSiteBottomEx";
 			this->DockSiteBottomEx->Size = System::Drawing::Size(1030, 0);
 			this->DockSiteBottomEx->TabIndex = 11;
@@ -1911,7 +1894,7 @@ namespace UIComponents {
 			this->DockSiteLeft->ForeColor = System::Drawing::Color::White;
 			this->DockSiteLeft->Location = System::Drawing::Point(0, 67);
 			this->DockSiteLeft->Name = L"DockSiteLeft";
-			this->DockSiteLeft->Size = System::Drawing::Size(0, 797);
+			this->DockSiteLeft->Size = System::Drawing::Size(0, 799);
 			this->DockSiteLeft->TabIndex = 8;
 			this->DockSiteLeft->TabStop = false;
 			// 
@@ -1924,7 +1907,7 @@ namespace UIComponents {
 			this->DockSiteRight->ForeColor = System::Drawing::Color::White;
 			this->DockSiteRight->Location = System::Drawing::Point(1030, 67);
 			this->DockSiteRight->Name = L"DockSiteRight";
-			this->DockSiteRight->Size = System::Drawing::Size(0, 797);
+			this->DockSiteRight->Size = System::Drawing::Size(0, 799);
 			this->DockSiteRight->TabIndex = 9;
 			this->DockSiteRight->TabStop = false;
 			// 
@@ -1966,12 +1949,12 @@ namespace UIComponents {
 			this->DockSiteCenter->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->DockSiteCenter->DocumentDockContainer = (gcnew DevComponents::DotNetBar::DocumentDockContainer(gcnew cli::array< DevComponents::DotNetBar::DocumentBaseContainer^  >(1) {
 				(cli::safe_cast<DevComponents::DotNetBar::DocumentBaseContainer^>((gcnew DevComponents::DotNetBar::DocumentBarContainer(this->CenterDockBar,
-					572, 597))))
+					572, 599))))
 			}, DevComponents::DotNetBar::eOrientation::Horizontal));
 			this->DockSiteCenter->ForeColor = System::Drawing::Color::White;
 			this->DockSiteCenter->Location = System::Drawing::Point(163, 67);
 			this->DockSiteCenter->Name = L"DockSiteCenter";
-			this->DockSiteCenter->Size = System::Drawing::Size(572, 597);
+			this->DockSiteCenter->Size = System::Drawing::Size(572, 599);
 			this->DockSiteCenter->TabIndex = 12;
 			this->DockSiteCenter->TabStop = false;
 			// 
@@ -1999,7 +1982,7 @@ namespace UIComponents {
 			this->CenterDockBar->LayoutType = DevComponents::DotNetBar::eLayoutType::DockContainer;
 			this->CenterDockBar->Location = System::Drawing::Point(0, 0);
 			this->CenterDockBar->Name = L"CenterDockBar";
-			this->CenterDockBar->Size = System::Drawing::Size(572, 597);
+			this->CenterDockBar->Size = System::Drawing::Size(572, 599);
 			this->CenterDockBar->Stretch = true;
 			this->CenterDockBar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->CenterDockBar->TabIndex = 0;
@@ -2016,7 +1999,7 @@ namespace UIComponents {
 			this->PanelDocumentContent->ForeColor = System::Drawing::Color::White;
 			this->PanelDocumentContent->Location = System::Drawing::Point(0, 0);
 			this->PanelDocumentContent->Name = L"PanelDocumentContent";
-			this->PanelDocumentContent->Size = System::Drawing::Size(572, 597);
+			this->PanelDocumentContent->Size = System::Drawing::Size(572, 599);
 			this->PanelDocumentContent->TabIndex = 10;
 			// 
 			// ContextMenuProvider
@@ -2115,18 +2098,18 @@ namespace UIComponents {
 			this->StatusBar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
 			this->StatusBar->ForeColor = System::Drawing::Color::Black;
 			this->StatusBar->IsMaximized = false;
-			this->StatusBar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(4) {
-				this->StatusBarLineNumber,
-					this->StatusBarColumnNumber, this->StatusBarPreprocessorOutputFlag, this->StatusBarScriptBytecodeLength
+			this->StatusBar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(5) {
+				this->StatusBarCurrentMessage,
+					this->StatusBarLineNumber, this->StatusBarColumnNumber, this->StatusBarPreprocessorOutputFlag, this->StatusBarScriptBytecodeLength
 			});
 			this->StatusBar->ItemSpacing = 7;
-			this->StatusBar->Location = System::Drawing::Point(0, 864);
+			this->StatusBar->Location = System::Drawing::Point(0, 866);
 			this->StatusBar->Name = L"StatusBar";
 			this->StatusBar->PaddingBottom = 0;
 			this->StatusBar->PaddingLeft = 15;
 			this->StatusBar->PaddingRight = 15;
 			this->StatusBar->PaddingTop = 0;
-			this->StatusBar->Size = System::Drawing::Size(1030, 26);
+			this->StatusBar->Size = System::Drawing::Size(1030, 24);
 			this->StatusBar->Stretch = true;
 			this->StatusBar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->StatusBar->TabIndex = 13;
@@ -2134,11 +2117,13 @@ namespace UIComponents {
 			// 
 			// StatusBarLineNumber
 			// 
+			this->StatusBarLineNumber->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
 			this->StatusBarLineNumber->Name = L"StatusBarLineNumber";
 			this->StatusBarLineNumber->Text = L"Line 0";
 			// 
 			// StatusBarColumnNumber
 			// 
+			this->StatusBarColumnNumber->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
 			this->StatusBarColumnNumber->Name = L"StatusBarColumnNumber";
 			this->StatusBarColumnNumber->Text = L"Column 0";
 			// 
@@ -2146,11 +2131,13 @@ namespace UIComponents {
 			// 
 			this->StatusBarPreprocessorOutputFlag->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
 			this->StatusBarPreprocessorOutputFlag->Name = L"StatusBarPreprocessorOutputFlag";
+			this->StatusBarPreprocessorOutputFlag->PaddingLeft = 10;
 			this->StatusBarPreprocessorOutputFlag->Text = L"Preprocessor Output ON";
 			// 
 			// StatusBarScriptBytecodeLength
 			// 
 			this->StatusBarScriptBytecodeLength->BeginGroup = true;
+			this->StatusBarScriptBytecodeLength->Diameter = 22;
 			this->StatusBarScriptBytecodeLength->Maximum = 32768;
 			this->StatusBarScriptBytecodeLength->Name = L"StatusBarScriptBytecodeLength";
 			this->StatusBarScriptBytecodeLength->ProgressBarType = DevComponents::DotNetBar::eCircularProgressType::Donut;
@@ -2158,6 +2145,11 @@ namespace UIComponents {
 			this->StatusBarScriptBytecodeLength->Text = L"Compiled Script Size:";
 			this->StatusBarScriptBytecodeLength->TextPadding->Left = 5;
 			this->StatusBarScriptBytecodeLength->TextPadding->Right = 5;
+			// 
+			// StatusBarCurrentMessage
+			// 
+			this->StatusBarCurrentMessage->Name = L"StatusBarCurrentMessage";
+			this->StatusBarCurrentMessage->Text = L"Current Message...";
 			// 
 			// ScriptEditorWorkspace
 			// 
@@ -2268,6 +2260,11 @@ namespace UIComponents {
 		SetObjectListViewTextOverlay(BookmarksList, ListViewOverlayForeColor, ListViewOverlayBackColor);
 		SetObjectListViewTextOverlay(FindResultsList, ListViewOverlayForeColor, ListViewOverlayBackColor);
 		SetObjectListViewTextOverlay(GlobalFindResultsList, ListViewOverlayForeColor, ListViewOverlayBackColor);
+
+		FindWindowDropdownFind->Items->Add("first");
+		FindWindowDropdownFind->Items->Add("2nd");
+		FindWindowDropdownFind->Items->Add("3rd");
+		FindWindowDropdownFind->Items->Add("last");
 	}
 	private: System::Void MainTabStrip_TabMove(System::Object^ sender, DevComponents::DotNetBar::SuperTabStripTabMovingEventArgs^ e) {
 		if ((e->InsertTab == nullptr || e->InsertTab->Name == "NewTabButton") && e->InsertBefore)
@@ -2331,7 +2328,7 @@ namespace UIComponents {
 		ToolbarMenuEdit->Enabled = false;
 	}
 	private: System::Void FindWindowButtonFind_Click(System::Object^ sender, System::EventArgs^ e) {
-		MessageBox::Show("Selected: " + FindWindowDropdownFind->SelectedText + " | Text: " + FindWindowDropdownFind->Text);
+		MessageBox::Show("Selected: " + FindWindowDropdownFind->SelectedItem + " | Text: " + FindWindowDropdownFind->Text);
 	}
 	};
 }

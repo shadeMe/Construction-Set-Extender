@@ -1,0 +1,1052 @@
+#include "ScriptEditorControllerImplComponents.h"
+#include "Preferences.h"
+
+
+namespace cse
+{
+
+
+namespace scriptEditor
+{
+
+
+namespace controller
+{
+
+
+namespace components
+{
+
+
+void ViewTabTearingHelper::TearingEventHandler(Object^ Sender, MouseEventArgs^ E)
+{
+	if (ProcessingMouseMessage)
+		return;
+
+	ProcessingMouseMessage = true;
+
+	switch (E->Button)
+	{
+	case MouseButtons::Left:
+		{
+			Debug::Assert(Torn != nullptr);
+			Debug::Assert(Source != nullptr);
+
+			bool Relocated = false;
+			bool SameTabStrip = false;
+			IntPtr Wnd = nativeWrapper::WindowFromPoint(E->Location);
+			if (Wnd == IntPtr::Zero)
+				break;
+
+			auto UnderMouse = Control::FromHandle(Wnd);
+			if (UnderMouse)
+			{
+				auto UserData = UnderMouse->Tag;
+				if (UserData)
+				{
+					view::components::ITabStrip^ TabStrip = nullptr;
+					try
+					{
+						TabStrip = safe_cast<view::components::ITabStrip^>(UnderMouse);
+					}
+					catch (...) {}
+
+					if (TabStrip)
+					{
+						auto ParentView = TabStrip->Parent;
+						if (ParentView == Source)
+							SameTabStrip = true;
+						else
+						{
+							// ### TODO relocate to the new view
+							Relocated = true;
+						}
+					}
+				}
+			}
+
+			if (!Relocated && !SameTabStrip)
+			{
+				// ### TODO create new view and relocate
+			}
+
+			End();
+		}
+
+		break;
+	default:
+		End();
+	}
+}
+
+void ViewTabTearingHelper::End()
+{
+	Debug::Assert(Active == true);
+
+	Active = false;
+	Torn = nullptr;
+	Source = nullptr;
+	Controller = nullptr;
+	ProcessingMouseMessage = false;
+
+	GlobalInputMonitor::HookManager::MouseUp -= TearingEventDelegate;
+}
+
+ViewTabTearingHelper::ViewTabTearingHelper()
+{
+	Torn = nullptr;
+	Source = nullptr;
+	Controller = nullptr;
+	Active = false;
+	ProcessingMouseMessage = false;
+
+	TearingEventDelegate = gcnew MouseEventHandler(this, &ViewTabTearingHelper::TearingEventHandler);
+}
+
+ViewTabTearingHelper::~ViewTabTearingHelper()
+{
+	if (Active)
+		End();
+
+	SAFEDELETE_CLR(TearingEventDelegate);
+}
+
+void ViewTabTearingHelper::InitiateHandling(model::IScriptDocument^ Tearing, view::IScriptEditorView^ From, IScriptEditorController^ ParentController)
+{
+	Debug::Assert(Active == false);
+	Debug::Assert(ProcessingMouseMessage == false);
+	Debug::Assert(Tearing != nullptr);
+	Debug::Assert(From != nullptr);
+	Debug::Assert(ParentController != nullptr);
+
+	Active = true;
+	Torn = Tearing;
+	Source = From;
+	Controller = ParentController;
+
+	GlobalInputMonitor::HookManager::MouseUp += TearingEventDelegate;
+}
+
+ViewTabTearingHelper^ ViewTabTearingHelper::Get()
+{
+	if (Singleton == nullptr)
+		Singleton = gcnew ViewTabTearingHelper();
+
+	return Singleton;
+}
+
+Image^ DocumentNavigationHelper::GetNodeIcon(obScriptParsing::Structurizer::Node::eNodeType NodeType)
+{
+	if (NodeIcons->Count == 0)
+	{
+		auto ImageResources =  gcnew ImageResourceManager("ScriptEditor.Icons");
+		NodeIcons->Add(obScriptParsing::Structurizer::Node::eNodeType::Invalid, ImageResources->CreateImage("Transparent"));
+		NodeIcons->Add(obScriptParsing::Structurizer::Node::eNodeType::VariableDeclaration, ImageResources->CreateImage("VariableDeclarations"));
+		NodeIcons->Add(obScriptParsing::Structurizer::Node::eNodeType::ScriptBlock, ImageResources->CreateImage("ScriptBlock"));
+		NodeIcons->Add(obScriptParsing::Structurizer::Node::eNodeType::BasicConditionalBlock, ImageResources->CreateImage("ConditionalBlock"));
+		NodeIcons->Add(obScriptParsing::Structurizer::Node::eNodeType::LoopBlock, ImageResources->CreateImage("LoopBlock"));
+	}
+
+	return NodeIcons[NodeType];
+}
+
+System::Object^ DocumentNavigationHelper::OutlineListViewAspectGetter(Object^ RowObject)
+{
+	if (RowObject == nullptr)
+		return nullptr;
+
+	auto Model = safe_cast<obScriptParsing::Structurizer::Node^>(RowObject);
+	return Model->Description;
+}
+
+System::Object^ DocumentNavigationHelper::OutlineListViewImageGetter(Object^ RowObject)
+{
+	if (RowObject == nullptr)
+		return nullptr;
+
+	auto Model = safe_cast<obScriptParsing::Structurizer::Node^>(RowObject);
+	return GetNodeIcon(Model->Type);
+}
+
+bool DocumentNavigationHelper::OutlineListViewCanExpandGetter(Object^ RowObject)
+{
+	if (RowObject == nullptr)
+		return nullptr;
+
+	auto Model = safe_cast<obScriptParsing::Structurizer::Node^>(RowObject);
+	return Model->Children->Count > 0;
+}
+
+System::Collections::IEnumerable^ DocumentNavigationHelper::OutlineListViewChildrenGetter(Object^ RowObject)
+{
+	if (RowObject == nullptr)
+		return nullptr;
+
+	auto Model = safe_cast<obScriptParsing::Structurizer::Node^>(RowObject);
+	return Model->Children;
+}
+
+DocumentNavigationHelper::CrumbItemData::CrumbItemData(model::IScriptDocument^ ParentScriptDocument, obScriptParsing::Structurizer::Node^ Scope)
+{
+	this->ParentScriptDocument = ParentScriptDocument;
+	this->Scope = Scope;
+}
+
+void DocumentNavigationHelper::Preferences_Changed(Object^ Sender, EventArgs^ E)
+{
+	NavigationBarVisible = preferences::SettingsHolder::Get()->Appearance->ShowScopeBar;
+}
+
+void DocumentNavigationHelper::GenerateAllCrumbs(obScriptParsing::Structurizer^ Data, model::IScriptDocument^ SourceDocument)
+{
+	ResetCrumbs();
+
+	if (!NavigationBarVisible)
+		return;
+
+	Root->Text = Data->RootName;
+	Root->Tag = gcnew CrumbItemData(SourceDocument, gcnew obScriptParsing::Structurizer::Node(obScriptParsing::Structurizer::Node::eNodeType::Invalid, 1, 1, Data->RootName));
+
+	for each (auto Itr in Data->Output)
+		CreateNewCrumb(Itr, Root, SourceDocument, true);
+
+	CachedStructureData = Data;
+}
+
+void DocumentNavigationHelper::EnumerateChildCrumbs(view::components::ICrumbBarItem^ Item, model::IScriptDocument^ SourceDocument)
+{
+	auto Data = safe_cast<CrumbItemData^>(Item->Tag);
+
+	for each (auto Itr in Data->Scope->Children)
+		CreateNewCrumb(Itr, Item, SourceDocument, true);
+}
+
+void DocumentNavigationHelper::CreateNewCrumb(obScriptParsing::Structurizer::Node^ Source, view::components::ICrumbBarItem^ Parent, model::IScriptDocument^ SourceDocument, bool EnumerateChildren)
+{
+	auto NewItem = CrumbBar->AllocateNewItem();
+	String^ LineText = Source->Description;
+	if (LineText->Length > MaxCrumbItemTextLength)
+		LineText = LineText->Substring(0, MaxCrumbItemTextLength) + "...";
+
+	NewItem->Text = LineText;
+	NewItem->Tooltip = Source->Description;
+	NewItem->Tag = gcnew CrumbItemData(SourceDocument, Source);
+	NewItem->Image = GetNodeIcon(Source->Type);
+
+	ActiveCrumbs->Add(Source, NewItem);
+	Parent->AddChild(NewItem);
+
+	if (EnumerateChildren)
+		EnumerateChildCrumbs(NewItem, SourceDocument);
+}
+
+void DocumentNavigationHelper::ResetCrumbs()
+{
+	Root->Text = "";
+	Root->Tag = nullptr;
+
+	ActiveCrumbs->Clear();
+	Root->ClearChildren();
+
+	CrumbBar->SelectedItem = Root;
+	CachedStructureData = nullptr;
+}
+
+void DocumentNavigationHelper::UpdateToLine(UInt32 Line)
+{
+	if (CachedStructureData == nullptr)
+		return;
+
+	auto ContainingNode = CachedStructureData->GetContainingNode(Line);
+	if (ContainingNode == nullptr)
+		return;
+
+	for each (auto Itr in ActiveCrumbs)
+	{
+		if (Itr.Key == ContainingNode)
+		{
+			CrumbBar->SelectedItem = Itr.Value;
+			return;
+		}
+	}
+
+	OutlineListView->SelectedObject = ContainingNode;
+	OutlineListView->EnsureItemVisible(ContainingNode);
+}
+
+void DocumentNavigationHelper::InitOutlineListView()
+{
+	auto Column = OutlineListView->AllocateNewColumn();
+	Column->FillsFreeSpace = true;
+	Column->Text = "Structure";
+	Column->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&DocumentNavigationHelper::OutlineListViewAspectGetter));
+	Column->SetImageGetter(gcnew view::components::IObjectListViewColumn::ImageGetter(&DocumentNavigationHelper::OutlineListViewImageGetter));
+
+	OutlineListView->AddColumn(Column);
+	OutlineListView->SetCanExpandGetter(gcnew view::components::IObjectListView::CanExpandGetter(&DocumentNavigationHelper::OutlineListViewCanExpandGetter));
+	OutlineListView->SetChildrenGetter(gcnew view::components::IObjectListView::ChildrenGetter(&DocumentNavigationHelper::OutlineListViewChildrenGetter));
+}
+
+void DocumentNavigationHelper::RefreshOutlineListView(obScriptParsing::Structurizer^ StructureData)
+{
+	OutlineListView->SetObjects(StructureData->Output, true);
+	OutlineListView->ExpandAll();
+	if (StructureData->CurrentScope)
+	{
+		OutlineListView->SelectedObject = StructureData->CurrentScope;
+		OutlineListView->EnsureItemVisible(StructureData->CurrentScope);
+	}
+
+	CachedStructureData = StructureData;
+}
+
+DocumentNavigationHelper::DocumentNavigationHelper(view::components::ICrumbBar^ CrumbBar, view::components::IObjectListView^ OutlineListView)
+{
+	this->CrumbBar = CrumbBar;
+	this->OutlineListView = OutlineListView;
+	CachedStructureData = nullptr;
+	Root = CrumbBar->AllocateNewItem();
+	Root->Image = GetNodeIcon(obScriptParsing::Structurizer::Node::eNodeType::Invalid);
+	ActiveCrumbs = gcnew Dictionary<obScriptParsing::Structurizer::Node^, view::components::ICrumbBarItem^>;
+
+	PreferencesChangedEventHandler = gcnew EventHandler(this, &DocumentNavigationHelper::Preferences_Changed);
+	preferences::SettingsHolder::Get()->SavedToDisk += PreferencesChangedEventHandler;
+
+	CrumbBar->ClearItems();
+	CrumbBar->AddItem(Root);
+}
+
+DocumentNavigationHelper::~DocumentNavigationHelper()
+{
+	preferences::SettingsHolder::Get()->SavedToDisk -= PreferencesChangedEventHandler;
+
+	SAFEDELETE_CLR(Root);
+	SAFEDELETE_CLR(PreferencesChangedEventHandler);
+
+	CrumbBar = nullptr;
+	OutlineListView = nullptr;
+}
+
+void DocumentNavigationHelper::SyncWithDocument(model::IScriptDocument^ SourceDocument)
+{
+	auto LastAnalysisData = SourceDocument->BackgroundAnalyzer->LastAnalysisResult;
+	if (LastAnalysisData)
+	{
+		auto StructureData = SourceDocument->NavigationHelper->GenerateStructureData(LastAnalysisData);
+		if (StructureData->Valid)
+		{
+			GenerateAllCrumbs(StructureData, SourceDocument);
+			RefreshOutlineListView(StructureData);
+			UpdateToLine(SourceDocument->TextEditor->CurrentLine);
+		}
+	}
+}
+
+void DocumentNavigationHelper::HandleCrumbBarEvent(view::ViewComponentEvent^ E, model::IScriptDocument^ SourceDocument)
+{
+	auto EventType = safe_cast<view::components::ICrumbBar::eEvent>(E->EventType);
+	switch (EventType)
+	{
+	case view::components::ICrumbBar::eEvent::ItemClick:
+	{
+		auto Args = safe_cast<view::components::ICrumbBar::ItemClickEventArgs^>(E->EventArgs);
+		if (Args->Item->Tag)
+		{
+			auto Data = safe_cast<CrumbItemData^>(Args->Item->Tag);
+			Data->ParentScriptDocument->TextEditor->ScrollToLine(Data->Scope->StartLine);
+		}
+
+		break;
+	}
+	default:
+		throw gcnew NotImplementedException();
+	}
+}
+
+void DocumentNavigationHelper::HandleListViewEvent(view::ViewComponentEvent^ E, model::IScriptDocument^ SourceDocument)
+{
+	auto EventType = safe_cast<view::components::IObjectListView::eEvent>(E->EventType);
+	switch (EventType)
+	{
+	case view::components::IObjectListView::eEvent::ItemActivate:
+	{
+		auto Args = safe_cast<view::components::IObjectListView::ItemActivateEventArgs^>(E->EventArgs);
+		if (Args->ItemModel)
+		{
+			auto Data = safe_cast<obScriptParsing::Structurizer::Node^>(Args->ItemModel);
+			SourceDocument->TextEditor->ScrollToLine(Data->StartLine);
+		}
+
+		break;
+	}
+	default:
+		throw gcnew NotImplementedException();
+	}
+}
+
+void DocumentNavigationHelper::HandleNavigationChangedEvent(model::components::INavigationHelper::NavigationChangedEventArgs^ E, model::IScriptDocument^ SourceDocument)
+{
+	if (E->StructureChanged)
+	{
+		if (E->StructureData == nullptr)
+			ResetCrumbs();
+		else
+			GenerateAllCrumbs(E->StructureData, SourceDocument);
+	}
+
+	if (E->LineChanged)
+		UpdateToLine(E->CurrentLine);
+}
+
+GlobalFindReplaceResult::ScriptDocumentData::ScriptDocumentData(model::IScriptDocument^ Source, textEditor::FindReplaceResult^ OperationResult)
+{
+	this->Source = Source;
+	this->SourceDescription = Source->ScriptEditorID + "(" + Source->ScriptFormID.ToString("X8") + ")";
+	this->OperationResult = OperationResult;
+}
+
+GlobalFindReplaceResult::GlobalFindReplaceResult()
+{
+	Operation = textEditor::eFindReplaceOperation::CountMatches;
+	Query = "";
+	Replacement = "";
+	Options = textEditor::eFindReplaceOptions::None;
+	DocumentsWithHits = gcnew List<ScriptDocumentData^>;
+}
+
+void GlobalFindReplaceResult::Add(model::IScriptDocument^ ScriptDocument, textEditor::FindReplaceResult^ OperationResult)
+{
+	Debug::Assert(OperationResult->HasError == false);
+	DocumentsWithHits->Add(gcnew ScriptDocumentData(ScriptDocument, OperationResult));
+}
+
+int GlobalFindReplaceResult::TotalHitCount::get()
+{
+	int Count = 0;
+
+	for each (auto Instance in DocumentsWithHits)
+		Count += Instance->TotalHits;
+
+	return Count;
+}
+
+bool GlobalFindReplaceResult::GenericCanExpandGetter(Object^ E)
+{
+	if (E->GetType() == GlobalFindReplaceResult::typeid)
+		return true;
+	else if (E->GetType() == GlobalFindReplaceResult::ScriptDocumentData::typeid)
+		return true;
+	else
+		return false;
+}
+
+System::Collections::IEnumerable^ GlobalFindReplaceResult::GenericChildrenGetter(Object^ E)
+{
+	if (E->GetType() == GlobalFindReplaceResult::typeid)
+	{
+		auto TopItem = safe_cast<GlobalFindReplaceResult^>(E);
+		return TopItem->DocumentsWithHits;
+	}
+
+	if (E->GetType() == GlobalFindReplaceResult::ScriptDocumentData::typeid)
+	{
+		auto PerScript = safe_cast<GlobalFindReplaceResult::ScriptDocumentData^>(E);
+		return PerScript->OperationResult->Hits;
+	}
+
+	return nullptr;
+}
+
+System::Object^ GlobalFindReplaceResult::TextAspectGetter(Object^ E)
+{
+	if (E->GetType() == GlobalFindReplaceResult::typeid)
+	{
+		auto TopItem = safe_cast<GlobalFindReplaceResult^>(E);
+		switch (TopItem->Operation)
+		{
+		case textEditor::eFindReplaceOperation::Replace:
+			return "Replace \"" + TopItem->Query + "\" with \"" + TopItem->Replacement + "\" (" + TopItem->TotalHitCount + " hits in " + TopItem->DocumentsWithHits->Count + " script(s))";
+		default:
+			return "Search \"" + TopItem->Query + "\" (" + TopItem->TotalHitCount + " hits in " + TopItem->DocumentsWithHits->Count + " script(s))";
+		}
+	}
+
+	if (E->GetType() == GlobalFindReplaceResult::ScriptDocumentData::typeid)
+	{
+		auto PerScript = safe_cast<GlobalFindReplaceResult::ScriptDocumentData^>(E);
+		return "Script " + PerScript->SourceDescription;
+	}
+
+	if (E->GetType() == textEditor::FindReplaceResult::HitData::typeid)
+	{
+		auto PerLine = safe_cast<textEditor::FindReplaceResult::HitData^>(E);
+		return PerLine->Text;
+	}
+
+	return String::Empty;
+}
+
+System::Object^ GlobalFindReplaceResult::LineAspectGetter(Object^ E)
+{
+	if (E->GetType() != textEditor::FindReplaceResult::HitData::typeid)
+		return String::Empty;
+
+	auto Model = safe_cast<textEditor::FindReplaceResult::HitData^>(E);
+	return Model->Line;
+}
+
+System::Object^ GlobalFindReplaceResult::HitsAspectGetter(Object^ E)
+{
+	if (E->GetType() == GlobalFindReplaceResult::ScriptDocumentData::typeid)
+	{
+		auto PerScript = safe_cast<GlobalFindReplaceResult::ScriptDocumentData^>(E);
+		return PerScript->TotalHits;
+	}
+
+	if (E->GetType() == textEditor::FindReplaceResult::HitData::typeid)
+	{
+		auto PerLine = safe_cast<textEditor::FindReplaceResult::HitData^>(E);
+		return PerLine->Hits;
+	}
+
+	return String::Empty;
+}
+
+FindReplaceHelper::FindReplaceSourceDropdownItem::FindReplaceSourceDropdownItem(eFindReplaceSource Source)
+{
+	this->Source = Source;
+}
+
+bool FindReplaceHelper::FindReplaceSourceDropdownItem::Equals(Object^ obj)
+{
+	if (obj == nullptr)
+		return false;
+
+	if (obj->GetType() == eFindReplaceSource::typeid)
+		return safe_cast<eFindReplaceSource>(obj) == this->Source;
+
+	if (obj->GetType() == FindReplaceHelper::FindReplaceSourceDropdownItem::typeid)
+		return safe_cast<FindReplaceHelper::FindReplaceSourceDropdownItem^>(obj)->Source == this->Source;
+
+	return false;
+}
+
+int FindReplaceHelper::FindReplaceSourceDropdownItem::GetHashCode()
+{
+	return Source.GetHashCode();
+}
+
+System::String^ FindReplaceHelper::FindReplaceSourceDropdownItem::ToString()
+{
+	switch (Source)
+	{
+	case eFindReplaceSource::CurrentDocumentSelection:
+		return "Selection (Current Script)";
+	case eFindReplaceSource::CurrentDocumentFullText:
+		return "Entire Text (Current Script)";
+	case eFindReplaceSource::AllDocumentsSelection:
+		return "Entire Text (All Open Scripts)";
+	}
+
+	return nullptr;
+}
+
+System::Object^ FindReplaceHelper::FindReplaceResultsListLineNumberAspectGetter(Object^ E)
+{
+	auto Model = safe_cast<model::components::ScriptFindResult^>(E);
+	if (Model == nullptr)
+		return nullptr;
+
+	return Model->Line;
+}
+
+System::Object^ FindReplaceHelper::FindReplaceResultsListTextAspectGetter(Object^ E)
+{
+	auto Model = safe_cast<model::components::ScriptFindResult^>(E);
+	if (Model == nullptr)
+		return nullptr;
+
+	return Model->Text;
+}
+
+System::Object^ FindReplaceHelper::FindReplaceResultsListHitsAspectGetter(Object^ E)
+{
+	auto Model = safe_cast<model::components::ScriptFindResult^>(E);
+	if (Model == nullptr)
+		return nullptr;
+
+	return Model->Hits;
+}
+
+void FindReplaceHelper::Preferences_Changed(Object^ Sender, EventArgs^ E)
+{
+	LoadPreferences();
+}
+
+void FindReplaceHelper::InitResultsListViews()
+{
+	{
+		auto ColumnLine = FindReplaceResultsListView->AllocateNewColumn();
+		auto ColumnText = FindReplaceResultsListView->AllocateNewColumn();
+		auto ColumnHits = FindReplaceResultsListView->AllocateNewColumn();
+
+		ColumnLine->Text = "Line";
+		ColumnLine->MinimumWidth = 16;
+		ColumnLine->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&FindReplaceHelper::FindReplaceResultsListLineNumberAspectGetter));
+
+		ColumnText->Text = "Code";
+		ColumnText->MinimumWidth = 250;
+		ColumnText->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&FindReplaceHelper::FindReplaceResultsListTextAspectGetter));
+
+		ColumnHits->Text = "Hits";
+		ColumnHits->MinimumWidth = 20;
+		ColumnHits->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&FindReplaceHelper::FindReplaceResultsListHitsAspectGetter));
+
+		FindReplaceResultsListView->AddColumn(ColumnLine);
+		FindReplaceResultsListView->AddColumn(ColumnText);
+		FindReplaceResultsListView->AddColumn(ColumnHits);
+	}
+
+	{
+		auto ColumnText = GlobalFindReplaceResultsListView->AllocateNewColumn();
+		auto ColumnLine = GlobalFindReplaceResultsListView->AllocateNewColumn();
+		auto ColumnHits = GlobalFindReplaceResultsListView->AllocateNewColumn();
+
+		ColumnText->Text = "Code";
+		ColumnText->Width = 500;
+		ColumnText->MinimumWidth = 250;
+		ColumnText->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&GlobalFindReplaceResult::TextAspectGetter));
+
+		ColumnLine->Text = "Line";
+		ColumnLine->MinimumWidth = 20;
+		ColumnLine->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&GlobalFindReplaceResult::LineAspectGetter));
+
+		ColumnHits->Text = "Hits";
+		ColumnHits->MinimumWidth = 20;
+		ColumnHits->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&GlobalFindReplaceResult::HitsAspectGetter));
+
+		GlobalFindReplaceResultsListView->AddColumn(ColumnLine);
+		GlobalFindReplaceResultsListView->AddColumn(ColumnText);
+		GlobalFindReplaceResultsListView->AddColumn(ColumnHits);
+
+		GlobalFindReplaceResultsListView->SetCanExpandGetter(gcnew view::components::IObjectListView::CanExpandGetter(&GlobalFindReplaceResult::GenericCanExpandGetter));
+		GlobalFindReplaceResultsListView->SetChildrenGetter(gcnew view::components::IObjectListView::ChildrenGetter(&GlobalFindReplaceResult::GenericChildrenGetter));
+	}
+}
+
+void FindReplaceHelper::InitFindReplaceLookInDropdown()
+{
+	FindReplaceLookInDropdown->ClearDropdownItems();
+
+	auto SourceCurrentDoc = gcnew FindReplaceSourceDropdownItem(eFindReplaceSource::CurrentDocumentFullText);
+
+	FindReplaceLookInDropdown->AddDropdownItem(gcnew FindReplaceSourceDropdownItem(eFindReplaceSource::CurrentDocumentSelection), false);
+	FindReplaceLookInDropdown->AddDropdownItem(SourceCurrentDoc, false);
+	FindReplaceLookInDropdown->AddDropdownItem(gcnew FindReplaceSourceDropdownItem(eFindReplaceSource::AllDocumentsSelection), false);
+	FindReplaceLookInDropdown->AddDropdownItem(gcnew FindReplaceSourceDropdownItem(eFindReplaceSource::AllDocumentsFullText), false);
+
+	FindReplaceLookInDropdown->Selection = SourceCurrentDoc;
+}
+
+void FindReplaceHelper::LoadPreferences()
+{
+	FindReplaceOptionsButtonMatchCase->Checked = !preferences::SettingsHolder::Get()->FindReplace->CaseInsensitive;
+	FindReplaceOptionsButtonMatchWholeWord->Checked = preferences::SettingsHolder::Get()->FindReplace->MatchWholeWord;
+	FindReplaceOptionsButtonUseRegEx->Checked = preferences::SettingsHolder::Get()->FindReplace->UseRegEx;
+	FindReplaceOptionsButtonIgnoreComments->Checked = preferences::SettingsHolder::Get()->FindReplace->IgnoreComments;
+}
+
+void FindReplaceHelper::SavePreferences()
+{
+	preferences::SettingsHolder::Get()->FindReplace->CaseInsensitive = !FindReplaceOptionsButtonMatchCase->Checked;
+	preferences::SettingsHolder::Get()->FindReplace->MatchWholeWord = FindReplaceOptionsButtonMatchWholeWord->Checked;
+	preferences::SettingsHolder::Get()->FindReplace->UseRegEx = FindReplaceOptionsButtonUseRegEx->Checked;
+	preferences::SettingsHolder::Get()->FindReplace->IgnoreComments = FindReplaceOptionsButtonIgnoreComments->Checked;
+}
+
+textEditor::eFindReplaceOptions FindReplaceHelper::GetSelectedOptions()
+{
+	auto Options = textEditor::eFindReplaceOptions::None;
+	if (!FindReplaceOptionsButtonMatchCase->Checked)
+		Options = Options | textEditor::eFindReplaceOptions::CaseInsensitive;
+
+	if (FindReplaceOptionsButtonMatchWholeWord->Checked)
+		Options = Options | textEditor::eFindReplaceOptions::MatchWholeWord;
+
+	if (FindReplaceOptionsButtonUseRegEx->Checked)
+		Options = Options | textEditor::eFindReplaceOptions::RegEx;
+
+	if (FindReplaceLookInDropdown->Selection == safe_cast<Enum^>(eFindReplaceSource::CurrentDocumentSelection) ||
+		FindReplaceLookInDropdown->Selection == safe_cast<Enum^>(eFindReplaceSource::AllDocumentsSelection))
+		Options = Options | textEditor::eFindReplaceOptions::InSelection;
+
+	if (FindReplaceOptionsButtonIgnoreComments->Checked)
+		Options = Options | textEditor::eFindReplaceOptions::IgnoreComments;
+
+	return Options;
+}
+
+void FindReplaceHelper::UpdateDropdownStrings(view::components::IComboBox^ ComboBox)
+{
+	auto CurrentText = ComboBox->Text;
+	auto LastItem = ComboBox->Items->GetEnumerator()->Current;
+
+	if (CurrentText != LastItem->ToString())
+		ComboBox->AddDropdownItem(CurrentText, true);
+}
+
+void FindReplaceHelper::PerformOperation(textEditor::eFindReplaceOperation Operation, IScriptEditorController^ Controller)
+{
+	auto Query = FindReplaceFindDropdown->Text;
+	if (Query->Length == 0)
+		return;
+
+	auto Replacement = FindReplaceReplaceDropdown->Text;
+
+	if (Operation == textEditor::eFindReplaceOperation::Find)
+		UpdateDropdownStrings(FindReplaceFindDropdown);
+
+	if (Operation == textEditor::eFindReplaceOperation::Replace && Replacement->Length != 0)
+		UpdateDropdownStrings(FindReplaceReplaceDropdown);
+
+	auto Options = GetSelectedOptions();
+	bool GlobalOperation = FindReplaceLookInDropdown->Selection == safe_cast<Enum^>(eFindReplaceSource::AllDocumentsSelection) ||
+						   FindReplaceLookInDropdown->Selection == safe_cast<Enum^>(eFindReplaceSource::AllDocumentsFullText);
+
+	auto Hits = DoOperation(Operation, Query, Replacement, Options, GlobalOperation, Controller);
+	if (Operation == textEditor::eFindReplaceOperation::CountMatches)
+		Controller->View->ShowNotification("Found " + Hits + " match(es)", nullptr, 4000);
+}
+
+FindReplaceHelper::FindReplaceHelper(view::IScriptEditorView^ View)
+{
+	FindReplaceResultsListView = View->GetComponentByRole(view::eViewRole::FindReplaceResults_ListView)->AsObjectListView();
+	GlobalFindReplaceResultsListView = View->GetComponentByRole(view::eViewRole::GlobalFindReplaceResults_TreeView)->AsObjectListView();
+	FindReplaceResultsPane = View->GetComponentByRole(view::eViewRole::FindReplaceResults_DockPanel)->AsDockablePane();
+	GlobalFindReplaceResultsPane = View->GetComponentByRole(view::eViewRole::GlobalFindReplaceResults_DockPanel)->AsDockablePane();
+	FindReplacePane = View->GetComponentByRole(view::eViewRole::FindReplace_DockPanel)->AsDockablePane();
+	FindReplaceFindDropdown = View->GetComponentByRole(view::eViewRole::FindReplace_FindDropdown)->AsComboBox();
+	FindReplaceReplaceDropdown = View->GetComponentByRole(view::eViewRole::FindReplace_ReplaceDropdown)->AsComboBox();
+	FindReplaceLookInDropdown = View->GetComponentByRole(view::eViewRole::FindReplace_LookInDropdown)->AsComboBox();
+	FindReplaceOptionsButtonMatchCase = View->GetComponentByRole(view::eViewRole::FindReplace_MatchCase)->AsButton();
+	FindReplaceOptionsButtonMatchWholeWord = View->GetComponentByRole(view::eViewRole::FindReplace_MatchWholeWord)->AsButton();
+	FindReplaceOptionsButtonUseRegEx = View->GetComponentByRole(view::eViewRole::FindReplace_UseRegEx)->AsButton();
+	FindReplaceOptionsButtonIgnoreComments = View->GetComponentByRole(view::eViewRole::FindReplace_IgnoreComments)->AsButton();
+	FindReplaceButtonFind = View->GetComponentByRole(view::eViewRole::FindReplace_FindButton)->AsButton();
+	FindReplaceButtonReplace = View->GetComponentByRole(view::eViewRole::FindReplace_ReplaceButton)->AsButton();
+	FindReplaceButtonCountMatches = View->GetComponentByRole(view::eViewRole::FindReplace_CountMatchesButton)->AsButton();
+
+	CachedGlobalFindReplaceResults = gcnew List<GlobalFindReplaceResult^>;
+	PreferencesChangedEventHandler = gcnew EventHandler(this, &FindReplaceHelper::Preferences_Changed);
+
+	preferences::SettingsHolder::Get()->SavedToDisk += PreferencesChangedEventHandler;
+	InitResultsListViews();
+	InitFindReplaceLookInDropdown();
+	LoadPreferences();
+}
+
+FindReplaceHelper::~FindReplaceHelper()
+{
+	preferences::SettingsHolder::Get()->SavedToDisk -= PreferencesChangedEventHandler;
+	CachedGlobalFindReplaceResults->Clear();
+	SavePreferences();
+
+	SAFEDELETE_CLR(PreferencesChangedEventHandler);
+	FindReplaceResultsListView = nullptr;
+	GlobalFindReplaceResultsListView = nullptr;
+	FindReplacePane = nullptr;
+	FindReplaceFindDropdown = nullptr;
+	FindReplaceReplaceDropdown = nullptr;
+	FindReplaceLookInDropdown = nullptr;
+	FindReplaceOptionsButtonMatchCase = nullptr;
+	FindReplaceOptionsButtonMatchWholeWord = nullptr;
+	FindReplaceOptionsButtonUseRegEx = nullptr;
+	FindReplaceOptionsButtonIgnoreComments = nullptr;
+	FindReplaceButtonFind = nullptr;
+	FindReplaceButtonReplace = nullptr;
+	FindReplaceButtonCountMatches = nullptr;
+}
+
+void FindReplaceHelper::HandleResultsViewEvent(view::ViewComponentEvent^ E, IScriptEditorController^ Controller)
+{
+	auto EventType = safe_cast<view::components::IObjectListView::eEvent>(E->EventType);
+	switch (EventType)
+	{
+	case view::components::IObjectListView::eEvent::ItemActivate:
+	{
+		auto Args = safe_cast<view::components::IObjectListView::ItemActivateEventArgs^>(E->EventArgs);
+
+		if (E->Component == FindReplaceResultsListView)
+		{
+			auto Item = safe_cast<model::components::ScriptFindResult^>(Args->ItemModel);
+			if (Item != nullptr)
+				Controller->Model->ActiveDocument->TextEditor->ScrollToLine(Item->Line);
+		}
+		else if (E->Component == GlobalFindReplaceResultsListView)
+		{
+			if (Args->ItemModel->GetType() == textEditor::FindReplaceResult::HitData::typeid)
+			{
+				auto Item = safe_cast<textEditor::FindReplaceResult::HitData^>(Args->ItemModel);
+				auto ScriptDocumentData = safe_cast<GlobalFindReplaceResult::ScriptDocumentData^>(Args->ParentItemModel);
+
+				if (ScriptDocumentData != nullptr)
+				{
+					Debug::Assert(Controller->Model->ContainsDocument(ScriptDocumentData->Source));
+					Controller->Model->ActiveDocument = ScriptDocumentData->Source;
+					Controller->Model->ActiveDocument->TextEditor->ScrollToLine(Item->Line);
+				}
+			}
+		}
+		else
+			gcnew NotImplementedException();
+
+		break;
+	}
+	default:
+		gcnew NotImplementedException();
+	}
+}
+
+void FindReplaceHelper::HandleFindReplaceEvent(view::ViewComponentEvent^ E, IScriptEditorController^ Controller)
+{
+	switch (E->Component->Role)
+	{
+	case view::eViewRole::FindReplace_FindDropdown:
+	case view::eViewRole::FindReplace_ReplaceDropdown:
+	{
+		auto Event = safe_cast<view::components::IComboBox::eEvent>(E->EventType);
+		if (Event == view::components::IComboBox::eEvent::KeyDown)
+		{
+			auto Args = safe_cast<view::components::IComboBox::KeyDownEventArgs^>(E->EventArgs);
+			switch (Args->KeyEvent->KeyCode)
+			{
+			case Keys::Enter:
+				if (E->Component == FindReplaceFindDropdown)
+					PerformOperation(textEditor::eFindReplaceOperation::Find, Controller);
+				else if (E->Component == FindReplaceReplaceDropdown)
+					PerformOperation(textEditor::eFindReplaceOperation::Replace, Controller);
+
+				Args->KeyEvent->Handled = true;
+				Args->KeyEvent->SuppressKeyPress = true;
+
+				break;
+			case Keys::Escape:
+				FindReplacePane->Visible = false;
+
+				Args->KeyEvent->Handled = true;
+				Args->KeyEvent->SuppressKeyPress = true;
+
+				break;
+			}
+		}
+
+		break;
+	}
+	case view::eViewRole::FindReplace_FindButton:
+		PerformOperation(textEditor::eFindReplaceOperation::Find, Controller);
+		break;
+	case view::eViewRole::FindReplace_ReplaceButton:
+		PerformOperation(textEditor::eFindReplaceOperation::Replace, Controller);
+		break;
+	case view::eViewRole::FindReplace_CountMatchesButton:
+		PerformOperation(textEditor::eFindReplaceOperation::CountMatches, Controller);
+		break;
+	case view::eViewRole::FindReplace_LookInDropdown:
+	case view::eViewRole::FindReplace_MatchCase:
+	case view::eViewRole::FindReplace_MatchWholeWord:
+	case view::eViewRole::FindReplace_UseRegEx:
+	case view::eViewRole::FindReplace_IgnoreComments:
+		;// nothing to do here
+	default:
+		gcnew ArgumentException("Unexpected find-replace panel component " + E->Component->Role.ToString());
+	}
+}
+
+void FindReplaceHelper::InvalidateScriptDocumentInGlobalResultsCache(model::IScriptDocument^ ScriptDocument)
+{
+	for each (auto GlobalResult in CachedGlobalFindReplaceResults)
+	{
+		for each (auto ScriptDocData in GlobalResult->DocumentsWithHits)
+		{
+			if (ScriptDocData->Source == ScriptDocument)
+				ScriptDocData->Source = nullptr;
+		}
+	}
+}
+
+int FindReplaceHelper::DoOperation(textEditor::eFindReplaceOperation Operation, String^ Query, String^ Replacement, textEditor::eFindReplaceOptions Options, bool InAllOpenDocuments, IScriptEditorController^ Controller)
+{
+	if (Query->Length == 0)
+		return 0;
+
+	if (!InAllOpenDocuments)
+	{
+		auto Result = Controller->Model->ActiveDocument->TextEditor->FindReplace(Operation, Query, Replacement, Options);
+		if (Result->TotalHits > 0 && Operation != textEditor::eFindReplaceOperation::CountMatches)
+			FindReplaceResultsPane->Visible = true;
+
+		return Result->TotalHits;
+	}
+
+	auto GlobalResult = gcnew GlobalFindReplaceResult;
+	GlobalResult->Operation = Operation;
+	GlobalResult->Query = Query;
+	GlobalResult->Replacement = Replacement;
+	GlobalResult->Options = Options;
+
+	for each (auto Document in Controller->Model->Documents)
+	{
+		auto FindResult = Document->TextEditor->FindReplace(Operation, Query, Replacement, Options);
+		if (FindResult->HasError)
+			break;
+
+		if (FindResult->TotalHits)
+			GlobalResult->Add(Document, FindResult);
+	}
+
+	if (GlobalResult->TotalHitCount > 0)
+	{
+		// we want the newest result to show first
+		CachedGlobalFindReplaceResults->Insert(0, GlobalResult);
+		GlobalFindReplaceResultsListView->SetObjects(CachedGlobalFindReplaceResults, true);
+		GlobalFindReplaceResultsPane->Visible = true;
+	}
+	else
+		Controller->View->ShowNotification("No matches were found", nullptr, 4000);
+
+	return -1;
+}
+
+InputManager::KeyChordData::KeyChordData(KeyCombo^ SecondChord, BasicAction^ Action)
+{
+	this->SecondChord = SecondChord;
+	this->Action = Action;
+}
+
+
+InputManager::KeyChordData::KeyChordData(BasicAction^ Action)
+{
+	this->SecondChord = nullptr;
+	this->Action = Action;
+}
+
+bool InputManager::KeyChordData::Equals(Object^ obj)
+{
+	if (obj == nullptr)
+		return false;
+	else if (obj->GetType() != KeyChordData::typeid)
+		return false;
+
+	auto Other = safe_cast<KeyChordData^>(obj);
+	return this->SecondChord->Equals(Other->SecondChord) && this->Action->Equals(Other->Action);
+}
+
+InputManager::InputManager()
+{
+	BlacklistedKeyCodes = gcnew List<Keys>;
+	KeyChordCommands = gcnew Dictionary<KeyCombo^, ChordDataUnion^>;
+	LastActiveFirstChord = nullptr;
+
+	BlacklistedKeyCodes->Add(Keys::Escape);
+}
+
+InputManager::~InputManager()
+{
+	KeyChordCommands->Clear();
+}
+
+void InputManager::AddKeyChordCommand(BasicAction^ Action, KeyCombo^ Primary, KeyCombo^ Secondary, bool OverwriteExisting)
+{
+	ChordDataUnion^ ExistingValue = nullptr;
+	if (!KeyChordCommands->TryGetValue(Primary, ExistingValue))
+	{
+		if (Secondary == nullptr)
+			ExistingValue = gcnew ChordDataUnion(gcnew KeyChordData(Action), nullptr);
+		else
+		{
+			ExistingValue = gcnew ChordDataUnion(nullptr, gcnew List<KeyChordData^>);
+			ExistingValue->Item2->Add(gcnew KeyChordData(Secondary, Action));
+		}
+
+		KeyChordCommands->Add(Primary, ExistingValue);
+		return;
+	}
+
+	if (!OverwriteExisting)
+	{
+		if (ExistingValue->Item1 && (Secondary || ExistingValue->Item1->Action != Action))
+			throw gcnew ArgumentException("Primary key chord '" + Primary->ToString() + "' has already been bound to a command without a secondary key chord");
+		else if (ExistingValue->Item2)
+		{
+			if (Secondary == nullptr)
+				throw gcnew ArgumentException("Primary key chord '" + Primary->ToString() + "' has already been bound to at least one secondary key chord");
+			else if (ExistingValue->Item2->Contains(gcnew KeyChordData(Secondary, Action)))
+				throw gcnew ArgumentException("Key chord '" + Primary->ToString() + ", " + Secondary->ToString() + "' has already been bound to a different command");
+		}
+	}
+
+	if (ExistingValue->Item1)
+	{
+		if (Secondary == nullptr)
+			ExistingValue->Item1->Action = Action;
+		else
+		{
+			auto NewData = gcnew ChordDataUnion(nullptr, gcnew List<KeyChordData^>);
+			KeyChordCommands[Primary] = NewData;
+		}
+	}
+	else
+	{
+		if (Secondary == nullptr)
+			KeyChordCommands[Primary] = gcnew ChordDataUnion(gcnew KeyChordData(Action), nullptr);
+		else
+		{
+			for each (auto Itr in ExistingValue->Item2)
+			{
+				if (Itr->SecondChord == Secondary)
+				{
+					Itr->Action = Action;
+					return;
+				}
+			}
+
+			ExistingValue->Item2->Add(gcnew KeyChordData(Secondary, Action));
+		}
+	}
+}
+
+void InputManager::AddKeyChordCommand(BasicAction^ Action, KeyCombo^ Primary, bool OverwriteExisting)
+{
+	AddKeyChordCommand(Action, Primary, nullptr, OverwriteExisting);
+}
+
+void InputManager::HandleKeyDown(KeyEventArgs^ E, IScriptEditorController^ Controller)
+{
+	if (LastActiveFirstChord)
+	{
+		// the first chord was already pressed
+	}
+}
+
+void InputManager::HandleMouseClick(MouseEventArgs^ E, IScriptEditorController^ Controller)
+{
+
+}
+
+bool InputManager::IsKeyBlacklisted(Keys Key)
+{
+
+}
+
+
+
+} // namespace components
+
+
+} // namespace controller
+
+
+} // namespace scriptEditor
+
+
+} // namespace cse

@@ -186,10 +186,10 @@ protected:
 	void				GotoLine(int Line);											// line numbers start at 1
 	void				RefreshTextView();
 	int					PerformFindReplaceOperationOnSegment(System::Text::RegularExpressions::Regex^ ExpressionParser,
-															 ITextEditor::eFindReplaceOperation Operation,
+															 eFindReplaceOperation Operation,
 															 AvalonEdit::Document::DocumentLine^ Line,
 															 String^ Replacement,
-															 ITextEditor::FindReplaceOptions Options);
+															 eFindReplaceOptions Options);
 	void				StartMiddleMouseScroll(System::Windows::Input::MouseButtonEventArgs^ E);
 	void				StopMiddleMouseScroll();
 	void				UpdateCodeFoldings();
@@ -296,7 +296,7 @@ public:
 	virtual void LoadFileFromDisk(String^ Path);
 	virtual void SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ DefaultName, String^ DefaultExtension);
 
-	virtual ITextEditor::FindReplaceResult^ FindReplace(ITextEditor::eFindReplaceOperation Operation, String^ Query, String^ Replacement, ITextEditor::FindReplaceOptions Options);
+	virtual FindReplaceResult^ FindReplace(eFindReplaceOperation Operation, String^ Query, String^ Replacement, eFindReplaceOptions Options);
 
 	virtual void BeginUpdate(void);
 	virtual void EndUpdate(bool FlagModification);

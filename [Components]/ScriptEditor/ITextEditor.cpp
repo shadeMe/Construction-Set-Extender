@@ -24,23 +24,23 @@ TextEditorMouseClickEventArgs::TextEditorMouseClickEventArgs(MouseButtons Button
 	this->ScriptTextOffset = ScriptTextOffset;
 }
 
-ITextEditor::FindReplaceResult::HitData::HitData(UInt32 Line, String^ Text, UInt32 Hits)
+FindReplaceResult::HitData::HitData(UInt32 Line, String^ Text, UInt32 Hits)
 	: Line(Line), Text(Text), Hits(Hits)
 {
 }
 
-ITextEditor::FindReplaceResult::FindReplaceResult()
+FindReplaceResult::FindReplaceResult()
 	: Hits(gcnew List<HitData^>), HasError(false)
 {
 }
 
-void ITextEditor::FindReplaceResult::Add(UInt32 Line, String^ Text, UInt32 HitsInLine)
+void FindReplaceResult::Add(UInt32 Line, String^ Text, UInt32 HitsInLine)
 {
 	Text->Replace("\t", "")->Replace("\r\n", "")->Replace("\n", "");
 	Hits->Add(gcnew HitData(Line, Text, HitsInLine));
 }
 
-int ITextEditor::FindReplaceResult::TotalHitCount::get()
+int FindReplaceResult::TotalHits::get()
 {
 	int Count = 0;
 

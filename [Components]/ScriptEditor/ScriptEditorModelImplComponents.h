@@ -90,6 +90,8 @@ public:
 	virtual ~NavigationHelper();
 
 	virtual event INavigationHelper::NavigationChangedEventHandler^ NavigationChanged;
+
+	virtual obScriptParsing::Structurizer^ GenerateStructureData(obScriptParsing::AnalysisData^ AnalysisData);
 };
 
 

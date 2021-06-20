@@ -14,6 +14,7 @@ namespace view
 
 
 enum class eViewRole;
+interface class IScriptEditorView;
 
 
 namespace components
@@ -41,10 +42,39 @@ public enum class eComponentType
 };
 
 
+interface class IForm;
+interface class IButton;
+interface class IComboBox;
+interface class ILabel;
+interface class ITabStrip;
+interface class ITabStripItem;
+interface class IObjectListView;
+interface class IObjectListViewColumn;
+interface class ICircularProgress;
+interface class IDockablePane;
+interface class ICrumbBar;
+interface class ICrumbBarItem;
+interface class IContainer;
+
+
 interface class IViewComponent
 {
 	property eComponentType Type;
 	property eViewRole Role;
+
+	IForm^ AsForm();
+	IButton^ AsButton();
+	IComboBox^ AsComboBox();
+	ILabel^ AsLabel();
+	ITabStrip^ AsTabStrip();
+	ITabStripItem^ AsTabStripItem();
+	IObjectListView^ AsObjectListView();
+	IObjectListViewColumn^ AsObjectListViewColumn();
+	ICircularProgress^ AsCircularProgress();
+	IDockablePane^ AsDockablePane();
+	ICrumbBar^ AsCrumbBar();
+	ICrumbBarItem^ AsCrumbBarItem();
+	IContainer^ AsContainer();
 };
 
 
@@ -108,20 +138,26 @@ interface class IButton : public IViewComponent
 interface class IComboBox : public IViewComponent
 {
 	property Object^ Selection;
-	property String^ SelectionText;
+	property String^ Text;
+	property IEnumerable<Object^>^ Items;
 
-	void AddDropdownItem(String^ NewItem);
+	void AddDropdownItem(Object^ NewItem, bool AtFirstPosition);
 	void ClearDropdownItems();
 
 	static enum class eEvent
 	{
-		SelectionChanged
+		SelectionChanged,
+		KeyDown,
 	};
 
 	ref struct SelectionChangedEventArgs
 	{
 		property Object^ SelectedItem;
-		property String^ SelectedItemText;
+	};
+
+	ref struct KeyDownEventArgs
+	{
+		property KeyEventArgs^ KeyEvent;
 	};
 };
 
@@ -138,12 +174,14 @@ interface class ITabStripItem : public IViewComponent
 	property String^ Tooltip;
 	property Image^ Image;
 	property Object^ Tag;
+	property ITabStrip^ Parent;
 };
 
 
 interface class ITabStrip
 {
 	property ITabStripItem^ ActiveTab;
+	property IScriptEditorView^ Parent;
 
 	ITabStripItem^ AllocateNewTab();
 	void AddTab(ITabStripItem^ Tab);
@@ -185,8 +223,6 @@ interface class ITabStrip
 };
 
 
-interface class IObjectListView;
-
 interface class IObjectListViewColumn : public IViewComponent
 {
 	delegate Object^ AspectGetter(Object^ Model);
@@ -196,6 +232,10 @@ interface class IObjectListViewColumn : public IViewComponent
 	property int Index;
 	property String^ Text;
 	property IObjectListView^ Parent;
+	property int MinimumWidth;
+	property int MaximumWidth;
+	property int Width;
+	property bool FillsFreeSpace;
 
 	void SetAspectGetter(AspectGetter^ Delegate);
 	void SetAspectToStringGetter(AspectToStringGetter^ Delegate);
@@ -217,6 +257,9 @@ interface class IObjectListView : public IViewComponent
 	List<IObjectListViewColumn^>^ GetColumns();
 	void SetCanExpandGetter(CanExpandGetter^ Delegate);
 	void SetChildrenGetter(ChildrenGetter^ Delegate);
+	void EnsureItemVisible(Object^ Item);
+	void ExpandAll();
+	void CollapseAll();
 
 	static enum class eEvent
 	{
@@ -226,6 +269,7 @@ interface class IObjectListView : public IViewComponent
 	ref struct ItemActivateEventArgs
 	{
 		property Object^ ItemModel;
+		property Object^ ParentItemModel;
 	};
 };
 
@@ -253,12 +297,16 @@ interface class ICrumbBarItem : public IViewComponent
 	property Object^ Tag;
 	property String^ Tooltip;
 	property Image^ Image;
+
+	void AddChild(ICrumbBarItem^ Child);
+	void ClearChildren();
 };
 
 
 interface class ICrumbBar : public IViewComponent
 {
 	property ICrumbBarItem^ SelectedItem;
+	property bool Visible;
 
 	ICrumbBarItem^ AllocateNewItem();
 	void ClearItems();
@@ -306,12 +354,14 @@ public enum class eViewRole
 	MainToolbar_SaveAllScripts,
 	MainToolbar_ScriptTypeDropdown,
 
+	MainToolbar_Edit,
 	MainToolbar_Edit_FindReplace,
 	MainToolbar_Edit_GoToLine,
 	MainToolbar_Edit_GoToOffset,
 	MainToolbar_Edit_AddBookmark,
 	MainToolbar_Edit_ToggleComment,
 
+	MainToolbar_View,
 	MainToolbar_View_PreprocessorOutput,
 	MainToolbar_View_BytecodeOffsets,
 	MainToolbar_View_IconMargin,
@@ -323,6 +373,7 @@ public enum class eViewRole
 	MainToolbar_View_NavigationBar,
 	MainToolbar_View_DarkMode,
 
+	MainToolbar_Tools,
 	MainToolbar_Tools_SanitiseScript,
 	MainToolbar_Tools_AttachScript,
 	MainToolbar_Tools_RecompileScriptDependencies,
@@ -344,6 +395,7 @@ public enum class eViewRole
 	MainToolbar_Help_Wiki,
 	MainToolbar_Help_OBSE,
 
+	StatusBar_CurrentMessage,
 	StatusBar_LineNumber,
 	StatusBar_ColumnNumber,
 	StatusBar_PreprocessorOutput,
