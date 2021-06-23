@@ -221,6 +221,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="ScriptEditorModelImplComponents.cpp" />
     <ClCompile Include="ScriptEditorViewImpl.cpp" />
     <ClCompile Include="ScriptEditorViewImplComponents.cpp" />
+    <ClCompile Include="ScriptPreprocessor.cpp" />
     <ClCompile Include="SelectScriptDialog.cpp" />
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="ScriptSync.cpp" />
@@ -238,6 +239,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="..\..\[Common]\ComponentDLLInterface.h" />
     <ClInclude Include="..\..\[Common]\CustomInputBox.h" />
     <ClInclude Include="..\..\[Common]\NativeWrapper.h" />
+    <ClInclude Include="ScriptPreprocessor.h" />
     <ClInclude Include="Utilities.h" />
     <ClInclude Include="AvalonEditComponents.h" />
     <ClInclude Include="BackgroundAnalysis.h" />
@@ -293,16 +295,6 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Icons.resx" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="Preprocessor\ScriptEditor.Preprocessor.vcxproj">
-      <Project>{67dd2ff6-aff7-4c49-80ae-72b47982563d}</Project>
-      <Private>false</Private>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
-      <LinkLibraryDependencies>true</LinkLibraryDependencies>
-      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VersionInfo.rc">

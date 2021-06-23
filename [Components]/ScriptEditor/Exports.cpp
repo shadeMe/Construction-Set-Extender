@@ -5,6 +5,7 @@
 #include "WorkspaceView.h"
 #include "ScriptSync.h"
 #include "Preferences.h"
+#include "ScriptPreprocessor.h"
 
 #include <memory.h>
 
@@ -22,27 +23,6 @@ extern "C"
 	{
 		return &g_InteropInterface;
 	}
-}
-
-Assembly^ ResolvePreprocessorAssemblyLoad(Object^, ResolveEventArgs^ E)
-{
-	Assembly^ PreprocAssembly, ^ExecutingAssemblies;
-	String^ TempPath = "";
-	String^	AppPath = gcnew String(nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetAppPath());
-
-	ExecutingAssemblies = Assembly::GetExecutingAssembly();
-
-	for each(AssemblyName^ AssmbName in ExecutingAssemblies->GetReferencedAssemblies())
-	{
-		if (AssmbName->FullName->Substring(0, AssmbName->FullName->IndexOf(",")) == E->Name->Substring(0, E->Name->IndexOf(",")))
-		{
-			TempPath = AppPath + COMPONENTDLLFOLDER + E->Name->Substring(0, E->Name->IndexOf(",")) + ".dll";
-			PreprocAssembly = Assembly::LoadFrom(TempPath);
-			return PreprocAssembly;
-		}
-	}
-
-	return nullptr;
 }
 
 void CLRUnhandledExceptionFilter(Object^, UnhandledExceptionEventArgs^ E)
@@ -68,7 +48,6 @@ void InitializeComponents(CommandTableData* ScriptCommandData, IntelliSenseUpdat
 	nativeWrapper::Initialize();
 
 	AppDomain^ CurrentDomain = AppDomain::CurrentDomain;
-	CurrentDomain->AssemblyResolve += gcnew ResolveEventHandler(&ResolvePreprocessorAssemblyLoad);
 	CurrentDomain->UnhandledException += gcnew UnhandledExceptionEventHandler(&CLRUnhandledExceptionFilter);
 	System::Windows::Media::RenderOptions::ProcessRenderMode = System::Windows::Interop::RenderMode::Default;
 
@@ -93,9 +72,9 @@ void InstantiateEditorAndHighlight(componentDLLInterface::ScriptData* Initialize
 
 	New->AssociateModel(Model, true);
 	New->Controller->FindReplace(New,
-								 cse::textEditors::ITextEditor::eFindReplaceOperation::Find,
+								 cse::textEditors::eFindReplaceOperation::Find,
 								 gcnew String(SearchQuery), "",
-								 cse::textEditors::ITextEditor::FindReplaceOptions::CaseInsensitive,
+								 cse::textEditors::eFindReplaceOptions::CaseInsensitive,
 								 false);
 }
 
@@ -163,10 +142,10 @@ void DummyPreprocessorErrorOutputWrapper(int Line, String^ Message)
 bool PreprocessScript(const char* ScriptText, char* OutPreprocessed, UInt32 BufferSize)
 {
 	String^ PreprocessedResult = "";
-	bool OperationResult = Preprocessor::GetSingleton()->PreprocessScript(gcnew String(ScriptText),
+	bool OperationResult = preprocessor::Preprocessor::Get()->PreprocessScript(gcnew String(ScriptText),
 								PreprocessedResult,
-								gcnew scriptPreprocessor::StandardOutputError(&DummyPreprocessorErrorOutputWrapper),
-								gcnew ScriptEditorPreprocessorData(gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
+								gcnew preprocessor::StandardOutputError(&DummyPreprocessorErrorOutputWrapper),
+								gcnew preprocessor::PreprocessorParams(gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
 								gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
 								preferences::SettingsHolder::Get()->Preprocessor->AllowMacroRedefs,
 								preferences::SettingsHolder::Get()->Preprocessor->NumPasses));

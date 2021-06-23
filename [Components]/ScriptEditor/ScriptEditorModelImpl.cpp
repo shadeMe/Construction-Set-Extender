@@ -3,6 +3,7 @@
 #include "IntelliSenseInterfaceModel.h"
 #include "IntelliSenseDatabase.h"
 #include "TextEditorFactory.h"
+#include "ScriptPreprocessor.h"
 
 namespace cse
 {
@@ -156,21 +157,21 @@ void DummyOutputWrapper(int Line, String^ Message) {}
 System::String^ ScriptDocument::PreprocessScriptText(String^ ScriptText, bool SuppressErrors, bool% OutPreprocessResult, bool% OutContainsDirectives)
 {
 	String^ Preprocessed = "";
-	scriptPreprocessor::StandardOutputError^ ErrorOutput = gcnew scriptPreprocessor::StandardOutputError(&DummyOutputWrapper);
+	auto ErrorOutput = gcnew preprocessor::StandardOutputError(&DummyOutputWrapper);
 	if (SuppressErrors == false)
 	{
-		ErrorOutput = gcnew scriptPreprocessor::StandardOutputError(this, &ScriptDocument::TrackPreprocessorMessage);
+		ErrorOutput = gcnew preprocessor::StandardOutputError(this, &ScriptDocument::TrackPreprocessorMessage);
 		BeginBatchUpdate(eBatchUpdateSource::Messages);
 		ClearMessages(ScriptDiagnosticMessage::eMessageSource::Preprocessor, ScriptDiagnosticMessage::eMessageType::All);
 	}
 
 
-	auto PreprocessorParams = gcnew ScriptEditorPreprocessorData(gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
+	auto PreprocessorParams = gcnew preprocessor::PreprocessorParams(gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
 		gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
 		preferences::SettingsHolder::Get()->Preprocessor->AllowMacroRedefs,
 		preferences::SettingsHolder::Get()->Preprocessor->NumPasses);
 
-	bool Result = Preprocessor::GetSingleton()->PreprocessScript(ScriptText, Preprocessed, ErrorOutput, PreprocessorParams);
+	bool Result = preprocessor::Preprocessor::Get()->PreprocessScript(ScriptText, Preprocessed, ErrorOutput, PreprocessorParams);
 
 	if (SuppressErrors == false)
 		EndBatchUpdate(eBatchUpdateSource::Messages);

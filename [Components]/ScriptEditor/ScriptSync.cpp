@@ -240,14 +240,14 @@ namespace cse
 			{
 				PreprocessorErrorCapture^ PreprocessorErrors = gcnew PreprocessorErrorCapture();
 
-				ScriptEditorPreprocessorData^ PreprocessorData = gcnew ScriptEditorPreprocessorData(
+				PreprocessorParams^ PreprocessorData = gcnew PreprocessorParams(
 					gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
 					gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
 					preferences::SettingsHolder::Get()->Preprocessor->AllowMacroRedefs,
 					preferences::SettingsHolder::Get()->Preprocessor->NumPasses);
 
 
-				bool PreprocessingSuccessful = Preprocessor::GetSingleton()->PreprocessScript(
+				bool PreprocessingSuccessful = Preprocessor::Get()->PreprocessScript(
 											ImportedScriptText, OutPreprocessedText, PreprocessorErrors->Delegate(), PreprocessorData);
 
 				if (PreprocessingSuccessful == false)

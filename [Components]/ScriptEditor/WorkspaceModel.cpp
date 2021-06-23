@@ -778,12 +778,12 @@ namespace cse
 			}
 
 
-			auto PreprocessorParams = gcnew ScriptEditorPreprocessorData(gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
+			auto PreprocessorParams = gcnew PreprocessorParams(gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
 																		 gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
 																		 preferences::SettingsHolder::Get()->Preprocessor->AllowMacroRedefs,
 																		 preferences::SettingsHolder::Get()->Preprocessor->NumPasses);
 
-			bool Result = Preprocessor::GetSingleton()->PreprocessScript(ScriptText, Preprocessed, ErrorOutput, PreprocessorParams);
+			bool Result = Preprocessor::Get()->PreprocessScript(ScriptText, Preprocessed, ErrorOutput, PreprocessorParams);
 
 			if (SuppressErrors == false)
 				EndBatchUpdate(BatchUpdateSource::Messages);

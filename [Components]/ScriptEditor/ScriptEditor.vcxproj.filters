@@ -137,6 +137,9 @@
     <ClCompile Include="Utilities.cpp">
       <Filter>Components\[REWRITE]</Filter>
     </ClCompile>
+    <ClCompile Include="ScriptPreprocessor.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h">
@@ -274,6 +277,9 @@
     </ClInclude>
     <ClInclude Include="Utilities.h">
       <Filter>Components\[REWRITE]</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptPreprocessor.h">
+      <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
