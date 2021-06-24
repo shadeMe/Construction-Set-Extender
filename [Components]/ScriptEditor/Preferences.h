@@ -74,10 +74,13 @@ namespace cse
 			[Description("Hide script editor window in Windows taskbar/task-switcher")]
 			property bool HideInTaskbar;
 
-
 			[Category("Script Picker")]
 			[Description("Sort scripts according to their flags (modified, deleted, etc) by default")]
 			property bool SortScriptsByFlags;
+
+			[Category("Export")]
+			[Description("File extension used scripts that are saved to disk")]
+			property String^ ExportedScriptFileExtension;
 
 			GeneralSettings()
 			{
@@ -88,9 +91,10 @@ namespace cse
 				CutCopyEntireLine = true;
 				RecompileDependsOnVarIdxMod = true;
 				SortScriptsByFlags = true;
+				ExportedScriptFileExtension = ".obscript";
 			}
 
-			virtual bool Validate(SettingsGroup^ OldValue, String^% OutMessage) override { return true; }
+			virtual bool Validate(SettingsGroup^ OldValue, String^% OutMessage) override;
 		};
 
 		ref struct IntelliSenseSettings : public SettingsGroup
@@ -189,18 +193,6 @@ namespace cse
 			static String^ CategoryName = "Appearance";
 
 			[Category("General")]
-			[Description("Text foreground color")]
-			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
-			[TypeConverter(CustomColorConverter::typeid)]
-			property Color ForeColor;
-
-			[Category("General")]
-			[Description("Text background color")]
-			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
-			[TypeConverter(CustomColorConverter::typeid)]
-			property Color BackColor;
-
-			[Category("General")]
 			[Description("Display size of tab characters")]
 			property UInt32 TabSize;
 
@@ -221,9 +213,13 @@ namespace cse
 			[Description("Display space characters")]
 			property bool ShowSpaces;
 
+			[Category("General")]
+			[Description("Use a dark theme for the script editor interface")]
+			property bool DarkMode;
+
 
 			[Category("Adornments")]
-			[Description("Show scope breadcrumb toolbar")]
+			[Description("Show navigation breadcrumb toolbar")]
 			property bool ShowScopeBar;
 
 			[Category("Adornments")]
@@ -231,114 +227,242 @@ namespace cse
 			property bool ShowCodeFolding;
 
 			[Category("Adornments")]
-			[Description("Show ")]
+			[Description("Show block visualizer")]
 			property bool ShowBlockVisualizer;
 
+			[Category("Adornments")]
+			[Description("Show icon margin")]
+			property bool ShowIconMargin;
 
-			[Category("Highlighting")]
+			[Category("Adornments")]
+			[Description("Show bytecode offset margin")]
+			property bool ShowBytecodeOffsetMargin;
+
+			[Category("Highlighting (Light Mode)")]
+			[Description("Text foreground color")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
+			property Color ForeColorLightMode;
+
+			[Category("Highlighting (Light Mode)")]
+			[Description("Text background color")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
+			property Color BackColorLightMode;
+
+			[Category("Highlighting (Light Mode)")]
 			[Description("Syntax highlighting foreground color for script keywords")]
 			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
 			[TypeConverter(CustomColorConverter::typeid)]
-			property Color ForeColorKeywords;
+			property Color ForeColorKeywordsLightMode;
 
-			[Category("Highlighting")]
+			[Category("Highlighting (Light Mode)")]
 			[Description("Syntax highlighting foreground color for digits")]
 			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
 			[TypeConverter(CustomColorConverter::typeid)]
-			property Color ForeColorDigits;
+			property Color ForeColorDigitsLightMode;
 
-			[Category("Highlighting")]
+			[Category("Highlighting (Light Mode)")]
 			[Description("Syntax highlighting color preprocessor directives")]
 			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
 			[TypeConverter(CustomColorConverter::typeid)]
-			property Color ForeColorPreprocessor;
+			property Color ForeColorPreprocessorLightMode;
 
-			[Category("Highlighting")]
+			[Category("Highlighting (Light Mode)")]
 			[Description("Syntax highlighting color script block names")]
 			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
 			[TypeConverter(CustomColorConverter::typeid)]
-			property Color ForeColorScriptBlocks;
+			property Color ForeColorScriptBlocksLightMode;
 
-			[Category("Highlighting")]
+			[Category("Highlighting (Light Mode)")]
 			[Description("Syntax highlighting color string literals")]
 			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
 			[TypeConverter(CustomColorConverter::typeid)]
-			property Color ForeColorStringLiterals;
+			property Color ForeColorStringLiteralsLightMode;
 
-			[Category("Highlighting")]
+			[Category("Highlighting (Light Mode)")]
 			[Description("Syntax highlighting foreground color for comments")]
 			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
 			[TypeConverter(CustomColorConverter::typeid)]
-			property Color ForeColorComments;
+			property Color ForeColorCommentsLightMode;
 
-			[Category("Highlighting")]
+			[Category("Highlighting (Light Mode)")]
 			[Description("Syntax highlighting foreground color for local variables")]
 			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
 			[TypeConverter(CustomColorConverter::typeid)]
-			property Color ForeColorLocalVariables;
+			property Color ForeColorLocalVariablesLightMode;
 
-			[Category("Highlighting")]
+			[Category("Highlighting (Light Mode)")]
 			[Description("Highlighting background color for selected text")]
 			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
 			[TypeConverter(CustomColorConverter::typeid)]
-			property Color BackColorSelection;
+			property Color BackColorSelectionLightMode;
 
-			[Category("Highlighting")]
+			[Category("Highlighting (Light Mode)")]
 			[Description("Highlighting background color for current line")]
 			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
 			[TypeConverter(CustomColorConverter::typeid)]
-			property Color BackColorCurrentLine;
+			property Color BackColorCurrentLineLightMode;
 
-			[Category("Highlighting")]
+			[Category("Highlighting (Light Mode)")]
 			[Description("Highlighting background color for lines exceeding the character limit (512)")]
 			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
 			[TypeConverter(CustomColorConverter::typeid)]
-			property Color BackColorCharLimit;
+			property Color BackColorCharLimitLightMode;
 
-			[Category("Highlighting")]
+			[Category("Highlighting (Light Mode)")]
 			[Description("Highlighting color for error squigglies")]
 			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
 			[TypeConverter(CustomColorConverter::typeid)]
-			property Color UnderlineColorError;
+			property Color UnderlineColorErrorLightMode;
 
-			[Category("Highlighting")]
+			[Category("Highlighting (Light Mode)")]
 			[Description("Highlighting color for find results")]
 			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
 			[TypeConverter(CustomColorConverter::typeid)]
-			property Color BackColorFindResults;
+			property Color BackColorFindResultsLightMode;
 
-			[Category("Highlighting")]
+			[Category("Highlighting (Light Mode)")]
 			[Description("Use bold-face font style for all highlighted text")]
-			property bool BoldFaceHighlightedText;
+			property bool BoldFaceHighlightedTextLightMode;
+
+
+			[Category("Highlighting (Dark Mode)")]
+			[Description("Text foreground color")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
+			property Color ForeColorDarkMode;
+
+			[Category("Highlighting (Dark Mode)")]
+			[Description("Text background color")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
+			property Color BackColorDarkMode;
+
+			[Category("Highlighting (Dark Mode)")]
+			[Description("Syntax highlighting foreground color for script keywords")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
+			property Color ForeColorKeywordsDarkMode;
+
+			[Category("Highlighting (Dark Mode)")]
+			[Description("Syntax highlighting foreground color for digits")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
+			property Color ForeColorDigitsDarkMode;
+
+			[Category("Highlighting (Dark Mode)")]
+			[Description("Syntax highlighting color preprocessor directives")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
+			property Color ForeColorPreprocessorDarkMode;
+
+			[Category("Highlighting (Dark Mode)")]
+			[Description("Syntax highlighting color script block names")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
+			property Color ForeColorScriptBlocksDarkMode;
+
+			[Category("Highlighting (Dark Mode)")]
+			[Description("Syntax highlighting color string literals")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
+			property Color ForeColorStringLiteralsDarkMode;
+
+			[Category("Highlighting (Dark Mode)")]
+			[Description("Syntax highlighting foreground color for comments")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
+			property Color ForeColorCommentsDarkMode;
+
+			[Category("Highlighting (Dark Mode)")]
+			[Description("Syntax highlighting foreground color for local variables")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
+			property Color ForeColorLocalVariablesDarkMode;
+
+			[Category("Highlighting (Dark Mode)")]
+			[Description("Highlighting background color for selected text")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
+			property Color BackColorSelectionDarkMode;
+
+			[Category("Highlighting (Dark Mode)")]
+			[Description("Highlighting background color for current line")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
+			property Color BackColorCurrentLineDarkMode;
+
+			[Category("Highlighting (Dark Mode)")]
+			[Description("Highlighting background color for lines exceeding the character limit (512)")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
+			property Color BackColorCharLimitDarkMode;
+
+			[Category("Highlighting (Dark Mode)")]
+			[Description("Highlighting color for error squigglies")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
+			property Color UnderlineColorErrorDarkMode;
+
+			[Category("Highlighting (Dark Mode)")]
+			[Description("Highlighting color for find results")]
+			[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+			[TypeConverter(CustomColorConverter::typeid)]
+			property Color BackColorFindResultsDarkMode;
+
+			[Category("Highlighting (Dark Mode)")]
+			[Description("Use bold-face font style for all highlighted text")]
+			property bool BoldFaceHighlightedTextDarkMode;
+
+
 
 			AppearanceSettings()
 			{
-				ForeColor = Color::FromArgb(253, 244, 193);
-				BackColor = Color::FromArgb(29, 32, 33);
 				TabSize = 4;
 				TextFont = gcnew Font("Segoe UI", 12);
 				WordWrap = false;
 				ShowTabs = false;
 				ShowSpaces = false;
+				DarkMode = false;
 
 				ShowScopeBar = true;
 				ShowCodeFolding = true;
 				ShowBlockVisualizer = true;
+				ShowIconMargin = true;
+				ShowBytecodeOffsetMargin = false;
 
-				ForeColorKeywords = Color::FromArgb(252, 128, 114);
-				ForeColorDigits = Color::FromArgb(255, 165, 0);
-				ForeColorPreprocessor = Color::FromArgb(165, 42, 42);
-				ForeColorScriptBlocks = Color::FromArgb(250, 30, 5);
-				ForeColorStringLiterals = Color::FromArgb(149, 192, 133);
-				ForeColorComments = Color::FromArgb(168, 153, 132);
-				ForeColorLocalVariables = Color::FromArgb(20, 153, 182);
+				ForeColorLightMode = Color::FromArgb(253, 244, 193);
+				BackColorLightMode = Color::FromArgb(29, 32, 33);
+				ForeColorKeywordsLightMode = Color::FromArgb(252, 128, 114);
+				ForeColorDigitsLightMode = Color::FromArgb(255, 165, 0);
+				ForeColorPreprocessorLightMode = Color::FromArgb(165, 42, 42);
+				ForeColorScriptBlocksLightMode = Color::FromArgb(250, 30, 5);
+				ForeColorStringLiteralsLightMode = Color::FromArgb(149, 192, 133);
+				ForeColorCommentsLightMode = Color::FromArgb(168, 153, 132);
+				ForeColorLocalVariablesLightMode = Color::FromArgb(20, 153, 182);
+				BackColorSelectionLightMode = Color::FromArgb(143, 70, 115);
+				BackColorCurrentLineLightMode = Color::FromArgb(102, 92, 84);
+				BackColorCharLimitLightMode = Color::FromArgb(139, 0, 139);
+				UnderlineColorErrorLightMode = Color::FromArgb(255, 0, 0);
+				BackColorFindResultsLightMode = Color::FromArgb(255, 255, 224);
+				BoldFaceHighlightedTextLightMode = false;
 
-				BackColorSelection = Color::FromArgb(143, 70, 115);
-				BackColorCurrentLine = Color::FromArgb(102, 92, 84);
-				BackColorCharLimit = Color::FromArgb(139, 0, 139);
-				UnderlineColorError = Color::FromArgb(255, 0, 0);
-				BackColorFindResults = Color::FromArgb(255, 255, 224);
-				BoldFaceHighlightedText = false;
+				ForeColorDarkMode = Color::FromArgb(253, 244, 193);
+				BackColorDarkMode = Color::FromArgb(29, 32, 33);
+				ForeColorKeywordsDarkMode = Color::FromArgb(252, 128, 114);
+				ForeColorDigitsDarkMode = Color::FromArgb(255, 165, 0);
+				ForeColorPreprocessorDarkMode = Color::FromArgb(165, 42, 42);
+				ForeColorScriptBlocksDarkMode = Color::FromArgb(250, 30, 5);
+				ForeColorStringLiteralsDarkMode = Color::FromArgb(149, 192, 133);
+				ForeColorCommentsDarkMode = Color::FromArgb(168, 153, 132);
+				ForeColorLocalVariablesDarkMode = Color::FromArgb(20, 153, 182);
+				BackColorSelectionDarkMode = Color::FromArgb(143, 70, 115);
+				BackColorCurrentLineDarkMode = Color::FromArgb(102, 92, 84);
+				BackColorCharLimitDarkMode = Color::FromArgb(139, 0, 139);
+				UnderlineColorErrorDarkMode = Color::FromArgb(255, 0, 0);
+				BackColorFindResultsDarkMode = Color::FromArgb(255, 255, 224);
+				BoldFaceHighlightedTextDarkMode = false;
 			}
 
 			virtual bool Validate(SettingsGroup^ OldValue, String^% OutMessage) override;
@@ -485,17 +609,12 @@ namespace cse
 			[Description("Automatically delete log files at sync end")]
 			property bool AutoDeleteLogs;
 
-			[Category("General")]
-			[Description("File extension used by synced scripts")]
-			property String^ ScriptFileExtension;
-
 			ScriptSyncSettings()
 			{
 				AutoSyncChanges = true;
 				AutoSyncInterval = 5;
 				ExistingFileHandlingOp = scriptEditor::scriptSync::SyncStartEventArgs::ExistingFileHandlingOperation::Prompt;
 				AutoDeleteLogs = false;
-				ScriptFileExtension = scriptEditor::scriptSync::SyncedScriptData::DefaultScriptFileExtension;
 			}
 
 			virtual bool Validate(SettingsGroup^ OldValue, String^% OutMessage) override;
@@ -541,14 +660,14 @@ namespace cse
 			FindReplaceSettings^	FindReplace;
 			ScriptSyncSettings^		ScriptSync;
 
-			property List<SettingsGroup^>^
-									AllGroups;
-			event EventHandler^		SavedToDisk;
+			property List<SettingsGroup^>^ AllGroups;
+			event EventHandler^ PreferencesChanged;
 
-			void					SaveToDisk();
-			void					LoadFromDisk();
+			void SaveToDisk();
+			void LoadFromDisk();
+			void RaisePreferencesChangedEvent();
 
-			static SettingsHolder^	Get();
+			static SettingsHolder^ Get();
 		};
 
 

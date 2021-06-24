@@ -46,7 +46,7 @@ protected:
 		Down
 	};
 
-	static enum class eToggleCommentOperation
+	static enum class eCommentOperation
 	{
 		Add,
 		Remove,
@@ -90,6 +90,7 @@ protected:
 	System::Windows::Media::Animation::DoubleAnimation^	SetTextPrologAnimationCache;
 
 	bool												TextFieldInUpdateFlag;
+	bool												TextFieldDisplayingStaticText;
 
 	model::IScriptDocument^								ParentScriptDocument;
 	LineTrackingManager^								LineTracker;
@@ -217,10 +218,13 @@ protected:
 	bool				GetLineVisible(UInt32 LineNumber, bool CheckVisualLine);	// inside the text field's viewable area
 	UInt32				GetFirstVisibleLine();
 	Point				PointToScreen(Point Location);
-	void				ToggleComment(int Line, eToggleCommentOperation Operation);
-	void				CommentLines(eToggleCommentOperation Operation);
+	void				PerformCommentOperationOnSingleLine(int Line, eCommentOperation Operation);
+	void				PerformCommentOperationOnSelection(eCommentOperation Operation);
 	void				ToggleSearchPanel(bool State);
 	String^				GetCurrentLineText(bool ClipAtCaretPos);
+	int					GetCharIndexFromPosition(Point Position);
+	Point				GetPositionFromCharIndex(int Index, bool Absolute);
+	void				FadeOutCurrentTextView();
 public:
 	AvalonEditTextEditor(model::IScriptDocument^ ParentScriptDocument);
 	~AvalonEditTextEditor();
@@ -275,6 +279,7 @@ public:
 	{
 		obScriptParsing::AnalysisData^ get() { return SemanticAnalysisCache; }
 	}
+	ImplPropertyGetOnly(bool, DisplayingStaticText, TextFieldDisplayingStaticText);
 
 	virtual void	Bind();
 	virtual void	Unbind();
@@ -284,17 +289,12 @@ public:
 	virtual void SetText(String^ Text, bool ResetUndoStack);
 	virtual String^ GetSelectedText(void);
 	virtual void SetSelectedText(String^ Text);
-	virtual int GetCharIndexFromPosition(Point Position);
-	virtual Point GetPositionFromCharIndex(int Index, bool Absolute);
 	virtual String^ GetTokenAtCharIndex(int Offset);
 	virtual String^ GetTokenAtCaretPos();
 	virtual void SetTokenAtCaretPos(String^ Replacement);
 	virtual void ScrollToCaret();
 	virtual void ScrollToLine(UInt32 LineNumber);
 	virtual void FocusTextArea();
-
-	virtual void LoadFileFromDisk(String^ Path);
-	virtual void SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ DefaultName, String^ DefaultExtension);
 
 	virtual FindReplaceResult^ FindReplace(eFindReplaceOperation Operation, String^ Query, String^ Replacement, eFindReplaceOptions Options);
 
@@ -306,6 +306,16 @@ public:
 
 	virtual void InitializeState(String^ ScriptText, int CaretPosition);
 	virtual ILineAnchor^ CreateLineAnchor(UInt32 Line);
+
+	virtual void InvokeDefaultCopy();
+	virtual void InvokeDefaultPaste();
+	virtual void CommentLine(UInt32 Line);
+	virtual void CommentSelection();
+	virtual void UncommentLine(UInt32 Line);
+	virtual void UncommentSelection();
+
+	virtual void BeginDisplayingStaticText(String^ TextToDisplay);
+	virtual void EndDisplayingStaticText();
 };
 
 

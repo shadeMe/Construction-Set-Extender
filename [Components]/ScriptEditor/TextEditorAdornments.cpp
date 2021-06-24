@@ -156,7 +156,7 @@ namespace cse
 			Bar->Items->Add(Root);
 			Bar->ItemClick += gcnew EventHandler(&ScopeBreadcrumbManager::OnItemClick);
 
-			preferences::SettingsHolder::Get()->SavedToDisk += ScriptEditorPreferencesSavedHandler;
+			preferences::SettingsHolder::Get()->PreferencesChanged += ScriptEditorPreferencesSavedHandler;
 		}
 
 		ScopeBreadcrumbManager::~ScopeBreadcrumbManager()
@@ -164,7 +164,7 @@ namespace cse
 			Debug::Assert(Bound == false);
 
 			Bar->Items->Clear();
-			preferences::SettingsHolder::Get()->SavedToDisk -= ScriptEditorPreferencesSavedHandler;
+			preferences::SettingsHolder::Get()->PreferencesChanged -= ScriptEditorPreferencesSavedHandler;
 
 			SAFEDELETE_CLR(Root);
 			SAFEDELETE_CLR(ParentLineChangedHandler);

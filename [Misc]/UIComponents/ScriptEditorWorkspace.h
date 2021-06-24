@@ -1,7 +1,7 @@
 #pragma once
-#include "ScriptEditorSelectScripts.h"
-#include "ScriptEditorScriptSync.h"
-#include "ScriptEditorPreferences.h"
+#include "ScriptSelectionDialog.h"
+#include "ScriptSyncDialog.h"
+#include "PreferencesDialog.h"
 
 namespace UIComponents {
 
@@ -85,9 +85,9 @@ namespace UIComponents {
 	private: DevComponents::DotNetBar::ButtonItem^ ToolbarMenuEdit;
 	private: DevComponents::DotNetBar::ButtonItem^ EditMenuFindReplace;
 	private: DevComponents::DotNetBar::ButtonItem^ EditMenuGoToLine;
-	private: DevComponents::DotNetBar::ButtonItem^ EditMenuGoToOffset;
+
 	private: DevComponents::DotNetBar::ButtonItem^ EditMenuAddBookmark;
-	private: DevComponents::DotNetBar::ButtonItem^ EditMenuToggleComment;
+
 	private: DevComponents::DotNetBar::ButtonItem^ ToolbarMenuView;
 	private: DevComponents::DotNetBar::ButtonItem^ ViewMenuPreprocessorOutput;
 	private: DevComponents::DotNetBar::ButtonItem^ ViewMenuBytecodeOffsets;
@@ -238,8 +238,8 @@ namespace UIComponents {
 	private: DevComponents::DotNetBar::ButtonItem^ ContextMenuTextEditor;
 	private: DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuCopy;
 	private: DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuPaste;
-	private: DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuToggleComment;
-	private: DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuAddBookmark;
+
+
 
 
 
@@ -259,6 +259,8 @@ namespace UIComponents {
 
 	private: DevComponents::DotNetBar::Layout::LayoutControlItem^ FindWindowLCIIgnoreComments;
 private: DevComponents::DotNetBar::LabelItem^ StatusBarCurrentMessage;
+private: DevComponents::DotNetBar::ButtonItem^ EditMenuComment;
+private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 
 
 
@@ -331,9 +333,7 @@ private: DevComponents::DotNetBar::LabelItem^ StatusBarCurrentMessage;
 			this->ToolbarMenuEdit = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->EditMenuFindReplace = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->EditMenuGoToLine = (gcnew DevComponents::DotNetBar::ButtonItem());
-			this->EditMenuGoToOffset = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->EditMenuAddBookmark = (gcnew DevComponents::DotNetBar::ButtonItem());
-			this->EditMenuToggleComment = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ToolbarMenuView = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ViewMenuPreprocessorOutput = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ViewMenuBytecodeOffsets = (gcnew DevComponents::DotNetBar::ButtonItem());
@@ -439,17 +439,17 @@ private: DevComponents::DotNetBar::LabelItem^ StatusBarCurrentMessage;
 			this->ContextMenuTextEditor = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->TextEditorContextMenuCopy = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->TextEditorContextMenuPaste = (gcnew DevComponents::DotNetBar::ButtonItem());
-			this->TextEditorContextMenuToggleComment = (gcnew DevComponents::DotNetBar::ButtonItem());
-			this->TextEditorContextMenuAddBookmark = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->TextEditorContextMenuOpenPreprocessorImport = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->TextEditorContextMenuJumpToScript = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->NavigationBar = (gcnew DevComponents::DotNetBar::CrumbBar());
 			this->StatusBar = (gcnew DevComponents::DotNetBar::Bar());
+			this->StatusBarCurrentMessage = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->StatusBarLineNumber = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->StatusBarColumnNumber = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->StatusBarPreprocessorOutputFlag = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->StatusBarScriptBytecodeLength = (gcnew DevComponents::DotNetBar::CircularProgressItem());
-			this->StatusBarCurrentMessage = (gcnew DevComponents::DotNetBar::LabelItem());
+			this->EditMenuComment = (gcnew DevComponents::DotNetBar::ButtonItem());
+			this->EditMenuUncomment = (gcnew DevComponents::DotNetBar::ButtonItem());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MainTabStrip))->BeginInit();
 			this->MainTabStrip->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContainerMainToolbar))->BeginInit();
@@ -726,7 +726,7 @@ private: DevComponents::DotNetBar::LabelItem^ StatusBarCurrentMessage;
 			this->ToolbarMenuEdit->Name = L"ToolbarMenuEdit";
 			this->ToolbarMenuEdit->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(5) {
 				this->EditMenuFindReplace,
-					this->EditMenuGoToLine, this->EditMenuGoToOffset, this->EditMenuAddBookmark, this->EditMenuToggleComment
+					this->EditMenuGoToLine, this->EditMenuAddBookmark, this->EditMenuComment, this->EditMenuUncomment
 			});
 			this->ToolbarMenuEdit->Text = L"&EDIT";
 			// 
@@ -746,12 +746,6 @@ private: DevComponents::DotNetBar::LabelItem^ StatusBarCurrentMessage;
 			this->EditMenuGoToLine->Name = L"EditMenuGoToLine";
 			this->EditMenuGoToLine->Text = L"Go To &Line";
 			// 
-			// EditMenuGoToOffset
-			// 
-			this->EditMenuGoToOffset->AlternateShortCutText = L"Ctrl + E";
-			this->EditMenuGoToOffset->Name = L"EditMenuGoToOffset";
-			this->EditMenuGoToOffset->Text = L"Go To &Offset";
-			// 
 			// EditMenuAddBookmark
 			// 
 			this->EditMenuAddBookmark->AlternateShortCutText = L"Ctrl + B";
@@ -759,13 +753,6 @@ private: DevComponents::DotNetBar::LabelItem^ StatusBarCurrentMessage;
 			this->EditMenuAddBookmark->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"EditMenuAddBookmark.Image")));
 			this->EditMenuAddBookmark->Name = L"EditMenuAddBookmark";
 			this->EditMenuAddBookmark->Text = L"Add &Bookmark";
-			// 
-			// EditMenuToggleComment
-			// 
-			this->EditMenuToggleComment->AlternateShortCutText = L"Ctrl + Q/W";
-			this->EditMenuToggleComment->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"EditMenuToggleComment.Image")));
-			this->EditMenuToggleComment->Name = L"EditMenuToggleComment";
-			this->EditMenuToggleComment->Text = L"Toggle &Comment";
 			// 
 			// ToolbarMenuView
 			// 
@@ -781,7 +768,6 @@ private: DevComponents::DotNetBar::LabelItem^ StatusBarCurrentMessage;
 			// 
 			// ViewMenuPreprocessorOutput
 			// 
-			this->ViewMenuPreprocessorOutput->Checked = true;
 			this->ViewMenuPreprocessorOutput->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ViewMenuPreprocessorOutput.Image")));
 			this->ViewMenuPreprocessorOutput->Name = L"ViewMenuPreprocessorOutput";
 			this->ViewMenuPreprocessorOutput->Text = L"&Preprocessed Script Text";
@@ -2021,10 +2007,9 @@ private: DevComponents::DotNetBar::LabelItem^ StatusBarCurrentMessage;
 			// 
 			this->ContextMenuTextEditor->AutoExpandOnClick = true;
 			this->ContextMenuTextEditor->Name = L"ContextMenuTextEditor";
-			this->ContextMenuTextEditor->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(7) {
+			this->ContextMenuTextEditor->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(5) {
 				this->TextEditorContextMenuCopy,
-					this->TextEditorContextMenuPaste, this->TextEditorContextMenuToggleComment, this->TextEditorContextMenuAddBookmark, this->TextEditorContextMenuAddVar,
-					this->TextEditorContextMenuOpenPreprocessorImport, this->TextEditorContextMenuJumpToScript
+					this->TextEditorContextMenuPaste, this->TextEditorContextMenuAddVar, this->TextEditorContextMenuOpenPreprocessorImport, this->TextEditorContextMenuJumpToScript
 			});
 			this->ContextMenuTextEditor->Text = L"TE";
 			// 
@@ -2041,21 +2026,6 @@ private: DevComponents::DotNetBar::LabelItem^ StatusBarCurrentMessage;
 			this->TextEditorContextMenuPaste->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"TextEditorContextMenuPaste.Image")));
 			this->TextEditorContextMenuPaste->Name = L"TextEditorContextMenuPaste";
 			this->TextEditorContextMenuPaste->Text = L"Paste";
-			// 
-			// TextEditorContextMenuToggleComment
-			// 
-			this->TextEditorContextMenuToggleComment->AlternateShortCutText = L"Ctrl + Q/W";
-			this->TextEditorContextMenuToggleComment->BeginGroup = true;
-			this->TextEditorContextMenuToggleComment->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"TextEditorContextMenuToggleComment.Image")));
-			this->TextEditorContextMenuToggleComment->Name = L"TextEditorContextMenuToggleComment";
-			this->TextEditorContextMenuToggleComment->Text = L"Toggle Comment";
-			// 
-			// TextEditorContextMenuAddBookmark
-			// 
-			this->TextEditorContextMenuAddBookmark->AlternateShortCutText = L"Ctrl + B";
-			this->TextEditorContextMenuAddBookmark->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"TextEditorContextMenuAddBookmark.Image")));
-			this->TextEditorContextMenuAddBookmark->Name = L"TextEditorContextMenuAddBookmark";
-			this->TextEditorContextMenuAddBookmark->Text = L"Add Bookmark";
 			// 
 			// TextEditorContextMenuOpenPreprocessorImport
 			// 
@@ -2115,6 +2085,11 @@ private: DevComponents::DotNetBar::LabelItem^ StatusBarCurrentMessage;
 			this->StatusBar->TabIndex = 13;
 			this->StatusBar->TabStop = false;
 			// 
+			// StatusBarCurrentMessage
+			// 
+			this->StatusBarCurrentMessage->Name = L"StatusBarCurrentMessage";
+			this->StatusBarCurrentMessage->Text = L"Current Message...";
+			// 
 			// StatusBarLineNumber
 			// 
 			this->StatusBarLineNumber->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
@@ -2146,10 +2121,18 @@ private: DevComponents::DotNetBar::LabelItem^ StatusBarCurrentMessage;
 			this->StatusBarScriptBytecodeLength->TextPadding->Left = 5;
 			this->StatusBarScriptBytecodeLength->TextPadding->Right = 5;
 			// 
-			// StatusBarCurrentMessage
+			// EditMenuComment
 			// 
-			this->StatusBarCurrentMessage->Name = L"StatusBarCurrentMessage";
-			this->StatusBarCurrentMessage->Text = L"Current Message...";
+			this->EditMenuComment->BeginGroup = true;
+			this->EditMenuComment->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"EditMenuComment.Image")));
+			this->EditMenuComment->Name = L"EditMenuComment";
+			this->EditMenuComment->Text = L"&Comment Selection";
+			// 
+			// EditMenuUncomment
+			// 
+			this->EditMenuUncomment->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"EditMenuUncomment.Image")));
+			this->EditMenuUncomment->Name = L"EditMenuUncomment";
+			this->EditMenuUncomment->Text = L"&Uncomment Selection";
 			// 
 			// ScriptEditorWorkspace
 			// 
@@ -2169,6 +2152,7 @@ private: DevComponents::DotNetBar::LabelItem^ StatusBarCurrentMessage;
 			this->Controls->Add(this->MainTabStrip);
 			this->Controls->Add(this->StatusBar);
 			this->DoubleBuffered = true;
+			this->ForeColor = System::Drawing::Color::White;
 			this->KeyPreview = true;
 			this->Name = L"ScriptEditorWorkspace";
 			this->Text = L"CSE Script Editor";
@@ -2277,15 +2261,15 @@ private: DevComponents::DotNetBar::LabelItem^ StatusBarCurrentMessage;
 			StyleManager->ManagerStyle = DevComponents::DotNetBar::eStyle::VisualStudio2012Dark;
 	}
 	private: System::Void ToolbarOpenScript_Click(System::Object^ sender, System::EventArgs^ e) {
-		auto dlg = gcnew ScriptEditorSelectScripts();
+		auto dlg = gcnew ::UIComponents::ScriptSelectionDialog();
 		dlg->ShowDialog(this);
 	}
 	private: System::Void ToolsMenuScriptSync_Click(System::Object^ sender, System::EventArgs^ e) {
-		auto dlg = gcnew ScriptEditorScriptSync();
+		auto dlg = gcnew ::UIComponents::ScriptEditorScriptSync();
 		dlg->ShowDialog(this);
 	}
 	private: System::Void ToolsMenuPreferences_Click(System::Object^ sender, System::EventArgs^ e) {
-		auto dlg = gcnew ScriptEditorPreferences();
+		auto dlg = gcnew ::UIComponents::ScriptEditorPreferences();
 		dlg->ShowDialog(this);
 	}
 
@@ -2306,6 +2290,9 @@ private: DevComponents::DotNetBar::LabelItem^ StatusBarCurrentMessage;
 
 	}
 	private: System::Void EditMenuFindReplace_Click(System::Object^ sender, System::EventArgs^ e) {
+		this->Close();
+		return;
+
 		if (!DockContainerItemFindReplace->Visible)
 			DevComponents::DotNetBar::BarUtilities::SetDockContainerVisible(DockContainerItemFindReplace, true);
 
@@ -2326,6 +2313,7 @@ private: DevComponents::DotNetBar::LabelItem^ StatusBarCurrentMessage;
 	}
 	private: System::Void ToolbarMenuEdit_PopupOpening(System::Object^ sender, DevComponents::DotNetBar::PopupOpenEventArgs^ e) {
 		ToolbarMenuEdit->Enabled = false;
+
 	}
 	private: System::Void FindWindowButtonFind_Click(System::Object^ sender, System::EventArgs^ e) {
 		MessageBox::Show("Selected: " + FindWindowDropdownFind->SelectedItem + " | Text: " + FindWindowDropdownFind->Text);

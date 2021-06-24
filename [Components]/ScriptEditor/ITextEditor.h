@@ -81,6 +81,8 @@ ref struct FindReplaceResult
 	void Add(UInt32 Line, String^ Text, UInt32 HitsInLine);
 };
 
+delegate UInt32 GetBytecodeOffsetForLineDelegate(UInt32 Line);
+
 interface class ITextEditor : public intellisense::IIntelliSenseInterfaceConsumer
 {
 	event TextEditorScriptModifiedEventHandler^ ScriptModified;
@@ -97,6 +99,7 @@ interface class ITextEditor : public intellisense::IIntelliSenseInterfaceConsume
 	property int LineCount;
 	property int Caret;
 	property bool Modified;
+	property bool DisplayingStaticText;
 
 	// methods
 	void Bind();	// called when the parent model is bound to a view, i.e., when the text editor is activated
@@ -107,8 +110,6 @@ interface class ITextEditor : public intellisense::IIntelliSenseInterfaceConsume
 	void SetText(String^ Text, bool ResetUndoStack);
 	String^ GetSelectedText(void);
 	void SetSelectedText(String^ Text);
-	int GetCharIndexFromPosition(Point Position);
-	Point GetPositionFromCharIndex(int Index, bool Absolute);
 	String^ GetTokenAtCharIndex(int Offset);
 	String^ GetTokenAtCaretPos();
 	void SetTokenAtCaretPos(String^ Replacement);
@@ -116,8 +117,8 @@ interface class ITextEditor : public intellisense::IIntelliSenseInterfaceConsume
 	void ScrollToLine(UInt32 LineNumber);
 	void FocusTextArea();
 
-	void LoadFileFromDisk(String^ Path);
-	void SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ DefaultName, String^ DefaultExtension);
+	//void LoadFileFromDisk(String^ Path);
+	//void SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ DefaultName, String^ DefaultExtension);
 
 	FindReplaceResult^ FindReplace(eFindReplaceOperation Operation, String^ Query, String^ Replacement, eFindReplaceOptions Options);
 
@@ -136,6 +137,9 @@ interface class ITextEditor : public intellisense::IIntelliSenseInterfaceConsume
 	void CommentSelection();
 	void UncommentLine(UInt32 Line);
 	void UncommentSelection();
+
+	void BeginDisplayingStaticText(String^ TextToDisplay);
+	void EndDisplayingStaticText();
 };
 
 

@@ -45,7 +45,7 @@ IntelliSenseInterfaceModel::IntelliSenseInterfaceModel(textEditor::ITextEditor^ 
 	BoundViewItemSelectedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceModel::BoundView_ItemSelected);
 	BoundViewDismissedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceModel::BoundView_Dismissed);
 
-	preferences::SettingsHolder::Get()->SavedToDisk += ScriptEditorPreferencesSavedHandler;
+	preferences::SettingsHolder::Get()->PreferencesChanged += ScriptEditorPreferencesSavedHandler;
 	ParentEditor->IntelliSenseInput += ParentEditorInputEventHandler;
 	ParentEditor->IntelliSenseContextChange += ParentEditorContextChangeEventHandler;
 	ParentEditor->IntelliSenseInsightHover += ParentEditorInsightHoverEventHandler;
@@ -56,7 +56,7 @@ IntelliSenseInterfaceModel::~IntelliSenseInterfaceModel()
 	Unbind();
 	ResetContext();
 
-	preferences::SettingsHolder::Get()->SavedToDisk -= ScriptEditorPreferencesSavedHandler;
+	preferences::SettingsHolder::Get()->PreferencesChanged -= ScriptEditorPreferencesSavedHandler;
 	ParentEditor->IntelliSenseInput -= ParentEditorInputEventHandler;
 	ParentEditor->IntelliSenseContextChange -= ParentEditorContextChangeEventHandler;
 	ParentEditor->IntelliSenseInsightHover -= ParentEditorInsightHoverEventHandler;

@@ -183,6 +183,7 @@ ref class ScriptEditorWorkspace : public MetroForm, IScriptEditorView
 	components::ViewComponentEventRaiser^ DelegateViewComponentEventRouter;
 	intellisense::IIntelliSenseInterfaceView^ IntelliSenseInterface;
 	bool SkipViewComponentEventProcessing;
+	Rectangle InitalBounds;
 
 	void HandleViewComponentEvent(ViewComponentEvent^ E);
 
@@ -217,6 +218,8 @@ public:
 	virtual void ShowNotification(String^ Message, Image^ Image, int DurationInMs);
 	virtual Forms::DialogResult ShowMessageBox(String^ Message, MessageBoxButtons Buttons, MessageBoxIcon Icon);
 	virtual Forms::DialogResult ShowInputPrompt(String^ Prompt, String^ Title, String^% OutText);
+	virtual List<String^>^ SelectExistingScripts(String^ DefaultSelectionEditorId);
+	virtual void Reveal();
 };
 
 

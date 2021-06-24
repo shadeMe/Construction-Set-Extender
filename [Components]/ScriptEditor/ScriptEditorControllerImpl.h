@@ -12,26 +12,138 @@ namespace scriptEditor
 {
 
 
-namespace controller
+namespace controllerImpl
 {
+
+
+using namespace controller;
+
+ref struct ActiveDocumentActionCollection
+{
+	property BasicAction^ Copy;
+	property BasicAction^ Paste;
+	property BasicAction^ Comment;
+	property BasicAction^ Uncomment;
+	property BasicAction^ AddBookmark;
+	property BasicAction^ GoToLine;
+
+	ActiveDocumentActionCollection();
+	~ActiveDocumentActionCollection();
+
+	void CreateDefaultKeyBindings(components::InputManager^ InputManager);
+};
+
+ref struct ViewActionCollection
+{
+	property BasicAction^ CurrentTabNewScript;
+	property BasicAction^ CurrentTabOpenScript;
+	property BasicAction^ CurrentTabSaveScript;
+	property BasicAction^ CurrentTabPreviousScript;
+	property BasicAction^ CurrentTabNextScript;
+	property BasicAction^ SaveAllTabs;
+
+	property BasicAction^ NewTabWithNewScript;
+	property BasicAction^ NewTabWithExistingScript;
+	property BasicAction^ PreviousTab;
+	property BasicAction^ NextTab;
+	property BasicAction^ CloseCurrentTab;
+
+	property BasicAction^ ShowFindReplacePane;
+
+	ViewActionCollection();
+	~ViewActionCollection();
+
+	void CreateDefaultKeyBindings(components::InputManager^ InputManager);
+};
+
+ref struct NewTabCreationParams
+{
+	static enum class eInitOperation
+	{
+		NewScript,
+		LoadExistingScript,
+		LoadFileFromDisk,
+	};
+
+	eInitOperation InitOperation;
+	String^ ExistingScriptEditorId;
+	String^ DiskFilePath;
+	bool BindAfterInit;
+
+	NewTabCreationParams();
+};
 
 
 ref class ScriptEditorController : public IScriptEditorController
 {
-	void BindScriptDocument(model::IScriptDocument^ Document, view::IScriptEditorView^ View);
-	void UnbindScriptDocument(model::IScriptDocument^ Document, view::IScriptEditorView^ View);
+	view::IScriptEditorView^ ChildView;
+	model::IScriptEditorModel^ ChildModel;
+	model::IScriptDocument^ BoundDocument;
+
+	view::IFactory^ ViewFactory;
+	model::IFactory^ ModelFactory;
+
+	components::DocumentNavigationHelper^ DocumentNavigationHelper;
+	components::FindReplaceHelper^ FindReplaceHelper;
+	components::InputManager^ InputManager;
+	ActiveDocumentActionCollection^ ActiveDocumentActions;
+	ViewActionCollection^ ViewActions;
+
+	view::IScriptEditorView::EventHandler^ DelegateViewComponentEvent;
+	model::IScriptDocument::StateChangeEventHandler^ DelegateModelDocumentStateChanged;
+	KeyEventHandler^ DelegateModelKeyDown;
+	textEditor::TextEditorMouseClickEventHandler^ DelegateModelMouseClick;
+	model::components::INavigationHelper::NavigationChangedEventHandler^ DelegateModelNavigationChanged;
+
+	bool DisableDocumentActivationOnTabSwitch;
+
+	void ActiveDocumentAction_Copy();
+	void ActiveDocumentAction_Paste();
+	void ActiveDocumentAction_Comment();
+	void ActiveDocumentAction_Uncomment();
+	void ActiveDocumentAction_AddBookmark();
+	void ActiveDocumentAction_GoToLine();
+
+	void ViewAction_CurrentTabNewScript();
+	void ViewAction_CurrentTabOpenScript();
+	void ViewAction_CurrentTabSaveScript();
+	void ViewAction_CurrentTabPreviousScript();
+	void ViewAction_CurrentTabNextScript();
+	void ViewAction_SaveAllTabs();
+	void ViewAction_NewTabWithNewScript();
+	void ViewAction_NewTabWithExistingScript();
+	void ViewAction_PreviousTab();
+	void ViewAction_NextTab();
+	void ViewAction_CloseCurrentTab();
+	void ViewAction_ShowFindReplacePane();
+
+	void SetBoundDocument(model::IScriptDocument^ Document);
+	void UnbindBoundDocument();
+
+	void SetDocumentDependentViewComponentsEnabled(bool Enabled);
 
 	bool HandleUnsavedChangesBeforeDestructiveOperation(model::IScriptDocument^ Document);
 	bool HandleUnsavedChangesBeforeDestructiveOperation(model::IScriptDocument^ Document, bool% OutOperationCancelled);
 
-	void NewScript(model::IScriptDocument^ Document);
-	void OpenScript(model::IScriptDocument^ Document, componentDLLInterface::ScriptData* Data);
-	bool SaveScript(model::IScriptDocument^ Document);
-	bool CloseScript(model::IScriptDocument^ Document, bool% OutOperationCancelled);
-	void LoadNextScript(model::IScriptDocument^ Document);
-	void LoadPreviousScript(model::IScriptDocument^ Document);
+	void AttachDocumentToView(model::IScriptDocument^ Document);
+	void DetachDocumentFromView(model::IScriptDocument^ Document);
+	void ActivateDocumentInView(model::IScriptDocument^ Document);
 
-	bool HandleInvalidViewEvent(view::ViewComponentEvent^ E);
+	void DisposeSelfOnViewClosure();
+	void CreateNewTab(NewTabCreationParams^ Params);
+	model::IScriptDocument^ ImportDocumentFromDisk(String^ DiskFilePath, bool ImportAsExistingScript);
+
+	void LoadNewUnsavedScriptIntoDocument(model::IScriptDocument^ Document);
+	void LoadExistingScriptIntoDocument(model::IScriptDocument^ Document, String^ ExistingScriptEditorId);
+	void LoadExistingScriptIntoDocument(model::IScriptDocument^ Document, DisposibleDataAutoPtr<componentDLLInterface::ScriptData> ExistingScriptData);
+	bool SaveDocument(model::IScriptDocument^ Document, model::IScriptDocument::eSaveOperation SaveOperation);
+	void LoadNextScriptIntoDocument(model::IScriptDocument^ Document);
+	void LoadPreviousScriptIntoDocument(model::IScriptDocument^ Document);
+	bool CloseAndRemoveDocument(model::IScriptDocument^ Document);
+	bool CloseAndRemoveDocument(model::IScriptDocument^ Document, bool% OutOperationCancelled);
+
+	void ValidateDocumentSyncingStatus(model::IScriptDocument^ Document);
+	bool ShouldUseAutoRecoveryFile(String^ ScriptEditorId);
 
 	void ViewEventHandler_MainWindow(view::ViewComponentEvent^ E);
 	void ViewEventHandler_MainTabStrip(view::ViewComponentEvent^ E);
@@ -45,17 +157,25 @@ ref class ScriptEditorController : public IScriptEditorController
 	void ViewEventHandler_OutlineViewPanel(view::ViewComponentEvent^ E);
 	void ViewEventHandler_TextEditorContextMenu(view::ViewComponentEvent^ E);
 
-	void ModelEventHandler_StateChanged(Object^ Sender, model::IScriptDocument::StateChangeEventArgs^ E);
-	void ModelEventHandler_ActiveDocumentChanged(Object^ Sender, model::IScriptEditorModel::ActiveDocumentChangedEventArgs^ E);
+	void ModelEventHandler_DocumentStateChanged(Object^ Sender, model::IScriptDocument::StateChangeEventArgs^ E);
 	void ModelEventHandler_KeyDown(Object^ Sender, KeyEventArgs^ E);
 	void ModelEventHandler_MouseClick(Object^ Sender, textEditor::TextEditorMouseClickEventArgs^ E);
+	void ModelEventHandler_NavigationChanged(Object^ Sender, model::components::INavigationHelper::NavigationChangedEventArgs^ E);
+public:
+	ScriptEditorController(model::IFactory^ ModelFactory, view::IFactory^ ViewFactory);
+	virtual ~ScriptEditorController();
 
-	void InputHandling_KeyDown(KeyEventArgs^ E);
-	void InputHandling_MouseClick(MouseEventArgs^ E);
+	ImplPropertyGetOnly(model::IScriptEditorModel^, Model, ChildModel);
+	ImplPropertyGetOnly(view::IScriptEditorView^, View, ChildView);
+
+	virtual IScriptEditorController^ New();
+	virtual IScriptEditorController^ New(Rectangle ViewInitialBounds);
+	virtual void RelocateDocument(model::IScriptDocument^ Document, IScriptEditorController^ Source);
+	virtual void ActivateOrCreateNewDocument(String^ ScriptEditorId);
 };
 
 
-} // namespace controller
+} // namespace controllerImpl
 
 
 } // namespace scriptEditor

@@ -1,5 +1,6 @@
 #include "IScriptEditorModel.h"
 #include "Preferences.h"
+#include "ScriptPreprocessor.h"
 
 
 namespace cse
@@ -33,12 +34,6 @@ ScriptLineAnnotation::ScriptLineAnnotation(textEditor::ILineAnchor^ Anchor, Stri
 {
 	Anchor_ = Anchor;
 	Text_ = Text;
-}
-
-void ScriptDiagnosticMessage::PopulateImageListWithMessageTypeImages(ImageList^ Destination)
-{
-	Destination->Images->Clear();
-	Destination->Images->AddRange(MessageTypeImages);
 }
 
 ScriptDiagnosticMessage::ScriptDiagnosticMessage(textEditor::ILineAnchor^ Anchor, String^ Message, eMessageType Type, eMessageSource Source)
@@ -151,7 +146,7 @@ void ScriptTextMetadataHelper::DeserializeRawScriptText(String^ RawScriptText, S
 
 			OutMetadata->Bookmarks->Add(gcnew ScriptTextMetadata::Bookmark(LineNo, Splits[2]));
 		}
-		else if (TextParser->GetTokenIndex(Preprocessor::kPreprocessorSigil) == 0)
+		else if (TextParser->GetTokenIndex(preprocessor::Preprocessor::kPreprocessorSigil) == 0)
 			OutMetadata->HasPreprocessorDirectives = true;
 
 		ReadLine = StringParser->ReadLine();
@@ -174,7 +169,7 @@ System::String^ ScriptTextMetadataHelper::SerializeMetadata(ScriptTextMetadata^ 
 
 
 	if (Metadata->HasPreprocessorDirectives)
-		Block += Preprocessor::kPreprocessorSigil + "\n";
+		Block += preprocessor::Preprocessor::kPreprocessorSigil + "\n";
 
 	if (Block != "")
 	{
@@ -201,6 +196,80 @@ INavigationHelper::NavigationChangedEventArgs::NavigationChangedEventArgs(obScri
 	this->CurrentLine = CurrentLine;
 }
 
+System::String^ ScriptTextAutoRecoveryCache::GetCacheFilePath(String^ ScriptEditorId)
+{
+	auto AutoRecoveryDir = gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath());
+	DisposibleDataAutoPtr<componentDLLInterface::ScriptData> ScriptData(
+		nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(
+			CString(ScriptEditorId).c_str()));
+
+	Debug::Assert(ScriptData.get() != nullptr);
+
+	auto ParentPluginFileName = ScriptData->ParentPluginName ? gcnew String(ScriptData->ParentPluginName) : "no-plugin";
+	return AutoRecoveryDir + "\\" + ParentPluginFileName + "__" + ScriptEditorId + ".obscript";
+}
+
+ScriptTextAutoRecoveryCache::ScriptTextAutoRecoveryCache(String^ ScriptEditorId)
+{
+	this->ScriptEditorId = ScriptEditorId;
+	this->Filepath = GetCacheFilePath(ScriptEditorId);
+}
+
+void ScriptTextAutoRecoveryCache::Write(String^ Text)
+{
+	try
+	{
+		System::IO::File::WriteAllText(Filepath, Text);
+	}
+	catch (Exception^ E)
+	{
+		DebugPrint("Couldn't write to auto-recovery file @ '" + Filepath + "'!\n\tException: " + E->Message, true);
+	}
+}
+
+System::String^ ScriptTextAutoRecoveryCache::Read()
+{
+	try
+	{
+		return System::IO::File::ReadAllText(Filepath);
+	}
+	catch (Exception^ E)
+	{
+		DebugPrint("Couldn't read from auto-recovery file @ '" + Filepath + "'!\n\tException: " + E->Message, true);
+	}
+
+	return String::Empty;
+}
+
+void ScriptTextAutoRecoveryCache::Delete(bool SendToRecycleBin)
+{
+	try
+	{
+		if (!SendToRecycleBin)
+			System::IO::File::Delete(Filepath);
+		else
+		{
+			Microsoft::VisualBasic::FileIO::FileSystem::DeleteFile(Filepath,
+																   Microsoft::VisualBasic::FileIO::UIOption::OnlyErrorDialogs,
+																   Microsoft::VisualBasic::FileIO::RecycleOption::SendToRecycleBin);
+		}
+	}
+	catch (...) {}
+}
+
+bool ScriptTextAutoRecoveryCache::Exists::get()
+{
+	return System::IO::File::Exists(Filepath);
+}
+
+System::DateTime ScriptTextAutoRecoveryCache::LastWriteTime::get()
+{
+	if (Exists)
+		return System::IO::File::GetLastWriteTime(Filepath);
+	else
+		return DateTime::MaxValue;
+}
+
 
 } // namespace components
 
@@ -217,32 +286,6 @@ IScriptDocument::StateChangeEventArgs::StateChangeEventArgs()
 	Messages = gcnew List<components::ScriptDiagnosticMessage^>;
 	Bookmarks = gcnew List<components::ScriptBookmark^>;
 	FindResults = gcnew List<components::ScriptFindResult^>;
-}
-
-IScriptEditorModel::ActiveDocumentChangedEventArgs::ActiveDocumentChangedEventArgs(IScriptDocument^ Old, IScriptDocument^ New)
-{
-	OldValue = Old;
-	NewValue = New;
-}
-
-IScriptEditorModel::ActiveDocumentActionCollection::ActiveDocumentActionCollection()
-{
-	Copy = gcnew BasicAction("Copy", "Copies the current selection or line");
-	Paste = gcnew BasicAction("Paste", "Pastes the contents of the clipboard at the caret location");
-	Comment = gcnew BasicAction("Comment", "Comments the current selection or line");
-	Uncomment = gcnew BasicAction("Uncomment", "Uncomments the current selection or line");
-	AddBookmark = gcnew ParameterizedAction("Add Bookmark", "Adds a new bookmark at the current line");
-	GoToLine = gcnew ParameterizedAction("Go to Line", "Jumps to a given line in the document");
-}
-
-IScriptEditorModel::ActiveDocumentActionCollection::~ActiveDocumentActionCollection()
-{
-	SAFEDELETE_CLR(Copy);
-	SAFEDELETE_CLR(Paste);
-	SAFEDELETE_CLR(Comment);
-	SAFEDELETE_CLR(Uncomment);
-	SAFEDELETE_CLR(AddBookmark);
-	SAFEDELETE_CLR(GoToLine);
 }
 
 

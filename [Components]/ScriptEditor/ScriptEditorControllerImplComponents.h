@@ -11,7 +11,7 @@ namespace scriptEditor
 {
 
 
-namespace controller
+namespace controllerImpl
 {
 
 
@@ -19,16 +19,18 @@ namespace components
 {
 
 
+using namespace controller;
+
 ref class ViewTabTearingHelper
 {
 	static ViewTabTearingHelper^ Singleton = nullptr;
 
-	model::IScriptDocument^ Torn;
-	view::IScriptEditorView^ Source;
-	IScriptEditorController^ Controller;
+	model::IScriptDocument^ TornDocument;
+	IScriptEditorController^ SourceController;
 	bool Active;
 	bool ProcessingMouseMessage;
 	MouseEventHandler^ TearingEventDelegate;
+	Dictionary<view::components::ITabStrip^, IScriptEditorController^>^ ActiveTabStrips;
 
 	void TearingEventHandler(Object^ Sender, MouseEventArgs^ E);
 	void End();
@@ -37,7 +39,9 @@ ref class ViewTabTearingHelper
 public:
 	~ViewTabTearingHelper();
 
-	void InitiateHandling(model::IScriptDocument^ Tearing, view::IScriptEditorView^ From, IScriptEditorController^ ParentController);
+	void InitiateHandling(model::IScriptDocument^ Tearing, IScriptEditorController^ ParentController);
+	void RegisterTabStrip(view::components::ITabStrip^ TabStrip, IScriptEditorController^ ParentController);
+	void DeregisterTabStrip(view::components::ITabStrip^ TabStrip);
 
 	property bool InProgress
 	{
@@ -209,34 +213,39 @@ public:
 
 ref class InputManager
 {
-	ref struct KeyChordData
+	ref struct ChordData
 	{
 		KeyCombo^ SecondChord;
-		BasicAction^ Action;
+		IAction^ Action;
 
-		KeyChordData(KeyCombo^ SecondChord, BasicAction^ Action);
-		KeyChordData(BasicAction^ Action);
+		ChordData(KeyCombo^ SecondChord, IAction^ Action);
+		ChordData(IAction^ Action);
 
 		virtual bool Equals(Object^ obj) override;
 	};
 
 	// mutually-exclusive tuple
-	// the first is not nullptr in the case of a single keychord command
+	// the first is not nullptr in the case of a single key chord command
 	// and the second is not nullptr when the primary chord has at least one command with a secondary chord
-	using ChordDataUnion = Tuple<KeyChordData^, List<KeyChordData^>^>;
+	using ChordDataUnion = Tuple<ChordData^, List<ChordData^>^>;
 
 	List<Keys>^ BlacklistedKeyCodes;
 	Dictionary<KeyCombo^, ChordDataUnion^>^ KeyChordCommands;
 	KeyCombo^ LastActiveFirstChord;
+
+	ChordData^ LookupDoubleKeyChordCommand(KeyCombo^ First, KeyCombo^ Second);
+	ChordData^ LookupSingleKeyChordCommand(KeyCombo^ First);
+	bool HasSecondKeyOfChord(KeyCombo^ First);
+	bool IsBound(KeyCombo^ Combo);
 public:
 	InputManager();
 	~InputManager();
 
-	void AddKeyChordCommand(BasicAction^ Action, KeyCombo^ Primary, KeyCombo^ Secondary, bool OverwriteExisting);
-	void AddKeyChordCommand(BasicAction^ Action, KeyCombo^ Primary, bool OverwriteExisting);
+	void AddKeyChordCommand(IAction^ Action, KeyCombo^ Primary, KeyCombo^ Secondary, bool OverwriteExisting);
+	void AddKeyChordCommand(IAction^ Action, KeyCombo^ Primary, bool OverwriteExisting);
 
 	void HandleKeyDown(KeyEventArgs^ E, IScriptEditorController^ Controller);
-	void HandleMouseClick(MouseEventArgs^ E, IScriptEditorController^ Controller);
+	void HandleMouseClick(textEditor::TextEditorMouseClickEventArgs^ E, IScriptEditorController^ Controller);
 
 	bool IsKeyBlacklisted(Keys Key);
 };
@@ -245,7 +254,7 @@ public:
 } // namespace components
 
 
-} // namespace controller
+} // namespace controllerImpl
 
 
 } // namespace scriptEditor

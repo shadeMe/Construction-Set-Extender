@@ -122,6 +122,9 @@ interface class IButton : public IViewComponent
 	property String^ Tooltip;
 	property bool Checked;
 	property bool Visible;
+	property bool Enabled;
+
+	void PerformClick();
 
 	static enum class eEvent
 	{
@@ -140,9 +143,11 @@ interface class IComboBox : public IViewComponent
 	property Object^ Selection;
 	property String^ Text;
 	property IEnumerable<Object^>^ Items;
+	property bool Enabled;
 
 	void AddDropdownItem(Object^ NewItem, bool AtFirstPosition);
 	void ClearDropdownItems();
+	Object^ LookupDropdownItem(String^ DropdownItemText);
 
 	static enum class eEvent
 	{
@@ -165,6 +170,7 @@ interface class IComboBox : public IViewComponent
 interface class ILabel : public IViewComponent
 {
 	property String^ Text;
+	property bool Visible;
 };
 
 
@@ -181,14 +187,14 @@ interface class ITabStripItem : public IViewComponent
 interface class ITabStrip
 {
 	property ITabStripItem^ ActiveTab;
-	property IScriptEditorView^ Parent;
+	property UInt32 TabCount;
 
 	ITabStripItem^ AllocateNewTab();
 	void AddTab(ITabStripItem^ Tab);
 	void RemoveTab(ITabStripItem^ Tab);
-	ITabStripItem^ GetNthTab(UInt32 Index);
 	void SelectNextTab();
 	void SelectPreviousTab();
+	ITabStripItem^ LookupTabByTag(Object^ Tag);
 
 	static enum class eEvent
 	{
@@ -215,7 +221,7 @@ interface class ITabStrip
 		property ITabStripItem^ Tab;
 	};
 
-	ref struct ActiveTabChanged
+	ref struct ActiveTabChangedEventArgs
 	{
 		property ITabStripItem^ OldValue;
 		property ITabStripItem^ NewValue;
@@ -331,6 +337,53 @@ interface class IContainer : public IViewComponent
 };
 
 
+interface class IScriptSelectionDialog
+{
+	ref struct Params
+	{
+		property String^ SelectedScriptEditorID;
+		property String^ FilterString;
+		property bool ShowDeletedScripts;
+		property bool PreventSyncedScriptSelection;
+
+		Params();
+	};
+
+	ref struct Result
+	{
+		property List<String^>^ SelectedScriptEditorIDs;
+		property UInt32 SelectionCount
+		{
+			UInt32 get() { return SelectedScriptEditorIDs->Count; }
+		}
+
+		Result();
+	};
+
+	Result^ SelectScripts(Params^ SelectionParams);
+};
+
+
+ref class CommonIcons
+{
+	static CommonIcons^ Singleton = gcnew CommonIcons();
+
+	ImageResourceManager^ IconResources;
+
+	CommonIcons();
+public:
+	property Image^ Transparent;
+	property Image^ UnsavedChanges;
+	property Image^ Info;
+	property Image^ Warning;
+	property Image^ Error;
+	property Image^ Invalid;
+	property Image^ Success;
+
+	static CommonIcons^ Get();
+};
+
+
 } // namespace components
 
 
@@ -357,9 +410,9 @@ public enum class eViewRole
 	MainToolbar_Edit,
 	MainToolbar_Edit_FindReplace,
 	MainToolbar_Edit_GoToLine,
-	MainToolbar_Edit_GoToOffset,
 	MainToolbar_Edit_AddBookmark,
-	MainToolbar_Edit_ToggleComment,
+	MainToolbar_Edit_Comment,
+	MainToolbar_Edit_Uncomment,
 
 	MainToolbar_View,
 	MainToolbar_View_PreprocessorOutput,
@@ -437,8 +490,6 @@ public enum class eViewRole
 	TextEditor_ContextMenu,
 	TextEditor_ContextMenu_Copy,
 	TextEditor_ContextMenu_Paste,
-	TextEditor_ContextMenu_ToggleComment,
-	TextEditor_ContextMenu_AddBookmark,
 
 	TextEditor_ContextMenu_AddVar_Integer,
 	TextEditor_ContextMenu_AddVar_Float,
@@ -456,6 +507,7 @@ using namespace components;
 interface class IScriptEditorView
 {
 	property intellisense::IIntelliSenseInterfaceView^ IntelliSenseView;
+	property IntPtr WindowHandle;
 
 	delegate void EventHandler(IScriptEditorView^ Sender, ViewComponentEvent^ E);
 
@@ -465,6 +517,17 @@ interface class IScriptEditorView
 	void ShowNotification(String^ Message, Image^ Image, int DurationInMs);
 	DialogResult ShowMessageBox(String^ Message, MessageBoxButtons Buttons, MessageBoxIcon Icon);
 	DialogResult ShowInputPrompt(String^ Prompt, String^ Title, String^% OutText);
+	List<String^>^ SelectExistingScripts(String^ DefaultSelectionEditorId);	// returns a list of script editorIDs
+
+	void Reveal();
+	void BeginUpdate();
+	void EndUpdate();
+};
+
+
+interface class IFactory
+{
+	IScriptEditorView^ NewView(Rectangle InitialBounds);
 };
 
 

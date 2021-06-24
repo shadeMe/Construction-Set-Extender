@@ -177,6 +177,31 @@ namespace cse
 		}
 
 
+		bool GeneralSettings::Validate(SettingsGroup^ OldValue, String^% OutMessage)
+		{
+			bool Success = true;
+			String^ Errors = "";
+			GeneralSettings^ Old = safe_cast<GeneralSettings^>(OldValue);
+
+			if (ExportedScriptFileExtension != Old->ExportedScriptFileExtension && scriptEditor::scriptSync::DiskSync::Get()->InProgress)
+			{
+				Success = false;
+				Errors = "ExportedScriptFileExtension cannot be modified when a syncing operation is in progress";
+				Errors += "\n";
+				ExportedScriptFileExtension = Old->ExportedScriptFileExtension;
+			}
+			else if (ExportedScriptFileExtension->Length < 2 || ExportedScriptFileExtension[0] != '.' || ExportedScriptFileExtension == scriptEditor::scriptSync::SyncedScriptData::LogFileExtension)
+			{
+				Success = false;
+				Errors = "ExportedScriptFileExtension must start with '.' and cannot be '" + scriptEditor::scriptSync::SyncedScriptData::LogFileExtension + "'";
+				Errors += "\n";
+				ExportedScriptFileExtension = Old->ExportedScriptFileExtension;
+			}
+
+			OutMessage = Errors;
+			return Success;
+		}
+
 		bool IntelliSenseSettings::Validate(SettingsGroup^ OldValue, String^% OutMessage)
 		{
 			bool Success = true;
@@ -314,21 +339,6 @@ namespace cse
 				AutoSyncInterval = Old->AutoSyncInterval;
 			}
 
-			if (ScriptFileExtension != Old->ScriptFileExtension && scriptEditor::scriptSync::DiskSync::Get()->InProgress)
-			{
-				Success = false;
-				Errors = "ScriptFileExtension cannot be modified when a syncing operation is in progress";
-				Errors += "\n";
-				ScriptFileExtension = Old->ScriptFileExtension;
-			}
-			else if (ScriptFileExtension->Length < 2 || ScriptFileExtension[0] != '.' || ScriptFileExtension == scriptEditor::scriptSync::SyncedScriptData::LogFileExtension)
-			{
-				Success = false;
-				Errors = "ScriptFileExtension must start with '.' and cannot be '" + scriptEditor::scriptSync::SyncedScriptData::LogFileExtension + "'";
-				Errors += "\n";
-				ScriptFileExtension = Old->ScriptFileExtension;
-			}
-
 			OutMessage = Errors;
 			return Success;
 		}
@@ -338,7 +348,7 @@ namespace cse
 			for each (SettingsGroup^ Group in AllGroups)
 				Group->Save();
 
-			SavedToDisk(this, gcnew EventArgs);
+			PreferencesChanged(this, gcnew EventArgs);
 		}
 
 		void SettingsHolder::LoadFromDisk()
@@ -352,6 +362,11 @@ namespace cse
 					Group->Validate(Snapshot, ValidationMessage);
 				}
 			}
+		}
+
+		void SettingsHolder::RaisePreferencesChangedEvent()
+		{
+			PreferencesChanged(this, gcnew EventArgs);
 		}
 
 		SettingsHolder^ SettingsHolder::Get()
@@ -595,6 +610,7 @@ namespace cse
 				delete components;
 			}
 		}
+
 
 
 

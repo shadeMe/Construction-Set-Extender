@@ -2,7 +2,6 @@
 #include "Preferences.h"
 #include "IntelliSenseInterfaceModel.h"
 #include "IntelliSenseDatabase.h"
-#include "TextEditorFactory.h"
 #include "ScriptPreprocessor.h"
 
 namespace cse
@@ -150,6 +149,17 @@ void ScriptDocument::OnStateChangedFindResults()
 	E->EventType = IScriptDocument::StateChangeEventArgs::eEventType::FindResults;
 	E->FindResults = FindResults;
 	StateChanged(this, E);
+}
+
+void ScriptDocument::ReleaseNativeObjectIfNewScript()
+{
+	if (NativeObject == nullptr)
+		return;
+	else if (!nativeWrapper::g_CSEInterfaceTable->ScriptEditor.IsUnsavedNewScript(NativeObject))
+		return;
+
+	nativeWrapper::g_CSEInterfaceTable->ScriptEditor.DestroyScriptInstance(NativeObject);
+	NativeObject = nullptr;
 }
 
 void DummyOutputWrapper(int Line, String^ Message) {}
@@ -376,59 +386,14 @@ void ScriptDocument::ClearFindResults()
 	OnStateChangedFindResults();
 }
 
-System::String^ ScriptDocument::LoadAutoRecoveryCache()
-{
-	auto LoadPath = GetAutoRecoveryCacheFilePath();
-	if (!System::IO::File::Exists(LoadPath))
-		return String::Empty;
-
-	try
-	{
-		auto RecoveredText = System::IO::File::ReadAllText(LoadPath);
-		Microsoft::VisualBasic::FileIO::FileSystem::DeleteFile(LoadPath,
-															   Microsoft::VisualBasic::FileIO::UIOption::OnlyErrorDialogs,
-															   Microsoft::VisualBasic::FileIO::RecycleOption::SendToRecycleBin);
-
-		return RecoveredText;
-	}
-	catch (Exception^ E)
-	{
-		DebugPrint("Couldn't load auto-recovery file from '" + LoadPath + "'!\n\tException: " + E->Message, true);
-	}
-
-	return String::Empty;
-}
 
 void ScriptDocument::SaveAutoRecoveryCache()
 {
 	auto Metadata = PrepareMetadataForSerialization(false);
 	auto TextToSave = ScriptText + ScriptTextMetadataHelper::SerializeMetadata(Metadata);
-	auto SavePath = GetAutoRecoveryCacheFilePath();
 
-	try
-	{
-		System::IO::File::WriteAllText(SavePath, TextToSave);
-	}
-	catch (Exception^ E)
-	{
-		DebugPrint("Couldn't save auto-recovery file to '" + SavePath + "'!\n\tException: " + E->Message, true);
-	}
-}
-
-System::String^ ScriptDocument::GetAutoRecoveryCacheFilePath()
-{
-	auto AutoRecoveryDir = gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath());
-	return AutoRecoveryDir + "\\" + GetPrettyName() + ".txt";
-}
-
-void ScriptDocument::ClearAutoRecoveryCache()
-{
-	try
-	{
-		auto Filepath = GetAutoRecoveryCacheFilePath();
-		System::IO::File::Delete(Filepath);
-	}
-	catch (...) {}
+	auto AutoRecoveryCache = gcnew model::components::ScriptTextAutoRecoveryCache(EditorID);
+	AutoRecoveryCache->Write(TextToSave);
 }
 
 ScriptTextMetadata^ ScriptDocument::PrepareMetadataForSerialization(bool HasPreprocessorDirectives)
@@ -449,7 +414,7 @@ ScriptDocument::ScriptDocument()
 	FormID = 0;
 	Bytecode = nullptr;
 	BytecodeLength = 0;
-	NativeObject = NativeObject;
+	NativeObject = nullptr;
 	CompilationInProgress = false;
 
 	Messages = gcnew List<ScriptDiagnosticMessage^>;
@@ -458,7 +423,7 @@ ScriptDocument::ScriptDocument()
 	ActiveBatchUpdateSource = eBatchUpdateSource::None;
 	ActiveBatchUpdateCounter = 0;
 
-	Editor = textEditor::Factory::Create(textEditor::Factory::eTextEditor::AvalonEdit, this);
+	Editor = gcnew textEditor::avalonEdit::AvalonEditTextEditor(this);
 	IntelliSense = gcnew intellisense::IntelliSenseInterfaceModel(Editor);
 	BgAnalyzer = gcnew BackgroundSemanticAnalyzer(this);
 	NavHelper = gcnew components::NavigationHelper(this);
@@ -475,7 +440,7 @@ ScriptDocument::ScriptDocument()
 	Editor->ScriptModified += EditorScriptModifiedHandler;
 	Editor->LineAnchorInvalidated += EditorLineAnchorInvalidatedHandler;
 	BgAnalyzer->SemanticAnalysisComplete += BgAnalysisCompleteHandler;
-	preferences::SettingsHolder::Get()->SavedToDisk += ScriptEditorPreferencesSavedHandler;
+	preferences::SettingsHolder::Get()->PreferencesChanged += ScriptEditorPreferencesSavedHandler;
 	AutoSaveTimer->Tick += AutoSaveTimerTickHandler;
 
 	AutoSaveTimer->Start();
@@ -483,12 +448,14 @@ ScriptDocument::ScriptDocument()
 
 ScriptDocument::~ScriptDocument()
 {
+	ReleaseNativeObjectIfNewScript();
+
 	AutoSaveTimer->Stop();
 
 	Editor->ScriptModified -= EditorScriptModifiedHandler;
 	Editor->LineAnchorInvalidated -= EditorLineAnchorInvalidatedHandler;
 	BgAnalyzer->SemanticAnalysisComplete -= BgAnalysisCompleteHandler;
-	preferences::SettingsHolder::Get()->SavedToDisk -= ScriptEditorPreferencesSavedHandler;
+	preferences::SettingsHolder::Get()->PreferencesChanged -= ScriptEditorPreferencesSavedHandler;
 	AutoSaveTimer->Tick -= AutoSaveTimerTickHandler;
 
 	SAFEDELETE_CLR(EditorScriptModifiedHandler);
@@ -525,18 +492,20 @@ void ScriptDocument::Initialize(componentDLLInterface::ScriptData* ScriptData, b
 {
 	Debug::Assert(ScriptData != nullptr);
 
+	// release the currently bound native object if it points to an unsaved new script instance
+	ReleaseNativeObjectIfNewScript();
+
 	EditorID = gcnew String(ScriptData->EditorID);
 	FormID = ScriptData->FormID;
 	Bytecode = reinterpret_cast<UInt8*>(ScriptData->ByteCode);
 	BytecodeLength = ScriptData->Length;
-	ScriptNativeObject = ScriptData->ParentForm;
+	NativeObject = ScriptData->ParentForm;
 	ScriptType = safe_cast<IScriptDocument::eScriptType>(ScriptData->Type);
-
 	OnStateChangedEditorIdAndFormId(EditorID, FormID);
 	OnStateChangedBytecodeLength(BytecodeLength);
 
-	TextEditor->Modified = false;
-
+	bool UnsavedNewScriptInstances = nativeWrapper::g_CSEInterfaceTable->ScriptEditor.IsUnsavedNewScript(NativeObject);
+	TextEditor->Modified = UnsavedNewScriptInstances ? true : false;
 
 	ClearMessages(ScriptDiagnosticMessage::eMessageSource::All, ScriptDiagnosticMessage::eMessageType::All);
 	ClearBookmarks();
@@ -544,7 +513,11 @@ void ScriptDocument::Initialize(componentDLLInterface::ScriptData* ScriptData, b
 
 	auto RawScriptText = gcnew String(ScriptData->Text);
 	if (UseAutoRecoveryFile)
-		RawScriptText = LoadAutoRecoveryCache();
+	{
+		auto AutoRecoveryFile = gcnew ScriptTextAutoRecoveryCache(EditorID);
+		RawScriptText = AutoRecoveryFile->Read();
+		AutoRecoveryFile->Delete(false);
+	}
 
 	String^ ExtractedScriptText = "";
 	auto ExtractedMetadata = gcnew ScriptTextMetadata();
@@ -570,10 +543,9 @@ void ScriptDocument::Initialize(componentDLLInterface::ScriptData* ScriptData, b
 	intellisense::IntelliSenseBackend::Get()->Refresh(false);
 }
 
-bool ScriptDocument::Save(IScriptDocument::eSaveOperation SaveOperation, bool% OutHasWarning)
+bool ScriptDocument::Save(IScriptDocument::eSaveOperation SaveOperation)
 {
-	if (ScriptNativeObject == nullptr)
-		return false;
+	Debug::Assert(ScriptNativeObject != nullptr);
 
 	bool Result = false;
 	DisposibleDataAutoPtr<componentDLLInterface::ScriptCompileData> CompileInteropData(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.AllocateCompileData());
@@ -605,10 +577,12 @@ bool ScriptDocument::Save(IScriptDocument::eSaveOperation SaveOperation, bool% O
 		}
 	}
 	EndScriptCompilation(Data);
-	OutHasWarning = Data->HasWarnings;
 
 	if (Result)
-		ClearAutoRecoveryCache();
+	{
+		auto AutoRecoveryCache = gcnew model::components::ScriptTextAutoRecoveryCache(EditorID);
+		AutoRecoveryCache->Delete(false);
+	}
 
 	return Result;
 }
@@ -709,109 +683,49 @@ UInt32 ScriptDocument::GetBookmarkCount(UInt32 Line)
 	return Count;
 }
 
-bool ScriptDocument::HasAutoRecoveryFile()
+void ScriptDocument::PushStateToSubscribers()
 {
-	return System::IO::File::Exists(GetAutoRecoveryCacheFilePath());
+	OnStateChangedDirty(TextEditor->Modified);
+	OnStateChangedBytecodeLength(BytecodeLength);
+	OnStateChangedType(Type);
+	OnStateChangedEditorIdAndFormId(EditorID, FormID);
+	OnStateChangedMessages();
+	OnStateChangedBookmarks();
+	OnStateChangedFindResults();
 }
 
-System::DateTime ScriptDocument::GetAutoRecoveryFileLastWriteTimestamp()
+String^ GetSanitizedIdentifier(String^ Identifier)
 {
-	if (HasAutoRecoveryFile())
-		return System::IO::File::GetLastWriteTime(GetAutoRecoveryCacheFilePath());
-
-	return DateTime::MaxValue;
+	return intellisense::IntelliSenseBackend::Get()->SanitizeIdentifier(Identifier);
 }
 
-
-void ScriptEditorDocumentModel::SetActiveScriptDocument(ScriptDocument^ New)
+bool ScriptDocument::SanitizeScriptText()
 {
-	if (SettingActiveScriptDocument)
-	{
-		// the only type of reentrant call we expect is one where the new active document is the same as the current
-		// this can potentially arise if there is a loop in the event chain connecting the model and the view
-		// only such cases can be safely ignored
-		Debug::Assert(New == ActiveScriptDocument);
-		return;
-	}
+	auto Agent = gcnew obScriptParsing::Sanitizer(TextEditor->GetText());
+	obScriptParsing::Sanitizer::eOperation Operation;
 
-	SettingActiveScriptDocument = true;
-	auto EventArgs = gcnew IScriptEditorModel::ActiveDocumentChangedEventArgs(ActiveScriptDocument, New);
+	if (preferences::SettingsHolder::Get()->Sanitizer->NormalizeIdentifiers)
+		Operation = Operation | obScriptParsing::Sanitizer::eOperation::AnnealCasing;
 
-	ActiveScriptDocument = New;
-	ActiveDocumentChanged(this, EventArgs);
-	SettingActiveScriptDocument = false;
+	if (preferences::SettingsHolder::Get()->Sanitizer->PrefixIfElseIfWithEval)
+		Operation = Operation | obScriptParsing::Sanitizer::eOperation::EvalifyIfs;
+
+	if (preferences::SettingsHolder::Get()->Sanitizer->ApplyCompilerOverride)
+		Operation = Operation | obScriptParsing::Sanitizer::eOperation::CompilerOverrideBlocks;
+
+	if (preferences::SettingsHolder::Get()->Sanitizer->IndentLines)
+		Operation = Operation | obScriptParsing::Sanitizer::eOperation::IndentLines;
+
+	bool Result = Agent->SanitizeScriptText(Operation, gcnew obScriptParsing::Sanitizer::GetSanitizedIdentifier(GetSanitizedIdentifier));
+	if (Result)
+		TextEditor->SetText(Agent->Output, false);
+
+	return Result;
 }
-
-bool ScriptEditorDocumentModel::ValidateCommonActionPreconditions()
-{
-	if (ActiveDocument == nullptr)
-		return false;
-}
-
-void ScriptEditorDocumentModel::ActiveAction_Copy()
-{
-	if (!ValidateCommonActionPreconditions())
-		return;
-
-	ActiveDocument->TextEditor->InvokeDefaultCopy();
-}
-
-void ScriptEditorDocumentModel::ActiveAction_Paste()
-{
-	if (!ValidateCommonActionPreconditions())
-		return;
-
-	ActiveDocument->TextEditor->InvokeDefaultPaste();
-}
-
-void ScriptEditorDocumentModel::ActiveAction_Comment()
-{
-	if (!ValidateCommonActionPreconditions())
-		return;
-
-	ActiveDocument->TextEditor->CommentSelection();
-}
-
-void ScriptEditorDocumentModel::ActiveAction_Uncomment()
-{
-	if (!ValidateCommonActionPreconditions())
-		return;
-
-	ActiveDocument->TextEditor->UncommentSelection();
-}
-
-void ScriptEditorDocumentModel::ActiveAction_AddBookmark(Object^ Params)
-{
-	if (!ValidateCommonActionPreconditions())
-		return;
-
-	auto ActionParam = safe_cast<IScriptEditorModel::ActiveDocumentActionCollection::AddBookmarkParams^>(Params);
-	ActiveDocument->AddBookmark(ActiveDocument->TextEditor->CurrentLine, ActionParam->BookmarkDescription);
-}
-
-void ScriptEditorDocumentModel::ActiveAction_GoToLine(Object^ Params)
-{
-	if (!ValidateCommonActionPreconditions())
-		return;
-
-	auto ActionParam = safe_cast<IScriptEditorModel::ActiveDocumentActionCollection::GoToLineParams^>(Params);
-	ActiveDocument->TextEditor->ScrollToLine(ActionParam->Line);
-}
-
 
 ScriptEditorDocumentModel::ScriptEditorDocumentModel()
 {
 	ScriptDocuments = gcnew List<ScriptDocument^>;
-	ActiveScriptDocument = nullptr;
-	SettingActiveScriptDocument = false;
-
-	ActiveActions = gcnew IScriptEditorModel::ActiveDocumentActionCollection;
-	ActiveActions->Copy->Delegate = gcnew ActionDelegate(this, &ScriptEditorDocumentModel::ActiveAction_Copy);
-	ActiveActions->Paste->Delegate = gcnew ActionDelegate(this, &ScriptEditorDocumentModel::ActiveAction_Paste);
-	ActiveActions->Comment->Delegate = gcnew ActionDelegate(this, &ScriptEditorDocumentModel::ActiveAction_Comment);
-	ActiveActions->Uncomment->Delegate = gcnew ActionDelegate(this, &ScriptEditorDocumentModel::ActiveAction_Uncomment);
-	ActiveActions->AddBookmark->Delegate = gcnew ParameterizedActionDelegate(this, &ScriptEditorDocumentModel::ActiveAction_AddBookmark);
-	ActiveActions->GoToLine->Delegate = gcnew ParameterizedActionDelegate(this, &ScriptEditorDocumentModel::ActiveAction_GoToLine);
 }
 
 ScriptEditorDocumentModel::~ScriptEditorDocumentModel()
@@ -819,9 +733,7 @@ ScriptEditorDocumentModel::~ScriptEditorDocumentModel()
 	for each (auto Itr in ScriptDocuments)
 		delete Itr;
 
-	ActiveScriptDocument = nullptr;
 	ScriptDocuments->Clear();
-	SAFEDELETE_CLR(ActiveActions);
 }
 
 IScriptDocument^ ScriptEditorDocumentModel::AllocateNewDocument()
@@ -831,6 +743,8 @@ IScriptDocument^ ScriptEditorDocumentModel::AllocateNewDocument()
 
 void ScriptEditorDocumentModel::AddDocument(IScriptDocument^ Document)
 {
+	Debug::Assert(Document != nullptr);
+
 	if (ContainsDocument(Document))
 		throw gcnew ArgumentException("Document is already part of the model");
 
@@ -840,6 +754,8 @@ void ScriptEditorDocumentModel::AddDocument(IScriptDocument^ Document)
 
 void ScriptEditorDocumentModel::RemoveDocument(IScriptDocument^ Document)
 {
+	Debug::Assert(Document != nullptr);
+
 	if (!ContainsDocument(Document))
 		throw gcnew ArgumentException("Document is not part of the model");
 
@@ -849,6 +765,7 @@ void ScriptEditorDocumentModel::RemoveDocument(IScriptDocument^ Document)
 
 bool ScriptEditorDocumentModel::ContainsDocument(IScriptDocument^ Document)
 {
+	Debug::Assert(Document != nullptr);
 	auto ScriptDoc = safe_cast<ScriptDocument^>(Document);
 
 	for each (auto Itr in ScriptDocuments)
@@ -880,15 +797,6 @@ IScriptDocument^ ScriptEditorDocumentModel::LookupDocument(String^ EditorId)
 	return nullptr;
 }
 
-IScriptDocument^ ScriptEditorDocumentModel::ActiveDocument::get()
-{
-	return ActiveScriptDocument;
-}
-
-void ScriptEditorDocumentModel::ActiveDocument::set(IScriptDocument^ v)
-{
-	SetActiveScriptDocument(safe_cast<ScriptDocument^>(v));
-}
 
 } // namespace modelImpl
 

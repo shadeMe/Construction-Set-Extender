@@ -101,12 +101,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
-    <ClCompile Include="ScriptEditorCodeSnippets.cpp" />
-    <ClCompile Include="ScriptEditorPreferences.cpp" />
-    <ClCompile Include="ScriptEditorRefactorForm.cpp" />
-    <ClCompile Include="ScriptEditorScriptSync.cpp" />
+    <ClCompile Include="CodeSnippetsDialog.cpp" />
+    <ClCompile Include="PreferencesDialog.cpp" />
+    <ClCompile Include="RefactorListViewDialog.cpp" />
+    <ClCompile Include="ScriptSyncDialog.cpp" />
     <ClCompile Include="ScriptEditorWorkspace.cpp" />
-    <ClCompile Include="ScriptEditorSelectScripts.cpp" />
+    <ClCompile Include="ScriptSelectionDialog.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -117,22 +117,22 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
-    <ClInclude Include="ScriptEditorCodeSnippets.h">
+    <ClInclude Include="CodeSnippetsDialog.h">
       <FileType>CppForm</FileType>
     </ClInclude>
-    <ClInclude Include="ScriptEditorPreferences.h">
+    <ClInclude Include="PreferencesDialog.h">
       <FileType>CppForm</FileType>
     </ClInclude>
-    <ClInclude Include="ScriptEditorRefactorForm.h">
+    <ClInclude Include="RefactorListViewDialog.h">
       <FileType>CppForm</FileType>
     </ClInclude>
-    <ClInclude Include="ScriptEditorScriptSync.h">
+    <ClInclude Include="ScriptSyncDialog.h">
       <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="ScriptEditorWorkspace.h">
       <FileType>CppForm</FileType>
     </ClInclude>
-    <ClInclude Include="ScriptEditorSelectScripts.h">
+    <ClInclude Include="ScriptSelectionDialog.h">
       <FileType>CppControl</FileType>
     </ClInclude>
     <ClInclude Include="stdafx.h" />
@@ -147,23 +147,23 @@
     <ResourceCompile Include="app.rc" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="ScriptEditorCodeSnippets.resx">
-      <DependentUpon>ScriptEditorCodeSnippets.h</DependentUpon>
+    <EmbeddedResource Include="CodeSnippetsDialog.resx">
+      <DependentUpon>CodeSnippetsDialog.h</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ScriptEditorPreferences.resx">
-      <DependentUpon>ScriptEditorPreferences.h</DependentUpon>
+    <EmbeddedResource Include="PreferencesDialog.resx">
+      <DependentUpon>PreferencesDialog.h</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ScriptEditorRefactorForm.resx">
-      <DependentUpon>ScriptEditorRefactorForm.h</DependentUpon>
+    <EmbeddedResource Include="RefactorListViewDialog.resx">
+      <DependentUpon>RefactorListViewDialog.h</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ScriptEditorScriptSync.resx">
-      <DependentUpon>ScriptEditorScriptSync.h</DependentUpon>
+    <EmbeddedResource Include="ScriptSyncDialog.resx">
+      <DependentUpon>ScriptSyncDialog.h</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ScriptEditorWorkspace.resx">
       <DependentUpon>ScriptEditorWorkspace.h</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ScriptEditorSelectScripts.resx">
-      <DependentUpon>ScriptEditorSelectScripts.h</DependentUpon>
+    <EmbeddedResource Include="ScriptSelectionDialog.resx">
+      <DependentUpon>ScriptSelectionDialog.h</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="TagBrowser.resx">
       <DependentUpon>TagBrowser.h</DependentUpon>

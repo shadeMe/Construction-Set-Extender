@@ -18,6 +18,9 @@ namespace model
 {
 
 
+interface class IScriptDocument;
+
+
 namespace components
 {
 
@@ -69,17 +72,7 @@ ref struct ScriptDiagnosticMessage : public ScriptLineAnnotation
 		Validator,
 		Preprocessor,
 	};
-
-	static void PopulateImageListWithMessageTypeImages(ImageList^ Destination);
 protected:
-	static array<Image^>^ MessageTypeImages =
-	{
-		/*Globals::ImageResources()->CreateImage("IntelliSenseItemEmpty"),
-		Globals::ImageResources()->CreateImage("MessageListInfo"),
-		Globals::ImageResources()->CreateImage("MessageListWarning"),
-		Globals::ImageResources()->CreateImage("MessageListError"),*/
-	};
-
 	eMessageType Type_;
 	eMessageSource Source_;
 public:
@@ -141,6 +134,31 @@ public:
 };
 
 
+ref class ScriptTextAutoRecoveryCache
+{
+	static String^ GetCacheFilePath(String^ ScriptEditorId);
+
+	String^ ScriptEditorId;
+	String^ Filepath;
+public:
+	ScriptTextAutoRecoveryCache(String^ ScriptEditorId);
+
+	property bool Exists
+	{
+		bool get();
+	}
+
+	property DateTime LastWriteTime
+	{
+		DateTime get();
+	}
+
+	void Write(String^ Text);
+	String^ Read();
+	void Delete(bool SendToRecycleBin);
+};
+
+
 interface class IBackgroundSemanticAnalyzer
 {
 	ref struct AnalysisCompleteEventArgs
@@ -156,6 +174,8 @@ interface class IBackgroundSemanticAnalyzer
 
 	event AnalysisCompleteEventHandler^ SemanticAnalysisComplete;
 
+	void Pause();
+	void Resume();
 	obScriptParsing::AnalysisData^ DoSynchronousAnalysis(bool RaiseCompletionEvent);
 };
 
@@ -231,6 +251,7 @@ interface class IScriptDocument
 
 	property bool Valid;
 	property bool Dirty;
+	property bool UnsavedNewScript;
 	property eScriptType ScriptType;
 	property String^ ScriptEditorID;
 	property UInt32 ScriptFormID;
@@ -245,10 +266,8 @@ interface class IScriptDocument
 	property components::IBackgroundSemanticAnalyzer^ BackgroundAnalyzer;
 	property components::INavigationHelper^ NavigationHelper;
 
-	// ### TODO do the housekeeping/autorecovery in the controller (since we need access to the view)
-	// same with anything that involves showing a message to teh user
 	void Initialize(componentDLLInterface::ScriptData* ScriptData, bool UseAutoRecoveryFile);
-	bool Save(eSaveOperation SaveOperation, bool% OutHasWarning);
+	bool Save(eSaveOperation SaveOperation);
 
 	List<components::ScriptDiagnosticMessage^>^ GetMessages(UInt32 Line, components::ScriptDiagnosticMessage::eMessageSource SourceFilter, components::ScriptDiagnosticMessage::eMessageType TypeFilter);
 	UInt32 GetErrorCount(UInt32 Line);
@@ -260,50 +279,20 @@ interface class IScriptDocument
 	List<components::ScriptBookmark^>^ GetBookmarks(UInt32 Line);
 	UInt32 GetBookmarkCount(UInt32 Line);
 
-	bool HasAutoRecoveryFile();
-	DateTime GetAutoRecoveryFileLastWriteTimestamp();
+	void PushStateToSubscribers();
+
+	void TogglePreprocessorOutput(bool Enabled);
+	bool IsPreprocessorOutputEnabled();
+
+	bool SanitizeScriptText();
+	void SaveScriptTextToDisk(String^ DiskFilePath);
+	void LoadScriptTextFromDisk(String^ DiskFilePath);
 };
 
 
 interface class IScriptEditorModel
 {
-	ref struct ActiveDocumentChangedEventArgs
-	{
-		property IScriptDocument^ OldValue;
-		property IScriptDocument^ NewValue;
-
-		ActiveDocumentChangedEventArgs(IScriptDocument^ Old, IScriptDocument^ New);
-	};
-	delegate void ActiveDocumentChangedEventHandler(Object^ Sender, ActiveDocumentChangedEventArgs^ E);
-
-	ref struct ActiveDocumentActionCollection
-	{
-		ref struct AddBookmarkParams
-		{
-			String^ BookmarkDescription;
-		};
-
-		ref struct GoToLineParams
-		{
-			UInt32 Line;
-		};
-
-		property BasicAction^ Copy;
-		property BasicAction^ Paste;
-		property BasicAction^ Comment;
-		property BasicAction^ Uncomment;
-		property ParameterizedAction^ AddBookmark;
-		property ParameterizedAction^ GoToLine;
-
-		ActiveDocumentActionCollection();
-		~ActiveDocumentActionCollection();
-	};
-
 	property List<IScriptDocument^>^ Documents;
-	property IScriptDocument^ ActiveDocument;
-	property ActiveDocumentActionCollection^ ActiveDocumentActions;
-
-	event ActiveDocumentChangedEventHandler^ ActiveDocumentChanged;
 
 	IScriptDocument^ AllocateNewDocument();
 	void AddDocument(IScriptDocument^ Document);
@@ -311,6 +300,12 @@ interface class IScriptEditorModel
 	bool ContainsDocument(IScriptDocument^ Document);
 	bool ContainsDocument(String^ EditorId);
 	IScriptDocument^ LookupDocument(String^ EditorId);
+};
+
+
+interface class IFactory
+{
+	IScriptEditorModel^ NewModel();
 };
 
 

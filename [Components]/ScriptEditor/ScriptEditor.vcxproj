@@ -212,6 +212,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="IntelliSenseItem.cpp" />
     <ClCompile Include="IScriptEditorModel.cpp" />
     <ClCompile Include="ITextEditor.cpp" />
+    <ClCompile Include="MvcFactories.cpp" />
     <ClCompile Include="NumberedRichTextBox.cpp" />
     <ClCompile Include="Preferences.cpp" />
     <ClCompile Include="RefactorTools.cpp" />
@@ -222,13 +223,13 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="ScriptEditorViewImpl.cpp" />
     <ClCompile Include="ScriptEditorViewImplComponents.cpp" />
     <ClCompile Include="ScriptPreprocessor.cpp" />
-    <ClCompile Include="SelectScriptDialog.cpp" />
+    <ClCompile Include="ScriptSelectionDialog.cpp" />
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="ScriptSync.cpp" />
     <ClCompile Include="SemanticAnalysis.cpp" />
     <ClCompile Include="SnippetManager.cpp" />
+    <ClCompile Include="IScriptEditorView.cpp" />
     <ClCompile Include="TextEditorAdornments.cpp" />
-    <ClCompile Include="TextEditorFactory.cpp" />
     <ClCompile Include="Utilities.cpp" />
     <ClCompile Include="WorkspaceModel.cpp" />
     <ClCompile Include="WorkspaceModelComponents.cpp" />
@@ -239,6 +240,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="..\..\[Common]\ComponentDLLInterface.h" />
     <ClInclude Include="..\..\[Common]\CustomInputBox.h" />
     <ClInclude Include="..\..\[Common]\NativeWrapper.h" />
+    <ClInclude Include="MvcFactories.h" />
     <ClInclude Include="ScriptPreprocessor.h" />
     <ClInclude Include="Utilities.h" />
     <ClInclude Include="AvalonEditComponents.h" />
@@ -269,7 +271,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="ScriptEditorModelImplComponents.h" />
     <ClInclude Include="ScriptEditorViewImpl.h" />
     <ClInclude Include="ScriptEditorViewImplComponents.h" />
-    <ClInclude Include="SelectScriptDialog.h" />
+    <ClInclude Include="ScriptSelectionDialog.h" />
     <ClInclude Include="ScriptSync.h" />
     <ClInclude Include="ITextEditor.h" />
     <ClInclude Include="Exports.h" />
@@ -278,7 +280,6 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="SemanticAnalysis.h" />
     <ClInclude Include="SnippetManager.h" />
     <ClInclude Include="TextEditorAdornments.h" />
-    <ClInclude Include="TextEditorFactory.h" />
     <ClInclude Include="WorkspaceModel.h" />
     <ClInclude Include="WorkspaceModelComponents.h" />
     <ClInclude Include="WorkspaceModelInterface.h" />
@@ -286,15 +287,17 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="WorkspaceViewInterface.h" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorCodeSnippets.resx" />
-    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorPreferences.resx" />
-    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorRefactorForm.resx" />
-    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorScriptSync.resx" />
-    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorSelectScripts.resx" />
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\CodeSnippetsDialog.resx" />
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\PreferencesDialog.resx" />
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\RefactorListViewDialog.resx" />
     <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorWorkspace.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Icons.resx" />
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptSelectionDialog.resx" />
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptSyncDialog.resx" />
+    <EmbeddedResource Include="Icons.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VersionInfo.rc">

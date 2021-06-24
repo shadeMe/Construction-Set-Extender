@@ -82,7 +82,7 @@
     <ClCompile Include="ScriptSync.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="SelectScriptDialog.cpp">
+    <ClCompile Include="ScriptSelectionDialog.cpp">
       <Filter>Components</Filter>
     </ClCompile>
     <ClCompile Include="..\..\[Common]\NativeWrapper.cpp">
@@ -127,7 +127,6 @@
     <ClCompile Include="ScriptEditorModelImplComponents.cpp">
       <Filter>Components\[REWRITE]</Filter>
     </ClCompile>
-    <ClCompile Include="TextEditorFactory.cpp" />
     <ClCompile Include="ScriptEditorControllerImpl.cpp">
       <Filter>Components\[REWRITE]</Filter>
     </ClCompile>
@@ -139,6 +138,12 @@
     </ClCompile>
     <ClCompile Include="ScriptPreprocessor.cpp">
       <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="MvcFactories.cpp">
+      <Filter>Components\[REWRITE]</Filter>
+    </ClCompile>
+    <ClCompile Include="IScriptEditorView.cpp">
+      <Filter>Components\[REWRITE]</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -211,7 +216,7 @@
     <ClInclude Include="ScriptSync.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="SelectScriptDialog.h">
+    <ClInclude Include="ScriptSelectionDialog.h">
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="..\..\[Common]\NativeWrapper.h">
@@ -265,7 +270,6 @@
     <ClInclude Include="ScriptEditorModelImplComponents.h">
       <Filter>Components\[REWRITE]</Filter>
     </ClInclude>
-    <ClInclude Include="TextEditorFactory.h" />
     <ClInclude Include="ScriptEditorControllerImpl.h">
       <Filter>Components\[REWRITE]</Filter>
     </ClInclude>
@@ -281,27 +285,30 @@
     <ClInclude Include="ScriptPreprocessor.h">
       <Filter>Components</Filter>
     </ClInclude>
+    <ClInclude Include="MvcFactories.h">
+      <Filter>Components\[REWRITE]</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Icons.resx">
       <Filter>Resources</Filter>
     </EmbeddedResource>
-    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorCodeSnippets.resx">
-      <Filter>Resources</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorPreferences.resx">
-      <Filter>Resources</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorRefactorForm.resx">
-      <Filter>Resources</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorScriptSync.resx">
-      <Filter>Resources</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorSelectScripts.resx">
-      <Filter>Resources</Filter>
-    </EmbeddedResource>
     <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorWorkspace.resx">
+      <Filter>Resources</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\CodeSnippetsDialog.resx">
+      <Filter>Resources</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\PreferencesDialog.resx">
+      <Filter>Resources</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\RefactorListViewDialog.resx">
+      <Filter>Resources</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptSelectionDialog.resx">
+      <Filter>Resources</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptSyncDialog.resx">
       <Filter>Resources</Filter>
     </EmbeddedResource>
   </ItemGroup>

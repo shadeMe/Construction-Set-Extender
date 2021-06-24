@@ -1,5 +1,6 @@
 #include "ScriptEditorViewImpl.h"
 #include "Preferences.h"
+#include "ScriptSelectionDialog.h"
 #include "[Common]\CustomInputBox.h"
 
 namespace cse
@@ -84,7 +85,7 @@ void ScriptEditorWorkspace::SetupViewComponentComboBox(ComboBoxEx^ Source, eView
 
 void ScriptEditorWorkspace::SetupViewComponentLabel(LabelItem^ Source, eViewRole Role)
 {
-	auto Vc = gcnew components::Label(Source, Role, DelegateViewComponentEventRouter);
+	auto Vc = gcnew components::Label(Source, Role);
 	Source->Tag = Vc;
 	RegisterViewComponent(Vc, Source, Role);
 }
@@ -104,14 +105,14 @@ void ScriptEditorWorkspace::SetupViewComponentObjectListView(BrightIdeasSoftware
 
 void ScriptEditorWorkspace::SetupViewComponentCircularProgress(DotNetBar::CircularProgressItem^ Source, eViewRole Role)
 {
-	auto Vc = gcnew components::CircularProgress(Source, Role, DelegateViewComponentEventRouter);
+	auto Vc = gcnew components::CircularProgress(Source, Role);
 	Source->Tag = Vc;
 	RegisterViewComponent(Vc, Source, Role);
 }
 
 void ScriptEditorWorkspace::SetupViewComponentDockablePane(DockContainerItem^ Source, eViewRole Role)
 {
-	auto Vc = gcnew components::DockablePane(Source, Role, DelegateViewComponentEventRouter);
+	auto Vc = gcnew components::DockablePane(Source, Role);
 	Source->Tag = Vc;
 	RegisterViewComponent(Vc, Source, Role);
 }
@@ -2065,7 +2066,6 @@ void ScriptEditorWorkspace::FinalizeComponents(Rectangle Bounds)
 	NewTabButton->Tooltip = L"New Tab";
 	NewTabButton->AutoExpandOnClick = true;
 	NewTabButton->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-	//NewTabButton->HotTrackingStyle = DevComponents::DotNetBar::eHotTrackingStyle::None;
 
 	auto NewTabNewScriptButton = gcnew DevComponents::DotNetBar::ButtonItem();
 	NewTabNewScriptButton->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolbarNewScript.Image")));
@@ -2089,21 +2089,9 @@ void ScriptEditorWorkspace::FinalizeComponents(Rectangle Bounds)
 	SetObjectListViewTextOverlay(FindResultsList, ListViewOverlayForeColor, ListViewOverlayBackColor);
 	SetObjectListViewTextOverlay(GlobalFindResultsList, ListViewOverlayForeColor, ListViewOverlayBackColor);
 
-	this->Size = Drawing::Size(Bounds.Width, Bounds.Height);
-	if (preferences::SettingsHolder::Get()->General->HideInTaskbar)
-	{
-		auto ParentWindowHandle = safe_cast<IntPtr>(nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetMainWindowHandle());
-		this->ShowInTaskbar = false;
-		this->Show(gcnew WindowHandleWrapper(ParentWindowHandle));
-	}
-	else
-		this->Show();
+	InitalBounds = Bounds;
 
-	this->Location = Drawing::Point(Bounds.Left, Bounds.Top);
 	this->ResumeLayout();
-
-	this->Focus();
-	this->BringToFront();
 }
 
 void ScriptEditorWorkspace::InitializeViewComponents()
@@ -2241,8 +2229,6 @@ ScriptEditorWorkspace::ScriptEditorWorkspace(Rectangle Bounds)
 		FinalizeComponents(Bounds);
 	}
 	SkipViewComponentEventProcessing = false;
-
-
 }
 
 ScriptEditorWorkspace::~ScriptEditorWorkspace()
@@ -2286,6 +2272,37 @@ Forms::DialogResult ScriptEditorWorkspace::ShowInputPrompt(String^ Prompt, Strin
 	if (Result->ReturnCode == Forms::DialogResult::OK)
 		OutText = Result->Text;
 	return Result->ReturnCode;
+}
+
+List<String^>^ ScriptEditorWorkspace::SelectExistingScripts(String^ DefaultSelectionEditorId)
+{
+	auto DialogParams = gcnew ScriptSelectionDialog::Params;
+	DialogParams->SelectedScriptEditorID = DefaultSelectionEditorId;
+
+	ScriptSelectionDialog ScriptSelection(DialogParams);
+	if (!ScriptSelection.HasResult)
+		return gcnew List<String^>;
+
+	return ScriptSelection.ResultData->SelectedScriptEditorIDs;
+}
+
+void ScriptEditorWorkspace::Reveal()
+{
+	this->Size = Drawing::Size(InitalBounds.Width, InitalBounds.Height);
+
+	if (preferences::SettingsHolder::Get()->General->HideInTaskbar)
+	{
+		auto ParentWindowHandle = safe_cast<IntPtr>(nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetMainWindowHandle());
+		this->ShowInTaskbar = false;
+		this->Show(gcnew WindowHandleWrapper(ParentWindowHandle));
+	}
+	else
+		this->Show();
+
+	this->Location = Drawing::Point(InitalBounds.Left, InitalBounds.Top);
+
+	this->Focus();
+	this->BringToFront();
 }
 
 

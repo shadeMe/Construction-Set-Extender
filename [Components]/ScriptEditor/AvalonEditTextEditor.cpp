@@ -96,10 +96,10 @@ public:
 };
 
 int AvalonEditTextEditor::PerformFindReplaceOperationOnSegment(System::Text::RegularExpressions::Regex^ ExpressionParser,
-																ITextEditor::eFindReplaceOperation Operation,
+																eFindReplaceOperation Operation,
 																AvalonEdit::Document::DocumentLine^ Line,
 																String^ Replacement,
-																ITextEditor::eFindReplaceOptions Options)
+																eFindReplaceOptions Options)
 {
 	int Hits = 0, SearchStartOffset = 0;
 	String^ CurrentLine = TextField->Document->GetText(Line);
@@ -117,9 +117,9 @@ int AvalonEditTextEditor::PerformFindReplaceOperationOnSegment(System::Text::Reg
 					int Offset = Line->Offset + Itr->Index, Length = Itr->Length;
 					Hits++;
 
-					if (Options.HasFlag(ITextEditor::eFindReplaceOptions::IgnoreComments) == false || GetCharIndexInsideCommentSegment(Offset) == false)
+					if (Options.HasFlag(eFindReplaceOptions::IgnoreComments) == false || GetCharIndexInsideCommentSegment(Offset) == false)
 					{
-						if (Operation == ITextEditor::eFindReplaceOperation::Replace)
+						if (Operation == eFindReplaceOperation::Replace)
 						{
 							TextField->Document->Replace(Offset, Length, Replacement);
 							CurrentLine = TextField->Document->GetText(Line);
@@ -128,7 +128,7 @@ int AvalonEditTextEditor::PerformFindReplaceOperationOnSegment(System::Text::Reg
 							Restart = true;
 							break;
 						}
-						else if (Operation == ITextEditor::eFindReplaceOperation::Find)
+						else if (Operation == eFindReplaceOperation::Find)
 						{
 							LineTracker->TrackFindResultSegment(Offset, Offset + Length);
 						}
@@ -289,10 +289,6 @@ void AvalonEditTextEditor::GotoLine(int Line)
 		ScrollToCaret();
 		FocusTextArea();
 	}
-	else
-	{
-		MessageBox::Show("Invalid line number.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
-	}
 }
 
 void AvalonEditTextEditor::RefreshTextView()
@@ -302,6 +298,9 @@ void AvalonEditTextEditor::RefreshTextView()
 
 void AvalonEditTextEditor::HandleTextChangeEvent()
 {
+	if (TextField->IsReadOnly || TextFieldDisplayingStaticText)
+		return;
+
 	Modified = true;
 
 	switch (IntelliSenseTextChangeEventHandlingMode)
@@ -702,9 +701,11 @@ int AvalonEditTextEditor::GetLastKnownMouseClickOffset()
 	return LastKnownMouseClickOffset;
 }
 
-void AvalonEditTextEditor::ToggleComment(int Line, eToggleCommentOperation Operation)
+void AvalonEditTextEditor::PerformCommentOperationOnSingleLine(int Line, eCommentOperation Operation)
 {
 	if (GetTextLength() == 0)
+		return;
+	else if (Line < 1 || Line > LineCount)
 		return;
 
 	AvalonEdit::Document::DocumentLine^ LineSegment = TextField->TextArea->Document->GetLineByNumber(Line);
@@ -715,15 +716,15 @@ void AvalonEditTextEditor::ToggleComment(int Line, eToggleCommentOperation Opera
 
 	switch (Operation)
 	{
-	case eToggleCommentOperation::Add:
+	case eCommentOperation::Add:
 		TextField->TextArea->Document->Insert(LineSegment->Offset, ";");
 		break;
-	case eToggleCommentOperation::Remove:
+	case eCommentOperation::Remove:
 		if (FirstChar == ';')
 			TextField->TextArea->Document->Replace(WhitespaceLeading->EndOffset, 1, "");
 
 		break;
-	case eToggleCommentOperation::Toggle:
+	case eCommentOperation::Toggle:
 		if (FirstChar == ';')
 			TextField->TextArea->Document->Replace(WhitespaceLeading->EndOffset, 1, "");
 		else if (FirstChar != ';')
@@ -733,37 +734,33 @@ void AvalonEditTextEditor::ToggleComment(int Line, eToggleCommentOperation Opera
 	}
 }
 
-void AvalonEditTextEditor::CommentLines(eToggleCommentOperation Operation)
+void AvalonEditTextEditor::PerformCommentOperationOnSelection(eCommentOperation Operation)
 {
+	auto TextSelection = TextField->TextArea->Selection;
+	if (TextSelection->IsEmpty)
+		return;
+
 	BeginUpdate();
 
-	AvalonEdit::Editing::Selection^ TextSelection = TextField->TextArea->Selection;
-	if (TextSelection->IsEmpty == false)
+	auto ProcessedLines = gcnew List<UInt32>;
+	for each (AvalonEdit::Document::ISegment^ Itr in TextSelection->Segments)
 	{
-		List<UInt32>^ ProcessedLines = gcnew List<UInt32>;
-		for each (AvalonEdit::Document::ISegment^ Itr in TextSelection->Segments)
-		{
-			AvalonEdit::Document::DocumentLine^ FirstLine = TextField->TextArea->Document->GetLineByOffset(Itr->Offset);
-			AvalonEdit::Document::DocumentLine^ LastLine = TextField->TextArea->Document->GetLineByOffset(Itr->EndOffset);
+		AvalonEdit::Document::DocumentLine^ FirstLine = TextField->TextArea->Document->GetLineByOffset(Itr->Offset);
+		AvalonEdit::Document::DocumentLine^ LastLine = TextField->TextArea->Document->GetLineByOffset(Itr->EndOffset);
 
-			for (AvalonEdit::Document::DocumentLine^ Itr = FirstLine; Itr != LastLine->NextLine && Itr != nullptr; Itr = Itr->NextLine)
+		for (AvalonEdit::Document::DocumentLine^ Itr = FirstLine; Itr != LastLine->NextLine && Itr != nullptr; Itr = Itr->NextLine)
+		{
+			if (ProcessedLines->Contains(Itr->LineNumber) == false)
 			{
-				if (ProcessedLines->Contains(Itr->LineNumber) == false)
-				{
-					ToggleComment(Itr->LineNumber, Operation);
-					ProcessedLines->Add(Itr->LineNumber);
-				}
+				PerformCommentOperationOnSingleLine(Itr->LineNumber, Operation);
+				ProcessedLines->Add(Itr->LineNumber);
 			}
 		}
-	}
-	else
-	{
-		// always toggle single lines
-		ToggleComment(TextField->TextArea->Document->GetLineByOffset(Caret)->LineNumber, eToggleCommentOperation::Toggle);
 	}
 
 	EndUpdate(false);
 }
+
 
 bool AvalonEditTextEditor::GetLineVisible(UInt32 LineNumber, bool CheckVisualLine)
 {
@@ -841,6 +838,9 @@ System::String^ AvalonEditTextEditor::GetCurrentLineText(bool ClipAtCaretPos)
 bool AvalonEditTextEditor::RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::Event Type, System::Windows::Input::KeyEventArgs^ K, System::Windows::Input::MouseButtonEventArgs^ M)
 {
 	Debug::Assert(IsFocused == true);
+
+	if (TextFieldDisplayingStaticText)
+		return false;
 
 	intellisense::IntelliSenseInputEventArgs^ E = nullptr;
 	switch (Type)
@@ -933,6 +933,9 @@ void AvalonEditTextEditor::RaiseIntelliSenseInsightHover(intellisense::IntelliSe
 
 void AvalonEditTextEditor::RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::Event Type)
 {
+	if (TextFieldDisplayingStaticText)
+		return;
+
 	intellisense::IntelliSenseContextChangeEventArgs^ E = gcnew intellisense::IntelliSenseContextChangeEventArgs(Type);
 
 	if (Type == intellisense::IntelliSenseContextChangeEventArgs::Event::Reset)
@@ -967,6 +970,8 @@ void AvalonEditTextEditor::RaiseIntelliSenseContextChange(intellisense::IntelliS
 
 void AvalonEditTextEditor::OnScriptModified(bool ModificationState)
 {
+	Debug::Assert(!TextFieldDisplayingStaticText);
+
 	ScriptModified(this, gcnew TextEditorScriptModifiedEventArgs(ModificationState));
 }
 
@@ -1127,6 +1132,9 @@ void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::In
 
 		break;
 	case System::Windows::Input::Key::Up:
+		if (TextFieldDisplayingStaticText)
+			break;
+
 		if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 		{
 			SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::SuppressAlways);
@@ -1141,6 +1149,9 @@ void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::In
 
 		break;
 	case System::Windows::Input::Key::Down:
+		if (TextFieldDisplayingStaticText)
+			break;
+
 		if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 		{
 			SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::SuppressAlways);
@@ -1156,6 +1167,9 @@ void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::In
 		break;
 	case System::Windows::Input::Key::Z:
 	case System::Windows::Input::Key::Y:
+		if (TextFieldDisplayingStaticText)
+			break;
+
 		if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 			SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::SuppressOnce);
 
@@ -1385,8 +1399,13 @@ void AvalonEditTextEditor::ScriptEditorPreferences_Saved( Object^ Sender, EventA
 	else
 		TextField->TextArea->IndentationStrategy = gcnew AvalonEdit::Indentation::DefaultIndentationStrategy();
 
-	Color ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
-	Color BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
+	Color ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColorLightMode;
+	Color BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColorLightMode;
+	if (preferences::SettingsHolder::Get()->Appearance->DarkMode)
+	{
+		ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColorDarkMode;
+		BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColorDarkMode;
+	}
 
 	WPFHost->ForeColor = ForegroundColor;
 	WPFHost->BackColor = BackgroundColor;
@@ -1407,12 +1426,20 @@ void AvalonEditTextEditor::ScriptEditorPreferences_Saved( Object^ Sender, EventA
 	TextField->LineNumbersForeground = ForegroundBrush;
 	TextFieldPanel->Background = BackgroundBrush;
 
+	if (preferences::SettingsHolder::Get()->Appearance->ShowIconMargin)
+		IconBarMargin->Visibility = System::Windows::Visibility::Visible;
+	else
+		IconBarMargin->Visibility = System::Windows::Visibility::Hidden;
+
 	TextField->TextArea->TextView->ElementGenerators->Remove(StructureVisualizer);
 
 	if (preferences::SettingsHolder::Get()->Appearance->ShowBlockVisualizer)
 		TextField->TextArea->TextView->ElementGenerators->Add(StructureVisualizer);
 
-	Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorFindResults;
+	Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorFindResultsLightMode;
+	if (preferences::SettingsHolder::Get()->Appearance->DarkMode)
+		Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorFindResultsDarkMode;
+
 	InlineSearchPanel->MarkerBrush = gcnew Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B));
 
 	RefreshTextView();
@@ -1518,8 +1545,13 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	TextField->VerticalScrollBarVisibility = System::Windows::Controls::ScrollBarVisibility::Hidden;
 	UpdateSyntaxHighlighting(true);
 
-	Color ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
-	Color BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
+	Color ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColorLightMode;
+	Color BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColorLightMode;
+	if (preferences::SettingsHolder::Get()->Appearance->DarkMode)
+	{
+		ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColorDarkMode;
+		BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColorDarkMode;
+	}
 	auto ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, ForegroundColor.R, ForegroundColor.G, ForegroundColor.B));
 	auto BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B));
 
@@ -1533,7 +1565,10 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	else
 		TextField->TextArea->IndentationStrategy = gcnew AvalonEdit::Indentation::DefaultIndentationStrategy();
 
-	Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorFindResults;
+	Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorFindResultsLightMode;
+	if (preferences::SettingsHolder::Get()->Appearance->DarkMode)
+		Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorFindResultsDarkMode;
+
 	InlineSearchPanel = AvalonEdit::Search::SearchPanel::Install(TextField);
 	InlineSearchPanel->MarkerBrush = gcnew Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B));
 	InlineSearchPanel->SearchOptionsChanged += SearchPanelSearchOptionsChangedHandler;
@@ -1578,12 +1613,18 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	SetTextPrologAnimationCache = nullptr;
 
 	TextFieldInUpdateFlag = false;
+	TextFieldDisplayingStaticText = false;
 	PreviousLineBuffer = -1;
 	SemanticAnalysisCache = gcnew obScriptParsing::AnalysisData();
 
 	LineTracker = gcnew LineTrackingManager(TextField, ParentScriptDocument);
 	IconBarMargin = gcnew DefaultIconMargin(TextField, ParentScriptDocument, WindowHandle);
 	TextField->TextArea->LeftMargins->Insert(0, IconBarMargin);
+
+	if (preferences::SettingsHolder::Get()->Appearance->ShowIconMargin)
+		IconBarMargin->Visibility = System::Windows::Visibility::Visible;
+	else
+		IconBarMargin->Visibility = System::Windows::Visibility::Hidden;
 
 	StructureVisualizer = gcnew StructureVisualizerRenderer(this);
 
@@ -1630,7 +1671,7 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	ScrollBarSyncTimer->Tick += ScrollBarSyncTimerTickHandler;
 	ExternalVerticalScrollBar->ValueChanged += ExternalScrollBarValueChangedHandler;
 	ExternalHorizontalScrollBar->ValueChanged += ExternalScrollBarValueChangedHandler;
-	preferences::SettingsHolder::Get()->SavedToDisk += ScriptEditorPreferencesSavedHandler;
+	preferences::SettingsHolder::Get()->PreferencesChanged += ScriptEditorPreferencesSavedHandler;
 	TextField->TextArea->TextView->VisualLineConstructionStarting += TextFieldVisualLineConstructionStartingHandler;
 }
 
@@ -1675,7 +1716,7 @@ AvalonEditTextEditor::~AvalonEditTextEditor()
 	ScrollBarSyncTimer->Tick -= ScrollBarSyncTimerTickHandler;
 	ExternalVerticalScrollBar->ValueChanged -= ExternalScrollBarValueChangedHandler;
 	ExternalHorizontalScrollBar->ValueChanged -= ExternalScrollBarValueChangedHandler;
-	preferences::SettingsHolder::Get()->SavedToDisk -= ScriptEditorPreferencesSavedHandler;
+	preferences::SettingsHolder::Get()->PreferencesChanged -= ScriptEditorPreferencesSavedHandler;
 	TextField->TextArea->TextView->VisualLineConstructionStarting -= TextFieldVisualLineConstructionStartingHandler;
 	InlineSearchPanel->SearchOptionsChanged -= SearchPanelSearchOptionsChangedHandler;
 
@@ -1742,6 +1783,7 @@ void AvalonEditTextEditor::Bind()
 	IsFocused = true;
 	ScrollBarSyncTimer->Start();
 	FocusTextArea();
+	ScrollToCaret();
 }
 
 void AvalonEditTextEditor::Unbind()
@@ -1749,11 +1791,6 @@ void AvalonEditTextEditor::Unbind()
 	IsFocused = false;
 	ScrollBarSyncTimer->Stop();
 	Windows::Input::Keyboard::ClearFocus();
-}
-
-void DummyOutputWrapper(int Line, String^ Message)
-{
-	;//
 }
 
 String^ AvalonEditTextEditor::GetText(void)
@@ -1771,35 +1808,14 @@ String^ AvalonEditTextEditor::GetText(UInt32 LineNumber)
 
 void AvalonEditTextEditor::SetText(String^ Text, bool ResetUndoStack)
 {
+	if (TextFieldDisplayingStaticText)
+		throw gcnew InvalidOperationException("Cannot modify text in read-only mode");
+
 	Text = SanitizeUnicodeString(Text);
 
 	SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::SuppressOnce);
 	RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::Event::Reset);
-
-	if (SetTextAnimating == false)
-	{
-		SetTextAnimating = true;
-
-		TextFieldPanel->Children->Add(AnimationPrimitive);
-
-		AnimationPrimitive->Fill = gcnew System::Windows::Media::VisualBrush(TextField);
-		AnimationPrimitive->Height = TextField->ActualHeight;
-		AnimationPrimitive->Width = TextField->ActualWidth;
-
-		TextFieldPanel->Children->Remove(TextField);
-
-		System::Windows::Media::Animation::DoubleAnimation^ FadeOutAnimation = gcnew System::Windows::Media::Animation::DoubleAnimation(1.0, 0.0,
-			System::Windows::Duration(System::TimeSpan::FromMilliseconds(kSetTextFadeAnimationDuration)),
-			System::Windows::Media::Animation::FillBehavior::Stop);
-		SetTextPrologAnimationCache = FadeOutAnimation;
-
-		FadeOutAnimation->Completed += SetTextAnimationCompletedHandler;
-		System::Windows::Media::Animation::Storyboard^ FadeOutStoryBoard = gcnew System::Windows::Media::Animation::Storyboard();
-		FadeOutStoryBoard->Children->Add(FadeOutAnimation);
-		FadeOutStoryBoard->SetTargetName(FadeOutAnimation, AnimationPrimitive->Name);
-		FadeOutStoryBoard->SetTargetProperty(FadeOutAnimation, gcnew System::Windows::PropertyPath(AnimationPrimitive->OpacityProperty));
-		FadeOutStoryBoard->Begin(TextFieldPanel);
-	}
+	FadeOutCurrentTextView();
 
 	if (ResetUndoStack)
 		TextField->Text = Text;
@@ -1822,6 +1838,9 @@ String^ AvalonEditTextEditor::GetSelectedText(void)
 
 void AvalonEditTextEditor::SetSelectedText(String^ Text)
 {
+	if (TextFieldDisplayingStaticText)
+		throw gcnew InvalidOperationException("Cannot modify text in read-only mode");
+
 	SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::SuppressOnce);
 
 	TextField->SelectedText = Text;
@@ -1857,6 +1876,34 @@ Point AvalonEditTextEditor::GetPositionFromCharIndex(int Index, bool Absolute)
 	}
 }
 
+void AvalonEditTextEditor::FadeOutCurrentTextView()
+{
+	if (SetTextAnimating)
+		return;
+
+	SetTextAnimating = true;
+
+	TextFieldPanel->Children->Add(AnimationPrimitive);
+
+	AnimationPrimitive->Fill = gcnew System::Windows::Media::VisualBrush(TextField);
+	AnimationPrimitive->Height = TextField->ActualHeight;
+	AnimationPrimitive->Width = TextField->ActualWidth;
+
+	TextFieldPanel->Children->Remove(TextField);
+
+	System::Windows::Media::Animation::DoubleAnimation^ FadeOutAnimation = gcnew System::Windows::Media::Animation::DoubleAnimation(1.0, 0.0,
+		System::Windows::Duration(System::TimeSpan::FromMilliseconds(kSetTextFadeAnimationDuration)),
+		System::Windows::Media::Animation::FillBehavior::Stop);
+	SetTextPrologAnimationCache = FadeOutAnimation;
+
+	FadeOutAnimation->Completed += SetTextAnimationCompletedHandler;
+	System::Windows::Media::Animation::Storyboard^ FadeOutStoryBoard = gcnew System::Windows::Media::Animation::Storyboard();
+	FadeOutStoryBoard->Children->Add(FadeOutAnimation);
+	FadeOutStoryBoard->SetTargetName(FadeOutAnimation, AnimationPrimitive->Name);
+	FadeOutStoryBoard->SetTargetProperty(FadeOutAnimation, gcnew System::Windows::PropertyPath(AnimationPrimitive->OpacityProperty));
+	FadeOutStoryBoard->Begin(TextFieldPanel);
+}
+
 String^ AvalonEditTextEditor::GetTokenAtCharIndex(int Offset)
 {
 	return GetTokenAtLocation(Offset, false)->Replace("\r\n", "")->Replace("\n", "");
@@ -1869,6 +1916,9 @@ String^ AvalonEditTextEditor::GetTokenAtCaretPos()
 
 void AvalonEditTextEditor::SetTokenAtCaretPos(String^ Replacement)
 {
+	if (TextFieldDisplayingStaticText)
+		throw gcnew InvalidOperationException("Cannot modify text in read-only mode");
+
 	GetTokenAtLocation(Caret - 1, true);
 	TextField->SelectedText = Replacement;
 	Caret = TextField->SelectionStart + TextField->SelectionLength;
@@ -1889,45 +1939,14 @@ void AvalonEditTextEditor::FocusTextArea()
 	WPFFocusHelper::Focus(TextField);
 }
 
-void AvalonEditTextEditor::LoadFileFromDisk(String^ Path)
+FindReplaceResult^ AvalonEditTextEditor::FindReplace(eFindReplaceOperation Operation, String^ Query, String^ Replacement, eFindReplaceOptions Options)
 {
-	try
-	{
-		SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::SuppressAlways);
-		StreamReader^ Reader = gcnew StreamReader(Path);
-		String^ FileText = Reader->ReadToEnd();
-		SetText(FileText, false);
-		Reader->Close();
-		SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::Propagate);
-	}
-	catch (Exception^ E)
-	{
-		DebugPrint("Error encountered when opening file for read operation!\n\tError Message: " + E->Message);
-		SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::Propagate);
-	}
-}
+	if (Operation == eFindReplaceOperation::Replace && TextFieldDisplayingStaticText)
+		throw gcnew InvalidOperationException("Cannot replace text in read-only mode");
 
-void AvalonEditTextEditor::SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ DefaultName, String^ DefaultExtension)
-{
-	if (PathIncludesFileName == false)
-		Path += "\\" + DefaultName + "." + DefaultExtension;
+	auto Result = gcnew FindReplaceResult;
 
-	try
-	{
-		TextField->Save(Path);
-	}
-	catch (Exception^ E)
-	{
-		DebugPrint("Error encountered when opening file for write operation!\n\tError Message: " + E->Message);
-	}
-}
-
-ITextEditor::FindReplaceResult^ AvalonEditTextEditor::FindReplace(ITextEditor::eFindReplaceOperation Operation,
-																		String^ Query, String^ Replacement, ITextEditor::eFindReplaceOptions Options)
-{
-	ITextEditor::FindReplaceResult^ Result = gcnew ITextEditor::FindReplaceResult;
-
-	if (Operation != ITextEditor::eFindReplaceOperation::CountMatches)
+	if (Operation != eFindReplaceOperation::CountMatches)
 	{
 		BeginUpdate();
 		LineTracker->ClearFindResultSegments();
@@ -1937,17 +1956,17 @@ ITextEditor::FindReplaceResult^ AvalonEditTextEditor::FindReplace(ITextEditor::e
 	{
 		String^ Pattern = "";
 
-		if (Options.HasFlag(ITextEditor::eFindReplaceOptions::RegEx))
+		if (Options.HasFlag(eFindReplaceOptions::RegEx))
 			Pattern = Query;
 		else
 		{
 			Pattern = System::Text::RegularExpressions::Regex::Escape(Query);
-			if (Options.HasFlag(ITextEditor::eFindReplaceOptions::MatchWholeWord))
+			if (Options.HasFlag(eFindReplaceOptions::MatchWholeWord))
 				Pattern = "\\b" + Pattern + "\\b";
 		}
 
 		System::Text::RegularExpressions::Regex^ Parser = nullptr;
-		if (Options.HasFlag(ITextEditor::eFindReplaceOptions::CaseInsensitive))
+		if (Options.HasFlag(eFindReplaceOptions::CaseInsensitive))
 		{
 			Parser = gcnew System::Text::RegularExpressions::Regex(Pattern,
 																	System::Text::RegularExpressions::RegexOptions::IgnoreCase | System::Text::RegularExpressions::RegexOptions::Singleline);
@@ -1960,7 +1979,7 @@ ITextEditor::FindReplaceResult^ AvalonEditTextEditor::FindReplace(ITextEditor::e
 
 		AvalonEdit::Editing::Selection^ TextSelection = TextField->TextArea->Selection;
 
-		if (Options.HasFlag(ITextEditor::eFindReplaceOptions::InSelection))
+		if (Options.HasFlag(eFindReplaceOptions::InSelection))
 		{
 			if (TextSelection->IsEmpty == false)
 			{
@@ -2006,19 +2025,11 @@ ITextEditor::FindReplaceResult^ AvalonEditTextEditor::FindReplace(ITextEditor::e
 		DebugPrint("Couldn't perform find/replace operation!\n\tException: " + E->Message);
 	}
 
-	if (Operation != ITextEditor::eFindReplaceOperation::CountMatches)
+	if (Operation != eFindReplaceOperation::CountMatches)
 	{
 		SetSelectionLength(0);
 		LineTracker->LineBackgroundRenderer->Redraw();
 		EndUpdate(false);
-	}
-
-	if (Result->HasError)
-	{
-		MessageBox::Show("An error occurred while performing the find/replace operation. Please recheck your search and/or replacement strings.",
-							SCRIPTEDITOR_TITLE,
-							MessageBoxButtons::OK,
-							MessageBoxIcon::Exclamation);
 	}
 
 	return Result;
@@ -2089,6 +2100,36 @@ ILineAnchor^ AvalonEditTextEditor::CreateLineAnchor(UInt32 Line)
 	return LineTracker->CreateLineAnchor(Line, false);
 }
 
+void AvalonEditTextEditor::InvokeDefaultCopy()
+{
+	TextField->Copy();
+}
+
+void AvalonEditTextEditor::InvokeDefaultPaste()
+{
+	TextField->Paste();
+}
+
+void AvalonEditTextEditor::CommentLine(UInt32 Line)
+{
+	PerformCommentOperationOnSingleLine(Line, eCommentOperation::Add);
+}
+
+void AvalonEditTextEditor::CommentSelection()
+{
+	PerformCommentOperationOnSelection(eCommentOperation::Add);
+}
+
+void AvalonEditTextEditor::UncommentLine(UInt32 Line)
+{
+	PerformCommentOperationOnSingleLine(Line, eCommentOperation::Remove);
+}
+
+void AvalonEditTextEditor::UncommentSelection()
+{
+	PerformCommentOperationOnSelection(eCommentOperation::Remove);
+}
+
 void AvalonEditTextEditor::InitializeState(String^ ScriptText, int CaretPosition)
 {
 	ResetExternalScrollBars();
@@ -2099,6 +2140,29 @@ void AvalonEditTextEditor::InitializeState(String^ ScriptText, int CaretPosition
 	FocusTextArea();
 }
 
+void AvalonEditTextEditor::BeginDisplayingStaticText(String^ TextToDisplay)
+{
+	Debug::Assert(!TextFieldDisplayingStaticText);
+
+	TextField->IsReadOnly = true;
+	TextField->Document->UndoStack->StartUndoGroup();
+	SetText(TextToDisplay, false);
+
+	TextFieldDisplayingStaticText = true;
+}
+
+void AvalonEditTextEditor::EndDisplayingStaticText()
+{
+	Debug::Assert(TextFieldDisplayingStaticText);
+
+	FadeOutCurrentTextView();
+	TextField->IsReadOnly = false;
+	TextField->Document->UndoStack->EndUndoGroup();
+	TextField->Document->UndoStack->Undo();
+	TextField->Document->UndoStack->ClearRedoStack();
+
+	TextFieldDisplayingStaticText = false;
+}
 
 } // namespace avalonEdit
 

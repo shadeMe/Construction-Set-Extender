@@ -51,7 +51,7 @@ namespace cse
 			TextEditor->MouseClick += TextEditorMouseClickHandler;
 			TextEditor->LineAnchorInvalidated += TextEditorLineAnchorInvalidatedHandler;
 			BackgroundAnalysis->SemanticAnalysisComplete += BackgroundAnalyzerAnalysisCompleteHandler;
-			preferences::SettingsHolder::Get()->SavedToDisk += ScriptEditorPreferencesSavedHandler;
+			preferences::SettingsHolder::Get()->PreferencesChanged += ScriptEditorPreferencesSavedHandler;
 			AutoSaveTimer->Tick += AutoSaveTimerTickHandler;
 
 			AutoSaveTimer->Start();
@@ -73,7 +73,7 @@ namespace cse
 			TextEditor->MouseClick -= TextEditorMouseClickHandler;
 			TextEditor->LineAnchorInvalidated -= TextEditorLineAnchorInvalidatedHandler;
 			BackgroundAnalysis->SemanticAnalysisComplete -= BackgroundAnalyzerAnalysisCompleteHandler;
-			preferences::SettingsHolder::Get()->SavedToDisk -= ScriptEditorPreferencesSavedHandler;
+			preferences::SettingsHolder::Get()->PreferencesChanged -= ScriptEditorPreferencesSavedHandler;
 			AutoSaveTimer->Tick -= AutoSaveTimerTickHandler;
 
 			SAFEDELETE_CLR(TextEditorKeyDownHandler);

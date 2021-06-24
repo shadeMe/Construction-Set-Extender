@@ -349,7 +349,7 @@ bool Button::GetterChecked()
 		return CheckBoxX->Checked;
 	}
 
-	return nullptr;
+	return false;
 }
 
 bool Button::GetterVisible()
@@ -364,7 +364,22 @@ bool Button::GetterVisible()
 		return CheckBoxX->Visible;
 	}
 
-	return nullptr;
+	return false;
+}
+
+bool Button::GetterEnabled()
+{
+	switch (SourceType)
+	{
+	case eSourceType::ButtonItem:
+		return ButtonItem->Enabled;
+	case eSourceType::ButtonX:
+		return ButtonX->Enabled;
+	case eSourceType::CheckBoxX:
+		return CheckBoxX->Enabled;
+	}
+
+	return false;
 }
 
 void Button::SetterText(String^ Value)
@@ -443,6 +458,22 @@ void Button::SetterVisible(bool Value)
 	}
 }
 
+void Button::SetterEnabled(bool Value)
+{
+	switch (SourceType)
+	{
+	case eSourceType::ButtonItem:
+		ButtonItem->Enabled = Value;
+		break;
+	case eSourceType::ButtonX:
+		ButtonX->Enabled = Value;
+		break;
+	case eSourceType::CheckBoxX:
+		CheckBoxX->Enabled = Value;
+		break;
+	}
+}
+
 Button::Button(DotNetBar::ButtonItem^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter)
 	: ViewComponent(eComponentType::Button, ViewRole, EventRouter)
 {
@@ -475,6 +506,13 @@ Button::~Button()
 	CheckBoxX = nullptr;
 }
 
+void Button::PerformClick()
+{
+	if (!Enabled)
+		return;
+
+	Handler_Click(nullptr, nullptr);
+}
 
 void ComboBox::Handler_SelectedIndexChanged(Object^ Sender, EventArgs^ E)
 {
@@ -651,6 +689,7 @@ TabStripItem::TabStripItem(DotNetBar::SuperTabItem^ Source, ITabStrip^ ParentTab
 	: ViewComponent(eComponentType::TabStripItem, eViewRole::None, nullptr)
 {
 	this->Source_ = Source;
+	this->Source_->Tag = this;
 	this->ParentTabStrip_ = ParentTabStrip;
 	Tag_ = nullptr;
 }
@@ -658,6 +697,7 @@ TabStripItem::TabStripItem(DotNetBar::SuperTabItem^ Source, ITabStrip^ ParentTab
 TabStripItem::~TabStripItem()
 {
 	Tag_ = nullptr;
+	Source_->Tag = nullptr;
 	Source_ = nullptr;
 	ParentTabStrip_ = nullptr;
 }
@@ -671,7 +711,6 @@ TabStripItem^ TabStripItem::New(ITabStrip^ ParentTabStrip)
 {
 	auto Source = gcnew SuperTabItem;
 	auto Wrapper = gcnew TabStripItem(Source, ParentTabStrip);
-	Source->Tag = Wrapper;
 	return Wrapper;
 }
 
@@ -688,7 +727,7 @@ void TabStrip::Handler_TabItemClose(Object^ Sender, DotNetBar::SuperTabStripTabI
 
 void TabStrip::Handler_SelectedTabChanged(Object^ Sender, DotNetBar::SuperTabStripSelectedTabChangedEventArgs^ E)
 {
-	auto EventArgs = gcnew ITabStrip::ActiveTabChanged;
+	auto EventArgs = gcnew ITabStrip::ActiveTabChangedEventArgs;
 	EventArgs->OldValue = TabStripItem::FromSuperTabItem(safe_cast<SuperTabItem^>(E->OldValue));
 	EventArgs->NewValue = TabStripItem::FromSuperTabItem(safe_cast<SuperTabItem^>(E->NewValue));
 
@@ -706,6 +745,16 @@ void TabStrip::Handler_TabStripMouseClick(Object^ Sender, MouseEventArgs^ E)
 
 void TabStrip::Handler_TabMoving(Object^ Sender, DotNetBar::SuperTabStripTabMovingEventArgs^ E)
 {
+	// prevent the tab from moving behind any non-tab items
+	if (E->InsertBefore)
+	{
+		if (E->InsertTab == nullptr || E->InsertTab->GetType() != DotNetBar::SuperTabItem::typeid)
+		{
+			E->CanMove = false;
+			return;
+		}
+	}
+
 	auto EventArgs = gcnew ITabStrip::TabMovingEventArgs;
 	EventArgs->Tab = TabStripItem::FromSuperTabItem(safe_cast<SuperTabItem^>(E->MoveTab));
 
@@ -714,10 +763,14 @@ void TabStrip::Handler_TabMoving(Object^ Sender, DotNetBar::SuperTabStripTabMovi
 
 SuperTabItem^ TabStrip::GetMouseOverTab()
 {
-	for each (DotNetBar::SuperTabItem^ Itr in Source->Tabs)
+	for each (auto Itr in Source->Tabs)
 	{
-		if (Itr->IsMouseOver)
-			return Itr;
+		if (Itr->GetType() != DotNetBar::SuperTabItem::typeid)
+			continue;
+
+		auto Item = safe_cast<DotNetBar::SuperTabItem^>(Itr);
+		if (Item->IsMouseOver)
+			return Item;
 	}
 
 	return nullptr;
@@ -727,6 +780,19 @@ void TabStrip::SelectTab(SuperTabItem^ Tab)
 {
 	Source->SelectedTab = Tab;
 	Source->TabStrip->EnsureVisible(Tab);
+}
+
+SuperTabItem^ TabStrip::GetFirstTabItem()
+{
+	for each (auto Itr in Source->Tabs)
+	{
+		if (Itr->GetType() != DotNetBar::SuperTabItem::typeid)
+			continue;
+
+		return safe_cast<DotNetBar::SuperTabItem^>(Itr);
+	}
+
+	return nullptr;
 }
 
 TabStrip::TabStrip(DotNetBar::SuperTabControl^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter)
@@ -770,7 +836,10 @@ ITabStripItem^ TabStrip::ActiveTab::get()
 void TabStrip::ActiveTab::set(ITabStripItem^ v)
 {
 	auto TabItem = safe_cast<TabStripItem^>(v);
-	Source->SelectedTab = TabItem->Source;
+	Debug::Assert(TabItem->Parent == this);
+	Debug::Assert(Source->Tabs->Contains(TabItem->Source));
+
+	SelectTab(TabItem->Source);
 }
 
 ITabStripItem^ TabStrip::AllocateNewTab()
@@ -781,27 +850,20 @@ ITabStripItem^ TabStrip::AllocateNewTab()
 void TabStrip::AddTab(ITabStripItem^ Tab)
 {
 	auto TabItem = safe_cast<TabStripItem^>(Tab);
+	Debug::Assert(Tab->Parent == this);
 	Source->Tabs->Add(TabItem->Source);
 }
 
 void TabStrip::RemoveTab(ITabStripItem^ Tab)
 {
 	auto TabItem = safe_cast<TabStripItem^>(Tab);
+	Debug::Assert(Tab->Parent == this);
 	Source->Tabs->Remove(TabItem->Source);
 }
 
-ITabStripItem^ TabStrip::GetNthTab(UInt32 Index)
+void TabStrip::SelectPreviousTab()
 {
-	if (Index >= Source->Tabs->Count)
-		return nullptr;
-
-	auto TabItem = safe_cast<DotNetBar::SuperTabItem^>(Source->Tabs[Index]);
-	return TabStripItem::FromSuperTabItem(TabItem);
-}
-
-void TabStrip::SelectNextTab()
-{
-	if (Source->Tabs->Count == 1)
+	if (Source->Tabs->Count < 2)
 		return;
 
 	if (!Source->SelectPreviousTab())
@@ -811,14 +873,14 @@ void TabStrip::SelectNextTab()
 	}
 }
 
-void TabStrip::SelectPreviousTab()
+void TabStrip::SelectNextTab()
 {
-	if (Source->Tabs->Count == 1)
+	if (Source->Tabs->Count < 2)
 		return;
 
 	if (!Source->SelectNextTab())
 	{
-		auto Tab = safe_cast<DotNetBar::SuperTabItem^>(Source->Tabs[0]);
+		auto Tab = GetFirstTabItem();
 		SelectTab(Tab);
 	}
 }
@@ -828,6 +890,7 @@ ObjectListViewColumn::ObjectListViewColumn(BrightIdeasSoftware::OLVColumn^ Sourc
 	: ViewComponent(eComponentType::ObjectListViewColumn, eViewRole::None, nullptr)
 {
 	this->Source_ = Source;
+	this->Source_->Tag = this;
 	this->ParentListView_ = ParentListView;
 
 	DelegateAspectGetter = nullptr;
@@ -865,6 +928,7 @@ ObjectListViewColumn::~ObjectListViewColumn()
 	SAFEDELETE_CLR(DelegateWrapperAspectToStringConverter);
 	SAFEDELETE_CLR(DelegateWrapperImageGetter);
 
+	Source_->Tag = nullptr;
 	Source_ = nullptr;
 }
 
@@ -895,7 +959,6 @@ ObjectListViewColumn^ ObjectListViewColumn::New(IObjectListView^ Parent)
 {
 	auto Source = gcnew BrightIdeasSoftware::OLVColumn;
 	auto Wrapper = gcnew ObjectListViewColumn(Source, Parent);
-	Source->Tag = Wrapper;
 	return Wrapper;
 }
 
@@ -992,6 +1055,7 @@ IObjectListViewColumn^ ObjectListView::AllocateNewColumn()
 void ObjectListView::AddColumn(IObjectListViewColumn^ Column)
 {
 	auto ColData = safe_cast<ObjectListViewColumn^>(Column);
+	Debug::Assert(ColData->Parent == this);
 
 	Source->AllColumns->Add(ColData->Source);
 	Source->Columns->Add(ColData->Source);

@@ -55,8 +55,9 @@ namespace componentDLLInterface
 		public:
 			ScriptData*								(* CreateNewScript)(void);
 			void									(* DestroyScriptInstance)(void* CurrentScript);
+			bool									(* IsUnsavedNewScript)(void* CurrentScript);
 			bool									(* CompileScript)(ScriptCompileData* Data);
-			void									(* RecompileScripts)(void);
+			void									(* RecompileAllScriptsInActiveFile)(void);
 			void									(* ToggleScriptCompilation)(bool State);
 			void									(* DeleteScript)(const char* EditorID);
 			ScriptData*								(* GetPreviousScriptInList)(void* CurrentScript);

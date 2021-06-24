@@ -207,7 +207,7 @@ BackgroundSemanticAnalyzer::BackgroundSemanticAnalyzer(model::IScriptDocument^ P
 	ParentScriptDocumentStateChangedHandler = gcnew model::IScriptDocument::StateChangeEventHandler(this, &BackgroundSemanticAnalyzer::ParentScriptDocument_StateChanged);
 	QueuePollTimerTickHandler = gcnew EventHandler(this, &BackgroundSemanticAnalyzer::QueuePollTimer_Tick);
 
-	preferences::SettingsHolder::Get()->SavedToDisk += PreferencesChangedHandler;
+	preferences::SettingsHolder::Get()->PreferencesChanged += PreferencesChangedHandler;
 	QueuePollTimer->Tick += QueuePollTimerTickHandler;
 	ParentScriptDocument->StateChanged += ParentScriptDocumentStateChangedHandler;
 }
@@ -217,7 +217,7 @@ BackgroundSemanticAnalyzer::~BackgroundSemanticAnalyzer()
 	WaitForBackgroundTask();
 	QueuePollTimer->Stop();
 
-	preferences::SettingsHolder::Get()->SavedToDisk -= PreferencesChangedHandler;
+	preferences::SettingsHolder::Get()->PreferencesChanged -= PreferencesChangedHandler;
 	QueuePollTimer->Tick -= QueuePollTimerTickHandler;
 	ParentScriptDocument->StateChanged -= ParentScriptDocumentStateChangedHandler;
 

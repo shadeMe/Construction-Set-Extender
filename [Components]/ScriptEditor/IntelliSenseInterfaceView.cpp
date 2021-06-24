@@ -35,7 +35,7 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView()
 	ListView->ItemActivate += ListViewItemActivateHandler;
 	ListView->SelectedIndexChanged += ListViewSelectionChangedHandler;
 	ListView->FormatRow += ListViewFormatRowHandler;
-	preferences::SettingsHolder::Get()->SavedToDisk += ScriptEditorPreferencesSavedHandler;
+	preferences::SettingsHolder::Get()->PreferencesChanged += ScriptEditorPreferencesSavedHandler;
 
 	Form->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 	Form->AutoScaleMode = AutoScaleMode::Font;
@@ -105,7 +105,7 @@ IntelliSenseInterfaceView::~IntelliSenseInterfaceView()
 	ListView->ItemActivate -= ListViewItemActivateHandler;
 	ListView->SelectedIndexChanged -= ListViewSelectionChangedHandler;
 	ListView->FormatRow -= ListViewFormatRowHandler;
-	preferences::SettingsHolder::Get()->SavedToDisk -= ScriptEditorPreferencesSavedHandler;
+	preferences::SettingsHolder::Get()->PreferencesChanged -= ScriptEditorPreferencesSavedHandler;
 
 	SAFEDELETE_CLR(ListViewKeyDownHandler);
 	SAFEDELETE_CLR(ListViewKeyUpHandler);

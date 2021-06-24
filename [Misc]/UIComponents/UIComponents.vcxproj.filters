@@ -22,19 +22,19 @@
     <ClCompile Include="ScriptEditorWorkspace.cpp">
       <Filter>Header Files\ScriptEditor</Filter>
     </ClCompile>
-    <ClCompile Include="ScriptEditorSelectScripts.cpp">
+    <ClCompile Include="ScriptSelectionDialog.cpp">
       <Filter>Header Files\ScriptEditor</Filter>
     </ClCompile>
-    <ClCompile Include="ScriptEditorScriptSync.cpp">
+    <ClCompile Include="ScriptSyncDialog.cpp">
       <Filter>Header Files\ScriptEditor</Filter>
     </ClCompile>
-    <ClCompile Include="ScriptEditorCodeSnippets.cpp">
+    <ClCompile Include="CodeSnippetsDialog.cpp">
       <Filter>Header Files\ScriptEditor</Filter>
     </ClCompile>
-    <ClCompile Include="ScriptEditorPreferences.cpp">
+    <ClCompile Include="PreferencesDialog.cpp">
       <Filter>Header Files\ScriptEditor</Filter>
     </ClCompile>
-    <ClCompile Include="ScriptEditorRefactorForm.cpp">
+    <ClCompile Include="RefactorListViewDialog.cpp">
       <Filter>Header Files\ScriptEditor</Filter>
     </ClCompile>
     <ClCompile Include="AssemblyInfo.cpp" />
@@ -59,19 +59,19 @@
     <ClInclude Include="ScriptEditorWorkspace.h">
       <Filter>Header Files\ScriptEditor</Filter>
     </ClInclude>
-    <ClInclude Include="ScriptEditorSelectScripts.h">
+    <ClInclude Include="ScriptSelectionDialog.h">
       <Filter>Header Files\ScriptEditor</Filter>
     </ClInclude>
-    <ClInclude Include="ScriptEditorScriptSync.h">
+    <ClInclude Include="ScriptSyncDialog.h">
       <Filter>Header Files\ScriptEditor</Filter>
     </ClInclude>
-    <ClInclude Include="ScriptEditorCodeSnippets.h">
+    <ClInclude Include="CodeSnippetsDialog.h">
       <Filter>Header Files\ScriptEditor</Filter>
     </ClInclude>
-    <ClInclude Include="ScriptEditorPreferences.h">
+    <ClInclude Include="PreferencesDialog.h">
       <Filter>Header Files\ScriptEditor</Filter>
     </ClInclude>
-    <ClInclude Include="ScriptEditorRefactorForm.h">
+    <ClInclude Include="RefactorListViewDialog.h">
       <Filter>Header Files\ScriptEditor</Filter>
     </ClInclude>
   </ItemGroup>

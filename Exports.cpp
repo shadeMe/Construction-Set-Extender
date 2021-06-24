@@ -532,6 +532,13 @@ void DestroyScriptInstance(void* CurrentScript)
 	ScriptForm->DeleteInstance();
 }
 
+bool IsUnsavedNewScript(void* CurrentScript)
+{
+	auto ScriptForm = CS_CAST(CurrentScript, TESForm, Script);
+
+	return ScriptForm->GetEditorID() == nullptr && ScriptForm->data == nullptr;
+}
+
 void SaveEditorBoundsToINI(UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
 {
 	char Buffer[0x200] = {0};
@@ -557,6 +564,9 @@ ScriptListData* GetScriptList(void)
 		for (tList<Script>::Iterator Itr = _DATAHANDLER->scripts.Begin(); !Itr.End() && Itr.Get(); ++Itr)
 		{
 			Script* ScriptForm = Itr.Get();
+			if (ScriptForm->GetEditorID() == nullptr)
+				continue;
+
 			Result->ScriptListHead[i].FillScriptData(ScriptForm);
 			i++;
 		}
@@ -1336,6 +1346,7 @@ componentDLLInterface::CSEInterfaceTable g_InteropInterface =
 	{
 		CreateNewScript,
 		DestroyScriptInstance,
+		IsUnsavedNewScript,
 		CompileScript,
 		RecompileScripts,
 		ToggleScriptCompilation,

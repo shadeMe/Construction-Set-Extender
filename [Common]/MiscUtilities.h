@@ -31,8 +31,7 @@ namespace cse
 	public:
 		ImageResourceManager(String^ BaseName);
 
-		Image^				CreateImage(String^ ResourceIdentifier);
-		void				SetupImageForToolStripButton(ToolStripButton^ Control);
+		Image^ CreateImage(String^ ResourceIdentifier);
 	};
 
 	ref class CSEControlDisposer

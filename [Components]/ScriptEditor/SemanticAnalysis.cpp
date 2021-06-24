@@ -642,7 +642,7 @@ namespace cse
 		AnalysisMessages->Clear();
 	}
 
-	void obScriptParsing::AnalysisData::PerformAnalysis(Params^ Parameters)
+	AnalysisData^ obScriptParsing::AnalysisData::PerformAnalysis(Params^ Parameters)
 	{
 		auto ScriptText = Parameters->ScriptText;
 		auto Type = Parameters->Type;
@@ -1104,6 +1104,8 @@ namespace cse
 		Profiler->Stop();
 	//	DebugPrint("Analysis of script '" + Name + "' complete. Time = " + Profiler->ElapsedMilliseconds + " ms, Flags = " + Operations.ToString());
 #endif // !NDEBUG
+
+		return this;
 	}
 
 	obScriptParsing::Variable^ obScriptParsing::AnalysisData::LookupVariable(String^ VarName)

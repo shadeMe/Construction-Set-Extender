@@ -194,7 +194,7 @@ namespace cse
 			ParentModelOnStateChangedDirtyHandler = gcnew IWorkspaceModel::StateChangeEventHandler(this, &ScriptBackgroundAnalysis::ParentModel_OnStateChangedDirty);
 			QueuePollTimerTickHandler = gcnew EventHandler(this, &ScriptBackgroundAnalysis::QueuePollTimer_Tick);
 
-			preferences::SettingsHolder::Get()->SavedToDisk += PreferencesChangedHandler;
+			preferences::SettingsHolder::Get()->PreferencesChanged += PreferencesChangedHandler;
 			QueuePollTimer->Tick += QueuePollTimerTickHandler;
 			ParentModel->StateChanged += ParentModelOnStateChangedDirtyHandler;
 		}
@@ -204,7 +204,7 @@ namespace cse
 			WaitForBackgroundTask();
 			QueuePollTimer->Stop();
 
-			preferences::SettingsHolder::Get()->SavedToDisk -= PreferencesChangedHandler;
+			preferences::SettingsHolder::Get()->PreferencesChanged -= PreferencesChangedHandler;
 			QueuePollTimer->Tick -= QueuePollTimerTickHandler;
 			ParentModel->StateChanged -= ParentModelOnStateChangedDirtyHandler;
 

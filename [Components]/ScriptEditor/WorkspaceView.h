@@ -4,7 +4,7 @@
 #include "AuxiliaryTextEditor.h"
 #include "WorkspaceViewInterface.h"
 #include "WorkspaceModelInterface.h"
-#include "SelectScriptDialog.h"
+#include "ScriptSelectionDialog.h"
 #include "FindReplaceDialog.h"
 #include "TextEditorAdornments.h"
 

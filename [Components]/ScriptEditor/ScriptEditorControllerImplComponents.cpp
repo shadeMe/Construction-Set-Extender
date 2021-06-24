@@ -1,5 +1,6 @@
 #include "ScriptEditorControllerImplComponents.h"
 #include "Preferences.h"
+#include "IntelliSenseDatabase.h"
 
 
 namespace cse
@@ -10,7 +11,7 @@ namespace scriptEditor
 {
 
 
-namespace controller
+namespace controllerImpl
 {
 
 
@@ -29,8 +30,8 @@ void ViewTabTearingHelper::TearingEventHandler(Object^ Sender, MouseEventArgs^ E
 	{
 	case MouseButtons::Left:
 		{
-			Debug::Assert(Torn != nullptr);
-			Debug::Assert(Source != nullptr);
+			Debug::Assert(TornDocument != nullptr);
+			Debug::Assert(SourceController != nullptr);
 
 			bool Relocated = false;
 			bool SameTabStrip = false;
@@ -53,13 +54,15 @@ void ViewTabTearingHelper::TearingEventHandler(Object^ Sender, MouseEventArgs^ E
 
 					if (TabStrip)
 					{
-						auto ParentView = TabStrip->Parent;
-						if (ParentView == Source)
+						Debug::Assert(ActiveTabStrips->ContainsKey(TabStrip));
+
+						auto ParentController = ActiveTabStrips[TabStrip];
+						if (ParentController == SourceController)
 							SameTabStrip = true;
 						else
 						{
-							// ### TODO relocate to the new view
 							Relocated = true;
+							ParentController->RelocateDocument(TornDocument, SourceController);
 						}
 					}
 				}
@@ -67,7 +70,13 @@ void ViewTabTearingHelper::TearingEventHandler(Object^ Sender, MouseEventArgs^ E
 
 			if (!Relocated && !SameTabStrip)
 			{
-				// ### TODO create new view and relocate
+				auto NewBounds = SourceController->View->GetComponentByRole(view::eViewRole::MainWindow)->AsForm()->Bounds;
+				NewBounds.X = E->Location.X;
+				NewBounds.Y = E->Location.Y;
+
+				auto NewController = SourceController->New(NewBounds);
+				NewController->RelocateDocument(TornDocument, SourceController);
+				NewController->View->Reveal();
 			}
 
 			End();
@@ -84,9 +93,8 @@ void ViewTabTearingHelper::End()
 	Debug::Assert(Active == true);
 
 	Active = false;
-	Torn = nullptr;
-	Source = nullptr;
-	Controller = nullptr;
+	TornDocument = nullptr;
+	SourceController = nullptr;
 	ProcessingMouseMessage = false;
 
 	GlobalInputMonitor::HookManager::MouseUp -= TearingEventDelegate;
@@ -94,11 +102,11 @@ void ViewTabTearingHelper::End()
 
 ViewTabTearingHelper::ViewTabTearingHelper()
 {
-	Torn = nullptr;
-	Source = nullptr;
-	Controller = nullptr;
+	TornDocument = nullptr;
+	SourceController = nullptr;
 	Active = false;
 	ProcessingMouseMessage = false;
+	ActiveTabStrips = gcnew Dictionary<view::components::ITabStrip^, IScriptEditorController^>;
 
 	TearingEventDelegate = gcnew MouseEventHandler(this, &ViewTabTearingHelper::TearingEventHandler);
 }
@@ -109,22 +117,35 @@ ViewTabTearingHelper::~ViewTabTearingHelper()
 		End();
 
 	SAFEDELETE_CLR(TearingEventDelegate);
+	ActiveTabStrips->Clear();
 }
 
-void ViewTabTearingHelper::InitiateHandling(model::IScriptDocument^ Tearing, view::IScriptEditorView^ From, IScriptEditorController^ ParentController)
+void ViewTabTearingHelper::InitiateHandling(model::IScriptDocument^ Tearing, IScriptEditorController^ ParentController)
 {
 	Debug::Assert(Active == false);
 	Debug::Assert(ProcessingMouseMessage == false);
 	Debug::Assert(Tearing != nullptr);
-	Debug::Assert(From != nullptr);
 	Debug::Assert(ParentController != nullptr);
 
 	Active = true;
-	Torn = Tearing;
-	Source = From;
-	Controller = ParentController;
+	TornDocument = Tearing;
+	SourceController = ParentController;
 
 	GlobalInputMonitor::HookManager::MouseUp += TearingEventDelegate;
+}
+
+void ViewTabTearingHelper::RegisterTabStrip(view::components::ITabStrip^ TabStrip, IScriptEditorController^ ParentController)
+{
+	Debug::Assert(ActiveTabStrips->ContainsKey(TabStrip) == false);
+
+	ActiveTabStrips->Add(TabStrip, ParentController);
+}
+
+void ViewTabTearingHelper::DeregisterTabStrip(view::components::ITabStrip^ TabStrip)
+{
+	Debug::Assert(ActiveTabStrips->ContainsKey(TabStrip));
+
+	ActiveTabStrips->Remove(TabStrip);
 }
 
 ViewTabTearingHelper^ ViewTabTearingHelper::Get()
@@ -310,7 +331,7 @@ DocumentNavigationHelper::DocumentNavigationHelper(view::components::ICrumbBar^ 
 	ActiveCrumbs = gcnew Dictionary<obScriptParsing::Structurizer::Node^, view::components::ICrumbBarItem^>;
 
 	PreferencesChangedEventHandler = gcnew EventHandler(this, &DocumentNavigationHelper::Preferences_Changed);
-	preferences::SettingsHolder::Get()->SavedToDisk += PreferencesChangedEventHandler;
+	preferences::SettingsHolder::Get()->PreferencesChanged += PreferencesChangedEventHandler;
 
 	CrumbBar->ClearItems();
 	CrumbBar->AddItem(Root);
@@ -318,7 +339,7 @@ DocumentNavigationHelper::DocumentNavigationHelper(view::components::ICrumbBar^ 
 
 DocumentNavigationHelper::~DocumentNavigationHelper()
 {
-	preferences::SettingsHolder::Get()->SavedToDisk -= PreferencesChangedEventHandler;
+	preferences::SettingsHolder::Get()->PreferencesChanged -= PreferencesChangedEventHandler;
 
 	SAFEDELETE_CLR(Root);
 	SAFEDELETE_CLR(PreferencesChangedEventHandler);
@@ -715,7 +736,7 @@ void FindReplaceHelper::PerformOperation(textEditor::eFindReplaceOperation Opera
 
 	auto Hits = DoOperation(Operation, Query, Replacement, Options, GlobalOperation, Controller);
 	if (Operation == textEditor::eFindReplaceOperation::CountMatches)
-		Controller->View->ShowNotification("Found " + Hits + " match(es)", nullptr, 4000);
+		Controller->View->ShowNotification("Found " + Hits + " match(es).", nullptr, 4000);
 }
 
 FindReplaceHelper::FindReplaceHelper(view::IScriptEditorView^ View)
@@ -739,7 +760,7 @@ FindReplaceHelper::FindReplaceHelper(view::IScriptEditorView^ View)
 	CachedGlobalFindReplaceResults = gcnew List<GlobalFindReplaceResult^>;
 	PreferencesChangedEventHandler = gcnew EventHandler(this, &FindReplaceHelper::Preferences_Changed);
 
-	preferences::SettingsHolder::Get()->SavedToDisk += PreferencesChangedEventHandler;
+	preferences::SettingsHolder::Get()->PreferencesChanged += PreferencesChangedEventHandler;
 	InitResultsListViews();
 	InitFindReplaceLookInDropdown();
 	LoadPreferences();
@@ -747,7 +768,7 @@ FindReplaceHelper::FindReplaceHelper(view::IScriptEditorView^ View)
 
 FindReplaceHelper::~FindReplaceHelper()
 {
-	preferences::SettingsHolder::Get()->SavedToDisk -= PreferencesChangedEventHandler;
+	preferences::SettingsHolder::Get()->PreferencesChanged -= PreferencesChangedEventHandler;
 	CachedGlobalFindReplaceResults->Clear();
 	SavePreferences();
 
@@ -780,7 +801,7 @@ void FindReplaceHelper::HandleResultsViewEvent(view::ViewComponentEvent^ E, IScr
 		{
 			auto Item = safe_cast<model::components::ScriptFindResult^>(Args->ItemModel);
 			if (Item != nullptr)
-				Controller->Model->ActiveDocument->TextEditor->ScrollToLine(Item->Line);
+				Controller->ActiveDocument->TextEditor->ScrollToLine(Item->Line);
 		}
 		else if (E->Component == GlobalFindReplaceResultsListView)
 		{
@@ -792,8 +813,8 @@ void FindReplaceHelper::HandleResultsViewEvent(view::ViewComponentEvent^ E, IScr
 				if (ScriptDocumentData != nullptr)
 				{
 					Debug::Assert(Controller->Model->ContainsDocument(ScriptDocumentData->Source));
-					Controller->Model->ActiveDocument = ScriptDocumentData->Source;
-					Controller->Model->ActiveDocument->TextEditor->ScrollToLine(Item->Line);
+					Controller->ActiveDocument = ScriptDocumentData->Source;
+					Controller->ActiveDocument->TextEditor->ScrollToLine(Item->Line);
 				}
 			}
 		}
@@ -881,7 +902,7 @@ int FindReplaceHelper::DoOperation(textEditor::eFindReplaceOperation Operation, 
 
 	if (!InAllOpenDocuments)
 	{
-		auto Result = Controller->Model->ActiveDocument->TextEditor->FindReplace(Operation, Query, Replacement, Options);
+		auto Result = Controller->ActiveDocument->TextEditor->FindReplace(Operation, Query, Replacement, Options);
 		if (Result->TotalHits > 0 && Operation != textEditor::eFindReplaceOperation::CountMatches)
 			FindReplaceResultsPane->Visible = true;
 
@@ -912,33 +933,73 @@ int FindReplaceHelper::DoOperation(textEditor::eFindReplaceOperation Operation, 
 		GlobalFindReplaceResultsPane->Visible = true;
 	}
 	else
-		Controller->View->ShowNotification("No matches were found", nullptr, 4000);
+		Controller->View->ShowNotification("No matches found.", nullptr, 4000);
 
 	return -1;
 }
 
-InputManager::KeyChordData::KeyChordData(KeyCombo^ SecondChord, BasicAction^ Action)
+InputManager::ChordData::ChordData(KeyCombo^ SecondChord, IAction^ Action)
 {
 	this->SecondChord = SecondChord;
 	this->Action = Action;
 }
 
 
-InputManager::KeyChordData::KeyChordData(BasicAction^ Action)
+InputManager::ChordData::ChordData(IAction^ Action)
 {
 	this->SecondChord = nullptr;
 	this->Action = Action;
 }
 
-bool InputManager::KeyChordData::Equals(Object^ obj)
+bool InputManager::ChordData::Equals(Object^ obj)
 {
 	if (obj == nullptr)
 		return false;
-	else if (obj->GetType() != KeyChordData::typeid)
+	else if (obj->GetType() != ChordData::typeid)
 		return false;
 
-	auto Other = safe_cast<KeyChordData^>(obj);
+	auto Other = safe_cast<ChordData^>(obj);
 	return this->SecondChord->Equals(Other->SecondChord) && this->Action->Equals(Other->Action);
+}
+
+InputManager::ChordData^ InputManager::LookupDoubleKeyChordCommand(KeyCombo^ First, KeyCombo^ Second)
+{
+	ChordDataUnion^ FirstChordMatch = nullptr;
+	if (!KeyChordCommands->TryGetValue(First, FirstChordMatch))
+		return nullptr;
+	else if (FirstChordMatch->Item1)
+		return nullptr;
+
+	for each (auto Itr in FirstChordMatch->Item2)
+	{
+		if (Itr->SecondChord == Second)
+			return Itr;
+	}
+
+	return nullptr;
+}
+
+InputManager::ChordData^ InputManager::LookupSingleKeyChordCommand(KeyCombo^ First)
+{
+	ChordDataUnion^ FirstChordMatch = nullptr;
+	if (!KeyChordCommands->TryGetValue(First, FirstChordMatch))
+		return nullptr;
+
+	return FirstChordMatch->Item1;
+}
+
+bool InputManager::HasSecondKeyOfChord(KeyCombo^ First)
+{
+	ChordDataUnion^ FirstChordMatch = nullptr;
+	if (!KeyChordCommands->TryGetValue(First, FirstChordMatch))
+		return false;
+
+	return FirstChordMatch->Item2 != nullptr;
+}
+
+bool InputManager::IsBound(KeyCombo^ Combo)
+{
+	return KeyChordCommands->ContainsKey(Combo);
 }
 
 InputManager::InputManager()
@@ -955,17 +1016,17 @@ InputManager::~InputManager()
 	KeyChordCommands->Clear();
 }
 
-void InputManager::AddKeyChordCommand(BasicAction^ Action, KeyCombo^ Primary, KeyCombo^ Secondary, bool OverwriteExisting)
+void InputManager::AddKeyChordCommand(IAction^ Action, KeyCombo^ Primary, KeyCombo^ Secondary, bool OverwriteExisting)
 {
 	ChordDataUnion^ ExistingValue = nullptr;
 	if (!KeyChordCommands->TryGetValue(Primary, ExistingValue))
 	{
 		if (Secondary == nullptr)
-			ExistingValue = gcnew ChordDataUnion(gcnew KeyChordData(Action), nullptr);
+			ExistingValue = gcnew ChordDataUnion(gcnew ChordData(Action), nullptr);
 		else
 		{
-			ExistingValue = gcnew ChordDataUnion(nullptr, gcnew List<KeyChordData^>);
-			ExistingValue->Item2->Add(gcnew KeyChordData(Secondary, Action));
+			ExistingValue = gcnew ChordDataUnion(nullptr, gcnew List<ChordData^>);
+			ExistingValue->Item2->Add(gcnew ChordData(Secondary, Action));
 		}
 
 		KeyChordCommands->Add(Primary, ExistingValue);
@@ -980,7 +1041,7 @@ void InputManager::AddKeyChordCommand(BasicAction^ Action, KeyCombo^ Primary, Ke
 		{
 			if (Secondary == nullptr)
 				throw gcnew ArgumentException("Primary key chord '" + Primary->ToString() + "' has already been bound to at least one secondary key chord");
-			else if (ExistingValue->Item2->Contains(gcnew KeyChordData(Secondary, Action)))
+			else if (ExistingValue->Item2->Contains(gcnew ChordData(Secondary, Action)))
 				throw gcnew ArgumentException("Key chord '" + Primary->ToString() + ", " + Secondary->ToString() + "' has already been bound to a different command");
 		}
 	}
@@ -991,14 +1052,14 @@ void InputManager::AddKeyChordCommand(BasicAction^ Action, KeyCombo^ Primary, Ke
 			ExistingValue->Item1->Action = Action;
 		else
 		{
-			auto NewData = gcnew ChordDataUnion(nullptr, gcnew List<KeyChordData^>);
+			auto NewData = gcnew ChordDataUnion(nullptr, gcnew List<ChordData^>);
 			KeyChordCommands[Primary] = NewData;
 		}
 	}
 	else
 	{
 		if (Secondary == nullptr)
-			KeyChordCommands[Primary] = gcnew ChordDataUnion(gcnew KeyChordData(Action), nullptr);
+			KeyChordCommands[Primary] = gcnew ChordDataUnion(gcnew ChordData(Action), nullptr);
 		else
 		{
 			for each (auto Itr in ExistingValue->Item2)
@@ -1010,40 +1071,84 @@ void InputManager::AddKeyChordCommand(BasicAction^ Action, KeyCombo^ Primary, Ke
 				}
 			}
 
-			ExistingValue->Item2->Add(gcnew KeyChordData(Secondary, Action));
+			ExistingValue->Item2->Add(gcnew ChordData(Secondary, Action));
 		}
 	}
 }
 
-void InputManager::AddKeyChordCommand(BasicAction^ Action, KeyCombo^ Primary, bool OverwriteExisting)
+void InputManager::AddKeyChordCommand(IAction^ Action, KeyCombo^ Primary, bool OverwriteExisting)
 {
 	AddKeyChordCommand(Action, Primary, nullptr, OverwriteExisting);
 }
 
 void InputManager::HandleKeyDown(KeyEventArgs^ E, IScriptEditorController^ Controller)
 {
+	E->Handled = true;
+
 	if (LastActiveFirstChord)
 	{
-		// the first chord was already pressed
+		// the first chord was already pressed, attempt to find the second
+		switch (E->KeyCode)
+		{
+		case Keys::Escape:
+			// cancel the active chord
+			LastActiveFirstChord = nullptr;
+			return;
+		case Keys::LControlKey:
+		case Keys::RControlKey:
+		case Keys::LMenu:
+		case Keys::RMenu:
+		case Keys::LShiftKey:
+		case Keys::RShiftKey:
+			// ignore modifier key presses
+			return;
+		}
+
+		auto SecondKeyOfChord = KeyCombo::FromKeyEvent(E);
+		auto MatchedCommand = LookupDoubleKeyChordCommand(LastActiveFirstChord, SecondKeyOfChord);
+
+		if (MatchedCommand)
+			MatchedCommand->Action->Invoke();
+
+		LastActiveFirstChord = nullptr;
+		return;
 	}
+
+	auto FirstKeyOfChord = KeyCombo::FromKeyEvent(E);
+	if (!IsBound(FirstKeyOfChord))
+	{
+		E->Handled = false;
+		return;
+	}
+
+	auto SingleKeyChordCommand = LookupSingleKeyChordCommand(FirstKeyOfChord);
+	if (SingleKeyChordCommand)
+		SingleKeyChordCommand->Action->Invoke();
+	else
+		LastActiveFirstChord = FirstKeyOfChord;
 }
 
-void InputManager::HandleMouseClick(MouseEventArgs^ E, IScriptEditorController^ Controller)
+void InputManager::HandleMouseClick(textEditor::TextEditorMouseClickEventArgs^ E, IScriptEditorController^ Controller)
 {
-
+	if (Control::ModifierKeys == Keys::Control && E->Button == MouseButtons::Left)
+	{
+		auto TokenAtClickLocation = Controller->ActiveDocument->TextEditor->GetTokenAtCharIndex(E->ScriptTextOffset);
+		auto AttachedScript = intellisense::IntelliSenseBackend::Get()->GetAttachedScript(TokenAtClickLocation);
+		if (AttachedScript)
+			Controller->ActivateOrCreateNewDocument(AttachedScript->GetIdentifier());
+	}
 }
 
 bool InputManager::IsKeyBlacklisted(Keys Key)
 {
-
+	return BlacklistedKeyCodes->Contains(Key);
 }
-
 
 
 } // namespace components
 
 
-} // namespace controller
+} // namespace controllerImpl
 
 
 } // namespace scriptEditor

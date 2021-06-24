@@ -128,12 +128,14 @@ ref class Button : public ViewComponent, IButton
 	String^ GetterTooltip();
 	bool GetterChecked();
 	bool GetterVisible();
+	bool GetterEnabled();
 
 	void SetterText(String^ Value);
 	void SetterShortcutKey(String^ Value);
 	void SetterTooltip(String^ Value);
 	void SetterChecked(bool Value);
 	void SetterVisible(bool Value);
+	void SetterEnabled(bool Value);
 public:
 	Button(DotNetBar::ButtonItem^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);
 	Button(DotNetBar::ButtonX^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);
@@ -145,6 +147,9 @@ public:
 	ImplPropertyWithAccessors(String^, ShortcutKey);
 	ImplPropertyWithAccessors(bool, Checked);
 	ImplPropertyWithAccessors(bool, Visible);
+	ImplPropertyWithAccessors(bool, Enabled);
+
+	virtual void PerformClick();
 };
 
 
@@ -222,7 +227,6 @@ public:
 ref class TabStrip : public ViewComponent, ITabStrip
 {
 	SuperTabControl^ Source;
-	IScriptEditorView^ Parent_;
 
 	EventHandler<DotNetBar::SuperTabStripTabItemCloseEventArgs^>^ DelegateTabItemClose;
 	EventHandler<DotNetBar::SuperTabStripSelectedTabChangedEventArgs^>^ DelegateSelectedTabChanged;
@@ -236,6 +240,7 @@ ref class TabStrip : public ViewComponent, ITabStrip
 
 	SuperTabItem^ GetMouseOverTab();
 	void SelectTab(SuperTabItem^ Tab);
+	SuperTabItem^ GetFirstTabItem();
 public:
 	TabStrip(DotNetBar::SuperTabControl^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);
 	virtual ~TabStrip();
@@ -245,12 +250,10 @@ public:
 		virtual ITabStripItem^ get();
 		virtual void set(ITabStripItem^ v);
 	}
-	ImplPropertySimple(IScriptEditorView^, Parent, Parent_);
 
 	virtual ITabStripItem^ AllocateNewTab();
 	virtual void AddTab(ITabStripItem^ Tab);
 	virtual void RemoveTab(ITabStripItem^ Tab);
-	virtual ITabStripItem^ GetNthTab(UInt32 Index);
 	virtual void SelectNextTab();
 	virtual void SelectPreviousTab();
 };

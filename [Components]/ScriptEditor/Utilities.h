@@ -9,20 +9,14 @@ namespace scriptEditor
 {
 
 
-delegate void ParameterizedActionDelegate(Object^ Param);
-delegate void ActionDelegate();
-
-
-generic <class TDelegate>
-ref class Action
+ref class IAction abstract
 {
 protected:
 	String^ Name_;
 	String^ Description_;
-	TDelegate Delegate_;
 public:
-	Action(String^ Name, String^ Description);
-	virtual ~Action();
+	IAction(String^ Name, String^ Description);
+	virtual ~IAction();
 
 	property String^ Name
 	{
@@ -32,16 +26,22 @@ public:
 	{
 		String^ get() { return Description_; }
 	}
-	property TDelegate Delegate
-	{
-		TDelegate get() { return Delegate_; }
-		void set(TDelegate v) { Delegate_ = v; }
-	}
+
+	virtual void Invoke() = 0;
 };
 
+ref class BasicAction : public IAction
+{
+public:
+	delegate void InvokationDelegate();
 
-using BasicAction = Action<ActionDelegate^>;
-using ParameterizedAction = Action<ParameterizedActionDelegate^>;
+	BasicAction(String^ Name, String^ Description);
+	virtual ~BasicAction();
+
+	property InvokationDelegate^ InvokeDelegate;
+
+	virtual void Invoke() override;
+};
 
 
 ref struct KeyCombo
@@ -50,9 +50,9 @@ ref struct KeyCombo
 	Keys Modifiers;
 
 	void Validate();
-public:
-	KeyCombo(Keys Main, Keys Modifiers);
 
+	KeyCombo(Keys Main, Keys Modifiers);
+public:
 	property Keys Key
 	{
 		Keys get() { return Main; }
@@ -76,6 +76,7 @@ public:
 	virtual String^ ToString() override;
 
 	static KeyCombo^ FromKeyEvent(KeyEventArgs^ E);
+	static KeyCombo^ New(Keys Modifier, Keys Key);
 };
 
 

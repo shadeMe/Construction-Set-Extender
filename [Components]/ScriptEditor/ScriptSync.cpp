@@ -5,7 +5,7 @@
 #include "Preferences.h"
 #include "IntelliSenseDatabase.h"
 #include "WorkspaceModelComponents.h"
-#include "SelectScriptDialog.h"
+#include "ScriptSelectionDialog.h"
 #include "Globals.h"
 #include "Preferences.h"
 
@@ -965,7 +965,7 @@ namespace cse
 				Params->ShowDeletedScripts = false;
 				Params->PreventSyncedScriptSelection = true;
 
-				SelectScriptDialog ScriptSelection(Params);
+				ScriptSelectionDialog ScriptSelection(Params);
 				if (ScriptSelection.HasResult == false || ScriptSelection.ResultData->SelectionCount == 0)
 					return;
 

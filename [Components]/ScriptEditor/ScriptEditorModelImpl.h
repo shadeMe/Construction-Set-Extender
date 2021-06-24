@@ -1,9 +1,9 @@
 #pragma once
+
 #include "Macros.h"
 #include "ScriptEditorModelImplComponents.h"
 #include "IntelliSenseInterfaceModel.h"
-#include "ITextEditor.h"
-
+#include "AvalonEditTextEditor.h"
 
 namespace cse
 {
@@ -45,7 +45,7 @@ ref class ScriptDocument : public IScriptDocument
 	eBatchUpdateSource ActiveBatchUpdateSource;
 	int ActiveBatchUpdateCounter;
 
-	textEditor::ITextEditor^ Editor;
+	textEditor::avalonEdit::AvalonEditTextEditor^ Editor;
 	intellisense::IntelliSenseInterfaceModel^ IntelliSense;
 	BackgroundSemanticAnalyzer^ BgAnalyzer;
 	NavigationHelper^ NavHelper;
@@ -71,6 +71,8 @@ ref class ScriptDocument : public IScriptDocument
 	void OnStateChangedBookmarks();
 	void OnStateChangedFindResults();
 
+	void ReleaseNativeObjectIfNewScript();
+
 	String^ PreprocessScriptText(String^ ScriptText, bool SuppressErrors, bool% OutPreprocessResult, bool% OutContainsDirectives);
 	void TrackPreprocessorMessage(int Line, String^ Message);
 
@@ -91,10 +93,7 @@ ref class ScriptDocument : public IScriptDocument
 	void AddFindResult(String^ Query, UInt32 Line, String^ PreviewText, UInt32 Hits);
 	void ClearFindResults();
 
-	String^ LoadAutoRecoveryCache();
 	void SaveAutoRecoveryCache();
-	String^ GetAutoRecoveryCacheFilePath();
-	void ClearAutoRecoveryCache();
 
 	ScriptTextMetadata^ PrepareMetadataForSerialization(bool HasPreprocessorDirectives);
 public:
@@ -102,7 +101,7 @@ public:
 	virtual ~ScriptDocument();
 
 	ImplPropertyGetOnly(bool, Valid, NativeObject != nullptr);
-	ImplPropertyGetOnly(bool, Dirty, Editor->Modified);
+	ImplPropertySimple(bool, Dirty, Editor->Modified);
 	ImplPropertyGetOnly(String^, ScriptEditorID, EditorID);
 	ImplPropertyGetOnly(UInt32, ScriptFormID, FormID);
 	ImplPropertyGetOnly(String^, ScriptText, Editor->GetText());
@@ -127,7 +126,7 @@ public:
 	virtual event IScriptDocument::StateChangeEventHandler^ StateChanged;
 
 	virtual void Initialize(componentDLLInterface::ScriptData* ScriptData, bool UseAutoRecoveryFile);
-	virtual bool Save(IScriptDocument::eSaveOperation SaveOperation, bool% OutHasWarning);
+	virtual bool Save(IScriptDocument::eSaveOperation SaveOperation);
 
 	virtual List<ScriptDiagnosticMessage^>^ GetMessages(UInt32 Line, ScriptDiagnosticMessage::eMessageSource SourceFilter, ScriptDiagnosticMessage::eMessageType TypeFilter);
 	virtual UInt32 GetErrorCount(UInt32 Line);
@@ -139,27 +138,18 @@ public:
 	virtual List<ScriptBookmark^>^ GetBookmarks(UInt32 Line);
 	virtual UInt32 GetBookmarkCount(UInt32 Line);
 
-	virtual bool HasAutoRecoveryFile();
-	virtual DateTime GetAutoRecoveryFileLastWriteTimestamp();
+	virtual void PushStateToSubscribers();
+
+	virtual void TogglePreprocessorOutput(bool Enabled);
+	virtual bool IsPreprocessorOutputEnabled();
+
+	virtual bool SanitizeScriptText();
 };
 
 
 ref class ScriptEditorDocumentModel : public IScriptEditorModel
 {
 	List<ScriptDocument^>^ ScriptDocuments;
-	ScriptDocument^ ActiveScriptDocument;
-	IScriptEditorModel::ActiveDocumentActionCollection^ ActiveActions;
-	bool SettingActiveScriptDocument;
-
-	void SetActiveScriptDocument(ScriptDocument^ New);
-
-	bool ValidateCommonActionPreconditions();
-	void ActiveAction_Copy();
-	void ActiveAction_Paste();
-	void ActiveAction_Comment();
-	void ActiveAction_Uncomment();
-	void ActiveAction_AddBookmark(Object^ Params);
-	void ActiveAction_GoToLine(Object^ Params);
 public:
 	ScriptEditorDocumentModel();
 	virtual ~ScriptEditorDocumentModel();
@@ -169,14 +159,6 @@ public:
 		virtual List<IScriptDocument^>^ get();
 		ImplPropertySetInvalid(List<IScriptDocument^>^);
 	}
-	property IScriptDocument^ ActiveDocument
-	{
-		virtual IScriptDocument^ get();
-		virtual void set(IScriptDocument^ v);
-	}
-	ImplPropertyGetOnly(IScriptEditorModel::ActiveDocumentActionCollection^, ActiveDocumentActions, ActiveActions);
-
-	virtual event IScriptEditorModel::ActiveDocumentChangedEventHandler^ ActiveDocumentChanged;
 
 	virtual IScriptDocument^ AllocateNewDocument();
 	virtual void AddDocument(IScriptDocument^ Document);

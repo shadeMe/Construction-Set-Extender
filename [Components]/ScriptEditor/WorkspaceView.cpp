@@ -758,7 +758,7 @@ namespace cse
 			EditorTabStrip->TabRemoved += ScriptStripTabRemovedHandler;
 			EditorTabStrip->TabStripMouseClick += ScriptStripMouseClickHandler;
 			EditorTabStrip->TabMoving += ScriptStripTabMovingHandler;
-			preferences::SettingsHolder::Get()->SavedToDisk += ScriptEditorPreferencesSavedHandler;
+			preferences::SettingsHolder::Get()->PreferencesChanged += ScriptEditorPreferencesSavedHandler;
 			ConcreteWorkspaceViewSubscribeClickEvent(NewTabButton);
 			ConcreteWorkspaceViewSubscribeClickEvent(SortTabsButton);
 
@@ -1503,7 +1503,7 @@ namespace cse
 			EditorTabStrip->TabMoving -= ScriptStripTabMovingHandler;
 			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(NewTabButton);
 			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(SortTabsButton);
-			preferences::SettingsHolder::Get()->SavedToDisk -= ScriptEditorPreferencesSavedHandler;
+			preferences::SettingsHolder::Get()->PreferencesChanged -= ScriptEditorPreferencesSavedHandler;
 
 			SAFEDELETE_CLR(EditorFormCancelHandler);
 			SAFEDELETE_CLR(EditorFormKeyDownHandler);
@@ -2105,7 +2105,7 @@ namespace cse
 				MessageBoxButtons::YesNo,
 				MessageBoxIcon::Exclamation) == DialogResult::Yes)
 			{
-				nativeWrapper::g_CSEInterfaceTable->ScriptEditor.RecompileScripts();
+				nativeWrapper::g_CSEInterfaceTable->ScriptEditor.RecompileAllScriptsInActiveFile();
 				MessageBox::Show("All active scripts recompiled. Results have been logged to the console.",
 								 SCRIPTEDITOR_TITLE,
 								 MessageBoxButtons::OK,
@@ -2766,7 +2766,7 @@ namespace cse
 			SelectScriptDialogParams^ Params = gcnew SelectScriptDialogParams;
 			Params->SelectedScriptEditorID = GetActiveModel()->ShortDescription;
 
-			SelectScriptDialog ScriptSelection(Params);
+			ScriptSelectionDialog ScriptSelection(Params);
 			if (ScriptSelection.HasResult == false)
 				return;
 
@@ -2803,7 +2803,7 @@ namespace cse
 			SelectScriptDialogParams^ Params = gcnew SelectScriptDialogParams;
 			Params->SelectedScriptEditorID = GetActiveModel()->ShortDescription;
 
-			SelectScriptDialog ScriptSelection(Params);
+			ScriptSelectionDialog ScriptSelection(Params);
 			if (ScriptSelection.HasResult == false)
 				return;
 

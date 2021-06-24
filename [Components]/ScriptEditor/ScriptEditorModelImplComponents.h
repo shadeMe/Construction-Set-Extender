@@ -64,9 +64,9 @@ public:
 
 	virtual event IBackgroundSemanticAnalyzer::AnalysisCompleteEventHandler^ SemanticAnalysisComplete;
 
-	void Pause();
-	void Resume();
 	void WaitForBackgroundTask();
+	virtual void Pause();
+	virtual void Resume();
 	virtual obScriptParsing::AnalysisData^ DoSynchronousAnalysis(bool RaiseCompletionEvent);
 };
 

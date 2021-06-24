@@ -271,7 +271,7 @@ namespace cse
 			AnalysisData();
 			~AnalysisData();
 
-			void PerformAnalysis(Params^ Parameters);
+			AnalysisData^ PerformAnalysis(Params^ Parameters);
 
 			ControlBlock^ GetBlockStartingAt(UInt32 Line);
 			ControlBlock^ GetBlockEndingAt(UInt32 Line);

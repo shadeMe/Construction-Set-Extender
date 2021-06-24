@@ -8,6 +8,21 @@ namespace scriptEditor
 {
 
 
+BasicAction::BasicAction(String^ Name, String^ Description)
+	: IAction(Name, Description)
+{
+}
+
+BasicAction::~BasicAction()
+{
+	delete InvokeDelegate;
+}
+
+void BasicAction::Invoke()
+{
+	InvokeDelegate();
+}
+
 void KeyCombo::Validate()
 {
 	if (Main.HasFlag(Keys::Control) || Main.HasFlag(Keys::Shift) || Main.HasFlag(Keys::Alt))
@@ -67,6 +82,11 @@ KeyCombo^ KeyCombo::FromKeyEvent(KeyEventArgs^ E)
 		Modifiers |= safe_cast<UInt32>(Keys::Alt);
 
 	return gcnew KeyCombo(E->KeyCode, safe_cast<Keys>(Modifiers));
+}
+
+KeyCombo^ KeyCombo::New(Keys Modifier, Keys Key)
+{
+	return gcnew KeyCombo(Key, Modifier);
 }
 
 
