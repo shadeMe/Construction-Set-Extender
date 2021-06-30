@@ -159,7 +159,6 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="..\..\[Common]\ComponentDLLInterface.h" />
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h" />
     <ClInclude Include="..\..\[Common]\IncludesCLR.h" />
-    <ClInclude Include="..\..\[Common]\ListViewUtilities.h" />
     <ClInclude Include="..\..\[Common]\MiscUtilities.h" />
     <ClInclude Include="..\..\[Common]\NativeWrapper.h" />
     <ClInclude Include="BSAReader.h" />
@@ -168,7 +167,6 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="Prefix.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\[Common]\ListViewUtilities.cpp" />
     <ClCompile Include="..\..\[Common]\MiscUtilities.cpp" />
     <ClCompile Include="..\..\[Common]\NativeWrapper.cpp" />
     <ClCompile Include="BSAReader.cpp" />

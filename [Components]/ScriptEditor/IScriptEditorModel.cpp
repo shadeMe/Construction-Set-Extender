@@ -281,11 +281,12 @@ IScriptDocument::StateChangeEventArgs::StateChangeEventArgs()
 	Dirty = false;
 	BytecodeLength = 0;
 	ScriptType = eScriptType::Object;
-	EditorId = "";
+	EditorId = nullptr;
 	FormId = 0;
-	Messages = gcnew List<components::ScriptDiagnosticMessage^>;
-	Bookmarks = gcnew List<components::ScriptBookmark^>;
-	FindResults = gcnew List<components::ScriptFindResult^>;
+	Messages = nullptr;
+	Bookmarks = nullptr;
+	FindResults = nullptr;
+	DisplayingPreprocessorOutput = false;
 }
 
 

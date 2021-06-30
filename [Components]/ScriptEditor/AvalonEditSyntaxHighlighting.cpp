@@ -1,6 +1,6 @@
 #include "AvalonEditSyntaxHighlighting.h"
-#include "Globals.h"
 #include "Preferences.h"
+#include "ScriptPreprocessor.h"
 
 namespace cse
 {
@@ -367,33 +367,33 @@ void AvalonEditXSHDManager::UpdateBaseDefinitions(void)
 	XSHDKeywords^ CommentMarkerPreprocessorKeywords = gcnew XSHDKeywords(PreprocessorColor, Color::GhostWhite, Color::GhostWhite, true);
 	XSHDKeywords^ CommentMarkerReminderKeywords = gcnew XSHDKeywords(ReminderColor, Color::GhostWhite, Color::GhostWhite, true);
 
-	CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-		[(int)CSEPreprocessorDirective::EncodingType::SingleLine] +
-		CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Define]));
-	CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-		[(int)CSEPreprocessorDirective::EncodingType::MultiLine] +
-		CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Define]));
+	CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(preprocessor::CSEPreprocessorDirective::EncodingIdentifier
+		[(int)preprocessor::CSEPreprocessorDirective::EncodingType::SingleLine] +
+		preprocessor::CSEPreprocessorDirective::DirectiveIdentifier[(int)preprocessor::CSEPreprocessorDirective::DirectiveType::Define]));
+	CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(preprocessor::CSEPreprocessorDirective::EncodingIdentifier
+		[(int)preprocessor::CSEPreprocessorDirective::EncodingType::MultiLine] +
+		preprocessor::CSEPreprocessorDirective::DirectiveIdentifier[(int)preprocessor::CSEPreprocessorDirective::DirectiveType::Define]));
 
-	CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-		[(int)CSEPreprocessorDirective::EncodingType::SingleLine] +
-		CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Enum]));
-	CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-		[(int)CSEPreprocessorDirective::EncodingType::MultiLine] +
-		CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Enum]));
+	CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(preprocessor::CSEPreprocessorDirective::EncodingIdentifier
+		[(int)preprocessor::CSEPreprocessorDirective::EncodingType::SingleLine] +
+		preprocessor::CSEPreprocessorDirective::DirectiveIdentifier[(int)preprocessor::CSEPreprocessorDirective::DirectiveType::Enum]));
+	CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(preprocessor::CSEPreprocessorDirective::EncodingIdentifier
+		[(int)preprocessor::CSEPreprocessorDirective::EncodingType::MultiLine] +
+		preprocessor::CSEPreprocessorDirective::DirectiveIdentifier[(int)preprocessor::CSEPreprocessorDirective::DirectiveType::Enum]));
 
-	CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-		[(int)CSEPreprocessorDirective::EncodingType::SingleLine] +
-		CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::If]));
-	CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-		[(int)CSEPreprocessorDirective::EncodingType::MultiLine] +
-		CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::If]));
+	CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(preprocessor::CSEPreprocessorDirective::EncodingIdentifier
+		[(int)preprocessor::CSEPreprocessorDirective::EncodingType::SingleLine] +
+		preprocessor::CSEPreprocessorDirective::DirectiveIdentifier[(int)preprocessor::CSEPreprocessorDirective::DirectiveType::If]));
+	CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(preprocessor::CSEPreprocessorDirective::EncodingIdentifier
+		[(int)preprocessor::CSEPreprocessorDirective::EncodingType::MultiLine] +
+		preprocessor::CSEPreprocessorDirective::DirectiveIdentifier[(int)preprocessor::CSEPreprocessorDirective::DirectiveType::If]));
 
-	CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-		[(int)CSEPreprocessorDirective::EncodingType::SingleLine] +
-		CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Import]));
-	CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-		[(int)CSEPreprocessorDirective::EncodingType::MultiLine] +
-		CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Import]));
+	CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(preprocessor::CSEPreprocessorDirective::EncodingIdentifier
+		[(int)preprocessor::CSEPreprocessorDirective::EncodingType::SingleLine] +
+		preprocessor::CSEPreprocessorDirective::DirectiveIdentifier[(int)preprocessor::CSEPreprocessorDirective::DirectiveType::Import]));
+	CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(preprocessor::CSEPreprocessorDirective::EncodingIdentifier
+		[(int)preprocessor::CSEPreprocessorDirective::EncodingType::MultiLine] +
+		preprocessor::CSEPreprocessorDirective::DirectiveIdentifier[(int)preprocessor::CSEPreprocessorDirective::DirectiveType::Import]));
 
 	CommentMarkerReminderKeywords->AddWord(gcnew XSHDWord("TODO"));
 	CommentMarkerReminderKeywords->AddWord(gcnew XSHDWord("HACK"));
@@ -457,6 +457,7 @@ AvalonEditHighlightingDefinition^ AvalonEditXSHDManager::GenerateHighlightingDef
 	if (LocalVariables && LocalVariables->Count)
 	{
 		bool Bold = preferences::SettingsHolder::Get()->Appearance->BoldFaceHighlightedText;
+
 		XSHDKeywords^ HighlightKeywords = gcnew XSHDKeywords(LocalVarsColor, Color::GhostWhite, Color::GhostWhite, Bold);
 
 		for each (String^ Itr in LocalVariables)

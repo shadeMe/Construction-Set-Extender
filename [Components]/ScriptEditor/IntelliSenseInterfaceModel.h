@@ -202,7 +202,7 @@ ref class IntelliSenseInterfaceModel : public IIntelliSenseInterfaceModel
 
 	void						PopulateDataStore();
 	generic <typename T> where T : IntelliSenseItem
-	void						EnumerateIntelliSenseItems(IEnumerable<T>^ Items, StringMatchType MatchType);
+	void						EnumerateIntelliSenseItems(IEnumerable<T>^ Items, eStringMatchType MatchType);
 
 	IntelliSenseItemScriptVariable^
 								LookupLocalVariable(String^ Identifier);

@@ -18,9 +18,6 @@
     <ClInclude Include="..\..\[Common]\Includes.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\[Common]\ListViewUtilities.h">
-      <Filter>Common</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\[Common]\MiscUtilities.h">
       <Filter>Common</Filter>
     </ClInclude>
@@ -38,9 +35,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\[Common]\ListViewUtilities.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\[Common]\MiscUtilities.cpp">
       <Filter>Common</Filter>
     </ClCompile>

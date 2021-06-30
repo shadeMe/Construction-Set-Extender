@@ -1,7 +1,7 @@
 #pragma once
 
-#include "[Common]\AuxiliaryWindowsForm.h"
 #include "IIntelliSenseInterface.h"
+#include "Utilities.h"
 
 namespace cse
 {
@@ -19,55 +19,52 @@ using namespace DevComponents;
 
 ref class IntelliSenseInterfaceView : public IIntelliSenseInterfaceView
 {
-	IIntelliSenseInterfaceModel^			BoundModel;
+	IIntelliSenseInterfaceModel^ BoundModel;
 
-	AnimatedForm^							Form;
-	BrightIdeasSoftware::ObjectListView^	ListView;
-	BrightIdeasSoftware::OLVColumn^			ListViewDefaultColumn;
-	DotNetBar::SuperTooltip^				ListViewPopup;
-	DotNetBar::SuperTooltip^				InsightPopup;
-	ImageList^								IntelliSenseItemImages;
+	AnimatedForm^ Form;
+	BrightIdeasSoftware::ObjectListView^ ListView;
+	BrightIdeasSoftware::OLVColumn^ ListViewDefaultColumn;
+	DotNetBar::SuperTooltip^ ListViewPopup;
+	DotNetBar::SuperTooltip^ InsightPopup;
 
-	property UInt32		MaximumVisibleItemCount;
-	property UInt32		InsightPopupDisplayDuration;
-	property UInt32		WindowWidth;
+	property UInt32 MaximumVisibleItemCount;
+	property UInt32 InsightPopupDisplayDuration;
+	property UInt32 WindowWidth;
 	property bool Bound
 	{
 		bool get() { return BoundModel != nullptr; }
 	}
 
-	void				ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
-	void				ListView_SelectionChanged(Object^ Sender, EventArgs^ E);
-	void				ListView_ItemActivate(Object^ Sender, EventArgs^ E);
-	void				ListView_KeyDown(Object^ Sender, KeyEventArgs^ E);
-	void				ListView_KeyUp(Object^ Sender, KeyEventArgs^ E);
-	void				ListView_FormatRow(Object^ Sender, BrightIdeasSoftware::FormatRowEventArgs^ E);
+	void ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
+	void ListView_SelectionChanged(Object^ Sender, EventArgs^ E);
+	void ListView_ItemActivate(Object^ Sender, EventArgs^ E);
+	void ListView_KeyDown(Object^ Sender, KeyEventArgs^ E);
+	void ListView_KeyUp(Object^ Sender, KeyEventArgs^ E);
+	void ListView_FormatRow(Object^ Sender, BrightIdeasSoftware::FormatRowEventArgs^ E);
 
-	static Object^		ListViewAspectGetter(Object^ RowObject);
-	static Object^		ListViewImageGetter(Object^ RowObject);
-	static void			SuperTooltip_MarkupLinkClick(Object^ Sender, DotNetBar::MarkupLinkClickEventArgs ^ E);
+	static Object^ ListViewAspectGetter(Object^ RowObject);
+	static Object^ ListViewImageGetter(Object^ RowObject);
+	static void SuperTooltip_MarkupLinkClick(Object^ Sender, DotNetBar::MarkupLinkClickEventArgs ^ E);
 
-	EventHandler^		ScriptEditorPreferencesSavedHandler;
-	EventHandler^		ListViewSelectionChangedHandler;
-	EventHandler^		ListViewItemActivateHandler;
-	KeyEventHandler^	ListViewKeyDownHandler;
-	KeyEventHandler^	ListViewKeyUpHandler;
-	EventHandler<BrightIdeasSoftware::FormatRowEventArgs^>^
-						ListViewFormatRowHandler;
-	AnimatedForm::TransitionCompleteHandler^
-						SelectFirstItemOnShowHandler;
+	EventHandler^ ScriptEditorPreferencesSavedHandler;
+	EventHandler^ ListViewSelectionChangedHandler;
+	EventHandler^ ListViewItemActivateHandler;
+	KeyEventHandler^ ListViewKeyDownHandler;
+	KeyEventHandler^ ListViewKeyUpHandler;
+	EventHandler<BrightIdeasSoftware::FormatRowEventArgs^>^ ListViewFormatRowHandler;
+	AnimatedForm::TransitionCompleteHandler^ SelectFirstItemOnShowHandler;
 
-	void	ShowListViewToolTip(IntelliSenseItem^ Item);
-	void	HideListViewToolTip();
-	void	SelectFirstItemOnShow(AnimatedForm^ Sender);
+	void ShowListViewToolTip(IntelliSenseItem^ Item);
+	void HideListViewToolTip();
+	void SelectFirstItemOnShow(AnimatedForm^ Sender);
 
-	static const float	DimmedOpacity = 0.15f;
+	static const float kDimmedOpacity = 0.15f;
 public:
 	IntelliSenseInterfaceView();
 	~IntelliSenseInterfaceView();
 
-	virtual event EventHandler^		ItemSelected;
-	virtual event EventHandler^		Dismissed;
+	virtual event EventHandler^ ItemSelected;
+	virtual event EventHandler^ Dismissed;
 
 	property bool Visible
 	{
@@ -88,19 +85,19 @@ public:
 		virtual void set(IntelliSenseItem^ e) {}
 	}
 
-	virtual void	Bind(IIntelliSenseInterfaceModel^ To);
-	virtual void	Unbind();
+	virtual void Bind(IIntelliSenseInterfaceModel^ To);
+	virtual void Unbind();
 
-	virtual void	ChangeSelection(IIntelliSenseInterfaceView::MoveDirection Direction);
-	virtual void	DimOpacity();
-	virtual void	ResetOpacity();
+	virtual void ChangeSelection(IIntelliSenseInterfaceView::MoveDirection Direction);
+	virtual void DimOpacity();
+	virtual void ResetOpacity();
 
-	virtual void	ShowInsightToolTip(IntelliSenseShowInsightToolTipArgs^ Args);
-	virtual void	HideInsightToolTip();
+	virtual void ShowInsightToolTip(IntelliSenseShowInsightToolTipArgs^ Args);
+	virtual void HideInsightToolTip();
 
-	virtual void	Update();
-	virtual void	Show(Drawing::Point Location, IntPtr Parent);
-	virtual void	Hide();
+	virtual void Update();
+	virtual void Show(Drawing::Point Location, IntPtr Parent);
+	virtual void Hide();
 };
 
 

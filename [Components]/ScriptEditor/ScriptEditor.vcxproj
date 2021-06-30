@@ -196,26 +196,20 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\[Common]\AuxiliaryWindowsForm.cpp" />
     <ClCompile Include="..\..\[Common]\NativeWrapper.cpp" />
-    <ClCompile Include="..\..\[Common]\ListViewUtilities.cpp" />
     <ClCompile Include="..\..\[Common]\MiscUtilities.cpp" />
-    <ClCompile Include="AuxiliaryTextEditor.cpp" />
     <ClCompile Include="AvalonEditComponents.cpp" />
     <ClCompile Include="AvalonEditTextEditor.cpp" />
     <ClCompile Include="AvalonEditSyntaxHighlighting.cpp" />
-    <ClCompile Include="BackgroundAnalysis.cpp" />
-    <ClCompile Include="FindReplaceDialog.cpp" />
-    <ClCompile Include="IntelliSenseDatabase.cpp" />
+    <ClCompile Include="IntelliSenseBackend.cpp" />
     <ClCompile Include="IntelliSenseInterfaceModel.cpp" />
     <ClCompile Include="IntelliSenseInterfaceView.cpp" />
     <ClCompile Include="IntelliSenseItem.cpp" />
+    <ClCompile Include="IScriptEditorController.cpp" />
     <ClCompile Include="IScriptEditorModel.cpp" />
     <ClCompile Include="ITextEditor.cpp" />
-    <ClCompile Include="MvcFactories.cpp" />
-    <ClCompile Include="NumberedRichTextBox.cpp" />
+    <ClCompile Include="ScriptEditorInstanceManager.cpp" />
     <ClCompile Include="Preferences.cpp" />
-    <ClCompile Include="RefactorTools.cpp" />
     <ClCompile Include="ScriptEditorControllerImpl.cpp" />
     <ClCompile Include="ScriptEditorControllerImplComponents.cpp" />
     <ClCompile Include="ScriptEditorModelImpl.cpp" />
@@ -229,40 +223,28 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="SemanticAnalysis.cpp" />
     <ClCompile Include="SnippetManager.cpp" />
     <ClCompile Include="IScriptEditorView.cpp" />
-    <ClCompile Include="TextEditorAdornments.cpp" />
     <ClCompile Include="Utilities.cpp" />
-    <ClCompile Include="WorkspaceModel.cpp" />
-    <ClCompile Include="WorkspaceModelComponents.cpp" />
-    <ClCompile Include="WorkspaceView.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\[Common]\AuxiliaryWindowsForm.h" />
     <ClInclude Include="..\..\[Common]\ComponentDLLInterface.h" />
-    <ClInclude Include="..\..\[Common]\CustomInputBox.h" />
     <ClInclude Include="..\..\[Common]\NativeWrapper.h" />
-    <ClInclude Include="MvcFactories.h" />
+    <ClInclude Include="ScriptEditorInstanceManager.h" />
     <ClInclude Include="ScriptPreprocessor.h" />
     <ClInclude Include="Utilities.h" />
     <ClInclude Include="AvalonEditComponents.h" />
-    <ClInclude Include="BackgroundAnalysis.h" />
-    <ClInclude Include="FindReplaceDialog.h" />
     <ClInclude Include="IIntelliSenseInterface.h" />
-    <ClInclude Include="IntelliSenseDatabase.h" />
+    <ClInclude Include="IntelliSenseBackend.h" />
     <ClInclude Include="IntelliSenseInterfaceModel.h" />
     <ClInclude Include="IntelliSenseInterfaceView.h" />
     <ClInclude Include="IntelliSenseItem.h" />
     <ClInclude Include="IScriptEditorController.h" />
     <ClInclude Include="ScriptEditorControllerImpl.h" />
     <ClInclude Include="Macros.h" />
-    <ClInclude Include="RefactorTools.h" />
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h" />
     <ClInclude Include="..\..\[Common]\IncludesCLR.h" />
-    <ClInclude Include="..\..\[Common]\ListViewUtilities.h" />
     <ClInclude Include="..\..\[Common]\MiscUtilities.h" />
-    <ClInclude Include="AuxiliaryTextEditor.h" />
     <ClInclude Include="AvalonEditTextEditor.h" />
     <ClInclude Include="AvalonEditSyntaxHighlighting.h" />
-    <ClInclude Include="NumberedRichTextBox.h" />
     <ClInclude Include="Preferences.h" />
     <ClInclude Include="IScriptEditorModel.h" />
     <ClInclude Include="IScriptEditorView.h" />
@@ -275,16 +257,9 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="ScriptSync.h" />
     <ClInclude Include="ITextEditor.h" />
     <ClInclude Include="Exports.h" />
-    <ClInclude Include="Globals.h" />
     <ClInclude Include="Prefix.h" />
     <ClInclude Include="SemanticAnalysis.h" />
     <ClInclude Include="SnippetManager.h" />
-    <ClInclude Include="TextEditorAdornments.h" />
-    <ClInclude Include="WorkspaceModel.h" />
-    <ClInclude Include="WorkspaceModelComponents.h" />
-    <ClInclude Include="WorkspaceModelInterface.h" />
-    <ClInclude Include="WorkspaceView.h" />
-    <ClInclude Include="WorkspaceViewInterface.h" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\..\[Misc]\UIComponents\CodeSnippetsDialog.resx" />
@@ -349,6 +324,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\OpenfileDialog\OpenfileDialog_16x.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\OpenFolder\OpenFolder_16x.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\OrderedList\OrderedList_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\PartiallyComplete\PartiallyComplete_16x.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Paste\Paste_16x.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Previous\Previous_16x.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ProcedureSettings\ProcedureSettings_16x.png" />

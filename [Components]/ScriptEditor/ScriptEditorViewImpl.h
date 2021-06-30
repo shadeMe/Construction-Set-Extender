@@ -55,9 +55,7 @@ ref class ScriptEditorWorkspace : public MetroForm, IScriptEditorView
 	DevComponents::DotNetBar::ButtonItem^ ToolbarMenuEdit;
 	DevComponents::DotNetBar::ButtonItem^ EditMenuFindReplace;
 	DevComponents::DotNetBar::ButtonItem^ EditMenuGoToLine;
-	DevComponents::DotNetBar::ButtonItem^ EditMenuGoToOffset;
 	DevComponents::DotNetBar::ButtonItem^ EditMenuAddBookmark;
-	DevComponents::DotNetBar::ButtonItem^ EditMenuToggleComment;
 	DevComponents::DotNetBar::ButtonItem^ ToolbarMenuView;
 	DevComponents::DotNetBar::ButtonItem^ ViewMenuPreprocessorOutput;
 	DevComponents::DotNetBar::ButtonItem^ ViewMenuBytecodeOffsets;
@@ -68,6 +66,12 @@ ref class ScriptEditorWorkspace : public MetroForm, IScriptEditorView
 	DevComponents::DotNetBar::ButtonItem^ ToolsMenuCompileDepends;
 	DevComponents::DotNetBar::ButtonItem^ ToolsMenuDocumentScript;
 	DevComponents::DotNetBar::ButtonItem^ ToolsMenuModifyVarIndices;
+	DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuAddVar;
+	DevComponents::DotNetBar::ButtonItem^ MenuAddVarInteger;
+	DevComponents::DotNetBar::ButtonItem^ MenuAddVarFloat;
+	DevComponents::DotNetBar::ButtonItem^ MenuAddVarReference;
+	DevComponents::DotNetBar::ButtonItem^ MenuAddVarString;
+	DevComponents::DotNetBar::ButtonItem^ MenuAddVarArray;
 	DevComponents::DotNetBar::ButtonItem^ ToolsMenuImport;
 	DevComponents::DotNetBar::ButtonItem^ MenuImportCurrentTab;
 	DevComponents::DotNetBar::ButtonItem^ MenuImportMultipleTabs;
@@ -113,11 +117,7 @@ ref class ScriptEditorWorkspace : public MetroForm, IScriptEditorView
 	DevComponents::DotNetBar::Controls::CheckBoxX^ FindWindowCheckboxMatchCase;
 	DevComponents::DotNetBar::Controls::CheckBoxX^ FindWindowCheckboxUseRegEx;
 	DevComponents::DotNetBar::Controls::CheckBoxX^ FindWindowCheckBoxMatchWholeWord;
-	DevComponents::DotNetBar::Controls::CheckBoxX^ FindWindowCheckBoxIgnoreComments;
 	DevComponents::DotNetBar::Controls::ComboBoxEx^ FindWindowComboLookIn;
-	DevComponents::Editors::ComboItem^ FindWindowDropdownLookInSelection;
-	DevComponents::Editors::ComboItem^ FindWindowDropdownLookInCurrentScript;
-	DevComponents::Editors::ComboItem^ FindWindowDropdownLookInAllOpenScripts;
 	DevComponents::DotNetBar::ButtonX^ FindWindowButtonFind;
 	DevComponents::DotNetBar::ButtonX^ FindWindowButtonReplace;
 	DevComponents::DotNetBar::ButtonX^ FindWindowButtonCountMatches;
@@ -128,7 +128,6 @@ ref class ScriptEditorWorkspace : public MetroForm, IScriptEditorView
 	DevComponents::DotNetBar::Layout::LayoutControlItem^ FindWindowLCIMatchCase;
 	DevComponents::DotNetBar::Layout::LayoutControlItem^ FindWindowLCIMatchWholeWord;
 	DevComponents::DotNetBar::Layout::LayoutControlItem^ FindWindowLCIUseRegEx;
-	DevComponents::DotNetBar::Layout::LayoutControlItem^ FindWindowLCIIgnoreComments;
 	DevComponents::DotNetBar::Layout::LayoutGroup^ FindWindowLayouyGroupButtons;
 	DevComponents::DotNetBar::Layout::LayoutControlItem^ FindWindowLCIFindButton;
 	DevComponents::DotNetBar::Layout::LayoutControlItem^ FindWindowLCIReplaceButton;
@@ -154,23 +153,18 @@ ref class ScriptEditorWorkspace : public MetroForm, IScriptEditorView
 	DevComponents::DotNetBar::ButtonItem^ ContextMenuTextEditor;
 	DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuCopy;
 	DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuPaste;
-	DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuToggleComment;
-	DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuAddBookmark;
-	DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuAddVar;
-	DevComponents::DotNetBar::ButtonItem^ MenuAddVarInteger;
-	DevComponents::DotNetBar::ButtonItem^ MenuAddVarFloat;
-	DevComponents::DotNetBar::ButtonItem^ MenuAddVarReference;
-	DevComponents::DotNetBar::ButtonItem^ MenuAddVarString;
-	DevComponents::DotNetBar::ButtonItem^ MenuAddVarArray;
 	DevComponents::DotNetBar::ButtonItem^ ToolbarMenuHelp;
 	DevComponents::DotNetBar::ButtonItem^ HelpMenuWiki;
 	DevComponents::DotNetBar::ButtonItem^ HelpMenuObseDocs;
-	DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuOpenPreprocessorImport;
 	DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuJumpToScript;
 	DevComponents::DotNetBar::Bar^ DockableBarOutlineView;
 	DevComponents::DotNetBar::Bar^ DockableBarMessages;
 	DevComponents::DotNetBar::Bar^ DockableBarBookmarks;
 	DevComponents::DotNetBar::Bar^ DockableBarFindReplaceResults;
+	DevComponents::DotNetBar::Controls::CheckBoxX^ FindWindowCheckBoxIgnoreComments;
+	DevComponents::DotNetBar::Layout::LayoutControlItem^ FindWindowLCIIgnoreComments;
+	DevComponents::DotNetBar::ButtonItem^ EditMenuComment;
+	DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 	System::ComponentModel::IContainer^ components;
 
 	ref struct ViewComponentData
@@ -181,14 +175,15 @@ ref class ScriptEditorWorkspace : public MetroForm, IScriptEditorView
 
 	Dictionary<eViewRole, ViewComponentData^>^ ViewComponents;
 	components::ViewComponentEventRaiser^ DelegateViewComponentEventRouter;
+	EventHandler^ DelegatePreferencesChanged;
 	intellisense::IIntelliSenseInterfaceView^ IntelliSenseInterface;
 	bool SkipViewComponentEventProcessing;
-	Rectangle InitalBounds;
 
 	void HandleViewComponentEvent(ViewComponentEvent^ E);
+	void HandlePreferencesChanged(Object^ Sender, EventArgs^ E);
 
 	void InitializeComponents();
-	void FinalizeComponents(Rectangle Bounds);
+	void FinalizeComponents();
 	void InitializeViewComponents();
 	void DeinitializeViewComponents();
 
@@ -202,15 +197,16 @@ ref class ScriptEditorWorkspace : public MetroForm, IScriptEditorView
 	void SetupViewComponentComboBox(ComboBoxEx^ Source, eViewRole Role);
 	void SetupViewComponentLabel(LabelItem^ Source, eViewRole Role);
 	void SetupViewComponentObjectListView(BrightIdeasSoftware::ObjectListView^ Source, eViewRole Role);
-	void SetupViewComponentCircularProgress(DotNetBar::CircularProgressItem^ Source, eViewRole Role);
+	void SetupViewComponentProgressBar(DotNetBar::CircularProgressItem^ Source, eViewRole Role);
 	void SetupViewComponentDockablePane(DockContainerItem^ Source, eViewRole Role);
 	void SetupViewComponentCrumbBar(DotNetBar::CrumbBar^ Source);
 	void SetupViewComponentContainer(Control^ Source, eViewRole Role);
 public:
-	ScriptEditorWorkspace(Rectangle Bounds);
+	ScriptEditorWorkspace();
 	virtual ~ScriptEditorWorkspace();
 
 	ImplPropertyGetOnly(intellisense::IIntelliSenseInterfaceView^, IntelliSenseView, IntelliSenseInterface);
+	ImplPropertyGetOnly(IntPtr, WindowHandle, this->Handle);
 
 	virtual event IScriptEditorView::EventHandler^ ComponentEvent;
 
@@ -218,8 +214,20 @@ public:
 	virtual void ShowNotification(String^ Message, Image^ Image, int DurationInMs);
 	virtual Forms::DialogResult ShowMessageBox(String^ Message, MessageBoxButtons Buttons, MessageBoxIcon Icon);
 	virtual Forms::DialogResult ShowInputPrompt(String^ Prompt, String^ Title, String^% OutText);
+	virtual Forms::DialogResult ShowInputPrompt(String^ Prompt, String^ Title, String^ DefaultValue, String^% OutText);
 	virtual List<String^>^ SelectExistingScripts(String^ DefaultSelectionEditorId);
-	virtual void Reveal();
+	virtual void Reveal(Rectangle InitialBounds);
+	virtual void BeginUpdate();
+	virtual void EndUpdate();
+};
+
+
+ref struct ScriptEditorViewFactory : public view::IFactory
+{
+public:
+	virtual view::IScriptEditorView^ NewView();
+
+	static ScriptEditorViewFactory^ NewFactory();
 };
 
 

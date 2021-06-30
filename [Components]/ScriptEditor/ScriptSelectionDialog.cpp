@@ -1,9 +1,7 @@
 #include "ScriptSelectionDialog.h"
-#include "Globals.h"
 #include "[Common]\NativeWrapper.h"
-#include "WorkspaceModelInterface.h"
-#include "[Common]\ListViewUtilities.h"
 #include "ScriptSync.h"
+#include "IScriptEditorView.h"
 #include "Preferences.h"
 
 namespace cse
@@ -559,7 +557,7 @@ void ScriptSelectionDialog::CompleteSelection()
 	if (ScriptList->SelectedObjects->Count == 0)
 	{
 		MessageBox::Show("Please select one or more scripts to continue.",
-						 SCRIPTEDITOR_TITLE,
+						 view::IScriptEditorView::MainWindowDefaultTitle,
 						 MessageBoxButtons::OK,
 						 MessageBoxIcon::Information);
 		return;

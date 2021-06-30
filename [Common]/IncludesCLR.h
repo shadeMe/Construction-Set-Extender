@@ -23,9 +23,6 @@ using namespace System::Resources;
 using namespace System::Reflection;
 using namespace System::Runtime::InteropServices;
 
-typedef unsigned char		UInt8;
-
-#define		SCRIPTEDITOR_TITLE			"CSE Script Editor"
-#define		COMPONENTDLLFOLDER			"Data\\OBSE\\Plugins\\CSE\\"
+typedef unsigned char UInt8;
 
 #define SAFEDELETE_CLR(Identifier)		delete Identifier; Identifier = nullptr

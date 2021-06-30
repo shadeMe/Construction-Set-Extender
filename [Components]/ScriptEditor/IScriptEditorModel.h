@@ -204,6 +204,11 @@ interface class INavigationHelper
 
 interface class IScriptDocument
 {
+	static property UInt16 MaximumScriptBytecodeLength
+	{
+		UInt16 get() { return 0x8000; }
+	}
+
 	static enum class eScriptType
 	{
 		Object = 0,
@@ -229,7 +234,8 @@ interface class IScriptDocument
 			EditorIdAndFormId,
 			Messages,
 			Bookmarks,
-			FindResults
+			FindResults,
+			DisplayingPreprocessorOutput,
 		};
 
 		eEventType EventType;
@@ -242,6 +248,7 @@ interface class IScriptDocument
 		List<components::ScriptDiagnosticMessage^>^ Messages;
 		List<components::ScriptBookmark^>^ Bookmarks;
 		List<components::ScriptFindResult^>^ FindResults;
+		bool DisplayingPreprocessorOutput;
 
 		StateChangeEventArgs();
 	};
@@ -281,18 +288,18 @@ interface class IScriptDocument
 
 	void PushStateToSubscribers();
 
-	void TogglePreprocessorOutput(bool Enabled);
+	bool TogglePreprocessorOutput(bool Enabled);
 	bool IsPreprocessorOutputEnabled();
 
 	bool SanitizeScriptText();
-	void SaveScriptTextToDisk(String^ DiskFilePath);
-	void LoadScriptTextFromDisk(String^ DiskFilePath);
+	bool SaveScriptTextToDisk(String^ DiskFilePath);
+	bool LoadScriptTextFromDisk(String^ DiskFilePath);
 };
 
 
 interface class IScriptEditorModel
 {
-	property List<IScriptDocument^>^ Documents;
+	property System::Collections::Generic::ICollection<IScriptDocument^>^ Documents;
 
 	IScriptDocument^ AllocateNewDocument();
 	void AddDocument(IScriptDocument^ Document);

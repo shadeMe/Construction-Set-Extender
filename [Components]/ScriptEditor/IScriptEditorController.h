@@ -18,14 +18,36 @@ namespace controller
 
 interface class IScriptEditorController
 {
+	ref struct InstantiationParams
+	{
+		[Flags]
+		static enum class eInitOperation
+		{
+			None = 0,
+
+			CreateNewScript = 1 << 0,
+			LoadExistingScript = 1 << 0,	// sets the same bit as above to ensure mutually-exclusivity
+
+			PerformFind = 1 << 1,
+		};
+
+		eInitOperation Operations;
+		Rectangle InitialBounds;
+		List<String^>^ ExistingScriptEditorIds;
+		String^ FindQuery;
+
+		InstantiationParams();
+	};
+
 	property model::IScriptEditorModel^ Model;
 	property view::IScriptEditorView^ View;
 	property model::IScriptDocument^ ActiveDocument;
 
 	IScriptEditorController^ New();
-	IScriptEditorController^ New(Rectangle ViewInitialBounds);
 	void RelocateDocument(model::IScriptDocument^ Document, IScriptEditorController^ Source);
 	void ActivateOrCreateNewDocument(String^ ScriptEditorId);
+
+	void InstantiateEditor(InstantiationParams^ Params);
 };
 
 

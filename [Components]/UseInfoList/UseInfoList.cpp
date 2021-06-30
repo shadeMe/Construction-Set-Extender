@@ -1,5 +1,4 @@
 #include "UseInfoList.h"
-#include "[Common]\ListViewUtilities.h"
 #include "[Common]\HandshakeStructs.h"
 #include "[Common]\NativeWrapper.h"
 

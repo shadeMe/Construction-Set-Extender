@@ -1,5 +1,5 @@
 #include "IntelliSenseInterfaceModel.h"
-#include "IntelliSenseDatabase.h"
+#include "IntelliSenseBackend.h"
 #include "Preferences.h"
 
 namespace cse
@@ -415,7 +415,7 @@ void IntelliSenseInterfaceModel::UpdateContext(IntelliSenseContextChangeEventArg
 		Context->Operation = IntelliSenseModelContext::OperationType::Dot;
 
 		IntelliSenseItemScriptVariable^ RefVar = LookupLocalVariable(UsingPreviousToken ? PreviousToken : CurrentToken);
-		if (RefVar && RefVar->GetDataType() == obScriptParsing::Variable::DataType::Ref)
+		if (RefVar && RefVar->GetDataType() == obScriptParsing::Variable::eDataType::Ref)
 		{
 			Context->CallingObject = RefVar;
 			Context->CallingObjectIsObjectReference = true;
@@ -588,7 +588,7 @@ void IntelliSenseInterfaceModel::ShowInsightTooltip(IntelliSenseInsightHoverEven
 		ShowArgs->TooltipBodyText += "</div>";
 
 		ShowArgs->TooltipBodyText = ShowArgs->TooltipBodyText->Replace("\n", "<br/>");
-		ShowArgs->TooltipBgColor = IRichTooltipContentProvider::BackgroundColor::Red;
+		ShowArgs->TooltipBgColor = IRichTooltipContentProvider::eBackgroundColor::Red;
 	}
 	else if (!E->HoveringOverComment)
 	{
@@ -687,7 +687,7 @@ void IntelliSenseInterfaceModel::RelocatePopup()
 
 void IntelliSenseInterfaceModel::PopulateDataStore()
 {
-	StringMatchType MatchType = UseSubstringFiltering ? StringMatchType::Substring : StringMatchType::StartsWith;
+	eStringMatchType MatchType = UseSubstringFiltering ? eStringMatchType::Substring : eStringMatchType::StartsWith;
 
 	FetchIntelliSenseItemsArgs^ FetchArgs = gcnew FetchIntelliSenseItemsArgs;
 	FetchArgs->IdentifierToMatch = Context->FilterString;
@@ -700,24 +700,24 @@ void IntelliSenseInterfaceModel::PopulateDataStore()
 	case IntelliSenseModelContext::OperationType::Default:
 		EnumerateIntelliSenseItems(LocalVariables, MatchType);
 
-		FetchArgs->FilterBy = FetchArgs->FilterBy & ~DatabaseLookupFilter::Snippet;
+		FetchArgs->FilterBy = FetchArgs->FilterBy & ~eDatabaseLookupFilter::Snippet;
 		EnumeratedItems->AddRange(IntelliSenseBackend::Get()->FetchIntelliSenseItems(FetchArgs));
 
 		break;
 	case IntelliSenseModelContext::OperationType::Call:
-		FetchArgs->FilterBy = DatabaseLookupFilter::UserFunction;
+		FetchArgs->FilterBy = eDatabaseLookupFilter::UserFunction;
 		EnumeratedItems->AddRange(IntelliSenseBackend::Get()->FetchIntelliSenseItems(FetchArgs));
 
 		break;
 	case IntelliSenseModelContext::OperationType::Assign:
 		EnumerateIntelliSenseItems(LocalVariables, MatchType);
 
-		FetchArgs->FilterBy = FetchArgs->FilterBy & ~DatabaseLookupFilter::Command;
-		FetchArgs->FilterBy = FetchArgs->FilterBy & ~DatabaseLookupFilter::Script;
-		FetchArgs->FilterBy = FetchArgs->FilterBy & ~DatabaseLookupFilter::UserFunction;
-		FetchArgs->FilterBy = FetchArgs->FilterBy & ~DatabaseLookupFilter::GameSetting;
-		FetchArgs->FilterBy = FetchArgs->FilterBy & ~DatabaseLookupFilter::Snippet;
-		FetchArgs->FilterBy = FetchArgs->FilterBy & ~DatabaseLookupFilter::Form;
+		FetchArgs->FilterBy = FetchArgs->FilterBy & ~eDatabaseLookupFilter::Command;
+		FetchArgs->FilterBy = FetchArgs->FilterBy & ~eDatabaseLookupFilter::Script;
+		FetchArgs->FilterBy = FetchArgs->FilterBy & ~eDatabaseLookupFilter::UserFunction;
+		FetchArgs->FilterBy = FetchArgs->FilterBy & ~eDatabaseLookupFilter::GameSetting;
+		FetchArgs->FilterBy = FetchArgs->FilterBy & ~eDatabaseLookupFilter::Snippet;
+		FetchArgs->FilterBy = FetchArgs->FilterBy & ~eDatabaseLookupFilter::Form;
 		EnumeratedItems->AddRange(IntelliSenseBackend::Get()->FetchIntelliSenseItems(FetchArgs));
 
 		break;
@@ -727,14 +727,14 @@ void IntelliSenseInterfaceModel::PopulateDataStore()
 
 		if (Context->CallingObjectIsObjectReference)
 		{
-			FetchArgs->FilterBy = DatabaseLookupFilter::Command;
-			FetchArgs->Options = DatabaseLookupOptions::OnlyCommandsThatNeedCallingObject;
+			FetchArgs->FilterBy = eDatabaseLookupFilter::Command;
+			FetchArgs->Options = eDatabaseLookupOptions::OnlyCommandsThatNeedCallingObject;
 			EnumeratedItems->AddRange(IntelliSenseBackend::Get()->FetchIntelliSenseItems(FetchArgs));
 		}
 
 		break;
 	case IntelliSenseModelContext::OperationType::Snippet:
-		FetchArgs->FilterBy = DatabaseLookupFilter::Snippet;
+		FetchArgs->FilterBy = eDatabaseLookupFilter::Snippet;
 		EnumeratedItems->AddRange(IntelliSenseBackend::Get()->FetchIntelliSenseItems(FetchArgs));
 
 		break;
@@ -743,13 +743,13 @@ void IntelliSenseInterfaceModel::PopulateDataStore()
 	if (EnumeratedItems->Count == 1)
 	{
 		IntelliSenseItem^ Item = EnumeratedItems[0];
-		if (Item->MatchesToken(Context->FilterString, StringMatchType::FullMatch))
+		if (Item->MatchesToken(Context->FilterString, eStringMatchType::FullMatch))
 			EnumeratedItems->Clear();			// do not show when enumerable == current token
 	}
 }
 
 generic <typename T> where T : IntelliSenseItem
-void IntelliSenseInterfaceModel::EnumerateIntelliSenseItems(IEnumerable<T>^ Items, StringMatchType MatchType)
+void IntelliSenseInterfaceModel::EnumerateIntelliSenseItems(IEnumerable<T>^ Items, eStringMatchType MatchType)
 {
 	for each (IntelliSenseItem ^ Itr in Items)
 	{
@@ -762,7 +762,7 @@ IntelliSenseItemScriptVariable^ IntelliSenseInterfaceModel::LookupLocalVariable(
 {
 	for each (IntelliSenseItemScriptVariable ^ Itr in LocalVariables)
 	{
-		if (Itr->MatchesToken(Identifier, StringMatchType::FullMatch))
+		if (Itr->MatchesToken(Identifier, eStringMatchType::FullMatch))
 			return Itr;
 	}
 

@@ -53,12 +53,14 @@ ref class ScriptDocument : public IScriptDocument
 
 	textEditor::TextEditorScriptModifiedEventHandler^ EditorScriptModifiedHandler;
 	EventHandler^ EditorLineAnchorInvalidatedHandler;
+	EventHandler^ EditorStaticTextDisplayChangedHandler;
 	IBackgroundSemanticAnalyzer::AnalysisCompleteEventHandler^ BgAnalysisCompleteHandler;
 	EventHandler^ AutoSaveTimerTickHandler;
 	EventHandler^ ScriptEditorPreferencesSavedHandler;
 
 	void Editor_ScriptModified(Object^ Sender, textEditor::TextEditorScriptModifiedEventArgs^ E);
 	void Editor_LineAnchorInvalidated(Object^ Sender, EventArgs^ E);
+	void Editor_StaticTextDisplayChanged(Object^ Sender, EventArgs^ E);
 	void BgAnalyzer_AnalysisComplete(Object^ Sender, IBackgroundSemanticAnalyzer::AnalysisCompleteEventArgs^ E);
 	void AutoSaveTimer_Tick(Object^ Sender, EventArgs^ E);
 	void ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
@@ -70,6 +72,7 @@ ref class ScriptDocument : public IScriptDocument
 	void OnStateChangedMessages();
 	void OnStateChangedBookmarks();
 	void OnStateChangedFindResults();
+	void OnStateChangedDisplayingPreprocessorOutput();
 
 	void ReleaseNativeObjectIfNewScript();
 
@@ -102,6 +105,7 @@ public:
 
 	ImplPropertyGetOnly(bool, Valid, NativeObject != nullptr);
 	ImplPropertySimple(bool, Dirty, Editor->Modified);
+	ImplPropertyGetOnly(bool, UnsavedNewScript, NativeObject && nativeWrapper::g_CSEInterfaceTable->ScriptEditor.IsUnsavedNewScript(NativeObject));
 	ImplPropertyGetOnly(String^, ScriptEditorID, EditorID);
 	ImplPropertyGetOnly(UInt32, ScriptFormID, FormID);
 	ImplPropertyGetOnly(String^, ScriptText, Editor->GetText());
@@ -140,10 +144,12 @@ public:
 
 	virtual void PushStateToSubscribers();
 
-	virtual void TogglePreprocessorOutput(bool Enabled);
+	virtual bool TogglePreprocessorOutput(bool Enabled);
 	virtual bool IsPreprocessorOutputEnabled();
 
 	virtual bool SanitizeScriptText();
+	virtual bool SaveScriptTextToDisk(String^ DiskFilePath);
+	virtual bool LoadScriptTextFromDisk(String^ DiskFilePath);
 };
 
 
@@ -154,10 +160,10 @@ public:
 	ScriptEditorDocumentModel();
 	virtual ~ScriptEditorDocumentModel();
 
-	property List<IScriptDocument^>^ Documents
+	property System::Collections::Generic::ICollection<IScriptDocument^>^ Documents
 	{
-		virtual List<IScriptDocument^>^ get();
-		ImplPropertySetInvalid(List<IScriptDocument^>^);
+		virtual System::Collections::Generic::ICollection<IScriptDocument^>^ get();
+		ImplPropertySetInvalid(System::Collections::Generic::ICollection<IScriptDocument^>^);
 	}
 
 	virtual IScriptDocument^ AllocateNewDocument();
@@ -166,6 +172,15 @@ public:
 	virtual bool ContainsDocument(IScriptDocument^ Document);
 	virtual bool ContainsDocument(String^ EditorId);
 	virtual IScriptDocument^ LookupDocument(String^ EditorId);
+};
+
+
+ref struct ScriptEditorModelFactory : public model::IFactory
+{
+public:
+	virtual model::IScriptEditorModel^ NewModel();
+
+	static ScriptEditorModelFactory^ NewFactory();
 };
 
 

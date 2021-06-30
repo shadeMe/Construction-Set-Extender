@@ -34,7 +34,7 @@ public enum class eComponentType
 	Label,
 	ObjectListView,
 	ObjectListViewColumn,
-	CircularProgress,
+	ProgressBar,
 	DockablePane,
 	CrumbBar,
 	CrumbBarItem,
@@ -50,7 +50,7 @@ interface class ITabStrip;
 interface class ITabStripItem;
 interface class IObjectListView;
 interface class IObjectListViewColumn;
-interface class ICircularProgress;
+interface class IProgressBar;
 interface class IDockablePane;
 interface class ICrumbBar;
 interface class ICrumbBarItem;
@@ -70,7 +70,7 @@ interface class IViewComponent
 	ITabStripItem^ AsTabStripItem();
 	IObjectListView^ AsObjectListView();
 	IObjectListViewColumn^ AsObjectListViewColumn();
-	ICircularProgress^ AsCircularProgress();
+	IProgressBar^ AsProgressBar();
 	IDockablePane^ AsDockablePane();
 	ICrumbBar^ AsCrumbBar();
 	ICrumbBarItem^ AsCrumbBarItem();
@@ -120,6 +120,7 @@ interface class IButton : public IViewComponent
 	property String^ Text;
 	property String^ ShortcutKey;
 	property String^ Tooltip;
+	property Object^ Tag;
 	property bool Checked;
 	property bool Visible;
 	property bool Enabled;
@@ -134,7 +135,10 @@ interface class IButton : public IViewComponent
 
 	ref struct ClickEventArgs {};
 
-	ref struct PopupOpeningEventArgs {};
+	ref struct PopupOpeningEventArgs
+	{
+		bool Cancel;
+	};
 };
 
 
@@ -142,7 +146,7 @@ interface class IComboBox : public IViewComponent
 {
 	property Object^ Selection;
 	property String^ Text;
-	property IEnumerable<Object^>^ Items;
+	property Collections::IEnumerable^ Items;
 	property bool Enabled;
 
 	void AddDropdownItem(Object^ NewItem, bool AtFirstPosition);
@@ -280,9 +284,10 @@ interface class IObjectListView : public IViewComponent
 };
 
 
-interface class ICircularProgress : public IViewComponent
+interface class IProgressBar : public IViewComponent
 {
 	property String^ Text;
+	property String^ Tooltip;
 	property int Value;
 	property int Minimum;
 	property int Maximum;
@@ -379,6 +384,7 @@ public:
 	property Image^ Error;
 	property Image^ Invalid;
 	property Image^ Success;
+	property Image^ InProgress;
 
 	static CommonIcons^ Get();
 };
@@ -448,7 +454,6 @@ public enum class eViewRole
 	MainToolbar_Help_Wiki,
 	MainToolbar_Help_OBSE,
 
-	StatusBar_CurrentMessage,
 	StatusBar_LineNumber,
 	StatusBar_ColumnNumber,
 	StatusBar_PreprocessorOutput,
@@ -497,7 +502,6 @@ public enum class eViewRole
 	TextEditor_ContextMenu_AddVar_String,
 	TextEditor_ContextMenu_AddVar_Array,
 
-	TextEditor_ContextMenu_OpenPreprocessorImportFile,
 	TextEditor_ContextMenu_JumpToAttachedScript,
 };
 
@@ -506,10 +510,15 @@ using namespace components;
 
 interface class IScriptEditorView
 {
+	static property String^ MainWindowDefaultTitle
+	{
+		String^ get() { return "CSE Script Editor"; }
+	}
+
 	property intellisense::IIntelliSenseInterfaceView^ IntelliSenseView;
 	property IntPtr WindowHandle;
 
-	delegate void EventHandler(IScriptEditorView^ Sender, ViewComponentEvent^ E);
+	delegate void EventHandler(Object^ Sender, ViewComponentEvent^ E);
 
 	event EventHandler^ ComponentEvent;
 
@@ -517,9 +526,10 @@ interface class IScriptEditorView
 	void ShowNotification(String^ Message, Image^ Image, int DurationInMs);
 	DialogResult ShowMessageBox(String^ Message, MessageBoxButtons Buttons, MessageBoxIcon Icon);
 	DialogResult ShowInputPrompt(String^ Prompt, String^ Title, String^% OutText);
+	DialogResult ShowInputPrompt(String^ Prompt, String^ Title, String^ DefaultValue, String^% OutText);
 	List<String^>^ SelectExistingScripts(String^ DefaultSelectionEditorId);	// returns a list of script editorIDs
 
-	void Reveal();
+	void Reveal(Rectangle InitialBounds);
 	void BeginUpdate();
 	void EndUpdate();
 };
@@ -527,7 +537,7 @@ interface class IScriptEditorView
 
 interface class IFactory
 {
-	IScriptEditorView^ NewView(Rectangle InitialBounds);
+	IScriptEditorView^ NewView();
 };
 
 

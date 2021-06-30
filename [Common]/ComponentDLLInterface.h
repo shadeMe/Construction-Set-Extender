@@ -59,7 +59,7 @@ namespace componentDLLInterface
 			bool									(* CompileScript)(ScriptCompileData* Data);
 			void									(* RecompileAllScriptsInActiveFile)(void);
 			void									(* ToggleScriptCompilation)(bool State);
-			void									(* DeleteScript)(const char* EditorID);
+			bool									(* DeleteScript)(const char* EditorID);
 			ScriptData*								(* GetPreviousScriptInList)(void* CurrentScript);
 			ScriptData*								(* GetNextScriptInList)(void* CurrentScript);
 			void									(* RemoveScriptBytecode)(void* Script);

@@ -40,6 +40,7 @@ CommonIcons::CommonIcons()
 	Error = IconResources->CreateImage("Error");
 	Invalid = IconResources->CreateImage("Invalid");
 	Success = IconResources->CreateImage("Success");
+	InProgress = IconResources->CreateImage("InProgress");
 }
 
 

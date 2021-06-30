@@ -26,9 +26,9 @@ public:
 		[DataMember]
 		String^													Name;
 		[DataMember]
-		obScriptParsing::Variable::DataType			Type;
+		obScriptParsing::Variable::eDataType			Type;
 
-		VariableInfo(String^ Name, obScriptParsing::Variable::DataType Type);
+		VariableInfo(String^ Name, obScriptParsing::Variable::eDataType Type);
 	};
 
 	[DataMember]
@@ -45,7 +45,7 @@ public:
 	CodeSnippet();
 	~CodeSnippet();
 
-	void						AddVariable(String^ Name, obScriptParsing::Variable::DataType Type);
+	void						AddVariable(String^ Name, obScriptParsing::Variable::eDataType Type);
 	void						AddVariable(VariableInfo^ Var);
 	void						RemoveVariable(VariableInfo^ Var);
 	VariableInfo^				LookupVariable(String^ Name);

@@ -1,6 +1,6 @@
 #include "AvalonEditTextEditor.h"
 #include "Preferences.h"
-#include "IntelliSenseDatabase.h"
+#include "IntelliSenseBackend.h"
 #include "IntelliSenseItem.h"
 
 namespace cse
@@ -25,75 +25,6 @@ using namespace ICSharpCode::AvalonEdit::Document;
 using namespace ICSharpCode::AvalonEdit::Editing;
 using namespace System::Text::RegularExpressions;
 
-ref class BracketSearchData
-{
-	Char	Symbol;
-	int		StartOffset;
-public:
-	property int	EndOffset;
-	property bool	Mismatching;
-
-	static String^	ValidOpeningBrackets = "([{";
-	static String^	ValidClosingBrackets = ")]}";
-
-	static enum class						BracketType
-	{
-		Invalid = 0,
-		Curved,
-		Square,
-		Squiggly
-	};
-	static enum class						BracketKind
-	{
-		Invalid = 0,
-		Opening,
-		Closing
-	};
-
-	BracketSearchData(Char Symbol, int StartOffset) :
-		Symbol(Symbol),
-		StartOffset(StartOffset)
-	{
-		EndOffset = -1;
-		Mismatching = false;
-	}
-
-	BracketType GetType()
-	{
-		switch (Symbol)
-		{
-		case '(':
-		case ')':
-			return BracketType::Curved;
-		case '[':
-		case ']':
-			return BracketType::Square;
-		case '{':
-		case '}':
-			return BracketType::Squiggly;
-		default:
-			return BracketType::Invalid;
-		}
-	}
-
-	BracketKind GetKind()
-	{
-		switch (Symbol)
-		{
-		case '(':
-		case '[':
-		case '{':
-			return BracketKind::Opening;
-		case ')':
-		case ']':
-		case '}':
-			return BracketKind::Closing;
-		default:
-			return BracketKind::Invalid;
-		}
-	}
-	int GetStartOffset() { return StartOffset; }
-};
 
 int AvalonEditTextEditor::PerformFindReplaceOperationOnSegment(System::Text::RegularExpressions::Regex^ ExpressionParser,
 																eFindReplaceOperation Operation,
@@ -531,7 +462,7 @@ void AvalonEditTextEditor::SearchBracesForHighlighting( int CaretPos )
 						BracketSearchData^ CurrentBracket = BracketStack->Pop();
 						BracketSearchData Buffer(Delimiter, DelimiterIndex);
 
-						if (CurrentBracket->GetType() == Buffer.GetType() && CurrentBracket->GetKind() == BracketSearchData::BracketKind::Opening)
+						if (CurrentBracket->GetType() == Buffer.GetType() && CurrentBracket->GetKind() == BracketSearchData::eBracketState::Opening)
 							CurrentBracket->EndOffset = DelimiterIndex;
 						else
 							CurrentBracket->Mismatching = true;
@@ -1025,6 +956,11 @@ void AvalonEditTextEditor::OnLineChanged()
 	LineChanged(this, EventArgs::Empty);
 }
 
+void AvalonEditTextEditor::OnColumnChanged()
+{
+	ColumnChanged(this, EventArgs::Empty);
+}
+
 void AvalonEditTextEditor::OnTextUpdated()
 {
 	TextUpdated(this, EventArgs::Empty);
@@ -1035,6 +971,10 @@ void AvalonEditTextEditor::OnLineAnchorInvalidated()
 	LineAnchorInvalidated(this, EventArgs::Empty);
 }
 
+void AvalonEditTextEditor::OnStaticTextDisplayChanged()
+{
+	StaticTextDisplayChanged(this, EventArgs::Empty);
+}
 
 void AvalonEditTextEditor::TextField_TextChanged(Object^ Sender, EventArgs^ E)
 {
@@ -1049,6 +989,12 @@ void AvalonEditTextEditor::TextField_CaretPositionChanged(Object^ Sender, EventA
 		PreviousLineBuffer = TextField->TextArea->Caret->Line;
 		LineTracker->LineBackgroundRenderer->Redraw();
 		OnLineChanged();
+	}
+
+	if (TextField->TextArea->Caret->Column != PreviousColumnBuffer)
+	{
+		PreviousColumnBuffer = TextField->TextArea->Caret->Column;
+		OnColumnChanged();
 	}
 
 	if (TextField->TextArea->Selection->IsEmpty)
@@ -1399,13 +1345,8 @@ void AvalonEditTextEditor::ScriptEditorPreferences_Saved( Object^ Sender, EventA
 	else
 		TextField->TextArea->IndentationStrategy = gcnew AvalonEdit::Indentation::DefaultIndentationStrategy();
 
-	Color ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColorLightMode;
-	Color BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColorLightMode;
-	if (preferences::SettingsHolder::Get()->Appearance->DarkMode)
-	{
-		ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColorDarkMode;
-		BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColorDarkMode;
-	}
+	Color ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
+	Color BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
 
 	WPFHost->ForeColor = ForegroundColor;
 	WPFHost->BackColor = BackgroundColor;
@@ -1436,9 +1377,7 @@ void AvalonEditTextEditor::ScriptEditorPreferences_Saved( Object^ Sender, EventA
 	if (preferences::SettingsHolder::Get()->Appearance->ShowBlockVisualizer)
 		TextField->TextArea->TextView->ElementGenerators->Add(StructureVisualizer);
 
-	Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorFindResultsLightMode;
-	if (preferences::SettingsHolder::Get()->Appearance->DarkMode)
-		Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorFindResultsDarkMode;
+	Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorFindResults;
 
 	InlineSearchPanel->MarkerBrush = gcnew Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B));
 
@@ -1545,13 +1484,8 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	TextField->VerticalScrollBarVisibility = System::Windows::Controls::ScrollBarVisibility::Hidden;
 	UpdateSyntaxHighlighting(true);
 
-	Color ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColorLightMode;
-	Color BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColorLightMode;
-	if (preferences::SettingsHolder::Get()->Appearance->DarkMode)
-	{
-		ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColorDarkMode;
-		BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColorDarkMode;
-	}
+	Color ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
+	Color BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
 	auto ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, ForegroundColor.R, ForegroundColor.G, ForegroundColor.B));
 	auto BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B));
 
@@ -1565,9 +1499,7 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	else
 		TextField->TextArea->IndentationStrategy = gcnew AvalonEdit::Indentation::DefaultIndentationStrategy();
 
-	Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorFindResultsLightMode;
-	if (preferences::SettingsHolder::Get()->Appearance->DarkMode)
-		Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorFindResultsDarkMode;
+	Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorFindResults;
 
 	InlineSearchPanel = AvalonEdit::Search::SearchPanel::Install(TextField);
 	InlineSearchPanel->MarkerBrush = gcnew Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B));
@@ -1615,6 +1547,7 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	TextFieldInUpdateFlag = false;
 	TextFieldDisplayingStaticText = false;
 	PreviousLineBuffer = -1;
+	PreviousColumnBuffer = -1;
 	SemanticAnalysisCache = gcnew obScriptParsing::AnalysisData();
 
 	LineTracker = gcnew LineTrackingManager(TextField, ParentScriptDocument);
@@ -1876,6 +1809,12 @@ Point AvalonEditTextEditor::GetPositionFromCharIndex(int Index, bool Absolute)
 	}
 }
 
+Point AvalonEditTextEditor::ScreenToClient(Point ScreenPosition)
+{
+	auto ClientCoords = TextField->PointFromScreen(Windows::Point(ScreenPosition.X, ScreenPosition.Y));
+	return Point(ClientCoords.X, ClientCoords.Y);
+}
+
 void AvalonEditTextEditor::FadeOutCurrentTextView()
 {
 	if (SetTextAnimating)
@@ -2048,7 +1987,7 @@ Point AvalonEditTextEditor::PointToScreen(Point Location)
 void AvalonEditTextEditor::BeginUpdate(void)
 {
 	if (TextFieldInUpdateFlag)
-		throw gcnew CSEGeneralException("Text editor is already being updated.");
+		throw gcnew InvalidOperationException("Text editor is already being updated.");
 
 	TextFieldInUpdateFlag = true;
 	TextField->Document->BeginUpdate();
@@ -2059,7 +1998,7 @@ void AvalonEditTextEditor::BeginUpdate(void)
 void AvalonEditTextEditor::EndUpdate(bool FlagModification)
 {
 	if (TextFieldInUpdateFlag == false)
-		throw gcnew CSEGeneralException("Text editor isn't being updated.");
+		throw gcnew InvalidOperationException("Text editor isn't being updated.");
 
 	TextField->Document->EndUpdate();
 	TextFieldInUpdateFlag = false;
@@ -2075,8 +2014,11 @@ UInt32 AvalonEditTextEditor::GetIndentLevel(UInt32 LineNumber)
 	return SemanticAnalysisCache->GetLineIndentLevel(LineNumber);
 }
 
-void AvalonEditTextEditor::InsertVariable(String^ VariableName, obScriptParsing::Variable::DataType VariableType)
+bool AvalonEditTextEditor::InsertVariable(String^ VariableName, obScriptParsing::Variable::eDataType VariableType)
 {
+	if (SemanticAnalysisCache->LookupVariable(VariableName))
+		return false;
+
 	String^ Declaration = obScriptParsing::Variable::GetVariableDataTypeToken(VariableType) + " " + VariableName + "\n";
 	UInt32 InsertionLine = SemanticAnalysisCache->NextVariableLine;
 	if (InsertionLine == 0)
@@ -2093,6 +2035,8 @@ void AvalonEditTextEditor::InsertVariable(String^ VariableName, obScriptParsing:
 
 		InsertText(Declaration, TextField->Document->GetOffset(InsertionLine, 1), true);
 	}
+
+	return true;
 }
 
 ILineAnchor^ AvalonEditTextEditor::CreateLineAnchor(UInt32 Line)
@@ -2149,6 +2093,7 @@ void AvalonEditTextEditor::BeginDisplayingStaticText(String^ TextToDisplay)
 	SetText(TextToDisplay, false);
 
 	TextFieldDisplayingStaticText = true;
+	OnStaticTextDisplayChanged();
 }
 
 void AvalonEditTextEditor::EndDisplayingStaticText()
@@ -2162,6 +2107,7 @@ void AvalonEditTextEditor::EndDisplayingStaticText()
 	TextField->Document->UndoStack->ClearRedoStack();
 
 	TextFieldDisplayingStaticText = false;
+	OnStaticTextDisplayChanged();
 }
 
 } // namespace avalonEdit

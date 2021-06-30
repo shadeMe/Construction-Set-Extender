@@ -1,5 +1,5 @@
 #include "IntelliSenseItem.h"
-#include "IntelliSenseDatabase.h"
+#include "IntelliSenseBackend.h"
 #include "ITextEditor.h"
 #include "SnippetManager.h"
 #include "[Common]\NativeWrapper.h"
@@ -16,25 +16,39 @@ namespace intellisense
 {
 
 
-bool DoStringMatch(String^ Source, String^ Target, StringMatchType Comparison)
+bool DoStringMatch(String^ Source, String^ Target, eStringMatchType Comparison)
 {
 	switch (Comparison)
 	{
-	case StringMatchType::StartsWith:
+	case eStringMatchType::StartsWith:
 		return Source->StartsWith(Target, System::StringComparison::CurrentCultureIgnoreCase);
-	case StringMatchType::Substring:
+	case eStringMatchType::Substring:
 		return Source->IndexOf(Target, System::StringComparison::CurrentCultureIgnoreCase) != -1;
-	case StringMatchType::FullMatch:
+	case eStringMatchType::FullMatch:
 		return Source->Equals(Target, System::StringComparison::CurrentCultureIgnoreCase);
 	default:
 		return false;
 	}
 }
 
-void IntelliSenseItem::PopulateImageListWithItemTypeImages(ImageList^ Destination)
+Image^ IntelliSenseItem::GetItemTypeIcon(eItemType Type)
 {
-	Destination->Images->Clear();
-	Destination->Images->AddRange(ItemTypeImages);
+	if (ItemTypeIcons->Count == 0)
+	{
+		auto ImageResources =  gcnew ImageResourceManager("ScriptEditor.Icons");
+		ItemTypeIcons->Add(eItemType::None, ImageResources->CreateImage("Transparent"));
+		ItemTypeIcons->Add(eItemType::ScriptCommand, ImageResources->CreateImage("ScriptCommand"));
+		ItemTypeIcons->Add(eItemType::ScriptVariable, ImageResources->CreateImage("LocalVariable"));
+		ItemTypeIcons->Add(eItemType::Quest, ImageResources->CreateImage("Quest"));
+		ItemTypeIcons->Add(eItemType::Script, ImageResources->CreateImage("UserDefinedFunction"));
+		ItemTypeIcons->Add(eItemType::UserFunction, ImageResources->CreateImage("UserDefinedFunction"));
+		ItemTypeIcons->Add(eItemType::GameSetting, ImageResources->CreateImage("GameSetting"));
+		ItemTypeIcons->Add(eItemType::GlobalVariable, ImageResources->CreateImage("GlobalVariable"));
+		ItemTypeIcons->Add(eItemType::Form, ImageResources->CreateImage("Form"));
+		ItemTypeIcons->Add(eItemType::Snippet, ImageResources->CreateImage("Snippet"));
+	}
+
+	return ItemTypeIcons[Type];
 }
 
 System::String^ IntelliSenseItem::GenerateHelpTextHeader(String^ Identifier)
@@ -52,25 +66,25 @@ IntelliSenseItem::IntelliSenseItem()
 	this->HelpTextHeader = String::Empty;
 	this->HelpTextBody = String::Empty;
 	this->HelpTextFooter = String::Empty;
-	this->Type = ItemType::Invalid;
+	this->ItemType = eItemType::None;
 }
 
-IntelliSenseItem::IntelliSenseItem(ItemType Type)
+IntelliSenseItem::IntelliSenseItem(eItemType Type)
 {
 	this->HelpTextHeader = String::Empty;
 	this->HelpTextBody = String::Empty;
 	this->HelpTextFooter = String::Empty;
-	this->Type = Type;
+	this->ItemType = Type;
 }
 
 System::String^ IntelliSenseItem::GetItemTypeName()
 {
-	return ItemTypeID[safe_cast<int>(Type)];
+	return ItemTypeID[safe_cast<int>(ItemType)];
 }
 
-IntelliSenseItem::ItemType IntelliSenseItem::GetItemType()
+IntelliSenseItem::eItemType IntelliSenseItem::GetItemType()
 {
-	return Type;
+	return ItemType;
 }
 
 void IntelliSenseItem::Insert(textEditor::ITextEditor^ Editor)
@@ -78,7 +92,7 @@ void IntelliSenseItem::Insert(textEditor::ITextEditor^ Editor)
 	Editor->SetTokenAtCaretPos(GetSubstitution());
 }
 
-bool IntelliSenseItem::MatchesToken( String^ Token, StringMatchType Comparison )
+bool IntelliSenseItem::MatchesToken( String^ Token, eStringMatchType Comparison )
 {
 	return DoStringMatch(GetIdentifier(), Token, Comparison);
 }
@@ -109,12 +123,12 @@ System::String^ IntelliSenseItemScriptCommand::GetPrettyNameForObsePlugin(String
 IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(componentDLLInterface::CommandTableData* CommandTableData,
 																const componentDLLInterface::ObScriptCommandInfo* CommandInfo,
 																String^ DeveloperUrl)
-	: IntelliSenseItem(ItemType::ScriptCommand)
+	: IntelliSenseItem(eItemType::ScriptCommand)
 {
 	const UInt16 kVanillaCommandStartOpcode = 0x1000, kVanillaCommandEndOpcode = 0x1170;
 	auto Locale = System::Globalization::CultureInfo::CurrentCulture->TextInfo;
 
-	SourceType CommandSource = SourceType::Vanilla;
+	eSourceType CommandSource = eSourceType::Vanilla;
 	String^ CommandSourceName = "Vanilla";
 	UInt32 CommandSourceVersion = 0;
 
@@ -125,13 +139,13 @@ IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(componentDLLInterfa
 		auto SourceObsePlugin = CommandTableData->GetParentPlugin(CommandInfo);
 		if (SourceObsePlugin)
 		{
-			CommandSource = SourceType::OBSEPlugin;
+			CommandSource = eSourceType::OBSEPlugin;
 			CommandSourceName = GetPrettyNameForObsePlugin(gcnew String(SourceObsePlugin->name));
 			CommandSourceVersion = SourceObsePlugin->version;
 		}
 		else
 		{
-			CommandSource = SourceType::OBSE;
+			CommandSource = eSourceType::OBSE;
 			CommandSourceName = "OBSE";
 			CommandSourceVersion = CommandTableData->GetRequiredOBSEVersion(CommandInfo);
 		}
@@ -147,7 +161,7 @@ IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(componentDLLInterfa
 	if (CommandInfo->shortName && CommandInfo->shortName[0] != '\0')
 		CommandShorthand = gcnew String(CommandInfo->shortName);
 
-	ReturnValueType CommandReturnType = safe_cast<ReturnValueType>(CommandTableData->GetCommandReturnType(CommandInfo));
+	eReturnValueType CommandReturnType = safe_cast<eReturnValueType>(CommandTableData->GetCommandReturnType(CommandInfo));
 
 	List<ScriptCommandParameter^>^ CommandParameters = gcnew List<ScriptCommandParameter^>;
 	for (int i = 0; i < CommandInfo->numParams; ++i)
@@ -236,7 +250,7 @@ String^ IntelliSenseItemScriptCommand::GetSubstitution()
 	return GetIdentifier();
 }
 
-bool IntelliSenseItemScriptCommand::MatchesToken(String^ Token, StringMatchType Comparison)
+bool IntelliSenseItemScriptCommand::MatchesToken(String^ Token, eStringMatchType Comparison)
 {
 	bool Found = DoStringMatch(Name, Token, Comparison);
 	if (!Found)
@@ -256,8 +270,8 @@ System::String^ IntelliSenseItemScriptCommand::GetDocumentationUrl()
 }
 
 IntelliSenseItemScriptVariable::IntelliSenseItemScriptVariable(String^ Name, String^ Comment,
-												obScriptParsing::Variable::DataType Type, String^ ParentEditorID) :
-	IntelliSenseItem(ItemType::ScriptVariable),
+												obScriptParsing::Variable::eDataType Type, String^ ParentEditorID) :
+	IntelliSenseItem(eItemType::ScriptVariable),
 	Name(Name),
 	DataType(Type),
 	Comment(Comment),
@@ -299,7 +313,7 @@ String^ IntelliSenseItemScriptVariable::GetDataTypeID()
 	return obScriptParsing::Variable::GetVariableDataTypeDescription(DataType);
 }
 
-obScriptParsing::Variable::DataType IntelliSenseItemScriptVariable::GetDataType()
+obScriptParsing::Variable::eDataType IntelliSenseItemScriptVariable::GetDataType()
 {
 	return DataType;
 }
@@ -316,7 +330,7 @@ String^ IntelliSenseItemForm::GetFormTypeIdentifier()
 
 IntelliSenseItemForm::IntelliSenseItemForm( componentDLLInterface::FormData* Data,
 											componentDLLInterface::ScriptData* AttachedScript) :
-	IntelliSenseItem(ItemType::Form)
+	IntelliSenseItem(eItemType::Form)
 {
 	TypeID = Data->TypeID;
 	FormID = Data->FormID;
@@ -337,20 +351,20 @@ IntelliSenseItemForm::IntelliSenseItemForm( componentDLLInterface::FormData* Dat
 		HelpTextBody += "<span>Name: " + gcnew String(Data->NameComponent) + "</span><br/>";
 
 	String^ FlagsDesc = "";
-	auto CheckedFlags = gcnew Dictionary<FormFlags, String^>;
-	CheckedFlags->Add(FormFlags::FromMaster, "From master file");
-	CheckedFlags->Add(FormFlags::FromActiveFile, "From active file");
-	CheckedFlags->Add(FormFlags::Deleted, "Deleted");
-	CheckedFlags->Add(FormFlags::TurnOffFire, "Turn off fire");
-	CheckedFlags->Add(FormFlags::QuestItem, "Quest item");
-	CheckedFlags->Add(FormFlags::VisibleWhenDistant, "Visible when distant");
+	auto CheckedFlags = gcnew Dictionary<eFormFlags, String^>;
+	CheckedFlags->Add(eFormFlags::FromMaster, "From master file");
+	CheckedFlags->Add(eFormFlags::FromActiveFile, "From active file");
+	CheckedFlags->Add(eFormFlags::Deleted, "Deleted");
+	CheckedFlags->Add(eFormFlags::TurnOffFire, "Turn off fire");
+	CheckedFlags->Add(eFormFlags::QuestItem, "Quest item");
+	CheckedFlags->Add(eFormFlags::VisibleWhenDistant, "Visible when distant");
 
 	for each (auto% CheckedFlag in CheckedFlags)
 	{
 		if (Flags & safe_cast<UInt32>(CheckedFlag.Key))
 		{
 			auto FlagString = CheckedFlag.Value;
-			if (TypeID == 0x31 && CheckedFlag.Key == FormFlags::QuestItem)
+			if (TypeID == 0x31 && CheckedFlag.Key == eFormFlags::QuestItem)
 				FlagString = "Persistent";
 
 			FlagsDesc += "<div width=\"100\"><span width=\"100\">" + FlagString + "</span></div>";
@@ -376,7 +390,7 @@ IntelliSenseItemForm::IntelliSenseItemForm( componentDLLInterface::FormData* Dat
 }
 
 IntelliSenseItemForm::IntelliSenseItemForm() :
-	IntelliSenseItem(ItemType::Form)
+	IntelliSenseItem(eItemType::Form)
 {
 	TypeID = 0;
 	FormID = 0;
@@ -418,11 +432,11 @@ System::String^ IntelliSenseItemForm::GetAttachedScriptEditorID()
 
 
 IntelliSenseItemGlobalVariable::IntelliSenseItemGlobalVariable(componentDLLInterface::FormData* Data,
-	obScriptParsing::Variable::DataType Type, String^ Value) :
+	obScriptParsing::Variable::eDataType Type, String^ Value) :
 	IntelliSenseItemForm(Data, nullptr)
 
 {
-	this->Type = IntelliSenseItem::ItemType::GlobalVariable;
+	this->ItemType = IntelliSenseItem::eItemType::GlobalVariable;
 	this->DataType = Type;
 	this->Value = Value;
 
@@ -458,10 +472,10 @@ System::String^ IntelliSenseItemGlobalVariable::TooltipBodyText::get()
 }
 
 IntelliSenseItemGameSetting::IntelliSenseItemGameSetting(componentDLLInterface::FormData* Data,
-	obScriptParsing::Variable::DataType Type, String^ Value) :
+	obScriptParsing::Variable::eDataType Type, String^ Value) :
 	IntelliSenseItemGlobalVariable(Data, Type, Value)
 {
-	this->Type = IntelliSenseItem::ItemType::GameSetting;
+	this->ItemType = IntelliSenseItem::eItemType::GameSetting;
 
 	// regenerate after changing type
 	HelpTextFooter = GenerateHelpTextFooter();
@@ -477,7 +491,7 @@ IntelliSenseItemQuest::IntelliSenseItemQuest(componentDLLInterface::FormData* Da
 											componentDLLInterface::ScriptData* AttachedScript)
 	: IntelliSenseItemForm(Data, AttachedScript)
 {
-	this->Type = IntelliSenseItem::ItemType::Quest;
+	this->ItemType = IntelliSenseItem::eItemType::Quest;
 
 	// regenerate after changing type
 	HelpTextFooter = GenerateHelpTextFooter();
@@ -487,9 +501,9 @@ IntelliSenseItemQuest::IntelliSenseItemQuest(componentDLLInterface::FormData* Da
 IntelliSenseItemScript::IntelliSenseItemScript() :
 	IntelliSenseItemForm()
 {
-	this->Type = IntelliSenseItem::ItemType::Script;
+	this->ItemType = IntelliSenseItem::eItemType::Script;
 
-	VarList = gcnew List<IntelliSenseItemScriptVariable^>;
+	Variables = gcnew List<IntelliSenseItemScriptVariable^>;
 	EditorID = "EmptyScript";
 	CommentDescription = String::Empty;
 }
@@ -497,9 +511,9 @@ IntelliSenseItemScript::IntelliSenseItemScript() :
 IntelliSenseItemScript::IntelliSenseItemScript(componentDLLInterface::ScriptData* ScriptData) :
 	IntelliSenseItemForm(ScriptData, nullptr)
 {
-	this->Type = IntelliSenseItem::ItemType::Script;
+	this->ItemType = IntelliSenseItem::eItemType::Script;
 
-	VarList = gcnew List<IntelliSenseItemScriptVariable^>;
+	Variables = gcnew List<IntelliSenseItemScriptVariable^>;
 	InitialAnalysisData = gcnew obScriptParsing::AnalysisData();
 	auto AnalysisParams = gcnew obScriptParsing::AnalysisData::Params;
 
@@ -512,13 +526,13 @@ IntelliSenseItemScript::IntelliSenseItemScript(componentDLLInterface::ScriptData
 	InitialAnalysisData->PerformAnalysis(AnalysisParams);
 
 	for each (obScriptParsing::Variable ^ Itr in InitialAnalysisData->Variables)
-		VarList->Add(gcnew IntelliSenseItemScriptVariable(Itr->Name, Itr->Comment, Itr->Type, EditorID));
+		Variables->Add(gcnew IntelliSenseItemScriptVariable(Itr->Name, Itr->Comment, Itr->Type, EditorID));
 
 	CommentDescription = InitialAnalysisData->Description;
 
 	if (CommentDescription->Length)
 		HelpTextBody += "<p width=\"250\" padding=\"0,0,5,10\">Comment: <i>" + CommentDescription->Replace("\n", "<br/>") + "</i></p>";
-	HelpTextBody += "Variables: " + VarList->Count;
+	HelpTextBody += "Variables: " + Variables->Count;
 
 	// regenerate after changing type
 	HelpTextFooter = GenerateHelpTextFooter();
@@ -526,9 +540,9 @@ IntelliSenseItemScript::IntelliSenseItemScript(componentDLLInterface::ScriptData
 
 IntelliSenseItemScriptVariable ^ IntelliSenseItemScript::LookupVariable(String ^ VariableName)
 {
-	for each (auto Itr in VarList)
+	for each (auto Itr in Variables)
 	{
-		if (Itr->MatchesToken(VariableName, StringMatchType::FullMatch))
+		if (Itr->MatchesToken(VariableName, eStringMatchType::FullMatch))
 			return Itr;
 	}
 
@@ -537,7 +551,7 @@ IntelliSenseItemScriptVariable ^ IntelliSenseItemScript::LookupVariable(String ^
 
 bool IntelliSenseItemScript::IsUserDefinedFunction()
 {
-	return Type == IntelliSenseItem::ItemType::UserFunction;
+	return ItemType == IntelliSenseItem::eItemType::UserFunction;
 }
 
 System::String^ IntelliSenseItemScript::GetItemTypeName()
@@ -548,13 +562,13 @@ System::String^ IntelliSenseItemScript::GetItemTypeName()
 
 IEnumerable<IntelliSenseItemScriptVariable^>^ IntelliSenseItemScript::GetVariables()
 {
-	return VarList;
+	return Variables;
 }
 
 IntelliSenseItemUserFunction::IntelliSenseItemUserFunction(componentDLLInterface::ScriptData* ScriptData) :
 	IntelliSenseItemScript(ScriptData)
 {
-	this->Type = ItemType::UserFunction;
+	this->ItemType = eItemType::UserFunction;
 
 	ParameterIndices = gcnew List<int>;
 	for (int i = 0; i < 10; ++i)
@@ -597,7 +611,7 @@ IntelliSenseItemUserFunction::IntelliSenseItemUserFunction(componentDLLInterface
 			if (UdfParamIndex == -1)
 				break;
 
-			auto ScriptVar = safe_cast<IntelliSenseItemScriptVariable^>(VarList[UdfParamIndex]);
+			auto ScriptVar = safe_cast<IntelliSenseItemScriptVariable^>(Variables[UdfParamIndex]);
 
 			HelpTextBody += kParamRowStart;
 			HelpTextBody += kParamCellStart + ScriptVar->GetIdentifier() + kParamCellEnd;
@@ -614,7 +628,7 @@ IntelliSenseItemUserFunction::IntelliSenseItemUserFunction(componentDLLInterface
 	else if (ReturnVarIndex == kReturnVarIdxAmbiguous)
 		HelpTextBody += "Return type: Ambiguous";
 	else
-		HelpTextBody += "Return type: " + safe_cast<IntelliSenseItemScriptVariable^>(VarList[ReturnVarIndex])->GetDataTypeID();
+		HelpTextBody += "Return type: " + safe_cast<IntelliSenseItemScriptVariable^>(Variables[ReturnVarIndex])->GetDataTypeID();
 
 	// regenerate after changing type
 	HelpTextFooter = GenerateHelpTextFooter();
@@ -623,7 +637,7 @@ IntelliSenseItemUserFunction::IntelliSenseItemUserFunction(componentDLLInterface
 IntelliSenseItemCodeSnippet::IntelliSenseItemCodeSnippet(CodeSnippet^ Source) :
 	IntelliSenseItem()
 {
-	this->Type = IntelliSenseItem::ItemType::Snippet;
+	this->ItemType = IntelliSenseItem::eItemType::Snippet;
 	Parent = Source;
 
 	HelpTextHeader = GenerateHelpTextHeader(Parent->Name + " (" + Parent->Shorthand + ")");
@@ -653,7 +667,7 @@ void IntelliSenseItemCodeSnippet::Insert(textEditor::ITextEditor^ Editor)
 	Editor->ScrollToCaret();
 }
 
-bool IntelliSenseItemCodeSnippet::MatchesToken( String^ Token, StringMatchType Comparison )
+bool IntelliSenseItemCodeSnippet::MatchesToken( String^ Token, eStringMatchType Comparison )
 {
 	bool Found = DoStringMatch(Parent->Name, Token, Comparison);
 	if (!Found)

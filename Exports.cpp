@@ -414,7 +414,7 @@ void ToggleScriptCompilation(bool State)
 	TESScriptCompiler::ToggleScriptCompilation(State);
 }
 
-void DeleteScript(const char* EditorID)
+bool DeleteScript(const char* EditorID)
 {
 	TESForm* Form = TESForm::LookupByEditorID(EditorID);
 	if (Form)
@@ -424,8 +424,12 @@ void DeleteScript(const char* EditorID)
 		{
 			ScriptForm->SetDeleted(true);
 			ScriptForm->UpdateUsageInfo();
+
+			return ScriptForm->IsDeleted();
 		}
 	}
+
+	return false;
 }
 
 enum

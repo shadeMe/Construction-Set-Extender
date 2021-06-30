@@ -1,7 +1,6 @@
 #include "AvalonEditComponents.h"
 #include "AvalonEditTextEditor.h"
 #include "Preferences.h"
-#include "Globals.h"
 
 namespace cse
 {
@@ -21,7 +20,7 @@ namespace avalonEdit
 
 System::Windows::Media::Imaging::BitmapSource^ WPFImageResourceGenerator::CreateImageSource(String^ ResourceIdentifier)
 {
-	Drawing::Bitmap^ OrgResource = safe_cast<Drawing::Bitmap^>(Globals::ImageResources()->CreateImage(ResourceIdentifier));
+	Drawing::Bitmap^ OrgResource = safe_cast<Drawing::Bitmap^>(IconResources->CreateImage(ResourceIdentifier));
 	System::Windows::Media::Imaging::BitmapSource^ Result = nullptr;
 
 	try
@@ -160,6 +159,7 @@ void LineTrackingManagerBgRenderer::DoLineLimitBackground(DocumentLine^ Line, Te
 		return;
 
 	Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorCharLimit;
+
 	RenderBackground(textView,
 						drawingContext,
 						Line->Offset,
@@ -176,6 +176,7 @@ void LineTrackingManagerBgRenderer::DoSelectedStringBackground(String^ Selection
 		return;
 
 	Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorSelection;
+
 	String^ CurrentLine = ParentEditor->Document->GetText(Line);
 
 	int Index = 0, Start = 0;
@@ -198,6 +199,7 @@ void LineTrackingManagerBgRenderer::DoSelectedStringBackground(String^ Selection
 void LineTrackingManagerBgRenderer::DoErrorSquiggles(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 {
 	Color Buffer = preferences::SettingsHolder::Get()->Appearance->UnderlineColorError;
+
 	Windows::Media::Color RenderColor = Windows::Media::Color::FromArgb(255, Buffer.R, Buffer.G, Buffer.B);
 
 	for each (auto Itr in ErrorSquiggles)
@@ -210,6 +212,7 @@ void LineTrackingManagerBgRenderer::DoErrorSquiggles(TextView^ textView, System:
 void LineTrackingManagerBgRenderer::DoFindResults(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 {
 	Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorFindResults;
+
 	for each (auto Itr in FindResults)
 	{
 		if (!Itr->Enabled)
@@ -672,15 +675,16 @@ void StructureVisualizerRenderer::OnMouseClick(Object^ Sender, Windows::Input::M
 Windows::UIElement^ StructureVisualizerRenderer::GenerateAdornment(UInt32 JumpLine, String^ ElementText)
 {
 	Color ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
+
 	Font^ CustomFont = gcnew Font(preferences::SettingsHolder::Get()->Appearance->TextFont->FontFamily->Name,
 									preferences::SettingsHolder::Get()->Appearance->TextFont->Size - 2,
 									FontStyle::Italic);
 
-	Windows::Media::Brush^ ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(100,
+	auto ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(100,
 													ForegroundColor.R,
 													ForegroundColor.G,
 													ForegroundColor.B));
-	Windows::Media::Brush^ BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(0, 0, 0, 0));
+	auto BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(0, 0, 0, 0));
 
 	ElementText = ElementText->Replace("\t", "");
 	if (ElementText->Length > 100)
@@ -690,7 +694,7 @@ Windows::UIElement^ StructureVisualizerRenderer::GenerateAdornment(UInt32 JumpLi
 	Data->JumpLine = JumpLine;
 	Data->Parent = ParentEditor;
 
-	Windows::Controls::StackPanel^ Panel = gcnew Windows::Controls::StackPanel();
+	auto Panel = gcnew Windows::Controls::StackPanel();
 	Panel->HorizontalAlignment = Windows::HorizontalAlignment::Center;
 	Panel->VerticalAlignment = Windows::VerticalAlignment::Bottom;
 	Panel->Orientation = Windows::Controls::Orientation::Horizontal;
@@ -699,10 +703,10 @@ Windows::UIElement^ StructureVisualizerRenderer::GenerateAdornment(UInt32 JumpLi
 	Panel->Tag = Data;
 	Panel->PreviewMouseDown += gcnew System::Windows::Input::MouseButtonEventHandler(OnMouseClick);
 
-	Windows::Media::Imaging::BitmapSource^ IconData = GetIconSource();
+	auto IconData = GetIconSource();
 	if (IconData)
 	{
-		Windows::Controls::Image^ Icon = gcnew Windows::Controls::Image();
+		auto Icon = gcnew Windows::Controls::Image();
 		Icon->Source = IconData;
 		Icon->Width = 14;
 		Icon->Height = 14;
@@ -711,7 +715,7 @@ Windows::UIElement^ StructureVisualizerRenderer::GenerateAdornment(UInt32 JumpLi
 		Panel->Children->Add(Icon);
 	}
 
-	Windows::Controls::Label^ AdornmentLabel = gcnew Windows::Controls::Label();
+	auto AdornmentLabel = gcnew Windows::Controls::Label();
 	AdornmentLabel->FontFamily = gcnew Windows::Media::FontFamily(CustomFont->FontFamily->Name);
 	AdornmentLabel->FontSize = CustomFont->Size;
 	AdornmentLabel->FontStyle = Windows::FontStyles::Italic;
@@ -920,7 +924,7 @@ void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::Mouse
 	bool DisplayPopup = false;
 	String^ PopupTitle = "";
 	String^ PopupText = "";
-	auto PopupBgColor = IRichTooltipContentProvider::BackgroundColor::Default;
+	auto PopupBgColor = IRichTooltipContentProvider::eBackgroundColor::Default;
 
 	Windows::Point DisplayLocation = TransformToPixels(E->GetPosition(ParentEditor));
 	DisplayLocation.X += System::Windows::SystemParameters::CursorWidth;
@@ -937,7 +941,7 @@ void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::Mouse
 														model::components::ScriptDiagnosticMessage::eMessageSource::All,
 														model::components::ScriptDiagnosticMessage::eMessageType::Error);
 
-		PopupBgColor = IRichTooltipContentProvider::BackgroundColor::Red;
+		PopupBgColor = IRichTooltipContentProvider::eBackgroundColor::Red;
 		PopupTitle = Errors->Count + " error" + (Errors->Count == 1 ? "" : "s");
 
 		PopupText += kRowStart;
@@ -952,7 +956,7 @@ void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::Mouse
 														  model::components::ScriptDiagnosticMessage::eMessageSource::All,
 														  model::components::ScriptDiagnosticMessage::eMessageType::Warning);
 
-		PopupBgColor = IRichTooltipContentProvider::BackgroundColor::Yellow;
+		PopupBgColor = IRichTooltipContentProvider::eBackgroundColor::Yellow;
 		PopupTitle = Warnings->Count + " warning" + (Warnings->Count == 1 ? "" : "s");
 
 		PopupText += kRowStart;
@@ -965,7 +969,7 @@ void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::Mouse
 		DisplayPopup = true;
 		auto Bookmarks = ParentScriptDocument->GetBookmarks(Line);
 
-		PopupBgColor = IRichTooltipContentProvider::BackgroundColor::Blue;
+		PopupBgColor = IRichTooltipContentProvider::eBackgroundColor::Blue;
 		PopupTitle = Bookmarks->Count + " bookmark" + (Bookmarks->Count == 1 ? "" : "s");
 
 		PopupText += kRowStart;

@@ -1,9 +1,6 @@
 #include "SnippetManager.h"
-
-#include "[Common]\NativeWrapper.h"
-#include "[Common]\ListViewUtilities.h"
-#include "[Common]\CustomInputBox.h"
-
+#include "IScriptEditorView.h"
+#include "Utilities.h"
 
 
 namespace cse
@@ -21,7 +18,7 @@ namespace intellisense
 using namespace System::IO;
 using namespace System::Windows::Forms;
 
-CodeSnippet::VariableInfo::VariableInfo(String^ Name, obScriptParsing::Variable::DataType Type)
+CodeSnippet::VariableInfo::VariableInfo(String^ Name, obScriptParsing::Variable::eDataType Type)
 {
 	this->Name = Name;
 	this->Type = Type;
@@ -63,7 +60,7 @@ CodeSnippet^ CodeSnippet::Load( String^ FullPath )
 	return Result;
 }
 
-void CodeSnippet::AddVariable(String^ Name, obScriptParsing::Variable::DataType Type)
+void CodeSnippet::AddVariable(String^ Name, obScriptParsing::Variable::eDataType Type)
 {
 	if (LookupVariable(Name) == nullptr)
 		Variables->Add(gcnew VariableInfo(Name, Type));
@@ -429,7 +426,7 @@ void CodeSnippetManagerDialog::InitializeComponent()
 	this->VarListCMAddVarInt->Name = L"VarListCMAddVarInt";
 	this->VarListCMAddVarInt->Size = System::Drawing::Size(152, 22);
 	this->VarListCMAddVarInt->Text = L"Integer";
-	this->VarListCMAddVarInt->Tag = obScriptParsing::Variable::DataType::Integer;
+	this->VarListCMAddVarInt->Tag = obScriptParsing::Variable::eDataType::Integer;
 	this->VarListCMAddVarInt->TextImageRelation = System::Windows::Forms::TextImageRelation::TextBeforeImage;
 	this->VarListCMAddVarInt->Click += gcnew EventHandler(this, &CodeSnippetManagerDialog::VarListCMAddVariable_Click);
 	//
@@ -439,7 +436,7 @@ void CodeSnippetManagerDialog::InitializeComponent()
 	this->VarListCMAddVarFloat->Name = L"VarListCMAddVarFloat";
 	this->VarListCMAddVarFloat->Size = System::Drawing::Size(152, 22);
 	this->VarListCMAddVarFloat->Text = L"Float";
-	this->VarListCMAddVarFloat->Tag = obScriptParsing::Variable::DataType::Float;
+	this->VarListCMAddVarFloat->Tag = obScriptParsing::Variable::eDataType::Float;
 	this->VarListCMAddVarFloat->TextImageRelation = System::Windows::Forms::TextImageRelation::TextBeforeImage;
 	this->VarListCMAddVarFloat->Click += gcnew EventHandler(this, &CodeSnippetManagerDialog::VarListCMAddVariable_Click);
 
@@ -450,7 +447,7 @@ void CodeSnippetManagerDialog::InitializeComponent()
 	this->VarListCMAddVarRef->Name = L"VarListCMAddVarRef";
 	this->VarListCMAddVarRef->Size = System::Drawing::Size(152, 22);
 	this->VarListCMAddVarRef->Text = L"Reference";
-	this->VarListCMAddVarRef->Tag = obScriptParsing::Variable::DataType::Ref;
+	this->VarListCMAddVarRef->Tag = obScriptParsing::Variable::eDataType::Ref;
 	this->VarListCMAddVarRef->TextImageRelation = System::Windows::Forms::TextImageRelation::TextBeforeImage;
 	this->VarListCMAddVarRef->Click += gcnew EventHandler(this, &CodeSnippetManagerDialog::VarListCMAddVariable_Click);
 	//
@@ -460,7 +457,7 @@ void CodeSnippetManagerDialog::InitializeComponent()
 	this->VarListCMAddVarString->Name = L"VarListCMAddVarString";
 	this->VarListCMAddVarString->Size = System::Drawing::Size(152, 22);
 	this->VarListCMAddVarString->Text = L"String";
-	this->VarListCMAddVarString->Tag = obScriptParsing::Variable::DataType::StringVar;
+	this->VarListCMAddVarString->Tag = obScriptParsing::Variable::eDataType::StringVar;
 	this->VarListCMAddVarString->TextImageRelation = System::Windows::Forms::TextImageRelation::TextBeforeImage;
 	this->VarListCMAddVarString->Click += gcnew EventHandler(this, &CodeSnippetManagerDialog::VarListCMAddVariable_Click);
 	//
@@ -470,7 +467,7 @@ void CodeSnippetManagerDialog::InitializeComponent()
 	this->VarListCMAddVarArray->Name = L"VarListCMAddVarArray";
 	this->VarListCMAddVarArray->Size = System::Drawing::Size(152, 22);
 	this->VarListCMAddVarArray->Text = L"Array";
-	this->VarListCMAddVarArray->Tag = obScriptParsing::Variable::DataType::ArrayVar;
+	this->VarListCMAddVarArray->Tag = obScriptParsing::Variable::eDataType::ArrayVar;
 	this->VarListCMAddVarArray->TextImageRelation = System::Windows::Forms::TextImageRelation::TextBeforeImage;
 	this->VarListCMAddVarArray->Click += gcnew EventHandler(this, &CodeSnippetManagerDialog::VarListCMAddVariable_Click);
 	//
@@ -549,7 +546,7 @@ void CodeSnippetManagerDialog::SetSnippetData( CodeSnippet^ Snippet, ListViewIte
 	if (NewName->IndexOfAny(ReservedCharacters->ToCharArray()) != -1)
 	{
 		MessageBox::Show("Snippet name cannot contain any of the following characters: " + ReservedCharacters,
-						SCRIPTEDITOR_TITLE,
+						view::IScriptEditorView::MainWindowDefaultTitle,
 						MessageBoxButtons::OK,
 						MessageBoxIcon::Exclamation);
 		return;
@@ -558,7 +555,7 @@ void CodeSnippetManagerDialog::SetSnippetData( CodeSnippet^ Snippet, ListViewIte
 			WorkingCopy->Lookup(NewName))
 	{
 		MessageBox::Show("Snippet name must be unique.",
-						SCRIPTEDITOR_TITLE,
+						view::IScriptEditorView::MainWindowDefaultTitle,
 						MessageBoxButtons::OK,
 						MessageBoxIcon::Exclamation);
 		return;
@@ -626,7 +623,7 @@ void CodeSnippetManagerDialog::ButtonApply_Click( Object^ Sender, EventArgs^ E )
 
 void CodeSnippetManagerDialog::SnippetListCMAddSnippet_Click( Object^ Sender, EventArgs^ E )
 {
-	inputBoxes::InputBoxResult^ Result = inputBoxes::InputBox::Show("Enter Snippet Name", "New Snippet");
+	auto Result = InputBox::Show("Enter Snippet Name", "New Snippet");
 	if (Result->ReturnCode == System::Windows::Forms::DialogResult::Cancel || Result->Text == "")
 		return;
 	else
@@ -636,7 +633,7 @@ void CodeSnippetManagerDialog::SnippetListCMAddSnippet_Click( Object^ Sender, Ev
 		if (WorkingCopy->Lookup(Name))
 		{
 			MessageBox::Show("Snippet name must be unique.",
-							SCRIPTEDITOR_TITLE,
+							view::IScriptEditorView::MainWindowDefaultTitle,
 							MessageBoxButtons::OK,
 							MessageBoxIcon::Exclamation);
 			return;
@@ -672,9 +669,9 @@ void CodeSnippetManagerDialog::SnippetListCMRemoveSnippet_Click( Object^ Sender,
 void CodeSnippetManagerDialog::VarListCMAddVariable_Click( Object^ Sender, EventArgs^ E )
 {
 	ToolStripMenuItem^ MenuItem = dynamic_cast<ToolStripMenuItem^>(Sender);
-	obScriptParsing::Variable::DataType VarType = (obScriptParsing::Variable::DataType)MenuItem->Tag;
+	obScriptParsing::Variable::eDataType VarType = (obScriptParsing::Variable::eDataType)MenuItem->Tag;
 
-	inputBoxes::InputBoxResult^ Result = inputBoxes::InputBox::Show("Enter Variable Name", "Add Variable");
+	auto Result = InputBox::Show("Enter Variable Name", "Add Variable");
 	if (Result->ReturnCode == System::Windows::Forms::DialogResult::Cancel || Result->Text == "")
 		return;
 	else

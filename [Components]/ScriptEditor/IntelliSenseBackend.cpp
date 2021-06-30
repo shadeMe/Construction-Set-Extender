@@ -1,5 +1,5 @@
 #include "IntelliSenseItem.h"
-#include "IntelliSenseDatabase.h"
+#include "IntelliSenseBackend.h"
 
 #include "SemanticAnalysis.h"
 #include "Preferences.h"
@@ -18,6 +18,33 @@ namespace scriptEditor
 namespace intellisense
 {
 
+
+FetchIntelliSenseItemsArgs::FetchIntelliSenseItemsArgs()
+{
+	IdentifierToMatch = String::Empty;
+	MatchType = eStringMatchType::StartsWith;
+	FilterBy = eDatabaseLookupFilter::All;
+	Options = eDatabaseLookupOptions::None;
+}
+
+ContextualIntelliSenseLookupArgs::ContextualIntelliSenseLookupArgs()
+{
+	CurrentToken = String::Empty;
+	PreviousToken = String::Empty;
+	DotOperatorInUse = false;
+	OnlyWithInsightInfo = false;
+}
+
+ContextualIntelliSenseLookupResult::ContextualIntelliSenseLookupResult()
+{
+	CurrentToken = nullptr;
+	CurrentTokenIsCallableObject = false;
+	CurrentTokenIsObjectReference = false;
+
+	PreviousToken = nullptr;
+	PreviousTokenIsCallableObject = false;
+	PreviousTokenIsObjectReference = false;
+}
 
 void IntelliSenseBackend::UpdateTimer_Tick(Object^ Sender, EventArgs^ E)
 {
@@ -80,21 +107,21 @@ void IntelliSenseBackend::UpdateDatabase()
 				continue;
 
 			String^ EditorID = gcnew String(Data->EditorID);
-			obScriptParsing::Variable::DataType VarType;
+			obScriptParsing::Variable::eDataType VarType;
 
 			switch (Data->Type)
 			{
 			case componentDLLInterface::GlobalData::kType_Int:
-				VarType = obScriptParsing::Variable::DataType::Integer;
+				VarType = obScriptParsing::Variable::eDataType::Integer;
 				break;
 			case componentDLLInterface::GlobalData::kType_Float:
-				VarType = obScriptParsing::Variable::DataType::Float;
+				VarType = obScriptParsing::Variable::eDataType::Float;
 				break;
 			case componentDLLInterface::GlobalData::kType_String:
-				VarType = obScriptParsing::Variable::DataType::StringVar;
+				VarType = obScriptParsing::Variable::eDataType::StringVar;
 				break;
 			default:
-				VarType = obScriptParsing::Variable::DataType::None;
+				VarType = obScriptParsing::Variable::eDataType::None;
 			}
 
 			auto NewItem = gcnew IntelliSenseItemGlobalVariable(Data, VarType, GetVariableValueString(Data));
@@ -260,13 +287,13 @@ IntelliSenseItem^ IntelliSenseBackend::LookupIntelliSenseItem(String^ Indentifie
 
 bool IntelliSenseBackend::IsCallableObject(IntelliSenseItem^ Item)
 {
-	if (Item->GetItemType() == IntelliSenseItem::ItemType::Quest)
+	if (Item->GetItemType() == IntelliSenseItem::eItemType::Quest)
 		return safe_cast<IntelliSenseItemQuest^>(Item)->HasAttachedScript();
-	else if (Item->GetItemType() == IntelliSenseItem::ItemType::Form)
+	else if (Item->GetItemType() == IntelliSenseItem::eItemType::Form)
 	{
 		auto Form = safe_cast<IntelliSenseItemForm^>(Item);
 
-		if (Form->MatchesToken("player", StringMatchType::FullMatch))
+		if (Form->MatchesToken("player", eStringMatchType::FullMatch))
 			return true;		// special-case
 
 		return Form->IsObjectReference() && Form->HasAttachedScript();
@@ -277,11 +304,11 @@ bool IntelliSenseBackend::IsCallableObject(IntelliSenseItem^ Item)
 
 bool IntelliSenseBackend::IsObjectReference(IntelliSenseItem^ Item)
 {
-	if (Item->GetItemType() != IntelliSenseItem::ItemType::Form)
+	if (Item->GetItemType() != IntelliSenseItem::eItemType::Form)
 		return false;
 
 	// special-case player
-	return safe_cast<IntelliSenseItemForm^>(Item)->IsObjectReference() || Item->MatchesToken("player", StringMatchType::FullMatch);
+	return safe_cast<IntelliSenseItemForm^>(Item)->IsObjectReference() || Item->MatchesToken("player", eStringMatchType::FullMatch);
 }
 
 IntelliSenseBackend::IntelliSenseBackend()
@@ -392,21 +419,21 @@ void IntelliSenseBackend::InitializeGameSettings(componentDLLInterface::IntelliS
 			continue;
 
 		String^ EditorID = gcnew String(GMST->EditorID);
-		obScriptParsing::Variable::DataType VarType;
+		obScriptParsing::Variable::eDataType VarType;
 
 		switch (GMST->Type)
 		{
 		case componentDLLInterface::GlobalData::kType_Int:
-			VarType = obScriptParsing::Variable::DataType::Integer;
+			VarType = obScriptParsing::Variable::eDataType::Integer;
 			break;
 		case componentDLLInterface::GlobalData::kType_Float:
-			VarType = obScriptParsing::Variable::DataType::Float;
+			VarType = obScriptParsing::Variable::eDataType::Float;
 			break;
 		case componentDLLInterface::GlobalData::kType_String:
-			VarType = obScriptParsing::Variable::DataType::StringVar;
+			VarType = obScriptParsing::Variable::eDataType::StringVar;
 			break;
 		default:
-			VarType = obScriptParsing::Variable::DataType::None;
+			VarType = obScriptParsing::Variable::eDataType::None;
 		}
 
 		auto NewItem = gcnew IntelliSenseItemGameSetting(GMST, VarType, GetVariableValueString(GMST));
@@ -434,7 +461,7 @@ bool IntelliSenseBackend::IsUserFunction(String^ Identifier)
 	if (Scripts->TryGetValue(Identifier, Script) == false)
 		return false;
 
-	return Script->GetItemType() == IntelliSenseItem::ItemType::UserFunction;
+	return Script->GetItemType() == IntelliSenseItem::eItemType::UserFunction;
 }
 
 bool IntelliSenseBackend::IsScriptCommand(String^ Identifier, bool CheckCommandShorthand)
@@ -466,40 +493,40 @@ void AddIndentifierToCollection(Dictionary<String^, T>^ Source, ICollection<Stri
 		Target->Add(Itr.Key);
 }
 
-System::Collections::Generic::HashSet<String^>^ IntelliSenseBackend::CreateIndentifierSnapshot(DatabaseLookupFilter Categories)
+System::Collections::Generic::HashSet<String^>^ IntelliSenseBackend::CreateIndentifierSnapshot(eDatabaseLookupFilter Categories)
 {
 	auto Out = gcnew HashSet<String^>(StringComparer::CurrentCultureIgnoreCase);
 
-	if (Categories.HasFlag(DatabaseLookupFilter::Command))
+	if (Categories.HasFlag(eDatabaseLookupFilter::Command))
 		AddIndentifierToCollection(ScriptCommands, Out);
 
-	if (Categories.HasFlag(DatabaseLookupFilter::GlobalVariable))
+	if (Categories.HasFlag(eDatabaseLookupFilter::GlobalVariable))
 		AddIndentifierToCollection(GlobalVariables, Out);
 
-	if (Categories.HasFlag(DatabaseLookupFilter::Quest))
+	if (Categories.HasFlag(eDatabaseLookupFilter::Quest))
 		AddIndentifierToCollection(Quests, Out);
 
-	if (Categories.HasFlag(DatabaseLookupFilter::Script))
+	if (Categories.HasFlag(eDatabaseLookupFilter::Script))
 		AddIndentifierToCollection(Scripts, Out);
 
-	if (Categories.HasFlag(DatabaseLookupFilter::UserFunction) &&
-		Categories.HasFlag(DatabaseLookupFilter::Script) == false)
+	if (Categories.HasFlag(eDatabaseLookupFilter::UserFunction) &&
+		Categories.HasFlag(eDatabaseLookupFilter::Script) == false)
 	{
 		for each (auto% Itr in Scripts)
 		{
-			if (Itr.Value->GetItemType() == IntelliSenseItem::ItemType::UserFunction)
+			if (Itr.Value->GetItemType() == IntelliSenseItem::eItemType::UserFunction)
 				Out->Add(Itr.Key);
 		}
 	}
 
-	if (Categories.HasFlag(DatabaseLookupFilter::GameSetting))
+	if (Categories.HasFlag(eDatabaseLookupFilter::GameSetting))
 		AddIndentifierToCollection(GameSettings, Out);
 
-	if (Categories.HasFlag(DatabaseLookupFilter::Form))
+	if (Categories.HasFlag(eDatabaseLookupFilter::Form))
 		AddIndentifierToCollection(Forms, Out);
 
-	if (Categories.HasFlag(DatabaseLookupFilter::ObjectReference) &&
-		Categories.HasFlag(DatabaseLookupFilter::Form) == false)
+	if (Categories.HasFlag(eDatabaseLookupFilter::ObjectReference) &&
+		Categories.HasFlag(eDatabaseLookupFilter::Form) == false)
 	{
 		for each (auto % Itr in Forms)
 		{
@@ -508,7 +535,7 @@ System::Collections::Generic::HashSet<String^>^ IntelliSenseBackend::CreateInden
 		}
 	}
 
-	if (Categories.HasFlag(DatabaseLookupFilter::Snippet))
+	if (Categories.HasFlag(eDatabaseLookupFilter::Snippet))
 		AddIndentifierToCollection(Snippets, Out);
 
 	return Out;
@@ -533,8 +560,8 @@ IntelliSenseItemScript^ IntelliSenseBackend::GetAttachedScript(IntelliSenseItem^
 	IntelliSenseItemScript^ Result = nullptr;
 	switch (Item->GetItemType())
 	{
-	case IntelliSenseItem::ItemType::Quest:
-	case IntelliSenseItem::ItemType::Form:
+	case IntelliSenseItem::eItemType::Quest:
+	case IntelliSenseItem::eItemType::Form:
 	{
 		auto Form = safe_cast<IntelliSenseItemForm^>(Item);
 		if (Form->HasAttachedScript())
@@ -545,8 +572,8 @@ IntelliSenseItemScript^ IntelliSenseBackend::GetAttachedScript(IntelliSenseItem^
 
 		break;
 	}
-	case IntelliSenseItem::ItemType::Script:
-	case IntelliSenseItem::ItemType::UserFunction:
+	case IntelliSenseItem::eItemType::Script:
+	case IntelliSenseItem::eItemType::UserFunction:
 		Result = safe_cast<IntelliSenseItemScript^>(Item);
 		break;
 	default:
@@ -578,12 +605,12 @@ List<IntelliSenseItem^>^ IntelliSenseBackend::FetchIntelliSenseItems(FetchIntell
 
 	List<IntelliSenseItem^>^ Fetched = gcnew List<IntelliSenseItem ^>;
 
-	if (FetchArgs->FilterBy.HasFlag(DatabaseLookupFilter::Command))
+	if (FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::Command))
 	{
 		List<IntelliSenseItem^>^ AllCommands = gcnew List<IntelliSenseItem^>;
 		DoFetch(ScriptCommands, FetchArgs, AllCommands);
 
-		if (!FetchArgs->Options.HasFlag(DatabaseLookupOptions::OnlyCommandsThatNeedCallingObject))
+		if (!FetchArgs->Options.HasFlag(eDatabaseLookupOptions::OnlyCommandsThatNeedCallingObject))
 			Fetched = AllCommands;
 		else for each (IntelliSenseItem ^ Itr in AllCommands)
 		{
@@ -592,36 +619,36 @@ List<IntelliSenseItem^>^ IntelliSenseBackend::FetchIntelliSenseItems(FetchIntell
 		}
 	}
 
-	if (FetchArgs->FilterBy.HasFlag(DatabaseLookupFilter::GlobalVariable))
+	if (FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::GlobalVariable))
 		DoFetch(GlobalVariables, FetchArgs, Fetched);
 
-	if (FetchArgs->FilterBy.HasFlag(DatabaseLookupFilter::Quest))
+	if (FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::Quest))
 		DoFetch(Quests, FetchArgs, Fetched);
 
-	if (FetchArgs->FilterBy.HasFlag(DatabaseLookupFilter::Script))
+	if (FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::Script))
 		DoFetch(Scripts, FetchArgs, Fetched);
 
-	if (FetchArgs->FilterBy.HasFlag(DatabaseLookupFilter::UserFunction) &&
-		FetchArgs->FilterBy.HasFlag(DatabaseLookupFilter::Script) == false)
+	if (FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::UserFunction) &&
+		FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::Script) == false)
 	{
 		List<IntelliSenseItem^>^ AllScriptTypes = gcnew List<IntelliSenseItem^>;
 		DoFetch(Scripts, FetchArgs, AllScriptTypes);
 
 		for each (IntelliSenseItem ^ Script in AllScriptTypes)
 		{
-			if (Script->GetItemType() == IntelliSenseItem::ItemType::UserFunction)
+			if (Script->GetItemType() == IntelliSenseItem::eItemType::UserFunction)
 				Fetched->Add(Script);
 		}
 	}
 
-	if (FetchArgs->FilterBy.HasFlag(DatabaseLookupFilter::GameSetting))
+	if (FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::GameSetting))
 		DoFetch(GameSettings, FetchArgs, Fetched);
 
-	if (FetchArgs->FilterBy.HasFlag(DatabaseLookupFilter::Form))
+	if (FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::Form))
 		DoFetch(Forms, FetchArgs, Fetched);
 
-	if (FetchArgs->FilterBy.HasFlag(DatabaseLookupFilter::ObjectReference) &&
-		FetchArgs->FilterBy.HasFlag(DatabaseLookupFilter::Form) == false)
+	if (FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::ObjectReference) &&
+		FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::Form) == false)
 	{
 		List<IntelliSenseItem^>^ AllForms = gcnew List<IntelliSenseItem^>;
 		DoFetch(Forms, FetchArgs, AllForms);
@@ -633,7 +660,7 @@ List<IntelliSenseItem^>^ IntelliSenseBackend::FetchIntelliSenseItems(FetchIntell
 		}
 	}
 
-	if (FetchArgs->FilterBy.HasFlag(DatabaseLookupFilter::Snippet))
+	if (FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::Snippet))
 		DoFetch(Snippets, FetchArgs, Fetched);
 
 	return Fetched;
@@ -660,8 +687,8 @@ ContextualIntelliSenseLookupResult^ IntelliSenseBackend::ContextualIntelliSenseL
 				if (RemoteVar)
 				{
 					Result->CurrentToken = RemoteVar;
-					Result->CurrentTokenIsCallableObject = RemoteVar->GetDataType() == obScriptParsing::Variable::DataType::Ref;
-					Result->CurrentTokenIsObjectReference = RemoteVar->GetDataType() == obScriptParsing::Variable::DataType::Ref;
+					Result->CurrentTokenIsCallableObject = RemoteVar->GetDataType() == obScriptParsing::Variable::eDataType::Ref;
+					Result->CurrentTokenIsObjectReference = RemoteVar->GetDataType() == obScriptParsing::Variable::eDataType::Ref;
 				}
 			}
 		}

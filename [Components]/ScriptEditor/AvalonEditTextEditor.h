@@ -69,6 +69,7 @@ protected:
 	int													LastKnownMouseClickOffset;
 	System::Windows::Input::Key							LastKeyThatWentDown;
 	int													PreviousLineBuffer;
+	int													PreviousColumnBuffer;
 
 	System::Windows::Point								MiddleMouseScrollStartPoint;
 	System::Windows::Vector								MiddleMouseCurrentScrollOffset;
@@ -137,8 +138,10 @@ protected:
 	bool	OnKeyDown(System::Windows::Input::KeyEventArgs^ E);			// returns true if handled
 	void	OnMouseClick(System::Windows::Input::MouseButtonEventArgs^ E);
 	void	OnLineChanged();
+	void	OnColumnChanged();
 	void	OnTextUpdated();
 	void	OnLineAnchorInvalidated();
+	void	OnStaticTextDisplayChanged();
 
 	void	TextField_TextChanged(Object^ Sender, EventArgs^ E);
 	void	TextField_CaretPositionChanged(Object^ Sender, EventArgs^ E);
@@ -222,28 +225,29 @@ protected:
 	void				PerformCommentOperationOnSelection(eCommentOperation Operation);
 	void				ToggleSearchPanel(bool State);
 	String^				GetCurrentLineText(bool ClipAtCaretPos);
-	int					GetCharIndexFromPosition(Point Position);
-	Point				GetPositionFromCharIndex(int Index, bool Absolute);
 	void				FadeOutCurrentTextView();
 public:
 	AvalonEditTextEditor(model::IScriptDocument^ ParentScriptDocument);
 	~AvalonEditTextEditor();
 
-	virtual event intellisense::IntelliSenseInputEventHandler^			IntelliSenseInput;
-	virtual event intellisense::IntelliSenseInsightHoverEventHandler^	IntelliSenseInsightHover;
-	virtual event intellisense::IntelliSenseContextChangeEventHandler^	IntelliSenseContextChange;
+	virtual event intellisense::IntelliSenseInputEventHandler^ IntelliSenseInput;
+	virtual event intellisense::IntelliSenseInsightHoverEventHandler^ IntelliSenseInsightHover;
+	virtual event intellisense::IntelliSenseContextChangeEventHandler^ IntelliSenseContextChange;
 
-	virtual event TextEditorScriptModifiedEventHandler^	ScriptModified;
-	virtual event KeyEventHandler^						KeyDown;
-	virtual event TextEditorMouseClickEventHandler^		MouseClick;
-	virtual event EventHandler^							LineChanged;
-	virtual event EventHandler^							TextUpdated;
-	virtual event EventHandler^							LineAnchorInvalidated;
+	virtual event TextEditorScriptModifiedEventHandler^ ScriptModified;
+	virtual event KeyEventHandler^ KeyDown;
+	virtual event TextEditorMouseClickEventHandler^ MouseClick;
+	virtual event EventHandler^ LineChanged;
+	virtual event EventHandler^ ColumnChanged;
+	virtual event EventHandler^ TextUpdated;
+	virtual event EventHandler^ LineAnchorInvalidated;
+	virtual event EventHandler^ StaticTextDisplayChanged;
 
 	ImplPropertyGetOnly(Control^, Container, WinFormsContainer);
 	ImplPropertyGetOnly(IntPtr, WindowHandle, WinFormsContainer->Handle);
 	ImplPropertySimple(bool, Enabled, WPFHost->Enabled);
 	ImplPropertyGetOnly(int, CurrentLine, TextField->TextArea->Caret->Line);
+	ImplPropertyGetOnly(int, CurrentColumn, TextField->TextArea->Caret->Column);
 	ImplPropertyGetOnly(int, LineCount, TextField->Document->LineCount);
 	property int Caret
 	{
@@ -296,13 +300,17 @@ public:
 	virtual void ScrollToLine(UInt32 LineNumber);
 	virtual void FocusTextArea();
 
+	virtual int GetCharIndexFromPosition(Point Position);
+	virtual Point GetPositionFromCharIndex(int Index, bool Absolute);
+	virtual Point ScreenToClient(Point ScreenPosition);
+
 	virtual FindReplaceResult^ FindReplace(eFindReplaceOperation Operation, String^ Query, String^ Replacement, eFindReplaceOptions Options);
 
 	virtual void BeginUpdate(void);
 	virtual void EndUpdate(bool FlagModification);
 
 	virtual UInt32 GetIndentLevel(UInt32 LineNumber);
-	virtual void InsertVariable(String^ VariableName, obScriptParsing::Variable::DataType VariableType);
+	virtual bool InsertVariable(String^ VariableName, obScriptParsing::Variable::eDataType VariableType);
 
 	virtual void InitializeState(String^ ScriptText, int CaretPosition);
 	virtual ILineAnchor^ CreateLineAnchor(UInt32 Line);

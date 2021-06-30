@@ -105,12 +105,12 @@ IObjectListViewColumn^ ViewComponent::AsObjectListViewColumn()
 	return safe_cast<IObjectListViewColumn^>(this);
 }
 
-ICircularProgress^ ViewComponent::AsCircularProgress()
+IProgressBar^ ViewComponent::AsProgressBar()
 {
-	if (Type_ != eComponentType::CircularProgress)
+	if (Type_ != eComponentType::ProgressBar)
 		return nullptr;
 
-	return safe_cast<ICircularProgress^>(this);
+	return safe_cast<IProgressBar^>(this);
 }
 
 IDockablePane^ ViewComponent::AsDockablePane()
@@ -242,9 +242,15 @@ void Button::Handler_Click(Object^ Sender, EventArgs^ E)
 void Button::Handler_PopupOpen(Object^ Sender, PopupOpenEventArgs^ E)
 {
 	// raise the first event for the button being opened
-	// then, raise the same event for all of the button's subitems
+	// then, raise the same event for all of the button's subitems (if the popup was not canceled)
 	auto EventArgs = gcnew IButton::PopupOpeningEventArgs;
+	EventArgs->Cancel = false;
 	RaiseEvent(IButton::eEvent::PopupOpening, EventArgs);
+	if (EventArgs->Cancel)
+	{
+		E->Cancel = true;
+		return;
+	}
 
 	for each (auto Itr in ButtonItem->SubItems)
 	{
@@ -479,6 +485,7 @@ Button::Button(DotNetBar::ButtonItem^ Source, eViewRole ViewRole, ViewComponentE
 {
 	SourceType = eSourceType::ButtonItem;
 	ButtonItem = Source;
+	Tag_ = nullptr;
 	InitEventHandlers();
 }
 
@@ -487,6 +494,7 @@ Button::Button(DotNetBar::ButtonX^ Source, eViewRole ViewRole, ViewComponentEven
 {
 	SourceType = eSourceType::ButtonX;
 	ButtonX = Source;
+	Tag_ = nullptr;
 	InitEventHandlers();
 }
 
@@ -495,6 +503,7 @@ Button::Button(DotNetBar::Controls::CheckBoxX^ Source, eViewRole ViewRole, ViewC
 {
 	SourceType = eSourceType::CheckBoxX;
 	CheckBoxX = Source;
+	Tag_ = nullptr;
 	InitEventHandlers();
 }
 
@@ -504,6 +513,7 @@ Button::~Button()
 	ButtonItem = nullptr;
 	ButtonX = nullptr;
 	CheckBoxX = nullptr;
+	Tag_ = nullptr;
 }
 
 void Button::PerformClick()
@@ -599,6 +609,32 @@ System::Object^ ComboBox::GetterSelection()
 	return nullptr;
 }
 
+System::Collections::IEnumerable^ ComboBox::GetterItems()
+{
+	switch (SourceType)
+	{
+	case eSourceType::ComboBoxItem:
+		return ComboBoxItem->Items;
+	case eSourceType::ComboBoxEx:
+		return ComboBoxEx->Items;
+	}
+
+	return nullptr;
+}
+
+bool ComboBox::GetterEnabled()
+{
+	switch (SourceType)
+	{
+	case eSourceType::ComboBoxItem:
+		return ComboBoxItem->Enabled;
+	case eSourceType::ComboBoxEx:
+		return ComboBoxEx->Enabled;
+	}
+
+	return false;
+}
+
 void ComboBox::SetterText(String^ Value)
 {
 	switch (SourceType)
@@ -625,6 +661,17 @@ void ComboBox::SetterSelection(Object^ Value)
 	}
 }
 
+void ComboBox::SetterEnabled(bool Value)
+{
+	switch (SourceType)
+	{
+	case eSourceType::ComboBoxItem:
+		ComboBoxItem->Enabled = Value;
+	case eSourceType::ComboBoxEx:
+		ComboBoxEx->Enabled = Value;
+	}
+}
+
 ComboBox::ComboBox(DotNetBar::ComboBoxItem^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter)
 	: ViewComponent(eComponentType::ComboBox, ViewRole, EventRouter)
 {
@@ -648,15 +695,21 @@ ComboBox::~ComboBox()
 	ComboBoxItem = nullptr;
 }
 
-void ComboBox::AddDropdownItem(Object^ NewItem)
+void ComboBox::AddDropdownItem(Object^ NewItem, bool AtFirstPosition)
 {
 	switch (SourceType)
 	{
 	case eSourceType::ComboBoxItem:
-		ComboBoxItem->Items->Add(NewItem);
+		if (AtFirstPosition)
+			ComboBoxItem->Items->Insert(0, NewItem);
+		else
+			ComboBoxItem->Items->Add(NewItem);
 		break;
 	case eSourceType::ComboBoxEx:
-		ComboBoxEx->Items->Add(NewItem);
+		if (AtFirstPosition)
+			ComboBoxEx->Items->Insert(0, NewItem);
+		else
+			ComboBoxEx->Items->Add(NewItem);
 		break;
 	}
 }
@@ -672,6 +725,17 @@ void ComboBox::ClearDropdownItems()
 		ComboBoxEx->Items->Clear();
 		break;
 	}
+}
+
+System::Object^ ComboBox::LookupDropdownItem(String^ DropdownItemText)
+{
+	for each (auto Item in GetterItems())
+	{
+		if (String::Equals(Item->ToString(), DropdownItemText))
+			return Item;
+	}
+
+	return nullptr;
 }
 
 Label::Label(DotNetBar::LabelItem^ Source, eViewRole ViewRole)
@@ -830,7 +894,7 @@ ITabStripItem^ TabStrip::ActiveTab::get()
 	if (Source->SelectedTab == nullptr)
 		return nullptr;
 
-	return safe_cast<ITabStripItem^>(Source->SelectedTab->Tag);
+	return TabStripItem::FromSuperTabItem(Source->SelectedTab);
 }
 
 void TabStrip::ActiveTab::set(ITabStripItem^ v)
@@ -841,6 +905,18 @@ void TabStrip::ActiveTab::set(ITabStripItem^ v)
 
 	SelectTab(TabItem->Source);
 }
+
+UInt32 TabStrip::TabCount::get()
+{
+	UInt32 Count = 0;
+	for each (auto Itr in Source->Tabs)
+	{
+		if (Itr->GetType() == DotNetBar::SuperTabItem::typeid)
+			++Count;
+	}
+	return Count;
+}
+
 
 ITabStripItem^ TabStrip::AllocateNewTab()
 {
@@ -871,6 +947,23 @@ void TabStrip::SelectPreviousTab()
 		auto Tab = safe_cast<DotNetBar::SuperTabItem^>(Source->Tabs[Source->Tabs->Count - 1]);
 		SelectTab(Tab);
 	}
+}
+
+ITabStripItem^ TabStrip::LookupTabByTag(Object^ Tag)
+{
+	for each (auto Itr in Source->Tabs)
+	{
+		if (Itr->GetType() != DotNetBar::SuperTabItem::typeid)
+			continue;
+
+		auto TabItem = TabStripItem::FromSuperTabItem(safe_cast<DotNetBar::SuperTabItem^>(Itr));
+		Debug::Assert(TabItem != nullptr);
+
+		if (TabItem->Tag == Tag)
+			return TabItem;
+	}
+
+	return nullptr;
 }
 
 void TabStrip::SelectNextTab()
@@ -1088,13 +1181,34 @@ void ObjectListView::SetChildrenGetter(IObjectListView::ChildrenGetter^ Delegate
 }
 
 
-CircularProgress::CircularProgress(DotNetBar::CircularProgressItem^ Source, eViewRole ViewRole)
-	: ViewComponent(eComponentType::CircularProgress, ViewRole, nullptr)
+void ObjectListView::EnsureItemVisible(Object^ Item)
+{
+	Source->EnsureModelVisible(Item);
+}
+
+void ObjectListView::ExpandAll()
+{
+	if (Source->GetType() != BrightIdeasSoftware::TreeListView::typeid)
+		throw gcnew InvalidOperationException("Can only be called on a tree listview");
+
+	safe_cast<BrightIdeasSoftware::TreeListView^>(Source)->ExpandAll();
+}
+
+void ObjectListView::CollapseAll()
+{
+	if (Source->GetType() != BrightIdeasSoftware::TreeListView::typeid)
+		throw gcnew InvalidOperationException("Can only be called on a tree listview");
+
+	safe_cast<BrightIdeasSoftware::TreeListView^>(Source)->CollapseAll();
+}
+
+ProgressBar::ProgressBar(DotNetBar::CircularProgressItem^ Source, eViewRole ViewRole)
+	: ViewComponent(eComponentType::ProgressBar, ViewRole, nullptr)
 {
 	this->Source = Source;
 }
 
-CircularProgress::~CircularProgress()
+ProgressBar::~ProgressBar()
 {
 	Source = nullptr;
 }
@@ -1147,6 +1261,19 @@ CrumbBarItem::~CrumbBarItem()
 	Source_ = nullptr;
 }
 
+void CrumbBarItem::AddChild(ICrumbBarItem^ Child)
+{
+	auto ToAdd = safe_cast<CrumbBarItem^>(Child);
+	Debug::Assert(ToAdd->Source != this->Source);
+
+	Source->SubItems->Add(ToAdd->Source);
+}
+
+void CrumbBarItem::ClearChildren()
+{
+	Source->SubItems->Clear();
+}
+
 CrumbBarItem^ CrumbBarItem::FromCrumbBarItem(DotNetBar::CrumbBarItem^ Crumb)
 {
 	return safe_cast<CrumbBarItem^>(Crumb->Tag);
@@ -1193,6 +1320,22 @@ CrumbBar::~CrumbBar()
 
 	SAFEDELETE_CLR(DelegateItemClick);
 	Source = nullptr;
+}
+
+ICrumbBarItem^ CrumbBar::SelectedItem::get()
+{
+	if (Source->SelectedItem == nullptr)
+		return nullptr;
+
+	return CrumbBarItem::FromCrumbBarItem(Source->SelectedItem);
+}
+
+void CrumbBar::SelectedItem::set(ICrumbBarItem^ v)
+{
+	auto CrumbItem = safe_cast<CrumbBarItem^>(v);
+	Debug::Assert(Source->Items->Contains(CrumbItem->Source));
+
+	Source->SelectedItem = CrumbItem->Source;
 }
 
 ICrumbBarItem^ CrumbBar::AllocateNewItem()

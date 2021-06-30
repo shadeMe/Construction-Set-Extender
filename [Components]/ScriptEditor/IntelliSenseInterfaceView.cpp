@@ -1,7 +1,7 @@
 #include "IntelliSenseInterfaceView.h"
 #include "IntelliSenseItem.h"
 #include "Preferences.h"
-#include "Globals.h"
+#include "Utilities.h"
 
 namespace cse
 {
@@ -45,13 +45,9 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView()
 	Form->ControlBox = false;
 	Form->Controls->Add(ListView);
 
-	IntelliSenseItemImages = gcnew ImageList();
-	IntelliSenseItem::PopulateImageListWithItemTypeImages(IntelliSenseItemImages);
-
 	ListView->View = View::Details;
 	ListView->Dock = DockStyle::Fill;
 	ListView->MultiSelect = false;
-	ListView->SmallImageList = IntelliSenseItemImages;
 	ListView->Location = Point(0, 0);
 	ListView->LabelEdit = false;
 	ListView->CheckBoxes = false;
@@ -187,16 +183,21 @@ void IntelliSenseInterfaceView::ListView_FormatRow(Object^ Sender, BrightIdeasSo
 	auto Item = safe_cast<IntelliSenseItem^>(E->Model);
 	switch (Item->GetItemType())
 	{
-	case IntelliSenseItem::ItemType::ScriptVariable:
+	case IntelliSenseItem::eItemType::ScriptVariable:
 		if (BoundModel->IsLocalVariable(Item->GetIdentifier()))
 		{
-			E->Item->ForeColor = preferences::SettingsHolder::Get()->Appearance->ForeColorLocalVariables;
+			auto ForeColor = preferences::SettingsHolder::Get()->Appearance->ForeColorLocalVariables;
+			E->Item->ForeColor = ForeColor;
 			break;
 		}
 	default:
-		E->Item->ForeColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
+	{
+		auto ForeColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
+		E->Item->ForeColor = ForeColor;
 	}
-	E->Item->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
+	}
+	auto BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
+	E->Item->BackColor = BackColor;
 
 	if (E->Model == E->ListView->SelectedObject)
 	{
@@ -229,7 +230,7 @@ Object^ IntelliSenseInterfaceView::ListViewImageGetter(Object^ RowObject)
 		IntelliSenseItem^ Item = (IntelliSenseItem^)RowObject;
 		Debug::Assert(Item != nullptr);
 
-		return (int)Item->GetItemType();
+		return IntelliSenseItem::GetItemTypeIcon(Item->GetItemType());
 	}
 	else
 		return nullptr;
@@ -351,7 +352,7 @@ void IntelliSenseInterfaceView::DimOpacity()
 	if (!Visible || Form->IsFadingIn)
 		return;
 
-	Form->Opacity = DimmedOpacity;
+	Form->Opacity = kDimmedOpacity;
 }
 
 void IntelliSenseInterfaceView::ResetOpacity()

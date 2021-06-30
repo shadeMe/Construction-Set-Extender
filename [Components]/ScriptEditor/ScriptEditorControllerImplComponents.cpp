@@ -1,6 +1,6 @@
 #include "ScriptEditorControllerImplComponents.h"
 #include "Preferences.h"
-#include "IntelliSenseDatabase.h"
+#include "IntelliSenseBackend.h"
 
 
 namespace cse
@@ -74,9 +74,9 @@ void ViewTabTearingHelper::TearingEventHandler(Object^ Sender, MouseEventArgs^ E
 				NewBounds.X = E->Location.X;
 				NewBounds.Y = E->Location.Y;
 
-				auto NewController = SourceController->New(NewBounds);
+				auto NewController = SourceController->New();
 				NewController->RelocateDocument(TornDocument, SourceController);
-				NewController->View->Reveal();
+				NewController->View->Reveal(NewBounds);
 			}
 
 			End();
@@ -321,10 +321,10 @@ void DocumentNavigationHelper::RefreshOutlineListView(obScriptParsing::Structuri
 	CachedStructureData = StructureData;
 }
 
-DocumentNavigationHelper::DocumentNavigationHelper(view::components::ICrumbBar^ CrumbBar, view::components::IObjectListView^ OutlineListView)
+DocumentNavigationHelper::DocumentNavigationHelper(view::IScriptEditorView^ View)
 {
-	this->CrumbBar = CrumbBar;
-	this->OutlineListView = OutlineListView;
+	CrumbBar = View->GetComponentByRole(view::eViewRole::NavigationBar)->AsCrumbBar();
+	OutlineListView = View->GetComponentByRole(view::eViewRole::OutlineView_TreeView)->AsObjectListView();
 	CachedStructureData = nullptr;
 	Root = CrumbBar->AllocateNewItem();
 	Root->Image = GetNodeIcon(obScriptParsing::Structurizer::Node::eNodeType::Invalid);

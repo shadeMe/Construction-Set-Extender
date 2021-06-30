@@ -140,7 +140,7 @@ String^ CSEPreprocessorDirective::GetMultilineValue(LineTrackingStringReader^% T
 	}
 
 	if (SliceStartFound == false || SliceEndFound == false)
-		throw gcnew CSEGeneralException("Couldn't extract multiline value.");
+		throw gcnew InvalidOperationException("Couldn't extract multiline value.");
 
 	return Result->Substring(1);
 }
@@ -190,9 +190,9 @@ DefineDirective::DefineDirective(String^ Token, StandardOutputError^ ErrorOutput
 			switch (LocalParser->TokenCount)
 			{
 			case 1:
-				throw gcnew CSEGeneralException("No name specified.");
+				throw gcnew InvalidOperationException("No name specified.");
 			case 2:
-				throw gcnew CSEGeneralException("No value specified.");
+				throw gcnew InvalidOperationException("No value specified.");
 			}
 
 			int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::SingleLine] + DirectiveIdentifier[(int)DirectiveType::Define]);
@@ -200,14 +200,14 @@ DefineDirective::DefineDirective(String^ Token, StandardOutputError^ ErrorOutput
 			Value = Token->Substring(LocalParser->Indices[Index + 1] + Name->Length + 1);
 
 			if (PreprocessorInstance->LookupDefineDirectiveByName(Name) != nullptr && PreprocessorInstance->GetInstanceData()->AllowMacroRedefinitions == false)
-				throw gcnew CSEGeneralException("Invalid redefinition.");
+				throw gcnew InvalidOperationException("Invalid redefinition.");
 			else if (IsNameValid(Name) == false)
-				throw gcnew CSEGeneralException("Invalid character in name.");
+				throw gcnew InvalidOperationException("Invalid character in name.");
 			else
 				PreprocessorInstance->RegisterDefineDirective(this);
 		}
 		else
-			throw gcnew CSEGeneralException("Token parser was in an invalid state.");
+			throw gcnew InvalidOperationException("Token parser was in an invalid state.");
 	}
 	catch (Exception^ E)
 	{
@@ -234,7 +234,7 @@ DefineDirective::DefineDirective(String^ Token, LineTrackingStringReader^% TextR
 			switch (LocalParser->TokenCount)
 			{
 			case 1:
-				throw gcnew CSEGeneralException("No name specified.");
+				throw gcnew InvalidOperationException("No name specified.");
 			}
 
 			int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::MultiLine] + DirectiveIdentifier[(int)DirectiveType::Define]);
@@ -243,11 +243,11 @@ DefineDirective::DefineDirective(String^ Token, LineTrackingStringReader^% TextR
 
 			String^ Result = "";
 			if (PreprocessorInstance->LookupDefineDirectiveByName(Name) != nullptr && PreprocessorInstance->GetInstanceData()->AllowMacroRedefinitions == false)
-				throw gcnew CSEGeneralException("Invalid redefinition.");
+				throw gcnew InvalidOperationException("Invalid redefinition.");
 			else if (IsNameValid(Name) == false)
-				throw gcnew CSEGeneralException("Invalid character in name.");
+				throw gcnew InvalidOperationException("Invalid character in name.");
 			else if (!PreprocessorInstance->Preprocess(Value, Result, ErrorOutput))
-				throw gcnew CSEGeneralException("Errors encountered while preprocessing DEFINE block");
+				throw gcnew InvalidOperationException("Errors encountered while preprocessing DEFINE block");
 			else
 			{
 				Value = Result;
@@ -255,7 +255,7 @@ DefineDirective::DefineDirective(String^ Token, LineTrackingStringReader^% TextR
 			}
 		}
 		else
-			throw gcnew CSEGeneralException("Token parser was in an invalid state.");
+			throw gcnew InvalidOperationException("Token parser was in an invalid state.");
 	}
 	catch (Exception^ E)
 	{
@@ -349,7 +349,7 @@ ImportDirective::ImportDirective(String ^Token, StandardOutputError ^ErrorOutput
 			switch (LocalParser->TokenCount)
 			{
 			case 1:
-				throw gcnew CSEGeneralException("No value specified.");
+				throw gcnew InvalidOperationException("No value specified.");
 			}
 
 			int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::SingleLine] + DirectiveIdentifier[(int)DirectiveType::Import]);
@@ -366,18 +366,18 @@ ImportDirective::ImportDirective(String ^Token, StandardOutputError ^ErrorOutput
 			}
 			catch (Exception^ E)
 			{
-				throw gcnew CSEGeneralException("Couldn't read from IMPORT script - " + E->Message);
+				throw gcnew InvalidOperationException("Couldn't read from IMPORT script - " + E->Message);
 			}
 
 			if (!PreprocessorInstance->Preprocess(Source, Result, ErrorOutput))
-				throw gcnew CSEGeneralException("Errors encountered while processing IMPORT script");
+				throw gcnew InvalidOperationException("Errors encountered while processing IMPORT script");
 			else
 			{
 				ImportSegment = Result;
 			}
 		}
 		else
-			throw gcnew CSEGeneralException("Token parser was in an invalid state.");
+			throw gcnew InvalidOperationException("Token parser was in an invalid state.");
 	}
 	catch (Exception^ E)
 	{
@@ -422,7 +422,7 @@ void EnumDirective::ParseComponentDefineDirectives(String^ Source, StandardOutpu
 		}
 
 		try			{ CurrentValue = float::Parse(ValueString); }
-		catch (...) { throw gcnew CSEGeneralException("Invalid value assigned to " + Name); }
+		catch (...) { throw gcnew InvalidOperationException("Invalid value assigned to " + Name); }
 		PreviousValue = CurrentValue;
 
 		String^ DefineToken = ";" + EncodingIdentifier[(int)EncodingType::SingleLine] + DirectiveIdentifier[(int)DirectiveType::Define] + " " + Name + " " + ValueString;
@@ -447,9 +447,9 @@ EnumDirective::EnumDirective(String^ Token, StandardOutputError^ ErrorOutput, Pr
 			switch (LocalParser->TokenCount)
 			{
 			case 1:
-				throw gcnew CSEGeneralException("No name specified.");
+				throw gcnew InvalidOperationException("No name specified.");
 			case 2:
-				throw gcnew CSEGeneralException("No value specified.");
+				throw gcnew InvalidOperationException("No value specified.");
 			}
 
 			int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::SingleLine] + DirectiveIdentifier[(int)DirectiveType::Enum]);
@@ -461,7 +461,7 @@ EnumDirective::EnumDirective(String^ Token, StandardOutputError^ ErrorOutput, Pr
 			ParseComponentDefineDirectives(Value, ErrorOutput, PreprocessorInstance, LineNumber);
 		}
 		else
-			throw gcnew CSEGeneralException("Token parser was in an invalid state.");
+			throw gcnew InvalidOperationException("Token parser was in an invalid state.");
 	}
 	catch (Exception^ E)
 	{
@@ -489,7 +489,7 @@ EnumDirective::EnumDirective(String^ Token, LineTrackingStringReader^% TextReade
 			switch (LocalParser->TokenCount)
 			{
 			case 1:
-				throw gcnew CSEGeneralException("No name specified.");
+				throw gcnew InvalidOperationException("No name specified.");
 			}
 
 			int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::MultiLine] + DirectiveIdentifier[(int)DirectiveType::Enum]);
@@ -506,7 +506,7 @@ EnumDirective::EnumDirective(String^ Token, LineTrackingStringReader^% TextReade
 			ParseComponentDefineDirectives(CondensedValue, ErrorOutput, PreprocessorInstance, LineNumber);
 		}
 		else
-			throw gcnew CSEGeneralException("Token parser was in an invalid state.");
+			throw gcnew InvalidOperationException("Token parser was in an invalid state.");
 	}
 	catch (Exception^ E)
 	{
@@ -557,21 +557,21 @@ bool IfDirective::Operator::Evaluator( BuiltInOperators Type, String^ LHS, Strin
 			else if (!LHSNumeric && !RHSNumeric)
 				Result = (LHSString == RHSString);
 			else
-				throw gcnew CSEGeneralException("Mismatching operand types.");
+				throw gcnew InvalidOperationException("Mismatching operand types.");
 
 			break;
 		case IfDirective::Operator::BuiltInOperators::LessThanOrEqual:
 			if (LHSNumeric && RHSNumeric)
 				Result = (LHSInt <= RHSInt);
 			else
-				throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
+				throw gcnew InvalidOperationException("Mismatching/invalid operand type(s).");
 
 			break;
 		case IfDirective::Operator::BuiltInOperators::GreaterThanOrEqual:
 			if (LHSNumeric && RHSNumeric)
 				Result = (LHSInt >= RHSInt);
 			else
-				throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
+				throw gcnew InvalidOperationException("Mismatching/invalid operand type(s).");
 
 			break;
 		case IfDirective::Operator::BuiltInOperators::LessThan:
@@ -580,7 +580,7 @@ bool IfDirective::Operator::Evaluator( BuiltInOperators Type, String^ LHS, Strin
 			else if (!LHSNumeric && !RHSNumeric)
 				Result = (String::Compare(LHSString, RHSString) < 0);
 			else
-				throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
+				throw gcnew InvalidOperationException("Mismatching/invalid operand type(s).");
 
 			break;
 		case IfDirective::Operator::BuiltInOperators::GreaterThan:
@@ -589,7 +589,7 @@ bool IfDirective::Operator::Evaluator( BuiltInOperators Type, String^ LHS, Strin
 			else if (!LHSNumeric && !RHSNumeric)
 				Result = (String::Compare(LHSString, RHSString) > 0);
 			else
-				throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
+				throw gcnew InvalidOperationException("Mismatching/invalid operand type(s).");
 
 			break;
 		case IfDirective::Operator::BuiltInOperators::NotEqual:
@@ -598,25 +598,25 @@ bool IfDirective::Operator::Evaluator( BuiltInOperators Type, String^ LHS, Strin
 			else if (!LHSNumeric && !RHSNumeric)
 				Result = (LHSString != RHSString);
 			else
-				throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
+				throw gcnew InvalidOperationException("Mismatching/invalid operand type(s).");
 
 			break;
 		case IfDirective::Operator::BuiltInOperators::LogicalAND:
 			if (LHSNumeric && RHSNumeric)
 				Result = (LHSInt && RHSInt);
 			else
-				throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
+				throw gcnew InvalidOperationException("Mismatching/invalid operand type(s).");
 
 			break;
 		case IfDirective::Operator::BuiltInOperators::LogicalOR:
 			if (LHSNumeric && RHSNumeric)
 				Result = (LHSInt || RHSInt);
 			else
-				throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
+				throw gcnew InvalidOperationException("Mismatching/invalid operand type(s).");
 
 			break;
 		default:
-			throw gcnew CSEGeneralException("Unknown operator");
+			throw gcnew InvalidOperationException("Unknown operator");
 
 			break;
 		}
@@ -784,13 +784,13 @@ bool IfDirective::ConvertInfixExpressionToPostFix(String^ Source, String^% Resul
 						else if (TopOperator != nullptr)
 							PostFixExpression += " " + ExpressionStack->Pop();
 						else
-							throw gcnew CSEGeneralException("Encountered a non-operator while searching for '('.");
+							throw gcnew InvalidOperationException("Encountered a non-operator while searching for '('.");
 					}
 
 					if (FoundSibling)
 						ExpressionStack->Pop();
 					else
-						throw gcnew CSEGeneralException("Mismatching parentheses.");
+						throw gcnew InvalidOperationException("Mismatching parentheses.");
 				}
 			}
 
@@ -800,18 +800,18 @@ bool IfDirective::ConvertInfixExpressionToPostFix(String^ Source, String^% Resul
 				Operator^ TopOperator = LookupOperatorByIdentifier(TopExpression);
 
 				if (TopExpression == ")" || TopExpression == ")")
-					throw gcnew CSEGeneralException("Mismatching parentheses.");
+					throw gcnew InvalidOperationException("Mismatching parentheses.");
 				else if (TopOperator != nullptr)
 					PostFixExpression += " " + ExpressionStack->Pop();
 				else
-					throw gcnew CSEGeneralException("Encountered a non-operator while unwinding expression stack.");
+					throw gcnew InvalidOperationException("Encountered a non-operator while unwinding expression stack.");
 			}
 
 			OperationResult = true;
 			Result = PostFixExpression;
 		}
 		else
-			throw gcnew CSEGeneralException("Token parser was in an invalid state.");
+			throw gcnew InvalidOperationException("Token parser was in an invalid state.");
 	}
 	catch (Exception^ E)
 	{
@@ -847,7 +847,7 @@ bool IfDirective::CheckBaseCondition(String^ Base, StandardOutputError^ ErrorOut
 					if (CurrentOperator)
 					{
 						if (ExpressionStack->Count < CurrentOperator->GetOperandCount())
-							throw gcnew CSEGeneralException("Incorrect number of operands for operator '" + CurrentOperator->GetIdentifier() + "'.");
+							throw gcnew InvalidOperationException("Incorrect number of operands for operator '" + CurrentOperator->GetIdentifier() + "'.");
 						else
 						{
 							String^ LHS = ExpressionStack->Pop();
@@ -874,14 +874,14 @@ bool IfDirective::CheckBaseCondition(String^ Base, StandardOutputError^ ErrorOut
 					else
 						Result = true;
 
-		//				throw gcnew CSEGeneralException("Invalid result expression '" + ResultExpression + "'.");
+		//				throw gcnew InvalidOperationException("Invalid result expression '" + ResultExpression + "'.");
 				}
 				else
-					throw gcnew CSEGeneralException("Too many operands.");
+					throw gcnew InvalidOperationException("Too many operands.");
 			}
 		}
 		else
-			throw gcnew CSEGeneralException("Couldn't convert infix expression to postfix notation.");
+			throw gcnew InvalidOperationException("Couldn't convert infix expression to postfix notation.");
 	}
 	catch (Exception^ E)
 	{
@@ -908,7 +908,7 @@ IfDirective::IfDirective(String^ Token, LineTrackingStringReader^% TextReader, S
 			switch (LocalParser->TokenCount)
 			{
 			case 1:
-				throw gcnew CSEGeneralException("No condition specified.");
+				throw gcnew InvalidOperationException("No condition specified.");
 			}
 
 			int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::MultiLine] + DirectiveIdentifier[(int)DirectiveType::If]);
@@ -917,7 +917,7 @@ IfDirective::IfDirective(String^ Token, LineTrackingStringReader^% TextReader, S
 
 			String^ PreprocessedBlock = "";
 			if (!PreprocessorInstance->Preprocess(Block, PreprocessedBlock, ErrorOutput))
-				throw gcnew CSEGeneralException("Errors encountered while processing IF block.");
+				throw gcnew InvalidOperationException("Errors encountered while processing IF block.");
 			else
 			{
 				Block = PreprocessedBlock;
@@ -927,7 +927,7 @@ IfDirective::IfDirective(String^ Token, LineTrackingStringReader^% TextReader, S
 			ValidationResult = CheckBaseCondition(BaseCondition, ErrorOutput, PreprocessorInstance);
 		}
 		else
-			throw gcnew CSEGeneralException("Token parser was in an invalid state.");
+			throw gcnew InvalidOperationException("Token parser was in an invalid state.");
 	}
 	catch (Exception^ E)
 	{

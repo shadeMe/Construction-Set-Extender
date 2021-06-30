@@ -1,7 +1,7 @@
 #include "ScriptEditorModelImpl.h"
 #include "Preferences.h"
 #include "IntelliSenseInterfaceModel.h"
-#include "IntelliSenseDatabase.h"
+#include "IntelliSenseBackend.h"
 #include "ScriptPreprocessor.h"
 
 namespace cse
@@ -47,6 +47,11 @@ void ScriptDocument::Editor_LineAnchorInvalidated(Object^ Sender, EventArgs^ E)
 
 	if (RemoveInvalidatedAnchors<ScriptFindResult^>(FindResults))
 		OnStateChangedFindResults();
+}
+
+void ScriptDocument::Editor_StaticTextDisplayChanged(Object^ Sender, EventArgs^ E)
+{
+	OnStateChangedDisplayingPreprocessorOutput();
 }
 
 void ScriptDocument::BgAnalyzer_AnalysisComplete(Object^ Sender, IBackgroundSemanticAnalyzer::AnalysisCompleteEventArgs^ E)
@@ -148,6 +153,14 @@ void ScriptDocument::OnStateChangedFindResults()
 	auto E = gcnew IScriptDocument::StateChangeEventArgs;
 	E->EventType = IScriptDocument::StateChangeEventArgs::eEventType::FindResults;
 	E->FindResults = FindResults;
+	StateChanged(this, E);
+}
+
+void ScriptDocument::OnStateChangedDisplayingPreprocessorOutput()
+{
+	auto E = gcnew IScriptDocument::StateChangeEventArgs;
+	E->EventType = IScriptDocument::StateChangeEventArgs::eEventType::DisplayingPreprocessorOutput;
+	E->DisplayingPreprocessorOutput = TextEditor->DisplayingStaticText;
 	StateChanged(this, E);
 }
 
@@ -433,12 +446,14 @@ ScriptDocument::ScriptDocument()
 
 	EditorScriptModifiedHandler = gcnew textEditor::TextEditorScriptModifiedEventHandler(this, &ScriptDocument::Editor_ScriptModified);
 	EditorLineAnchorInvalidatedHandler = gcnew EventHandler(this, &ScriptDocument::Editor_LineAnchorInvalidated);
+	EditorStaticTextDisplayChangedHandler = gcnew EventHandler(this, &ScriptDocument::Editor_StaticTextDisplayChanged);
 	BgAnalysisCompleteHandler = gcnew IBackgroundSemanticAnalyzer::AnalysisCompleteEventHandler(this, &ScriptDocument::BgAnalyzer_AnalysisComplete);
 	AutoSaveTimerTickHandler = gcnew EventHandler(this, &ScriptDocument::AutoSaveTimer_Tick);
 	ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &ScriptDocument::ScriptEditorPreferences_Saved);
 
 	Editor->ScriptModified += EditorScriptModifiedHandler;
 	Editor->LineAnchorInvalidated += EditorLineAnchorInvalidatedHandler;
+	Editor->StaticTextDisplayChanged += EditorStaticTextDisplayChangedHandler;
 	BgAnalyzer->SemanticAnalysisComplete += BgAnalysisCompleteHandler;
 	preferences::SettingsHolder::Get()->PreferencesChanged += ScriptEditorPreferencesSavedHandler;
 	AutoSaveTimer->Tick += AutoSaveTimerTickHandler;
@@ -454,12 +469,14 @@ ScriptDocument::~ScriptDocument()
 
 	Editor->ScriptModified -= EditorScriptModifiedHandler;
 	Editor->LineAnchorInvalidated -= EditorLineAnchorInvalidatedHandler;
+	Editor->StaticTextDisplayChanged -= EditorStaticTextDisplayChangedHandler;
 	BgAnalyzer->SemanticAnalysisComplete -= BgAnalysisCompleteHandler;
 	preferences::SettingsHolder::Get()->PreferencesChanged -= ScriptEditorPreferencesSavedHandler;
 	AutoSaveTimer->Tick -= AutoSaveTimerTickHandler;
 
 	SAFEDELETE_CLR(EditorScriptModifiedHandler);
 	SAFEDELETE_CLR(EditorLineAnchorInvalidatedHandler);
+	SAFEDELETE_CLR(EditorStaticTextDisplayChangedHandler);
 	SAFEDELETE_CLR(BgAnalysisCompleteHandler);
 	SAFEDELETE_CLR(ScriptEditorPreferencesSavedHandler);
 	SAFEDELETE_CLR(AutoSaveTimerTickHandler);
@@ -491,6 +508,7 @@ void ScriptDocument::ScriptType::set(IScriptDocument::eScriptType v)
 void ScriptDocument::Initialize(componentDLLInterface::ScriptData* ScriptData, bool UseAutoRecoveryFile)
 {
 	Debug::Assert(ScriptData != nullptr);
+	Debug::Assert(!TextEditor->DisplayingStaticText);
 
 	// release the currently bound native object if it points to an unsaved new script instance
 	ReleaseNativeObjectIfNewScript();
@@ -514,6 +532,8 @@ void ScriptDocument::Initialize(componentDLLInterface::ScriptData* ScriptData, b
 	auto RawScriptText = gcnew String(ScriptData->Text);
 	if (UseAutoRecoveryFile)
 	{
+		Debug::Assert(!UnsavedNewScriptInstances);
+
 		auto AutoRecoveryFile = gcnew ScriptTextAutoRecoveryCache(EditorID);
 		RawScriptText = AutoRecoveryFile->Read();
 		AutoRecoveryFile->Delete(false);
@@ -692,6 +712,27 @@ void ScriptDocument::PushStateToSubscribers()
 	OnStateChangedMessages();
 	OnStateChangedBookmarks();
 	OnStateChangedFindResults();
+	OnStateChangedDisplayingPreprocessorOutput();
+}
+
+bool ScriptDocument::TogglePreprocessorOutput(bool Enabled)
+{
+	if (Enabled && Dirty)
+		return false;
+
+	Debug::Assert(TextEditor->DisplayingStaticText == !Enabled);
+
+	if (Enabled)
+		TextEditor->BeginDisplayingStaticText(PreprocessedScriptText);
+	else
+		TextEditor->EndDisplayingStaticText();
+
+	return true;
+}
+
+bool ScriptDocument::IsPreprocessorOutputEnabled()
+{
+	return TextEditor->DisplayingStaticText;
 }
 
 String^ GetSanitizedIdentifier(String^ Identifier)
@@ -723,6 +764,35 @@ bool ScriptDocument::SanitizeScriptText()
 	return Result;
 }
 
+bool ScriptDocument::SaveScriptTextToDisk(String^ DiskFilePath)
+{
+	try
+	{
+		File::WriteAllText(DiskFilePath, ScriptText, System::Text::Encoding::UTF8);
+		return true;
+	}
+	catch (Exception^ E)
+	{
+		DebugPrint("Couldn't save script text to file @ " + DiskFilePath + "!\nException: " + E->ToString());
+		return false;
+	}
+}
+
+bool ScriptDocument::LoadScriptTextFromDisk(String^ DiskFilePath)
+{
+	try
+	{
+		auto FileContents = File::ReadAllText(DiskFilePath);
+		TextEditor->SetText(FileContents, false);
+		return true;
+	}
+	catch (Exception^ E)
+	{
+		DebugPrint("Couldn't load script text from file @ " + DiskFilePath + "!\nException: " + E->ToString());
+		return false;
+	}
+}
+
 ScriptEditorDocumentModel::ScriptEditorDocumentModel()
 {
 	ScriptDocuments = gcnew List<ScriptDocument^>;
@@ -734,6 +804,14 @@ ScriptEditorDocumentModel::~ScriptEditorDocumentModel()
 		delete Itr;
 
 	ScriptDocuments->Clear();
+}
+
+System::Collections::Generic::ICollection<IScriptDocument^>^ ScriptEditorDocumentModel::Documents::get()
+{
+	auto Out = gcnew List<IScriptDocument^>;
+	for each (auto Itr in ScriptDocuments)
+		Out->Add(Itr);
+	return Out;
 }
 
 IScriptDocument^ ScriptEditorDocumentModel::AllocateNewDocument()
@@ -795,6 +873,16 @@ IScriptDocument^ ScriptEditorDocumentModel::LookupDocument(String^ EditorId)
 	}
 
 	return nullptr;
+}
+
+model::IScriptEditorModel^ ScriptEditorModelFactory::NewModel()
+{
+	return gcnew modelImpl::ScriptEditorDocumentModel;
+}
+
+ScriptEditorModelFactory^ ScriptEditorModelFactory::NewFactory()
+{
+	return gcnew ScriptEditorModelFactory;
 }
 
 

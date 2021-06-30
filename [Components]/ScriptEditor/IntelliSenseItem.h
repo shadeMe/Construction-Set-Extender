@@ -3,7 +3,6 @@
 #include "[Common]\HandShakeStructs.h"
 #include "SemanticAnalysis.h"
 #include "ITextEditor.h"
-#include "Globals.h"
 
 namespace cse
 {
@@ -20,14 +19,14 @@ namespace intellisense
 ref class IntelliSenseInterface;
 ref class CodeSnippet;
 
-static enum class StringMatchType
+static enum class eStringMatchType
 {
 	StartsWith,
 	Substring,
 	FullMatch
 };
 
-bool DoStringMatch(String^ Source, String^ Target, StringMatchType Comparison);
+bool DoStringMatch(String^ Source, String^ Target, eStringMatchType Comparison);
 
 ref class IntelliSenseItem : public IRichTooltipContentProvider
 {
@@ -44,24 +43,10 @@ ref class IntelliSenseItem : public IRichTooltipContentProvider
 		"Form",
 		"Code Snippet"
 	};
-
-	static array<Image^>^ ItemTypeImages =
-	{
-		Globals::ImageResources()->CreateImage("IntelliSenseItemEmpty"),
-		Globals::ImageResources()->CreateImage("IntelliSenseItemCommand"),
-		Globals::ImageResources()->CreateImage("IntelliSenseItemLocalVar"),
-		Globals::ImageResources()->CreateImage("IntelliSenseItemQuest"),
-		Globals::ImageResources()->CreateImage("IntelliSenseItemUDF"),
-		Globals::ImageResources()->CreateImage("IntelliSenseItemUDF"),
-		Globals::ImageResources()->CreateImage("IntelliSenseItemGMST"),
-		Globals::ImageResources()->CreateImage("IntelliSenseItemGlobalVar"),
-		Globals::ImageResources()->CreateImage("IntelliSenseItemForm"),
-		Globals::ImageResources()->CreateImage("IntelliSenseItemSnippet"),
-	};
 public:
-	static enum class ItemType
+	static enum class eItemType
 	{
-		Invalid = 0,
+		None = 0,
 		ScriptCommand,
 		ScriptVariable,
 		Quest,
@@ -73,28 +58,30 @@ public:
 		Snippet,
 	};
 
-	static void		PopulateImageListWithItemTypeImages(ImageList^ Destination);
+	static Image^ GetItemTypeIcon(eItemType Type);
 protected:
-	ItemType	Type;
-	String^		HelpTextHeader;
-	String^		HelpTextBody;
-	String^		HelpTextFooter;
+	static Dictionary<eItemType, Image^>^ ItemTypeIcons = gcnew Dictionary<eItemType, Image^>;
 
-	String^		GenerateHelpTextHeader(String^ Identifier);
-	String^		GenerateHelpTextFooter();
+	eItemType ItemType;
+	String^ HelpTextHeader;
+	String^ HelpTextBody;
+	String^ HelpTextFooter;
+
+	String^ GenerateHelpTextHeader(String^ Identifier);
+	String^ GenerateHelpTextFooter();
 public:
 	IntelliSenseItem();
-	IntelliSenseItem(ItemType Type);
+	IntelliSenseItem(eItemType Type);
 
-	virtual void		Insert(textEditor::ITextEditor^ Editor);
+	virtual void Insert(textEditor::ITextEditor^ Editor);
 
-	virtual bool		MatchesToken(String^ Token, StringMatchType Comparison);
-	virtual bool		HasInsightInfo();
+	virtual bool MatchesToken(String^ Token, eStringMatchType Comparison);
+	virtual bool HasInsightInfo();
 
-	virtual String^		GetIdentifier() abstract;
-	virtual String^		GetSubstitution() abstract;
-	virtual String^		GetItemTypeName();
-	ItemType			GetItemType();
+	virtual String^ GetIdentifier() abstract;
+	virtual String^ GetSubstitution() abstract;
+	virtual String^ GetItemTypeName();
+	eItemType GetItemType();
 
 	virtual property String^ TooltipHeaderText
 	{
@@ -118,22 +105,22 @@ public:
 	}
 	virtual property Image^	TooltipFooterImage
 	{
-		Image^ get() { return ItemTypeImages[safe_cast<int>(Type)]; }
+		Image^ get() { return GetItemTypeIcon(ItemType); }
 		void set(Image^ set) {}
 	}
-	virtual property IRichTooltipContentProvider::BackgroundColor TooltipBgColor
+	virtual property IRichTooltipContentProvider::eBackgroundColor TooltipBgColor
 	{
-		IRichTooltipContentProvider::BackgroundColor get()
-		{ return IRichTooltipContentProvider::BackgroundColor::Default; }
-		void set(IRichTooltipContentProvider::BackgroundColor set) {}
+		IRichTooltipContentProvider::eBackgroundColor get()
+		{ return IRichTooltipContentProvider::eBackgroundColor::Default; }
+		void set(IRichTooltipContentProvider::eBackgroundColor set) {}
 	}
 };
 
 ref struct ScriptCommandParameter
 {
-	String^	TypeName;
+	String^ TypeName;
 	String^ Description;
-	bool	Optional;
+	bool Optional;
 
 	ScriptCommandParameter(componentDLLInterface::ObScriptCommandInfo::ParamInfo* ParamInfo);
 };
@@ -141,7 +128,7 @@ ref struct ScriptCommandParameter
 ref class IntelliSenseItemScriptCommand : public IntelliSenseItem
 {
 protected:
-	static enum class SourceType
+	static enum class eSourceType
 	{
 		Vanilla = 0,
 		OBSE,
@@ -158,7 +145,7 @@ protected:
 		"Ambiguous"
 	};
 
-	static enum class ReturnValueType
+	static enum class eReturnValueType
 	{
 		Default = 0,
 		Form,
@@ -168,59 +155,54 @@ protected:
 		Ambiguous
 	};
 
-	static String^	GetPrettyNameForObsePlugin(String^ PluginName);
+	static String^ GetPrettyNameForObsePlugin(String^ PluginName);
 
-	String^		Name;
-	SourceType	Source;
-	String^		SourceName;
-	UInt32		SourceVersion;
-	String^		Description;
-	String^		Shorthand;
-	ReturnValueType
-				ResultType;
-	List<ScriptCommandParameter^>^
-				Parameters;
-	bool		RequireCallingRef;
-	String^		DocumentationUrl;
+	String^ Name;
+	eSourceType Source;
+	String^ SourceName;
+	UInt32 SourceVersion;
+	String^ Description;
+	String^ Shorthand;
+	eReturnValueType ResultType;
+	List<ScriptCommandParameter^>^ Parameters;
+	bool RequireCallingRef;
+	String^ DocumentationUrl;
 public:
 	IntelliSenseItemScriptCommand(componentDLLInterface::CommandTableData* CommandTableData,
-									const componentDLLInterface::ObScriptCommandInfo* CommandInfo,
-									String^ DeveloperUrl);
+								  const componentDLLInterface::ObScriptCommandInfo* CommandInfo,
+								  String^ DeveloperUrl);
 
-	virtual bool		MatchesToken(String^ Token, StringMatchType Comparison) override;
-	virtual String^		GetIdentifier() override;
-	virtual String^		GetSubstitution() override;
-	bool				RequiresCallingRef();
-	String^				GetShorthand();
-	String^				GetDocumentationUrl();
+	virtual bool MatchesToken(String^ Token, eStringMatchType Comparison) override;
+	virtual String^ GetIdentifier() override;
+	virtual String^ GetSubstitution() override;
+	bool RequiresCallingRef();
+	String^ GetShorthand();
+	String^ GetDocumentationUrl();
 };
 
 ref class IntelliSenseItemScriptVariable : public IntelliSenseItem
 {
 protected:
-	String^								Name;
-	obScriptParsing::Variable::DataType	DataType;
-	String^								Comment;
-	String^								ParentEditorID;		// Optional editorID of the parent script
-															// Empty for ad-hoc local variables.
+	String^ Name;
+	obScriptParsing::Variable::eDataType DataType;
+	String^ Comment;
+	String^ ParentEditorID;		// Optional editorID of the parent script; empty for ad-hoc local variables
 public:
-	IntelliSenseItemScriptVariable(String^ Name,
-									String^ Comment,
-									obScriptParsing::Variable::DataType Type,
-									String^ ParentEditorID);
+	IntelliSenseItemScriptVariable(String^ Name, String^ Comment, obScriptParsing::Variable::eDataType Type,
+								   String^ ParentEditorID);
 
-	virtual String^							GetItemTypeName() override;
-	virtual String^							GetIdentifier() override;
-	virtual String^							GetSubstitution() override;
-	String^									GetComment();
-	obScriptParsing::Variable::DataType		GetDataType();
-	String^									GetDataTypeID();
+	virtual String^ GetItemTypeName() override;
+	virtual String^ GetIdentifier() override;
+	virtual String^ GetSubstitution() override;
+	String^ GetComment();
+	obScriptParsing::Variable::eDataType GetDataType();
+	String^ GetDataTypeID();
 };
 
 ref class IntelliSenseItemForm : public IntelliSenseItem
 {
 protected:
-	static enum class FormFlags
+	static enum class eFormFlags
 	{
 		FromMaster           = /*00*/ 0x00000001,
 		FromActiveFile       = /*01*/ 0x00000002,
@@ -233,14 +215,14 @@ protected:
 		VisibleWhenDistant   = /*0F*/ 0x00008000,
 	};
 
-	String^		EditorID;
-	UInt32		TypeID;
-	UInt32		FormID;
-	UInt32		Flags;
-	bool		BaseForm;
-	String^		AttachedScriptEditorID;
+	String^ EditorID;
+	UInt32 TypeID;
+	UInt32 FormID;
+	UInt32 Flags;
+	bool BaseForm;
+	String^ AttachedScriptEditorID;
 
-	String^		GetFormTypeIdentifier();
+	String^ GetFormTypeIdentifier();
 
 	IntelliSenseItemForm();
 public:
@@ -249,22 +231,21 @@ public:
 	virtual String^ GetIdentifier() override;
 	virtual String^ GetSubstitution() override;
 	virtual String^ GetItemTypeName() override;
-	bool			IsObjectReference();
-	bool			HasAttachedScript();
-	String^			GetAttachedScriptEditorID();
+	bool IsObjectReference();
+	bool HasAttachedScript();
+	String^ GetAttachedScriptEditorID();
 };
 
 ref class IntelliSenseItemGlobalVariable : public IntelliSenseItemForm
 {
 protected:
-	obScriptParsing::Variable::DataType	DataType;
-	String^								Value;
+	obScriptParsing::Variable::eDataType DataType;
+	String^ Value;
 public:
-	IntelliSenseItemGlobalVariable(componentDLLInterface::FormData* Data,
-						obScriptParsing::Variable::DataType Type, String^ Value);
+	IntelliSenseItemGlobalVariable(componentDLLInterface::FormData* Data, obScriptParsing::Variable::eDataType Type, String^ Value);
 
-	void				SetValue(String^ Val);
-	virtual String^		GetItemTypeName() override;
+	virtual String^ GetItemTypeName() override;
+	void SetValue(String^ Val);
 
 	property String^ TooltipBodyText
 	{
@@ -275,17 +256,15 @@ public:
 ref class IntelliSenseItemGameSetting : public IntelliSenseItemGlobalVariable
 {
 public:
-	IntelliSenseItemGameSetting(componentDLLInterface::FormData* Data,
-		obScriptParsing::Variable::DataType Type, String^ Value);
+	IntelliSenseItemGameSetting(componentDLLInterface::FormData* Data, obScriptParsing::Variable::eDataType Type, String^ Value);
 
-	virtual String^		GetItemTypeName() override;
+	virtual String^ GetItemTypeName() override;
 };
 
 ref class IntelliSenseItemQuest : public IntelliSenseItemForm
 {
 public:
-	IntelliSenseItemQuest(componentDLLInterface::FormData* Data,
-						componentDLLInterface::ScriptData* AttachedScript);
+	IntelliSenseItemQuest(componentDLLInterface::FormData* Data, componentDLLInterface::ScriptData* AttachedScript);
 };
 
 ref class IntelliSenseItemScript : public IntelliSenseItemForm
@@ -294,9 +273,9 @@ ref class IntelliSenseItemScript : public IntelliSenseItemForm
 protected:
 	IntelliSenseItemScript();
 
-	List<IntelliSenseItemScriptVariable^>^	VarList;
-	String^									CommentDescription;
-	obScriptParsing::AnalysisData^			InitialAnalysisData;
+	List<IntelliSenseItemScriptVariable^>^ Variables;
+	String^ CommentDescription;
+	obScriptParsing::AnalysisData^ InitialAnalysisData;
 public:
 	IntelliSenseItemScript(componentDLLInterface::ScriptData* ScriptData);
 
@@ -305,21 +284,19 @@ public:
 		IntelliSenseItemScript^ get() { return Empty; }
 	}
 
-	IEnumerable<IntelliSenseItemScriptVariable^>^
-						GetVariables();
-	IntelliSenseItemScriptVariable^
-						LookupVariable(String^ VariableName);
-	bool				IsUserDefinedFunction();
-	virtual String^		GetItemTypeName() override;
+	IEnumerable<IntelliSenseItemScriptVariable^>^ GetVariables();
+	IntelliSenseItemScriptVariable^ LookupVariable(String^ VariableName);
+	bool IsUserDefinedFunction();
+	virtual String^ GetItemTypeName() override;
 };
 
 ref class IntelliSenseItemUserFunction : public IntelliSenseItemScript
 {
-	static const int	kReturnVarIdxNone = -1;
-	static const int	kReturnVarIdxAmbiguous = -9;
+	static const int kReturnVarIdxNone = -1;
+	static const int kReturnVarIdxAmbiguous = -9;
 protected:
-	List<int>^			ParameterIndices;
-	int					ReturnVarIndex;
+	List<int>^ ParameterIndices;
+	int ReturnVarIndex;
 public:
 	IntelliSenseItemUserFunction(componentDLLInterface::ScriptData* ScriptData);
 };
@@ -327,13 +304,13 @@ public:
 ref class IntelliSenseItemCodeSnippet : public IntelliSenseItem
 {
 protected:
-	CodeSnippet^	Parent;
+	CodeSnippet^ Parent;
 public:
 	IntelliSenseItemCodeSnippet(CodeSnippet^ Source);
 
-	virtual void	Insert(textEditor::ITextEditor^ Editor) override;
-	virtual bool	MatchesToken(String^ Token, StringMatchType Comparison) override;
-	virtual bool	HasInsightInfo() override;
+	virtual void Insert(textEditor::ITextEditor^ Editor) override;
+	virtual bool MatchesToken(String^ Token, eStringMatchType Comparison) override;
+	virtual bool HasInsightInfo() override;
 	virtual String^ GetIdentifier() override;
 	virtual String^ GetSubstitution() override;
 };
@@ -341,7 +318,7 @@ public:
 ref class IntelliSenseItemSorter : public System::Collections::Generic::IComparer<IntelliSenseItem^>
 {
 protected:
-	SortOrder	Order;
+	SortOrder Order;
 public:
 	IntelliSenseItemSorter(SortOrder Order) : Order(Order) {}
 

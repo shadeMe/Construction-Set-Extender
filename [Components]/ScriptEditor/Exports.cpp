@@ -1,18 +1,15 @@
 #include "Exports.h"
-#include "IntelliSenseDatabase.h"
-#include "Globals.h"
-#include "WorkspaceModel.h"
-#include "WorkspaceView.h"
+#include "IntelliSenseBackend.h"
 #include "ScriptSync.h"
 #include "Preferences.h"
 #include "ScriptPreprocessor.h"
+#include "ScriptEditorInstanceManager.h"
 
 #include <memory.h>
 
 using namespace componentDLLInterface;
 using namespace System::Reflection;
 using namespace cse;
-using namespace cse::intellisense;
 using namespace cse::scriptEditor;
 
 extern componentDLLInterface::ScriptEditorInterface g_InteropInterface;
@@ -39,72 +36,68 @@ void CLRUnhandledExceptionFilter(Object^, UnhandledExceptionEventArgs^ E)
 
 void InitializeComponents(CommandTableData* ScriptCommandData, IntelliSenseUpdateData* GMSTData)
 {
-	if (Threading::SynchronizationContext::Current == nullptr)
-		Threading::SynchronizationContext::SetSynchronizationContext(gcnew Threading::SynchronizationContext());
-
-	Globals::MainThreadID = Threading::Thread::CurrentThread->ManagedThreadId;
-	Globals::MainThreadTaskScheduler = Threading::Tasks::TaskScheduler::FromCurrentSynchronizationContext();
-
-	nativeWrapper::Initialize();
-
 	AppDomain^ CurrentDomain = AppDomain::CurrentDomain;
 	CurrentDomain->UnhandledException += gcnew UnhandledExceptionEventHandler(&CLRUnhandledExceptionFilter);
-	System::Windows::Media::RenderOptions::ProcessRenderMode = System::Windows::Interop::RenderMode::Default;
 
+	nativeWrapper::Initialize();
 	preferences::SettingsHolder::Get()->LoadFromDisk();
-
 	intellisense::IntelliSenseBackend::Get()->InitializeScriptCommands(ScriptCommandData);
 	intellisense::IntelliSenseBackend::Get()->InitializeGameSettings(GMSTData);
 }
 
 void InstantiateEditor(componentDLLInterface::ScriptData* InitializerScript, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
 {
-	ConcreteWorkspaceView^ New = (ConcreteWorkspaceView^)ConcreteWorkspaceViewFactory::Instance->CreateView(Left, Top, Width, Height);
-	IWorkspaceModel^ Model = ConcreteWorkspaceModelFactory::Instance->CreateModel(InitializerScript);
+	auto Params = gcnew controller::IScriptEditorController::InstantiationParams;
+	Params->Operations = controller::IScriptEditorController::InstantiationParams::eInitOperation::LoadExistingScript;
+	Params->InitialBounds = Rectangle(Top, Left, Width, Height);
+	Params->ExistingScriptEditorIds->Add(gcnew String(InitializerScript->EditorID));
 
-	New->AssociateModel(Model, true);
+	ScriptEditorInstanceManager::Get()->NewInstance()->InstantiateEditor(Params);
 }
 
 void InstantiateEditorAndHighlight(componentDLLInterface::ScriptData* InitializerScript, const char* SearchQuery, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
 {
-	ConcreteWorkspaceView^ New = (ConcreteWorkspaceView^)ConcreteWorkspaceViewFactory::Instance->CreateView(Left, Top, Width, Height);
-	IWorkspaceModel^ Model = ConcreteWorkspaceModelFactory::Instance->CreateModel(InitializerScript);
+	auto Params = gcnew controller::IScriptEditorController::InstantiationParams;
+	Params->Operations = controller::IScriptEditorController::InstantiationParams::eInitOperation::LoadExistingScript
+						 | controller::IScriptEditorController::InstantiationParams::eInitOperation::PerformFind;
+	Params->InitialBounds = Rectangle(Top, Left, Width, Height);
+	Params->ExistingScriptEditorIds->Add(gcnew String(InitializerScript->EditorID));
+	Params->FindQuery = gcnew String(SearchQuery);
 
-	New->AssociateModel(Model, true);
-	New->Controller->FindReplace(New,
-								 cse::textEditors::eFindReplaceOperation::Find,
-								 gcnew String(SearchQuery), "",
-								 cse::textEditors::eFindReplaceOptions::CaseInsensitive,
-								 false);
+	ScriptEditorInstanceManager::Get()->NewInstance()->InstantiateEditor(Params);
 }
 
 void InstantiateEditors(componentDLLInterface::ScriptData** InitializerScripts, UInt32 ScriptCount, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
 {
-	ConcreteWorkspaceView^ New = (ConcreteWorkspaceView^)ConcreteWorkspaceViewFactory::Instance->CreateView(Left, Top, Width, Height);
+	auto Params = gcnew controller::IScriptEditorController::InstantiationParams;
+	Params->Operations = controller::IScriptEditorController::InstantiationParams::eInitOperation::LoadExistingScript;
+	Params->InitialBounds = Rectangle(Top, Left, Width, Height);
+
 	for (int i = 0; i < ScriptCount; i++)
 	{
-		IWorkspaceModel^ Model = ConcreteWorkspaceModelFactory::Instance->CreateModel(InitializerScripts[i]);
-		New->AssociateModel(Model, i == 0);
+		auto NextScript = InitializerScripts[i];
+		Params->ExistingScriptEditorIds->Add(gcnew String(NextScript->EditorID));
 	}
 
+	ScriptEditorInstanceManager::Get()->NewInstance()->InstantiateEditor(Params);
 	nativeWrapper::g_CSEInterfaceTable->DeleteData(InitializerScripts, true);
 }
 
 void InstantiateEditorsAndHighlight(componentDLLInterface::ScriptData** InitializerScripts, UInt32 ScriptCount, const char* SearchQuery, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
 {
-	ConcreteWorkspaceView^ New = (ConcreteWorkspaceView^)ConcreteWorkspaceViewFactory::Instance->CreateView(Left, Top, Width, Height);
+	auto Params = gcnew controller::IScriptEditorController::InstantiationParams;
+	Params->Operations = controller::IScriptEditorController::InstantiationParams::eInitOperation::LoadExistingScript
+						 | controller::IScriptEditorController::InstantiationParams::eInitOperation::PerformFind;
+	Params->InitialBounds = Rectangle(Top, Left, Width, Height);
+	Params->FindQuery = gcnew String(SearchQuery);
+
 	for (int i = 0; i < ScriptCount; i++)
 	{
-		IWorkspaceModel^ Model = ConcreteWorkspaceModelFactory::Instance->CreateModel(InitializerScripts[i]);
-		New->AssociateModel(Model, i == 0);
+		auto NextScript = InitializerScripts[i];
+		Params->ExistingScriptEditorIds->Add(gcnew String(NextScript->EditorID));
 	}
 
-	New->Controller->FindReplace(New,
-								 cse::textEditors::ITextEditor::eFindReplaceOperation::Find,
-								 gcnew String(SearchQuery), "",
-								 cse::textEditors::ITextEditor::FindReplaceOptions::CaseInsensitive,
-								 true);
-
+	ScriptEditorInstanceManager::Get()->NewInstance()->InstantiateEditor(Params);
 	nativeWrapper::g_CSEInterfaceTable->DeleteData(InitializerScripts, true);
 }
 
@@ -120,7 +113,7 @@ void ShowDiskSyncDialog(void)
 
 void CloseAllOpenEditors(void)
 {
-	ConcreteWorkspaceViewFactory::Instance->Clear();
+	ScriptEditorInstanceManager::Get()->ReleaseAllActiveControllers();
 	scriptSync::DiskSyncDialog::Close();
 }
 
@@ -131,7 +124,7 @@ void UpdateIntelliSenseDatabase(void)
 
 UInt32 GetOpenEditorCount(void)
 {
-	return ConcreteWorkspaceModelFactory::Instance->Count;
+	return ScriptEditorInstanceManager::Get()->Count;
 }
 
 void DummyPreprocessorErrorOutputWrapper(int Line, String^ Message)

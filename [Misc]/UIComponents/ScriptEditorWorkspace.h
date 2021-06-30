@@ -248,7 +248,7 @@ namespace UIComponents {
 	private: DevComponents::DotNetBar::ButtonItem^ ToolbarMenuHelp;
 	private: DevComponents::DotNetBar::ButtonItem^ HelpMenuWiki;
 	private: DevComponents::DotNetBar::ButtonItem^ HelpMenuObseDocs;
-	private: DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuOpenPreprocessorImport;
+
 	private: DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuJumpToScript;
 
 	private: DevComponents::DotNetBar::Bar^ DockableBarOutlineView;
@@ -258,7 +258,7 @@ namespace UIComponents {
 	private: DevComponents::DotNetBar::Controls::CheckBoxX^ FindWindowCheckBoxIgnoreComments;
 
 	private: DevComponents::DotNetBar::Layout::LayoutControlItem^ FindWindowLCIIgnoreComments;
-private: DevComponents::DotNetBar::LabelItem^ StatusBarCurrentMessage;
+
 private: DevComponents::DotNetBar::ButtonItem^ EditMenuComment;
 private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 
@@ -334,6 +334,8 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->EditMenuFindReplace = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->EditMenuGoToLine = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->EditMenuAddBookmark = (gcnew DevComponents::DotNetBar::ButtonItem());
+			this->EditMenuComment = (gcnew DevComponents::DotNetBar::ButtonItem());
+			this->EditMenuUncomment = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ToolbarMenuView = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ViewMenuPreprocessorOutput = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ViewMenuBytecodeOffsets = (gcnew DevComponents::DotNetBar::ButtonItem());
@@ -439,17 +441,13 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->ContextMenuTextEditor = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->TextEditorContextMenuCopy = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->TextEditorContextMenuPaste = (gcnew DevComponents::DotNetBar::ButtonItem());
-			this->TextEditorContextMenuOpenPreprocessorImport = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->TextEditorContextMenuJumpToScript = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->NavigationBar = (gcnew DevComponents::DotNetBar::CrumbBar());
 			this->StatusBar = (gcnew DevComponents::DotNetBar::Bar());
-			this->StatusBarCurrentMessage = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->StatusBarLineNumber = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->StatusBarColumnNumber = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->StatusBarPreprocessorOutputFlag = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->StatusBarScriptBytecodeLength = (gcnew DevComponents::DotNetBar::CircularProgressItem());
-			this->EditMenuComment = (gcnew DevComponents::DotNetBar::ButtonItem());
-			this->EditMenuUncomment = (gcnew DevComponents::DotNetBar::ButtonItem());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MainTabStrip))->BeginInit();
 			this->MainTabStrip->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContainerMainToolbar))->BeginInit();
@@ -489,29 +487,14 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContextMenuProvider))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->StatusBar))->BeginInit();
 			this->SuspendLayout();
-			// 
-			// StyleManager
-			// 
 			this->StyleManager->ManagerStyle = DevComponents::DotNetBar::eStyle::VisualStudio2012Dark;
 			this->StyleManager->MetroColorParameters = DevComponents::DotNetBar::Metro::ColorTables::MetroColorGeneratorParameters(System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)),
 				static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(48))), System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(0)),
 					static_cast<System::Int32>(static_cast<System::Byte>(122)), static_cast<System::Int32>(static_cast<System::Byte>(204))));
-			// 
-			// MainTabStrip
-			// 
 			this->MainTabStrip->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(45)),
 				static_cast<System::Int32>(static_cast<System::Byte>(48)));
 			this->MainTabStrip->CloseButtonOnTabsVisible = true;
-			// 
-			// 
-			// 
-			// 
-			// 
-			// 
 			this->MainTabStrip->ControlBox->CloseBox->Name = L"";
-			// 
-			// 
-			// 
 			this->MainTabStrip->ControlBox->MenuBox->Name = L"";
 			this->MainTabStrip->ControlBox->Name = L"";
 			this->MainTabStrip->ControlBox->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(2) {
@@ -533,49 +516,34 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 				static_cast<System::Byte>(0)));
 			this->MainTabStrip->SelectedTabIndex = 0;
 			this->MainTabStrip->Size = System::Drawing::Size(1030, 30);
-			this->MainTabStrip->TabFont = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+			this->MainTabStrip->TabFont = (gcnew System::Drawing::Font(L"Segoe UI", 8.25, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->MainTabStrip->TabIndex = 1;
 			this->MainTabStrip->Tabs->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(2) { this->DummyTabItem, this->AnotherDummyTabItem });
 			this->MainTabStrip->TabStyle = DevComponents::DotNetBar::eSuperTabStyle::Office2010BackstageBlue;
 			this->MainTabStrip->TextAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
 			this->MainTabStrip->TabMoving += gcnew System::EventHandler<DevComponents::DotNetBar::SuperTabStripTabMovingEventArgs^ >(this, &ScriptEditorWorkspace::MainTabStrip_TabMove);
-			// 
-			// DummySuperTabControlPanel1
-			// 
 			this->DummySuperTabControlPanel1->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->DummySuperTabControlPanel1->Location = System::Drawing::Point(0, 30);
 			this->DummySuperTabControlPanel1->Name = L"DummySuperTabControlPanel1";
 			this->DummySuperTabControlPanel1->Size = System::Drawing::Size(1030, 0);
 			this->DummySuperTabControlPanel1->TabIndex = 0;
 			this->DummySuperTabControlPanel1->TabItem = this->DummyTabItem;
-			// 
-			// DummyTabItem
-			// 
 			this->DummyTabItem->AttachedControl = this->DummySuperTabControlPanel1;
 			this->DummyTabItem->GlobalItem = false;
 			this->DummyTabItem->ImageAlignment = DevComponents::DotNetBar::ImageAlignment::MiddleCenter;
 			this->DummyTabItem->Name = L"DummyTabItem";
 			this->DummyTabItem->Text = L"Dummy Tab";
-			// 
-			// DummySuperTabControlPanel2
-			// 
 			this->DummySuperTabControlPanel2->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->DummySuperTabControlPanel2->Location = System::Drawing::Point(0, 30);
 			this->DummySuperTabControlPanel2->Name = L"DummySuperTabControlPanel2";
 			this->DummySuperTabControlPanel2->Size = System::Drawing::Size(737, 0);
 			this->DummySuperTabControlPanel2->TabIndex = 0;
 			this->DummySuperTabControlPanel2->TabItem = this->AnotherDummyTabItem;
-			// 
-			// AnotherDummyTabItem
-			// 
 			this->AnotherDummyTabItem->AttachedControl = this->DummySuperTabControlPanel2;
 			this->AnotherDummyTabItem->GlobalItem = false;
 			this->AnotherDummyTabItem->Name = L"AnotherDummyTabItem";
 			this->AnotherDummyTabItem->Text = L"Yet Another Dummy Tab";
-			// 
-			// ContainerMainToolbar
-			// 
 			this->ContainerMainToolbar->AccessibleDescription = L"DotNetBar Bar (ContainerMainToolbar)";
 			this->ContainerMainToolbar->AccessibleName = L"DotNetBar Bar";
 			this->ContainerMainToolbar->AccessibleRole = System::Windows::Forms::AccessibleRole::ToolBar;
@@ -609,19 +577,12 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->ContainerMainToolbar->TabIndex = 2;
 			this->ContainerMainToolbar->TabStop = false;
 			this->ContainerMainToolbar->ItemClick += gcnew System::EventHandler(this, &ScriptEditorWorkspace::ContainerMainToolbar_ItemClick);
-			// 
-			// ToolbarNewScript
-			// 
-			this->ToolbarNewScript->AlternateShortCutText = L"aasds";
 			this->ToolbarNewScript->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolbarNewScript.Image")));
 			this->ToolbarNewScript->ImagePaddingHorizontal = 15;
 			this->ToolbarNewScript->ImagePaddingVertical = 10;
 			this->ToolbarNewScript->Name = L"ToolbarNewScript";
 			this->ToolbarNewScript->Text = L"New Script";
 			this->ToolbarNewScript->Tooltip = L"New Script";
-			// 
-			// ToolbarOpenScript
-			// 
 			this->ToolbarOpenScript->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolbarOpenScript.Image")));
 			this->ToolbarOpenScript->ImagePaddingHorizontal = 15;
 			this->ToolbarOpenScript->ImagePaddingVertical = 10;
@@ -629,9 +590,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->ToolbarOpenScript->Text = L"Open Script";
 			this->ToolbarOpenScript->Tooltip = L"Open Script";
 			this->ToolbarOpenScript->Click += gcnew System::EventHandler(this, &ScriptEditorWorkspace::ToolbarOpenScript_Click);
-			// 
-			// ToolbarSaveScript
-			// 
 			this->ToolbarSaveScript->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolbarSaveScript.Image")));
 			this->ToolbarSaveScript->ImagePaddingHorizontal = 15;
 			this->ToolbarSaveScript->ImagePaddingVertical = 10;
@@ -642,28 +600,16 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			});
 			this->ToolbarSaveScript->Text = L"Save Script";
 			this->ToolbarSaveScript->Tooltip = L"Save Script";
-			// 
-			// ToolbarSaveScriptAndActivePlugin
-			// 
 			this->ToolbarSaveScriptAndActivePlugin->Name = L"ToolbarSaveScriptAndActivePlugin";
 			this->ToolbarSaveScriptAndActivePlugin->Text = L"Save Script and Active Plugin";
-			// 
-			// ToolbarSaveScriptNoCompile
-			// 
 			this->ToolbarSaveScriptNoCompile->Name = L"ToolbarSaveScriptNoCompile";
 			this->ToolbarSaveScriptNoCompile->Text = L"Save Script (Do Not Compile)";
-			// 
-			// ToolbarSaveAllScripts
-			// 
 			this->ToolbarSaveAllScripts->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolbarSaveAllScripts.Image")));
 			this->ToolbarSaveAllScripts->ImagePaddingHorizontal = 15;
 			this->ToolbarSaveAllScripts->ImagePaddingVertical = 10;
 			this->ToolbarSaveAllScripts->Name = L"ToolbarSaveAllScripts";
 			this->ToolbarSaveAllScripts->Text = L"Save All Open Scripts";
 			this->ToolbarSaveAllScripts->Tooltip = L"Save All Open Scripts";
-			// 
-			// ToolbarPreviousScript
-			// 
 			this->ToolbarPreviousScript->BeginGroup = true;
 			this->ToolbarPreviousScript->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolbarPreviousScript.Image")));
 			this->ToolbarPreviousScript->ImagePaddingHorizontal = 15;
@@ -671,53 +617,32 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->ToolbarPreviousScript->Name = L"ToolbarPreviousScript";
 			this->ToolbarPreviousScript->Text = L"Previous Script";
 			this->ToolbarPreviousScript->Tooltip = L"Previous Script";
-			// 
-			// ToolbarNextScript
-			// 
 			this->ToolbarNextScript->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolbarNextScript.Image")));
 			this->ToolbarNextScript->ImagePaddingHorizontal = 15;
 			this->ToolbarNextScript->ImagePaddingVertical = 10;
 			this->ToolbarNextScript->Name = L"ToolbarNextScript";
 			this->ToolbarNextScript->Text = L"Next Script";
 			this->ToolbarNextScript->Tooltip = L"Next Script";
-			// 
-			// ToolbarLabelScriptType
-			// 
 			this->ToolbarLabelScriptType->BeginGroup = true;
 			this->ToolbarLabelScriptType->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Center;
 			this->ToolbarLabelScriptType->Name = L"ToolbarLabelScriptType";
 			this->ToolbarLabelScriptType->PaddingLeft = 5;
 			this->ToolbarLabelScriptType->Text = L"Script Type";
-			// 
-			// ToolbarScriptTypeDropdown
-			// 
 			this->ToolbarScriptTypeDropdown->ComboWidth = 150;
 			this->ToolbarScriptTypeDropdown->DropDownHeight = 106;
 			this->ToolbarScriptTypeDropdown->DropDownWidth = 150;
 			this->ToolbarScriptTypeDropdown->ItemHeight = 18;
 			this->ToolbarScriptTypeDropdown->Items->AddRange(gcnew cli::array< System::Object^  >(3) {
-				this->DropdownScriptTypeObject,
-					this->DropdownScriptTypeQuest, this->DropdownScriptTypeMagicEffect
+				this->DropdownScriptTypeObject, this->DropdownScriptTypeQuest,
+					this->DropdownScriptTypeMagicEffect
 			});
 			this->ToolbarScriptTypeDropdown->Name = L"ToolbarScriptTypeDropdown";
-			// 
-			// DropdownScriptTypeObject
-			// 
 			this->DropdownScriptTypeObject->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"DropdownScriptTypeObject.Image")));
 			this->DropdownScriptTypeObject->Text = L"Object Script";
-			// 
-			// DropdownScriptTypeQuest
-			// 
 			this->DropdownScriptTypeQuest->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"DropdownScriptTypeQuest.Image")));
 			this->DropdownScriptTypeQuest->Text = L"Quest Script";
-			// 
-			// DropdownScriptTypeMagicEffect
-			// 
 			this->DropdownScriptTypeMagicEffect->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"DropdownScriptTypeMagicEffect.Image")));
 			this->DropdownScriptTypeMagicEffect->Text = L"Magic Effect Script";
-			// 
-			// ToolbarMenuEdit
-			// 
 			this->ToolbarMenuEdit->AutoExpandOnClick = true;
 			this->ToolbarMenuEdit->ImageFixedSize = System::Drawing::Size(12, 12);
 			this->ToolbarMenuEdit->ImagePaddingHorizontal = 15;
@@ -729,33 +654,28 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 					this->EditMenuGoToLine, this->EditMenuAddBookmark, this->EditMenuComment, this->EditMenuUncomment
 			});
 			this->ToolbarMenuEdit->Text = L"&EDIT";
-			// 
-			// EditMenuFindReplace
-			// 
 			this->EditMenuFindReplace->AlternateShortCutText = L"Ctrl+Shift+F";
 			this->EditMenuFindReplace->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"EditMenuFindReplace.Image")));
 			this->EditMenuFindReplace->Name = L"EditMenuFindReplace";
 			this->EditMenuFindReplace->Text = L"&Find and Replace";
 			this->EditMenuFindReplace->Click += gcnew System::EventHandler(this, &ScriptEditorWorkspace::EditMenuFindReplace_Click);
-			// 
-			// EditMenuGoToLine
-			// 
 			this->EditMenuGoToLine->AlternateShortCutText = L"Ctrl + G";
 			this->EditMenuGoToLine->BeginGroup = true;
 			this->EditMenuGoToLine->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"EditMenuGoToLine.Image")));
 			this->EditMenuGoToLine->Name = L"EditMenuGoToLine";
 			this->EditMenuGoToLine->Text = L"Go To &Line";
-			// 
-			// EditMenuAddBookmark
-			// 
 			this->EditMenuAddBookmark->AlternateShortCutText = L"Ctrl + B";
 			this->EditMenuAddBookmark->BeginGroup = true;
 			this->EditMenuAddBookmark->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"EditMenuAddBookmark.Image")));
 			this->EditMenuAddBookmark->Name = L"EditMenuAddBookmark";
 			this->EditMenuAddBookmark->Text = L"Add &Bookmark";
-			// 
-			// ToolbarMenuView
-			// 
+			this->EditMenuComment->BeginGroup = true;
+			this->EditMenuComment->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"EditMenuComment.Image")));
+			this->EditMenuComment->Name = L"EditMenuComment";
+			this->EditMenuComment->Text = L"&Comment Selection";
+			this->EditMenuUncomment->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"EditMenuUncomment.Image")));
+			this->EditMenuUncomment->Name = L"EditMenuUncomment";
+			this->EditMenuUncomment->Text = L"&Uncomment Selection";
 			this->ToolbarMenuView->AutoExpandOnClick = true;
 			this->ToolbarMenuView->ImageFixedSize = System::Drawing::Size(12, 12);
 			this->ToolbarMenuView->Name = L"ToolbarMenuView";
@@ -765,72 +685,39 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 					this->ViewMenuFindResults, this->ViewMenuGlobalFindResults, this->ViewMenuNavBreadcrumb, this->ViewMenuDarkMode
 			});
 			this->ToolbarMenuView->Text = L"&VIEW";
-			// 
-			// ViewMenuPreprocessorOutput
-			// 
 			this->ViewMenuPreprocessorOutput->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ViewMenuPreprocessorOutput.Image")));
 			this->ViewMenuPreprocessorOutput->Name = L"ViewMenuPreprocessorOutput";
 			this->ViewMenuPreprocessorOutput->Text = L"&Preprocessed Script Text";
-			// 
-			// ViewMenuBytecodeOffsets
-			// 
 			this->ViewMenuBytecodeOffsets->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ViewMenuBytecodeOffsets.Image")));
 			this->ViewMenuBytecodeOffsets->Name = L"ViewMenuBytecodeOffsets";
 			this->ViewMenuBytecodeOffsets->Text = L"Script B&ytecode Offsets";
-			// 
-			// ViewMenuIconMargin
-			// 
 			this->ViewMenuIconMargin->Name = L"ViewMenuIconMargin";
 			this->ViewMenuIconMargin->Text = L"&Icon Margin";
-			// 
-			// ViewMenuMessages
-			// 
 			this->ViewMenuMessages->BeginGroup = true;
 			this->ViewMenuMessages->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ViewMenuMessages.Image")));
 			this->ViewMenuMessages->Name = L"ViewMenuMessages";
 			this->ViewMenuMessages->Text = L"&Messages";
-			// 
-			// ViewMenuBookmarks
-			// 
 			this->ViewMenuBookmarks->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ViewMenuBookmarks.Image")));
 			this->ViewMenuBookmarks->Name = L"ViewMenuBookmarks";
 			this->ViewMenuBookmarks->Text = L"&Bookmarks";
 			this->ViewMenuBookmarks->Click += gcnew System::EventHandler(this, &ScriptEditorWorkspace::ViewMenuBookmarks_Click);
-			// 
-			// ViewMenuOutline
-			// 
 			this->ViewMenuOutline->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ViewMenuOutline.Image")));
 			this->ViewMenuOutline->Name = L"ViewMenuOutline";
 			this->ViewMenuOutline->Text = L"&Outline View";
-			// 
-			// ViewMenuFindResults
-			// 
 			this->ViewMenuFindResults->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ViewMenuFindResults.Image")));
 			this->ViewMenuFindResults->Name = L"ViewMenuFindResults";
 			this->ViewMenuFindResults->Text = L"&Find and Replace Results";
-			// 
-			// ViewMenuGlobalFindResults
-			// 
 			this->ViewMenuGlobalFindResults->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ViewMenuGlobalFindResults.Image")));
 			this->ViewMenuGlobalFindResults->Name = L"ViewMenuGlobalFindResults";
 			this->ViewMenuGlobalFindResults->Text = L"Find in &Tabs Results";
-			// 
-			// ViewMenuNavBreadcrumb
-			// 
 			this->ViewMenuNavBreadcrumb->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ViewMenuNavBreadcrumb.Image")));
 			this->ViewMenuNavBreadcrumb->Name = L"ViewMenuNavBreadcrumb";
 			this->ViewMenuNavBreadcrumb->Text = L"&Navigation Bar";
-			// 
-			// ViewMenuDarkMode
-			// 
 			this->ViewMenuDarkMode->BeginGroup = true;
 			this->ViewMenuDarkMode->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ViewMenuDarkMode.Image")));
 			this->ViewMenuDarkMode->Name = L"ViewMenuDarkMode";
 			this->ViewMenuDarkMode->Text = L"&Dark Mode";
 			this->ViewMenuDarkMode->Click += gcnew System::EventHandler(this, &ScriptEditorWorkspace::ViewMenuDarkMode_Click);
-			// 
-			// ToolbarMenuTools
-			// 
 			this->ToolbarMenuTools->AutoExpandOnClick = true;
 			this->ToolbarMenuTools->Name = L"ToolbarMenuTools";
 			this->ToolbarMenuTools->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(12) {
@@ -840,40 +727,22 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 					this->ToolsMenuPreferences
 			});
 			this->ToolbarMenuTools->Text = L"&TOOLS";
-			// 
-			// ToolsMenuSanitiseScript
-			// 
 			this->ToolsMenuSanitiseScript->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolsMenuSanitiseScript.Image")));
 			this->ToolsMenuSanitiseScript->Name = L"ToolsMenuSanitiseScript";
 			this->ToolsMenuSanitiseScript->Text = L"&Sanitise Script";
-			// 
-			// ToolsMenuAttachScript
-			// 
 			this->ToolsMenuAttachScript->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolsMenuAttachScript.Image")));
 			this->ToolsMenuAttachScript->Name = L"ToolsMenuAttachScript";
 			this->ToolsMenuAttachScript->Text = L"&Attach Script...";
-			// 
-			// ToolsMenuCompileDepends
-			// 
 			this->ToolsMenuCompileDepends->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolsMenuCompileDepends.Image")));
 			this->ToolsMenuCompileDepends->Name = L"ToolsMenuCompileDepends";
 			this->ToolsMenuCompileDepends->Text = L"Recompile Script &Dependencies";
-			// 
-			// ToolsMenuDocumentScript
-			// 
 			this->ToolsMenuDocumentScript->BeginGroup = true;
 			this->ToolsMenuDocumentScript->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolsMenuDocumentScript.Image")));
 			this->ToolsMenuDocumentScript->Name = L"ToolsMenuDocumentScript";
 			this->ToolsMenuDocumentScript->Text = L"Doc&ument Script...";
-			// 
-			// ToolsMenuModifyVarIndices
-			// 
 			this->ToolsMenuModifyVarIndices->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolsMenuModifyVarIndices.Image")));
 			this->ToolsMenuModifyVarIndices->Name = L"ToolsMenuModifyVarIndices";
 			this->ToolsMenuModifyVarIndices->Text = L"Modif&y Variable Indices...";
-			// 
-			// ToolsMenuImport
-			// 
 			this->ToolsMenuImport->BeginGroup = true;
 			this->ToolsMenuImport->Name = L"ToolsMenuImport";
 			this->ToolsMenuImport->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(2) {
@@ -881,93 +750,48 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 					this->MenuImportMultipleTabs
 			});
 			this->ToolsMenuImport->Text = L"&Import";
-			// 
-			// MenuImportCurrentTab
-			// 
 			this->MenuImportCurrentTab->Name = L"MenuImportCurrentTab";
 			this->MenuImportCurrentTab->Text = L"Import File into &Current Script";
-			// 
-			// MenuImportMultipleTabs
-			// 
 			this->MenuImportMultipleTabs->Name = L"MenuImportMultipleTabs";
 			this->MenuImportMultipleTabs->Text = L"Import &Multiple Files...";
-			// 
-			// ToolsMenuExport
-			// 
 			this->ToolsMenuExport->Name = L"ToolsMenuExport";
 			this->ToolsMenuExport->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(2) {
 				this->MenuExportCurrentTab,
 					this->MenuExportAllTabs
 			});
 			this->ToolsMenuExport->Text = L"&Export";
-			// 
-			// MenuExportCurrentTab
-			// 
 			this->MenuExportCurrentTab->Name = L"MenuExportCurrentTab";
 			this->MenuExportCurrentTab->Text = L"Save &Current Script to Disk";
-			// 
-			// MenuExportAllTabs
-			// 
 			this->MenuExportAllTabs->Name = L"MenuExportAllTabs";
 			this->MenuExportAllTabs->Text = L"Save &All Open Scripts to Disk";
-			// 
-			// ToolsMenuCompileActiveFileScripts
-			// 
 			this->ToolsMenuCompileActiveFileScripts->BeginGroup = true;
 			this->ToolsMenuCompileActiveFileScripts->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolsMenuCompileActiveFileScripts.Image")));
 			this->ToolsMenuCompileActiveFileScripts->Name = L"ToolsMenuCompileActiveFileScripts";
 			this->ToolsMenuCompileActiveFileScripts->Text = L"Recompile All Scripts in Active &File";
-			// 
-			// ToolsMenuDeleteScripts
-			// 
 			this->ToolsMenuDeleteScripts->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolsMenuDeleteScripts.Image")));
 			this->ToolsMenuDeleteScripts->Name = L"ToolsMenuDeleteScripts";
 			this->ToolsMenuDeleteScripts->Text = L"&Delete Scripts...";
-			// 
-			// ToolsMenuScriptSync
-			// 
 			this->ToolsMenuScriptSync->BeginGroup = true;
 			this->ToolsMenuScriptSync->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolsMenuScriptSync.Image")));
 			this->ToolsMenuScriptSync->Name = L"ToolsMenuScriptSync";
 			this->ToolsMenuScriptSync->Text = L"S&ync Scripts to Disk...";
 			this->ToolsMenuScriptSync->Click += gcnew System::EventHandler(this, &ScriptEditorWorkspace::ToolsMenuScriptSync_Click);
-			// 
-			// ToolsMenuCodeSnippets
-			// 
 			this->ToolsMenuCodeSnippets->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolsMenuCodeSnippets.Image")));
 			this->ToolsMenuCodeSnippets->Name = L"ToolsMenuCodeSnippets";
 			this->ToolsMenuCodeSnippets->Text = L"Code &Snippets...";
-			// 
-			// ToolsMenuPreferences
-			// 
 			this->ToolsMenuPreferences->BeginGroup = true;
 			this->ToolsMenuPreferences->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolsMenuPreferences.Image")));
 			this->ToolsMenuPreferences->Name = L"ToolsMenuPreferences";
 			this->ToolsMenuPreferences->Text = L"Script Editor &Preferences...";
 			this->ToolsMenuPreferences->Click += gcnew System::EventHandler(this, &ScriptEditorWorkspace::ToolsMenuPreferences_Click);
-			// 
-			// ToolbarMenuHelp
-			// 
 			this->ToolbarMenuHelp->AutoExpandOnClick = true;
 			this->ToolbarMenuHelp->Name = L"ToolbarMenuHelp";
-			this->ToolbarMenuHelp->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(2) {
-				this->HelpMenuWiki,
-					this->HelpMenuObseDocs
-			});
+			this->ToolbarMenuHelp->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(2) { this->HelpMenuWiki, this->HelpMenuObseDocs });
 			this->ToolbarMenuHelp->Text = L"&HELP";
-			// 
-			// HelpMenuWiki
-			// 
 			this->HelpMenuWiki->Name = L"HelpMenuWiki";
 			this->HelpMenuWiki->Text = L"Wiki";
-			// 
-			// HelpMenuObseDocs
-			// 
 			this->HelpMenuObseDocs->Name = L"HelpMenuObseDocs";
 			this->HelpMenuObseDocs->Text = L"OBSE Manual";
-			// 
-			// TextEditorContextMenuAddVar
-			// 
 			this->TextEditorContextMenuAddVar->AutoExpandOnClick = true;
 			this->TextEditorContextMenuAddVar->BeginGroup = true;
 			this->TextEditorContextMenuAddVar->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"TextEditorContextMenuAddVar.Image")));
@@ -977,39 +801,21 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 					this->MenuAddVarFloat, this->MenuAddVarReference, this->MenuAddVarString, this->MenuAddVarArray
 			});
 			this->TextEditorContextMenuAddVar->Text = L"Add &Variable";
-			// 
-			// MenuAddVarInteger
-			// 
 			this->MenuAddVarInteger->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::TextOnlyAlways;
 			this->MenuAddVarInteger->Name = L"MenuAddVarInteger";
 			this->MenuAddVarInteger->Text = L"&Integer";
-			// 
-			// MenuAddVarFloat
-			// 
 			this->MenuAddVarFloat->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::TextOnlyAlways;
 			this->MenuAddVarFloat->Name = L"MenuAddVarFloat";
 			this->MenuAddVarFloat->Text = L"&Float";
-			// 
-			// MenuAddVarReference
-			// 
 			this->MenuAddVarReference->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::TextOnlyAlways;
 			this->MenuAddVarReference->Name = L"MenuAddVarReference";
 			this->MenuAddVarReference->Text = L"&Reference";
-			// 
-			// MenuAddVarString
-			// 
 			this->MenuAddVarString->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::TextOnlyAlways;
 			this->MenuAddVarString->Name = L"MenuAddVarString";
 			this->MenuAddVarString->Text = L"&String";
-			// 
-			// MenuAddVarArray
-			// 
 			this->MenuAddVarArray->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::TextOnlyAlways;
 			this->MenuAddVarArray->Name = L"MenuAddVarArray";
 			this->MenuAddVarArray->Text = L"&Array";
-			// 
-			// DockManager
-			// 
 			this->DockManager->AllowUserBarCustomize = false;
 			this->DockManager->AlwaysShowFullMenus = true;
 			this->DockManager->AutoDispatchShortcuts->Add(DevComponents::DotNetBar::eShortcut::F1);
@@ -1035,9 +841,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockManager->ToolbarRightDockSite = this->DockSiteRight;
 			this->DockManager->ToolbarTopDockSite = this->DockSiteTopEx;
 			this->DockManager->TopDockSite = this->DockSiteTop;
-			// 
-			// DockSiteBottom
-			// 
 			this->DockSiteBottom->AccessibleRole = System::Windows::Forms::AccessibleRole::Window;
 			this->DockSiteBottom->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(45)),
 				static_cast<System::Int32>(static_cast<System::Byte>(48)));
@@ -1059,9 +862,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockSiteBottom->Size = System::Drawing::Size(1030, 200);
 			this->DockSiteBottom->TabIndex = 7;
 			this->DockSiteBottom->TabStop = false;
-			// 
-			// DockableBarFindInTabsResults
-			// 
 			this->DockableBarFindInTabsResults->AccessibleDescription = L"DotNetBar Bar (DockableBarFindInTabsResults)";
 			this->DockableBarFindInTabsResults->AccessibleName = L"DotNetBar Bar";
 			this->DockableBarFindInTabsResults->AccessibleRole = System::Windows::Forms::AccessibleRole::Grouping;
@@ -1073,8 +873,8 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockableBarFindInTabsResults->CanHide = true;
 			this->DockableBarFindInTabsResults->CloseSingleTab = true;
 			this->DockableBarFindInTabsResults->Controls->Add(this->PanelDockContainerGlobalFindResults);
-			this->DockableBarFindInTabsResults->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular,
-				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+			this->DockableBarFindInTabsResults->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
 			this->DockableBarFindInTabsResults->GrabHandleStyle = DevComponents::DotNetBar::eGrabHandleStyle::Caption;
 			this->DockableBarFindInTabsResults->IsMaximized = false;
 			this->DockableBarFindInTabsResults->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(1) { this->DockContainerItemGlobalFindResults });
@@ -1087,9 +887,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockableBarFindInTabsResults->TabIndex = 0;
 			this->DockableBarFindInTabsResults->TabStop = false;
 			this->DockableBarFindInTabsResults->Text = L"Find in Tabs Results";
-			// 
-			// PanelDockContainerGlobalFindResults
-			// 
 			this->PanelDockContainerGlobalFindResults->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->PanelDockContainerGlobalFindResults->Controls->Add(this->GlobalFindResultsList);
 			this->PanelDockContainerGlobalFindResults->DisabledBackColor = System::Drawing::Color::Empty;
@@ -1101,15 +898,12 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->PanelDockContainerGlobalFindResults->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
 			this->PanelDockContainerGlobalFindResults->Style->GradientAngle = 90;
 			this->PanelDockContainerGlobalFindResults->TabIndex = 13;
-			// 
-			// GlobalFindResultsList
-			// 
 			this->GlobalFindResultsList->BackColor = System::Drawing::Color::Black;
 			this->GlobalFindResultsList->CellEditUseWholeCell = false;
 			this->GlobalFindResultsList->Cursor = System::Windows::Forms::Cursors::Default;
 			this->GlobalFindResultsList->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->GlobalFindResultsList->EmptyListMsg = L"Doesn\'t look like anything to me...";
-			this->GlobalFindResultsList->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75F, System::Drawing::FontStyle::Regular,
+			this->GlobalFindResultsList->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75, System::Drawing::FontStyle::Regular,
 				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
 			this->GlobalFindResultsList->ForeColor = System::Drawing::Color::White;
 			this->GlobalFindResultsList->GridLines = true;
@@ -1123,15 +917,9 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->GlobalFindResultsList->UseCompatibleStateImageBehavior = false;
 			this->GlobalFindResultsList->View = System::Windows::Forms::View::Details;
 			this->GlobalFindResultsList->VirtualMode = true;
-			// 
-			// DockContainerItemGlobalFindResults
-			// 
 			this->DockContainerItemGlobalFindResults->Control = this->PanelDockContainerGlobalFindResults;
 			this->DockContainerItemGlobalFindResults->Name = L"DockContainerItemGlobalFindResults";
 			this->DockContainerItemGlobalFindResults->Text = L"Find in Tabs Results";
-			// 
-			// DockableBarMessages
-			// 
 			this->DockableBarMessages->AccessibleDescription = L"DotNetBar Bar (DockableBarMessages)";
 			this->DockableBarMessages->AccessibleName = L"DotNetBar Bar";
 			this->DockableBarMessages->AccessibleRole = System::Windows::Forms::AccessibleRole::Grouping;
@@ -1142,7 +930,7 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockableBarMessages->CanHide = true;
 			this->DockableBarMessages->CloseSingleTab = true;
 			this->DockableBarMessages->Controls->Add(this->PanelDockContainerMessageList);
-			this->DockableBarMessages->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+			this->DockableBarMessages->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->DockableBarMessages->GrabHandleStyle = DevComponents::DotNetBar::eGrabHandleStyle::Caption;
 			this->DockableBarMessages->IsMaximized = false;
@@ -1156,9 +944,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockableBarMessages->TabIndex = 1;
 			this->DockableBarMessages->TabStop = false;
 			this->DockableBarMessages->Text = L"Messages";
-			// 
-			// PanelDockContainerMessageList
-			// 
 			this->PanelDockContainerMessageList->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->PanelDockContainerMessageList->Controls->Add(this->MessagesList);
 			this->PanelDockContainerMessageList->DisabledBackColor = System::Drawing::Color::Empty;
@@ -1170,15 +955,12 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->PanelDockContainerMessageList->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
 			this->PanelDockContainerMessageList->Style->GradientAngle = 90;
 			this->PanelDockContainerMessageList->TabIndex = 0;
-			// 
-			// MessagesList
-			// 
 			this->MessagesList->BackColor = System::Drawing::Color::Black;
 			this->MessagesList->CellEditUseWholeCell = false;
 			this->MessagesList->Cursor = System::Windows::Forms::Cursors::Default;
 			this->MessagesList->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->MessagesList->EmptyListMsg = L"Doesn\'t look like anything to me...";
-			this->MessagesList->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75F, System::Drawing::FontStyle::Regular,
+			this->MessagesList->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75, System::Drawing::FontStyle::Regular,
 				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
 			this->MessagesList->ForeColor = System::Drawing::Color::White;
 			this->MessagesList->FullRowSelect = true;
@@ -1193,15 +975,9 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->MessagesList->UseCompatibleStateImageBehavior = false;
 			this->MessagesList->View = System::Windows::Forms::View::Details;
 			this->MessagesList->VirtualMode = true;
-			// 
-			// DockContainerItemMessageList
-			// 
 			this->DockContainerItemMessageList->Control = this->PanelDockContainerMessageList;
 			this->DockContainerItemMessageList->Name = L"DockContainerItemMessageList";
 			this->DockContainerItemMessageList->Text = L"Messages";
-			// 
-			// DockableBarBookmarks
-			// 
 			this->DockableBarBookmarks->AccessibleDescription = L"DotNetBar Bar (DockableBarBookmarks)";
 			this->DockableBarBookmarks->AccessibleName = L"DotNetBar Bar";
 			this->DockableBarBookmarks->AccessibleRole = System::Windows::Forms::AccessibleRole::Grouping;
@@ -1212,7 +988,7 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockableBarBookmarks->CanHide = true;
 			this->DockableBarBookmarks->CloseSingleTab = true;
 			this->DockableBarBookmarks->Controls->Add(this->PanelDockContainerBookmarks);
-			this->DockableBarBookmarks->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+			this->DockableBarBookmarks->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->DockableBarBookmarks->GrabHandleStyle = DevComponents::DotNetBar::eGrabHandleStyle::Caption;
 			this->DockableBarBookmarks->IsMaximized = false;
@@ -1226,9 +1002,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockableBarBookmarks->TabIndex = 2;
 			this->DockableBarBookmarks->TabStop = false;
 			this->DockableBarBookmarks->Text = L"Bookmarks";
-			// 
-			// PanelDockContainerBookmarks
-			// 
 			this->PanelDockContainerBookmarks->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->PanelDockContainerBookmarks->Controls->Add(this->BookmarksList);
 			this->PanelDockContainerBookmarks->Controls->Add(this->BookmarksToolbar);
@@ -1241,15 +1014,12 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->PanelDockContainerBookmarks->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
 			this->PanelDockContainerBookmarks->Style->GradientAngle = 90;
 			this->PanelDockContainerBookmarks->TabIndex = 5;
-			// 
-			// BookmarksList
-			// 
 			this->BookmarksList->BackColor = System::Drawing::Color::Black;
 			this->BookmarksList->CellEditUseWholeCell = false;
 			this->BookmarksList->Cursor = System::Windows::Forms::Cursors::Default;
 			this->BookmarksList->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->BookmarksList->EmptyListMsg = L"Doesn\'t look like anything to me...";
-			this->BookmarksList->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75F, System::Drawing::FontStyle::Regular,
+			this->BookmarksList->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75, System::Drawing::FontStyle::Regular,
 				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
 			this->BookmarksList->ForeColor = System::Drawing::Color::White;
 			this->BookmarksList->FullRowSelect = true;
@@ -1264,9 +1034,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->BookmarksList->UseCompatibleStateImageBehavior = false;
 			this->BookmarksList->View = System::Windows::Forms::View::Details;
 			this->BookmarksList->VirtualMode = true;
-			// 
-			// BookmarksToolbar
-			// 
 			this->BookmarksToolbar->AntiAlias = true;
 			this->BookmarksToolbar->CanMove = false;
 			this->BookmarksToolbar->CanUndock = false;
@@ -1287,33 +1054,21 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->BookmarksToolbar->TabIndex = 0;
 			this->BookmarksToolbar->TabStop = false;
 			this->BookmarksToolbar->Text = L"bar1";
-			// 
-			// BookmarksToolbarAdd
-			// 
 			this->BookmarksToolbarAdd->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"BookmarksToolbarAdd.Image")));
 			this->BookmarksToolbarAdd->ImagePaddingHorizontal = 15;
 			this->BookmarksToolbarAdd->ImagePaddingVertical = 10;
 			this->BookmarksToolbarAdd->Name = L"BookmarksToolbarAdd";
-			this->BookmarksToolbarAdd->Text = L"Add Bookmark";
-			this->BookmarksToolbarAdd->Tooltip = L"Add Bookmark";
-			// 
-			// BookmarksToolbarRemove
-			// 
+			this->BookmarksToolbarAdd->Text = L"Add Bookmark on the Current Line";
+			this->BookmarksToolbarAdd->Tooltip = L"Add Bookmark on the Current Line";
 			this->BookmarksToolbarRemove->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"BookmarksToolbarRemove.Image")));
 			this->BookmarksToolbarRemove->ImagePaddingHorizontal = 15;
 			this->BookmarksToolbarRemove->ImagePaddingVertical = 10;
 			this->BookmarksToolbarRemove->Name = L"BookmarksToolbarRemove";
-			this->BookmarksToolbarRemove->Text = L"Remove Bookmark";
-			this->BookmarksToolbarRemove->Tooltip = L"Remove Bookmark";
-			// 
-			// DockContainerItemBookmarks
-			// 
+			this->BookmarksToolbarRemove->Text = L"Remove Selected Bookmark";
+			this->BookmarksToolbarRemove->Tooltip = L"Remove Selected Bookmark";
 			this->DockContainerItemBookmarks->Control = this->PanelDockContainerBookmarks;
 			this->DockContainerItemBookmarks->Name = L"DockContainerItemBookmarks";
 			this->DockContainerItemBookmarks->Text = L"Bookmarks";
-			// 
-			// DockableBarFindReplaceResults
-			// 
 			this->DockableBarFindReplaceResults->AccessibleDescription = L"DotNetBar Bar (DockableBarFindReplaceResults)";
 			this->DockableBarFindReplaceResults->AccessibleName = L"DotNetBar Bar";
 			this->DockableBarFindReplaceResults->AccessibleRole = System::Windows::Forms::AccessibleRole::Grouping;
@@ -1324,7 +1079,7 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockableBarFindReplaceResults->CanHide = true;
 			this->DockableBarFindReplaceResults->CloseSingleTab = true;
 			this->DockableBarFindReplaceResults->Controls->Add(this->PanelDockContainerFindResults);
-			this->DockableBarFindReplaceResults->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular,
+			this->DockableBarFindReplaceResults->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25, System::Drawing::FontStyle::Regular,
 				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
 			this->DockableBarFindReplaceResults->GrabHandleStyle = DevComponents::DotNetBar::eGrabHandleStyle::Caption;
 			this->DockableBarFindReplaceResults->IsMaximized = false;
@@ -1338,9 +1093,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockableBarFindReplaceResults->TabIndex = 3;
 			this->DockableBarFindReplaceResults->TabStop = false;
 			this->DockableBarFindReplaceResults->Text = L"Find and Replace Results";
-			// 
-			// PanelDockContainerFindResults
-			// 
 			this->PanelDockContainerFindResults->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->PanelDockContainerFindResults->Controls->Add(this->FindResultsList);
 			this->PanelDockContainerFindResults->Controls->Add(this->FindResultsToolbar);
@@ -1353,15 +1105,12 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->PanelDockContainerFindResults->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
 			this->PanelDockContainerFindResults->Style->GradientAngle = 90;
 			this->PanelDockContainerFindResults->TabIndex = 9;
-			// 
-			// FindResultsList
-			// 
 			this->FindResultsList->BackColor = System::Drawing::Color::Black;
 			this->FindResultsList->CellEditUseWholeCell = false;
 			this->FindResultsList->Cursor = System::Windows::Forms::Cursors::Default;
 			this->FindResultsList->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->FindResultsList->EmptyListMsg = L"Doesn\'t look like anything to me...";
-			this->FindResultsList->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75F, System::Drawing::FontStyle::Regular,
+			this->FindResultsList->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75, System::Drawing::FontStyle::Regular,
 				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
 			this->FindResultsList->ForeColor = System::Drawing::Color::White;
 			this->FindResultsList->FullRowSelect = true;
@@ -1376,9 +1125,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->FindResultsList->UseCompatibleStateImageBehavior = false;
 			this->FindResultsList->View = System::Windows::Forms::View::Details;
 			this->FindResultsList->VirtualMode = true;
-			// 
-			// FindResultsToolbar
-			// 
 			this->FindResultsToolbar->AntiAlias = true;
 			this->FindResultsToolbar->Dock = System::Windows::Forms::DockStyle::Top;
 			this->FindResultsToolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
@@ -1395,25 +1141,13 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->FindResultsToolbar->TabIndex = 0;
 			this->FindResultsToolbar->TabStop = false;
 			this->FindResultsToolbar->Text = L"bar1";
-			// 
-			// FindResultsToolbarLabel
-			// 
 			this->FindResultsToolbarLabel->Name = L"FindResultsToolbarLabel";
 			this->FindResultsToolbarLabel->Text = L"Query :";
-			// 
-			// FindResultsListToolbarLabelQuery
-			// 
 			this->FindResultsListToolbarLabelQuery->Name = L"FindResultsListToolbarLabelQuery";
 			this->FindResultsListToolbarLabelQuery->Text = L"Last Find/Replace Operation";
-			// 
-			// DockContainerItemFindResults
-			// 
 			this->DockContainerItemFindResults->Control = this->PanelDockContainerFindResults;
 			this->DockContainerItemFindResults->Name = L"DockContainerItemFindResults";
 			this->DockContainerItemFindResults->Text = L"Find and Replace Results";
-			// 
-			// DockSiteLeftEx
-			// 
 			this->DockSiteLeftEx->AccessibleRole = System::Windows::Forms::AccessibleRole::Window;
 			this->DockSiteLeftEx->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(45)),
 				static_cast<System::Int32>(static_cast<System::Byte>(48)));
@@ -1429,9 +1163,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockSiteLeftEx->Size = System::Drawing::Size(163, 599);
 			this->DockSiteLeftEx->TabIndex = 4;
 			this->DockSiteLeftEx->TabStop = false;
-			// 
-			// DockableBarOutlineView
-			// 
 			this->DockableBarOutlineView->AccessibleDescription = L"DotNetBar Bar (DockableBarOutlineView)";
 			this->DockableBarOutlineView->AccessibleName = L"DotNetBar Bar";
 			this->DockableBarOutlineView->AccessibleRole = System::Windows::Forms::AccessibleRole::Grouping;
@@ -1443,7 +1174,7 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockableBarOutlineView->CanHide = true;
 			this->DockableBarOutlineView->CloseSingleTab = true;
 			this->DockableBarOutlineView->Controls->Add(this->PanelDockContainerOutline);
-			this->DockableBarOutlineView->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+			this->DockableBarOutlineView->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->DockableBarOutlineView->GrabHandleStyle = DevComponents::DotNetBar::eGrabHandleStyle::Caption;
 			this->DockableBarOutlineView->IsMaximized = false;
@@ -1457,9 +1188,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockableBarOutlineView->TabIndex = 0;
 			this->DockableBarOutlineView->TabStop = false;
 			this->DockableBarOutlineView->Text = L"Outline View";
-			// 
-			// PanelDockContainerOutline
-			// 
 			this->PanelDockContainerOutline->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->PanelDockContainerOutline->Controls->Add(this->OutlineTreeView);
 			this->PanelDockContainerOutline->DisabledBackColor = System::Drawing::Color::Empty;
@@ -1471,9 +1199,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->PanelDockContainerOutline->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
 			this->PanelDockContainerOutline->Style->GradientAngle = 90;
 			this->PanelDockContainerOutline->TabIndex = 0;
-			// 
-			// OutlineTreeView
-			// 
 			this->OutlineTreeView->BackColor = System::Drawing::Color::Black;
 			this->OutlineTreeView->CellEditUseWholeCell = false;
 			this->OutlineTreeView->Dock = System::Windows::Forms::DockStyle::Fill;
@@ -1487,15 +1212,9 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->OutlineTreeView->UseCompatibleStateImageBehavior = false;
 			this->OutlineTreeView->View = System::Windows::Forms::View::Details;
 			this->OutlineTreeView->VirtualMode = true;
-			// 
-			// DockContainerItemOutline
-			// 
 			this->DockContainerItemOutline->Control = this->PanelDockContainerOutline;
 			this->DockContainerItemOutline->Name = L"DockContainerItemOutline";
 			this->DockContainerItemOutline->Text = L"Outline View";
-			// 
-			// DockSiteRightEx
-			// 
 			this->DockSiteRightEx->AccessibleRole = System::Windows::Forms::AccessibleRole::Window;
 			this->DockSiteRightEx->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(45)),
 				static_cast<System::Int32>(static_cast<System::Byte>(48)));
@@ -1511,9 +1230,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockSiteRightEx->Size = System::Drawing::Size(295, 599);
 			this->DockSiteRightEx->TabIndex = 5;
 			this->DockSiteRightEx->TabStop = false;
-			// 
-			// DockableBarFindReplace
-			// 
 			this->DockableBarFindReplace->AccessibleDescription = L"DotNetBar Bar (DockableBarFindReplace)";
 			this->DockableBarFindReplace->AccessibleName = L"DotNetBar Bar";
 			this->DockableBarFindReplace->AccessibleRole = System::Windows::Forms::AccessibleRole::Grouping;
@@ -1525,7 +1241,7 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockableBarFindReplace->CanHide = true;
 			this->DockableBarFindReplace->CloseSingleTab = true;
 			this->DockableBarFindReplace->Controls->Add(this->PanelDockContainerFindReplace);
-			this->DockableBarFindReplace->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+			this->DockableBarFindReplace->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->DockableBarFindReplace->GrabHandleStyle = DevComponents::DotNetBar::eGrabHandleStyle::Caption;
 			this->DockableBarFindReplace->IsMaximized = false;
@@ -1540,9 +1256,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockableBarFindReplace->TabIndex = 0;
 			this->DockableBarFindReplace->TabStop = false;
 			this->DockableBarFindReplace->Text = L"Find and Replace";
-			// 
-			// PanelDockContainerFindReplace
-			// 
 			this->PanelDockContainerFindReplace->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->PanelDockContainerFindReplace->Controls->Add(this->FindWindowLayoutControl);
 			this->PanelDockContainerFindReplace->DisabledBackColor = System::Drawing::Color::Empty;
@@ -1554,9 +1267,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->PanelDockContainerFindReplace->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
 			this->PanelDockContainerFindReplace->Style->GradientAngle = 90;
 			this->PanelDockContainerFindReplace->TabIndex = 0;
-			// 
-			// FindWindowLayoutControl
-			// 
 			this->FindWindowLayoutControl->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)),
 				static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(48)));
 			this->FindWindowLayoutControl->Controls->Add(this->FindWindowDropdownFind);
@@ -1573,18 +1283,12 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->FindWindowLayoutControl->ForeColor = System::Drawing::Color::White;
 			this->FindWindowLayoutControl->Location = System::Drawing::Point(0, 0);
 			this->FindWindowLayoutControl->Name = L"FindWindowLayoutControl";
-			// 
-			// 
-			// 
 			this->FindWindowLayoutControl->RootGroup->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::Layout::LayoutItemBase^  >(5) {
 				this->FindWindowLCIFindDropdown,
 					this->FindWindowLCIReplaceDropdown, this->FindWindowLCILookIn, this->FindWindowLayoutGroupSettings, this->FindWindowLayouyGroupButtons
 			});
 			this->FindWindowLayoutControl->Size = System::Drawing::Size(282, 573);
 			this->FindWindowLayoutControl->TabIndex = 19;
-			// 
-			// FindWindowDropdownFind
-			// 
 			this->FindWindowDropdownFind->DrawMode = System::Windows::Forms::DrawMode::OwnerDrawFixed;
 			this->FindWindowDropdownFind->ForeColor = System::Drawing::Color::White;
 			this->FindWindowDropdownFind->ItemHeight = 17;
@@ -1594,9 +1298,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->FindWindowDropdownFind->Size = System::Drawing::Size(228, 23);
 			this->FindWindowDropdownFind->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->FindWindowDropdownFind->TabIndex = 0;
-			// 
-			// FindWindowDropdownReplace
-			// 
 			this->FindWindowDropdownReplace->DrawMode = System::Windows::Forms::DrawMode::OwnerDrawFixed;
 			this->FindWindowDropdownReplace->ForeColor = System::Drawing::Color::White;
 			this->FindWindowDropdownReplace->ItemHeight = 17;
@@ -1606,9 +1307,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->FindWindowDropdownReplace->Size = System::Drawing::Size(228, 23);
 			this->FindWindowDropdownReplace->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->FindWindowDropdownReplace->TabIndex = 1;
-			// 
-			// FindWindowComboLookIn
-			// 
 			this->FindWindowComboLookIn->DisplayMember = L"Text";
 			this->FindWindowComboLookIn->DrawMode = System::Windows::Forms::DrawMode::OwnerDrawFixed;
 			this->FindWindowComboLookIn->DropDownStyle = System::Windows::Forms::ComboBoxStyle::DropDownList;
@@ -1621,14 +1319,8 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->FindWindowComboLookIn->Size = System::Drawing::Size(228, 23);
 			this->FindWindowComboLookIn->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->FindWindowComboLookIn->TabIndex = 2;
-			// 
-			// FindWindowCheckboxMatchCase
-			// 
 			this->FindWindowCheckboxMatchCase->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)),
 				static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(48)));
-			// 
-			// 
-			// 
 			this->FindWindowCheckboxMatchCase->BackgroundStyle->CornerType = DevComponents::DotNetBar::eCornerType::Square;
 			this->FindWindowCheckboxMatchCase->ForeColor = System::Drawing::Color::White;
 			this->FindWindowCheckboxMatchCase->Location = System::Drawing::Point(8, 98);
@@ -1638,14 +1330,8 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->FindWindowCheckboxMatchCase->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->FindWindowCheckboxMatchCase->TabIndex = 3;
 			this->FindWindowCheckboxMatchCase->Text = L"Match case";
-			// 
-			// FindWindowCheckboxUseRegEx
-			// 
 			this->FindWindowCheckboxUseRegEx->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)),
 				static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(48)));
-			// 
-			// 
-			// 
 			this->FindWindowCheckboxUseRegEx->BackgroundStyle->CornerType = DevComponents::DotNetBar::eCornerType::Square;
 			this->FindWindowCheckboxUseRegEx->ForeColor = System::Drawing::Color::White;
 			this->FindWindowCheckboxUseRegEx->Location = System::Drawing::Point(8, 158);
@@ -1655,14 +1341,8 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->FindWindowCheckboxUseRegEx->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->FindWindowCheckboxUseRegEx->TabIndex = 5;
 			this->FindWindowCheckboxUseRegEx->Text = L"Use regular expressions";
-			// 
-			// FindWindowCheckBoxMatchWholeWord
-			// 
 			this->FindWindowCheckBoxMatchWholeWord->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)),
 				static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(48)));
-			// 
-			// 
-			// 
 			this->FindWindowCheckBoxMatchWholeWord->BackgroundStyle->CornerType = DevComponents::DotNetBar::eCornerType::Square;
 			this->FindWindowCheckBoxMatchWholeWord->ForeColor = System::Drawing::Color::White;
 			this->FindWindowCheckBoxMatchWholeWord->Location = System::Drawing::Point(8, 128);
@@ -1672,14 +1352,8 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->FindWindowCheckBoxMatchWholeWord->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->FindWindowCheckBoxMatchWholeWord->TabIndex = 4;
 			this->FindWindowCheckBoxMatchWholeWord->Text = L"Match whole word";
-			// 
-			// FindWindowCheckBoxIgnoreComments
-			// 
 			this->FindWindowCheckBoxIgnoreComments->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)),
 				static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(48)));
-			// 
-			// 
-			// 
 			this->FindWindowCheckBoxIgnoreComments->BackgroundStyle->CornerType = DevComponents::DotNetBar::eCornerType::Square;
 			this->FindWindowCheckBoxIgnoreComments->ForeColor = System::Drawing::Color::White;
 			this->FindWindowCheckBoxIgnoreComments->Location = System::Drawing::Point(8, 188);
@@ -1689,9 +1363,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->FindWindowCheckBoxIgnoreComments->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->FindWindowCheckBoxIgnoreComments->TabIndex = 6;
 			this->FindWindowCheckBoxIgnoreComments->Text = L"Ignore comments";
-			// 
-			// FindWindowButtonFind
-			// 
 			this->FindWindowButtonFind->AccessibleRole = System::Windows::Forms::AccessibleRole::PushButton;
 			this->FindWindowButtonFind->ColorTable = DevComponents::DotNetBar::eButtonColor::OrangeWithBackground;
 			this->FindWindowButtonFind->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"FindWindowButtonFind.Image")));
@@ -1704,9 +1375,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->FindWindowButtonFind->TabIndex = 8;
 			this->FindWindowButtonFind->Text = L"Find";
 			this->FindWindowButtonFind->Click += gcnew System::EventHandler(this, &ScriptEditorWorkspace::FindWindowButtonFind_Click);
-			// 
-			// FindWindowButtonReplace
-			// 
 			this->FindWindowButtonReplace->AccessibleRole = System::Windows::Forms::AccessibleRole::PushButton;
 			this->FindWindowButtonReplace->ColorTable = DevComponents::DotNetBar::eButtonColor::OrangeWithBackground;
 			this->FindWindowButtonReplace->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"FindWindowButtonReplace.Image")));
@@ -1718,9 +1386,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->FindWindowButtonReplace->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->FindWindowButtonReplace->TabIndex = 9;
 			this->FindWindowButtonReplace->Text = L"Replace";
-			// 
-			// FindWindowButtonCountMatches
-			// 
 			this->FindWindowButtonCountMatches->AccessibleRole = System::Windows::Forms::AccessibleRole::PushButton;
 			this->FindWindowButtonCountMatches->ColorTable = DevComponents::DotNetBar::eButtonColor::OrangeWithBackground;
 			this->FindWindowButtonCountMatches->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"FindWindowButtonCountMatches.Image")));
@@ -1732,9 +1397,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->FindWindowButtonCountMatches->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->FindWindowButtonCountMatches->TabIndex = 10;
 			this->FindWindowButtonCountMatches->Text = L"Count Matches";
-			// 
-			// FindWindowLCIFindDropdown
-			// 
 			this->FindWindowLCIFindDropdown->Control = this->FindWindowDropdownFind;
 			this->FindWindowLCIFindDropdown->Height = 30;
 			this->FindWindowLCIFindDropdown->MinSize = System::Drawing::Size(64, 18);
@@ -1742,9 +1404,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->FindWindowLCIFindDropdown->Text = L"Find";
 			this->FindWindowLCIFindDropdown->Width = 100;
 			this->FindWindowLCIFindDropdown->WidthType = DevComponents::DotNetBar::Layout::eLayoutSizeType::Percent;
-			// 
-			// FindWindowLCIReplaceDropdown
-			// 
 			this->FindWindowLCIReplaceDropdown->Control = this->FindWindowDropdownReplace;
 			this->FindWindowLCIReplaceDropdown->Height = 30;
 			this->FindWindowLCIReplaceDropdown->MinSize = System::Drawing::Size(64, 18);
@@ -1752,9 +1411,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->FindWindowLCIReplaceDropdown->Text = L"Replace";
 			this->FindWindowLCIReplaceDropdown->Width = 100;
 			this->FindWindowLCIReplaceDropdown->WidthType = DevComponents::DotNetBar::Layout::eLayoutSizeType::Percent;
-			// 
-			// FindWindowLCILookIn
-			// 
 			this->FindWindowLCILookIn->Control = this->FindWindowComboLookIn;
 			this->FindWindowLCILookIn->Height = 30;
 			this->FindWindowLCILookIn->MinSize = System::Drawing::Size(64, 18);
@@ -1762,9 +1418,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->FindWindowLCILookIn->Text = L"Look in";
 			this->FindWindowLCILookIn->Width = 100;
 			this->FindWindowLCILookIn->WidthType = DevComponents::DotNetBar::Layout::eLayoutSizeType::Percent;
-			// 
-			// FindWindowLayoutGroupSettings
-			// 
 			this->FindWindowLayoutGroupSettings->Height = 150;
 			this->FindWindowLayoutGroupSettings->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::Layout::LayoutItemBase^  >(4) {
 				this->FindWindowLCIMatchCase,
@@ -1775,45 +1428,30 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->FindWindowLayoutGroupSettings->TextPosition = DevComponents::DotNetBar::Layout::eLayoutPosition::Top;
 			this->FindWindowLayoutGroupSettings->Width = 100;
 			this->FindWindowLayoutGroupSettings->WidthType = DevComponents::DotNetBar::Layout::eLayoutSizeType::Percent;
-			// 
-			// FindWindowLCIMatchCase
-			// 
 			this->FindWindowLCIMatchCase->Control = this->FindWindowCheckboxMatchCase;
 			this->FindWindowLCIMatchCase->Height = 30;
 			this->FindWindowLCIMatchCase->MinSize = System::Drawing::Size(64, 18);
 			this->FindWindowLCIMatchCase->Name = L"FindWindowLCIMatchCase";
 			this->FindWindowLCIMatchCase->Width = 100;
 			this->FindWindowLCIMatchCase->WidthType = DevComponents::DotNetBar::Layout::eLayoutSizeType::Percent;
-			// 
-			// FindWindowLCIMatchWholeWord
-			// 
 			this->FindWindowLCIMatchWholeWord->Control = this->FindWindowCheckBoxMatchWholeWord;
 			this->FindWindowLCIMatchWholeWord->Height = 30;
 			this->FindWindowLCIMatchWholeWord->MinSize = System::Drawing::Size(64, 18);
 			this->FindWindowLCIMatchWholeWord->Name = L"FindWindowLCIMatchWholeWord";
 			this->FindWindowLCIMatchWholeWord->Width = 100;
 			this->FindWindowLCIMatchWholeWord->WidthType = DevComponents::DotNetBar::Layout::eLayoutSizeType::Percent;
-			// 
-			// FindWindowLCIUseRegEx
-			// 
 			this->FindWindowLCIUseRegEx->Control = this->FindWindowCheckboxUseRegEx;
 			this->FindWindowLCIUseRegEx->Height = 30;
 			this->FindWindowLCIUseRegEx->MinSize = System::Drawing::Size(64, 18);
 			this->FindWindowLCIUseRegEx->Name = L"FindWindowLCIUseRegEx";
 			this->FindWindowLCIUseRegEx->Width = 100;
 			this->FindWindowLCIUseRegEx->WidthType = DevComponents::DotNetBar::Layout::eLayoutSizeType::Percent;
-			// 
-			// FindWindowLCIIgnoreComments
-			// 
 			this->FindWindowLCIIgnoreComments->Control = this->FindWindowCheckBoxIgnoreComments;
 			this->FindWindowLCIIgnoreComments->Height = 30;
 			this->FindWindowLCIIgnoreComments->MinSize = System::Drawing::Size(64, 18);
 			this->FindWindowLCIIgnoreComments->Name = L"FindWindowLCIIgnoreComments";
 			this->FindWindowLCIIgnoreComments->Width = 100;
 			this->FindWindowLCIIgnoreComments->WidthType = DevComponents::DotNetBar::Layout::eLayoutSizeType::Percent;
-			// 
-			// FindWindowLayouyGroupButtons
-			// 
 			this->FindWindowLayouyGroupButtons->Height = 100;
 			this->FindWindowLayouyGroupButtons->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::Layout::LayoutItemBase^  >(3) {
 				this->FindWindowLCIFindButton,
@@ -1824,42 +1462,27 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->FindWindowLayouyGroupButtons->TextPosition = DevComponents::DotNetBar::Layout::eLayoutPosition::Top;
 			this->FindWindowLayouyGroupButtons->Width = 100;
 			this->FindWindowLayouyGroupButtons->WidthType = DevComponents::DotNetBar::Layout::eLayoutSizeType::Percent;
-			// 
-			// FindWindowLCIFindButton
-			// 
 			this->FindWindowLCIFindButton->Control = this->FindWindowButtonFind;
 			this->FindWindowLCIFindButton->Height = 36;
 			this->FindWindowLCIFindButton->MinSize = System::Drawing::Size(32, 20);
 			this->FindWindowLCIFindButton->Name = L"FindWindowLCIFindButton";
 			this->FindWindowLCIFindButton->Width = 50;
 			this->FindWindowLCIFindButton->WidthType = DevComponents::DotNetBar::Layout::eLayoutSizeType::Percent;
-			// 
-			// FindWindowLCIReplaceButton
-			// 
 			this->FindWindowLCIReplaceButton->Control = this->FindWindowButtonReplace;
 			this->FindWindowLCIReplaceButton->Height = 36;
 			this->FindWindowLCIReplaceButton->MinSize = System::Drawing::Size(32, 20);
 			this->FindWindowLCIReplaceButton->Name = L"FindWindowLCIReplaceButton";
 			this->FindWindowLCIReplaceButton->Width = 50;
 			this->FindWindowLCIReplaceButton->WidthType = DevComponents::DotNetBar::Layout::eLayoutSizeType::Percent;
-			// 
-			// FindWindowLCICountMatches
-			// 
 			this->FindWindowLCICountMatches->Control = this->FindWindowButtonCountMatches;
 			this->FindWindowLCICountMatches->Height = 36;
 			this->FindWindowLCICountMatches->MinSize = System::Drawing::Size(32, 20);
 			this->FindWindowLCICountMatches->Name = L"FindWindowLCICountMatches";
 			this->FindWindowLCICountMatches->Width = 100;
 			this->FindWindowLCICountMatches->WidthType = DevComponents::DotNetBar::Layout::eLayoutSizeType::Percent;
-			// 
-			// DockContainerItemFindReplace
-			// 
 			this->DockContainerItemFindReplace->Control = this->PanelDockContainerFindReplace;
 			this->DockContainerItemFindReplace->Name = L"DockContainerItemFindReplace";
 			this->DockContainerItemFindReplace->Text = L"Find and Replace";
-			// 
-			// DockSiteBottomEx
-			// 
 			this->DockSiteBottomEx->AccessibleRole = System::Windows::Forms::AccessibleRole::Window;
 			this->DockSiteBottomEx->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(45)),
 				static_cast<System::Int32>(static_cast<System::Byte>(48)));
@@ -1870,9 +1493,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockSiteBottomEx->Size = System::Drawing::Size(1030, 0);
 			this->DockSiteBottomEx->TabIndex = 11;
 			this->DockSiteBottomEx->TabStop = false;
-			// 
-			// DockSiteLeft
-			// 
 			this->DockSiteLeft->AccessibleRole = System::Windows::Forms::AccessibleRole::Window;
 			this->DockSiteLeft->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(45)),
 				static_cast<System::Int32>(static_cast<System::Byte>(48)));
@@ -1883,9 +1503,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockSiteLeft->Size = System::Drawing::Size(0, 799);
 			this->DockSiteLeft->TabIndex = 8;
 			this->DockSiteLeft->TabStop = false;
-			// 
-			// DockSiteRight
-			// 
 			this->DockSiteRight->AccessibleRole = System::Windows::Forms::AccessibleRole::Window;
 			this->DockSiteRight->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(45)),
 				static_cast<System::Int32>(static_cast<System::Byte>(48)));
@@ -1896,9 +1513,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockSiteRight->Size = System::Drawing::Size(0, 799);
 			this->DockSiteRight->TabIndex = 9;
 			this->DockSiteRight->TabStop = false;
-			// 
-			// DockSiteTopEx
-			// 
 			this->DockSiteTopEx->AccessibleRole = System::Windows::Forms::AccessibleRole::Window;
 			this->DockSiteTopEx->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(45)),
 				static_cast<System::Int32>(static_cast<System::Byte>(48)));
@@ -1910,9 +1524,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockSiteTopEx->Size = System::Drawing::Size(1030, 0);
 			this->DockSiteTopEx->TabIndex = 10;
 			this->DockSiteTopEx->TabStop = false;
-			// 
-			// DockSiteTop
-			// 
 			this->DockSiteTop->AccessibleRole = System::Windows::Forms::AccessibleRole::Window;
 			this->DockSiteTop->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(45)),
 				static_cast<System::Int32>(static_cast<System::Byte>(48)));
@@ -1925,9 +1536,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockSiteTop->Size = System::Drawing::Size(1030, 0);
 			this->DockSiteTop->TabIndex = 6;
 			this->DockSiteTop->TabStop = false;
-			// 
-			// DockSiteCenter
-			// 
 			this->DockSiteCenter->AccessibleRole = System::Windows::Forms::AccessibleRole::Window;
 			this->DockSiteCenter->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(45)),
 				static_cast<System::Int32>(static_cast<System::Byte>(48)));
@@ -1943,9 +1551,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->DockSiteCenter->Size = System::Drawing::Size(572, 599);
 			this->DockSiteCenter->TabIndex = 12;
 			this->DockSiteCenter->TabStop = false;
-			// 
-			// CenterDockBar
-			// 
 			this->CenterDockBar->AccessibleDescription = L"DotNetBar Bar (CenterDockBar)";
 			this->CenterDockBar->AccessibleName = L"DotNetBar Bar";
 			this->CenterDockBar->AccessibleRole = System::Windows::Forms::AccessibleRole::Grouping;
@@ -1961,7 +1566,7 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->CenterDockBar->CanReorderTabs = false;
 			this->CenterDockBar->CanUndock = false;
 			this->CenterDockBar->Controls->Add(this->PanelDocumentContent);
-			this->CenterDockBar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+			this->CenterDockBar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->CenterDockBar->GrabHandleStyle = DevComponents::DotNetBar::eGrabHandleStyle::Caption;
 			this->CenterDockBar->IsMaximized = false;
@@ -1973,9 +1578,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->CenterDockBar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->CenterDockBar->TabIndex = 0;
 			this->CenterDockBar->TabStop = false;
-			// 
-			// PanelDocumentContent
-			// 
 			this->PanelDocumentContent->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(85)),
 				static_cast<System::Int32>(static_cast<System::Byte>(85)), static_cast<System::Int32>(static_cast<System::Byte>(91)));
 			this->ContextMenuProvider->SetContextMenuEx(this->PanelDocumentContent, this->ContextMenuTextEditor);
@@ -1987,67 +1589,40 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->PanelDocumentContent->Name = L"PanelDocumentContent";
 			this->PanelDocumentContent->Size = System::Drawing::Size(572, 599);
 			this->PanelDocumentContent->TabIndex = 10;
-			// 
-			// ContextMenuProvider
-			// 
 			this->ContextMenuProvider->AntiAlias = true;
 			this->ContextMenuProvider->DockSide = DevComponents::DotNetBar::eDockSide::Document;
 			this->ContextMenuProvider->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
 			this->ContextMenuProvider->IsMaximized = false;
 			this->ContextMenuProvider->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(1) { this->ContextMenuTextEditor });
-			this->ContextMenuProvider->Location = System::Drawing::Point(6, 57);
+			this->ContextMenuProvider->Location = System::Drawing::Point(3, 28);
 			this->ContextMenuProvider->Name = L"ContextMenuProvider";
 			this->ContextMenuProvider->Size = System::Drawing::Size(113, 25);
 			this->ContextMenuProvider->Stretch = true;
 			this->ContextMenuProvider->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->ContextMenuProvider->TabIndex = 0;
 			this->ContextMenuProvider->TabStop = false;
-			// 
-			// ContextMenuTextEditor
-			// 
 			this->ContextMenuTextEditor->AutoExpandOnClick = true;
 			this->ContextMenuTextEditor->Name = L"ContextMenuTextEditor";
-			this->ContextMenuTextEditor->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(5) {
+			this->ContextMenuTextEditor->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(4) {
 				this->TextEditorContextMenuCopy,
-					this->TextEditorContextMenuPaste, this->TextEditorContextMenuAddVar, this->TextEditorContextMenuOpenPreprocessorImport, this->TextEditorContextMenuJumpToScript
+					this->TextEditorContextMenuPaste, this->TextEditorContextMenuAddVar, this->TextEditorContextMenuJumpToScript
 			});
 			this->ContextMenuTextEditor->Text = L"TE";
-			// 
-			// TextEditorContextMenuCopy
-			// 
 			this->TextEditorContextMenuCopy->AlternateShortCutText = L"Ctrl + C";
 			this->TextEditorContextMenuCopy->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"TextEditorContextMenuCopy.Image")));
 			this->TextEditorContextMenuCopy->Name = L"TextEditorContextMenuCopy";
 			this->TextEditorContextMenuCopy->Text = L"Copy";
-			// 
-			// TextEditorContextMenuPaste
-			// 
 			this->TextEditorContextMenuPaste->AlternateShortCutText = L"Ctrl + V";
 			this->TextEditorContextMenuPaste->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"TextEditorContextMenuPaste.Image")));
 			this->TextEditorContextMenuPaste->Name = L"TextEditorContextMenuPaste";
 			this->TextEditorContextMenuPaste->Text = L"Paste";
-			// 
-			// TextEditorContextMenuOpenPreprocessorImport
-			// 
-			this->TextEditorContextMenuOpenPreprocessorImport->BeginGroup = true;
-			this->TextEditorContextMenuOpenPreprocessorImport->Name = L"TextEditorContextMenuOpenPreprocessorImport";
-			this->TextEditorContextMenuOpenPreprocessorImport->Text = L"Open Preprocessor Import File";
-			// 
-			// TextEditorContextMenuJumpToScript
-			// 
 			this->TextEditorContextMenuJumpToScript->AlternateShortCutText = L"Ctrl + |";
 			this->TextEditorContextMenuJumpToScript->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"TextEditorContextMenuJumpToScript.Image")));
 			this->TextEditorContextMenuJumpToScript->Name = L"TextEditorContextMenuJumpToScript";
 			this->TextEditorContextMenuJumpToScript->Text = L"Jump to Attached Script";
-			// 
-			// NavigationBar
-			// 
 			this->NavigationBar->AutoSize = true;
 			this->NavigationBar->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(45)),
 				static_cast<System::Int32>(static_cast<System::Byte>(48)));
-			// 
-			// 
-			// 
 			this->NavigationBar->BackgroundStyle->Class = L"CrumbBarBackgroundKey";
 			this->NavigationBar->BackgroundStyle->CornerType = DevComponents::DotNetBar::eCornerType::Square;
 			this->NavigationBar->ContainerControlProcessDialogKey = true;
@@ -2059,18 +1634,15 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->NavigationBar->Size = System::Drawing::Size(572, 22);
 			this->NavigationBar->Style = DevComponents::DotNetBar::eCrumbBarStyle::Office2007;
 			this->NavigationBar->TabIndex = 9;
-			// 
-			// StatusBar
-			// 
 			this->StatusBar->AntiAlias = true;
 			this->StatusBar->BarType = DevComponents::DotNetBar::eBarType::StatusBar;
 			this->StatusBar->Dock = System::Windows::Forms::DockStyle::Bottom;
 			this->StatusBar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
 			this->StatusBar->ForeColor = System::Drawing::Color::Black;
 			this->StatusBar->IsMaximized = false;
-			this->StatusBar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(5) {
-				this->StatusBarCurrentMessage,
-					this->StatusBarLineNumber, this->StatusBarColumnNumber, this->StatusBarPreprocessorOutputFlag, this->StatusBarScriptBytecodeLength
+			this->StatusBar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(4) {
+				this->StatusBarLineNumber, this->StatusBarColumnNumber,
+					this->StatusBarPreprocessorOutputFlag, this->StatusBarScriptBytecodeLength
 			});
 			this->StatusBar->ItemSpacing = 7;
 			this->StatusBar->Location = System::Drawing::Point(0, 866);
@@ -2084,33 +1656,15 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->StatusBar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->StatusBar->TabIndex = 13;
 			this->StatusBar->TabStop = false;
-			// 
-			// StatusBarCurrentMessage
-			// 
-			this->StatusBarCurrentMessage->Name = L"StatusBarCurrentMessage";
-			this->StatusBarCurrentMessage->Text = L"Current Message...";
-			// 
-			// StatusBarLineNumber
-			// 
-			this->StatusBarLineNumber->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
 			this->StatusBarLineNumber->Name = L"StatusBarLineNumber";
 			this->StatusBarLineNumber->Text = L"Line 0";
-			// 
-			// StatusBarColumnNumber
-			// 
-			this->StatusBarColumnNumber->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
 			this->StatusBarColumnNumber->Name = L"StatusBarColumnNumber";
 			this->StatusBarColumnNumber->Text = L"Column 0";
-			// 
-			// StatusBarPreprocessorOutputFlag
-			// 
+			this->StatusBarPreprocessorOutputFlag->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"StatusBarPreprocessorOutputFlag.Image")));
 			this->StatusBarPreprocessorOutputFlag->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
 			this->StatusBarPreprocessorOutputFlag->Name = L"StatusBarPreprocessorOutputFlag";
 			this->StatusBarPreprocessorOutputFlag->PaddingLeft = 10;
-			this->StatusBarPreprocessorOutputFlag->Text = L"Preprocessor Output ON";
-			// 
-			// StatusBarScriptBytecodeLength
-			// 
+			this->StatusBarPreprocessorOutputFlag->Text = L"Preprocessor Output <b>ON</b> <font size=\"-2\">(Some Actions Are Disabled)</font>";
 			this->StatusBarScriptBytecodeLength->BeginGroup = true;
 			this->StatusBarScriptBytecodeLength->Diameter = 22;
 			this->StatusBarScriptBytecodeLength->Maximum = 32768;
@@ -2120,22 +1674,6 @@ private: DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
 			this->StatusBarScriptBytecodeLength->Text = L"Compiled Script Size:";
 			this->StatusBarScriptBytecodeLength->TextPadding->Left = 5;
 			this->StatusBarScriptBytecodeLength->TextPadding->Right = 5;
-			// 
-			// EditMenuComment
-			// 
-			this->EditMenuComment->BeginGroup = true;
-			this->EditMenuComment->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"EditMenuComment.Image")));
-			this->EditMenuComment->Name = L"EditMenuComment";
-			this->EditMenuComment->Text = L"&Comment Selection";
-			// 
-			// EditMenuUncomment
-			// 
-			this->EditMenuUncomment->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"EditMenuUncomment.Image")));
-			this->EditMenuUncomment->Name = L"EditMenuUncomment";
-			this->EditMenuUncomment->Text = L"&Uncomment Selection";
-			// 
-			// ScriptEditorWorkspace
-			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(1030, 890);

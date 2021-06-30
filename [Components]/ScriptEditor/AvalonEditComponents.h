@@ -30,19 +30,20 @@ using namespace ICSharpCode::AvalonEdit::Utils;
 
 ref class WPFImageResourceGenerator
 {
+	static ImageResourceManager^ IconResources = gcnew ImageResourceManager("ScriptEditor.Icons");
 public:
-	static System::Windows::Media::Imaging::BitmapSource^		CreateImageSource(String^ ResourceIdentifier);
+	static System::Windows::Media::Imaging::BitmapSource^ CreateImageSource(String^ ResourceIdentifier);
 };
 
 // lovely hack, this - http://apocryph.org/archives/275
 ref class WPFFocusHelper
 {
-	static void		DispatcherCallback(Windows::UIElement^ Element);
-	static void		ThreadCallback(Object^ Element);
+	static void DispatcherCallback(Windows::UIElement^ Element);
+	static void ThreadCallback(Object^ Element);
 
-	delegate void	InvokeDelegate(Windows::UIElement^ Element);
+	delegate void InvokeDelegate(Windows::UIElement^ Element);
 public:
-	static void		Focus(Windows::UIElement^ Element);
+	static void Focus(Windows::UIElement^ Element);
 };
 
 System::Windows::Point TransformToPixels(double X, double Y);		// device-independent to pixels
@@ -50,6 +51,76 @@ System::Windows::Point TransformToPixels(System::Windows::Point In);
 
 ref class AvalonEditTextEditor;
 ref class LineTrackingManager;
+
+ref class BracketSearchData
+{
+	Char Symbol;
+	int StartOffset;
+public:
+	property int EndOffset;
+	property bool Mismatching;
+
+	static String^ ValidOpeningBrackets = "([{";
+	static String^ ValidClosingBrackets = ")]}";
+
+	static enum class eBracketType
+	{
+		Invalid = 0,
+		Curved,
+		Square,
+		Squiggly
+	};
+	static enum class eBracketState
+	{
+		Invalid = 0,
+		Opening,
+		Closing
+	};
+
+	BracketSearchData(Char Symbol, int StartOffset) :
+		Symbol(Symbol),
+		StartOffset(StartOffset)
+	{
+		EndOffset = -1;
+		Mismatching = false;
+	}
+
+	eBracketType GetType()
+	{
+		switch (Symbol)
+		{
+		case '(':
+		case ')':
+			return eBracketType::Curved;
+		case '[':
+		case ']':
+			return eBracketType::Square;
+		case '{':
+		case '}':
+			return eBracketType::Squiggly;
+		default:
+			return eBracketType::Invalid;
+		}
+	}
+
+	eBracketState GetKind()
+	{
+		switch (Symbol)
+		{
+		case '(':
+		case '[':
+		case '{':
+			return eBracketState::Opening;
+		case ')':
+		case ']':
+		case '}':
+			return eBracketState::Closing;
+		default:
+			return eBracketState::Invalid;
+		}
+	}
+	int GetStartOffset() { return StartOffset; }
+};
 
 ref struct BackgroundRenderSegment
 {

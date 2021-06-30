@@ -10,59 +10,35 @@
     <Filter Include="Components">
       <UniqueIdentifier>{c2b18af5-444f-48b9-8009-bf96da40fbec}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Utilities">
-      <UniqueIdentifier>{0bc09888-f771-470d-a4a7-6d4055720405}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Interop">
       <UniqueIdentifier>{1426fe20-b175-44e5-83f7-ba6aa8abc8e0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Components\TextEditors">
-      <UniqueIdentifier>{bd189d1f-2e31-4f33-bab0-36d3abdaf0d9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Components\TextEditors\AvalonEdit">
-      <UniqueIdentifier>{6996c544-3d88-418b-8970-822abf06a6de}</UniqueIdentifier>
     </Filter>
     <Filter Include="Components\IntelliSense">
       <UniqueIdentifier>{2e85eed8-5f29-4e81-baee-d6674aa94e59}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Components\[REWRITE]">
-      <UniqueIdentifier>{1760e6ed-10aa-475f-a518-e08871bf8bd5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resources\Icons">
       <UniqueIdentifier>{b99490d6-f992-4da0-a02e-27f5fdbe860d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Components\AvalonEdit">
+      <UniqueIdentifier>{6996c544-3d88-418b-8970-822abf06a6de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\Model-View-Controller">
+      <UniqueIdentifier>{affe00f9-0d71-40f3-bcf8-24c3ae7640e1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\[Common]\ListViewUtilities.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\[Common]\MiscUtilities.cpp">
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="Exports.cpp" />
-    <ClCompile Include="RefactorTools.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\[Common]\AuxiliaryWindowsForm.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
     <ClCompile Include="AvalonEditComponents.cpp">
-      <Filter>Components\TextEditors\AvalonEdit</Filter>
+      <Filter>Components\AvalonEdit</Filter>
     </ClCompile>
     <ClCompile Include="AvalonEditTextEditor.cpp">
-      <Filter>Components\TextEditors\AvalonEdit</Filter>
+      <Filter>Components\AvalonEdit</Filter>
     </ClCompile>
     <ClCompile Include="AvalonEditSyntaxHighlighting.cpp">
-      <Filter>Components\TextEditors\AvalonEdit</Filter>
-    </ClCompile>
-    <ClCompile Include="AuxiliaryTextEditor.cpp">
-      <Filter>Components\TextEditors</Filter>
-    </ClCompile>
-    <ClCompile Include="NumberedRichTextBox.cpp">
-      <Filter>Components\TextEditors</Filter>
-    </ClCompile>
-    <ClCompile Include="FindReplaceDialog.cpp">
-      <Filter>Components</Filter>
+      <Filter>Components\AvalonEdit</Filter>
     </ClCompile>
     <ClCompile Include="SnippetManager.cpp">
       <Filter>Components</Filter>
@@ -70,14 +46,11 @@
     <ClCompile Include="SemanticAnalysis.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="IntelliSenseDatabase.cpp">
+    <ClCompile Include="IntelliSenseBackend.cpp">
       <Filter>Components\IntelliSense</Filter>
     </ClCompile>
     <ClCompile Include="IntelliSenseItem.cpp">
       <Filter>Components\IntelliSense</Filter>
-    </ClCompile>
-    <ClCompile Include="TextEditorAdornments.cpp">
-      <Filter>Components</Filter>
     </ClCompile>
     <ClCompile Include="ScriptSync.cpp">
       <Filter>Components</Filter>
@@ -97,103 +70,66 @@
     <ClCompile Include="Preferences.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="BackgroundAnalysis.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="WorkspaceModelComponents.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="WorkspaceModel.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="WorkspaceView.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="ScriptEditorViewImplComponents.cpp">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClCompile>
-    <ClCompile Include="ScriptEditorViewImpl.cpp">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClCompile>
-    <ClCompile Include="IScriptEditorModel.cpp">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClCompile>
-    <ClCompile Include="ITextEditor.cpp">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClCompile>
-    <ClCompile Include="ScriptEditorModelImpl.cpp">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClCompile>
-    <ClCompile Include="ScriptEditorModelImplComponents.cpp">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClCompile>
-    <ClCompile Include="ScriptEditorControllerImpl.cpp">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClCompile>
-    <ClCompile Include="ScriptEditorControllerImplComponents.cpp">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClCompile>
-    <ClCompile Include="Utilities.cpp">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClCompile>
     <ClCompile Include="ScriptPreprocessor.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="MvcFactories.cpp">
-      <Filter>Components\[REWRITE]</Filter>
+    <ClCompile Include="ITextEditor.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptEditorInstanceManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="IScriptEditorModel.cpp">
+      <Filter>Components\Model-View-Controller</Filter>
     </ClCompile>
     <ClCompile Include="IScriptEditorView.cpp">
-      <Filter>Components\[REWRITE]</Filter>
+      <Filter>Components\Model-View-Controller</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptEditorControllerImpl.cpp">
+      <Filter>Components\Model-View-Controller</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptEditorControllerImplComponents.cpp">
+      <Filter>Components\Model-View-Controller</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptEditorModelImpl.cpp">
+      <Filter>Components\Model-View-Controller</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptEditorModelImplComponents.cpp">
+      <Filter>Components\Model-View-Controller</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptEditorViewImpl.cpp">
+      <Filter>Components\Model-View-Controller</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptEditorViewImplComponents.cpp">
+      <Filter>Components\Model-View-Controller</Filter>
+    </ClCompile>
+    <ClCompile Include="IScriptEditorController.cpp">
+      <Filter>Components\Model-View-Controller</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\[Common]\HandShakeStructs.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Common]\ListViewUtilities.h">
-      <Filter>Common</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\[Common]\MiscUtilities.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="Exports.h" />
-    <ClInclude Include="Globals.h" />
     <ClInclude Include="Prefix.h" />
-    <ClInclude Include="..\..\[Common]\CustomInputBox.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="RefactorTools.h">
-      <Filter>Components</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\[Common]\ComponentDLLInterface.h">
       <Filter>Interop</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Common]\AuxiliaryWindowsForm.h">
-      <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\[Common]\IncludesCLR.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="AvalonEditSyntaxHighlighting.h">
-      <Filter>Components\TextEditors\AvalonEdit</Filter>
+      <Filter>Components\AvalonEdit</Filter>
     </ClInclude>
     <ClInclude Include="AvalonEditComponents.h">
-      <Filter>Components\TextEditors\AvalonEdit</Filter>
+      <Filter>Components\AvalonEdit</Filter>
     </ClInclude>
     <ClInclude Include="AvalonEditTextEditor.h">
-      <Filter>Components\TextEditors\AvalonEdit</Filter>
-    </ClInclude>
-    <ClInclude Include="NumberedRichTextBox.h">
-      <Filter>Components\TextEditors</Filter>
-    </ClInclude>
-    <ClInclude Include="AuxiliaryTextEditor.h">
-      <Filter>Components\TextEditors</Filter>
-    </ClInclude>
-    <ClInclude Include="ITextEditor.h">
-      <Filter>Components\TextEditors</Filter>
-    </ClInclude>
-    <ClInclude Include="FindReplaceDialog.h">
-      <Filter>Components</Filter>
+      <Filter>Components\AvalonEdit</Filter>
     </ClInclude>
     <ClInclude Include="SnippetManager.h">
       <Filter>Components</Filter>
@@ -201,7 +137,7 @@
     <ClInclude Include="SemanticAnalysis.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="IntelliSenseDatabase.h">
+    <ClInclude Include="IntelliSenseBackend.h">
       <Filter>Components\IntelliSense</Filter>
     </ClInclude>
     <ClInclude Include="IntelliSenseItem.h">
@@ -209,9 +145,6 @@
     </ClInclude>
     <ClInclude Include="IIntelliSenseInterface.h">
       <Filter>Components\IntelliSense</Filter>
-    </ClInclude>
-    <ClInclude Include="TextEditorAdornments.h">
-      <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="ScriptSync.h">
       <Filter>Components</Filter>
@@ -231,62 +164,50 @@
     <ClInclude Include="Preferences.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="BackgroundAnalysis.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="WorkspaceModelComponents.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="WorkspaceModel.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="WorkspaceModelInterface.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="WorkspaceView.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="WorkspaceViewInterface.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="IScriptEditorView.h">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClInclude>
-    <ClInclude Include="IScriptEditorModel.h">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClInclude>
-    <ClInclude Include="ScriptEditorViewImplComponents.h">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClInclude>
-    <ClInclude Include="Macros.h">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClInclude>
-    <ClInclude Include="ScriptEditorViewImpl.h">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClInclude>
-    <ClInclude Include="ScriptEditorModelImpl.h">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClInclude>
-    <ClInclude Include="ScriptEditorModelImplComponents.h">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClInclude>
-    <ClInclude Include="ScriptEditorControllerImpl.h">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClInclude>
-    <ClInclude Include="IScriptEditorController.h">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClInclude>
-    <ClInclude Include="ScriptEditorControllerImplComponents.h">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClInclude>
-    <ClInclude Include="Utilities.h">
-      <Filter>Components\[REWRITE]</Filter>
-    </ClInclude>
     <ClInclude Include="ScriptPreprocessor.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="MvcFactories.h">
-      <Filter>Components\[REWRITE]</Filter>
+    <ClInclude Include="ITextEditor.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorInstanceManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Utilities.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\HandShakeStructs.h">
+      <Filter>Interop</Filter>
+    </ClInclude>
+    <ClInclude Include="Macros.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="IScriptEditorController.h">
+      <Filter>Components\Model-View-Controller</Filter>
+    </ClInclude>
+    <ClInclude Include="IScriptEditorModel.h">
+      <Filter>Components\Model-View-Controller</Filter>
+    </ClInclude>
+    <ClInclude Include="IScriptEditorView.h">
+      <Filter>Components\Model-View-Controller</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorControllerImpl.h">
+      <Filter>Components\Model-View-Controller</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorControllerImplComponents.h">
+      <Filter>Components\Model-View-Controller</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorModelImpl.h">
+      <Filter>Components\Model-View-Controller</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorModelImplComponents.h">
+      <Filter>Components\Model-View-Controller</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorViewImpl.h">
+      <Filter>Components\Model-View-Controller</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorViewImplComponents.h">
+      <Filter>Components\Model-View-Controller</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -544,6 +465,9 @@
       <Filter>Resources\Icons</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Wizard\Wizard_16x.png">
+      <Filter>Resources\Icons</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\PartiallyComplete\PartiallyComplete_16x.png">
       <Filter>Resources\Icons</Filter>
     </Image>
   </ItemGroup>

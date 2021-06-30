@@ -154,7 +154,7 @@ ref class IntelliSenseShowInsightToolTipArgs : public IRichTooltipContentProvide
 	Image^		TooltipBodyImage_;
 	String^		TooltipFooterText_;
 	Image^		TooltipFooterImage_;
-	IRichTooltipContentProvider::BackgroundColor
+	IRichTooltipContentProvider::eBackgroundColor
 				TooltipBgColor_;
 public:
 	virtual property String^ TooltipHeaderText
@@ -182,10 +182,10 @@ public:
 		Image^ get() { return TooltipFooterImage_; }
 		void set(Image^ set) { TooltipFooterImage_ = set; }
 	}
-	virtual property IRichTooltipContentProvider::BackgroundColor TooltipBgColor
+	virtual property IRichTooltipContentProvider::eBackgroundColor TooltipBgColor
 	{
-		IRichTooltipContentProvider::BackgroundColor get() { return TooltipBgColor_; }
-		void set(IRichTooltipContentProvider::BackgroundColor set) { TooltipBgColor_ = set; }
+		IRichTooltipContentProvider::eBackgroundColor get() { return TooltipBgColor_; }
+		void set(IRichTooltipContentProvider::eBackgroundColor set) { TooltipBgColor_ = set; }
 	}
 	property Point DisplayScreenCoords;
 	property IntPtr	ParentWindowHandle;
@@ -196,7 +196,7 @@ public:
 		TooltipBodyText_ = String::Empty;
 		TooltipFooterText_ = String::Empty;
 		TooltipBodyImage_ = TooltipFooterImage_ = nullptr;
-		TooltipBgColor_ = IRichTooltipContentProvider::BackgroundColor::Default;
+		TooltipBgColor_ = IRichTooltipContentProvider::eBackgroundColor::Default;
 
 		DisplayScreenCoords = Point(0, 0);
 		ParentWindowHandle = IntPtr::Zero;

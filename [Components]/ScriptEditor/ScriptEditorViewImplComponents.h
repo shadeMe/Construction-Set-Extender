@@ -63,7 +63,7 @@ public:
 	virtual ITabStripItem^ AsTabStripItem();
 	virtual IObjectListView^ AsObjectListView();
 	virtual IObjectListViewColumn^ AsObjectListViewColumn();
-	virtual ICircularProgress^ AsCircularProgress();
+	virtual IProgressBar^ AsProgressBar();
 	virtual IDockablePane^ AsDockablePane();
 	virtual ICrumbBar^ AsCrumbBar();
 	virtual ICrumbBarItem^ AsCrumbBarItem();
@@ -113,6 +113,7 @@ ref class Button : public ViewComponent, IButton
 	ButtonX^ ButtonX;
 	CheckBoxX^ CheckBoxX;
 	eSourceType SourceType;
+	Object^ Tag_;
 
 	EventHandler^ DelegateClick;
 	DotNetBarManager::PopupOpenEventHandler^ DelegatePopupOpen;
@@ -145,6 +146,7 @@ public:
 	ImplPropertyWithAccessors(String^, Text);
 	ImplPropertyWithAccessors(String^, Tooltip);
 	ImplPropertyWithAccessors(String^, ShortcutKey);
+	ImplPropertySimple(Object^, Tag, Tag_);
 	ImplPropertyWithAccessors(bool, Checked);
 	ImplPropertyWithAccessors(bool, Visible);
 	ImplPropertyWithAccessors(bool, Enabled);
@@ -176,9 +178,12 @@ ref class ComboBox : public ViewComponent, IComboBox
 
 	String^ GetterText();
 	Object^ GetterSelection();
+	Collections::IEnumerable^ GetterItems();
+	bool GetterEnabled();
 
 	void SetterText(String^ Value);
 	void SetterSelection(Object^ Value);
+	void SetterEnabled(bool Value);
 public:
 	ComboBox(DotNetBar::ComboBoxItem^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);
 	ComboBox(DotNetBar::Controls::ComboBoxEx^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);
@@ -186,9 +191,12 @@ public:
 
 	ImplPropertyWithAccessors(Object^, Selection);
 	ImplPropertyWithAccessors(String^, Text);
+	ImplPropertyGetOnlyAccessor(Collections::IEnumerable^, Items);
+	ImplPropertyWithAccessors(bool, Enabled);
 
-	virtual void AddDropdownItem(Object^ NewItem);
+	virtual void AddDropdownItem(Object^ NewItem, bool AtFirstPosition);
 	virtual void ClearDropdownItems();
+	virtual Object^ LookupDropdownItem(String^ DropdownItemText);
 };
 
 
@@ -200,6 +208,7 @@ public:
 	virtual ~Label();
 
 	ImplPropertySimple(String^, Text, Source->Text);
+	ImplPropertySimple(bool, Visible, Source->Visible);
 };
 
 
@@ -250,12 +259,18 @@ public:
 		virtual ITabStripItem^ get();
 		virtual void set(ITabStripItem^ v);
 	}
+	property UInt32 TabCount
+	{
+		virtual UInt32 get();
+		ImplPropertySetInvalid(UInt32);
+	}
 
 	virtual ITabStripItem^ AllocateNewTab();
 	virtual void AddTab(ITabStripItem^ Tab);
 	virtual void RemoveTab(ITabStripItem^ Tab);
 	virtual void SelectNextTab();
 	virtual void SelectPreviousTab();
+	virtual ITabStripItem^ LookupTabByTag(Object^ Tag);
 };
 
 
@@ -282,6 +297,10 @@ public:
 	ImplPropertyGetOnly(int, Index, Source_->Index);
 	ImplPropertySimple(String^, Text, Source_->Text);
 	ImplPropertyGetOnly(IObjectListView^, Parent, ParentListView_);
+	ImplPropertySimple(int, MinimumWidth, Source_->MinimumWidth);
+	ImplPropertySimple(int, MaximumWidth, Source_->MaximumWidth);
+	ImplPropertySimple(int, Width, Source_->Width);
+	ImplPropertySimple(bool, FillsFreeSpace, Source_->FillsFreeSpace);
 	ImplPropertyGetOnly(BrightIdeasSoftware::OLVColumn^, Source, Source_);
 
 	virtual void SetAspectGetter(IObjectListViewColumn::AspectGetter^ Delegate);
@@ -320,17 +339,21 @@ public:
 	virtual List<IObjectListViewColumn^>^ GetColumns();
 	virtual void SetCanExpandGetter(IObjectListView::CanExpandGetter^ Delegate);
 	virtual void SetChildrenGetter(IObjectListView::ChildrenGetter^ Delegate);
+	virtual void EnsureItemVisible(Object^ Item);
+	virtual void ExpandAll();
+	virtual void CollapseAll();
 };
 
 
-ref class CircularProgress : public ViewComponent, ICircularProgress
+ref class ProgressBar : public ViewComponent, IProgressBar
 {
 	DotNetBar::CircularProgressItem^ Source;
 public:
-	CircularProgress(DotNetBar::CircularProgressItem^ Source, eViewRole ViewRole);
-	virtual ~CircularProgress();
+	ProgressBar(DotNetBar::CircularProgressItem^ Source, eViewRole ViewRole);
+	virtual ~ProgressBar();
 
 	ImplPropertySimple(String^, Text, Source->Text);
+	ImplPropertySimple(String^, Tooltip, Source->Tooltip);
 	ImplPropertySimple(int, Value, Source->Value);
 	ImplPropertySimple(int, Minimum, Source->Minimum);
 	ImplPropertySimple(int, Maximum, Source->Maximum);
@@ -368,6 +391,9 @@ public:
 	ImplPropertySimple(Object^, Tag, Tag_);
 	ImplPropertyGetOnly(DotNetBar::CrumbBarItem^, Source, Source_);
 
+	virtual void AddChild(ICrumbBarItem^ Child);
+	virtual void ClearChildren();
+
 	static CrumbBarItem^ FromCrumbBarItem(DotNetBar::CrumbBarItem^ Crumb);
 	static CrumbBarItem^ New();
 };
@@ -389,6 +415,7 @@ public:
 		virtual ICrumbBarItem^ get();
 		virtual void set(ICrumbBarItem^ v);
 	}
+	ImplPropertySimple(bool, Visible, Source->Visible);
 
 	virtual ICrumbBarItem^ AllocateNewItem();
 	virtual void ClearItems();

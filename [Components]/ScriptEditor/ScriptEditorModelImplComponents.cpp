@@ -1,6 +1,6 @@
 #include "ScriptEditorModelImplComponents.h"
 #include "Preferences.h"
-#include "IntelliSenseDatabase.h"
+#include "IntelliSenseBackend.h"
 
 
 namespace cse
@@ -58,7 +58,7 @@ void BackgroundSemanticAnalyzer::QueuePollTimer_Tick(Object^ Sender, EventArgs^ 
 	}
 }
 
-cse::obScriptParsing::AnalysisData::Params^ BackgroundSemanticAnalyzer::GenerateAnalysisParameters()
+obScriptParsing::AnalysisData::Params^ BackgroundSemanticAnalyzer::GenerateAnalysisParameters()
 {
 	auto AnalysisParams = gcnew obScriptParsing::AnalysisData::Params;
 
@@ -94,10 +94,10 @@ cse::obScriptParsing::AnalysisData::Params^ BackgroundSemanticAnalyzer::Generate
 		AnalysisParams->Ops = AnalysisParams->Ops | obScriptParsing::AnalysisData::eOperation::SuppressQuestVariableRefCount;
 
 	AnalysisParams->ScriptCommandIdentifiers = intellisense::IntelliSenseBackend::Get()->CreateIndentifierSnapshot(
-		intellisense::DatabaseLookupFilter::Command);
+		intellisense::eDatabaseLookupFilter::Command);
 
-	auto Filter = intellisense::DatabaseLookupFilter::All & ~intellisense::DatabaseLookupFilter::Snippet;
-	Filter = Filter & ~intellisense::DatabaseLookupFilter::Command;
+	auto Filter = intellisense::eDatabaseLookupFilter::All & ~intellisense::eDatabaseLookupFilter::Snippet;
+	Filter = Filter & ~intellisense::eDatabaseLookupFilter::Command;
 	AnalysisParams->FormIdentifiers = intellisense::IntelliSenseBackend::Get()->CreateIndentifierSnapshot(Filter);
 
 	return AnalysisParams;
@@ -254,7 +254,7 @@ void BackgroundSemanticAnalyzer::WaitForBackgroundTask()
 	}
 }
 
-cse::obScriptParsing::AnalysisData^ BackgroundSemanticAnalyzer::DoSynchronousAnalysis(bool RaiseCompletionEvent)
+obScriptParsing::AnalysisData^ BackgroundSemanticAnalyzer::DoSynchronousAnalysis(bool RaiseCompletionEvent)
 {
 	auto AnalysisParams = GenerateAnalysisParameters();
 	auto AnalysisResult = gcnew obScriptParsing::AnalysisData;
@@ -274,7 +274,7 @@ void NavigationHelper::ParentScriptDocument_LineChanged(Object^ Sender, EventArg
 	auto EventArgs = gcnew INavigationHelper::NavigationChangedEventArgs(nullptr, ParentScriptDocument->TextEditor->CurrentLine);
 	EventArgs->LineChanged = true;
 
-	NavigationChanged(this, EventArgs);
+	NavigationChanged(ParentScriptDocument, EventArgs);
 }
 
 void NavigationHelper::ParentScriptDocument_BgAnalysisComplete(Object^ Sender, model::components::IBackgroundSemanticAnalyzer::AnalysisCompleteEventArgs^ E)
@@ -284,7 +284,7 @@ void NavigationHelper::ParentScriptDocument_BgAnalysisComplete(Object^ Sender, m
 	auto EventArgs = gcnew INavigationHelper::NavigationChangedEventArgs(StructureData, ParentScriptDocument->TextEditor->CurrentLine);
 	EventArgs->StructureChanged = true;
 
-	NavigationChanged(this, EventArgs);
+	NavigationChanged(ParentScriptDocument, EventArgs);
 }
 
 void NavigationHelper::ParentScriptDocument_TextUpdated(Object^ Sender, EventArgs^ E)
@@ -295,7 +295,7 @@ void NavigationHelper::ParentScriptDocument_TextUpdated(Object^ Sender, EventArg
 	EventArgs->StructureChanged = true;
 	EventArgs->LineChanged = true;
 
-	NavigationChanged(this, EventArgs);
+	NavigationChanged(ParentScriptDocument, EventArgs);
 }
 
 void NavigationHelper::UpdateStructureData(obScriptParsing::AnalysisData^ AnalysisData)

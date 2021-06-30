@@ -88,7 +88,7 @@ ref class DocumentNavigationHelper
 	void InitOutlineListView();
 	void RefreshOutlineListView(obScriptParsing::Structurizer^ Data);
 public:
-	DocumentNavigationHelper(view::components::ICrumbBar^ CrumbBar, view::components::IObjectListView^ OutlineListView);
+	DocumentNavigationHelper(view::IScriptEditorView^ View);
 	~DocumentNavigationHelper();
 
 	ImplPropertySimple(bool, NavigationBarVisible, CrumbBar->Visible);
