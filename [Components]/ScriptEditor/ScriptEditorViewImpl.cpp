@@ -1,4 +1,4 @@
-#include "ScriptEditorViewImpl.h"
+﻿#include "ScriptEditorViewImpl.h"
 #include "Preferences.h"
 #include "ScriptSelectionDialog.h"
 
@@ -20,20 +20,40 @@ void ScriptEditorWorkspace::HandleViewComponentEvent(ViewComponentEvent^ E)
 	switch (E->Component->Role)
 	{
 	case eViewRole::MainToolbar_View_DarkMode:
-		preferences::SettingsHolder::Get()->Appearance->DarkMode = preferences::SettingsHolder::Get()->Appearance->DarkMode == false;
-		preferences::SettingsHolder::Get()->RaisePreferencesChangedEvent();
+	{
+		auto EventType = safe_cast<view::components::IButton::eEvent>(E->EventType);
+		auto OnClick = EventType == view::components::IButton::eEvent::Click;
+		auto OnPopup = EventType == view::components::IButton::eEvent::PopupOpening;
+
+		if (OnClick)
+		{
+			preferences::SettingsHolder::Get()->Appearance->DarkMode = preferences::SettingsHolder::Get()->Appearance->DarkMode == false;
+			preferences::SettingsHolder::Get()->RaisePreferencesChangedEvent();
+		}
+		else if (OnPopup)
+			E->Component->AsButton()->Checked = preferences::SettingsHolder::Get()->Appearance->DarkMode;
+
 		return;
 	}
+	}
+
+	if (SkipViewComponentEventProcessing)
+		return;
 
 	ComponentEvent(this, E);
 }
 
 void ScriptEditorWorkspace::HandlePreferencesChanged(Object^ Sender, EventArgs^ E)
 {
-	if (preferences::SettingsHolder::Get()->Appearance->DarkMode)
-		StyleManager->ChangeStyle(eStyle::VisualStudio2012Dark, preferences::SettingsHolder::Get()->Appearance->AccentColor);
-	else
-		StyleManager->ChangeStyle(eStyle::VisualStudio2012Light, preferences::SettingsHolder::Get()->Appearance->AccentColor);
+	auto Style = preferences::SettingsHolder::Get()->Appearance->DarkMode ? eStyle::VisualStudio2012Dark : eStyle::VisualStudio2012Light;
+	auto AccentColor = preferences::SettingsHolder::Get()->Appearance->AccentColor;
+	if (StyleManager->Style != Style)
+		StyleManager->ChangeStyle(Style, AccentColor);
+
+	if (!StyleManager->MetroColorParameters.BaseColor.Equals(AccentColor))
+		StyleManager->MetroColorParameters = DotNetBar::Metro::ColorTables::MetroColorGeneratorParameters(StyleManager->MetroColorParameters.CanvasColor, AccentColor);
+
+	DotNetBar::ToastNotification::CustomGlowColor = Color::FromArgb(75, AccentColor.R, AccentColor.G, AccentColor.B);
 }
 
 void ScriptEditorWorkspace::RegisterViewComponent(components::ViewComponent^ ViewComponent, Object^ Source, eViewRole Role)
@@ -147,11 +167,17 @@ void ScriptEditorWorkspace::SetupViewComponentContainer(Control^ Source, eViewRo
 	RegisterViewComponent(Vc, Source, Role);
 }
 
+void ScriptEditorWorkspace::SetupViewComponentContextMenu(ContextMenuBar^ Provider, ButtonItem^ ContextMenuRoot, eViewRole Role)
+{
+	auto Vc = gcnew components::ContextMenu(Provider, ContextMenuRoot, Role, DelegateViewComponentEventRouter);
+	Provider->Tag = Vc;
+	RegisterViewComponent(Vc, Provider, Role);
+}
+
 void ScriptEditorWorkspace::InitializeComponents()
 {
 	this->components = (gcnew System::ComponentModel::Container());
-	System::ComponentModel::ComponentResourceManager^ resources = (gcnew System::ComponentModel::ComponentResourceManager(ScriptEditorWorkspace::typeid));
-	this->StyleManager = (gcnew DevComponents::DotNetBar::StyleManager(this->components));
+	auto resources = (gcnew System::Resources::ResourceManager("ScriptEditor.ScriptEditorWorkspace", Assembly::GetExecutingAssembly()));
 	this->MainTabStrip = (gcnew DevComponents::DotNetBar::SuperTabControl());
 	this->DummySuperTabControlPanel1 = (gcnew DevComponents::DotNetBar::SuperTabControlPanel());
 	this->DummyTabItem = (gcnew DevComponents::DotNetBar::SuperTabItem());
@@ -160,7 +186,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->ContainerMainToolbar = (gcnew DevComponents::DotNetBar::Bar());
 	this->ToolbarNewScript = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->ToolbarOpenScript = (gcnew DevComponents::DotNetBar::ButtonItem());
-	this->ToolbarSaveScript = (gcnew DevComponents::DotNetBar::ButtonItem());
+	this->ToolbarSaveScriptDropdown = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->ToolbarSaveScriptAndActivePlugin = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->ToolbarSaveScriptNoCompile = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->ToolbarSaveAllScripts = (gcnew DevComponents::DotNetBar::ButtonItem());
@@ -178,8 +204,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->EditMenuComment = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->EditMenuUncomment = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->ToolbarMenuView = (gcnew DevComponents::DotNetBar::ButtonItem());
-	this->ViewMenuPreprocessorOutput = (gcnew DevComponents::DotNetBar::ButtonItem());
-	this->ViewMenuBytecodeOffsets = (gcnew DevComponents::DotNetBar::ButtonItem());
+	this->ViewMenuPreprocessorOutputBytecodeOffsets = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->ViewMenuIconMargin = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->ViewMenuMessages = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->ViewMenuBookmarks = (gcnew DevComponents::DotNetBar::ButtonItem());
@@ -216,10 +241,6 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->MenuAddVarArray = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->DockManager = (gcnew DevComponents::DotNetBar::DotNetBarManager(this->components));
 	this->DockSiteBottom = (gcnew DevComponents::DotNetBar::DockSite());
-	this->DockableBarFindInTabsResults = (gcnew DevComponents::DotNetBar::Bar());
-	this->PanelDockContainerGlobalFindResults = (gcnew DevComponents::DotNetBar::PanelDockContainer());
-	this->GlobalFindResultsList = (gcnew BrightIdeasSoftware::TreeListView());
-	this->DockContainerItemGlobalFindResults = (gcnew DevComponents::DotNetBar::DockContainerItem());
 	this->DockableBarMessages = (gcnew DevComponents::DotNetBar::Bar());
 	this->PanelDockContainerMessageList = (gcnew DevComponents::DotNetBar::PanelDockContainer());
 	this->MessagesList = (gcnew BrightIdeasSoftware::FastObjectListView());
@@ -238,6 +259,10 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindResultsToolbarLabel = (gcnew DevComponents::DotNetBar::LabelItem());
 	this->FindResultsListToolbarLabelQuery = (gcnew DevComponents::DotNetBar::LabelItem());
 	this->DockContainerItemFindResults = (gcnew DevComponents::DotNetBar::DockContainerItem());
+	this->DockableBarFindInTabsResults = (gcnew DevComponents::DotNetBar::Bar());
+	this->PanelDockContainerGlobalFindResults = (gcnew DevComponents::DotNetBar::PanelDockContainer());
+	this->GlobalFindResultsList = (gcnew BrightIdeasSoftware::TreeListView());
+	this->DockContainerItemGlobalFindResults = (gcnew DevComponents::DotNetBar::DockContainerItem());
 	this->DockSiteLeftEx = (gcnew DevComponents::DotNetBar::DockSite());
 	this->DockableBarOutlineView = (gcnew DevComponents::DotNetBar::Bar());
 	this->PanelDockContainerOutline = (gcnew DevComponents::DotNetBar::PanelDockContainer());
@@ -289,14 +314,14 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->StatusBarColumnNumber = (gcnew DevComponents::DotNetBar::LabelItem());
 	this->StatusBarPreprocessorOutputFlag = (gcnew DevComponents::DotNetBar::LabelItem());
 	this->StatusBarScriptBytecodeLength = (gcnew DevComponents::DotNetBar::CircularProgressItem());
+	this->ToolbarSaveScript = (gcnew DevComponents::DotNetBar::ButtonItem());
+	this->EmptyWorkspacePanel = (gcnew DevComponents::DotNetBar::PanelEx());
+	this->GetStartedButtonNewScript = (gcnew DevComponents::DotNetBar::ButtonX());
+	this->GetStartedButtonOpenScript = (gcnew DevComponents::DotNetBar::ButtonX());
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MainTabStrip))->BeginInit();
 	this->MainTabStrip->SuspendLayout();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContainerMainToolbar))->BeginInit();
 	this->DockSiteBottom->SuspendLayout();
-	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->DockableBarFindInTabsResults))->BeginInit();
-	this->DockableBarFindInTabsResults->SuspendLayout();
-	this->PanelDockContainerGlobalFindResults->SuspendLayout();
-	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->GlobalFindResultsList))->BeginInit();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->DockableBarMessages))->BeginInit();
 	this->DockableBarMessages->SuspendLayout();
 	this->PanelDockContainerMessageList->SuspendLayout();
@@ -311,6 +336,10 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->PanelDockContainerFindResults->SuspendLayout();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->FindResultsList))->BeginInit();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->FindResultsToolbar))->BeginInit();
+	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->DockableBarFindInTabsResults))->BeginInit();
+	this->DockableBarFindInTabsResults->SuspendLayout();
+	this->PanelDockContainerGlobalFindResults->SuspendLayout();
+	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->GlobalFindResultsList))->BeginInit();
 	this->DockSiteLeftEx->SuspendLayout();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->DockableBarOutlineView))->BeginInit();
 	this->DockableBarOutlineView->SuspendLayout();
@@ -327,14 +356,8 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->PanelDocumentContent->SuspendLayout();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContextMenuProvider))->BeginInit();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->StatusBar))->BeginInit();
+	this->EmptyWorkspacePanel->SuspendLayout();
 	this->SuspendLayout();
-	//
-	// StyleManager
-	//
-	this->StyleManager->ManagerStyle = DevComponents::DotNetBar::eStyle::VisualStudio2012Dark;
-	this->StyleManager->MetroColorParameters = DevComponents::DotNetBar::Metro::ColorTables::MetroColorGeneratorParameters(System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)),
-		static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(48))), System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(0)),
-			static_cast<System::Int32>(static_cast<System::Byte>(122)), static_cast<System::Int32>(static_cast<System::Byte>(204))));
 	//
 	// MainTabStrip
 	//
@@ -351,7 +374,9 @@ void ScriptEditorWorkspace::InitializeComponents()
 	//
 	//
 	//
+	this->MainTabStrip->ControlBox->MenuBox->AutoHide = true;
 	this->MainTabStrip->ControlBox->MenuBox->Name = L"";
+	this->MainTabStrip->ControlBox->MenuBox->Visible = false;
 	this->MainTabStrip->ControlBox->Name = L"";
 	this->MainTabStrip->ControlBox->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(2) {
 		this->MainTabStrip->ControlBox->MenuBox,
@@ -416,7 +441,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	//
 	this->ContainerMainToolbar->AccessibleDescription = L"DotNetBar Bar (ContainerMainToolbar)";
 	this->ContainerMainToolbar->AccessibleName = L"DotNetBar Bar";
-	this->ContainerMainToolbar->AccessibleRole = System::Windows::Forms::AccessibleRole::ToolBar;
+	this->ContainerMainToolbar->AccessibleRole = System::Windows::Forms::AccessibleRole::MenuBar;
 	this->ContainerMainToolbar->AntiAlias = true;
 	this->ContainerMainToolbar->CanDockBottom = false;
 	this->ContainerMainToolbar->CanDockLeft = false;
@@ -427,21 +452,22 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->ContainerMainToolbar->Dock = System::Windows::Forms::DockStyle::Top;
 	this->ContainerMainToolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
 	this->ContainerMainToolbar->IsMaximized = false;
-	this->ContainerMainToolbar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(12) {
+	this->ContainerMainToolbar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(13) {
 		this->ToolbarNewScript,
-			this->ToolbarOpenScript, this->ToolbarSaveScript, this->ToolbarSaveAllScripts, this->ToolbarPreviousScript, this->ToolbarNextScript,
-			this->ToolbarLabelScriptType, this->ToolbarScriptTypeDropdown, this->ToolbarMenuEdit, this->ToolbarMenuView, this->ToolbarMenuTools,
-			this->ToolbarMenuHelp
+			this->ToolbarOpenScript, this->ToolbarSaveScript, this->ToolbarSaveScriptDropdown, this->ToolbarSaveAllScripts, this->ToolbarPreviousScript,
+			this->ToolbarNextScript, this->ToolbarLabelScriptType, this->ToolbarScriptTypeDropdown, this->ToolbarMenuEdit, this->ToolbarMenuView,
+			this->ToolbarMenuTools, this->ToolbarMenuHelp
 	});
-	this->ContainerMainToolbar->ItemSpacing = 4;
+	this->ContainerMainToolbar->ItemSpacing = 5;
 	this->ContainerMainToolbar->Location = System::Drawing::Point(0, 30);
 	this->ContainerMainToolbar->Margin = System::Windows::Forms::Padding(5);
+	this->ContainerMainToolbar->MenuBar = true;
 	this->ContainerMainToolbar->Name = L"ContainerMainToolbar";
-	this->ContainerMainToolbar->PaddingBottom = 5;
-	this->ContainerMainToolbar->PaddingLeft = 5;
-	this->ContainerMainToolbar->PaddingRight = 5;
-	this->ContainerMainToolbar->PaddingTop = 5;
-	this->ContainerMainToolbar->Size = System::Drawing::Size(1030, 37);
+	this->ContainerMainToolbar->PaddingBottom = 7;
+	this->ContainerMainToolbar->PaddingLeft = 0;
+	this->ContainerMainToolbar->PaddingRight = 0;
+	this->ContainerMainToolbar->PaddingTop = 7;
+	this->ContainerMainToolbar->Size = System::Drawing::Size(1030, 40);
 	this->ContainerMainToolbar->Stretch = true;
 	this->ContainerMainToolbar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->ContainerMainToolbar->TabIndex = 2;
@@ -465,18 +491,21 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->ToolbarOpenScript->Text = L"Open Script";
 	this->ToolbarOpenScript->Tooltip = L"Open Script";
 	//
-	// ToolbarSaveScript
+	// ToolbarSaveScriptDropdown
 	//
-	this->ToolbarSaveScript->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolbarSaveScript.Image")));
-	this->ToolbarSaveScript->ImagePaddingHorizontal = 15;
-	this->ToolbarSaveScript->ImagePaddingVertical = 10;
-	this->ToolbarSaveScript->Name = L"ToolbarSaveScript";
-	this->ToolbarSaveScript->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(2) {
+	this->ToolbarSaveScriptDropdown->AutoExpandOnClick = true;
+	this->ToolbarSaveScriptDropdown->ImagePaddingHorizontal = 0;
+	this->ToolbarSaveScriptDropdown->ImagePaddingVertical = 0;
+	this->ToolbarSaveScriptDropdown->Name = L"ToolbarSaveScriptDropdown";
+	this->ToolbarSaveScriptDropdown->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(2) {
 		this->ToolbarSaveScriptAndActivePlugin,
 			this->ToolbarSaveScriptNoCompile
 	});
-	this->ToolbarSaveScript->Text = L"Save Script";
-	this->ToolbarSaveScript->Tooltip = L"Save Script";
+	this->ToolbarSaveScriptDropdown->Symbol = L"58836";
+	this->ToolbarSaveScriptDropdown->SymbolSet = DevComponents::DotNetBar::eSymbolSet::Material;
+	this->ToolbarSaveScriptDropdown->SymbolSize = 12;
+	this->ToolbarSaveScriptDropdown->Text = L"<expand/>";
+	this->ToolbarSaveScriptDropdown->Tooltip = L"More Save Operations...";
 	//
 	// ToolbarSaveScriptAndActivePlugin
 	//
@@ -606,24 +635,18 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->ToolbarMenuView->AutoExpandOnClick = true;
 	this->ToolbarMenuView->ImageFixedSize = System::Drawing::Size(12, 12);
 	this->ToolbarMenuView->Name = L"ToolbarMenuView";
-	this->ToolbarMenuView->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(10) {
-		this->ViewMenuPreprocessorOutput,
-			this->ViewMenuBytecodeOffsets, this->ViewMenuIconMargin, this->ViewMenuMessages, this->ViewMenuBookmarks, this->ViewMenuOutline,
-			this->ViewMenuFindResults, this->ViewMenuGlobalFindResults, this->ViewMenuNavBreadcrumb, this->ViewMenuDarkMode
+	this->ToolbarMenuView->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(9) {
+		this->ViewMenuPreprocessorOutputBytecodeOffsets,
+			this->ViewMenuMessages, this->ViewMenuBookmarks, this->ViewMenuOutline, this->ViewMenuFindResults, this->ViewMenuGlobalFindResults,
+			this->ViewMenuNavBreadcrumb, this->ViewMenuIconMargin, this->ViewMenuDarkMode
 	});
 	this->ToolbarMenuView->Text = L"&VIEW";
 	//
-	// ViewMenuPreprocessorOutput
+	// ViewMenuPreprocessorOutputBytecodeOffsets
 	//
-	this->ViewMenuPreprocessorOutput->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ViewMenuPreprocessorOutput.Image")));
-	this->ViewMenuPreprocessorOutput->Name = L"ViewMenuPreprocessorOutput";
-	this->ViewMenuPreprocessorOutput->Text = L"&Preprocessed Script Text";
-	//
-	// ViewMenuBytecodeOffsets
-	//
-	this->ViewMenuBytecodeOffsets->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ViewMenuBytecodeOffsets.Image")));
-	this->ViewMenuBytecodeOffsets->Name = L"ViewMenuBytecodeOffsets";
-	this->ViewMenuBytecodeOffsets->Text = L"Script B&ytecode Offsets";
+	this->ViewMenuPreprocessorOutputBytecodeOffsets->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ViewMenuPreprocessorOutputBytecodeOffsets.Image")));
+	this->ViewMenuPreprocessorOutputBytecodeOffsets->Name = L"ViewMenuPreprocessorOutputBytecodeOffsets";
+	this->ViewMenuPreprocessorOutputBytecodeOffsets->Text = L"&Preprocessed Script Text &amp;<br/>Script Bytecode Offsets";
 	//
 	// ViewMenuIconMargin
 	//
@@ -663,6 +686,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	//
 	// ViewMenuNavBreadcrumb
 	//
+	this->ViewMenuNavBreadcrumb->BeginGroup = true;
 	this->ViewMenuNavBreadcrumb->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ViewMenuNavBreadcrumb.Image")));
 	this->ViewMenuNavBreadcrumb->Name = L"ViewMenuNavBreadcrumb";
 	this->ViewMenuNavBreadcrumb->Text = L"&Navigation Bar";
@@ -801,11 +825,13 @@ void ScriptEditorWorkspace::InitializeComponents()
 	//
 	// HelpMenuWiki
 	//
+	this->HelpMenuWiki->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"HelpMenuWiki.Image")));
 	this->HelpMenuWiki->Name = L"HelpMenuWiki";
 	this->HelpMenuWiki->Text = L"Wiki";
 	//
 	// HelpMenuObseDocs
 	//
+	this->HelpMenuObseDocs->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"HelpMenuObseDocs.Image")));
 	this->HelpMenuObseDocs->Name = L"HelpMenuObseDocs";
 	this->HelpMenuObseDocs->Text = L"OBSE Manual";
 	//
@@ -884,10 +910,10 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->DockSiteBottom->AccessibleRole = System::Windows::Forms::AccessibleRole::Window;
 	this->DockSiteBottom->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(45)), static_cast<System::Int32>(static_cast<System::Byte>(45)),
 		static_cast<System::Int32>(static_cast<System::Byte>(48)));
-	this->DockSiteBottom->Controls->Add(this->DockableBarFindInTabsResults);
 	this->DockSiteBottom->Controls->Add(this->DockableBarMessages);
 	this->DockSiteBottom->Controls->Add(this->DockableBarBookmarks);
 	this->DockSiteBottom->Controls->Add(this->DockableBarFindReplaceResults);
+	this->DockSiteBottom->Controls->Add(this->DockableBarFindInTabsResults);
 	this->DockSiteBottom->Dock = System::Windows::Forms::DockStyle::Bottom;
 	this->DockSiteBottom->DocumentDockContainer = (gcnew DevComponents::DotNetBar::DocumentDockContainer(gcnew cli::array< DevComponents::DotNetBar::DocumentBaseContainer^  >(4) {
 		(cli::safe_cast<DevComponents::DotNetBar::DocumentBaseContainer^>((gcnew DevComponents::DotNetBar::DocumentBarContainer(this->DockableBarMessages,
@@ -897,81 +923,11 @@ void ScriptEditorWorkspace::InitializeComponents()
 						221, 193))))
 	}, DevComponents::DotNetBar::eOrientation::Horizontal));
 	this->DockSiteBottom->ForeColor = System::Drawing::Color::White;
-	this->DockSiteBottom->Location = System::Drawing::Point(0, 666);
+	this->DockSiteBottom->Location = System::Drawing::Point(0, 660);
 	this->DockSiteBottom->Name = L"DockSiteBottom";
 	this->DockSiteBottom->Size = System::Drawing::Size(1030, 200);
 	this->DockSiteBottom->TabIndex = 7;
 	this->DockSiteBottom->TabStop = false;
-	//
-	// DockableBarFindInTabsResults
-	//
-	this->DockableBarFindInTabsResults->AccessibleDescription = L"DotNetBar Bar (DockableBarFindInTabsResults)";
-	this->DockableBarFindInTabsResults->AccessibleName = L"DotNetBar Bar";
-	this->DockableBarFindInTabsResults->AccessibleRole = System::Windows::Forms::AccessibleRole::Grouping;
-	this->DockableBarFindInTabsResults->AutoHide = true;
-	this->DockableBarFindInTabsResults->AutoHideTabTextAlwaysVisible = true;
-	this->DockableBarFindInTabsResults->AutoSyncBarCaption = true;
-	this->DockableBarFindInTabsResults->BarType = DevComponents::DotNetBar::eBarType::DockWindow;
-	this->DockableBarFindInTabsResults->CanDockTop = false;
-	this->DockableBarFindInTabsResults->CanHide = true;
-	this->DockableBarFindInTabsResults->CloseSingleTab = true;
-	this->DockableBarFindInTabsResults->Controls->Add(this->PanelDockContainerGlobalFindResults);
-	this->DockableBarFindInTabsResults->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular,
-		System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
-	this->DockableBarFindInTabsResults->GrabHandleStyle = DevComponents::DotNetBar::eGrabHandleStyle::Caption;
-	this->DockableBarFindInTabsResults->IsMaximized = false;
-	this->DockableBarFindInTabsResults->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(1) { this->DockContainerItemGlobalFindResults });
-	this->DockableBarFindInTabsResults->LayoutType = DevComponents::DotNetBar::eLayoutType::DockContainer;
-	this->DockableBarFindInTabsResults->Location = System::Drawing::Point(809, 7);
-	this->DockableBarFindInTabsResults->Name = L"DockableBarFindInTabsResults";
-	this->DockableBarFindInTabsResults->Size = System::Drawing::Size(221, 193);
-	this->DockableBarFindInTabsResults->Stretch = true;
-	this->DockableBarFindInTabsResults->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-	this->DockableBarFindInTabsResults->TabIndex = 0;
-	this->DockableBarFindInTabsResults->TabStop = false;
-	this->DockableBarFindInTabsResults->Text = L"Find in Tabs Results";
-	//
-	// PanelDockContainerGlobalFindResults
-	//
-	this->PanelDockContainerGlobalFindResults->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-	this->PanelDockContainerGlobalFindResults->Controls->Add(this->GlobalFindResultsList);
-	this->PanelDockContainerGlobalFindResults->DisabledBackColor = System::Drawing::Color::Empty;
-	this->PanelDockContainerGlobalFindResults->Location = System::Drawing::Point(3, 23);
-	this->PanelDockContainerGlobalFindResults->Name = L"PanelDockContainerGlobalFindResults";
-	this->PanelDockContainerGlobalFindResults->Size = System::Drawing::Size(215, 167);
-	this->PanelDockContainerGlobalFindResults->Style->Alignment = System::Drawing::StringAlignment::Center;
-	this->PanelDockContainerGlobalFindResults->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
-	this->PanelDockContainerGlobalFindResults->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
-	this->PanelDockContainerGlobalFindResults->Style->GradientAngle = 90;
-	this->PanelDockContainerGlobalFindResults->TabIndex = 13;
-	//
-	// GlobalFindResultsList
-	//
-	this->GlobalFindResultsList->BackColor = System::Drawing::Color::Black;
-	this->GlobalFindResultsList->CellEditUseWholeCell = false;
-	this->GlobalFindResultsList->Cursor = System::Windows::Forms::Cursors::Default;
-	this->GlobalFindResultsList->Dock = System::Windows::Forms::DockStyle::Fill;
-	this->GlobalFindResultsList->EmptyListMsg = L"Doesn\'t look like anything to me...";
-	this->GlobalFindResultsList->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75F, System::Drawing::FontStyle::Regular,
-		System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
-	this->GlobalFindResultsList->ForeColor = System::Drawing::Color::White;
-	this->GlobalFindResultsList->GridLines = true;
-	this->GlobalFindResultsList->HideSelection = false;
-	this->GlobalFindResultsList->Location = System::Drawing::Point(0, 0);
-	this->GlobalFindResultsList->MultiSelect = false;
-	this->GlobalFindResultsList->Name = L"GlobalFindResultsList";
-	this->GlobalFindResultsList->ShowGroups = false;
-	this->GlobalFindResultsList->Size = System::Drawing::Size(215, 167);
-	this->GlobalFindResultsList->TabIndex = 0;
-	this->GlobalFindResultsList->UseCompatibleStateImageBehavior = false;
-	this->GlobalFindResultsList->View = System::Windows::Forms::View::Details;
-	this->GlobalFindResultsList->VirtualMode = true;
-	//
-	// DockContainerItemGlobalFindResults
-	//
-	this->DockContainerItemGlobalFindResults->Control = this->PanelDockContainerGlobalFindResults;
-	this->DockContainerItemGlobalFindResults->Name = L"DockContainerItemGlobalFindResults";
-	this->DockContainerItemGlobalFindResults->Text = L"Find in Tabs Results";
 	//
 	// DockableBarMessages
 	//
@@ -1016,16 +972,13 @@ void ScriptEditorWorkspace::InitializeComponents()
 	//
 	// MessagesList
 	//
-	this->MessagesList->BackColor = System::Drawing::Color::Black;
 	this->MessagesList->CellEditUseWholeCell = false;
 	this->MessagesList->Cursor = System::Windows::Forms::Cursors::Default;
 	this->MessagesList->Dock = System::Windows::Forms::DockStyle::Fill;
 	this->MessagesList->EmptyListMsg = L"Doesn\'t look like anything to me...";
 	this->MessagesList->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75F, System::Drawing::FontStyle::Regular,
 		System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
-	this->MessagesList->ForeColor = System::Drawing::Color::White;
 	this->MessagesList->FullRowSelect = true;
-	this->MessagesList->GridLines = true;
 	this->MessagesList->HideSelection = false;
 	this->MessagesList->Location = System::Drawing::Point(0, 0);
 	this->MessagesList->MultiSelect = false;
@@ -1087,16 +1040,13 @@ void ScriptEditorWorkspace::InitializeComponents()
 	//
 	// BookmarksList
 	//
-	this->BookmarksList->BackColor = System::Drawing::Color::Black;
 	this->BookmarksList->CellEditUseWholeCell = false;
 	this->BookmarksList->Cursor = System::Windows::Forms::Cursors::Default;
 	this->BookmarksList->Dock = System::Windows::Forms::DockStyle::Fill;
 	this->BookmarksList->EmptyListMsg = L"Doesn\'t look like anything to me...";
 	this->BookmarksList->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75F, System::Drawing::FontStyle::Regular,
 		System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
-	this->BookmarksList->ForeColor = System::Drawing::Color::White;
 	this->BookmarksList->FullRowSelect = true;
-	this->BookmarksList->GridLines = true;
 	this->BookmarksList->HideSelection = false;
 	this->BookmarksList->Location = System::Drawing::Point(28, 0);
 	this->BookmarksList->MultiSelect = false;
@@ -1199,16 +1149,13 @@ void ScriptEditorWorkspace::InitializeComponents()
 	//
 	// FindResultsList
 	//
-	this->FindResultsList->BackColor = System::Drawing::Color::Black;
 	this->FindResultsList->CellEditUseWholeCell = false;
 	this->FindResultsList->Cursor = System::Windows::Forms::Cursors::Default;
 	this->FindResultsList->Dock = System::Windows::Forms::DockStyle::Fill;
 	this->FindResultsList->EmptyListMsg = L"Doesn\'t look like anything to me...";
 	this->FindResultsList->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75F, System::Drawing::FontStyle::Regular,
 		System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
-	this->FindResultsList->ForeColor = System::Drawing::Color::White;
 	this->FindResultsList->FullRowSelect = true;
-	this->FindResultsList->GridLines = true;
 	this->FindResultsList->HideSelection = false;
 	this->FindResultsList->Location = System::Drawing::Point(0, 19);
 	this->FindResultsList->MultiSelect = false;
@@ -1255,6 +1202,74 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->DockContainerItemFindResults->Name = L"DockContainerItemFindResults";
 	this->DockContainerItemFindResults->Text = L"Find and Replace Results";
 	//
+	// DockableBarFindInTabsResults
+	//
+	this->DockableBarFindInTabsResults->AccessibleDescription = L"DotNetBar Bar (DockableBarFindInTabsResults)";
+	this->DockableBarFindInTabsResults->AccessibleName = L"DotNetBar Bar";
+	this->DockableBarFindInTabsResults->AccessibleRole = System::Windows::Forms::AccessibleRole::Grouping;
+	this->DockableBarFindInTabsResults->AutoHide = true;
+	this->DockableBarFindInTabsResults->AutoHideTabTextAlwaysVisible = true;
+	this->DockableBarFindInTabsResults->AutoSyncBarCaption = true;
+	this->DockableBarFindInTabsResults->BarType = DevComponents::DotNetBar::eBarType::DockWindow;
+	this->DockableBarFindInTabsResults->CanDockTop = false;
+	this->DockableBarFindInTabsResults->CanHide = true;
+	this->DockableBarFindInTabsResults->CloseSingleTab = true;
+	this->DockableBarFindInTabsResults->Controls->Add(this->PanelDockContainerGlobalFindResults);
+	this->DockableBarFindInTabsResults->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular,
+		System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+	this->DockableBarFindInTabsResults->GrabHandleStyle = DevComponents::DotNetBar::eGrabHandleStyle::Caption;
+	this->DockableBarFindInTabsResults->IsMaximized = false;
+	this->DockableBarFindInTabsResults->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(1) { this->DockContainerItemGlobalFindResults });
+	this->DockableBarFindInTabsResults->LayoutType = DevComponents::DotNetBar::eLayoutType::DockContainer;
+	this->DockableBarFindInTabsResults->Location = System::Drawing::Point(809, 7);
+	this->DockableBarFindInTabsResults->Name = L"DockableBarFindInTabsResults";
+	this->DockableBarFindInTabsResults->Size = System::Drawing::Size(221, 193);
+	this->DockableBarFindInTabsResults->Stretch = true;
+	this->DockableBarFindInTabsResults->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+	this->DockableBarFindInTabsResults->TabIndex = 0;
+	this->DockableBarFindInTabsResults->TabStop = false;
+	this->DockableBarFindInTabsResults->Text = L"Find in Tabs Results";
+	//
+	// PanelDockContainerGlobalFindResults
+	//
+	this->PanelDockContainerGlobalFindResults->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+	this->PanelDockContainerGlobalFindResults->Controls->Add(this->GlobalFindResultsList);
+	this->PanelDockContainerGlobalFindResults->DisabledBackColor = System::Drawing::Color::Empty;
+	this->PanelDockContainerGlobalFindResults->Location = System::Drawing::Point(3, 23);
+	this->PanelDockContainerGlobalFindResults->Name = L"PanelDockContainerGlobalFindResults";
+	this->PanelDockContainerGlobalFindResults->Size = System::Drawing::Size(215, 167);
+	this->PanelDockContainerGlobalFindResults->Style->Alignment = System::Drawing::StringAlignment::Center;
+	this->PanelDockContainerGlobalFindResults->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
+	this->PanelDockContainerGlobalFindResults->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
+	this->PanelDockContainerGlobalFindResults->Style->GradientAngle = 90;
+	this->PanelDockContainerGlobalFindResults->TabIndex = 13;
+	//
+	// GlobalFindResultsList
+	//
+	this->GlobalFindResultsList->CellEditUseWholeCell = false;
+	this->GlobalFindResultsList->Cursor = System::Windows::Forms::Cursors::Default;
+	this->GlobalFindResultsList->Dock = System::Windows::Forms::DockStyle::Fill;
+	this->GlobalFindResultsList->EmptyListMsg = L"Doesn\'t look like anything to me...";
+	this->GlobalFindResultsList->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75F, System::Drawing::FontStyle::Regular,
+		System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+	this->GlobalFindResultsList->FullRowSelect = true;
+	this->GlobalFindResultsList->HideSelection = false;
+	this->GlobalFindResultsList->Location = System::Drawing::Point(0, 0);
+	this->GlobalFindResultsList->MultiSelect = false;
+	this->GlobalFindResultsList->Name = L"GlobalFindResultsList";
+	this->GlobalFindResultsList->ShowGroups = false;
+	this->GlobalFindResultsList->Size = System::Drawing::Size(215, 167);
+	this->GlobalFindResultsList->TabIndex = 0;
+	this->GlobalFindResultsList->UseCompatibleStateImageBehavior = false;
+	this->GlobalFindResultsList->View = System::Windows::Forms::View::Details;
+	this->GlobalFindResultsList->VirtualMode = true;
+	//
+	// DockContainerItemGlobalFindResults
+	//
+	this->DockContainerItemGlobalFindResults->Control = this->PanelDockContainerGlobalFindResults;
+	this->DockContainerItemGlobalFindResults->Name = L"DockContainerItemGlobalFindResults";
+	this->DockContainerItemGlobalFindResults->Text = L"Find in Tabs Results";
+	//
 	// DockSiteLeftEx
 	//
 	this->DockSiteLeftEx->AccessibleRole = System::Windows::Forms::AccessibleRole::Window;
@@ -1264,12 +1279,12 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->DockSiteLeftEx->Dock = System::Windows::Forms::DockStyle::Left;
 	this->DockSiteLeftEx->DocumentDockContainer = (gcnew DevComponents::DotNetBar::DocumentDockContainer(gcnew cli::array< DevComponents::DotNetBar::DocumentBaseContainer^  >(1) {
 		(cli::safe_cast<DevComponents::DotNetBar::DocumentBaseContainer^>((gcnew DevComponents::DotNetBar::DocumentBarContainer(this->DockableBarOutlineView,
-			156, 599))))
+			156, 590))))
 	}, DevComponents::DotNetBar::eOrientation::Horizontal));
 	this->DockSiteLeftEx->ForeColor = System::Drawing::Color::White;
-	this->DockSiteLeftEx->Location = System::Drawing::Point(0, 67);
+	this->DockSiteLeftEx->Location = System::Drawing::Point(0, 70);
 	this->DockSiteLeftEx->Name = L"DockSiteLeftEx";
-	this->DockSiteLeftEx->Size = System::Drawing::Size(163, 599);
+	this->DockSiteLeftEx->Size = System::Drawing::Size(163, 590);
 	this->DockSiteLeftEx->TabIndex = 4;
 	this->DockSiteLeftEx->TabStop = false;
 	//
@@ -1294,7 +1309,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->DockableBarOutlineView->LayoutType = DevComponents::DotNetBar::eLayoutType::DockContainer;
 	this->DockableBarOutlineView->Location = System::Drawing::Point(0, 0);
 	this->DockableBarOutlineView->Name = L"DockableBarOutlineView";
-	this->DockableBarOutlineView->Size = System::Drawing::Size(156, 599);
+	this->DockableBarOutlineView->Size = System::Drawing::Size(156, 590);
 	this->DockableBarOutlineView->Stretch = true;
 	this->DockableBarOutlineView->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->DockableBarOutlineView->TabIndex = 0;
@@ -1308,7 +1323,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->PanelDockContainerOutline->DisabledBackColor = System::Drawing::Color::Empty;
 	this->PanelDockContainerOutline->Location = System::Drawing::Point(3, 23);
 	this->PanelDockContainerOutline->Name = L"PanelDockContainerOutline";
-	this->PanelDockContainerOutline->Size = System::Drawing::Size(150, 573);
+	this->PanelDockContainerOutline->Size = System::Drawing::Size(150, 564);
 	this->PanelDockContainerOutline->Style->Alignment = System::Drawing::StringAlignment::Center;
 	this->PanelDockContainerOutline->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
 	this->PanelDockContainerOutline->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
@@ -1317,15 +1332,13 @@ void ScriptEditorWorkspace::InitializeComponents()
 	//
 	// OutlineTreeView
 	//
-	this->OutlineTreeView->BackColor = System::Drawing::Color::Black;
 	this->OutlineTreeView->CellEditUseWholeCell = false;
 	this->OutlineTreeView->Dock = System::Windows::Forms::DockStyle::Fill;
-	this->OutlineTreeView->ForeColor = System::Drawing::Color::White;
 	this->OutlineTreeView->HideSelection = false;
 	this->OutlineTreeView->Location = System::Drawing::Point(0, 0);
 	this->OutlineTreeView->Name = L"OutlineTreeView";
 	this->OutlineTreeView->ShowGroups = false;
-	this->OutlineTreeView->Size = System::Drawing::Size(150, 573);
+	this->OutlineTreeView->Size = System::Drawing::Size(150, 564);
 	this->OutlineTreeView->TabIndex = 0;
 	this->OutlineTreeView->UseCompatibleStateImageBehavior = false;
 	this->OutlineTreeView->View = System::Windows::Forms::View::Details;
@@ -1346,12 +1359,12 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->DockSiteRightEx->Dock = System::Windows::Forms::DockStyle::Right;
 	this->DockSiteRightEx->DocumentDockContainer = (gcnew DevComponents::DotNetBar::DocumentDockContainer(gcnew cli::array< DevComponents::DotNetBar::DocumentBaseContainer^  >(1) {
 		(cli::safe_cast<DevComponents::DotNetBar::DocumentBaseContainer^>((gcnew DevComponents::DotNetBar::DocumentBarContainer(this->DockableBarFindReplace,
-			288, 599))))
+			288, 590))))
 	}, DevComponents::DotNetBar::eOrientation::Vertical));
 	this->DockSiteRightEx->ForeColor = System::Drawing::Color::White;
-	this->DockSiteRightEx->Location = System::Drawing::Point(735, 67);
+	this->DockSiteRightEx->Location = System::Drawing::Point(735, 70);
 	this->DockSiteRightEx->Name = L"DockSiteRightEx";
-	this->DockSiteRightEx->Size = System::Drawing::Size(295, 599);
+	this->DockSiteRightEx->Size = System::Drawing::Size(295, 590);
 	this->DockSiteRightEx->TabIndex = 5;
 	this->DockSiteRightEx->TabStop = false;
 	//
@@ -1377,7 +1390,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->DockableBarFindReplace->Location = System::Drawing::Point(7, 0);
 	this->DockableBarFindReplace->MinimumSize = System::Drawing::Size(300, 320);
 	this->DockableBarFindReplace->Name = L"DockableBarFindReplace";
-	this->DockableBarFindReplace->Size = System::Drawing::Size(300, 599);
+	this->DockableBarFindReplace->Size = System::Drawing::Size(300, 590);
 	this->DockableBarFindReplace->Stretch = true;
 	this->DockableBarFindReplace->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->DockableBarFindReplace->TabIndex = 0;
@@ -1391,7 +1404,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->PanelDockContainerFindReplace->DisabledBackColor = System::Drawing::Color::Empty;
 	this->PanelDockContainerFindReplace->Location = System::Drawing::Point(3, 23);
 	this->PanelDockContainerFindReplace->Name = L"PanelDockContainerFindReplace";
-	this->PanelDockContainerFindReplace->Size = System::Drawing::Size(282, 573);
+	this->PanelDockContainerFindReplace->Size = System::Drawing::Size(282, 564);
 	this->PanelDockContainerFindReplace->Style->Alignment = System::Drawing::StringAlignment::Center;
 	this->PanelDockContainerFindReplace->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
 	this->PanelDockContainerFindReplace->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
@@ -1423,7 +1436,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 		this->FindWindowLCIFindDropdown,
 			this->FindWindowLCIReplaceDropdown, this->FindWindowLCILookIn, this->FindWindowLayoutGroupSettings, this->FindWindowLayouyGroupButtons
 	});
-	this->FindWindowLayoutControl->Size = System::Drawing::Size(282, 573);
+	this->FindWindowLayoutControl->Size = System::Drawing::Size(282, 564);
 	this->FindWindowLayoutControl->TabIndex = 19;
 	//
 	// FindWindowDropdownFind
@@ -1707,7 +1720,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 		static_cast<System::Int32>(static_cast<System::Byte>(48)));
 	this->DockSiteBottomEx->Dock = System::Windows::Forms::DockStyle::Bottom;
 	this->DockSiteBottomEx->ForeColor = System::Drawing::Color::White;
-	this->DockSiteBottomEx->Location = System::Drawing::Point(0, 866);
+	this->DockSiteBottomEx->Location = System::Drawing::Point(0, 860);
 	this->DockSiteBottomEx->Name = L"DockSiteBottomEx";
 	this->DockSiteBottomEx->Size = System::Drawing::Size(1030, 0);
 	this->DockSiteBottomEx->TabIndex = 11;
@@ -1720,9 +1733,9 @@ void ScriptEditorWorkspace::InitializeComponents()
 		static_cast<System::Int32>(static_cast<System::Byte>(48)));
 	this->DockSiteLeft->Dock = System::Windows::Forms::DockStyle::Left;
 	this->DockSiteLeft->ForeColor = System::Drawing::Color::White;
-	this->DockSiteLeft->Location = System::Drawing::Point(0, 67);
+	this->DockSiteLeft->Location = System::Drawing::Point(0, 70);
 	this->DockSiteLeft->Name = L"DockSiteLeft";
-	this->DockSiteLeft->Size = System::Drawing::Size(0, 799);
+	this->DockSiteLeft->Size = System::Drawing::Size(0, 790);
 	this->DockSiteLeft->TabIndex = 8;
 	this->DockSiteLeft->TabStop = false;
 	//
@@ -1733,9 +1746,9 @@ void ScriptEditorWorkspace::InitializeComponents()
 		static_cast<System::Int32>(static_cast<System::Byte>(48)));
 	this->DockSiteRight->Dock = System::Windows::Forms::DockStyle::Right;
 	this->DockSiteRight->ForeColor = System::Drawing::Color::White;
-	this->DockSiteRight->Location = System::Drawing::Point(1030, 67);
+	this->DockSiteRight->Location = System::Drawing::Point(1030, 70);
 	this->DockSiteRight->Name = L"DockSiteRight";
-	this->DockSiteRight->Size = System::Drawing::Size(0, 799);
+	this->DockSiteRight->Size = System::Drawing::Size(0, 790);
 	this->DockSiteRight->TabIndex = 9;
 	this->DockSiteRight->TabStop = false;
 	//
@@ -1747,7 +1760,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->DockSiteTopEx->Dock = System::Windows::Forms::DockStyle::Top;
 	this->DockSiteTopEx->Enabled = false;
 	this->DockSiteTopEx->ForeColor = System::Drawing::Color::White;
-	this->DockSiteTopEx->Location = System::Drawing::Point(0, 67);
+	this->DockSiteTopEx->Location = System::Drawing::Point(0, 70);
 	this->DockSiteTopEx->Name = L"DockSiteTopEx";
 	this->DockSiteTopEx->Size = System::Drawing::Size(1030, 0);
 	this->DockSiteTopEx->TabIndex = 10;
@@ -1762,7 +1775,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->DockSiteTop->DocumentDockContainer = (gcnew DevComponents::DotNetBar::DocumentDockContainer());
 	this->DockSiteTop->Enabled = false;
 	this->DockSiteTop->ForeColor = System::Drawing::Color::White;
-	this->DockSiteTop->Location = System::Drawing::Point(0, 67);
+	this->DockSiteTop->Location = System::Drawing::Point(0, 70);
 	this->DockSiteTop->Name = L"DockSiteTop";
 	this->DockSiteTop->Size = System::Drawing::Size(1030, 0);
 	this->DockSiteTop->TabIndex = 6;
@@ -1777,12 +1790,12 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->DockSiteCenter->Dock = System::Windows::Forms::DockStyle::Fill;
 	this->DockSiteCenter->DocumentDockContainer = (gcnew DevComponents::DotNetBar::DocumentDockContainer(gcnew cli::array< DevComponents::DotNetBar::DocumentBaseContainer^  >(1) {
 		(cli::safe_cast<DevComponents::DotNetBar::DocumentBaseContainer^>((gcnew DevComponents::DotNetBar::DocumentBarContainer(this->CenterDockBar,
-			572, 599))))
+			572, 590))))
 	}, DevComponents::DotNetBar::eOrientation::Horizontal));
 	this->DockSiteCenter->ForeColor = System::Drawing::Color::White;
-	this->DockSiteCenter->Location = System::Drawing::Point(163, 67);
+	this->DockSiteCenter->Location = System::Drawing::Point(163, 70);
 	this->DockSiteCenter->Name = L"DockSiteCenter";
-	this->DockSiteCenter->Size = System::Drawing::Size(572, 599);
+	this->DockSiteCenter->Size = System::Drawing::Size(572, 590);
 	this->DockSiteCenter->TabIndex = 12;
 	this->DockSiteCenter->TabStop = false;
 	//
@@ -1803,6 +1816,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->CenterDockBar->CanReorderTabs = false;
 	this->CenterDockBar->CanUndock = false;
 	this->CenterDockBar->Controls->Add(this->PanelDocumentContent);
+	this->CenterDockBar->Controls->Add(this->NavigationBar);
 	this->CenterDockBar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 		static_cast<System::Byte>(0)));
 	this->CenterDockBar->GrabHandleStyle = DevComponents::DotNetBar::eGrabHandleStyle::Caption;
@@ -1810,7 +1824,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->CenterDockBar->LayoutType = DevComponents::DotNetBar::eLayoutType::DockContainer;
 	this->CenterDockBar->Location = System::Drawing::Point(0, 0);
 	this->CenterDockBar->Name = L"CenterDockBar";
-	this->CenterDockBar->Size = System::Drawing::Size(572, 599);
+	this->CenterDockBar->Size = System::Drawing::Size(572, 590);
 	this->CenterDockBar->Stretch = true;
 	this->CenterDockBar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->CenterDockBar->TabIndex = 0;
@@ -1821,13 +1835,13 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->PanelDocumentContent->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(85)),
 		static_cast<System::Int32>(static_cast<System::Byte>(85)), static_cast<System::Int32>(static_cast<System::Byte>(91)));
 	this->ContextMenuProvider->SetContextMenuEx(this->PanelDocumentContent, this->ContextMenuTextEditor);
+	this->PanelDocumentContent->Controls->Add(this->EmptyWorkspacePanel);
 	this->PanelDocumentContent->Controls->Add(this->ContextMenuProvider);
-	this->PanelDocumentContent->Controls->Add(this->NavigationBar);
 	this->PanelDocumentContent->Dock = System::Windows::Forms::DockStyle::Fill;
 	this->PanelDocumentContent->ForeColor = System::Drawing::Color::White;
-	this->PanelDocumentContent->Location = System::Drawing::Point(0, 0);
+	this->PanelDocumentContent->Location = System::Drawing::Point(0, 22);
 	this->PanelDocumentContent->Name = L"PanelDocumentContent";
-	this->PanelDocumentContent->Size = System::Drawing::Size(572, 599);
+	this->PanelDocumentContent->Size = System::Drawing::Size(572, 568);
 	this->PanelDocumentContent->TabIndex = 10;
 	//
 	// ContextMenuProvider
@@ -1837,7 +1851,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->ContextMenuProvider->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
 	this->ContextMenuProvider->IsMaximized = false;
 	this->ContextMenuProvider->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(1) { this->ContextMenuTextEditor });
-	this->ContextMenuProvider->Location = System::Drawing::Point(3, 28);
+	this->ContextMenuProvider->Location = System::Drawing::Point(6, 6);
 	this->ContextMenuProvider->Name = L"ContextMenuProvider";
 	this->ContextMenuProvider->Size = System::Drawing::Size(113, 25);
 	this->ContextMenuProvider->Stretch = true;
@@ -1898,8 +1912,21 @@ void ScriptEditorWorkspace::InitializeComponents()
 	//
 	// StatusBar
 	//
+	this->StatusBar->AccessibleDescription = L"DotNetBar Bar (StatusBar)";
+	this->StatusBar->AccessibleName = L"DotNetBar Bar";
+	this->StatusBar->AccessibleRole = System::Windows::Forms::AccessibleRole::ToolBar;
 	this->StatusBar->AntiAlias = true;
 	this->StatusBar->BarType = DevComponents::DotNetBar::eBarType::StatusBar;
+	this->StatusBar->CanAutoHide = false;
+	this->StatusBar->CanCustomize = false;
+	this->StatusBar->CanDockLeft = false;
+	this->StatusBar->CanDockRight = false;
+	this->StatusBar->CanDockTab = false;
+	this->StatusBar->CanDockTop = false;
+	this->StatusBar->CanMaximizeFloating = false;
+	this->StatusBar->CanMove = false;
+	this->StatusBar->CanReorderTabs = false;
+	this->StatusBar->CanUndock = false;
 	this->StatusBar->Dock = System::Windows::Forms::DockStyle::Bottom;
 	this->StatusBar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
 	this->StatusBar->ForeColor = System::Drawing::Color::Black;
@@ -1908,14 +1935,14 @@ void ScriptEditorWorkspace::InitializeComponents()
 		this->StatusBarLineNumber,
 			this->StatusBarColumnNumber, this->StatusBarPreprocessorOutputFlag, this->StatusBarScriptBytecodeLength
 	});
-	this->StatusBar->ItemSpacing = 7;
-	this->StatusBar->Location = System::Drawing::Point(0, 866);
+	this->StatusBar->ItemSpacing = 10;
+	this->StatusBar->Location = System::Drawing::Point(0, 860);
 	this->StatusBar->Name = L"StatusBar";
-	this->StatusBar->PaddingBottom = 0;
+	this->StatusBar->PaddingBottom = 3;
 	this->StatusBar->PaddingLeft = 15;
 	this->StatusBar->PaddingRight = 15;
-	this->StatusBar->PaddingTop = 0;
-	this->StatusBar->Size = System::Drawing::Size(1030, 24);
+	this->StatusBar->PaddingTop = 3;
+	this->StatusBar->Size = System::Drawing::Size(1030, 30);
 	this->StatusBar->Stretch = true;
 	this->StatusBar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->StatusBar->TabIndex = 13;
@@ -1937,19 +1964,81 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->StatusBarPreprocessorOutputFlag->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
 	this->StatusBarPreprocessorOutputFlag->Name = L"StatusBarPreprocessorOutputFlag";
 	this->StatusBarPreprocessorOutputFlag->PaddingLeft = 10;
-	this->StatusBarPreprocessorOutputFlag->Text = L"Preprocessor Output <b>ON</b> <font size=\"-2\">(Some Actions Are Disabled)</font>";
+	this->StatusBarPreprocessorOutputFlag->Text = L"Preprocessor Output <b>ON</b>";
+	this->StatusBarPreprocessorOutputFlag->Visible = false;
 	//
 	// StatusBarScriptBytecodeLength
 	//
-	this->StatusBarScriptBytecodeLength->BeginGroup = true;
 	this->StatusBarScriptBytecodeLength->Diameter = 22;
+	this->StatusBarScriptBytecodeLength->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
 	this->StatusBarScriptBytecodeLength->Maximum = 32768;
 	this->StatusBarScriptBytecodeLength->Name = L"StatusBarScriptBytecodeLength";
 	this->StatusBarScriptBytecodeLength->ProgressBarType = DevComponents::DotNetBar::eCircularProgressType::Donut;
 	this->StatusBarScriptBytecodeLength->ProgressColor = System::Drawing::Color::MintCream;
-	this->StatusBarScriptBytecodeLength->Text = L"Compiled Script Size:";
+	this->StatusBarScriptBytecodeLength->Text = L"Uncompiled Script";
 	this->StatusBarScriptBytecodeLength->TextPadding->Left = 5;
 	this->StatusBarScriptBytecodeLength->TextPadding->Right = 5;
+	this->StatusBarScriptBytecodeLength->Visible = false;
+	//
+	// ToolbarSaveScript
+	//
+	this->ToolbarSaveScript->BeginGroup = true;
+	this->ToolbarSaveScript->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolbarSaveScript.Image")));
+	this->ToolbarSaveScript->ImagePaddingHorizontal = 10;
+	this->ToolbarSaveScript->ImagePosition = DevComponents::DotNetBar::eImagePosition::Right;
+	this->ToolbarSaveScript->Name = L"ToolbarSaveScript";
+	this->ToolbarSaveScript->Text = L"Save Script";
+	//
+	// EmptyWorkspacePanel
+	//
+	this->EmptyWorkspacePanel->CanvasColor = System::Drawing::SystemColors::Control;
+	this->EmptyWorkspacePanel->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+	this->EmptyWorkspacePanel->Controls->Add(this->GetStartedButtonOpenScript);
+	this->EmptyWorkspacePanel->Controls->Add(this->GetStartedButtonNewScript);
+	this->EmptyWorkspacePanel->DisabledBackColor = System::Drawing::Color::Empty;
+	this->EmptyWorkspacePanel->Dock = System::Windows::Forms::DockStyle::Fill;
+	this->EmptyWorkspacePanel->Location = System::Drawing::Point(0, 0);
+	this->EmptyWorkspacePanel->Name = L"EmptyWorkspacePanel";
+	this->EmptyWorkspacePanel->Size = System::Drawing::Size(572, 568);
+	this->EmptyWorkspacePanel->Style->Alignment = System::Drawing::StringAlignment::Center;
+	this->EmptyWorkspacePanel->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
+	this->EmptyWorkspacePanel->Style->Border = DevComponents::DotNetBar::eBorderType::SingleLine;
+	this->EmptyWorkspacePanel->Style->BorderColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBorder;
+	this->EmptyWorkspacePanel->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelText;
+	this->EmptyWorkspacePanel->Style->GradientAngle = 90;
+	this->EmptyWorkspacePanel->TabIndex = 5;
+	//
+	// GetStartedButtonNewScript
+	//
+	this->GetStartedButtonNewScript->AccessibleRole = System::Windows::Forms::AccessibleRole::PushButton;
+	this->GetStartedButtonNewScript->Anchor = System::Windows::Forms::AnchorStyles::None;
+	this->GetStartedButtonNewScript->ColorTable = DevComponents::DotNetBar::eButtonColor::OrangeWithBackground;
+	this->GetStartedButtonNewScript->ImagePosition = DevComponents::DotNetBar::eImagePosition::Top;
+	this->GetStartedButtonNewScript->ImageTextSpacing = 10;
+	this->GetStartedButtonNewScript->Location = System::Drawing::Point(105, 133);
+	this->GetStartedButtonNewScript->Name = L"GetStartedButtonNewScript";
+	this->GetStartedButtonNewScript->Size = System::Drawing::Size(365, 144);
+	this->GetStartedButtonNewScript->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+	this->GetStartedButtonNewScript->Symbol = L"";
+	this->GetStartedButtonNewScript->SymbolSize = 20;
+	this->GetStartedButtonNewScript->TabIndex = 0;
+	this->GetStartedButtonNewScript->Text = L"<font size=\"+8\">Create a New Script</font>";
+	//
+	// GetStartedButtonOpenScript
+	//
+	this->GetStartedButtonOpenScript->AccessibleRole = System::Windows::Forms::AccessibleRole::PushButton;
+	this->GetStartedButtonOpenScript->Anchor = System::Windows::Forms::AnchorStyles::None;
+	this->GetStartedButtonOpenScript->ColorTable = DevComponents::DotNetBar::eButtonColor::OrangeWithBackground;
+	this->GetStartedButtonOpenScript->ImagePosition = DevComponents::DotNetBar::eImagePosition::Top;
+	this->GetStartedButtonOpenScript->ImageTextSpacing = 10;
+	this->GetStartedButtonOpenScript->Location = System::Drawing::Point(105, 299);
+	this->GetStartedButtonOpenScript->Name = L"GetStartedButtonOpenScript";
+	this->GetStartedButtonOpenScript->Size = System::Drawing::Size(365, 144);
+	this->GetStartedButtonOpenScript->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+	this->GetStartedButtonOpenScript->Symbol = L"";
+	this->GetStartedButtonOpenScript->SymbolSize = 20;
+	this->GetStartedButtonOpenScript->TabIndex = 1;
+	this->GetStartedButtonOpenScript->Text = L"<font size=\"+8\">Edit an Existing Script</font>";
 	//
 	// ScriptEditorWorkspace
 	//
@@ -1969,7 +2058,6 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->Controls->Add(this->MainTabStrip);
 	this->Controls->Add(this->StatusBar);
 	this->DoubleBuffered = true;
-	this->ForeColor = System::Drawing::Color::White;
 	this->KeyPreview = true;
 	this->Name = L"ScriptEditorWorkspace";
 	this->Text = L"CSE Script Editor";
@@ -1977,10 +2065,6 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->MainTabStrip->ResumeLayout(false);
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContainerMainToolbar))->EndInit();
 	this->DockSiteBottom->ResumeLayout(false);
-	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->DockableBarFindInTabsResults))->EndInit();
-	this->DockableBarFindInTabsResults->ResumeLayout(false);
-	this->PanelDockContainerGlobalFindResults->ResumeLayout(false);
-	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->GlobalFindResultsList))->EndInit();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->DockableBarMessages))->EndInit();
 	this->DockableBarMessages->ResumeLayout(false);
 	this->PanelDockContainerMessageList->ResumeLayout(false);
@@ -1995,6 +2079,10 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->PanelDockContainerFindResults->ResumeLayout(false);
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->FindResultsList))->EndInit();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->FindResultsToolbar))->EndInit();
+	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->DockableBarFindInTabsResults))->EndInit();
+	this->DockableBarFindInTabsResults->ResumeLayout(false);
+	this->PanelDockContainerGlobalFindResults->ResumeLayout(false);
+	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->GlobalFindResultsList))->EndInit();
 	this->DockSiteLeftEx->ResumeLayout(false);
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->DockableBarOutlineView))->EndInit();
 	this->DockableBarOutlineView->ResumeLayout(false);
@@ -2008,10 +2096,11 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->DockSiteCenter->ResumeLayout(false);
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->CenterDockBar))->EndInit();
 	this->CenterDockBar->ResumeLayout(false);
+	this->CenterDockBar->PerformLayout();
 	this->PanelDocumentContent->ResumeLayout(false);
-	this->PanelDocumentContent->PerformLayout();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContextMenuProvider))->EndInit();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->StatusBar))->EndInit();
+	this->EmptyWorkspacePanel->ResumeLayout(false);
 	this->ResumeLayout(false);
 }
 
@@ -2019,36 +2108,38 @@ void SetObjectListViewTextOverlay(BrightIdeasSoftware::ObjectListView^ ListView,
 {
 	auto EmptyMsgOverlay = safe_cast<BrightIdeasSoftware::TextOverlay^>(ListView->EmptyListMsgOverlay);
 	EmptyMsgOverlay->TextColor = Color::White;
-	EmptyMsgOverlay->BackColor = Color::FromArgb(150, 29, 32, 33);
+	EmptyMsgOverlay->BackColor = Color::FromArgb(75, 29, 32, 33);
 	EmptyMsgOverlay->BorderWidth = 0.f;
 }
 
 void ScriptEditorWorkspace::FinalizeComponents()
 {
 	this->SuspendLayout();
-	this->Hide();
 
 	MainTabStrip->Tabs->Clear();
 	MainTabStrip->Controls->Remove(this->DummySuperTabControlPanel1);
 	MainTabStrip->Controls->Remove(this->DummySuperTabControlPanel2);
 
-	System::ComponentModel::ComponentResourceManager^ resources = (gcnew System::ComponentModel::ComponentResourceManager(ScriptEditorWorkspace::typeid));
+	auto ImageResources =  gcnew ImageResourceManager("ScriptEditor.Icons");
 
 	auto NewTabButton = gcnew DevComponents::DotNetBar::ButtonItem();
 	NewTabButton->Name = L"NewTabButton";
 	NewTabButton->Text = L"New Tab...";
-	NewTabButton->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(NewTabButton->Name)));
+	NewTabButton->Image = ImageResources->CreateImage("NewTab");
 	NewTabButton->Tooltip = L"New Tab";
 	NewTabButton->AutoExpandOnClick = true;
 	NewTabButton->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 
 	auto NewTabNewScriptButton = gcnew DevComponents::DotNetBar::ButtonItem();
-	NewTabNewScriptButton->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolbarNewScript.Image")));
+	NewTabNewScriptButton->Image = ImageResources->CreateImage("New");
 	NewTabNewScriptButton->Text = L"New Script";
 
 	auto NewTabOpenScriptButton = gcnew DevComponents::DotNetBar::ButtonItem();
-	NewTabOpenScriptButton->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolbarOpenScript.Image")));
+	NewTabOpenScriptButton->Image = ImageResources->CreateImage("Open");
 	NewTabOpenScriptButton->Text = L"Existing Script...";
+
+	NewTabButton->SubItems->Add(NewTabNewScriptButton);
+	NewTabButton->SubItems->Add(NewTabOpenScriptButton);
 
 	MainTabStrip->Tabs->Add(NewTabButton);
 
@@ -2057,12 +2148,19 @@ void ScriptEditorWorkspace::FinalizeComponents()
 	SetupViewComponentButton(NewTabOpenScriptButton, eViewRole::MainTabStrip_NewTab_ExistingScript);
 
 	auto ListViewOverlayForeColor = Color::White;
-	auto ListViewOverlayBackColor = Color::FromArgb(150, 29, 32, 33);
+	auto ListViewOverlayBackColor = Color::FromArgb(75, 29, 32, 33);
 
 	SetObjectListViewTextOverlay(MessagesList, ListViewOverlayForeColor, ListViewOverlayBackColor);
 	SetObjectListViewTextOverlay(BookmarksList, ListViewOverlayForeColor, ListViewOverlayBackColor);
 	SetObjectListViewTextOverlay(FindResultsList, ListViewOverlayForeColor, ListViewOverlayBackColor);
 	SetObjectListViewTextOverlay(GlobalFindResultsList, ListViewOverlayForeColor, ListViewOverlayBackColor);
+
+	auto AccentColor = preferences::SettingsHolder::Get()->Appearance->AccentColor;
+	if (preferences::SettingsHolder::Get()->Appearance->DarkMode)
+		StyleManager->ChangeStyle(eStyle::VisualStudio2012Dark, AccentColor);
+	else
+		StyleManager->ChangeStyle(eStyle::VisualStudio2012Light, AccentColor);
+	StyleManager->MetroColorParameters = DotNetBar::Metro::ColorTables::MetroColorGeneratorParameters(StyleManager->MetroColorParameters.CanvasColor, AccentColor);
 
 	this->ResumeLayout();
 }
@@ -2091,8 +2189,7 @@ void ScriptEditorWorkspace::InitializeViewComponents()
 	SetupViewComponentButton(EditMenuUncomment, eViewRole::MainToolbar_Edit_Uncomment);
 
 	SetupViewComponentButton(ToolbarMenuView, eViewRole::MainToolbar_View);
-	SetupViewComponentButton(ViewMenuPreprocessorOutput, eViewRole::MainToolbar_View_PreprocessorOutput);
-	SetupViewComponentButton(ViewMenuBytecodeOffsets, eViewRole::MainToolbar_View_BytecodeOffsets);
+	SetupViewComponentButton(ViewMenuPreprocessorOutputBytecodeOffsets, eViewRole::MainToolbar_View_PreprocessorOutputAndBytecodeOffsets);
 	SetupViewComponentButton(ViewMenuIconMargin, eViewRole::MainToolbar_View_IconMargin);
 	SetupViewComponentButton(ViewMenuMessages, eViewRole::MainToolbar_View_Messages);
 	SetupViewComponentButton(ViewMenuFindResults, eViewRole::MainToolbar_View_FindReplaceResults);
@@ -2156,12 +2253,13 @@ void ScriptEditorWorkspace::InitializeViewComponents()
 
 	SetupViewComponentCrumbBar(NavigationBar);
 
+	SetupViewComponentContainer(StatusBar, eViewRole::StatusBar);
 	SetupViewComponentLabel(StatusBarLineNumber, eViewRole::StatusBar_LineNumber);
 	SetupViewComponentLabel(StatusBarColumnNumber, eViewRole::StatusBar_ColumnNumber);
 	SetupViewComponentLabel(StatusBarPreprocessorOutputFlag, eViewRole::StatusBar_PreprocessorOutput);
 	SetupViewComponentProgressBar(StatusBarScriptBytecodeLength, eViewRole::StatusBar_CompiledScriptSize);
 
-	SetupViewComponentButton(ContextMenuTextEditor, eViewRole::TextEditor_ContextMenu);
+	SetupViewComponentContextMenu(ContextMenuProvider, ContextMenuTextEditor, eViewRole::TextEditor_ContextMenu);
 	SetupViewComponentButton(TextEditorContextMenuCopy, eViewRole::TextEditor_ContextMenu_Copy);
 	SetupViewComponentButton(TextEditorContextMenuPaste, eViewRole::TextEditor_ContextMenu_Paste);
 	SetupViewComponentButton(MenuAddVarInteger, eViewRole::TextEditor_ContextMenu_AddVar_Integer);
@@ -2170,6 +2268,10 @@ void ScriptEditorWorkspace::InitializeViewComponents()
 	SetupViewComponentButton(MenuAddVarString, eViewRole::TextEditor_ContextMenu_AddVar_String);
 	SetupViewComponentButton(MenuAddVarArray, eViewRole::TextEditor_ContextMenu_AddVar_Array);
 	SetupViewComponentButton(TextEditorContextMenuJumpToScript, eViewRole::TextEditor_ContextMenu_JumpToAttachedScript);
+
+	SetupViewComponentContainer(EmptyWorkspacePanel, eViewRole::EmptyWorkspacePanel);
+	SetupViewComponentButton(GetStartedButtonNewScript, eViewRole::EmptyWorkspacePanel_NewScript);
+	SetupViewComponentButton(GetStartedButtonOpenScript, eViewRole::EmptyWorkspacePanel_OpenScript);
 }
 
 void ScriptEditorWorkspace::DeinitializeViewComponents()
@@ -2210,6 +2312,7 @@ ScriptEditorWorkspace::~ScriptEditorWorkspace()
 	preferences::SettingsHolder::Get()->PreferencesChanged -= DelegatePreferencesChanged;
 
 	DeinitializeViewComponents();
+	SAFEDELETE_CLR(IntelliSenseInterface);
 
 	auto Bounds = this->WindowState == FormWindowState::Normal ? this->Bounds : this->RestoreBounds;
 	nativeWrapper::g_CSEInterfaceTable->ScriptEditor.SaveEditorBoundsToINI(Bounds.Left, Bounds.Top, Bounds.Width, Bounds.Height);
@@ -2234,7 +2337,18 @@ components::IViewComponent^ ScriptEditorWorkspace::GetComponentByRole(eViewRole 
 
 void ScriptEditorWorkspace::ShowNotification(String^ Message, Image^ Image, int DurationInMs)
 {
-	DotNetBar::ToastNotification::Show(this, Message, Image, DurationInMs);
+	static bool DoOnce = false;
+	if (!DoOnce)
+	{
+		DoOnce = true;
+		DotNetBar::ToastNotification::ToastMargin->All = 32;
+		DotNetBar::ToastNotification::ToastFont = gcnew Drawing::Font(Drawing::SystemFonts::MessageBoxFont->FontFamily, 10.25f);
+
+		auto AccentColor = preferences::SettingsHolder::Get()->Appearance->AccentColor;
+		DotNetBar::ToastNotification::CustomGlowColor = Color::FromArgb(75, AccentColor.R, AccentColor.G, AccentColor.B);
+	}
+
+	DotNetBar::ToastNotification::Show(this, Message, Image, DurationInMs, eToastGlowColor::Custom);
 }
 
 Forms::DialogResult ScriptEditorWorkspace::ShowMessageBox(String^ Message, MessageBoxButtons Buttons, MessageBoxIcon Icon)
@@ -2244,15 +2358,12 @@ Forms::DialogResult ScriptEditorWorkspace::ShowMessageBox(String^ Message, Messa
 
 Forms::DialogResult ScriptEditorWorkspace::ShowInputPrompt(String^ Prompt, String^ Title, String^% OutText)
 {
-	auto Result = InputBox::Show(Prompt, Title);
-	if (Result->ReturnCode == Forms::DialogResult::OK)
-		OutText = Result->Text;
-	return Result->ReturnCode;
+	return ShowInputPrompt(Prompt, Title, "", OutText);
 }
 
 Forms::DialogResult ScriptEditorWorkspace::ShowInputPrompt(String^ Prompt, String^ Title, String^ DefaultValue, String^% OutText)
 {
-	auto Result = InputBox::Show(Prompt, Title, DefaultValue);
+	auto Result = InputBox::Show(Prompt, Title, DefaultValue, WindowHandle);
 	if (Result->ReturnCode == Forms::DialogResult::OK)
 		OutText = Result->Text;
 	return Result->ReturnCode;
@@ -2262,6 +2373,7 @@ List<String^>^ ScriptEditorWorkspace::SelectExistingScripts(String^ DefaultSelec
 {
 	auto DialogParams = gcnew ScriptSelectionDialog::Params;
 	DialogParams->SelectedScriptEditorID = DefaultSelectionEditorId;
+	DialogParams->ParentWindowHandle = WindowHandle;
 
 	ScriptSelectionDialog ScriptSelection(DialogParams);
 	if (!ScriptSelection.HasResult)
@@ -2291,12 +2403,12 @@ void ScriptEditorWorkspace::Reveal(Rectangle InitialBounds)
 
 void ScriptEditorWorkspace::BeginUpdate()
 {
-	this->SuspendLayout();
+	GetComponentByRole(eViewRole::MainWindow)->AsForm()->BeginUpdate();
 }
 
 void ScriptEditorWorkspace::EndUpdate()
 {
-	this->ResumeLayout(true);
+	GetComponentByRole(eViewRole::MainWindow)->AsForm()->EndUpdate();
 }
 
 view::IScriptEditorView^ ScriptEditorViewFactory::NewView()

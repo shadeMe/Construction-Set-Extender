@@ -38,7 +38,8 @@ public enum class eComponentType
 	DockablePane,
 	CrumbBar,
 	CrumbBarItem,
-	Container
+	Container,
+	ContextMenu
 };
 
 
@@ -55,6 +56,7 @@ interface class IDockablePane;
 interface class ICrumbBar;
 interface class ICrumbBarItem;
 interface class IContainer;
+interface class IContextMenu;
 
 
 interface class IViewComponent
@@ -75,6 +77,7 @@ interface class IViewComponent
 	ICrumbBar^ AsCrumbBar();
 	ICrumbBarItem^ AsCrumbBarItem();
 	IContainer^ AsContainer();
+	IContextMenu^ AsContextMenu();
 };
 
 
@@ -152,6 +155,7 @@ interface class IComboBox : public IViewComponent
 	void AddDropdownItem(Object^ NewItem, bool AtFirstPosition);
 	void ClearDropdownItems();
 	Object^ LookupDropdownItem(String^ DropdownItemText);
+	void Focus();
 
 	static enum class eEvent
 	{
@@ -204,6 +208,7 @@ interface class ITabStrip
 	{
 		TabClick,
 		TabMoving,
+		TabMoved,
 		TabClosing,
 		ActiveTabChanged,
 	};
@@ -215,6 +220,11 @@ interface class ITabStrip
 	};
 
 	ref struct TabMovingEventArgs
+	{
+		property ITabStripItem^ Tab;
+	};
+
+	ref struct TabMovedEventArgs
 	{
 		property ITabStripItem^ Tab;
 	};
@@ -260,8 +270,10 @@ interface class IObjectListView : public IViewComponent
 
 	property Object^ SelectedObject;
 	property Collections::IList^ SelectedObjects;
+	property bool HeaderVisible;
 
 	void SetObjects(Collections::IEnumerable^ Collection, bool PreserveState);
+	void ClearObjects();
 	IObjectListViewColumn^ AllocateNewColumn();
 	void AddColumn(IObjectListViewColumn^ Column);
 	List<IObjectListViewColumn^>^ GetColumns();
@@ -291,6 +303,7 @@ interface class IProgressBar : public IViewComponent
 	property int Value;
 	property int Minimum;
 	property int Maximum;
+	property bool Visible;
 };
 
 
@@ -339,6 +352,17 @@ interface class IContainer : public IViewComponent
 {
 	void AddControl(Control^ Control);
 	void RemoveControl(Control^ Control);
+	void Invalidate();
+};
+
+
+interface class IContextMenu : public IViewComponent
+{
+	// context menus will raise the IButton::eEvent::PopupOpening once when they are about to open
+	// the event subscriber should - just for this single invocation - interpret the component as an IButton
+
+	void Show(Drawing::Point ScreenCoords);
+	void Hide();
 };
 
 
@@ -386,6 +410,11 @@ public:
 	property Image^ Success;
 	property Image^ InProgress;
 
+	property ImageResourceManager^ ResourceManager
+	{
+		ImageResourceManager^ get() { return IconResources; }
+	}
+
 	static CommonIcons^ Get();
 };
 
@@ -421,8 +450,7 @@ public enum class eViewRole
 	MainToolbar_Edit_Uncomment,
 
 	MainToolbar_View,
-	MainToolbar_View_PreprocessorOutput,
-	MainToolbar_View_BytecodeOffsets,
+	MainToolbar_View_PreprocessorOutputAndBytecodeOffsets,
 	MainToolbar_View_IconMargin,
 	MainToolbar_View_Messages,
 	MainToolbar_View_Bookmarks,
@@ -454,6 +482,7 @@ public enum class eViewRole
 	MainToolbar_Help_Wiki,
 	MainToolbar_Help_OBSE,
 
+	StatusBar,
 	StatusBar_LineNumber,
 	StatusBar_ColumnNumber,
 	StatusBar_PreprocessorOutput,
@@ -503,6 +532,10 @@ public enum class eViewRole
 	TextEditor_ContextMenu_AddVar_Array,
 
 	TextEditor_ContextMenu_JumpToAttachedScript,
+
+	EmptyWorkspacePanel,
+	EmptyWorkspacePanel_NewScript,
+	EmptyWorkspacePanel_OpenScript,
 };
 
 

@@ -40,9 +40,10 @@ namespace cse
 		[DllImport("gdi32.dll")]
 		int												DeleteObject(IntPtr hObject);
 
-		void											WriteToMainWindowStatusBar(int PanelIndex, String^ Message);
-		void											ShowNonActivatingWindow(Control^ Window, IntPtr ParentHandle);
-		void											PrintToConsole(UInt8 Source, String^% Message);
+		void WriteToMainWindowStatusBar(int PanelIndex, String^ Message);
+		void ShowNonActivatingWindow(Control^ Window, IntPtr ParentHandle);
+		void PrintToConsole(UInt8 Source, String^% Message);
+		void SetControlRedraw(Control^ Window, bool Enabled);
 
 		void Initialize();
 	};
@@ -62,7 +63,7 @@ namespace cse
 		void reset(T* NewData = nullptr)
 		{
 			if (Data)
-				nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+				nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data);
 
 			Data = NewData;
 		}

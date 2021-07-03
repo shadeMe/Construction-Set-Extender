@@ -623,7 +623,7 @@ void CodeSnippetManagerDialog::ButtonApply_Click( Object^ Sender, EventArgs^ E )
 
 void CodeSnippetManagerDialog::SnippetListCMAddSnippet_Click( Object^ Sender, EventArgs^ E )
 {
-	auto Result = InputBox::Show("Enter Snippet Name", "New Snippet");
+	auto Result = InputBox::Show("Enter Snippet Name", "New Snippet", "", Handle);
 	if (Result->ReturnCode == System::Windows::Forms::DialogResult::Cancel || Result->Text == "")
 		return;
 	else
@@ -671,7 +671,7 @@ void CodeSnippetManagerDialog::VarListCMAddVariable_Click( Object^ Sender, Event
 	ToolStripMenuItem^ MenuItem = dynamic_cast<ToolStripMenuItem^>(Sender);
 	obScriptParsing::Variable::eDataType VarType = (obScriptParsing::Variable::eDataType)MenuItem->Tag;
 
-	auto Result = InputBox::Show("Enter Variable Name", "Add Variable");
+	auto Result = InputBox::Show("Enter Variable Name", "Add Variable", "", Handle);
 	if (Result->ReturnCode == System::Windows::Forms::DialogResult::Cancel || Result->Text == "")
 		return;
 	else

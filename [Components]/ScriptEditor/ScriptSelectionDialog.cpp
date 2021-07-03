@@ -101,11 +101,27 @@ ScriptSelectionDialog::Params::Params()
 	this->FilterString = "";
 	this->ShowDeletedScripts = true;
 	this->PreventSyncedScriptSelection = false;
+	this->ParentWindowHandle = IntPtr::Zero;
 }
 
 ScriptSelectionDialog::SelectionResult::SelectionResult()
 {
 	this->SelectedScriptEditorIDs = gcnew List<String^>;
+}
+
+Image^ ScriptSelectionDialog::GetFlagIcon(eFlagType FlagType)
+{
+	if (FlagIcons->Count == 0)
+	{
+		auto ImageResources = view::components::CommonIcons::Get()->ResourceManager;
+		FlagIcons->Add(eFlagType::Default, ImageResources->CreateImage("Transparent"));
+		FlagIcons->Add(eFlagType::Active, ImageResources->CreateImage("Asterisk"));
+		FlagIcons->Add(eFlagType::Deleted, ImageResources->CreateImage("Trash"));
+		FlagIcons->Add(eFlagType::Syncing, ImageResources->CreateImage("Syncing"));
+		FlagIcons->Add(eFlagType::Uncompiled, view::components::CommonIcons::Get()->Warning);
+	}
+
+	return FlagIcons[FlagType];
 }
 
 void ScriptSelectionDialog::ScriptList_SelectionChanged(Object^ Sender, EventArgs^ E)
@@ -243,7 +259,11 @@ void ScriptSelectionDialog::DeferredSelectionUpdateTimer_Tick(Object^ Sender, Ev
 
 void ScriptSelectionDialog::Dialog_Cancel(Object^ Sender, CancelEventArgs^ E)
 {
-	SaveBoundsToINI();
+}
+
+void ScriptSelectionDialog::Dialog_Load(Object^ Sender, EventArgs^ E)
+{
+	BottomToolbarTextboxFilter->Focus();
 }
 
 void ScriptSelectionDialog::InitializeComponent()
@@ -281,7 +301,7 @@ void ScriptSelectionDialog::InitializeComponent()
 	this->BottomToolbarCompleteSelection->Name = L"BottomToolbarCompleteSelection";
 	this->BottomToolbarCompleteSelection->Size = System::Drawing::Size(81, 29);
 	this->BottomToolbarCompleteSelection->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-	this->BottomToolbarCompleteSelection->TabIndex = 1;
+	this->BottomToolbarCompleteSelection->TabIndex = 2;
 	this->BottomToolbarCompleteSelection->Text = L"OK";
 	//
 	// BottomToolbarContainer
@@ -300,7 +320,6 @@ void ScriptSelectionDialog::InitializeComponent()
 	this->BottomToolbarContainer->Style->BorderColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBorder;
 	this->BottomToolbarContainer->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelText;
 	this->BottomToolbarContainer->Style->GradientAngle = 90;
-	this->BottomToolbarContainer->TabIndex = 34;
 	//
 	// BottomToolbar
 	//
@@ -379,9 +398,7 @@ void ScriptSelectionDialog::InitializeComponent()
 	//
 	this->ScriptTextPreview->Border->Class = L"TextBoxBorder";
 	this->ScriptTextPreview->Border->CornerType = DevComponents::DotNetBar::eCornerType::Square;
-	this->ScriptTextPreview->DisabledBackColor = System::Drawing::Color::Black;
 	this->ScriptTextPreview->Font = (gcnew System::Drawing::Font(L"Consolas", 9));
-	this->ScriptTextPreview->ForeColor = System::Drawing::Color::White;
 	this->ScriptTextPreview->Location = System::Drawing::Point(491, 0);
 	this->ScriptTextPreview->MaxLength = 65535;
 	this->ScriptTextPreview->Multiline = true;
@@ -390,7 +407,7 @@ void ScriptSelectionDialog::InitializeComponent()
 	this->ScriptTextPreview->ReadOnly = true;
 	this->ScriptTextPreview->ScrollBars = System::Windows::Forms::ScrollBars::Both;
 	this->ScriptTextPreview->Size = System::Drawing::Size(406, 568);
-	this->ScriptTextPreview->TabIndex = 33;
+	this->ScriptTextPreview->TabStop = false;
 	this->ScriptTextPreview->WordWrap = false;
 	//
 	// ScriptList
@@ -402,23 +419,16 @@ void ScriptSelectionDialog::InitializeComponent()
 	this->ScriptList->AllColumns->Add(this->ScriptListCParentPlugin);
 	this->ScriptList->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
 		| System::Windows::Forms::AnchorStyles::Left));
-	this->ScriptList->BackColor = System::Drawing::Color::Black;
-	this->ScriptList->CellEditUseWholeCell = false;
 	this->ScriptList->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(5) {
 		this->ScriptListCFlags,
 			this->ScriptListCScriptName, this->ScriptListCFormID, this->ScriptListCType, this->ScriptListCParentPlugin
 	});
-	this->ScriptList->Cursor = System::Windows::Forms::Cursors::Default;
-	this->ScriptList->ForeColor = System::Drawing::Color::White;
 	this->ScriptList->FullRowSelect = true;
-	this->ScriptList->GridLines = true;
 	this->ScriptList->HideSelection = false;
-	this->ScriptList->Location = System::Drawing::Point(3, 0);
 	this->ScriptList->Name = L"ScriptList";
 	this->ScriptList->ShowGroups = false;
 	this->ScriptList->Size = System::Drawing::Size(482, 533);
-	this->ScriptList->TabIndex = 32;
-	this->ScriptList->TabStop = false;
+	this->ScriptList->TabIndex = 1;
 	this->ScriptList->UseCompatibleStateImageBehavior = false;
 	this->ScriptList->View = System::Windows::Forms::View::Details;
 	this->ScriptList->VirtualMode = true;
@@ -459,6 +469,7 @@ void ScriptSelectionDialog::InitializeComponent()
 	this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 	this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 	this->ClientSize = System::Drawing::Size(900, 574);
+	this->StartPosition = FormStartPosition::CenterParent;
 	this->Controls->Add(this->BottomToolbarCompleteSelection);
 	this->Controls->Add(this->BottomToolbarContainer);
 	this->Controls->Add(this->ScriptTextPreview);
@@ -474,9 +485,17 @@ void ScriptSelectionDialog::InitializeComponent()
 	this->ResumeLayout(false);
 }
 
-
 void ScriptSelectionDialog::FinalizeComponents()
 {
+	this->ScriptListCFlags->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&ScriptSelectionDialog::ScriptListAspectFlagsGetter);
+	this->ScriptListCFlags->ImageGetter = gcnew BrightIdeasSoftware::ImageGetterDelegate(&ScriptSelectionDialog::ScriptListImageFlagsGetter);
+	this->ScriptListCFlags->AspectToStringConverter = gcnew BrightIdeasSoftware::AspectToStringConverterDelegate(&ScriptSelectionDialog::ScriptListAspectToStringConverterFlags);
+	this->ScriptListCScriptName->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&ScriptSelectionDialog::ScriptListAspectScriptNameGetter);
+	this->ScriptListCFormID->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&ScriptSelectionDialog::ScriptListAspectFormIDGetter);
+	this->ScriptListCFormID->AspectToStringConverter = gcnew BrightIdeasSoftware::AspectToStringConverterDelegate(&ScriptSelectionDialog::ScriptListAspectToStringConverterFormID);
+	this->ScriptListCType->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&ScriptSelectionDialog::ScriptListAspectTypeGetter);
+	this->ScriptListCParentPlugin->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&ScriptSelectionDialog::ScriptListAspectParentPluginGetter);
+
 	// ### The invocation of the SelectionChanged event apparently is tied to the parent thread's idle message loop
 	// ### This breaks event handling for this event when the idle loop isn't active (which are usually active when thread-modal dialog is being shown)
 	// ### We need to use SelectedIndexChanged instead.
@@ -494,6 +513,7 @@ void ScriptSelectionDialog::FinalizeComponents()
 	BottomToolbarTextboxFilter->TextChanged += gcnew EventHandler(this, &ScriptSelectionDialog::BottomToolbarTextboxFilter_TextChanged);
 	BottomToolbarTextboxFilter->KeyDown += gcnew KeyEventHandler(this, &ScriptSelectionDialog::BottomToolbarTextboxFilter_KeyDown);
 	this->Closing += gcnew CancelEventHandler(this, &ScriptSelectionDialog::Dialog_Cancel);
+	this->Load += gcnew System::EventHandler(this, &ScriptSelectionDialog::Dialog_Load);
 
 	// Set the sort fields in the columns' tag fields
 	ScriptListCFlags->Tag = ScriptCollectionSorter::eSortField::Flags;
@@ -503,8 +523,6 @@ void ScriptSelectionDialog::FinalizeComponents()
 	ScriptListCParentPlugin->Tag = ScriptCollectionSorter::eSortField::ParentPlugin;
 
 	ScriptList->VirtualListDataSource = gcnew FastScriptListViewDataSource(ScriptList);
-
-	BottomToolbarTextboxFilter->Focus();
 }
 
 
@@ -515,41 +533,6 @@ void ScriptSelectionDialog::ShowUseReport()
 		NativeScriptDataWrapper^ Data = (NativeScriptDataWrapper^)ScriptList->SelectedObject;
 		nativeWrapper::g_CSEInterfaceTable->EditorAPI.ShowUseReportDialog(Data->ScriptData->EditorID);
 	}
-}
-
-void ScriptSelectionDialog::SaveBoundsToINI()
-{
-	nativeWrapper::g_CSEInterfaceTable->EditorAPI.WriteToINI("W", "ScriptEditor::ScriptListDialog",
-		(CString(ClientSize.Width.ToString())).c_str());
-	nativeWrapper::g_CSEInterfaceTable->EditorAPI.WriteToINI("H", "ScriptEditor::ScriptListDialog",
-		(CString(ClientSize.Height.ToString())).c_str());
-	nativeWrapper::g_CSEInterfaceTable->EditorAPI.WriteToINI("X", "ScriptEditor::ScriptListDialog",
-		(CString(DesktopLocation.X.ToString())).c_str());
-	nativeWrapper::g_CSEInterfaceTable->EditorAPI.WriteToINI("Y", "ScriptEditor::ScriptListDialog",
-		(CString(DesktopLocation.Y.ToString())).c_str());
-
-}
-
-void ScriptSelectionDialog::LoadBoundsFromINI()
-{
-	char Buffer[0x200] = { 0 };
-	int X, Y, W, H;
-	nativeWrapper::g_CSEInterfaceTable->EditorAPI.ReadFromINI("W", "ScriptEditor::ScriptListDialog",
-		"916", Buffer, sizeof(Buffer));
-	W = Int32::Parse(gcnew String(Buffer));
-	nativeWrapper::g_CSEInterfaceTable->EditorAPI.ReadFromINI("H", "ScriptEditor::ScriptListDialog",
-		"541", Buffer, sizeof(Buffer));
-	H = Int32::Parse(gcnew String(Buffer));
-	nativeWrapper::g_CSEInterfaceTable->EditorAPI.ReadFromINI("X", "ScriptEditor::ScriptListDialog",
-		"0", Buffer, sizeof(Buffer));
-	X = Int32::Parse(gcnew String(Buffer));
-	nativeWrapper::g_CSEInterfaceTable->EditorAPI.ReadFromINI("Y", "ScriptEditor::ScriptListDialog",
-		"0", Buffer, sizeof(Buffer));
-	Y = Int32::Parse(gcnew String(Buffer));
-
-	ClientSize = System::Drawing::Size(W, H);
-	DesktopLocation = Point(X, Y);
-	Location = DesktopLocation;
 }
 
 void ScriptSelectionDialog::CompleteSelection()
@@ -714,15 +697,10 @@ System::Object^ ScriptSelectionDialog::ScriptListImageFlagsGetter(Object^ RowObj
 		return nullptr;
 
 	NativeScriptDataWrapper^ Data = (NativeScriptDataWrapper^)RowObject;
-	eFlagType Flag = GetFlagType(Data->ScriptData);
-	if (Flag != eFlagType::Default)
-		return (int)Flag;
-	else
-		return nullptr;
+	return GetFlagIcon(GetFlagType(Data->ScriptData));
 }
 
-ScriptSelectionDialog::ScriptSelectionDialog(Params^ Parameters) :
-	DevComponents::DotNetBar::Metro::MetroForm()
+ScriptSelectionDialog::ScriptSelectionDialog(Params^ Parameters)
 {
 	InitializeComponent();
 	FinalizeComponents();
@@ -738,24 +716,22 @@ ScriptSelectionDialog::ScriptSelectionDialog(Params^ Parameters) :
 	PopulateLoadedScripts(Parameters->FilterString, true, preferences::SettingsHolder::Get()->General->SortScriptsByFlags);
 	BottomToolbarCompleteSelection->Enabled = false;
 
-	LoadBoundsFromINI();
-
-	this->Hide();
-	this->ShowDialog();
+	if (Parameters->ParentWindowHandle != IntPtr::Zero)
+		this->ShowDialog(gcnew WindowHandleWrapper(Parameters->ParentWindowHandle));
+	else
+		this->ShowDialog();
 }
 
 ScriptSelectionDialog::~ScriptSelectionDialog()
 {
 	if (LoadedScripts)
-		nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(LoadedScripts, false);
+		nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(LoadedScripts);
 
 	if (components)
 	{
 		delete components;
 	}
 }
-
-
 
 
 } // namespace scriptEditor

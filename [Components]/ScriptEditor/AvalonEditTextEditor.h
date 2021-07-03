@@ -81,8 +81,8 @@ protected:
 	bool												IsFocused;
 
 	Timer^												ScrollBarSyncTimer;
-	VScrollBar^											ExternalVerticalScrollBar;
-	HScrollBar^											ExternalHorizontalScrollBar;
+	DotNetBar::ScrollBarAdv^							ExternalVerticalScrollBar;
+	DotNetBar::ScrollBarAdv^							ExternalHorizontalScrollBar;
 	bool												SynchronizingExternalScrollBars;
 	bool												SynchronizingInternalScrollBars;
 	System::Windows::Vector								PreviousScrollOffsetBuffer;
@@ -96,6 +96,7 @@ protected:
 	model::IScriptDocument^								ParentScriptDocument;
 	LineTrackingManager^								LineTracker;
 	DefaultIconMargin^									IconBarMargin;
+	ScriptBytecodeOffsetMargin^							BytecodeOffsetMargin;
 	StructureVisualizerRenderer^						StructureVisualizer;
 	AvalonEdit::Search::SearchPanel^					InlineSearchPanel;
 	obScriptParsing::AnalysisData^						SemanticAnalysisCache;
@@ -128,6 +129,8 @@ protected:
 														SearchPanelSearchOptionsChangedHandler;
 
 	model::components::IBackgroundSemanticAnalyzer::AnalysisCompleteEventHandler^ BackgroundAnalyzerAnalysisCompleteHandler;
+
+	bool Disposing;
 
 
 	bool	RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::Event Type, System::Windows::Input::KeyEventArgs^ K, System::Windows::Input::MouseButtonEventArgs^ M);
@@ -249,6 +252,7 @@ public:
 	ImplPropertyGetOnly(int, CurrentLine, TextField->TextArea->Caret->Line);
 	ImplPropertyGetOnly(int, CurrentColumn, TextField->TextArea->Caret->Column);
 	ImplPropertyGetOnly(int, LineCount, TextField->Document->LineCount);
+	ImplPropertyGetOnly(bool, SelectionEmpty, TextField->TextArea->Selection->IsEmpty);
 	property int Caret
 	{
 		virtual int get() { return TextField->TextArea->Caret->Offset; }
@@ -324,6 +328,8 @@ public:
 
 	virtual void BeginDisplayingStaticText(String^ TextToDisplay);
 	virtual void EndDisplayingStaticText();
+
+	void ToggleScriptBytecodeOffsetMargin(bool Enabled);
 };
 
 

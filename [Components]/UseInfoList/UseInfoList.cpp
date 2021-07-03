@@ -102,7 +102,7 @@ namespace cse
 	{
 		if (LoadedForms)
 		{
-			nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(LoadedForms, false);
+			nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(LoadedForms);
 			LoadedForms = nullptr;
 		}
 	}
@@ -569,7 +569,7 @@ namespace cse
 	{
 		if (LoadedForms)
 		{
-			nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(LoadedForms, false);
+			nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(LoadedForms);
 			LoadedForms = nullptr;
 		}
 

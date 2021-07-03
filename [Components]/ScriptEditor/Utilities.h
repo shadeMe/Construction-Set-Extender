@@ -81,73 +81,16 @@ public:
 
 ref struct InputBoxResult
 {
-	DialogResult ReturnCode;
+	Windows::Forms::DialogResult ReturnCode;
 	String^ Text;
 };
 
 ref class InputBox : public DevComponents::DotNetBar::Metro::MetroForm
 {
-	static String^ _formCaption = String::Empty;
-	static String^ _formPrompt = String::Empty;
-	static InputBoxResult^ _outputResponse = gcnew InputBoxResult();
-	static String^ _defaultValue = String::Empty;
-	static int _xPos = -1;
-	static int _yPos = -1;
-
-	static property String^ FormCaption
-	{
-		void set(String^ value)
-		{
-			_formCaption = value;
-		}
-	}
-	static property String^ FormPrompt
-	{
-		void set(String^ value)
-		{
-			_formPrompt = value;
-		}
-	}
-	static property InputBoxResult^ OutputResponse
-	{
-		InputBoxResult^ get()
-		{
-			return _outputResponse;
-		}
-		void set(InputBoxResult^ value)
-		{
-			_outputResponse = value;
-		}
-	}
-	static property String^ DefaultValue
-	{
-		void set(String^ value)
-		{
-			_defaultValue = value;
-		}
-	}
-	static property int XPosition
-	{
-		void set(int value)
-		{
-			//	if (value >= 0)
-			_xPos = value;
-		}
-	}
-	static property int YPosition
-	{
-		void set(int value)
-		{
-			//	if (value >= 0)
-			_yPos = value;
-		}
-	}
-
-	System::Windows::Forms::Label^ lblPrompt;
-	System::Windows::Forms::Button^ btnOK;
-	System::Windows::Forms::Button^ btnCancel;
-	System::Windows::Forms::TextBox^ txtInput;
-	System::ComponentModel::Container^ components;
+	DevComponents::DotNetBar::LabelX^ lblPrompt;
+	DevComponents::DotNetBar::ButtonX^ btnOK;
+	DevComponents::DotNetBar::ButtonX^ btnCancel;
+	DevComponents::DotNetBar::Controls::TextBoxX^ txtInput;
 
 	void txtInput_KeyDown(Object^ Sender, KeyEventArgs^ E);
 	void InitializeComponent(void);
@@ -155,18 +98,18 @@ ref class InputBox : public DevComponents::DotNetBar::Metro::MetroForm
 
 	void btnOK_Click(Object^ sender, EventArgs^ e);
 	void btnCancel_Click(Object^ sender, EventArgs^ e);
-public:
+
 	InputBox(void);
+public:
 	~InputBox();
 
-	static InputBoxResult^ Show(String^ Prompt);
-	static InputBoxResult^ Show(String^ Prompt,String^ Title);
-	static InputBoxResult^ Show(String^ Prompt,String^ Title,String^ Default);
-	static InputBoxResult^ Show(String^ Prompt,String^ Title,String^ Default,int XPos,int YPos);
+	property InputBoxResult^ Result;
+
+	static InputBoxResult^ Show(String^ Prompt, String^ Title, String^ Default, IntPtr ParentWindowHandle);
 };
 
 
-ref class AnimatedForm : public System::Windows::Forms::Form
+ref class AnimatedForm : public DevComponents::DotNetBar::Metro::MetroForm
 {
 public:
 	delegate void TransitionCompleteHandler(AnimatedForm^ Sender);
@@ -183,14 +126,14 @@ protected:
 
 	virtual void WndProc(Message% m) override;
 
-	static enum class Transition
+	static enum class eTransition
 	{
 		None = 0,
 		FadeIn,
 		FadeOut
 	};
 
-	static enum class TransitionFinalState
+	static enum class eTransitionFinalState
 	{
 		None = 0,
 		Show,
@@ -200,41 +143,29 @@ protected:
 
 	ref struct StartTransitionParams
 	{
-		TransitionFinalState	EndState;
-		IntPtr					ParentWindowHandle;
-		Point					Position;
-		bool					UsePosition;
-		bool					Animate;
+		eTransitionFinalState EndState;
+		IntPtr ParentWindowHandle;
+		Point Position;
+		bool UsePosition;
+		bool Animate;
 
-		StartTransitionParams()
-		{
-			EndState = TransitionFinalState::None;
-			ParentWindowHandle = IntPtr::Zero;
-			Position = Point(0, 0);
-			UsePosition = false;
-			Animate = true;
-		}
+		StartTransitionParams();
 	};
+;
+	eTransition ActiveTransition;
+	eTransitionFinalState ActiveTransitionEndState;
+	TransitionCompleteHandler^ ActiveTransitionCompleteHandler;
+	bool ShowFormWithoutActivation;
 
-	Transition
-		ActiveTransition;
-	TransitionFinalState
-		ActiveTransitionEndState;
-	TransitionCompleteHandler^
-		ActiveTransitionCompleteHandler;
+	Timer^ FadeTimer;
+	EventHandler^ FadeTimerTickHandler;
+	bool ClosingForm;
 
-	bool	ShowFormWithoutActivation;
+	void FadeTimer_Tick(Object^ Sender, EventArgs^ E);
 
-	Timer^	FadeTimer;
-	EventHandler^
-		FadeTimerTickHandler;
-	bool	ClosingForm;
-
-	void	FadeTimer_Tick(Object^ Sender, EventArgs^ E);
-
-	void	ShowFormDiscreetly(IntPtr ParentWindowHandle);
-	void	StartTransition(StartTransitionParams^ Params);
-	void	EndTransition(StartTransitionParams^ StartParams);
+	void ShowFormDiscreetly(IntPtr ParentWindowHandle);
+	void StartTransition(StartTransitionParams^ Params);
+	void EndTransition(StartTransitionParams^ StartParams);
 public:
 	AnimatedForm(bool ShowFormWithoutActivation);
 	virtual ~AnimatedForm();
@@ -243,23 +174,23 @@ public:
 	property bool PreventActivation;
 	property bool IsFadingIn
 	{
-		bool get() { return ActiveTransition == Transition::FadeIn; }
+		bool get() { return ActiveTransition == eTransition::FadeIn; }
 	}
 	property bool IsFadingOut
 	{
-		bool get() { return ActiveTransition == Transition::FadeOut; }
+		bool get() { return ActiveTransition == eTransition::FadeOut; }
 	}
 
-	void	Show();
-	void	Show(IntPtr ParentHandle);
-	void	Show(Drawing::Point Position, IntPtr ParentHandle, bool Animate);
-	void	Hide();
-	void	Hide(bool Animate);
-	void	Close();
-	void	ForceClose();
+	void Show();
+	void Show(IntPtr ParentHandle);
+	void Show(Drawing::Point Position, IntPtr ParentHandle, bool Animate);
+	void Hide();
+	void Hide(bool Animate);
+	void Close();
+	void ForceClose();
 
-	void	SetSize(Drawing::Size WindowSize);
-	void	SetNextActiveTransitionCompleteHandler(TransitionCompleteHandler^ NewHandler);
+	void SetSize(Drawing::Size WindowSize);
+	void SetNextActiveTransitionCompleteHandler(TransitionCompleteHandler^ NewHandler);
 };
 
 

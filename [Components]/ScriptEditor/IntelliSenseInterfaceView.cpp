@@ -20,6 +20,7 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView()
 	BoundModel = nullptr;
 
 	Form = gcnew AnimatedForm(true);
+
 	ListView = gcnew BrightIdeasSoftware::FastObjectListView;
 
 	ListViewSelectionChangedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceView::ListView_SelectionChanged);
@@ -250,7 +251,7 @@ void IntelliSenseInterfaceView::ShowListViewToolTip(IntelliSenseItem^ Item)
 	TooltipData->FooterImage = Item->TooltipFooterImage;
 	TooltipData->Color = MapRichTooltipBackgroundColorToDotNetBar(Item->TooltipBgColor);
 
-	auto DesktopLocation = Point(Form->DesktopBounds.Left + Form->DesktopBounds.Width, Form->DesktopBounds.Top);
+	auto DesktopLocation = Point(Form->DesktopBounds.Left + Form->DesktopBounds.Width + 2, Form->DesktopBounds.Top);
 
 	if (ListViewPopup->IsTooltipVisible)
 	{
@@ -353,6 +354,7 @@ void IntelliSenseInterfaceView::DimOpacity()
 		return;
 
 	Form->Opacity = kDimmedOpacity;
+	HideListViewToolTip();
 }
 
 void IntelliSenseInterfaceView::ResetOpacity()
@@ -361,6 +363,10 @@ void IntelliSenseInterfaceView::ResetOpacity()
 		return;
 
 	Form->Opacity = 1.f;
+
+	auto CurrentSelection = safe_cast<IntelliSenseItem^>(ListView->SelectedObject);
+	if (CurrentSelection)
+		ShowListViewToolTip(CurrentSelection);
 }
 
 void IntelliSenseInterfaceView::ShowInsightToolTip(IntelliSenseShowInsightToolTipArgs^ Args)

@@ -58,6 +58,7 @@ public:
 		property String^ FilterString;
 		property bool ShowDeletedScripts;
 		property bool PreventSyncedScriptSelection;
+		property IntPtr ParentWindowHandle;
 
 		Params();
 	};
@@ -85,6 +86,10 @@ public:
 
 	static eFlagType GetFlagType(componentDLLInterface::ScriptData* Script);
 private:
+	static Dictionary<eFlagType, Image^>^ FlagIcons = gcnew Dictionary<eFlagType, Image^>;
+
+	static Image^ GetFlagIcon(eFlagType FlagType);
+
 	BrightIdeasSoftware::FastObjectListView^ ScriptList;
 	BrightIdeasSoftware::OLVColumn^ ScriptListCFlags;
 	BrightIdeasSoftware::OLVColumn^ ScriptListCScriptName;
@@ -118,12 +123,11 @@ private:
 
 	void DeferredSelectionUpdateTimer_Tick(Object^ Sender, EventArgs^ E);
 	void Dialog_Cancel(Object^ Sender, CancelEventArgs^ E);
+	void Dialog_Load(Object^ Sender, EventArgs^ E);
 
 	void InitializeComponent();
 	void FinalizeComponents();
 	void ShowUseReport();
-	void SaveBoundsToINI();
-	void LoadBoundsFromINI();
 	void CompleteSelection();
 	void PopulateLoadedScripts(String^ FilterString, bool DefaultSelection, bool SortByFlags);
 
@@ -135,7 +139,6 @@ private:
 	static Object^ ScriptListAspectFlagsGetter(Object^ RowObject);
 	static String^ ScriptListAspectToStringConverterFlags(Object^ RowObject);
 	static Object^ ScriptListImageFlagsGetter(Object^ RowObject);
-
 
 	Params^ Parameters;
 	componentDLLInterface::ScriptListData* LoadedScripts;

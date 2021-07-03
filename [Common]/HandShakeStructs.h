@@ -66,7 +66,6 @@ namespace componentDLLInterface
 
 		const char *Text;
 		UInt16 Type;
-		bool ModifiedFlag;
 		void* ByteCode;
 		UInt16 Length;
 		const char* ParentID;

@@ -16,11 +16,21 @@ namespace obScriptParsing
 
 class ByteCodeParser
 {
-protected:
-	static UInt32 Read16(Array^% Data, UInt32% CurrentOffset);
-	static bool LineHasData(String^% Line);
+
+	static enum class eBuiltInOpcodes : UInt16
+	{
+		End = 0x11,
+		Else = 0x17,
+		EndIf = 0x19,
+		DotOperator = 0x1C,
+		ScriptName = 0x1D,
+		Return = 0x1E,
+	};
+
+	static UInt16 Read16(UInt8* Data, UInt16% CurrentOffset);
+	static bool LineHasData(String^ Line);
 public:
-	static UInt32 GetOffsetForLine(String^% Line, Array^% Data, UInt32% CurrentOffset);
+	static UInt16 GetOffsetForLine(String^ Line, UInt8* Data, UInt16% CurrentOffset);
 };
 
 

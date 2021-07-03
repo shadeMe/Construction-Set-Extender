@@ -102,6 +102,7 @@
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="CodeSnippetsDialog.cpp" />
+    <ClCompile Include="InputPromptDialog.cpp" />
     <ClCompile Include="PreferencesDialog.cpp" />
     <ClCompile Include="RefactorListViewDialog.cpp" />
     <ClCompile Include="ScriptSyncDialog.cpp" />
@@ -116,6 +117,9 @@
     <ClCompile Include="UseInfoList.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="InputPromptDialog.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
     <ClInclude Include="resource.h" />
     <ClInclude Include="CodeSnippetsDialog.h">
       <FileType>CppForm</FileType>
@@ -149,6 +153,9 @@
   <ItemGroup>
     <EmbeddedResource Include="CodeSnippetsDialog.resx">
       <DependentUpon>CodeSnippetsDialog.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InputPromptDialog.resx">
+      <DependentUpon>InputPromptDialog.h</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PreferencesDialog.resx">
       <DependentUpon>PreferencesDialog.h</DependentUpon>

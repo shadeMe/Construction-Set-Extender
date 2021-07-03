@@ -543,10 +543,10 @@ bool PreferencesDialog::PopulateCategories()
 		for each (SettingsGroup^ Group in SettingsHolder::Get()->AllGroups)
 		{
 			ToolStripButton^ NewButton = gcnew ToolStripButton;
-			auto IconResources = gcnew ImageResourceManager("ScriptEditor.Icons");
+			auto ImageResources = view::components::CommonIcons::Get()->ResourceManager;
 
 			NewButton->Text = Group->GetCategoryName();
-			NewButton->Image = IconResources->CreateImage(Group->GetIconName());
+			NewButton->Image = ImageResources->CreateImage(Group->GetIconName());
 			NewButton->Click += gcnew System::EventHandler(this, &PreferencesDialog::ToolStripCategoryButton_Click);
 			NewButton->Tag = Group;
 			NewButton->CheckState = CheckState::Unchecked;

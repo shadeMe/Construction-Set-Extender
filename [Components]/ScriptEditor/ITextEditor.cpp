@@ -25,7 +25,7 @@ TextEditorMouseClickEventArgs::TextEditorMouseClickEventArgs(MouseButtons Button
 }
 
 FindReplaceResult::HitData::HitData(UInt32 Line, String^ Text, UInt32 Hits)
-	: Line(Line), Text(Text), Hits(Hits)
+	: Line(Line), Text(Text), HitCount(Hits)
 {
 }
 
@@ -45,7 +45,7 @@ int FindReplaceResult::TotalHits::get()
 	int Count = 0;
 
 	for each (auto Itr in Hits)
-		Count += Itr->Hits;
+		Count += Itr->HitCount;
 
 	return Count;
 }

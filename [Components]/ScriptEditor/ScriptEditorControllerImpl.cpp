@@ -147,7 +147,10 @@ void ScriptEditorController::ActiveDocumentAction_Comment()
 	if (Document == nullptr)
 		return;
 
-	Document->TextEditor->CommentSelection();
+	if (!Document->TextEditor->SelectionEmpty)
+		Document->TextEditor->CommentSelection();
+	else
+		Document->TextEditor->CommentLine(Document->TextEditor->CurrentLine);
 }
 
 void ScriptEditorController::ActiveDocumentAction_Uncomment()
@@ -156,13 +159,18 @@ void ScriptEditorController::ActiveDocumentAction_Uncomment()
 	if (Document == nullptr)
 		return;
 
-	Document->TextEditor->UncommentSelection();
+	if (!Document->TextEditor->SelectionEmpty)
+		Document->TextEditor->UncommentSelection();
+	else
+		Document->TextEditor->UncommentLine(Document->TextEditor->CurrentLine);
 }
 
 void ScriptEditorController::ActiveDocumentAction_AddBookmark()
 {
 	auto Document = BoundDocument;
 	if (Document == nullptr)
+		return;
+	else if (Document->IsPreprocessorOutputEnabled())
 		return;
 
 	String^ BookmarkText = "";
@@ -307,12 +315,12 @@ void ScriptEditorController::SetBoundDocument(model::IScriptDocument^ Document)
 
 	BoundDocument = Document;
 
-	View->GetComponentByRole(view::eViewRole::TextEditor_ViewPortContainer)->AsContainer()->AddControl(BoundDocument->TextEditor->Container);
+	BoundDocument->TextEditor->Container->Visible = true;
+	BoundDocument->TextEditor->Container->BringToFront();
+	BoundDocument->TextEditor->Container->Focus();
 
 	BoundDocument->TextEditor->KeyDown += DelegateModelKeyDown;
 	BoundDocument->TextEditor->MouseClick += DelegateModelMouseClick;
-	BoundDocument->TextEditor->LineChanged += DelegateModelLineChanged;
-	BoundDocument->TextEditor->ColumnChanged += DelegateModelColumnChanged;
 	BoundDocument->NavigationHelper->NavigationChanged += DelegateModelNavigationChanged;
 
 	BoundDocument->IntelliSenseModel->Bind(View->IntelliSenseView);
@@ -322,6 +330,7 @@ void ScriptEditorController::SetBoundDocument(model::IScriptDocument^ Document)
 	BoundDocument->PushStateToSubscribers();
 
 	ValidateDocumentSyncingStatus(BoundDocument);
+	DocumentNavigationHelper->SyncWithDocument(BoundDocument);
 
 	SetDocumentDependentViewComponentsEnabled(true);
 	if (BoundDocument->IsPreprocessorOutputEnabled())
@@ -338,12 +347,12 @@ void ScriptEditorController::UnbindBoundDocument()
 
 	BoundDocument->TextEditor->KeyDown -= DelegateModelKeyDown;
 	BoundDocument->TextEditor->MouseClick -= DelegateModelMouseClick;
-	BoundDocument->TextEditor->LineChanged -= DelegateModelLineChanged;
-	BoundDocument->TextEditor->ColumnChanged -= DelegateModelColumnChanged;
 	BoundDocument->NavigationHelper->NavigationChanged -= DelegateModelNavigationChanged;
 
-	View->GetComponentByRole(view::eViewRole::TextEditor_ViewPortContainer)->AsContainer()->RemoveControl(BoundDocument->TextEditor->Container);
-	SetDocumentDependentViewComponentsEnabled(false);
+	BoundDocument->TextEditor->Container->SendToBack();
+	BoundDocument->TextEditor->Container->Visible = false;
+
+	ResetViewComponentsToUnboundState();
 
 	BoundDocument = nullptr;
 }
@@ -361,12 +370,12 @@ void ScriptEditorController::SetDocumentDependentViewComponentsEnabled(bool Enab
 		view::eViewRole::MainToolbar_NextScript,
 		view::eViewRole::MainToolbar_SaveAllScripts,
 		view::eViewRole::MainToolbar_ScriptTypeDropdown,
+		view::eViewRole::MainToolbar_Edit_FindReplace,
 		view::eViewRole::MainToolbar_Edit_GoToLine,
 		view::eViewRole::MainToolbar_Edit_AddBookmark,
 		view::eViewRole::MainToolbar_Edit_Comment,
 		view::eViewRole::MainToolbar_Edit_Uncomment,
-		view::eViewRole::MainToolbar_View_PreprocessorOutput,
-		view::eViewRole::MainToolbar_View_BytecodeOffsets,
+		view::eViewRole::MainToolbar_View_PreprocessorOutputAndBytecodeOffsets,
 		view::eViewRole::MainToolbar_View_IconMargin,
 		view::eViewRole::MainToolbar_Tools_SanitiseScript,
 		view::eViewRole::MainToolbar_Tools_AttachScript,
@@ -411,6 +420,12 @@ void ScriptEditorController::SetDocumentDependentViewComponentsEnabled(bool Enab
 		else
 			throw gcnew NotImplementedException;
 	}
+
+	View->GetComponentByRole(view::eViewRole::NavigationBar)->AsCrumbBar()->Visible = Enabled ? preferences::SettingsHolder::Get()->Appearance->ShowScopeBar : false;
+	View->GetComponentByRole(view::eViewRole::StatusBar_LineNumber)->AsLabel()->Visible = Enabled;
+	View->GetComponentByRole(view::eViewRole::StatusBar_ColumnNumber)->AsLabel()->Visible = Enabled;
+	View->GetComponentByRole(view::eViewRole::StatusBar_CompiledScriptSize)->AsProgressBar()->Visible = Enabled;
+	View->GetComponentByRole(view::eViewRole::StatusBar)->AsContainer()->Invalidate();
 }
 
 void ScriptEditorController::SetDocumentPreprocessorOutputDisplayDependentViewComponentsEnabled(bool Enabled)
@@ -462,6 +477,17 @@ void ScriptEditorController::SetDocumentPreprocessorOutputDisplayDependentViewCo
 		else
 			throw gcnew NotImplementedException;
 	}
+}
+
+void ScriptEditorController::ResetViewComponentsToUnboundState()
+{
+	SetDocumentDependentViewComponentsEnabled(false);
+	DocumentNavigationHelper->SyncWithDocument(nullptr);
+
+	View->GetComponentByRole(view::eViewRole::MainWindow)->AsForm()->Text = view::IScriptEditorView::MainWindowDefaultTitle;
+	View->GetComponentByRole(view::eViewRole::Messages_ListView)->AsObjectListView()->ClearObjects();
+	View->GetComponentByRole(view::eViewRole::Bookmarks_ListView)->AsObjectListView()->ClearObjects();
+	View->GetComponentByRole(view::eViewRole::FindReplaceResults_ListView)->AsObjectListView()->ClearObjects();
 }
 
 view::ITabStripItem^ ScriptEditorController::LookupTabStripItem(model::IScriptDocument^ Document)
@@ -522,7 +548,8 @@ bool ScriptEditorController::HandleVolatileDocumentStateBeforeDestructiveOperati
 	// we need to be bound to the view if we want process user input
 	Debug::Assert(BoundDocument == Document);
 
-	auto PromptResult = View->ShowMessageBox("The current script '" + Document->ScriptEditorID + "' has unsaved changes.\n\nDo you wish to save them?",
+	auto PromptScriptName = Document->ScriptEditorID != "" ? "'" + Document->ScriptEditorID + "' " : "";
+	auto PromptResult = View->ShowMessageBox("The current script " + PromptScriptName + "has unsaved changes.\n\nDo you wish to save them?",
 											 MessageBoxButtons::YesNoCancel,
 											 MessageBoxIcon::Exclamation);
 
@@ -556,6 +583,8 @@ void ScriptEditorController::AttachDocumentToView(model::IScriptDocument^ Docume
 
 	// we need to start subscribe to certain changes in state even when the document isn't active
 	Document->StateChanged += DelegateModelDocumentStateChanged;
+
+	View->GetComponentByRole(view::eViewRole::TextEditor_ViewPortContainer)->AsContainer()->AddControl(Document->TextEditor->Container);
 }
 
 void ScriptEditorController::DetachDocumentFromView(model::IScriptDocument^ Document)
@@ -570,7 +599,11 @@ void ScriptEditorController::DetachDocumentFromView(model::IScriptDocument^ Docu
 	TabStrip->RemoveTab(TabItem);
 	delete TabItem;
 
+	FindReplaceHelper->InvalidateScriptDocumentInGlobalResultsCache(Document);
+
 	Document->StateChanged -= DelegateModelDocumentStateChanged;
+
+	View->GetComponentByRole(view::eViewRole::TextEditor_ViewPortContainer)->AsContainer()->RemoveControl(Document->TextEditor->Container);
 }
 
 void ScriptEditorController::ActivateDocumentInView(model::IScriptDocument^ Document)
@@ -670,6 +703,14 @@ model::IScriptDocument^ ScriptEditorController::ImportDocumentFromDisk(String^ D
 	NewOrExisting->Dirty = true;
 
 	return NewOrExisting;
+}
+
+void ScriptEditorController::AllowDocumentBindingAfterTabMove()
+{
+	Debug::Assert(BoundDocument != nullptr);
+	Debug::Assert(DisableDocumentActivationOnTabSwitch);
+
+	DisableDocumentActivationOnTabSwitch = false;
 }
 
 void ScriptEditorController::LoadNewUnsavedScriptIntoDocument(model::IScriptDocument^ Document)
@@ -792,7 +833,7 @@ bool ScriptEditorController::ShouldUseAutoRecoveryFile(String^ ScriptEditorId)
 {
 	if (!preferences::SettingsHolder::Get()->Backup->UseAutoRecovery)
 		return false;
-	else if (!String::Equals(BoundDocument->ScriptEditorID, ScriptEditorId, StringComparison::CurrentCultureIgnoreCase))
+	else if (BoundDocument && !String::Equals(BoundDocument->ScriptEditorID, ScriptEditorId, StringComparison::CurrentCultureIgnoreCase))
 		return false;
 
 	auto AutoRecoveryFile = gcnew model::components::ScriptTextAutoRecoveryCache(ScriptEditorId);
@@ -810,6 +851,16 @@ bool ScriptEditorController::ShouldUseAutoRecoveryFile(String^ ScriptEditorId)
 	}
 
 	return true;
+}
+
+void ScriptEditorController::DeferredUiActionTimer_Tick(Object^ Sender, EventArgs^ E)
+{
+	Debug::Assert(DelegateDeferredUiAction != nullptr);
+
+	DeferredUiActionTimer->Enabled = false;
+	DelegateDeferredUiAction();
+
+	DelegateDeferredUiAction = nullptr;
 }
 
 void ScriptEditorController::ViewEventHandler_ComponentEvent(Object^ Sender, view::ViewComponentEvent^ E)
@@ -847,8 +898,7 @@ void ScriptEditorController::ViewEventHandler_ComponentEvent(Object^ Sender, vie
 		ViewEventHandler_MainToolbarMenuEdit(E);
 		break;
 	case view::eViewRole::MainToolbar_View:
-	case view::eViewRole::MainToolbar_View_PreprocessorOutput:
-	case view::eViewRole::MainToolbar_View_BytecodeOffsets:
+	case view::eViewRole::MainToolbar_View_PreprocessorOutputAndBytecodeOffsets:
 	case view::eViewRole::MainToolbar_View_IconMargin:
 	case view::eViewRole::MainToolbar_View_Messages:
 	case view::eViewRole::MainToolbar_View_Bookmarks:
@@ -928,6 +978,11 @@ void ScriptEditorController::ViewEventHandler_ComponentEvent(Object^ Sender, vie
 	case view::eViewRole::TextEditor_ContextMenu_JumpToAttachedScript:
 		ViewEventHandler_TextEditorContextMenu(E);
 		break;
+	case view::eViewRole::EmptyWorkspacePanel:
+	case view::eViewRole::EmptyWorkspacePanel_NewScript:
+	case view::eViewRole::EmptyWorkspacePanel_OpenScript:
+		ViewEventHandler_EmptyWorkspacePanel(E);
+		break;
 	default:
 		throw gcnew ArgumentException("Unknown view component role " + E->Component->Role.ToString());
 	}
@@ -968,11 +1023,7 @@ void ScriptEditorController::ViewEventHandler_MainWindow(view::ViewComponentEven
 
 		auto ModelDocumentsCopy = gcnew List<model::IScriptDocument^>(Model->Documents);
 		bool CloseOperationCancelled = false;
-
-		// we need to disable the default tab switching behaviour since removing
-		// a tab will cause the next tab in the tabstrip to automatically get activated
 		bool StopClosure = false;
-		DisableDocumentActivationOnTabSwitch = true;
 		Form->BeginUpdate();
 		{
 			for each (auto Doc in ModelDocumentsCopy)
@@ -981,7 +1032,15 @@ void ScriptEditorController::ViewEventHandler_MainWindow(view::ViewComponentEven
 				if (Doc->Dirty)
 					ActivateDocumentInView(Doc);
 
-				bool CloseSuccess = CloseAndRemoveDocument(Doc, CloseOperationCancelled);
+				// we need to disable the default tab switching behaviour since removing
+				// a tab will cause the next tab in the tabstrip to automatically get activated
+				DisableDocumentActivationOnTabSwitch = true;
+				bool CloseSuccess = false;
+				{
+					CloseSuccess = CloseAndRemoveDocument(Doc, CloseOperationCancelled);
+				}
+				DisableDocumentActivationOnTabSwitch = false;
+
 				if (!CloseSuccess || CloseOperationCancelled)
 				{
 					// cancel the close operation and let the user handle any errors, etc
@@ -993,7 +1052,6 @@ void ScriptEditorController::ViewEventHandler_MainWindow(view::ViewComponentEven
 			}
 		}
 		Form->EndUpdate();
-		DisableDocumentActivationOnTabSwitch = false;
 
 		if (StopClosure)
 		{
@@ -1014,6 +1072,10 @@ void ScriptEditorController::ViewEventHandler_MainTabStrip(view::ViewComponentEv
 {
 	if (E->Component->Type == view::eComponentType::Button)
 	{
+		auto EventType = safe_cast<view::components::IButton::eEvent>(E->EventType);
+		if (EventType == view::components::IButton::eEvent::PopupOpening)
+			return;
+
 		switch (E->Component->Role)
 		{
 		case view::eViewRole::MainTabStrip_NewTab_NewScript:
@@ -1033,7 +1095,7 @@ void ScriptEditorController::ViewEventHandler_MainTabStrip(view::ViewComponentEv
 			auto ExistingScriptEditorIds = View->SelectExistingScripts(BoundDocument ? BoundDocument->ScriptEditorID : "");
 			bool FirstScript = true;
 
-			//View->BeginUpdate();
+			View->BeginUpdate();
 			{
 				for each (auto EditorId in ExistingScriptEditorIds)
 				{
@@ -1042,12 +1104,14 @@ void ScriptEditorController::ViewEventHandler_MainTabStrip(view::ViewComponentEv
 						Params->BindAfterInit = true;
 						FirstScript = false;
 					}
+					else
+						Params->BindAfterInit = false;
 
 					Params->ExistingScriptEditorId = EditorId;
 					CreateNewTab(Params);
 				}
 			}
-			//View->EndUpdate();
+			View->EndUpdate();
 
 			break;
 		}
@@ -1091,6 +1155,26 @@ void ScriptEditorController::ViewEventHandler_MainTabStrip(view::ViewComponentEv
 
 		break;
 	}
+	case view::components::ITabStrip::eEvent::TabMoved:
+	{
+		// on a successful tab moved operation, the tab collection on the tabstrip is reordered by removing
+		// and inserting the existing tabs in the new order, leading to each of them being activated in turn
+		// this causes each of their attached parent to get bound/unbound, resulting in a drop in UI responsiveness
+
+		// we have to, therefore, resort to this hack - temporarily disable document binding after the completion of
+		// the tab moved event
+		auto Args = safe_cast<view::components::ITabStrip::TabMovedEventArgs^>(E->EventArgs);
+		Debug::Assert(Args->Tab != nullptr);
+
+		auto MovedDocument = safe_cast<model::IScriptDocument^>(Args->Tab->Tag);
+		Debug::Assert(BoundDocument == MovedDocument);
+
+		auto DeferredUiAction = gcnew DeferredUiActionDelegate(this, &ScriptEditorController::AllowDocumentBindingAfterTabMove);
+		DisableDocumentActivationOnTabSwitch = true;
+		QueueDeferredUiAction(DeferredUiAction, 64);
+
+		break;
+	}
 	case view::components::ITabStrip::eEvent::TabClosing:
 	{
 		auto Args = safe_cast<view::components::ITabStrip::TabClosingEventArgs^>(E->EventArgs);
@@ -1114,16 +1198,14 @@ void ScriptEditorController::ViewEventHandler_MainTabStrip(view::ViewComponentEv
 		if (Args->NewValue == nullptr)
 			break;
 
-		auto OldDocument = safe_cast<model::IScriptDocument^>(Args->OldValue->Tag);
+		auto OldDocument = Args->OldValue ? safe_cast<model::IScriptDocument^>(Args->OldValue->Tag) : nullptr;
 		auto NewDocument = safe_cast<model::IScriptDocument^>(Args->NewValue->Tag);
 
 		View->BeginUpdate();
 		{
-			if (OldDocument)
-			{
-				Debug::Assert(OldDocument == BoundDocument);
+			if (OldDocument && OldDocument == BoundDocument)
 				UnbindBoundDocument();
-			}
+
 			SetBoundDocument(NewDocument);
 		}
 		View->EndUpdate();
@@ -1138,7 +1220,7 @@ void ScriptEditorController::ViewEventHandler_MainToolbar(view::ViewComponentEve
 	switch (E->Component->Role)
 	{
 	case view::eViewRole::MainToolbar_NewScript:
-		LoadNextScriptIntoDocument(BoundDocument);
+		LoadNewUnsavedScriptIntoDocument(BoundDocument);
 		break;
 	case view::eViewRole::MainToolbar_OpenScript:
 	{
@@ -1148,7 +1230,7 @@ void ScriptEditorController::ViewEventHandler_MainToolbar(view::ViewComponentEve
 		auto ExistingScriptEditorIds = View->SelectExistingScripts(BoundDocument->ScriptEditorID);
 		bool FirstScript = true;
 
-		//View->BeginUpdate();
+		View->BeginUpdate();
 		{
 			for each (auto EditorId in ExistingScriptEditorIds)
 			{
@@ -1164,7 +1246,7 @@ void ScriptEditorController::ViewEventHandler_MainToolbar(view::ViewComponentEve
 				}
 			}
 		}
-		//View->EndUpdate();
+		View->EndUpdate();
 
 		break;
 	}
@@ -1226,7 +1308,7 @@ void ScriptEditorController::ViewEventHandler_MainToolbarMenuEdit(view::ViewComp
 	switch (E->Component->Role)
 	{
 	case view::eViewRole::MainToolbar_Edit_FindReplace:
-		ViewActions->ShowFindReplacePane->Invoke();
+		FindReplaceHelper->ShowFindReplacePane(this);
 		break;
 	case view::eViewRole::MainToolbar_Edit_GoToLine:
 		ActiveDocumentActions->GoToLine->Invoke();
@@ -1242,20 +1324,6 @@ void ScriptEditorController::ViewEventHandler_MainToolbarMenuEdit(view::ViewComp
 		break;
 	}
 }
-
-void HandlePreferencesButtonEvent(view::components::IButton::eEvent EventType, view::components::IButton^ Button, bool% PreferenceValue)
-{
-	if (EventType == view::components::IButton::eEvent::PopupOpening)
-		Button->Checked = PreferenceValue;
-	else if (EventType == view::components::IButton::eEvent::Click)
-	{
-		PreferenceValue = PreferenceValue == false;
-		preferences::SettingsHolder::Get()->RaisePreferencesChangedEvent();
-	}
-	else
-		throw gcnew NotImplementedException();
-}
-
 
 void HandlePreferencesDockablePaneEvent(view::components::IButton::eEvent EventType, view::components::IButton^ Button, view::components::IDockablePane^ Pane)
 {
@@ -1276,23 +1344,37 @@ void ScriptEditorController::ViewEventHandler_MainToolbarMenuView(view::ViewComp
 
 	switch (E->Component->Role)
 	{
-	case view::eViewRole::MainToolbar_View_PreprocessorOutput:
+	case view::eViewRole::MainToolbar_View_PreprocessorOutputAndBytecodeOffsets:
+		if (BoundDocument == nullptr)
+			break;
+
 		if (OnPopupOpening)
 			Button->Checked = BoundDocument->IsPreprocessorOutputEnabled();
 		else if (OnClick)
 		{
-			bool IsTurnedOn = BoundDocument->IsPreprocessorOutputEnabled();
+			bool WasTurnedOn = BoundDocument->IsPreprocessorOutputEnabled();
+			bool Success = BoundDocument->TogglePreprocessorOutput(!WasTurnedOn);
+			bool GotTurnedOn = BoundDocument->IsPreprocessorOutputEnabled();
+			SetDocumentPreprocessorOutputDisplayDependentViewComponentsEnabled(!GotTurnedOn);
 
-			SetDocumentPreprocessorOutputDisplayDependentViewComponentsEnabled(!IsTurnedOn);
-			BoundDocument->TogglePreprocessorOutput(IsTurnedOn == false);
+			if (GotTurnedOn)
+			{
+				View->ShowNotification("Displaying script preprocessor output. Certain actions are disabled in this mode.",
+									   view::components::CommonIcons::Get()->Info, 4000);
+			}
+			else if (!Success)
+				View->ShowNotification("This operation cannot be performed until the unsaved changes are saved.", view::components::CommonIcons::Get()->Info, 4000);
 		}
 
 		break;
-	case view::eViewRole::MainToolbar_View_BytecodeOffsets:
-		HandlePreferencesButtonEvent(EventType, Button, preferences::SettingsHolder::Get()->Appearance->ShowBytecodeOffsetMargin);
-		break;
 	case view::eViewRole::MainToolbar_View_IconMargin:
-		HandlePreferencesButtonEvent(EventType, Button, preferences::SettingsHolder::Get()->Appearance->ShowIconMargin);
+		if (OnPopupOpening)
+			Button->Checked = preferences::SettingsHolder::Get()->Appearance->ShowIconMargin;
+		else if (OnClick)
+		{
+			preferences::SettingsHolder::Get()->Appearance->ShowIconMargin = preferences::SettingsHolder::Get()->Appearance->ShowIconMargin == false;
+			preferences::SettingsHolder::Get()->RaisePreferencesChangedEvent();
+		}
 		break;
 	case view::eViewRole::MainToolbar_View_Messages:
 		HandlePreferencesDockablePaneEvent(EventType, Button,
@@ -1315,10 +1397,13 @@ void ScriptEditorController::ViewEventHandler_MainToolbarMenuView(view::ViewComp
 										   View->GetComponentByRole(view::eViewRole::GlobalFindReplaceResults_DockPanel)->AsDockablePane());
 		break;
 	case view::eViewRole::MainToolbar_View_NavigationBar:
-		HandlePreferencesButtonEvent(EventType, Button, preferences::SettingsHolder::Get()->Appearance->ShowScopeBar);
-		break;
-	case view::eViewRole::MainToolbar_View_DarkMode:
-		HandlePreferencesButtonEvent(EventType, Button, preferences::SettingsHolder::Get()->Appearance->DarkMode);
+		if (OnPopupOpening)
+			Button->Checked = preferences::SettingsHolder::Get()->Appearance->ShowScopeBar;
+		else if (OnClick)
+		{
+			preferences::SettingsHolder::Get()->Appearance->ShowScopeBar = preferences::SettingsHolder::Get()->Appearance->ShowScopeBar == false;
+			preferences::SettingsHolder::Get()->RaisePreferencesChangedEvent();
+		}
 		break;
 	}
 }
@@ -1610,14 +1695,15 @@ void ScriptEditorController::ViewEventHandler_TextEditorContextMenu(view::ViewCo
 			ActivateOrCreateNewDocument(Button->Tag->ToString());
 		else
 		{
-			auto RelativeCoords = BoundDocument->TextEditor->ScreenToClient(Cursor::Position);
+			auto CursorPosition = Cursor::Position;
+			auto RelativeCoords = BoundDocument->TextEditor->ScreenToClient(CursorPosition);
 			auto TextIndex = BoundDocument->TextEditor->GetCharIndexFromPosition(RelativeCoords);
 			auto TokenAtPopup = BoundDocument->TextEditor->GetTokenAtCharIndex(TextIndex);
 			auto AttachedScript = intellisense::IntelliSenseBackend::Get()->GetAttachedScript(TokenAtPopup);
 
 			if (AttachedScript)
 			{
-				Button->Text = "Open Attached Script (" + AttachedScript->GetIdentifier() + ")";
+				Button->Text = "Open Attached Script";
 				Button->Visible = true;
 				Button->Tag = AttachedScript->GetIdentifier();
 			}
@@ -1627,6 +1713,19 @@ void ScriptEditorController::ViewEventHandler_TextEditorContextMenu(view::ViewCo
 
 		break;
 	}
+	}
+}
+
+void ScriptEditorController::ViewEventHandler_EmptyWorkspacePanel(view::ViewComponentEvent^ E)
+{
+	switch (E->Component->Role)
+	{
+	case view::eViewRole::EmptyWorkspacePanel_NewScript:
+		ViewActions->NewTabWithNewScript->Invoke();
+		break;
+	case view::eViewRole::EmptyWorkspacePanel_OpenScript:
+		ViewActions->NewTabWithExistingScript->Invoke();
+		break;
 	}
 }
 
@@ -1645,7 +1744,7 @@ void ScriptEditorController::ModelEventHandler_DocumentStateChanged(Object^ Send
 
 		break;
 	}
-	case model::IScriptDocument::StateChangeEventArgs::eEventType::BytecodeLength:
+	case model::IScriptDocument::StateChangeEventArgs::eEventType::Bytecode:
 	{
 		if (Document != BoundDocument)
 			break;
@@ -1658,15 +1757,13 @@ void ScriptEditorController::ModelEventHandler_DocumentStateChanged(Object^ Send
 			BytecodeProgress->Value = 0;
 			BytecodeProgress->Minimum = 0;
 			BytecodeProgress->Maximum = 0;
-			BytecodeProgress->Tooltip = "";
 		}
 		else
 		{
-			BytecodeProgress->Text = "Compiled Script Size:";
+			BytecodeProgress->Text = String::Format("Compiled Script Size: {0:F2} KB", static_cast<float>(E->BytecodeLength / 1024.0));
 			BytecodeProgress->Value = E->BytecodeLength;
 			BytecodeProgress->Minimum = 0;
 			BytecodeProgress->Maximum = model::IScriptDocument::MaximumScriptBytecodeLength;
-			BytecodeProgress->Tooltip = String::Format("Compiled Script Size: {0:F2} KB", static_cast<float>(E->BytecodeLength / 1024.0));
 		}
 
 		break;
@@ -1740,6 +1837,21 @@ void ScriptEditorController::ModelEventHandler_DocumentStateChanged(Object^ Send
 
 		auto StatusBarLabel = View->GetComponentByRole(view::eViewRole::StatusBar_PreprocessorOutput)->AsLabel();
 		StatusBarLabel->Visible = E->DisplayingPreprocessorOutput;
+
+		break;
+	}
+	case model::IScriptDocument::StateChangeEventArgs::eEventType::LineOrColumn:
+	{
+		if (Document != BoundDocument)
+			break;
+
+		auto StatusBarLabelLine = View->GetComponentByRole(view::eViewRole::StatusBar_LineNumber)->AsLabel();
+		StatusBarLabelLine->Text = "Line " + E->Line.ToString();
+
+		auto StatusBarLabelCol = View->GetComponentByRole(view::eViewRole::StatusBar_ColumnNumber)->AsLabel();
+		StatusBarLabelCol->Text = "Column " + E->Column.ToString();
+
+		break;
 	}
 	default:
 		throw gcnew ArgumentException("Unknown state document change event type " + E->EventType.ToString());
@@ -1753,7 +1865,7 @@ void ScriptEditorController::ModelEventHandler_KeyDown(Object^ Sender, KeyEventA
 
 void ScriptEditorController::ModelEventHandler_MouseClick(Object^ Sender, textEditor::TextEditorMouseClickEventArgs^ E)
 {
-	InputManager->HandleMouseClick(E, this);
+	InputManager->HandleTextEditorMouseClick(E, this);
 }
 
 void ScriptEditorController::ModelEventHandler_NavigationChanged(Object^ Sender, model::components::INavigationHelper::NavigationChangedEventArgs^ E)
@@ -1764,20 +1876,180 @@ void ScriptEditorController::ModelEventHandler_NavigationChanged(Object^ Sender,
 	DocumentNavigationHelper->HandleNavigationChangedEvent(E, Document);
 }
 
-void ScriptEditorController::ModelEventHandler_LineChanged(Object^ Sender, EventArgs^ E)
+System::Object^ ScriptTextAnnotationListLineNumberAspectGetter(Object^ E)
 {
-	Debug::Assert(BoundDocument != nullptr);
+	auto Model = safe_cast<model::components::ScriptLineAnnotation^>(E);
+	if (Model == nullptr)
+		return nullptr;
 
-	auto StatusBarLabelLine = View->GetComponentByRole(view::eViewRole::StatusBar_LineNumber)->AsLabel();
-	StatusBarLabelLine->Text = BoundDocument->TextEditor->CurrentLine.ToString();
+	return Model->Line;
 }
 
-void ScriptEditorController::ModelEventHandler_ColumnChanged(Object^ Sender, EventArgs^ E)
+System::Object^ ScriptTextAnnotationListTextAspectGetter(Object^ E)
 {
-	Debug::Assert(BoundDocument != nullptr);
+	auto Model = safe_cast<model::components::ScriptLineAnnotation^>(E);
+	if (Model == nullptr)
+		return nullptr;
 
-	auto StatusBarLabelCol = View->GetComponentByRole(view::eViewRole::StatusBar_ColumnNumber)->AsLabel();
-	StatusBarLabelCol->Text = BoundDocument->TextEditor->CurrentColumn.ToString();
+	return Model->Text;
+}
+
+System::Object^ MessageListTypeAspectGetter(Object^ E)
+{
+	auto Model = safe_cast<model::components::ScriptDiagnosticMessage^>(E);
+	if (Model == nullptr)
+		return nullptr;
+
+	return Model->Type;
+}
+
+System::Object^ MessageListTypeImageGetter(Object^ RowObject)
+{
+	auto Model = safe_cast<model::components::ScriptDiagnosticMessage^>(RowObject);
+	if (Model == nullptr)
+		return nullptr;
+
+	switch (Model->Type)
+	{
+	case model::components::ScriptDiagnosticMessage::eMessageType::Info:
+		return view::components::CommonIcons::Get()->Info;
+	case model::components::ScriptDiagnosticMessage::eMessageType::Warning:
+		return view::components::CommonIcons::Get()->Warning;
+	case model::components::ScriptDiagnosticMessage::eMessageType::Error:
+		return view::components::CommonIcons::Get()->Error;
+	}
+
+	return nullptr;
+}
+
+System::String^ MessageListTypeAspectToStringConverter(Object^ E)
+{
+	return String::Empty;
+}
+
+System::Object^ MessageListSourceAspectGetter(Object^ E)
+{
+	auto Model = safe_cast<model::components::ScriptDiagnosticMessage^>(E);
+	if (Model == nullptr)
+		return nullptr;
+
+	return Model->Source;
+}
+
+System::String^ MessageListSourceAspectToStringConverter(Object^ E)
+{
+	auto Key = safe_cast<model::components::ScriptDiagnosticMessage::eMessageSource>(E);
+	return Key.ToString();
+}
+
+void ScriptEditorController::InitViewComponents()
+{
+	{
+		auto MessagesListView = View->GetComponentByRole(view::eViewRole::Messages_ListView)->AsObjectListView();
+
+		auto ColumnType = MessagesListView->AllocateNewColumn();
+		auto ColumnLine = MessagesListView->AllocateNewColumn();
+		auto ColumnText = MessagesListView->AllocateNewColumn();
+		auto ColumnSource = MessagesListView->AllocateNewColumn();
+
+		ColumnType->Text = "Type";
+		ColumnType->MinimumWidth = 40;
+		ColumnType->MaximumWidth = 40;
+		ColumnType->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&MessageListTypeAspectGetter));
+		ColumnType->SetAspectToStringGetter(gcnew view::components::IObjectListViewColumn::AspectToStringGetter(&MessageListTypeAspectToStringConverter));
+		ColumnType->SetImageGetter(gcnew view::components::IObjectListViewColumn::ImageGetter(&MessageListTypeImageGetter));
+
+		ColumnLine->Text = "Line";
+		ColumnLine->MinimumWidth = 30;
+		ColumnLine->MaximumWidth = 40;
+		ColumnLine->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&ScriptTextAnnotationListLineNumberAspectGetter));
+
+		ColumnText->Text = "Message";
+		ColumnText->MinimumWidth = 600;
+		ColumnText->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&ScriptTextAnnotationListTextAspectGetter));
+
+		ColumnSource->Text = "Message Source";
+		ColumnSource->MinimumWidth = 100;
+		ColumnSource->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&MessageListSourceAspectGetter));
+		ColumnSource->SetAspectToStringGetter(gcnew view::components::IObjectListViewColumn::AspectToStringGetter(&MessageListSourceAspectToStringConverter));
+
+		MessagesListView->AddColumn(ColumnType);
+		MessagesListView->AddColumn(ColumnLine);
+		MessagesListView->AddColumn(ColumnText);
+		MessagesListView->AddColumn(ColumnSource);
+	}
+
+	{
+		auto BookmarksListView = View->GetComponentByRole(view::eViewRole::Bookmarks_ListView)->AsObjectListView();
+
+		auto ColumnLine = BookmarksListView->AllocateNewColumn();
+		auto ColumnText = BookmarksListView->AllocateNewColumn();
+
+		ColumnLine->Text = "Line";
+		ColumnLine->MinimumWidth = 30;
+		ColumnLine->MaximumWidth = 40;
+		ColumnLine->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&ScriptTextAnnotationListLineNumberAspectGetter));
+
+		ColumnText->Text = "Description";
+		ColumnText->MinimumWidth = 600;
+		ColumnText->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&ScriptTextAnnotationListTextAspectGetter));
+
+		BookmarksListView->AddColumn(ColumnLine);
+		BookmarksListView->AddColumn(ColumnText);
+	}
+
+	ResetViewComponentsToUnboundState();
+}
+
+void ScriptEditorController::ProcessInstantiationParameters(IScriptEditorController::InstantiationParams^ Params)
+{
+	if (Params->Operations == IScriptEditorController::InstantiationParams::eInitOperation::None)
+	{
+		View->Reveal(Params->InitialBounds);
+		return;
+	}
+
+	bool IsSingleDocument = Params->ExistingScriptEditorIds->Count == 1 || Params->Operations.HasFlag(IScriptEditorController::InstantiationParams::eInitOperation::CreateNewScript);
+	auto NewTabParams = gcnew NewTabCreationParams;
+
+	if (Params->Operations.HasFlag(IScriptEditorController::InstantiationParams::eInitOperation::CreateNewScript))
+	{
+		NewTabParams->InitOperation = NewTabCreationParams::eInitOperation::NewScript;
+		NewTabParams->BindAfterInit = true;
+		CreateNewTab(NewTabParams);
+	}
+	else if (Params->Operations.HasFlag(IScriptEditorController::InstantiationParams::eInitOperation::LoadExistingScript))
+	{
+		NewTabParams->InitOperation = NewTabCreationParams::eInitOperation::LoadExistingScript;
+
+		for (int i = 0; i < Params->ExistingScriptEditorIds->Count; ++i)
+		{
+			NewTabParams->ExistingScriptEditorId = Params->ExistingScriptEditorIds[i];
+			Debug::Assert(NewTabParams->ExistingScriptEditorId->Length > 0);
+			NewTabParams->BindAfterInit = i == 0;
+			CreateNewTab(NewTabParams);
+		}
+	}
+	else
+		throw gcnew ArgumentException("Unknown controller instantiation operation!");
+
+	if (Params->Operations.HasFlag(IScriptEditorController::InstantiationParams::eInitOperation::PerformFind))
+	{
+		bool DoGlobalFind = !IsSingleDocument;
+		FindReplaceHelper->DoOperation(textEditor::eFindReplaceOperation::Find, Params->FindQuery, "", textEditor::eFindReplaceOptions::CaseInsensitive, DoGlobalFind, this);
+	}
+
+	View->Reveal(Params->InitialBounds);
+}
+
+void ScriptEditorController::QueueDeferredUiAction(DeferredUiActionDelegate^ Action, UInt32 TimeoutInMs)
+{
+	Debug::Assert(!DeferredUiActionTimer->Enabled);
+	Debug::Assert(DelegateDeferredUiAction == nullptr);
+
+	DelegateDeferredUiAction = Action;
+	DeferredUiActionTimer->Interval = TimeoutInMs;
+	DeferredUiActionTimer->Start();
 }
 
 ScriptEditorController::ScriptEditorController(model::IFactory^ ModelFactory, view::IFactory^ ViewFactory)
@@ -1792,7 +2064,7 @@ ScriptEditorController::ScriptEditorController(model::IFactory^ ModelFactory, vi
 
 	DocumentNavigationHelper = gcnew components::DocumentNavigationHelper(ChildView);
 	FindReplaceHelper = gcnew components::FindReplaceHelper(ChildView);;
-	InputManager = gcnew components::InputManager;
+	InputManager = gcnew components::InputManager(ChildView->GetComponentByRole(view::eViewRole::TextEditor_ContextMenu)->AsContextMenu());
 
 	ActiveDocumentActions = gcnew ActiveDocumentActionCollection;
 	ActiveDocumentActions->Copy->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_Copy);
@@ -1823,19 +2095,33 @@ ScriptEditorController::ScriptEditorController(model::IFactory^ ModelFactory, vi
 	ViewActions->ShowFindReplacePane->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_ShowFindReplacePane);
 	ViewActions->CreateDefaultKeyBindings(InputManager);
 
+	DeferredUiActionTimer = gcnew Timer;
+	DeferredUiActionTimer->Interval = 100;
+	DeferredUiActionTimer->Enabled = false;
+
 	DelegateViewComponentEvent = gcnew view::IScriptEditorView::EventHandler(this, &ScriptEditorController::ViewEventHandler_ComponentEvent);
 	DelegateModelDocumentStateChanged = gcnew model::IScriptDocument::StateChangeEventHandler(this, &ScriptEditorController::ModelEventHandler_DocumentStateChanged);
 	DelegateModelKeyDown = gcnew KeyEventHandler(this, &ScriptEditorController::ModelEventHandler_KeyDown);
 	DelegateModelMouseClick = gcnew textEditor::TextEditorMouseClickEventHandler(this, &ScriptEditorController::ModelEventHandler_MouseClick);
 	DelegateModelNavigationChanged = gcnew model::components::INavigationHelper::NavigationChangedEventHandler(this, &ScriptEditorController::ModelEventHandler_NavigationChanged);
-	DelegateModelLineChanged = gcnew EventHandler(this, &ScriptEditorController::ModelEventHandler_LineChanged);
-	DelegateModelColumnChanged = gcnew EventHandler(this, &ScriptEditorController::ModelEventHandler_ColumnChanged);
+	DelegateDeferredUiActionTimerTick = gcnew EventHandler(this, &ScriptEditorController::DeferredUiActionTimer_Tick);
+	DelegateDeferredUiAction = nullptr;
 
 	DisableDocumentActivationOnTabSwitch = false;
 
 	ChildView->ComponentEvent += DelegateViewComponentEvent;
+	DeferredUiActionTimer->Tick += DelegateDeferredUiActionTimerTick;
 
+	InitViewComponents();
+
+	components::ViewTabTearingHelper::Get()->RegisterTabStrip(View->GetComponentByRole(view::eViewRole::MainTabStrip)->AsTabStrip(), this);
 	ScriptEditorInstanceManager::Get()->RegisterController(this);
+}
+
+ScriptEditorController::ScriptEditorController(model::IFactory^ ModelFactory, view::IFactory^ ViewFactory, IScriptEditorController::InstantiationParams^ InitParams)
+	: ScriptEditorController(ModelFactory, ViewFactory)
+{
+	ProcessInstantiationParameters(InitParams);
 }
 
 ScriptEditorController::~ScriptEditorController()
@@ -1852,10 +2138,15 @@ ScriptEditorController::~ScriptEditorController()
 	SAFEDELETE_CLR(ActiveDocumentActions);
 	SAFEDELETE_CLR(ViewActions);
 
+	DeferredUiActionTimer->Tick -= DelegateDeferredUiActionTimerTick;
+	SAFEDELETE_CLR(DeferredUiActionTimer);
+
 	SAFEDELETE_CLR(ChildModel);
 	if (ChildView)
 	{
 		ChildView->ComponentEvent -= DelegateViewComponentEvent;
+		components::ViewTabTearingHelper::Get()->DeregisterTabStrip(View->GetComponentByRole(view::eViewRole::MainTabStrip)->AsTabStrip());
+
 		SAFEDELETE_CLR(ChildView);
 	}
 
@@ -1867,10 +2158,18 @@ ScriptEditorController::~ScriptEditorController()
 	SAFEDELETE_CLR(DelegateModelKeyDown);
 	SAFEDELETE_CLR(DelegateModelMouseClick);
 	SAFEDELETE_CLR(DelegateModelNavigationChanged);
-	SAFEDELETE_CLR(DelegateModelLineChanged);
-	SAFEDELETE_CLR(DelegateModelColumnChanged);
+	SAFEDELETE_CLR(DelegateDeferredUiActionTimerTick);
+	SAFEDELETE_CLR(DelegateDeferredUiAction);
 
 	ScriptEditorInstanceManager::Get()->DeregisterController(this);
+}
+
+void ScriptEditorController::ActiveDocument::set(model::IScriptDocument^ v)
+{
+	if (BoundDocument == v)
+		return;
+
+	ActivateDocumentInView(v);
 }
 
 IScriptEditorController^ ScriptEditorController::New()
@@ -1878,19 +2177,35 @@ IScriptEditorController^ ScriptEditorController::New()
 	return ControllerFactory->NewController(ModelFactory, ViewFactory);
 }
 
+IScriptEditorController^ ScriptEditorController::New(IScriptEditorController::InstantiationParams^ Params)
+{
+	return ControllerFactory->NewController(ModelFactory, ViewFactory, Params);
+}
+
 void ScriptEditorController::RelocateDocument(model::IScriptDocument^ Document, IScriptEditorController^ Source)
 {
 	auto OtherController = safe_cast<ScriptEditorController^>(Source);
 
-	if (OtherController->ActiveDocument == Document)
-		OtherController->UnbindBoundDocument();
+	OtherController->View->BeginUpdate();
+	this->View->BeginUpdate();
+	{
+		if (OtherController->ActiveDocument == Document)
+			OtherController->UnbindBoundDocument();
 
-	OtherController->DetachDocumentFromView(Document);
-	OtherController->Model->RemoveDocument(Document);
+		OtherController->DetachDocumentFromView(Document);
+		OtherController->Model->RemoveDocument(Document);
 
-	this->Model->AddDocument(Document);
-	this->AttachDocumentToView(Document);
-	this->ActivateDocumentInView(Document);
+		this->Model->AddDocument(Document);
+		this->AttachDocumentToView(Document);
+		this->ActivateDocumentInView(Document);
+	}
+	this->View->EndUpdate();
+	OtherController->View->EndUpdate();
+
+	// dispose the source controller if it has no other documents
+	// as we don't want to have empty views sticking around
+	if (OtherController->Model->Documents->Count == 0)
+		delete OtherController;
 }
 
 void ScriptEditorController::ActivateOrCreateNewDocument(String^ ScriptEditorId)
@@ -1910,51 +2225,14 @@ void ScriptEditorController::ActivateOrCreateNewDocument(String^ ScriptEditorId)
 	CreateNewTab(NewTabParams);
 }
 
-void ScriptEditorController::InstantiateEditor(IScriptEditorController::InstantiationParams^ Params)
-{
-	Debug::Assert(Params->Operations != IScriptEditorController::InstantiationParams::eInitOperation::None);
-
-	bool IsSingleDocument = Params->ExistingScriptEditorIds->Count == 1 || Params->Operations.HasFlag(IScriptEditorController::InstantiationParams::eInitOperation::CreateNewScript);
-
-	auto NewController = safe_cast<ScriptEditorController^>(New());
-	auto NewTabParams = gcnew NewTabCreationParams;
-
-	if (Params->Operations.HasFlag(IScriptEditorController::InstantiationParams::eInitOperation::CreateNewScript))
-	{
-		NewTabParams->InitOperation = NewTabCreationParams::eInitOperation::NewScript;
-		NewTabParams->BindAfterInit = true;
-		NewController->CreateNewTab(NewTabParams);
-	}
-	else if (Params->Operations.HasFlag(IScriptEditorController::InstantiationParams::eInitOperation::LoadExistingScript))
-	{
-		NewTabParams->InitOperation = NewTabCreationParams::eInitOperation::LoadExistingScript;
-
-		for (int i = 0; i < Params->ExistingScriptEditorIds->Count; ++i)
-		{
-			NewTabParams->ExistingScriptEditorId = Params->ExistingScriptEditorIds[i];
-			Debug::Assert(NewTabParams->ExistingScriptEditorId->Length > 0);
-			NewTabParams->BindAfterInit = i == 0;
-			NewController->CreateNewTab(NewTabParams);
-		}
-	}
-	else
-		throw gcnew ArgumentException("Unknown controller instantiation operation!");
-
-
-	if (Params->Operations.HasFlag(IScriptEditorController::InstantiationParams::eInitOperation::PerformFind))
-	{
-		bool DoGlobalFind = !IsSingleDocument;
-
-		NewController->FindReplaceHelper->DoOperation(textEditor::eFindReplaceOperation::Find, Params->FindQuery, "",
-													  textEditor::eFindReplaceOptions::CaseInsensitive, DoGlobalFind, NewController);
-	}
-
-	NewController->View->Reveal(Params->InitialBounds);
-}
-
 IScriptEditorController^ ScriptEditorControllerFactory::NewController(model::IFactory^ ModelFactory, view::IFactory^ ViewFactory)
 {
 	return gcnew controllerImpl::ScriptEditorController(ModelFactory, ViewFactory);
+}
+
+IScriptEditorController^ ScriptEditorControllerFactory::NewController(model::IFactory^ ModelFactory, view::IFactory^ ViewFactory, IScriptEditorController::InstantiationParams^ InitParams)
+{
+	return gcnew controllerImpl::ScriptEditorController(ModelFactory, ViewFactory, InitParams);
 }
 
 ScriptEditorControllerFactory^ ScriptEditorControllerFactory::NewFactory()

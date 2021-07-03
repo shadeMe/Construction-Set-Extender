@@ -54,6 +54,11 @@ void ScriptDocument::Editor_StaticTextDisplayChanged(Object^ Sender, EventArgs^ 
 	OnStateChangedDisplayingPreprocessorOutput();
 }
 
+void ScriptDocument::Editor_LineColumnChanged(Object^ Sender, EventArgs^ E)
+{
+	OnStateChangedLineColumn();
+}
+
 void ScriptDocument::BgAnalyzer_AnalysisComplete(Object^ Sender, IBackgroundSemanticAnalyzer::AnalysisCompleteEventArgs^ E)
 {
 	BeginBatchUpdate(eBatchUpdateSource::Messages);
@@ -98,10 +103,13 @@ void ScriptDocument::OnStateChangedDirty(bool Modified)
 	StateChanged(this, E);
 }
 
-void ScriptDocument::OnStateChangedBytecodeLength(UInt16 Size)
+void ScriptDocument::OnStateChangedBytecode(UInt8* Data, UInt16 Size, String^ PreprocessedScriptText)
 {
+	CalculateLineBytecodeOffsets(PreprocessedScriptText, Data, Size);
+
 	auto E = gcnew IScriptDocument::StateChangeEventArgs;
-	E->EventType = IScriptDocument::StateChangeEventArgs::eEventType::BytecodeLength;
+	E->EventType = IScriptDocument::StateChangeEventArgs::eEventType::Bytecode;
+	E->BytecodeData = Data;
 	E->BytecodeLength = Size;
 	StateChanged(this, E);
 }
@@ -161,6 +169,15 @@ void ScriptDocument::OnStateChangedDisplayingPreprocessorOutput()
 	auto E = gcnew IScriptDocument::StateChangeEventArgs;
 	E->EventType = IScriptDocument::StateChangeEventArgs::eEventType::DisplayingPreprocessorOutput;
 	E->DisplayingPreprocessorOutput = TextEditor->DisplayingStaticText;
+	StateChanged(this, E);
+}
+
+void ScriptDocument::OnStateChangedLineColumn()
+{
+	auto E = gcnew IScriptDocument::StateChangeEventArgs;
+	E->EventType = IScriptDocument::StateChangeEventArgs::eEventType::LineOrColumn;
+	E->Line = TextEditor->CurrentLine;
+	E->Column = TextEditor->CurrentColumn;
 	StateChanged(this, E);
 }
 
@@ -264,11 +281,11 @@ void ScriptDocument::EndScriptCompilation(ScriptCompilationData^ Data)
 			FormID = Data->CompileResult->Script.FormID;
 			Bytecode = reinterpret_cast<UInt8*>(Data->CompileResult->Script.ByteCode);
 			BytecodeLength = Data->CompileResult->Script.Length;
-
 			ScriptType = safe_cast<IScriptDocument::eScriptType>(Data->CompileResult->Script.Type);
+
 			OnStateChangedEditorIdAndFormId(EditorID, FormID);
-			OnStateChangedBytecodeLength(BytecodeLength);
-			TextEditor->Modified = false;
+			OnStateChangedBytecode(Bytecode, BytecodeLength, PreprocessedScriptText);
+			Dirty = false;
 		}
 		else
 		{
@@ -420,6 +437,44 @@ ScriptTextMetadata^ ScriptDocument::PrepareMetadataForSerialization(bool HasPrep
 	return Metadata;
 }
 
+bool ScriptDocument::CalculateLineBytecodeOffsets(String^ PreprocessedScriptText, UInt8* BytecodeData, UInt16 BytecodeLength)
+{
+	try
+	{
+		LineBytecodeOffsets->Clear();
+		LineBytecodeOffsets->Add(0);	// sentinel offset; will be set to 0xFFFF in case of an error
+
+		if (BytecodeData)
+		{
+			UInt16 BytecodeCursor = 0;
+			auto ScriptTextLines = PreprocessedScriptText->Split('\n');
+
+			for each (auto Line in ScriptTextLines)
+			{
+				auto LineOffset = obScriptParsing::ByteCodeParser::GetOffsetForLine(Line, BytecodeData, BytecodeCursor);
+				LineBytecodeOffsets->Add(LineOffset);
+			}
+		}
+	}
+	catch (...)
+	{
+		// exceptions can be raised when bytecode doesn't correspond to script text for whatever reason (external modification, etc)
+		LineBytecodeOffsets[0] = 0xFFFF;
+	}
+
+	return AreLineBytecodeOffsetsValid();
+}
+
+bool ScriptDocument::AreLineBytecodeOffsetsValid()
+{
+	if (LineBytecodeOffsets->Count == 0)
+		return false;
+	else if (LineBytecodeOffsets[0] == 0xFFFF)
+		return false;
+
+	return true;
+}
+
 ScriptDocument::ScriptDocument()
 {
 	Type = IScriptDocument::eScriptType::Object;
@@ -435,10 +490,11 @@ ScriptDocument::ScriptDocument()
 	FindResults = gcnew List<ScriptFindResult^>;
 	ActiveBatchUpdateSource = eBatchUpdateSource::None;
 	ActiveBatchUpdateCounter = 0;
+	LineBytecodeOffsets = gcnew List<UInt16>;
 
+	BgAnalyzer = gcnew BackgroundSemanticAnalyzer(this);
 	Editor = gcnew textEditor::avalonEdit::AvalonEditTextEditor(this);
 	IntelliSense = gcnew intellisense::IntelliSenseInterfaceModel(Editor);
-	BgAnalyzer = gcnew BackgroundSemanticAnalyzer(this);
 	NavHelper = gcnew components::NavigationHelper(this);
 
 	AutoSaveTimer = gcnew Timer();
@@ -447,6 +503,7 @@ ScriptDocument::ScriptDocument()
 	EditorScriptModifiedHandler = gcnew textEditor::TextEditorScriptModifiedEventHandler(this, &ScriptDocument::Editor_ScriptModified);
 	EditorLineAnchorInvalidatedHandler = gcnew EventHandler(this, &ScriptDocument::Editor_LineAnchorInvalidated);
 	EditorStaticTextDisplayChangedHandler = gcnew EventHandler(this, &ScriptDocument::Editor_StaticTextDisplayChanged);
+	EditorLineColumnChangedHandler = gcnew EventHandler(this, &ScriptDocument::Editor_LineColumnChanged);
 	BgAnalysisCompleteHandler = gcnew IBackgroundSemanticAnalyzer::AnalysisCompleteEventHandler(this, &ScriptDocument::BgAnalyzer_AnalysisComplete);
 	AutoSaveTimerTickHandler = gcnew EventHandler(this, &ScriptDocument::AutoSaveTimer_Tick);
 	ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &ScriptDocument::ScriptEditorPreferences_Saved);
@@ -454,6 +511,8 @@ ScriptDocument::ScriptDocument()
 	Editor->ScriptModified += EditorScriptModifiedHandler;
 	Editor->LineAnchorInvalidated += EditorLineAnchorInvalidatedHandler;
 	Editor->StaticTextDisplayChanged += EditorStaticTextDisplayChangedHandler;
+	Editor->LineChanged += EditorLineColumnChangedHandler;
+	Editor->ColumnChanged += EditorLineColumnChangedHandler;
 	BgAnalyzer->SemanticAnalysisComplete += BgAnalysisCompleteHandler;
 	preferences::SettingsHolder::Get()->PreferencesChanged += ScriptEditorPreferencesSavedHandler;
 	AutoSaveTimer->Tick += AutoSaveTimerTickHandler;
@@ -470,6 +529,8 @@ ScriptDocument::~ScriptDocument()
 	Editor->ScriptModified -= EditorScriptModifiedHandler;
 	Editor->LineAnchorInvalidated -= EditorLineAnchorInvalidatedHandler;
 	Editor->StaticTextDisplayChanged -= EditorStaticTextDisplayChangedHandler;
+	Editor->LineChanged -= EditorLineColumnChangedHandler;
+	Editor->ColumnChanged -= EditorLineColumnChangedHandler;
 	BgAnalyzer->SemanticAnalysisComplete -= BgAnalysisCompleteHandler;
 	preferences::SettingsHolder::Get()->PreferencesChanged -= ScriptEditorPreferencesSavedHandler;
 	AutoSaveTimer->Tick -= AutoSaveTimerTickHandler;
@@ -477,6 +538,7 @@ ScriptDocument::~ScriptDocument()
 	SAFEDELETE_CLR(EditorScriptModifiedHandler);
 	SAFEDELETE_CLR(EditorLineAnchorInvalidatedHandler);
 	SAFEDELETE_CLR(EditorStaticTextDisplayChangedHandler);
+	SAFEDELETE_CLR(EditorLineColumnChangedHandler);
 	SAFEDELETE_CLR(BgAnalysisCompleteHandler);
 	SAFEDELETE_CLR(ScriptEditorPreferencesSavedHandler);
 	SAFEDELETE_CLR(AutoSaveTimerTickHandler);
@@ -489,6 +551,12 @@ ScriptDocument::~ScriptDocument()
 	Messages->Clear();
 	Bookmarks->Clear();
 	FindResults->Clear();
+}
+
+
+bool ScriptDocument::UnsavedNewScript::get()
+{
+	return NativeObject && nativeWrapper::g_CSEInterfaceTable->ScriptEditor.IsUnsavedNewScript(NativeObject);
 }
 
 System::String^ ScriptDocument::PreprocessedScriptText::get()
@@ -519,11 +587,6 @@ void ScriptDocument::Initialize(componentDLLInterface::ScriptData* ScriptData, b
 	BytecodeLength = ScriptData->Length;
 	NativeObject = ScriptData->ParentForm;
 	ScriptType = safe_cast<IScriptDocument::eScriptType>(ScriptData->Type);
-	OnStateChangedEditorIdAndFormId(EditorID, FormID);
-	OnStateChangedBytecodeLength(BytecodeLength);
-
-	bool UnsavedNewScriptInstances = nativeWrapper::g_CSEInterfaceTable->ScriptEditor.IsUnsavedNewScript(NativeObject);
-	TextEditor->Modified = UnsavedNewScriptInstances ? true : false;
 
 	ClearMessages(ScriptDiagnosticMessage::eMessageSource::All, ScriptDiagnosticMessage::eMessageType::All);
 	ClearBookmarks();
@@ -532,7 +595,7 @@ void ScriptDocument::Initialize(componentDLLInterface::ScriptData* ScriptData, b
 	auto RawScriptText = gcnew String(ScriptData->Text);
 	if (UseAutoRecoveryFile)
 	{
-		Debug::Assert(!UnsavedNewScriptInstances);
+		Debug::Assert(!UnsavedNewScript);
 
 		auto AutoRecoveryFile = gcnew ScriptTextAutoRecoveryCache(EditorID);
 		RawScriptText = AutoRecoveryFile->Read();
@@ -550,6 +613,9 @@ void ScriptDocument::Initialize(componentDLLInterface::ScriptData* ScriptData, b
 
 	TextEditor->InitializeState(ExtractedScriptText, ExtractedMetadata->CaretPos);
 
+	OnStateChangedEditorIdAndFormId(EditorID, FormID);
+	OnStateChangedBytecode(Bytecode, BytecodeLength, PreprocessedScriptText);
+
 	BeginBatchUpdate(eBatchUpdateSource::Bookmarks);
 	{
 		for each (auto Itr in ExtractedMetadata->Bookmarks)
@@ -559,8 +625,8 @@ void ScriptDocument::Initialize(componentDLLInterface::ScriptData* ScriptData, b
 		}
 	}
 	EndBatchUpdate(eBatchUpdateSource::Bookmarks);
-
 	intellisense::IntelliSenseBackend::Get()->Refresh(false);
+	Dirty = UnsavedNewScript ? true : false;
 }
 
 bool ScriptDocument::Save(IScriptDocument::eSaveOperation SaveOperation)
@@ -705,14 +771,15 @@ UInt32 ScriptDocument::GetBookmarkCount(UInt32 Line)
 
 void ScriptDocument::PushStateToSubscribers()
 {
-	OnStateChangedDirty(TextEditor->Modified);
-	OnStateChangedBytecodeLength(BytecodeLength);
+	OnStateChangedDirty(Dirty);
+	OnStateChangedBytecode(Bytecode, BytecodeLength, PreprocessedScriptText);
 	OnStateChangedType(Type);
 	OnStateChangedEditorIdAndFormId(EditorID, FormID);
 	OnStateChangedMessages();
 	OnStateChangedBookmarks();
 	OnStateChangedFindResults();
 	OnStateChangedDisplayingPreprocessorOutput();
+	OnStateChangedLineColumn();
 }
 
 bool ScriptDocument::TogglePreprocessorOutput(bool Enabled)
@@ -727,6 +794,7 @@ bool ScriptDocument::TogglePreprocessorOutput(bool Enabled)
 	else
 		TextEditor->EndDisplayingStaticText();
 
+	Editor->ToggleScriptBytecodeOffsetMargin(Enabled);
 	return true;
 }
 
@@ -791,6 +859,35 @@ bool ScriptDocument::LoadScriptTextFromDisk(String^ DiskFilePath)
 		DebugPrint("Couldn't load script text from file @ " + DiskFilePath + "!\nException: " + E->ToString());
 		return false;
 	}
+}
+
+textEditor::FindReplaceResult^ ScriptDocument::FindReplace(textEditor::eFindReplaceOperation Operation, String^ Query, String^ Replacement, textEditor::eFindReplaceOptions Options)
+{
+	auto Result = TextEditor->FindReplace(Operation, Query, Replacement, Options);
+	if (!Result->HasError)
+	{
+		BeginBatchUpdate(eBatchUpdateSource::FindResults);
+		{
+			ClearFindResults();
+			auto OpQuery = Operation == textEditor::eFindReplaceOperation::Replace ? Query + " => " + Replacement : Query;
+			for each (auto Hit in Result->Hits)
+				AddFindResult(OpQuery, Hit->Line, Hit->Text, Hit->HitCount);
+		}
+		EndBatchUpdate(eBatchUpdateSource::FindResults);
+	}
+
+	return Result;
+}
+
+bool ScriptDocument::GetBytecodeOffsetForScriptLine(UInt32 Line, UInt16% OutOffset)
+{
+	if (!AreLineBytecodeOffsetsValid())
+		return false;
+	else if (Line < 1 || Line >= LineBytecodeOffsets->Count)
+		return false;
+
+	OutOffset = LineBytecodeOffsets[Line];
+	return true;
 }
 
 ScriptEditorDocumentModel::ScriptEditorDocumentModel()

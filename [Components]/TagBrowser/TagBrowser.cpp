@@ -191,7 +191,7 @@ namespace cse
 							BadItems = true;
 							DebugPrint("Couldn't find form '" + Token + "'");
 						}
-						nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+						nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data);
 					}
 				}
 			}
@@ -480,7 +480,7 @@ namespace cse
 					}
 
 					nativeWrapper::g_CSEInterfaceTable->TagBrowser.InstantiateObjects(InteropData);
-					nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(InteropData, false);
+					nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(InteropData);
 				}
 			}
 			else
@@ -738,7 +738,7 @@ namespace cse
 					BadItems = true;
 					DebugPrint("Couldn't find form '" + Itr + "'");
 				}
-				nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+				nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data);
 			}
 
 			FormList->EndUpdate();

@@ -1,5 +1,6 @@
 #include "AvalonEditComponents.h"
 #include "AvalonEditTextEditor.h"
+#include "IScriptEditorView.h"
 #include "Preferences.h"
 
 namespace cse
@@ -20,7 +21,7 @@ namespace avalonEdit
 
 System::Windows::Media::Imaging::BitmapSource^ WPFImageResourceGenerator::CreateImageSource(String^ ResourceIdentifier)
 {
-	Drawing::Bitmap^ OrgResource = safe_cast<Drawing::Bitmap^>(IconResources->CreateImage(ResourceIdentifier));
+	Drawing::Bitmap^ OrgResource = safe_cast<Drawing::Bitmap^>(view::components::CommonIcons::Get()->ResourceManager->CreateImage(ResourceIdentifier));
 	System::Windows::Media::Imaging::BitmapSource^ Result = nullptr;
 
 	try
@@ -745,7 +746,7 @@ StructureVisualizerRenderer::~StructureVisualizerRenderer()
 Windows::Media::Imaging::BitmapSource^ StructureVisualizerRenderer::GetIconSource()
 {
 	if (ElementIcon == nullptr)
-		ElementIcon = WPFImageResourceGenerator::CreateImageSource("AvalonEditStructureVisualizer");
+		ElementIcon = WPFImageResourceGenerator::CreateImageSource("StructureVis");
 
 	return ElementIcon;
 }
@@ -790,16 +791,20 @@ Windows::Media::HitTestResult^ IconMargin::HitTestCore(Windows::Media::PointHitT
 
 Windows::Size IconMargin::MeasureOverride(Windows::Size availableSize)
 {
-	return Windows::Size(18, 0);
+	return Windows::Size(22, 0);
 }
 
 void IconMargin::OnRender(Windows::Media::DrawingContext^ drawingContext)
 {
 	Windows::Size renderSize = this->RenderSize;
-	drawingContext->DrawRectangle(Windows::SystemColors::ControlBrush, nullptr, Windows::Rect(0, 0, renderSize.Width, renderSize.Height));
-	drawingContext->DrawLine(gcnew Windows::Media::Pen(Windows::SystemColors::ControlDarkBrush, 1),
-							Windows::Point(renderSize.Width - 0.5, 0),
-							Windows::Point(renderSize.Width - 0.5, renderSize.Height));
+
+	auto BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
+	auto BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B));
+
+	drawingContext->DrawRectangle(BackgroundBrush, nullptr, Windows::Rect(0, 0, renderSize.Width, renderSize.Height));
+	//drawingContext->DrawLine(gcnew Windows::Media::Pen(Windows::SystemColors::ControlDarkBrush, 1),
+	//						Windows::Point(renderSize.Width - 0.5, 0),
+	//						Windows::Point(renderSize.Width - 0.5, renderSize.Height));
 
 	AvalonEdit::Rendering::TextView^ textView = this->TextView;
 
@@ -822,6 +827,8 @@ void IconMargin::OnRender(Windows::Media::DrawingContext^ drawingContext)
 			}
 		}
 	}
+
+	AbstractMargin::OnRender(drawingContext);
 }
 
 void IconMargin::OnMouseDown(System::Windows::Input::MouseButtonEventArgs^ e)
@@ -893,7 +900,7 @@ IconMargin::~IconMargin()
 Windows::Media::Imaging::BitmapSource^ DefaultIconMargin::GetWarningIcon()
 {
 	if (WarningIcon == nullptr)
-		WarningIcon = WPFImageResourceGenerator::CreateImageSource("AvalonEditIconMarginWarningColor");
+		WarningIcon = WPFImageResourceGenerator::CreateImageSource("Warning");
 
 	return WarningIcon;
 }
@@ -901,7 +908,7 @@ Windows::Media::Imaging::BitmapSource^ DefaultIconMargin::GetWarningIcon()
 Windows::Media::Imaging::BitmapSource^ DefaultIconMargin::GetErrorIcon()
 {
 	if (ErrorIcon == nullptr)
-		ErrorIcon = WPFImageResourceGenerator::CreateImageSource("AvalonEditIconMarginErrorColor");
+		ErrorIcon = WPFImageResourceGenerator::CreateImageSource("Error");
 
 	return ErrorIcon;
 }
@@ -909,14 +916,22 @@ Windows::Media::Imaging::BitmapSource^ DefaultIconMargin::GetErrorIcon()
 Windows::Media::Imaging::BitmapSource^ DefaultIconMargin::GetBookmarkIcon()
 {
 	if (BookmarkIcon == nullptr)
-		BookmarkIcon = WPFImageResourceGenerator::CreateImageSource("AvalonEditIconMarginBookmark");
+		BookmarkIcon = WPFImageResourceGenerator::CreateImageSource("Bookmark");
 
 	return BookmarkIcon;
 }
 
 void DefaultIconMargin::ParentModel_StateChanged(Object^ Sender, model::IScriptDocument::StateChangeEventArgs^ E)
 {
-	this->InvalidateVisual();
+	switch (E->EventType)
+	{
+	case model::IScriptDocument::StateChangeEventArgs::eEventType::Dirty:
+	case model::IScriptDocument::StateChangeEventArgs::eEventType::Messages:
+	case model::IScriptDocument::StateChangeEventArgs::eEventType::Bookmarks:
+	case model::IScriptDocument::StateChangeEventArgs::eEventType::DisplayingPreprocessorOutput:
+		this->InvalidateVisual();
+		break;
+	}
 }
 
 void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::MouseEventArgs^ E)
@@ -1014,20 +1029,13 @@ bool DefaultIconMargin::GetRenderData(int Line, Windows::Media::Imaging::BitmapS
 		return false;
 
 	if (ErrorCount)
-	{
 		OutIcon = GetErrorIcon();
-		Width = Height = 16;
-	}
 	else if (WarningCount)
-	{
 		OutIcon = GetWarningIcon();
-		Width = Height = 16;
-	}
 	else if (BookmarkCount)
-	{
 		OutIcon = GetBookmarkIcon();
-		Width = Height = 16;
-	}
+
+	Width = Height = 12;
 
 	OutOpacity = 1.0;
 	return true;
@@ -1083,6 +1091,119 @@ DefaultIconMargin::~DefaultIconMargin()
 TagableDoubleAnimation::TagableDoubleAnimation(double fromValue, double toValue, System::Windows::Duration duration, System::Windows::Media::Animation::FillBehavior fillBehavior)
 	: DoubleAnimation(fromValue, toValue, duration, fillBehavior)
 {
+}
+
+
+void ScriptBytecodeOffsetMargin::ParentModel_StateChanged(Object^ Sender, model::IScriptDocument::StateChangeEventArgs^ E)
+{
+	switch (E->EventType)
+	{
+	case model::IScriptDocument::StateChangeEventArgs::eEventType::Dirty:
+	case model::IScriptDocument::StateChangeEventArgs::eEventType::Bytecode:
+	case model::IScriptDocument::StateChangeEventArgs::eEventType::DisplayingPreprocessorOutput:
+		this->InvalidateVisual();
+		break;
+	}
+}
+
+Windows::Size ScriptBytecodeOffsetMargin::MeasureOverride(Windows::Size availableSize)
+{
+	LineNumberMargin::MeasureOverride(availableSize);
+	auto ForegroundBrush = safe_cast<System::Windows::Media::Brush^>(GetValue(Windows::Controls::Control::ForegroundProperty));
+	auto FormattedText = gcnew Windows::Media::FormattedText("OOOO",
+											 				 Globalization::CultureInfo::CurrentCulture, Windows::FlowDirection::LeftToRight,
+															 typeface, emSize, ForegroundBrush,
+															 nullptr, Windows::Media::TextOptions::GetTextFormattingMode(this));
+	return Windows::Size(FormattedText->Width, 0);
+}
+
+void ScriptBytecodeOffsetMargin::OnRender(Windows::Media::DrawingContext^ drawingContext)
+{
+	if (TextView == nullptr || !TextView->VisualLinesValid)
+		return;
+
+	auto ForegroundBrush = safe_cast<System::Windows::Media::Brush^>(GetValue(Windows::Controls::Control::ForegroundProperty));
+	for each (auto Line in TextView->VisualLines)
+	{
+		auto LineNo = Line->FirstDocumentLine->LineNumber;
+		UInt16 LineOffset;
+		auto LineOffsetText = gcnew String(' ', 4);
+		if (ParentScriptDocument->GetBytecodeOffsetForScriptLine(LineNo, LineOffset))
+		{
+			if (LineOffset != 0xFFFF)
+				LineOffsetText = LineOffset.ToString("X4");
+		}
+		else
+			LineOffsetText = "ERR!";
+
+		auto FormattedText = gcnew Windows::Media::FormattedText(LineOffsetText,
+											 					 Globalization::CultureInfo::CurrentCulture, Windows::FlowDirection::LeftToRight,
+																 typeface, emSize, ForegroundBrush,
+																 nullptr, Windows::Media::TextOptions::GetTextFormattingMode(this));
+		auto YPos = Line->GetTextLineVisualYPosition(Line->TextLines[0], ICSharpCode::AvalonEdit::Rendering::VisualYPosition::TextTop);
+		drawingContext->DrawText(FormattedText, Windows::Point(RenderSize.Width - FormattedText->Width, YPos - TextView->VerticalOffset));
+	}
+}
+
+ScriptBytecodeOffsetMargin::ScriptBytecodeOffsetMargin(model::IScriptDocument^ ParentScriptDocument)
+{
+	this->ParentScriptDocument = ParentScriptDocument;
+
+	ParentModelStateChangedHandler = gcnew model::IScriptDocument::StateChangeEventHandler(this, &ScriptBytecodeOffsetMargin::ParentModel_StateChanged);
+	this->ParentScriptDocument->StateChanged += ParentModelStateChangedHandler;
+}
+
+ScriptBytecodeOffsetMargin::~ScriptBytecodeOffsetMargin()
+{
+	ParentScriptDocument->StateChanged -= ParentModelStateChangedHandler;
+	SAFEDELETE_CLR(ParentModelStateChangedHandler);
+
+	ParentScriptDocument = nullptr;
+}
+
+
+void ScriptBytecodeOffsetMargin::AddToTextArea(AvalonEdit::TextEditor^ Field, ScriptBytecodeOffsetMargin^ Margin)
+{
+	auto FirstSeparator = safe_cast<Windows::Shapes::Line^>(DottedLineMargin::Create());
+	auto SecondSeparator = safe_cast<Windows::Shapes::Line^>(DottedLineMargin::Create());
+
+	int LineNumberMarginIdx = -1;
+	for (int i = 0; i < Field->TextArea->LeftMargins->Count; ++i)
+	{
+		if (Field->TextArea->LeftMargins[i]->GetType() == LineNumberMargin::typeid)
+		{
+			LineNumberMarginIdx = i;
+			break;
+		}
+	}
+
+	Debug::Assert(LineNumberMarginIdx != -1);
+
+	int InsertAtIdx = LineNumberMarginIdx;
+	Field->TextArea->LeftMargins->Insert(InsertAtIdx, FirstSeparator);
+	Field->TextArea->LeftMargins->Insert(InsertAtIdx + 1, Margin);
+	Field->TextArea->LeftMargins->Insert(InsertAtIdx + 2, SecondSeparator);
+
+	auto ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
+	auto ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, ForegroundColor.R, ForegroundColor.G, ForegroundColor.B));
+	auto ForegroundBinding = gcnew System::Windows::Data::Binding("LineNumbersForeground");
+	ForegroundBinding->Source = Field;
+
+	FirstSeparator->SetBinding(Windows::Shapes::Line::StrokeProperty, ForegroundBinding);
+	SecondSeparator->SetBinding(Windows::Shapes::Line::StrokeProperty, ForegroundBinding);
+	FirstSeparator->SetValue(Windows::Shapes::Line::StrokeProperty, ForegroundBrush);
+	SecondSeparator->SetValue(Windows::Shapes::Line::StrokeProperty, ForegroundBrush);
+}
+
+void ScriptBytecodeOffsetMargin::RemoveFromTextArea(AvalonEdit::TextEditor^ Field, ScriptBytecodeOffsetMargin^ Margin)
+{
+	auto MarginIdx = Field->TextArea->LeftMargins->IndexOf(Margin);
+	Debug::Assert(MarginIdx != -1);
+
+	// 2 separators + 1 margin
+	Field->TextArea->LeftMargins->RemoveAt(MarginIdx - 1);
+	Field->TextArea->LeftMargins->RemoveAt(MarginIdx - 1);
+	Field->TextArea->LeftMargins->RemoveAt(MarginIdx - 1);
 }
 
 

@@ -3,6 +3,7 @@
 #include "ITextEditor.h"
 #include "SnippetManager.h"
 #include "[Common]\NativeWrapper.h"
+#include "IScriptEditorView.h"
 
 namespace cse
 {
@@ -35,7 +36,7 @@ Image^ IntelliSenseItem::GetItemTypeIcon(eItemType Type)
 {
 	if (ItemTypeIcons->Count == 0)
 	{
-		auto ImageResources =  gcnew ImageResourceManager("ScriptEditor.Icons");
+		auto ImageResources = view::components::CommonIcons::Get()->ResourceManager;
 		ItemTypeIcons->Add(eItemType::None, ImageResources->CreateImage("Transparent"));
 		ItemTypeIcons->Add(eItemType::ScriptCommand, ImageResources->CreateImage("ScriptCommand"));
 		ItemTypeIcons->Add(eItemType::ScriptVariable, ImageResources->CreateImage("LocalVariable"));

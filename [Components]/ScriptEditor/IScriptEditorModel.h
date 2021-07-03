@@ -229,18 +229,20 @@ interface class IScriptDocument
 		{
 			None,
 			Dirty,
-			BytecodeLength,
+			Bytecode,
 			ScriptType,
 			EditorIdAndFormId,
 			Messages,
 			Bookmarks,
 			FindResults,
 			DisplayingPreprocessorOutput,
+			LineOrColumn,
 		};
 
 		eEventType EventType;
 
 		bool Dirty;
+		UInt8* BytecodeData;
 		UInt16 BytecodeLength;		// in bytes
 		eScriptType ScriptType;
 		String^ EditorId;
@@ -249,6 +251,8 @@ interface class IScriptDocument
 		List<components::ScriptBookmark^>^ Bookmarks;
 		List<components::ScriptFindResult^>^ FindResults;
 		bool DisplayingPreprocessorOutput;
+		UInt32 Line;
+		UInt32 Column;
 
 		StateChangeEventArgs();
 	};
@@ -294,6 +298,10 @@ interface class IScriptDocument
 	bool SanitizeScriptText();
 	bool SaveScriptTextToDisk(String^ DiskFilePath);
 	bool LoadScriptTextFromDisk(String^ DiskFilePath);
+
+	textEditor::FindReplaceResult^ FindReplace(textEditor::eFindReplaceOperation Operation, String^ Query, String^ Replacement, textEditor::eFindReplaceOptions Options);
+
+	bool GetBytecodeOffsetForScriptLine(UInt32 Line, UInt16% OutOffset);
 };
 
 

@@ -26,9 +26,9 @@ interface class IScriptEditorController
 			None = 0,
 
 			CreateNewScript = 1 << 0,
-			LoadExistingScript = 1 << 0,	// sets the same bit as above to ensure mutually-exclusivity
+			LoadExistingScript = 1 << 1,
 
-			PerformFind = 1 << 1,
+			PerformFind = 1 << 2,
 		};
 
 		eInitOperation Operations;
@@ -44,16 +44,17 @@ interface class IScriptEditorController
 	property model::IScriptDocument^ ActiveDocument;
 
 	IScriptEditorController^ New();
+	IScriptEditorController^ New(InstantiationParams^ Params);
 	void RelocateDocument(model::IScriptDocument^ Document, IScriptEditorController^ Source);
 	void ActivateOrCreateNewDocument(String^ ScriptEditorId);
-
-	void InstantiateEditor(InstantiationParams^ Params);
 };
 
 
 interface class IFactory
 {
 	IScriptEditorController^ NewController(model::IFactory^ ModelFactory, view::IFactory^ ViewFactory);
+	IScriptEditorController^ NewController(model::IFactory^ ModelFactory, view::IFactory^ ViewFactory, IScriptEditorController::InstantiationParams^ InitParams);
+
 };
 
 

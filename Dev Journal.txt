@@ -66,8 +66,6 @@ SE		---->
 
 
 	ENHANCEMENT		=
-		> Key chords for shortcuts
-		> Integrate the preprocessor/offset viewers into the main text editor control
 		> Tabs on the side
 		> Fuzzy search for IntelliSense
 		> Prevent the creation of duplicate script editor IDs

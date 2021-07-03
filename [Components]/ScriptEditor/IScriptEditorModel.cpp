@@ -198,6 +198,9 @@ INavigationHelper::NavigationChangedEventArgs::NavigationChangedEventArgs(obScri
 
 System::String^ ScriptTextAutoRecoveryCache::GetCacheFilePath(String^ ScriptEditorId)
 {
+	if (ScriptEditorId->Length == 0)
+		return String::Empty;
+
 	auto AutoRecoveryDir = gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath());
 	DisposibleDataAutoPtr<componentDLLInterface::ScriptData> ScriptData(
 		nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(
@@ -243,6 +246,9 @@ System::String^ ScriptTextAutoRecoveryCache::Read()
 
 void ScriptTextAutoRecoveryCache::Delete(bool SendToRecycleBin)
 {
+	if (!Exists)
+		return;
+
 	try
 	{
 		if (!SendToRecycleBin)
@@ -279,6 +285,7 @@ IScriptDocument::StateChangeEventArgs::StateChangeEventArgs()
 	EventType = eEventType::None;
 
 	Dirty = false;
+	BytecodeData = nullptr;
 	BytecodeLength = 0;
 	ScriptType = eScriptType::Object;
 	EditorId = nullptr;
@@ -287,6 +294,7 @@ IScriptDocument::StateChangeEventArgs::StateChangeEventArgs()
 	Bookmarks = nullptr;
 	FindResults = nullptr;
 	DisplayingPreprocessorOutput = false;
+	Line = Column = 0;
 }
 
 

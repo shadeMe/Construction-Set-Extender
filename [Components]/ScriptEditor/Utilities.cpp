@@ -98,132 +98,102 @@ KeyCombo^ KeyCombo::New(Keys Modifier, Keys Key)
 InputBox::InputBox(void)
 {
 	InitializeComponent();
+	Result = gcnew InputBoxResult;
+	Result->ReturnCode = Windows::Forms::DialogResult::Ignore;
+	Result->Text = String::Empty;
 }
 
 InputBox::~InputBox()
 {
-	if (components)
-		delete components;
 }
 
 void InputBox::InitializeComponent()
 {
-	this->lblPrompt = (gcnew System::Windows::Forms::Label());
-	this->btnOK = (gcnew System::Windows::Forms::Button());
-	this->btnCancel = (gcnew System::Windows::Forms::Button());
-	this->txtInput = (gcnew System::Windows::Forms::TextBox());
+	this->lblPrompt = (gcnew DevComponents::DotNetBar::LabelX());
+	this->btnOK = (gcnew DevComponents::DotNetBar::ButtonX());
+	this->btnCancel = (gcnew DevComponents::DotNetBar::ButtonX());
+	this->txtInput = (gcnew DevComponents::DotNetBar::Controls::TextBoxX());
 	this->SuspendLayout();
 	//
 	// lblPrompt
 	//
-	this->lblPrompt->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
-		| System::Windows::Forms::AnchorStyles::Left)
-		| System::Windows::Forms::AnchorStyles::Right));
-	this->lblPrompt->Location = System::Drawing::Point(13, 9);
-	this->lblPrompt->Margin = System::Windows::Forms::Padding(4, 0, 4, 0);
+	//
+	//
+	//
+	this->lblPrompt->BackgroundStyle->CornerType = DevComponents::DotNetBar::eCornerType::Square;
+	this->lblPrompt->Location = System::Drawing::Point(12, 12);
 	this->lblPrompt->Name = L"lblPrompt";
-	this->lblPrompt->Size = System::Drawing::Size(362, 84);
+	this->lblPrompt->Size = System::Drawing::Size(313, 52);
 	this->lblPrompt->TabIndex = 0;
+	this->lblPrompt->Text = L"Prompt Text";
+	this->lblPrompt->TextLineAlignment = System::Drawing::StringAlignment::Near;
 	//
 	// btnOK
 	//
-	this->btnOK->DialogResult = System::Windows::Forms::DialogResult::OK;
-	this->btnOK->Location = System::Drawing::Point(388, 12);
-	this->btnOK->Margin = System::Windows::Forms::Padding(4, 3, 4, 3);
+	this->btnOK->AccessibleRole = System::Windows::Forms::AccessibleRole::PushButton;
+	this->btnOK->ColorTable = DevComponents::DotNetBar::eButtonColor::OrangeWithBackground;
+	this->btnOK->Location = System::Drawing::Point(345, 12);
 	this->btnOK->Name = L"btnOK";
-	this->btnOK->Size = System::Drawing::Size(77, 24);
-	this->btnOK->TabIndex = 1;
+	this->btnOK->Size = System::Drawing::Size(75, 23);
+	this->btnOK->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+	this->btnOK->TabIndex = 2;
 	this->btnOK->Text = L"OK";
-	this->btnOK->UseVisualStyleBackColor = true;
 	this->btnOK->Click += gcnew System::EventHandler(this, &InputBox::btnOK_Click);
 	//
 	// btnCancel
 	//
+	this->btnCancel->AccessibleRole = System::Windows::Forms::AccessibleRole::PushButton;
+	this->btnCancel->ColorTable = DevComponents::DotNetBar::eButtonColor::OrangeWithBackground;
 	this->btnCancel->DialogResult = System::Windows::Forms::DialogResult::Cancel;
-	this->btnCancel->Location = System::Drawing::Point(388, 42);
-	this->btnCancel->Margin = System::Windows::Forms::Padding(4, 3, 4, 3);
+	this->btnCancel->Location = System::Drawing::Point(345, 41);
 	this->btnCancel->Name = L"btnCancel";
-	this->btnCancel->Size = System::Drawing::Size(77, 24);
-	this->btnCancel->TabIndex = 2;
+	this->btnCancel->Size = System::Drawing::Size(75, 23);
+	this->btnCancel->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+	this->btnCancel->TabIndex = 3;
 	this->btnCancel->Text = L"Cancel";
-	this->btnCancel->UseVisualStyleBackColor = true;
 	this->btnCancel->Click += gcnew System::EventHandler(this, &InputBox::btnCancel_Click);
 	//
 	// txtInput
 	//
-	this->txtInput->Location = System::Drawing::Point(13, 96);
-	this->txtInput->Margin = System::Windows::Forms::Padding(4, 3, 4, 3);
+	this->txtInput->BackColor = System::Drawing::Color::Black;
+	//
+	//
+	//
+	this->txtInput->Border->Class = L"TextBoxBorder";
+	this->txtInput->Border->CornerType = DevComponents::DotNetBar::eCornerType::Square;
+	this->txtInput->DisabledBackColor = System::Drawing::Color::Black;
+	this->txtInput->ForeColor = System::Drawing::Color::White;
+	this->txtInput->Location = System::Drawing::Point(12, 74);
 	this->txtInput->Name = L"txtInput";
-	this->txtInput->Size = System::Drawing::Size(452, 20);
-	this->txtInput->TabIndex = 3;
-	this->txtInput->AcceptsReturn = true;
-	this->txtInput->Multiline = true;
-	this->txtInput->KeyDown += gcnew KeyEventHandler(this, &InputBox::txtInput_KeyDown);
+	this->txtInput->PreventEnterBeep = true;
+	this->txtInput->Size = System::Drawing::Size(313, 22);
+	this->txtInput->TabIndex = 1;
+	this->txtInput->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &InputBox::txtInput_KeyDown);
 	//
-	// InputBox
+	// InputPromptDialog
 	//
-	this->ControlBox = false;
-	this->ShowInTaskbar = false;
 	this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 	this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-	this->ClientSize = System::Drawing::Size(478, 128);
+	this->CancelButton = this->btnCancel;
+	this->ClientSize = System::Drawing::Size(432, 108);
+	this->ControlBox = false;
 	this->Controls->Add(this->txtInput);
 	this->Controls->Add(this->btnCancel);
 	this->Controls->Add(this->btnOK);
 	this->Controls->Add(this->lblPrompt);
+	this->DoubleBuffered = true;
 	this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedToolWindow;
-	this->Visible = false;
-	this->Margin = System::Windows::Forms::Padding(4, 3, 4, 3);
-	this->Name = L"InputBox";
+	this->Name = L"InputPromptDialog";
+	this->ShowIcon = false;
+	this->ShowInTaskbar = false;
+	this->StartPosition = System::Windows::Forms::FormStartPosition::CenterParent;
+	this->Text = L"Prompt Dialog";
 	this->Load += gcnew System::EventHandler(this, &InputBox::InputBox_Load);
 	this->ResumeLayout(false);
-	this->PerformLayout();
 }
 
 void InputBox::InputBox_Load(System::Object^ sender, System::EventArgs^ e)
 {
-	OutputResponse->ReturnCode = Windows::Forms::DialogResult::Ignore;
-	OutputResponse->Text = String::Empty;
-
-	txtInput->Text = _defaultValue;
-	lblPrompt->Text = _formPrompt;
-	Text = _formCaption;
-
-	// Retrieve the working rectangle from the Screen class
-	// using the PrimaryScreen and the WorkingArea properties->
-	Rectangle workingRectangle = Screen::PrimaryScreen->WorkingArea;
-
-	if ((_xPos >= 0 && _xPos < workingRectangle.Width - 100) && (_yPos >= 0 && _yPos < workingRectangle.Height - 100))
-	{
-		StartPosition = FormStartPosition::Manual;
-		Location = Point(_xPos, _yPos);
-	}
-	else
-	{
-		StartPosition = FormStartPosition::CenterScreen;
-		this->CenterToScreen();
-	}
-
-	String^ PrompText = lblPrompt->Text;
-
-	int n = 0;
-	int Index = 0;
-	while (PrompText->IndexOf("\n", Index) > -1)
-	{
-		Index = PrompText->IndexOf("\n", Index) + 1;
-		n++;
-	}
-
-	if (n == 0)
-		n = 1;
-
-	Drawing::Point Txt = txtInput->Location;
-	Txt.Y = Txt.Y + (n * 4);
-	txtInput->Location = Txt;
-	Drawing::Size form = Size;
-	form.Height = form.Height + (n * 4);
-	Size = form;
-
 	txtInput->SelectionStart = 0;
 	txtInput->SelectionLength = txtInput->Text->Length;
 	txtInput->Focus();
@@ -231,17 +201,15 @@ void InputBox::InputBox_Load(System::Object^ sender, System::EventArgs^ e)
 
 void InputBox::btnOK_Click(Object^ sender, EventArgs^ e)
 {
-	OutputResponse->ReturnCode = Windows::Forms::DialogResult::OK;
-	OutputResponse->Text = txtInput->Text;
-	//delete frmInputDialog;
+	Result->ReturnCode = Windows::Forms::DialogResult::OK;
+	Result->Text = txtInput->Text;
 	Close();
 }
 
 void InputBox::btnCancel_Click(Object^ sender, EventArgs^ e)
 {
-	OutputResponse->ReturnCode = Windows::Forms::DialogResult::Cancel;
-	OutputResponse->Text = String::Empty; // Clean output response
-											//delete frmInputDialog;
+	Result->ReturnCode = Windows::Forms::DialogResult::Cancel;
+	Result->Text = String::Empty;
 	Close();
 }
 
@@ -258,61 +226,16 @@ void InputBox::txtInput_KeyDown(Object^ Sender, KeyEventArgs^ E)
 	}
 }
 
-InputBoxResult^ InputBox::Show(String^ Prompt)
+InputBoxResult^ InputBox::Show(String^ Prompt, String^ Title, String^ Default, IntPtr ParentWindowHandle)
 {
-	InputBox^ dialogForm = gcnew InputBox();
+	auto Form = gcnew InputBox();
 
-	dialogForm->FormPrompt = Prompt;
-	// 				dialogForm->XPosition    = -1;
-	// 				dialogForm->YPosition    = -1;
+	Form->txtInput->Text = Default;
+	Form->lblPrompt->Text = Prompt;
+	Form->Text = Title;
 
-	// Display the form as a modal dialog box->
-	dialogForm->ShowDialog();
-	return dialogForm->OutputResponse;
-}
-
-InputBoxResult^ InputBox::Show(String^ Prompt, String^ Title)
-{
-	InputBox^ dialogForm = gcnew InputBox();
-
-	dialogForm->FormCaption = Title;
-	dialogForm->FormPrompt = Prompt;
-	// 				dialogForm->XPosition    = -1;
-	// 				dialogForm->YPosition    = -1;
-
-	// Display the form as a modal dialog box->
-	dialogForm->ShowDialog();
-	return dialogForm->OutputResponse;
-}
-
-InputBoxResult^ InputBox::Show(String^ Prompt, String^ Title, String^ Default)
-{
-	InputBox^ dialogForm = gcnew InputBox();
-
-	dialogForm->FormCaption = Title;
-	dialogForm->FormPrompt = Prompt;
-	dialogForm->DefaultValue = Default;
-	// 				dialogForm->XPosition    = -1;
-	// 				dialogForm->YPosition    = -1;
-
-	// Display the form as a modal dialog box->
-	dialogForm->ShowDialog();
-	return dialogForm->OutputResponse;
-}
-
-InputBoxResult^ InputBox::Show(String^ Prompt, String^ Title, String^ Default, int XPos, int YPos)
-{
-	InputBox^ dialogForm = gcnew InputBox();
-
-	dialogForm->FormCaption = Title;
-	dialogForm->FormPrompt = Prompt;
-	dialogForm->DefaultValue = Default;
-	dialogForm->XPosition = XPos;
-	dialogForm->YPosition = YPos;
-
-	// Display the form as a modal dialog box->
-	dialogForm->ShowDialog();
-	return dialogForm->OutputResponse;
+	Form->ShowDialog(gcnew WindowHandleWrapper(ParentWindowHandle));
+	return Form->Result;
 }
 
 void AnimatedForm::WndProc(Message% m)
@@ -339,28 +262,34 @@ void AnimatedForm::WndProc(Message% m)
 			return;
 		break;
 	}
-	/*case WM_NCACTIVATE:
-	if (!PreventActivation && ActiveTransition == Transition::None)
-	break;
-
-	m.Result = IntPtr::Zero;
-	return;*/
 	case WM_ACTIVATE:
 		if (((int)m.WParam & 0xFFFF) != WA_INACTIVE)
 		{
-			if (!PreventActivation && ActiveTransition == Transition::None)
+			if (!PreventActivation && ActiveTransition == eTransition::None)
 				break;
 
 			if (m.LParam != IntPtr::Zero)
 				nativeWrapper::SetActiveWindow(m.LParam);
 			else
-				// Could not find sender, just de-activate it.
-				nativeWrapper::SetActiveWindow(IntPtr::Zero);
+				nativeWrapper::SetActiveWindow(IntPtr::Zero);	// Could not find sender, just de-activate it.
+
+			m.Result = IntPtr::Zero;
+			return;
 		}
+
 		break;
 	}
 
-	Form::WndProc(m);
+	MetroForm::WndProc(m);
+}
+
+AnimatedForm::StartTransitionParams::StartTransitionParams()
+{
+	EndState = eTransitionFinalState::None;
+	ParentWindowHandle = IntPtr::Zero;
+	Position = Point(0, 0);
+	UsePosition = false;
+	Animate = true;
 }
 
 void AnimatedForm::FadeTimer_Tick(Object^ Sender, EventArgs^ E)
@@ -370,9 +299,9 @@ void AnimatedForm::FadeTimer_Tick(Object^ Sender, EventArgs^ E)
 	auto NumTicksReqd = kTransitionTime / static_cast<double>(FadeTimer->Interval);
 	auto PerTickDelta = 1.0 / NumTicksReqd;
 
-	if (ActiveTransition == Transition::FadeIn)
+	if (ActiveTransition == eTransition::FadeIn)
 		this->Opacity += PerTickDelta;
-	else if (ActiveTransition == Transition::FadeOut)
+	else if (ActiveTransition == eTransition::FadeOut)
 		this->Opacity -= PerTickDelta;
 
 	if (this->Opacity >= 1.0 || this->Opacity <= 0.0)
@@ -383,21 +312,21 @@ void AnimatedForm::ShowFormDiscreetly(IntPtr ParentWindowHandle)
 {
 	this->Opacity = 0;
 	if (ParentWindowHandle != IntPtr::Zero)
-		Form::Show(gcnew WindowHandleWrapper(ParentWindowHandle));
+		MetroForm::Show(gcnew WindowHandleWrapper(ParentWindowHandle));
 	else
-		Form::Show();
+		MetroForm::Show();
 }
 
 void AnimatedForm::StartTransition(StartTransitionParams^ Params)
 {
 	Debug::Assert(ClosingForm == false);
-	Debug::Assert(ActiveTransition == Transition::None);
-	Debug::Assert(ActiveTransitionEndState == TransitionFinalState::None);
+	Debug::Assert(ActiveTransition == eTransition::None);
+	Debug::Assert(ActiveTransitionEndState == eTransitionFinalState::None);
 	Debug::Assert(FadeTimer->Enabled == false);
 
 	switch (Params->EndState)
 	{
-	case TransitionFinalState::Show:
+	case eTransitionFinalState::Show:
 		if (Params->UsePosition)
 			SetDesktopLocation(Params->Position.X, Params->Position.Y);
 
@@ -406,19 +335,19 @@ void AnimatedForm::StartTransition(StartTransitionParams^ Params)
 
 		if (Params->Animate)
 		{
-			ActiveTransition = Transition::FadeIn;
+			ActiveTransition = eTransition::FadeIn;
 			this->Opacity = 0;
 		}
 
 		break;
-	case TransitionFinalState::Hide:
-	case TransitionFinalState::Close:
+	case eTransitionFinalState::Hide:
+	case eTransitionFinalState::Close:
 		if (!Visible)
-			Form::Show();
+			MetroForm::Show();
 
 		if (Params->Animate)
 		{
-			ActiveTransition = Transition::FadeOut;
+			ActiveTransition = eTransition::FadeOut;
 			this->Opacity = 1;
 		}
 
@@ -437,7 +366,7 @@ void AnimatedForm::StartTransition(StartTransitionParams^ Params)
 
 void AnimatedForm::EndTransition(StartTransitionParams^ StartParams)
 {
-	if (ActiveTransitionEndState == TransitionFinalState::None)
+	if (ActiveTransitionEndState == eTransitionFinalState::None)
 		return;
 	else if (ClosingForm)
 		return;
@@ -449,31 +378,30 @@ void AnimatedForm::EndTransition(StartTransitionParams^ StartParams)
 
 	switch (ActiveTransitionEndState)
 	{
-	case TransitionFinalState::Hide:
-		Form::Hide();
+	case eTransitionFinalState::Hide:
+		MetroForm::Hide();
 		this->Opacity = 1;
 		break;
-	case TransitionFinalState::Show:
+	case eTransitionFinalState::Show:
 		if (StartParams == nullptr)
-			Form::BringToFront();
+			MetroForm::BringToFront();
 		this->Opacity = 1;
 		break;
-	case TransitionFinalState::Close:
-		Form::Close();
+	case eTransitionFinalState::Close:
+		MetroForm::Close();
 		ClosingForm = true;
 		break;
 	}
 
-	ActiveTransition = Transition::None;
-	ActiveTransitionEndState = TransitionFinalState::None;
+	ActiveTransition = eTransition::None;
+	ActiveTransitionEndState = eTransitionFinalState::None;
 	ActiveTransitionCompleteHandler = nullptr;
 }
 
 AnimatedForm::AnimatedForm( bool ShowFormWithoutActivation )
-	: System::Windows::Forms::Form()
 {
-	ActiveTransition = Transition::None;
-	ActiveTransitionEndState = TransitionFinalState::None;
+	ActiveTransition = eTransition::None;
+	ActiveTransitionEndState = eTransitionFinalState::None;
 	ActiveTransitionCompleteHandler = nullptr;
 
 	this->ShowFormWithoutActivation = ShowFormWithoutActivation;
@@ -511,7 +439,7 @@ void AnimatedForm::Show()
 	EndTransition(nullptr);
 
 	auto Params = gcnew StartTransitionParams;
-	Params->EndState = TransitionFinalState::Show;
+	Params->EndState = eTransitionFinalState::Show;
 	StartTransition(Params);
 }
 
@@ -526,7 +454,7 @@ void AnimatedForm::Show(IntPtr ParentHandle)
 	EndTransition(nullptr);
 
 	auto Params = gcnew StartTransitionParams;
-	Params->EndState = TransitionFinalState::Show;
+	Params->EndState = eTransitionFinalState::Show;
 	Params->ParentWindowHandle = ParentHandle;
 	StartTransition(Params);
 }
@@ -539,7 +467,7 @@ void AnimatedForm::Show(Drawing::Point Position, IntPtr ParentHandle, bool Anima
 	EndTransition(nullptr);
 
 	auto Params = gcnew StartTransitionParams;
-	Params->EndState = TransitionFinalState::Show;
+	Params->EndState = eTransitionFinalState::Show;
 	Params->ParentWindowHandle = ParentHandle;
 	Params->Position = Position;
 	Params->UsePosition = true;
@@ -563,7 +491,7 @@ void AnimatedForm::Hide(bool Animate)
 	EndTransition(nullptr);
 
 	auto Params = gcnew StartTransitionParams;
-	Params->EndState = TransitionFinalState::Hide;
+	Params->EndState = eTransitionFinalState::Hide;
 	Params->Animate = Animate;
 	StartTransition(Params);
 }
@@ -576,13 +504,13 @@ void AnimatedForm::Close()
 	EndTransition(nullptr);
 
 	auto Params = gcnew StartTransitionParams;
-	Params->EndState = TransitionFinalState::Close;
+	Params->EndState = eTransitionFinalState::Close;
 	StartTransition(Params);
 }
 
 void AnimatedForm::ForceClose()
 {
-	Form::Close();
+	MetroForm::Close();
 }
 
 void AnimatedForm::SetSize(Drawing::Size WindowSize)

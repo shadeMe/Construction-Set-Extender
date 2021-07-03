@@ -24,20 +24,9 @@ extern "C"
 	}
 }
 
-void DeleteInterOpData(IDisposableData* Pointer, bool IsArray)
+void DeleteInterOpData(IDisposableData* Pointer)
 {
-	if (IsArray)
-		delete[] Pointer;
-	else
-		delete Pointer;
-}
-
-void DeleteData(void* Pointer, bool IsArray)
-{
-	if (IsArray)
-		delete[] Pointer;
-	else
-		delete Pointer;
+	delete Pointer;
 }
 
 /**** BEGIN EDITORAPI SUBINTERFACE ****/
@@ -1322,7 +1311,6 @@ TagBrowserInstantiationData* AllocateInstantionData(UInt32 FormCount)
 componentDLLInterface::CSEInterfaceTable g_InteropInterface =
 {
 	DeleteInterOpData,
-	DeleteData,
 	{
 		ComponentDLLDebugPrint,
 		WriteToStatusBar,

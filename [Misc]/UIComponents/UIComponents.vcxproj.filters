@@ -42,6 +42,9 @@
     <ClCompile Include="TagBrowser.cpp" />
     <ClCompile Include="UIComponents.cpp" />
     <ClCompile Include="UseInfoList.cpp" />
+    <ClCompile Include="InputPromptDialog.cpp">
+      <Filter>Header Files\ScriptEditor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TagBrowser.h">
@@ -72,6 +75,9 @@
       <Filter>Header Files\ScriptEditor</Filter>
     </ClInclude>
     <ClInclude Include="RefactorListViewDialog.h">
+      <Filter>Header Files\ScriptEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="InputPromptDialog.h">
       <Filter>Header Files\ScriptEditor</Filter>
     </ClInclude>
   </ItemGroup>

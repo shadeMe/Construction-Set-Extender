@@ -68,8 +68,7 @@ public:
 	virtual ICrumbBar^ AsCrumbBar();
 	virtual ICrumbBarItem^ AsCrumbBarItem();
 	virtual IContainer^ AsContainer();
-
-	static ViewComponent^ FromControl(Control^ Control);
+	virtual IContextMenu^ AsContextMenu();
 };
 
 
@@ -150,8 +149,11 @@ public:
 	ImplPropertyWithAccessors(bool, Checked);
 	ImplPropertyWithAccessors(bool, Visible);
 	ImplPropertyWithAccessors(bool, Enabled);
+	ImplPropertyGetOnly(DotNetBar::ButtonItem^, SourceButtonItem, ButtonItem);
 
 	virtual void PerformClick();
+
+	static Button^ FromDotNetBarBaseItem(BaseItem^ Item);
 };
 
 
@@ -197,6 +199,7 @@ public:
 	virtual void AddDropdownItem(Object^ NewItem, bool AtFirstPosition);
 	virtual void ClearDropdownItems();
 	virtual Object^ LookupDropdownItem(String^ DropdownItemText);
+	virtual void Focus();
 };
 
 
@@ -241,11 +244,17 @@ ref class TabStrip : public ViewComponent, ITabStrip
 	EventHandler<DotNetBar::SuperTabStripSelectedTabChangedEventArgs^>^ DelegateSelectedTabChanged;
 	EventHandler<MouseEventArgs^>^ DelegateTabStripMouseClick;
 	EventHandler<DotNetBar::SuperTabStripTabMovingEventArgs^>^ DelegateTabMoving;
+	EventHandler<DotNetBar::SuperTabStripTabMovedEventArgs^>^ DelegateTabMoved;
+	EventHandler<MouseEventArgs^>^ DelegateTabStripMouseDown;
+	EventHandler<MouseEventArgs^>^ DelegateTabStripMouseUp;
 
 	void Handler_TabItemClose(Object^ Sender, DotNetBar::SuperTabStripTabItemCloseEventArgs ^ E);
 	void Handler_SelectedTabChanged(Object^ Sender, DotNetBar::SuperTabStripSelectedTabChangedEventArgs^ E);
 	void Handler_TabStripMouseClick(Object^ Sender, MouseEventArgs^ E);
 	void Handler_TabMoving(Object^ Sender, DotNetBar::SuperTabStripTabMovingEventArgs^ E);
+	void Handler_TabMoved(Object^ Sender, DotNetBar::SuperTabStripTabMovedEventArgs^ E);
+	void Handler_TabStripMouseDown(Object^ Sender, MouseEventArgs^ E);
+	void Handler_TabStripMouseUp(Object^ Sender, MouseEventArgs^ E);
 
 	SuperTabItem^ GetMouseOverTab();
 	void SelectTab(SuperTabItem^ Tab);
@@ -332,8 +341,14 @@ public:
 
 	ImplPropertySimple(Object^, SelectedObject, Source->SelectedObject);
 	ImplPropertySimple(System::Collections::IList^, SelectedObjects, Source->SelectedObjects);
+	property bool HeaderVisible
+	{
+		virtual bool get();
+		virtual void set(bool v);
+	}
 
 	virtual void SetObjects(System::Collections::IEnumerable^ Collection, bool PreserveState);
+	virtual void ClearObjects();
 	virtual IObjectListViewColumn^ AllocateNewColumn();
 	virtual void AddColumn(IObjectListViewColumn^ Column);
 	virtual List<IObjectListViewColumn^>^ GetColumns();
@@ -357,6 +372,7 @@ public:
 	ImplPropertySimple(int, Value, Source->Value);
 	ImplPropertySimple(int, Minimum, Source->Minimum);
 	ImplPropertySimple(int, Maximum, Source->Maximum);
+	ImplPropertySimple(bool, Visible, Source->Visible);
 };
 
 
@@ -432,6 +448,21 @@ public:
 
 	virtual void AddControl(Control^ Control);
 	virtual void RemoveControl(Control^ Control);
+	virtual void Invalidate();
+};
+
+
+ref class ContextMenu : public ViewComponent, IContextMenu
+{
+	ContextMenuBar^ Provider;
+	Button^ RootWrapper;
+	PopupItem^ Popup;
+public:
+	ContextMenu(ContextMenuBar^ Provider, ButtonItem^ Root, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);
+	virtual ~ContextMenu();
+
+	virtual void Show(Drawing::Point ScreenCoords);
+	virtual void Hide();
 };
 
 

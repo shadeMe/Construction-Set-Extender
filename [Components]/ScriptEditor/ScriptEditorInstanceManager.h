@@ -23,7 +23,7 @@ ref class ScriptEditorInstanceManager
 public:
 	~ScriptEditorInstanceManager();
 
-	controller::IScriptEditorController^ NewInstance();
+	void NewInstance(controller::IScriptEditorController::InstantiationParams^ InitParams);
 
 	void RegisterController(controller::IScriptEditorController^ Controller);
 	void DeregisterController(controller::IScriptEditorController^ Controller);

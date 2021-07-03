@@ -145,9 +145,12 @@ IContainer^ ViewComponent::AsContainer()
 	return safe_cast<IContainer^>(this);
 }
 
-ViewComponent^ ViewComponent::FromControl(Control^ Control)
+IContextMenu^ ViewComponent::AsContextMenu()
 {
-	return safe_cast<ViewComponent^>(Control->Tag);
+	if (Type_ != eComponentType::ContextMenu)
+		return nullptr;
+
+	return safe_cast<IContextMenu^>(this);
 }
 
 void Form::Handler_Closing(Object^ Sender, CancelEventArgs^ E)
@@ -210,11 +213,14 @@ void Form::Bounds::set(Rectangle v)
 void Form::BeginUpdate()
 {
 	Source->SuspendLayout();
+	nativeWrapper::SetControlRedraw(Source, false);
 }
 
 void Form::EndUpdate()
 {
-	Source->ResumeLayout(true);
+	nativeWrapper::SetControlRedraw(Source, true);
+	Source->ResumeLayout(false);
+	Source->Refresh();
 }
 
 void Form::Redraw()
@@ -254,8 +260,9 @@ void Button::Handler_PopupOpen(Object^ Sender, PopupOpenEventArgs^ E)
 
 	for each (auto Itr in ButtonItem->SubItems)
 	{
-		auto Component = ViewComponent::FromControl(safe_cast<Control^>(Itr));
-		RaiseEvent(Component, IButton::eEvent::PopupOpening, EventArgs);
+		auto Component = FromDotNetBarBaseItem(safe_cast<BaseItem^>(Itr));
+		if (Component)
+			RaiseEvent(Component, IButton::eEvent::PopupOpening, EventArgs);
 	}
 }
 
@@ -524,6 +531,11 @@ void Button::PerformClick()
 	Handler_Click(nullptr, nullptr);
 }
 
+Button^ Button::FromDotNetBarBaseItem(BaseItem^ Item)
+{
+	return safe_cast<Button^>(Item->Tag);
+}
+
 void ComboBox::Handler_SelectedIndexChanged(Object^ Sender, EventArgs^ E)
 {
 	auto EventArgs = gcnew IComboBox::SelectionChangedEventArgs;
@@ -667,8 +679,10 @@ void ComboBox::SetterEnabled(bool Value)
 	{
 	case eSourceType::ComboBoxItem:
 		ComboBoxItem->Enabled = Value;
+		break;
 	case eSourceType::ComboBoxEx:
 		ComboBoxEx->Enabled = Value;
+		break;
 	}
 }
 
@@ -738,6 +752,19 @@ System::Object^ ComboBox::LookupDropdownItem(String^ DropdownItemText)
 	return nullptr;
 }
 
+void ComboBox::Focus()
+{
+	switch (SourceType)
+	{
+	case eSourceType::ComboBoxItem:
+		ComboBoxItem->Focus();
+		break;
+	case eSourceType::ComboBoxEx:
+		ComboBoxEx->Focus();
+		break;
+	}
+}
+
 Label::Label(DotNetBar::LabelItem^ Source, eViewRole ViewRole)
 	: ViewComponent(eComponentType::Label, ViewRole, nullptr)
 {
@@ -792,8 +819,10 @@ void TabStrip::Handler_TabItemClose(Object^ Sender, DotNetBar::SuperTabStripTabI
 void TabStrip::Handler_SelectedTabChanged(Object^ Sender, DotNetBar::SuperTabStripSelectedTabChangedEventArgs^ E)
 {
 	auto EventArgs = gcnew ITabStrip::ActiveTabChangedEventArgs;
-	EventArgs->OldValue = TabStripItem::FromSuperTabItem(safe_cast<SuperTabItem^>(E->OldValue));
-	EventArgs->NewValue = TabStripItem::FromSuperTabItem(safe_cast<SuperTabItem^>(E->NewValue));
+	if (E->OldValue)
+		EventArgs->OldValue = TabStripItem::FromSuperTabItem(safe_cast<SuperTabItem^>(E->OldValue));
+	if (E->NewValue)
+		EventArgs->NewValue = TabStripItem::FromSuperTabItem(safe_cast<SuperTabItem^>(E->NewValue));
 
 	RaiseEvent(ITabStrip::eEvent::ActiveTabChanged, EventArgs);
 }
@@ -802,7 +831,10 @@ void TabStrip::Handler_TabStripMouseClick(Object^ Sender, MouseEventArgs^ E)
 {
 	auto EventArgs = gcnew ITabStrip::TabClickEventArgs;
 	EventArgs->MouseEvent = E;
-	EventArgs->MouseOverTab = TabStripItem::FromSuperTabItem(GetMouseOverTab());
+
+	auto MouseOverTab = GetMouseOverTab();
+	if (MouseOverTab)
+		EventArgs->MouseOverTab = TabStripItem::FromSuperTabItem(MouseOverTab);
 
 	RaiseEvent(ITabStrip::eEvent::TabClick, EventArgs);
 }
@@ -812,7 +844,7 @@ void TabStrip::Handler_TabMoving(Object^ Sender, DotNetBar::SuperTabStripTabMovi
 	// prevent the tab from moving behind any non-tab items
 	if (E->InsertBefore)
 	{
-		if (E->InsertTab == nullptr || E->InsertTab->GetType() != DotNetBar::SuperTabItem::typeid)
+		if (E->InsertTab && E->InsertTab->GetType() != DotNetBar::SuperTabItem::typeid)
 		{
 			E->CanMove = false;
 			return;
@@ -823,6 +855,22 @@ void TabStrip::Handler_TabMoving(Object^ Sender, DotNetBar::SuperTabStripTabMovi
 	EventArgs->Tab = TabStripItem::FromSuperTabItem(safe_cast<SuperTabItem^>(E->MoveTab));
 
 	RaiseEvent(ITabStrip::eEvent::TabMoving, EventArgs);
+}
+
+void TabStrip::Handler_TabMoved(Object^ Sender, DotNetBar::SuperTabStripTabMovedEventArgs^ E)
+{
+	auto EventArgs = gcnew ITabStrip::TabMovedEventArgs;
+	EventArgs->Tab = TabStripItem::FromSuperTabItem(safe_cast<SuperTabItem^>(E->Tab));
+
+	RaiseEvent(ITabStrip::eEvent::TabMoved, EventArgs);
+}
+
+void TabStrip::Handler_TabStripMouseDown(Object^ Sender, MouseEventArgs^ E)
+{
+}
+
+void TabStrip::Handler_TabStripMouseUp(Object^ Sender, MouseEventArgs^ E)
+{
 }
 
 SuperTabItem^ TabStrip::GetMouseOverTab()
@@ -864,10 +912,21 @@ TabStrip::TabStrip(DotNetBar::SuperTabControl^ Source, eViewRole ViewRole, ViewC
 {
 	this->Source = Source;
 
+	DelegateTabItemClose = gcnew EventHandler<DotNetBar::SuperTabStripTabItemCloseEventArgs^>(this, &TabStrip::Handler_TabItemClose);
+	DelegateSelectedTabChanged = gcnew EventHandler<DotNetBar::SuperTabStripSelectedTabChangedEventArgs^>(this, &TabStrip::Handler_SelectedTabChanged);
+	DelegateTabStripMouseClick = gcnew EventHandler<MouseEventArgs^>(this, &TabStrip::Handler_TabStripMouseClick);
+	DelegateTabMoving = gcnew EventHandler<DotNetBar::SuperTabStripTabMovingEventArgs^>(this, &TabStrip::Handler_TabMoving);
+	DelegateTabMoved = gcnew EventHandler<DotNetBar::SuperTabStripTabMovedEventArgs^>(this, &TabStrip::Handler_TabMoved);
+	DelegateTabStripMouseDown = gcnew EventHandler<MouseEventArgs^>(this, &TabStrip::Handler_TabStripMouseDown);
+	DelegateTabStripMouseUp = gcnew EventHandler<MouseEventArgs^>(this, &TabStrip::Handler_TabStripMouseUp);
+
 	Source->TabItemClose += DelegateTabItemClose;
 	Source->SelectedTabChanged += DelegateSelectedTabChanged;
 	Source->TabStripMouseClick += DelegateTabStripMouseClick;
 	Source->TabMoving += DelegateTabMoving;
+	Source->TabMoved += DelegateTabMoved;
+	Source->TabStripMouseDown += DelegateTabStripMouseDown;
+	Source->TabStripMouseUp += DelegateTabStripMouseUp;
 
 	Source->TabStrip->Tag = this;
 }
@@ -878,11 +937,17 @@ TabStrip::~TabStrip()
 	Source->SelectedTabChanged -= DelegateSelectedTabChanged;
 	Source->TabStripMouseClick -= DelegateTabStripMouseClick;
 	Source->TabMoving -= DelegateTabMoving;
+	Source->TabMoved -= DelegateTabMoved;
+	Source->TabStripMouseDown -= DelegateTabStripMouseDown;
+	Source->TabStripMouseUp -= DelegateTabStripMouseUp;
 
 	SAFEDELETE_CLR(DelegateTabItemClose);
 	SAFEDELETE_CLR(DelegateSelectedTabChanged);
 	SAFEDELETE_CLR(DelegateTabStripMouseClick);
 	SAFEDELETE_CLR(DelegateTabMoving);
+	SAFEDELETE_CLR(DelegateTabMoved);
+	SAFEDELETE_CLR(DelegateTabStripMouseDown);
+	SAFEDELETE_CLR(DelegateTabStripMouseUp);
 
 	Source->TabStrip->Tag = nullptr;
 	Source = nullptr;
@@ -1104,6 +1169,7 @@ ObjectListView::ObjectListView(BrightIdeasSoftware::ObjectListView^ Source, eVie
 	DelegateWrapperChildrenGetter = gcnew BrightIdeasSoftware::TreeListView::ChildrenGetterDelegate(this, &ObjectListView::Wrapper_ChildrenGetter);
 
 	Source->ItemActivate += DelegateItemActivate;
+	Source->HideSelection = false;
 }
 
 ObjectListView::~ObjectListView()
@@ -1132,12 +1198,28 @@ ObjectListView::~ObjectListView()
 		delete ColumnItem;
 	}
 
+	Source->ClearObjects();
 	Source = nullptr;
+}
+
+bool ObjectListView::HeaderVisible::get()
+{
+	return Source->HeaderStyle != ColumnHeaderStyle::None;
+}
+
+void ObjectListView::HeaderVisible::set(bool v)
+{
+	Source->HeaderStyle = v ? ColumnHeaderStyle::Clickable : ColumnHeaderStyle::None;
 }
 
 void ObjectListView::SetObjects(System::Collections::IEnumerable^ Collection, bool PreserveState)
 {
 	Source->SetObjects(Collection, PreserveState);
+}
+
+void ObjectListView::ClearObjects()
+{
+	Source->ClearObjects();
 }
 
 IObjectListViewColumn^ ObjectListView::AllocateNewColumn()
@@ -1244,7 +1326,7 @@ void DockablePane::Focus()
 		ParentBar->AutoHideVisible = true;
 
 	Source->Focus();
-	//Source->Control->Focus();
+	Source->Control->Focus();
 }
 
 
@@ -1333,7 +1415,6 @@ ICrumbBarItem^ CrumbBar::SelectedItem::get()
 void CrumbBar::SelectedItem::set(ICrumbBarItem^ v)
 {
 	auto CrumbItem = safe_cast<CrumbBarItem^>(v);
-	Debug::Assert(Source->Items->Contains(CrumbItem->Source));
 
 	Source->SelectedItem = CrumbItem->Source;
 }
@@ -1374,6 +1455,47 @@ void Container::AddControl(Control^ Control)
 void Container::RemoveControl(Control^ Control)
 {
 	Source->Controls->Remove(Control);
+}
+
+void Container::Invalidate()
+{
+	if (Source->GetType() == DotNetBar::Bar::typeid)
+	{
+		auto SourceBar = safe_cast<DotNetBar::Bar^>(Source);
+		SourceBar->RecalcLayout();
+		SourceBar->RecalcSize();
+	}
+
+	Source->Refresh();
+}
+
+ContextMenu::ContextMenu(ContextMenuBar^ Provider, ButtonItem^ Root, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter)
+	: ViewComponent(eComponentType::ContextMenu, ViewRole, nullptr)
+{
+	this->Provider = Provider;
+	this->RootWrapper = gcnew Button(Root, ViewRole, EventRouter);
+	this->Popup = safe_cast<PopupItem^>(RootWrapper->SourceButtonItem);
+}
+
+ContextMenu::~ContextMenu()
+{
+	Provider = nullptr;
+
+	RootWrapper->SourceButtonItem->Tag = nullptr;
+	delete RootWrapper;
+
+	Popup = nullptr;
+}
+
+void ContextMenu::Show(Drawing::Point ScreenCoords)
+{
+	Popup->PopupMenu(ScreenCoords.X, ScreenCoords.Y, true);
+}
+
+void ContextMenu::Hide()
+{
+	if (Popup->Expanded)
+		Popup->ClosePopup();
 }
 
 

@@ -25,9 +25,9 @@ ScriptEditorInstanceManager::~ScriptEditorInstanceManager()
 	ActiveControllers->Clear();
 }
 
-controller::IScriptEditorController^ ScriptEditorInstanceManager::NewInstance()
+void ScriptEditorInstanceManager::NewInstance(controller::IScriptEditorController::InstantiationParams^ InitParams)
 {
-	return ControllerFactory->NewController(ModelFactory, ViewFactory);
+	auto NewController = ControllerFactory->NewController(ModelFactory, ViewFactory, InitParams);
 }
 
 void ScriptEditorInstanceManager::RegisterController(controller::IScriptEditorController^ Controller)
@@ -48,10 +48,13 @@ void ScriptEditorInstanceManager::DeregisterController(controller::IScriptEditor
 
 void ScriptEditorInstanceManager::ReleaseAllActiveControllers()
 {
-	for each (auto Controller in ActiveControllers)
+	// we need to use a buffer as controllers will remove themselves from the collection upon disposal
+	auto Buffer = gcnew List<controller::IScriptEditorController^>(ActiveControllers);
+
+	for each (auto Controller in Buffer)
 		delete Controller;
 
-	ActiveControllers->Clear();
+	Debug::Assert(ActiveControllers->Count == 0);
 }
 
 ScriptEditorInstanceManager^ ScriptEditorInstanceManager::Get()

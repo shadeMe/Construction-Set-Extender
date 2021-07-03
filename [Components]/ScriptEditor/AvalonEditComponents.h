@@ -28,9 +28,8 @@ using namespace ICSharpCode::AvalonEdit::Editing;
 using namespace ICSharpCode::AvalonEdit::Utils;
 
 
-ref class WPFImageResourceGenerator
+ref struct WPFImageResourceGenerator
 {
-	static ImageResourceManager^ IconResources = gcnew ImageResourceManager("ScriptEditor.Icons");
 public:
 	static System::Windows::Media::Imaging::BitmapSource^ CreateImageSource(String^ ResourceIdentifier);
 };
@@ -374,6 +373,24 @@ protected:
 public:
 	DefaultIconMargin(AvalonEdit::TextEditor^ ParentEditor, model::IScriptDocument^ ParentScriptDocument, IntPtr ToolTipParent);
 	virtual ~DefaultIconMargin();
+};
+
+ref class ScriptBytecodeOffsetMargin : public ICSharpCode::AvalonEdit::Editing::LineNumberMargin
+{
+protected:
+	model::IScriptDocument^ ParentScriptDocument;
+	model::IScriptDocument::StateChangeEventHandler^ ParentModelStateChangedHandler;
+
+	void ParentModel_StateChanged(Object^ Sender, model::IScriptDocument::StateChangeEventArgs^ E);
+
+	virtual Windows::Size MeasureOverride(Windows::Size availableSize) override;
+	virtual void OnRender(Windows::Media::DrawingContext^ drawingContext) override;
+public:
+	ScriptBytecodeOffsetMargin(model::IScriptDocument^ ParentScriptDocument);
+	virtual ~ScriptBytecodeOffsetMargin();
+
+	static void AddToTextArea(AvalonEdit::TextEditor^ Field, ScriptBytecodeOffsetMargin^ Margin);
+	static void RemoveFromTextArea(AvalonEdit::TextEditor^ Field, ScriptBytecodeOffsetMargin^ Margin);
 };
 
 

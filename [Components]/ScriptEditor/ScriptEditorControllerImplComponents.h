@@ -28,7 +28,6 @@ ref class ViewTabTearingHelper
 	model::IScriptDocument^ TornDocument;
 	IScriptEditorController^ SourceController;
 	bool Active;
-	bool ProcessingMouseMessage;
 	MouseEventHandler^ TearingEventDelegate;
 	Dictionary<view::components::ITabStrip^, IScriptEditorController^>^ ActiveTabStrips;
 
@@ -209,6 +208,7 @@ public:
 					textEditor::eFindReplaceOptions Options,
 					bool InAllOpenDocuments,
 					IScriptEditorController^ Controller);
+	void ShowFindReplacePane(IScriptEditorController^ Controller);
 };
 
 ref class InputManager
@@ -232,20 +232,21 @@ ref class InputManager
 	List<Keys>^ BlacklistedKeyCodes;
 	Dictionary<KeyCombo^, ChordDataUnion^>^ KeyChordCommands;
 	KeyCombo^ LastActiveFirstChord;
+	view::components::IContextMenu^ TextEditorContextMenu;
 
 	ChordData^ LookupDoubleKeyChordCommand(KeyCombo^ First, KeyCombo^ Second);
 	ChordData^ LookupSingleKeyChordCommand(KeyCombo^ First);
 	bool HasSecondKeyOfChord(KeyCombo^ First);
 	bool IsBound(KeyCombo^ Combo);
 public:
-	InputManager();
+	InputManager(view::components::IContextMenu^ TextEditorContextMenu);
 	~InputManager();
 
 	void AddKeyChordCommand(IAction^ Action, KeyCombo^ Primary, KeyCombo^ Secondary, bool OverwriteExisting);
 	void AddKeyChordCommand(IAction^ Action, KeyCombo^ Primary, bool OverwriteExisting);
 
 	void HandleKeyDown(KeyEventArgs^ E, IScriptEditorController^ Controller);
-	void HandleMouseClick(textEditor::TextEditorMouseClickEventArgs^ E, IScriptEditorController^ Controller);
+	void HandleTextEditorMouseClick(textEditor::TextEditorMouseClickEventArgs^ E, IScriptEditorController^ Controller);
 
 	bool IsKeyBlacklisted(Keys Key);
 };

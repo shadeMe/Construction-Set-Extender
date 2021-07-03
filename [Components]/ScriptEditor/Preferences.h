@@ -108,7 +108,7 @@ ref struct GeneralSettings : public SettingsGroup
 ref struct IntelliSenseSettings : public SettingsGroup
 {
 	static String^ CategoryName = "IntelliSense";
-	static String^ IconName = "IntelliSenseBackend";
+	static String^ IconName = "IntelliSenseBackEnd";
 
 	[Category("Popup Window")]
 	[Description("Width of the popup window")]
@@ -256,10 +256,6 @@ ref struct AppearanceSettings : public SettingsGroup
 	[Category("Adornments")]
 	[Description("Show icon margin")]
 	property bool ShowIconMargin;
-
-	[Category("Adornments")]
-	[Description("Show bytecode offset margin")]
-	property bool ShowBytecodeOffsetMargin;
 
 	[Category("Highlighting (Light Mode)")]
 	[Description("Text foreground color")]
@@ -551,7 +547,6 @@ ref struct AppearanceSettings : public SettingsGroup
 		ShowCodeFolding = true;
 		ShowBlockVisualizer = true;
 		ShowIconMargin = true;
-		ShowBytecodeOffsetMargin = false;
 
 		ForeColor_LM = Color::FromArgb(253, 244, 193);
 		BackColor_LM = Color::FromArgb(29, 32, 33);
@@ -570,7 +565,7 @@ ref struct AppearanceSettings : public SettingsGroup
 		BoldFaceHighlightedText_LM = false;
 
 		ForeColor_DM = Color::FromArgb(253, 244, 193);
-		BackColor_DM = Color::FromArgb(29, 32, 33);
+		BackColor_DM = Color::FromArgb(45, 45, 48);
 		ForeColorKeywords_DM = Color::FromArgb(252, 128, 114);
 		ForeColorDigits_DM = Color::FromArgb(255, 165, 0);
 		ForeColorPreprocessor_DM = Color::FromArgb(165, 42, 42);

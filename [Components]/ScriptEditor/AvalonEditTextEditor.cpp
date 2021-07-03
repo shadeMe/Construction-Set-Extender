@@ -282,45 +282,61 @@ void AvalonEditTextEditor::UpdateCodeFoldings()
 
 void AvalonEditTextEditor::SynchronizeExternalScrollBars()
 {
-	SynchronizingExternalScrollBars = true;
-
 	int ScrollBarHeight = TextField->ExtentHeight - TextField->ViewportHeight + 155;
 	int ScrollBarWidth = TextField->ExtentWidth - TextField->ViewportWidth + 155;
 	int VerticalOffset = TextField->VerticalOffset;
 	int HorizontalOffset = TextField->HorizontalOffset;
 
-	if (ScrollBarHeight <= 0 || VerticalOffset < 0 || VerticalOffset >= ScrollBarHeight)
-		ExternalVerticalScrollBar->Enabled = false;
-	else if (!ExternalVerticalScrollBar->Enabled)
-		ExternalVerticalScrollBar->Enabled = true;
+	SynchronizingExternalScrollBars = true;
+	{
+		if (ScrollBarHeight <= 0 || VerticalOffset < 0 || VerticalOffset >= ScrollBarHeight)
+		{
+			//ExternalVerticalScrollBar->Enabled = false;
+			ExternalVerticalScrollBar->Visible = false;
+		}
+		else if (!ExternalVerticalScrollBar->Visible)
+		{
+			//ExternalVerticalScrollBar->Enabled = true;
+			ExternalVerticalScrollBar->Visible = true;
+		}
 
-	ExternalVerticalScrollBar->Maximum = ScrollBarHeight;
-	ExternalVerticalScrollBar->Minimum = 0;
-	ExternalVerticalScrollBar->Value = 0;
+		if (ExternalVerticalScrollBar->Visible)
+		{
+			ExternalVerticalScrollBar->Maximum = ScrollBarHeight;
+			ExternalVerticalScrollBar->Minimum = 0;
 
-	if (VerticalOffset < ExternalVerticalScrollBar->Minimum)
-		VerticalOffset = ExternalVerticalScrollBar->Minimum;
-	else if (VerticalOffset > ExternalVerticalScrollBar->Maximum)
-		VerticalOffset = ExternalVerticalScrollBar->Maximum;
+			if (VerticalOffset < ExternalVerticalScrollBar->Minimum)
+				VerticalOffset = ExternalVerticalScrollBar->Minimum;
+			else if (VerticalOffset > ExternalVerticalScrollBar->Maximum)
+				VerticalOffset = ExternalVerticalScrollBar->Maximum;
 
-	ExternalVerticalScrollBar->Value = VerticalOffset;
+			ExternalVerticalScrollBar->Value = VerticalOffset;
+		}
 
-	if (ScrollBarWidth <= 0 || HorizontalOffset < 0 || HorizontalOffset >= ScrollBarWidth)
-		ExternalHorizontalScrollBar->Enabled = false;
-	else if (!ExternalHorizontalScrollBar->Enabled)
-		ExternalHorizontalScrollBar->Enabled = true;
+		if (ScrollBarWidth <= 0 || HorizontalOffset < 0 || HorizontalOffset >= ScrollBarWidth)
+		{
+			//ExternalHorizontalScrollBar->Enabled = false;
+			ExternalHorizontalScrollBar->Visible = false;
+		}
+		else if (!ExternalHorizontalScrollBar->Visible)
+		{
+			//ExternalHorizontalScrollBar->Enabled = true;
+			ExternalHorizontalScrollBar->Visible = true;
+		}
 
-	ExternalHorizontalScrollBar->Maximum = ScrollBarWidth;
-	ExternalHorizontalScrollBar->Minimum = 0;
-	ExternalHorizontalScrollBar->Value = 0;
+		if (ExternalHorizontalScrollBar->Visible)
+		{
+			ExternalHorizontalScrollBar->Maximum = ScrollBarWidth;
+			ExternalHorizontalScrollBar->Minimum = 0;
 
-	if (HorizontalOffset < ExternalHorizontalScrollBar->Minimum)
-		HorizontalOffset = ExternalHorizontalScrollBar->Minimum;
-	else if (HorizontalOffset > ExternalHorizontalScrollBar->Maximum)
-		HorizontalOffset = ExternalHorizontalScrollBar->Maximum;
+			if (HorizontalOffset < ExternalHorizontalScrollBar->Minimum)
+				HorizontalOffset = ExternalHorizontalScrollBar->Minimum;
+			else if (HorizontalOffset > ExternalHorizontalScrollBar->Maximum)
+				HorizontalOffset = ExternalHorizontalScrollBar->Maximum;
 
-	ExternalHorizontalScrollBar->Value = HorizontalOffset;
-
+			ExternalHorizontalScrollBar->Value = HorizontalOffset;
+		}
+	}
 	SynchronizingExternalScrollBars = false;
 }
 
@@ -944,11 +960,16 @@ void AvalonEditTextEditor::OnMouseClick(System::Windows::Input::MouseButtonEvent
 		break;
 	}
 
-	MouseClick(this, gcnew TextEditorMouseClickEventArgs(Buttons,
-														E->ClickCount,
-														E->GetPosition(TextField).X,
-														E->GetPosition(TextField).Y,
-														LastKnownMouseClickOffset));
+	auto RelativePos = E->GetPosition(TextField);
+	auto EventArgs = gcnew TextEditorMouseClickEventArgs(Buttons,
+														 E->ClickCount,
+														 RelativePos.X,
+														 RelativePos.Y,
+														 LastKnownMouseClickOffset);
+	auto ScreenPos = TextField->PointToScreen(RelativePos);
+	EventArgs->ScreenCoords = Drawing::Point(ScreenPos.X, ScreenPos.Y);
+
+	MouseClick(this, EventArgs);
 }
 
 void AvalonEditTextEditor::OnLineChanged()
@@ -1278,22 +1299,18 @@ void AvalonEditTextEditor::ExternalScrollBar_ValueChanged( Object^ Sender, Event
 		int VerticalOffset = ExternalVerticalScrollBar->Value;
 		int HorizontalOffset = ExternalHorizontalScrollBar->Value;
 
-		VScrollBar^ VertSender = dynamic_cast<VScrollBar^>(Sender);
-		HScrollBar^ HortSender = dynamic_cast<HScrollBar^>(Sender);
-
-		if (VertSender != nullptr)
-		{
+		if (Sender == ExternalVerticalScrollBar)
 			TextField->ScrollToVerticalOffset(VerticalOffset);
-		}
-		else if (HortSender != nullptr)
-		{
+		else if (Sender == ExternalHorizontalScrollBar)
 			TextField->ScrollToHorizontalOffset(HorizontalOffset);
-		}
 	}
 }
 
 void AvalonEditTextEditor::SetTextAnimation_Completed( Object^ Sender, EventArgs^ E )
 {
+	if (Disposing)
+		return;
+
 	SetTextPrologAnimationCache->Completed -= SetTextAnimationCompletedHandler;
 	SetTextPrologAnimationCache = nullptr;
 
@@ -1368,9 +1385,15 @@ void AvalonEditTextEditor::ScriptEditorPreferences_Saved( Object^ Sender, EventA
 	TextFieldPanel->Background = BackgroundBrush;
 
 	if (preferences::SettingsHolder::Get()->Appearance->ShowIconMargin)
-		IconBarMargin->Visibility = System::Windows::Visibility::Visible;
+	{
+		if (!TextField->TextArea->LeftMargins->Contains(IconBarMargin))
+			TextField->TextArea->LeftMargins->Insert(0, IconBarMargin);
+	}
 	else
-		IconBarMargin->Visibility = System::Windows::Visibility::Hidden;
+	{
+		if (TextField->TextArea->LeftMargins->Contains(IconBarMargin))
+			TextField->TextArea->LeftMargins->RemoveAt(0);
+	}
 
 	TextField->TextArea->TextView->ElementGenerators->Remove(StructureVisualizer);
 
@@ -1437,8 +1460,8 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 		CodeFoldingStrategy = gcnew ObScriptCodeFoldingStrategy(this);
 
 	MiddleMouseScrollTimer = gcnew Timer();
-	ExternalVerticalScrollBar = gcnew VScrollBar();
-	ExternalHorizontalScrollBar = gcnew HScrollBar();
+	ExternalVerticalScrollBar = gcnew DotNetBar::VScrollBarAdv();
+	ExternalHorizontalScrollBar = gcnew DotNetBar::ScrollBar::HScrollBarAdv();
 	ScrollBarSyncTimer = gcnew Timer();
 
 	BackgroundAnalyzerAnalysisCompleteHandler = gcnew model::components::IBackgroundSemanticAnalyzer::AnalysisCompleteEventHandler(this, &AvalonEditTextEditor::BackgroundAnalysis_AnalysisComplete);
@@ -1530,10 +1553,12 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	ScrollBarSyncTimer->Interval = 200;
 
 	ExternalVerticalScrollBar->Dock = DockStyle::Right;
+	ExternalVerticalScrollBar->Size = Size(16, 100);
 	ExternalVerticalScrollBar->SmallChange = 30;
 	ExternalVerticalScrollBar->LargeChange = 155;
 
 	ExternalHorizontalScrollBar->Dock = DockStyle::Bottom;
+	ExternalHorizontalScrollBar->Size = Size(100, 16);
 	ExternalHorizontalScrollBar->SmallChange = 30;
 	ExternalHorizontalScrollBar->LargeChange = 155;
 
@@ -1552,12 +1577,12 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 
 	LineTracker = gcnew LineTrackingManager(TextField, ParentScriptDocument);
 	IconBarMargin = gcnew DefaultIconMargin(TextField, ParentScriptDocument, WindowHandle);
-	TextField->TextArea->LeftMargins->Insert(0, IconBarMargin);
 
 	if (preferences::SettingsHolder::Get()->Appearance->ShowIconMargin)
-		IconBarMargin->Visibility = System::Windows::Visibility::Visible;
-	else
-		IconBarMargin->Visibility = System::Windows::Visibility::Hidden;
+		TextField->TextArea->LeftMargins->Insert(0, IconBarMargin);
+
+	BytecodeOffsetMargin = gcnew ScriptBytecodeOffsetMargin(ParentScriptDocument);
+
 
 	StructureVisualizer = gcnew StructureVisualizerRenderer(this);
 
@@ -1578,6 +1603,8 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	WPFHost->ForeColor = ForegroundColor;
 	WPFHost->BackColor = BackgroundColor;
 	WPFHost->TabStop = false;
+
+	Disposing = false;
 
 	SetFont(preferences::SettingsHolder::Get()->Appearance->TextFont);
 	SetTabCharacterSize(preferences::SettingsHolder::Get()->Appearance->TabSize);
@@ -1610,6 +1637,11 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 
 AvalonEditTextEditor::~AvalonEditTextEditor()
 {
+	Disposing = true;
+
+	if (DisplayingStaticText)
+		EndDisplayingStaticText();
+
 	ParentScriptDocument->BackgroundAnalyzer->SemanticAnalysisComplete -= BackgroundAnalyzerAnalysisCompleteHandler;
 	ParentScriptDocument = nullptr;
 
@@ -1627,7 +1659,7 @@ AvalonEditTextEditor::~AvalonEditTextEditor()
 
 	TextField->TextArea->TextView->ElementGenerators->Clear();
 
-	TextField->TextArea->LeftMargins->Remove(IconBarMargin);
+	TextField->TextArea->LeftMargins->Clear();
 
 	TextField->TextChanged -= TextFieldTextChangedHandler;
 	TextField->TextArea->Caret->PositionChanged -= TextFieldCaretPositionChangedHandler;
@@ -1683,6 +1715,7 @@ AvalonEditTextEditor::~AvalonEditTextEditor()
 	WinFormsContainer->Controls->Clear();
 	WinFormsContainer->ContextMenu = nullptr;
 
+	SAFEDELETE_CLR(BytecodeOffsetMargin);
 	SAFEDELETE_CLR(IconBarMargin);
 	SAFEDELETE_CLR(LineTracker);
 	SAFEDELETE_CLR(StructureVisualizer);
@@ -1781,7 +1814,11 @@ void AvalonEditTextEditor::SetSelectedText(String^ Text)
 
 int AvalonEditTextEditor::GetCharIndexFromPosition(Point Position)
 {
-	Nullable<AvalonEdit::TextViewPosition> TextPos = TextField->TextArea->TextView->GetPosition(Windows::Point(Position.X, Position.Y));
+	System::Windows::Point CorrectedPosition(Position.X + TextField->TextArea->TextView->ScrollOffset.X, Position.Y + TextField->TextArea->TextView->ScrollOffset.Y);
+	for each (auto Itr in TextField->TextArea->LeftMargins)
+		CorrectedPosition.X -= (safe_cast<System::Windows::FrameworkElement^>(Itr))->ActualWidth;
+
+	Nullable<AvalonEdit::TextViewPosition> TextPos = TextField->TextArea->TextView->GetPosition(CorrectedPosition);
 	if (TextPos.HasValue)
 		return TextField->Document->GetOffset(TextPos.Value.Line, TextPos.Value.Column);
 	else
@@ -1817,7 +1854,9 @@ Point AvalonEditTextEditor::ScreenToClient(Point ScreenPosition)
 
 void AvalonEditTextEditor::FadeOutCurrentTextView()
 {
-	if (SetTextAnimating)
+	if (Disposing)
+		return;
+	else if (SetTextAnimating)
 		return;
 
 	SetTextAnimating = true;
@@ -2051,26 +2090,41 @@ void AvalonEditTextEditor::InvokeDefaultCopy()
 
 void AvalonEditTextEditor::InvokeDefaultPaste()
 {
+	if (DisplayingStaticText)
+		return;
+
 	TextField->Paste();
 }
 
 void AvalonEditTextEditor::CommentLine(UInt32 Line)
 {
+	if (DisplayingStaticText)
+		return;
+
 	PerformCommentOperationOnSingleLine(Line, eCommentOperation::Add);
 }
 
 void AvalonEditTextEditor::CommentSelection()
 {
+	if (DisplayingStaticText)
+		return;
+
 	PerformCommentOperationOnSelection(eCommentOperation::Add);
 }
 
 void AvalonEditTextEditor::UncommentLine(UInt32 Line)
 {
+	if (DisplayingStaticText)
+		return;
+
 	PerformCommentOperationOnSingleLine(Line, eCommentOperation::Remove);
 }
 
 void AvalonEditTextEditor::UncommentSelection()
 {
+	if (DisplayingStaticText)
+		return;
+
 	PerformCommentOperationOnSelection(eCommentOperation::Remove);
 }
 
@@ -2092,6 +2146,8 @@ void AvalonEditTextEditor::BeginDisplayingStaticText(String^ TextToDisplay)
 	TextField->Document->UndoStack->StartUndoGroup();
 	SetText(TextToDisplay, false);
 
+	// ### TODO clear all line anchors
+
 	TextFieldDisplayingStaticText = true;
 	OnStaticTextDisplayChanged();
 }
@@ -2105,10 +2161,20 @@ void AvalonEditTextEditor::EndDisplayingStaticText()
 	TextField->Document->UndoStack->EndUndoGroup();
 	TextField->Document->UndoStack->Undo();
 	TextField->Document->UndoStack->ClearRedoStack();
+	Caret = 0;
 
 	TextFieldDisplayingStaticText = false;
 	OnStaticTextDisplayChanged();
 }
+
+void AvalonEditTextEditor::ToggleScriptBytecodeOffsetMargin(bool Enabled)
+{
+	if (Enabled)
+		ScriptBytecodeOffsetMargin::AddToTextArea(TextField, BytecodeOffsetMargin);
+	else
+		ScriptBytecodeOffsetMargin::RemoveFromTextArea(TextField, BytecodeOffsetMargin);
+}
+
 
 } // namespace avalonEdit
 

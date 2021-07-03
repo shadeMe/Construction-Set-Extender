@@ -27,12 +27,14 @@ using namespace System;
 
 ref class ScriptEditorWorkspace : public MetroForm, IScriptEditorView
 {
-	DevComponents::DotNetBar::StyleManager^ StyleManager;
+	static DevComponents::DotNetBar::StyleManager^ StyleManager = gcnew DevComponents::DotNetBar::StyleManager;
+
 	DevComponents::DotNetBar::SuperTabControl^ MainTabStrip;
 	DevComponents::DotNetBar::Bar^ ContainerMainToolbar;
 	DevComponents::DotNetBar::ButtonItem^ ToolbarNewScript;
 	DevComponents::DotNetBar::ButtonItem^ ToolbarOpenScript;
 	DevComponents::DotNetBar::ButtonItem^ ToolbarSaveScript;
+	DevComponents::DotNetBar::ButtonItem^ ToolbarSaveScriptDropdown;
 	DevComponents::DotNetBar::ButtonItem^ ToolbarSaveScriptAndActivePlugin;
 	DevComponents::DotNetBar::ButtonItem^ ToolbarSaveScriptNoCompile;
 	DevComponents::DotNetBar::ButtonItem^ ToolbarPreviousScript;
@@ -57,8 +59,7 @@ ref class ScriptEditorWorkspace : public MetroForm, IScriptEditorView
 	DevComponents::DotNetBar::ButtonItem^ EditMenuGoToLine;
 	DevComponents::DotNetBar::ButtonItem^ EditMenuAddBookmark;
 	DevComponents::DotNetBar::ButtonItem^ ToolbarMenuView;
-	DevComponents::DotNetBar::ButtonItem^ ViewMenuPreprocessorOutput;
-	DevComponents::DotNetBar::ButtonItem^ ViewMenuBytecodeOffsets;
+	DevComponents::DotNetBar::ButtonItem^ ViewMenuPreprocessorOutputBytecodeOffsets;
 	DevComponents::DotNetBar::ButtonItem^ ViewMenuIconMargin;
 	DevComponents::DotNetBar::ButtonItem^ ToolbarMenuTools;
 	DevComponents::DotNetBar::ButtonItem^ ToolsMenuSanitiseScript;
@@ -165,6 +166,9 @@ ref class ScriptEditorWorkspace : public MetroForm, IScriptEditorView
 	DevComponents::DotNetBar::Layout::LayoutControlItem^ FindWindowLCIIgnoreComments;
 	DevComponents::DotNetBar::ButtonItem^ EditMenuComment;
 	DevComponents::DotNetBar::ButtonItem^ EditMenuUncomment;
+	DevComponents::DotNetBar::PanelEx^ EmptyWorkspacePanel;
+	DevComponents::DotNetBar::ButtonX^ GetStartedButtonOpenScript;
+	DevComponents::DotNetBar::ButtonX^ GetStartedButtonNewScript;
 	System::ComponentModel::IContainer^ components;
 
 	ref struct ViewComponentData
@@ -201,6 +205,7 @@ ref class ScriptEditorWorkspace : public MetroForm, IScriptEditorView
 	void SetupViewComponentDockablePane(DockContainerItem^ Source, eViewRole Role);
 	void SetupViewComponentCrumbBar(DotNetBar::CrumbBar^ Source);
 	void SetupViewComponentContainer(Control^ Source, eViewRole Role);
+	void SetupViewComponentContextMenu(ContextMenuBar^ Provider, ButtonItem^ ContextMenuRoot, eViewRole Role);
 public:
 	ScriptEditorWorkspace();
 	virtual ~ScriptEditorWorkspace();

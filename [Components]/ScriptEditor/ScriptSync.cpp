@@ -1026,6 +1026,7 @@ void DiskSyncDialog::ButtonSelectScripts_Click(Object^ Sender, EventArgs^ E)
 	auto Params = gcnew ScriptSelectionDialog::Params;
 	Params->ShowDeletedScripts = false;
 	Params->PreventSyncedScriptSelection = true;
+	Params->ParentWindowHandle = this->Handle;
 
 	ScriptSelectionDialog ScriptSelection(Params);
 	if (ScriptSelection.HasResult == false || ScriptSelection.ResultData->SelectionCount == 0)

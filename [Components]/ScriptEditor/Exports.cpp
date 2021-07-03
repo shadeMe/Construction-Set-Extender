@@ -36,8 +36,10 @@ void CLRUnhandledExceptionFilter(Object^, UnhandledExceptionEventArgs^ E)
 
 void InitializeComponents(CommandTableData* ScriptCommandData, IntelliSenseUpdateData* GMSTData)
 {
+#ifdef NDEBUG
 	AppDomain^ CurrentDomain = AppDomain::CurrentDomain;
 	CurrentDomain->UnhandledException += gcnew UnhandledExceptionEventHandler(&CLRUnhandledExceptionFilter);
+#endif
 
 	nativeWrapper::Initialize();
 	preferences::SettingsHolder::Get()->LoadFromDisk();
@@ -48,57 +50,67 @@ void InitializeComponents(CommandTableData* ScriptCommandData, IntelliSenseUpdat
 void InstantiateEditor(componentDLLInterface::ScriptData* InitializerScript, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
 {
 	auto Params = gcnew controller::IScriptEditorController::InstantiationParams;
-	Params->Operations = controller::IScriptEditorController::InstantiationParams::eInitOperation::LoadExistingScript;
-	Params->InitialBounds = Rectangle(Top, Left, Width, Height);
-	Params->ExistingScriptEditorIds->Add(gcnew String(InitializerScript->EditorID));
+	if (InitializerScript)
+	{
+		Params->Operations = controller::IScriptEditorController::InstantiationParams::eInitOperation::LoadExistingScript;
+		Params->ExistingScriptEditorIds->Add(gcnew String(InitializerScript->EditorID));
+	}
 
-	ScriptEditorInstanceManager::Get()->NewInstance()->InstantiateEditor(Params);
+	Params->InitialBounds = Rectangle(Left, Top, Width, Height);
+
+	ScriptEditorInstanceManager::Get()->NewInstance(Params);
+	nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(InitializerScript);
 }
 
 void InstantiateEditorAndHighlight(componentDLLInterface::ScriptData* InitializerScript, const char* SearchQuery, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
 {
+	Debug::Assert(InitializerScript != nullptr);
+
 	auto Params = gcnew controller::IScriptEditorController::InstantiationParams;
 	Params->Operations = controller::IScriptEditorController::InstantiationParams::eInitOperation::LoadExistingScript
 						 | controller::IScriptEditorController::InstantiationParams::eInitOperation::PerformFind;
-	Params->InitialBounds = Rectangle(Top, Left, Width, Height);
+	Params->InitialBounds = Rectangle(Left, Top, Width, Height);
 	Params->ExistingScriptEditorIds->Add(gcnew String(InitializerScript->EditorID));
 	Params->FindQuery = gcnew String(SearchQuery);
 
-	ScriptEditorInstanceManager::Get()->NewInstance()->InstantiateEditor(Params);
+	ScriptEditorInstanceManager::Get()->NewInstance(Params);
+	nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(InitializerScript);
 }
 
-void InstantiateEditors(componentDLLInterface::ScriptData** InitializerScripts, UInt32 ScriptCount, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
+void InstantiateEditors(ScriptListData* InitializerScripts, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
 {
+	Debug::Assert(InitializerScripts != nullptr);
+
 	auto Params = gcnew controller::IScriptEditorController::InstantiationParams;
 	Params->Operations = controller::IScriptEditorController::InstantiationParams::eInitOperation::LoadExistingScript;
-	Params->InitialBounds = Rectangle(Top, Left, Width, Height);
+	Params->InitialBounds = Rectangle(Left, Top, Width, Height);
 
-	for (int i = 0; i < ScriptCount; i++)
+	for (int i = 0; i < InitializerScripts->ScriptCount; i++)
 	{
-		auto NextScript = InitializerScripts[i];
+		auto NextScript = &InitializerScripts->ScriptListHead[i];
 		Params->ExistingScriptEditorIds->Add(gcnew String(NextScript->EditorID));
 	}
 
-	ScriptEditorInstanceManager::Get()->NewInstance()->InstantiateEditor(Params);
-	nativeWrapper::g_CSEInterfaceTable->DeleteData(InitializerScripts, true);
+	ScriptEditorInstanceManager::Get()->NewInstance(Params);
 }
 
-void InstantiateEditorsAndHighlight(componentDLLInterface::ScriptData** InitializerScripts, UInt32 ScriptCount, const char* SearchQuery, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
+void InstantiateEditorsAndHighlight(ScriptListData* InitializerScripts, const char* SearchQuery, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
 {
+	Debug::Assert(InitializerScripts != nullptr);
+
 	auto Params = gcnew controller::IScriptEditorController::InstantiationParams;
 	Params->Operations = controller::IScriptEditorController::InstantiationParams::eInitOperation::LoadExistingScript
 						 | controller::IScriptEditorController::InstantiationParams::eInitOperation::PerformFind;
-	Params->InitialBounds = Rectangle(Top, Left, Width, Height);
+	Params->InitialBounds = Rectangle(Left, Top, Width, Height);
 	Params->FindQuery = gcnew String(SearchQuery);
 
-	for (int i = 0; i < ScriptCount; i++)
+	for (int i = 0; i < InitializerScripts->ScriptCount; i++)
 	{
-		auto NextScript = InitializerScripts[i];
+		auto NextScript = &InitializerScripts->ScriptListHead[i];
 		Params->ExistingScriptEditorIds->Add(gcnew String(NextScript->EditorID));
 	}
 
-	ScriptEditorInstanceManager::Get()->NewInstance()->InstantiateEditor(Params);
-	nativeWrapper::g_CSEInterfaceTable->DeleteData(InitializerScripts, true);
+	ScriptEditorInstanceManager::Get()->NewInstance(Params);
 }
 
 bool IsDiskSyncInProgress(void)

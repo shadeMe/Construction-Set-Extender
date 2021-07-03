@@ -27,9 +27,10 @@ delegate void TextEditorScriptModifiedEventHandler(Object^ Sender, TextEditorScr
 ref class TextEditorMouseClickEventArgs : public MouseEventArgs
 {
 public:
-	property int ScriptTextOffset;
-
 	TextEditorMouseClickEventArgs(MouseButtons Button, int Clicks, int X, int Y, int ScriptTextOffset);
+
+	property Point ScreenCoords;
+	property int ScriptTextOffset;
 };
 delegate void TextEditorMouseClickEventHandler(Object^ Sender, TextEditorMouseClickEventArgs^ E);
 
@@ -63,7 +64,7 @@ ref struct FindReplaceResult
 	{
 		UInt32 Line;
 		String^ Text;		// the line's text after replacement
-		UInt32 Hits;		// no of hits in the line
+		UInt32 HitCount;		// no of hits in the line
 
 		HitData(UInt32 Line, String^ Text, UInt32 Hits);
 	};
@@ -80,8 +81,6 @@ ref struct FindReplaceResult
 
 	void Add(UInt32 Line, String^ Text, UInt32 HitsInLine);
 };
-
-delegate UInt32 GetBytecodeOffsetForLineDelegate(UInt32 Line);
 
 interface class ITextEditor : public intellisense::IIntelliSenseInterfaceConsumer
 {
@@ -100,6 +99,7 @@ interface class ITextEditor : public intellisense::IIntelliSenseInterfaceConsume
 	property int CurrentLine;
 	property int CurrentColumn;
 	property int LineCount;
+	property bool SelectionEmpty;
 	property int Caret;
 	property bool Modified;
 	property bool DisplayingStaticText;

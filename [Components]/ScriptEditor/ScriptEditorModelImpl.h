@@ -44,6 +44,7 @@ ref class ScriptDocument : public IScriptDocument
 	List<ScriptFindResult^>^ FindResults;
 	eBatchUpdateSource ActiveBatchUpdateSource;
 	int ActiveBatchUpdateCounter;
+	List<UInt16>^ LineBytecodeOffsets;
 
 	textEditor::avalonEdit::AvalonEditTextEditor^ Editor;
 	intellisense::IntelliSenseInterfaceModel^ IntelliSense;
@@ -54,6 +55,7 @@ ref class ScriptDocument : public IScriptDocument
 	textEditor::TextEditorScriptModifiedEventHandler^ EditorScriptModifiedHandler;
 	EventHandler^ EditorLineAnchorInvalidatedHandler;
 	EventHandler^ EditorStaticTextDisplayChangedHandler;
+	EventHandler^ EditorLineColumnChangedHandler;
 	IBackgroundSemanticAnalyzer::AnalysisCompleteEventHandler^ BgAnalysisCompleteHandler;
 	EventHandler^ AutoSaveTimerTickHandler;
 	EventHandler^ ScriptEditorPreferencesSavedHandler;
@@ -61,18 +63,20 @@ ref class ScriptDocument : public IScriptDocument
 	void Editor_ScriptModified(Object^ Sender, textEditor::TextEditorScriptModifiedEventArgs^ E);
 	void Editor_LineAnchorInvalidated(Object^ Sender, EventArgs^ E);
 	void Editor_StaticTextDisplayChanged(Object^ Sender, EventArgs^ E);
+	void Editor_LineColumnChanged(Object^ Sender, EventArgs^ E);
 	void BgAnalyzer_AnalysisComplete(Object^ Sender, IBackgroundSemanticAnalyzer::AnalysisCompleteEventArgs^ E);
 	void AutoSaveTimer_Tick(Object^ Sender, EventArgs^ E);
 	void ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
 
 	void OnStateChangedDirty(bool Modified);
-	void OnStateChangedBytecodeLength(UInt16 Size);
+	void OnStateChangedBytecode(UInt8* Data, UInt16 Size, String^ PreprocessedScriptText);
 	void OnStateChangedType(IScriptDocument::eScriptType Type);
 	void OnStateChangedEditorIdAndFormId(String^ EditorId, UInt32 FormId);
 	void OnStateChangedMessages();
 	void OnStateChangedBookmarks();
 	void OnStateChangedFindResults();
 	void OnStateChangedDisplayingPreprocessorOutput();
+	void OnStateChangedLineColumn();
 
 	void ReleaseNativeObjectIfNewScript();
 
@@ -99,13 +103,19 @@ ref class ScriptDocument : public IScriptDocument
 	void SaveAutoRecoveryCache();
 
 	ScriptTextMetadata^ PrepareMetadataForSerialization(bool HasPreprocessorDirectives);
+	bool CalculateLineBytecodeOffsets(String^ PreprocessedScriptText, UInt8* BytecodeData, UInt16 BytecodeLength);
+	bool AreLineBytecodeOffsetsValid();
 public:
 	ScriptDocument();
 	virtual ~ScriptDocument();
 
 	ImplPropertyGetOnly(bool, Valid, NativeObject != nullptr);
 	ImplPropertySimple(bool, Dirty, Editor->Modified);
-	ImplPropertyGetOnly(bool, UnsavedNewScript, NativeObject && nativeWrapper::g_CSEInterfaceTable->ScriptEditor.IsUnsavedNewScript(NativeObject));
+	property bool UnsavedNewScript
+	{
+		virtual bool get();
+		ImplPropertySetInvalid(bool);
+	}
 	ImplPropertyGetOnly(String^, ScriptEditorID, EditorID);
 	ImplPropertyGetOnly(UInt32, ScriptFormID, FormID);
 	ImplPropertyGetOnly(String^, ScriptText, Editor->GetText());
@@ -150,6 +160,10 @@ public:
 	virtual bool SanitizeScriptText();
 	virtual bool SaveScriptTextToDisk(String^ DiskFilePath);
 	virtual bool LoadScriptTextFromDisk(String^ DiskFilePath);
+
+	virtual textEditor::FindReplaceResult^ FindReplace(textEditor::eFindReplaceOperation Operation, String^ Query, String^ Replacement, textEditor::eFindReplaceOptions Options);
+
+	virtual bool GetBytecodeOffsetForScriptLine(UInt32 Line, UInt16% OutOffset);
 };
 
 

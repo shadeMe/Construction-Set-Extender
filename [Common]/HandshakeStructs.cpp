@@ -61,14 +61,15 @@ namespace componentDLLInterface
 		DescriptionComponent = Description ? Description->description.c_str() : nullptr;
 	}
 
-	FormData::FormData() : EditorID(nullptr), FormID(0), TypeID(0), Flags(0), ParentForm(nullptr), ParentPluginName(nullptr), ObjectReference(false), BaseFormEditorID(nullptr)
+	FormData::FormData()
+		: EditorID(nullptr), FormID(0), TypeID(0), Flags(0), ParentForm(nullptr), ParentPluginName(nullptr), ObjectReference(false), BaseFormEditorID(nullptr)
 	{
 		kHandShakeStructCounters[kCounter_FormData]++;
 	}
 
 	FormData::FormData(TESForm* Parent)
+		: FormData()
 	{
-		kHandShakeStructCounters[kCounter_FormData]++;
 		FillFormData(Parent);
 	}
 
@@ -90,14 +91,15 @@ namespace componentDLLInterface
 		Compiled = (Form->data != nullptr && Length > 0);
 	}
 
-	ScriptData::ScriptData() : FormData(), Text(0), Type(0), ModifiedFlag(0), ByteCode(0), Length(0), ParentID(0), UDF(false), Compiled(false)
+	ScriptData::ScriptData()
+		: FormData(), Text(0), Type(0), ByteCode(0), Length(0), ParentID(0), UDF(false), Compiled(false)
 	{
 		kHandShakeStructCounters[kCounter_ScriptData]++;
 	}
 
 	ScriptData::ScriptData(Script* Parent)
+		: ScriptData()
 	{
-		kHandShakeStructCounters[kCounter_ScriptData]++;
 		FillScriptData(Parent);
 	}
 

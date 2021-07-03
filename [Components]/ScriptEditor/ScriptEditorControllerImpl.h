@@ -83,6 +83,8 @@ ref struct NewTabCreationParams
 
 ref class ScriptEditorController : public IScriptEditorController
 {
+	delegate void DeferredUiActionDelegate();
+
 	static property String^ UnsavedScriptDisplayText
 	{
 		String^ get() { return "Unsaved Script"; }
@@ -101,14 +103,15 @@ ref class ScriptEditorController : public IScriptEditorController
 	components::InputManager^ InputManager;
 	ActiveDocumentActionCollection^ ActiveDocumentActions;
 	ViewActionCollection^ ViewActions;
+	Timer^ DeferredUiActionTimer;
 
 	view::IScriptEditorView::EventHandler^ DelegateViewComponentEvent;
 	model::IScriptDocument::StateChangeEventHandler^ DelegateModelDocumentStateChanged;
 	KeyEventHandler^ DelegateModelKeyDown;
 	textEditor::TextEditorMouseClickEventHandler^ DelegateModelMouseClick;
 	model::components::INavigationHelper::NavigationChangedEventHandler^ DelegateModelNavigationChanged;
-	EventHandler^ DelegateModelLineChanged;
-	EventHandler^ DelegateModelColumnChanged;
+	EventHandler^ DelegateDeferredUiActionTimerTick;
+	DeferredUiActionDelegate^ DelegateDeferredUiAction;
 
 	bool DisableDocumentActivationOnTabSwitch;
 
@@ -143,6 +146,8 @@ ref class ScriptEditorController : public IScriptEditorController
 
 	void SetDocumentDependentViewComponentsEnabled(bool Enabled);
 	void SetDocumentPreprocessorOutputDisplayDependentViewComponentsEnabled(bool Enabled);
+	void ResetViewComponentsToUnboundState();
+
 	view::ITabStripItem^ LookupTabStripItem(model::IScriptDocument^ Document);
 	void SetDocumentScriptTypeFromDropdown(model::IScriptDocument^ Document, view::components::IComboBox^ Dropdown);
 	void SetScriptTypeDropdown(view::components::IComboBox^ Dropdown, model::IScriptDocument::eScriptType ScriptType);
@@ -158,6 +163,8 @@ ref class ScriptEditorController : public IScriptEditorController
 	model::IScriptDocument^ CreateNewTab(NewTabCreationParams^ Params);
 	model::IScriptDocument^ ImportDocumentFromDisk(String^ DiskFilePath, bool ImportAsExistingScript);
 
+	void AllowDocumentBindingAfterTabMove();
+
 	void LoadNewUnsavedScriptIntoDocument(model::IScriptDocument^ Document);
 	void LoadExistingScriptIntoDocument(model::IScriptDocument^ Document, String^ ExistingScriptEditorId);
 	void LoadExistingScriptIntoDocument(model::IScriptDocument^ Document, DisposibleDataAutoPtr<componentDLLInterface::ScriptData> ExistingScriptData);
@@ -170,6 +177,7 @@ ref class ScriptEditorController : public IScriptEditorController
 	void ValidateDocumentSyncingStatus(model::IScriptDocument^ Document);
 	bool ShouldUseAutoRecoveryFile(String^ ScriptEditorId);
 
+	void DeferredUiActionTimer_Tick(Object^ Sender, EventArgs^ E);
 	void ViewEventHandler_ComponentEvent(Object^ Sender, view::ViewComponentEvent^ E);
 
 	void ViewEventHandler_MainWindow(view::ViewComponentEvent^ E);
@@ -182,25 +190,34 @@ ref class ScriptEditorController : public IScriptEditorController
 	void ViewEventHandler_MessagesPanel(view::ViewComponentEvent^ E);
 	void ViewEventHandler_BookmarksPanel(view::ViewComponentEvent^ E);
 	void ViewEventHandler_TextEditorContextMenu(view::ViewComponentEvent^ E);
+	void ViewEventHandler_EmptyWorkspacePanel(view::ViewComponentEvent^ E);
 
 	void ModelEventHandler_DocumentStateChanged(Object^ Sender, model::IScriptDocument::StateChangeEventArgs^ E);
 	void ModelEventHandler_KeyDown(Object^ Sender, KeyEventArgs^ E);
 	void ModelEventHandler_MouseClick(Object^ Sender, textEditor::TextEditorMouseClickEventArgs^ E);
 	void ModelEventHandler_NavigationChanged(Object^ Sender, model::components::INavigationHelper::NavigationChangedEventArgs^ E);
-	void ModelEventHandler_LineChanged(Object^ Sender, EventArgs^ E);
-	void ModelEventHandler_ColumnChanged(Object^ Sender, EventArgs^ E);
+
+	void InitViewComponents();
+	void ProcessInstantiationParameters(IScriptEditorController::InstantiationParams^ Params);
+
+	void QueueDeferredUiAction(DeferredUiActionDelegate^ Action, UInt32 TimeoutInMs);
 public:
 	ScriptEditorController(model::IFactory^ ModelFactory, view::IFactory^ ViewFactory);
+	ScriptEditorController(model::IFactory^ ModelFactory, view::IFactory^ ViewFactory, IScriptEditorController::InstantiationParams^ InitParams);
 	virtual ~ScriptEditorController();
 
 	ImplPropertyGetOnly(model::IScriptEditorModel^, Model, ChildModel);
 	ImplPropertyGetOnly(view::IScriptEditorView^, View, ChildView);
-	ImplPropertyGetOnly(model::IScriptDocument^, ActiveDocument, BoundDocument);
+	property model::IScriptDocument^ ActiveDocument
+	{
+		virtual model::IScriptDocument^ get() { return BoundDocument; }
+		virtual void set(model::IScriptDocument^ v);
+	}
 
 	virtual IScriptEditorController^ New();
+	virtual IScriptEditorController^ New(IScriptEditorController::InstantiationParams^ Params);
 	virtual void RelocateDocument(model::IScriptDocument^ Document, IScriptEditorController^ Source);
 	virtual void ActivateOrCreateNewDocument(String^ ScriptEditorId);
-	virtual void InstantiateEditor(IScriptEditorController::InstantiationParams^ Params);
 };
 
 
@@ -208,6 +225,7 @@ ref struct ScriptEditorControllerFactory : public controller::IFactory
 {
 public:
 	virtual controller::IScriptEditorController^ NewController(model::IFactory^ ModelFactory, view::IFactory^ ViewFactory);
+	virtual controller::IScriptEditorController^ NewController(model::IFactory^ ModelFactory, view::IFactory^ ViewFactory, IScriptEditorController::InstantiationParams^ InitParams);
 
 	static ScriptEditorControllerFactory^ NewFactory();
 };

@@ -116,7 +116,7 @@ namespace UIComponents {
 			this->BottomToolbarCompleteSelection->Name = L"BottomToolbarCompleteSelection";
 			this->BottomToolbarCompleteSelection->Size = System::Drawing::Size(81, 29);
 			this->BottomToolbarCompleteSelection->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-			this->BottomToolbarCompleteSelection->TabIndex = 1;
+			this->BottomToolbarCompleteSelection->TabIndex = 2;
 			this->BottomToolbarCompleteSelection->Text = L"OK";
 			//
 			// BottomToolbarContainer
@@ -135,7 +135,6 @@ namespace UIComponents {
 			this->BottomToolbarContainer->Style->BorderColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBorder;
 			this->BottomToolbarContainer->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelText;
 			this->BottomToolbarContainer->Style->GradientAngle = 90;
-			this->BottomToolbarContainer->TabIndex = 34;
 			//
 			// BottomToolbar
 			//
@@ -225,7 +224,7 @@ namespace UIComponents {
 			this->ScriptTextPreview->ReadOnly = true;
 			this->ScriptTextPreview->ScrollBars = System::Windows::Forms::ScrollBars::Both;
 			this->ScriptTextPreview->Size = System::Drawing::Size(406, 568);
-			this->ScriptTextPreview->TabIndex = 33;
+			this->ScriptTextPreview->TabStop = false;
 			this->ScriptTextPreview->WordWrap = false;
 			//
 			// ScriptList
@@ -252,8 +251,7 @@ namespace UIComponents {
 			this->ScriptList->Name = L"ScriptList";
 			this->ScriptList->ShowGroups = false;
 			this->ScriptList->Size = System::Drawing::Size(482, 533);
-			this->ScriptList->TabIndex = 32;
-			this->ScriptList->TabStop = false;
+			this->ScriptList->TabIndex = 1;
 			this->ScriptList->UseCompatibleStateImageBehavior = false;
 			this->ScriptList->View = System::Windows::Forms::View::Details;
 			this->ScriptList->VirtualMode = true;

@@ -37,6 +37,14 @@ namespace cse
 			CString CStr(Message);
 			nativeWrapper::g_CSEInterfaceTable->EditorAPI.DebugPrint(Source, CStr.c_str());
 		}
+
+		void SetControlRedraw(Control^ Window, bool Enabled)
+		{
+			const int WM_SETREDRAW = 11;
+
+			SendMessageA(Window->Handle, WM_SETREDRAW, static_cast<IntPtr>(Enabled), static_cast<IntPtr>(0));
+		}
+
 	}
 
 	namespace log

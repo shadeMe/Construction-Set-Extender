@@ -12,70 +12,85 @@ namespace obScriptParsing
 {
 
 
-UInt32 ByteCodeParser::Read16(Array^% Data, UInt32% CurrentOffset)
+UInt16 ByteCodeParser::Read16(UInt8* Data, UInt16% CurrentOffset)
 {
-	UInt32 LoByte = (Byte)Data->GetValue((int)CurrentOffset++),
-		HiByte = (Byte)Data->GetValue((int)CurrentOffset++);
+	auto LoByte = Data[CurrentOffset++];
+	auto HiByte = Data[CurrentOffset++];
+
 	return LoByte + (HiByte << 8);
 }
 
-bool ByteCodeParser::LineHasData(String^% Line)
+bool ByteCodeParser::LineHasData(String^ Line)
 {
-	String^ Extract = Line->Split(';')[0];
-	if (Extract == "")		return false;
+	String^ NonCommentPart = Line->Split(';')[0];
+	if (NonCommentPart == "")
+		return false;
 
-	int Idx = 0;
-	for each (char Itr in Extract)
+	int i = 0;
+	for each (char Itr in NonCommentPart)
 	{
-		if (Itr != '\t' && Itr != ' ')	break;
-		Idx++;
+		if (Itr != '\t' && Itr != ' ')
+			break;
+
+		++i;
 	}
 
-	Extract = Extract->Substring(Idx)->Split('\t', '\r', '\n', ' ')[0];
-	if (Extract == "")
+	NonCommentPart = NonCommentPart->Substring(i)->Split('\t', '\r', '\n', ' ')[0];
+	if (NonCommentPart == "")
 		return false;
 
-	if (Variable::GetVariableDataType(Extract) != Variable::eDataType::None)
+	if (Variable::GetVariableDataType(NonCommentPart) != Variable::eDataType::None)
 		return false;
 
-	else
-		return true;
+	return true;
 }
 
-UInt32 ByteCodeParser::GetOffsetForLine(String^% Line, Array^% Data, UInt32% CurrentOffset)
+UInt16 ByteCodeParser::GetOffsetForLine(String^ Line, UInt8* Data, UInt16% CurrentOffset)
 {
 	if (!ByteCodeParser::LineHasData(Line))
-		return 0xFFFFFFFF;
+		return 0xFFFF;
 
-	UInt32 OpCode = Read16(Data, CurrentOffset);
+	auto Opcode = Read16(Data, CurrentOffset);
 
-	switch (OpCode)
+	if (safe_cast<UInt16>(eBuiltInOpcodes::ScriptName) == Opcode)
 	{
-	case 0x1D:				 // scn
 		ByteCodeParser::Read16(Data, CurrentOffset);
 		return 0;
-	case 0x1C:				 // dot operator
+	}
+	else if (safe_cast<UInt16>(eBuiltInOpcodes::DotOperator) == Opcode)
+	{
 		ByteCodeParser::Read16(Data, CurrentOffset);
 		return GetOffsetForLine(Line, Data, CurrentOffset) - 4;
-	case 0x11:				 // end
+	}
+	else if (safe_cast<UInt16>(eBuiltInOpcodes::End) == Opcode)
+	{
 		ByteCodeParser::Read16(Data, CurrentOffset);
 		return CurrentOffset - 4;
-	case 0x1E:				// return
+	}
+	else if (safe_cast<UInt16>(eBuiltInOpcodes::Return) == Opcode)
+	{
 		ByteCodeParser::Read16(Data, CurrentOffset);
 		return CurrentOffset - 4;
-	case 0x17:				 // else
+	}
+	else if (safe_cast<UInt16>(eBuiltInOpcodes::Else) == Opcode)
+	{
 		ByteCodeParser::Read16(Data, CurrentOffset);
 		ByteCodeParser::Read16(Data, CurrentOffset);
 		return CurrentOffset - 6;
-	case 0x19:				 // endif
+	}
+	else if (safe_cast<UInt16>(eBuiltInOpcodes::EndIf) == Opcode)
+	{
 		ByteCodeParser::Read16(Data, CurrentOffset);
 		return CurrentOffset - 4;
-	default:
-		UInt32 Len = ByteCodeParser::Read16(Data, CurrentOffset);
-		UInt32 Cur = CurrentOffset - 4;
-		CurrentOffset += Len;
-		return Cur;
 	}
+
+	// all other opcodes should be encoded in the same way as regular script commands
+	// ### TODO does this support some of the newer OBSE features like the compiler override?
+	auto ArgumentLength = ByteCodeParser::Read16(Data, CurrentOffset);
+	auto CurrentLineOffset = CurrentOffset - 4;
+	CurrentOffset += ArgumentLength;
+
+	return CurrentLineOffset;
 }
 
 LineTokenizer::LineTokenizer()
