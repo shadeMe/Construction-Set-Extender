@@ -330,15 +330,18 @@ public:
 ref class ObjectListView : public ViewComponent, IObjectListView
 {
 	BrightIdeasSoftware::ObjectListView^ Source;
+	StyleManagerAmbient^ ColorManager;
 
 	IObjectListView::CanExpandGetter^ DelegateCanExpandGetter;
 	IObjectListView::ChildrenGetter^ DelegateChildrenGetter;
 
 	EventHandler^ DelegateItemActivate;
+	EventHandler^ DelegatePreferenceChanged;
 	BrightIdeasSoftware::TreeListView::CanExpandGetterDelegate^ DelegateWrapperCanExpandGetter;
 	BrightIdeasSoftware::TreeListView::ChildrenGetterDelegate^ DelegateWrapperChildrenGetter;
 
 	void Handler_ItemActivate(Object^ Sender, EventArgs^ E);
+	void Handler_PreferencesChanged(Object^ Sender, EventArgs^ E);
 	bool Wrapper_CanExpandGetter(Object^ Model);
 	Collections::IEnumerable^ Wrapper_ChildrenGetter(Object^ Model);
 public:

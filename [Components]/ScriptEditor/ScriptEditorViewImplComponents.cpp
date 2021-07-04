@@ -1,4 +1,5 @@
 #include "ScriptEditorViewImplComponents.h"
+#include "Preferences.h"
 
 namespace cse
 {
@@ -1196,6 +1197,17 @@ void ObjectListView::Handler_ItemActivate(Object^ Sender, EventArgs^ E)
 	RaiseEvent(IObjectListView::eEvent::ItemActivate, EventArgs);
 }
 
+void ObjectListView::Handler_PreferencesChanged(Object^ Sender, EventArgs^ E)
+{
+	bool DarkMode = preferences::SettingsHolder::Get()->Appearance->DarkMode;
+	auto BackColor = DarkMode ? StyleManager::MetroColorGeneratorParameters.VisualStudio2012Dark.CanvasColor : StyleManager::MetroColorGeneratorParameters.VisualStudio2012Light.CanvasColor;
+	auto AccentColor = preferences::SettingsHolder::Get()->Appearance->AccentColor;
+	auto ForeColor = DarkMode ? Color::White : Color::Black;
+
+	Source->ForeColor = ForeColor;
+	Source->BackColor = BackColor;
+}
+
 bool ObjectListView::Wrapper_CanExpandGetter(Object^ Model)
 {
 	return DelegateCanExpandGetter(Model);
@@ -1210,20 +1222,28 @@ ObjectListView::ObjectListView(BrightIdeasSoftware::ObjectListView^ Source, eVie
 	: ViewComponent(eComponentType::ObjectListView, ViewRole, EventRouter)
 {
 	this->Source = Source;
+	this->ColorManager = gcnew StyleManagerAmbient;
 
 	DelegateCanExpandGetter = nullptr;
 	DelegateChildrenGetter = nullptr;
 
 	DelegateItemActivate = gcnew EventHandler(this, &ObjectListView::Handler_ItemActivate);
+	DelegatePreferenceChanged = gcnew EventHandler(this, &ObjectListView::Handler_PreferencesChanged);
 	DelegateWrapperCanExpandGetter = gcnew BrightIdeasSoftware::TreeListView::CanExpandGetterDelegate(this, &ObjectListView::Wrapper_CanExpandGetter);
 	DelegateWrapperChildrenGetter = gcnew BrightIdeasSoftware::TreeListView::ChildrenGetterDelegate(this, &ObjectListView::Wrapper_ChildrenGetter);
 
 	Source->ItemActivate += DelegateItemActivate;
 	Source->HideSelection = false;
+
+	preferences::SettingsHolder::Get()->PreferencesChanged += DelegatePreferenceChanged;
+	ColorManager->SetEnableAmbientSettings(Source, eAmbientSettings::ChildControls);
+
+	Handler_PreferencesChanged(nullptr, nullptr);
 }
 
 ObjectListView::~ObjectListView()
 {
+	preferences::SettingsHolder::Get()->PreferencesChanged -= DelegatePreferenceChanged;
 	Source->ItemActivate -= DelegateItemActivate;
 
 	if (DelegateCanExpandGetter != nullptr)
@@ -1239,6 +1259,7 @@ ObjectListView::~ObjectListView()
 	}
 
 	SAFEDELETE_CLR(DelegateItemActivate);
+	SAFEDELETE_CLR(DelegatePreferenceChanged);
 	SAFEDELETE_CLR(DelegateWrapperCanExpandGetter);
 	SAFEDELETE_CLR(DelegateWrapperChildrenGetter);
 
@@ -1250,6 +1271,8 @@ ObjectListView::~ObjectListView()
 
 	Source->ClearObjects();
 	Source = nullptr;
+
+	SAFEDELETE_CLR(ColorManager);
 }
 
 bool ObjectListView::HeaderVisible::get()
