@@ -107,6 +107,7 @@ private:
 	DevComponents::DotNetBar::LabelItem^ BottomToolbarSelectionCount;
 	DevComponents::DotNetBar::ButtonX^ BottomToolbarCompleteSelection;
 	System::Windows::Forms::Timer^ DeferredSelectionUpdateTimer;
+	DevComponents::DotNetBar::StyleManagerAmbient^ ColorManager;
 	System::ComponentModel::IContainer^ components;
 
 	void ScriptList_SelectionChanged(Object^ Sender, EventArgs^ E);

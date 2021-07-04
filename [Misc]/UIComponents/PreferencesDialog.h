@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 namespace UIComponents {
 
@@ -82,19 +82,12 @@ namespace UIComponents {
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->SidebarSettingsCategories))->BeginInit();
 			this->ContainerPropertyGrid->SuspendLayout();
 			this->SuspendLayout();
-			// 
-			// PropertyGrid
-			// 
 			this->PropertyGrid->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->PropertyGrid->GridLinesColor = System::Drawing::Color::WhiteSmoke;
 			this->PropertyGrid->Location = System::Drawing::Point(0, 0);
 			this->PropertyGrid->Name = L"PropertyGrid";
-			this->PropertyGrid->Size = System::Drawing::Size(398, 498);
+			this->PropertyGrid->Size = System::Drawing::Size(398, 490);
 			this->PropertyGrid->TabIndex = 0;
-			this->PropertyGrid->Text = L"advPropertyGrid1";
-			// 
-			// TopBar
-			// 
+			this->PropertyGrid->HelpType = DevComponents::DotNetBar::ePropertyGridHelpType::Panel;
 			this->TopBar->AntiAlias = true;
 			this->TopBar->Dock = System::Windows::Forms::DockStyle::Top;
 			this->TopBar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
@@ -104,53 +97,42 @@ namespace UIComponents {
 			this->TopBar->Name = L"TopBar";
 			this->TopBar->PaddingBottom = 8;
 			this->TopBar->PaddingTop = 8;
-			this->TopBar->Size = System::Drawing::Size(434, 33);
+			this->TopBar->Size = System::Drawing::Size(434, 41);
 			this->TopBar->Stretch = true;
 			this->TopBar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->TopBar->TabIndex = 1;
 			this->TopBar->TabStop = false;
 			this->TopBar->Text = L"bar1";
-			// 
-			// LabelCategories
-			// 
 			this->LabelCategories->Name = L"LabelCategories";
-			this->LabelCategories->Text = L"CATEGORIES";
-			// 
-			// LabelCurrentCategory
-			// 
+			this->LabelCategories->Symbol = L"";
+			this->LabelCategories->Text = L"Settings Category";
 			this->LabelCurrentCategory->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
 			this->LabelCurrentCategory->Name = L"LabelCurrentCategory";
 			this->LabelCurrentCategory->Text = L"Current Category";
-			// 
-			// SidebarSettingsCategories
-			// 
 			this->SidebarSettingsCategories->AntiAlias = true;
 			this->SidebarSettingsCategories->Dock = System::Windows::Forms::DockStyle::Left;
 			this->SidebarSettingsCategories->DockOrientation = DevComponents::DotNetBar::eOrientation::Vertical;
 			this->SidebarSettingsCategories->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
 			this->SidebarSettingsCategories->IsMaximized = false;
 			this->SidebarSettingsCategories->ItemSpacing = 5;
-			this->SidebarSettingsCategories->Location = System::Drawing::Point(0, 33);
+			this->SidebarSettingsCategories->Location = System::Drawing::Point(0, 41);
 			this->SidebarSettingsCategories->Name = L"SidebarSettingsCategories";
 			this->SidebarSettingsCategories->PaddingLeft = 15;
 			this->SidebarSettingsCategories->PaddingRight = 15;
-			this->SidebarSettingsCategories->Size = System::Drawing::Size(36, 498);
+			this->SidebarSettingsCategories->Size = System::Drawing::Size(36, 490);
 			this->SidebarSettingsCategories->Stretch = true;
 			this->SidebarSettingsCategories->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->SidebarSettingsCategories->TabIndex = 2;
 			this->SidebarSettingsCategories->TabStop = false;
 			this->SidebarSettingsCategories->Text = L"bar2";
-			// 
-			// ContainerPropertyGrid
-			// 
 			this->ContainerPropertyGrid->CanvasColor = System::Drawing::SystemColors::Control;
 			this->ContainerPropertyGrid->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->ContainerPropertyGrid->Controls->Add(this->PropertyGrid);
 			this->ContainerPropertyGrid->DisabledBackColor = System::Drawing::Color::Empty;
 			this->ContainerPropertyGrid->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->ContainerPropertyGrid->Location = System::Drawing::Point(36, 33);
+			this->ContainerPropertyGrid->Location = System::Drawing::Point(36, 41);
 			this->ContainerPropertyGrid->Name = L"ContainerPropertyGrid";
-			this->ContainerPropertyGrid->Size = System::Drawing::Size(398, 498);
+			this->ContainerPropertyGrid->Size = System::Drawing::Size(398, 490);
 			this->ContainerPropertyGrid->Style->Alignment = System::Drawing::StringAlignment::Center;
 			this->ContainerPropertyGrid->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
 			this->ContainerPropertyGrid->Style->Border = DevComponents::DotNetBar::eBorderType::SingleLine;
@@ -159,9 +141,6 @@ namespace UIComponents {
 			this->ContainerPropertyGrid->Style->GradientAngle = 90;
 			this->ContainerPropertyGrid->TabIndex = 3;
 			this->ContainerPropertyGrid->Text = L"panelEx1";
-			// 
-			// ScriptEditorPreferences
-			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(434, 531);
@@ -169,9 +148,11 @@ namespace UIComponents {
 			this->Controls->Add(this->SidebarSettingsCategories);
 			this->Controls->Add(this->TopBar);
 			this->DoubleBuffered = true;
+			this->MinimizeBox = false;
 			this->MinimumSize = System::Drawing::Size(450, 550);
 			this->Name = L"ScriptEditorPreferences";
 			this->ShowIcon = false;
+			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterParent;
 			this->Text = L"Preferences";
 			this->Load += gcnew System::EventHandler(this, &ScriptEditorPreferences::ScriptEditorPreferences_Load);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->PropertyGrid))->EndInit();

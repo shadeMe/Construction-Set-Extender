@@ -2109,8 +2109,8 @@ void ScriptEditorWorkspace::InitializeComponents()
 void SetObjectListViewTextOverlay(BrightIdeasSoftware::ObjectListView^ ListView, Color ForeColor, Color BackColor)
 {
 	auto EmptyMsgOverlay = safe_cast<BrightIdeasSoftware::TextOverlay^>(ListView->EmptyListMsgOverlay);
-	EmptyMsgOverlay->TextColor = Color::White;
-	EmptyMsgOverlay->BackColor = Color::FromArgb(75, 29, 32, 33);
+	EmptyMsgOverlay->TextColor = ForeColor;
+	EmptyMsgOverlay->BackColor = BackColor;
 	EmptyMsgOverlay->BorderWidth = 0.f;
 }
 

@@ -54,7 +54,8 @@ namespace UIComponents {
 	private: DevComponents::DotNetBar::LabelItem^ BottomToolbarSelectionCount;
 	private: DevComponents::DotNetBar::ButtonX^ BottomToolbarCompleteSelection;
 	private: System::Windows::Forms::Timer^ DeferredSelectionUpdateTimer;
-	private: System::ComponentModel::IContainer^ components;
+    private: DevComponents::DotNetBar::StyleManagerAmbient^ ColorManager;
+    private: System::ComponentModel::IContainer^ components;
 
 
 
@@ -102,13 +103,14 @@ namespace UIComponents {
 			this->ScriptListCType = (gcnew BrightIdeasSoftware::OLVColumn());
 			this->ScriptListCParentPlugin = (gcnew BrightIdeasSoftware::OLVColumn());
 			this->DeferredSelectionUpdateTimer = (gcnew System::Windows::Forms::Timer(this->components));
+			this->ColorManager = (gcnew DevComponents::DotNetBar::StyleManagerAmbient(this->components));
 			this->BottomToolbarContainer->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->BottomToolbar))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ScriptList))->BeginInit();
 			this->SuspendLayout();
-			//
+			// 
 			// BottomToolbarCompleteSelection
-			//
+			// 
 			this->BottomToolbarCompleteSelection->AccessibleRole = System::Windows::Forms::AccessibleRole::PushButton;
 			this->BottomToolbarCompleteSelection->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left));
 			this->BottomToolbarCompleteSelection->ColorTable = DevComponents::DotNetBar::eButtonColor::OrangeWithBackground;
@@ -118,9 +120,9 @@ namespace UIComponents {
 			this->BottomToolbarCompleteSelection->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->BottomToolbarCompleteSelection->TabIndex = 2;
 			this->BottomToolbarCompleteSelection->Text = L"OK";
-			//
+			// 
 			// BottomToolbarContainer
-			//
+			// 
 			this->BottomToolbarContainer->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left));
 			this->BottomToolbarContainer->CanvasColor = System::Drawing::SystemColors::Control;
 			this->BottomToolbarContainer->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
@@ -135,9 +137,10 @@ namespace UIComponents {
 			this->BottomToolbarContainer->Style->BorderColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBorder;
 			this->BottomToolbarContainer->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelText;
 			this->BottomToolbarContainer->Style->GradientAngle = 90;
-			//
+			this->BottomToolbarContainer->TabIndex = 3;
+			// 
 			// BottomToolbar
-			//
+			// 
 			this->BottomToolbar->AntiAlias = true;
 			this->BottomToolbar->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->BottomToolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
@@ -155,16 +158,16 @@ namespace UIComponents {
 			this->BottomToolbar->TabIndex = 0;
 			this->BottomToolbar->TabStop = false;
 			this->BottomToolbar->Text = L"bar1";
-			//
+			// 
 			// BottomToolbarTextboxFilter
-			//
+			// 
 			this->BottomToolbarTextboxFilter->Name = L"BottomToolbarTextboxFilter";
 			this->BottomToolbarTextboxFilter->TextBoxWidth = 165;
 			this->BottomToolbarTextboxFilter->WatermarkColor = System::Drawing::SystemColors::GrayText;
 			this->BottomToolbarTextboxFilter->WatermarkText = L"Filter";
-			//
+			// 
 			// BottomToolbarSelectAll
-			//
+			// 
 			this->BottomToolbarSelectAll->AutoExpandOnClick = true;
 			this->BottomToolbarSelectAll->BeginGroup = true;
 			this->BottomToolbarSelectAll->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::ImageAndText;
@@ -177,40 +180,40 @@ namespace UIComponents {
 					this->MenuSelectAllDeleted, this->MenuSelectAllUncompiled
 			});
 			this->BottomToolbarSelectAll->Text = L"Select All...";
-			//
+			// 
 			// MenuSelectAllActive
-			//
+			// 
 			this->MenuSelectAllActive->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"MenuSelectAllActive.Image")));
 			this->MenuSelectAllActive->Name = L"MenuSelectAllActive";
 			this->MenuSelectAllActive->Text = L"Active Scripts";
-			//
+			// 
 			// MenuSelectAllDeleted
-			//
+			// 
 			this->MenuSelectAllDeleted->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"MenuSelectAllDeleted.Image")));
 			this->MenuSelectAllDeleted->Name = L"MenuSelectAllDeleted";
 			this->MenuSelectAllDeleted->Text = L"Deleted Scripts";
-			//
+			// 
 			// MenuSelectAllUncompiled
-			//
+			// 
 			this->MenuSelectAllUncompiled->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"MenuSelectAllUncompiled.Image")));
 			this->MenuSelectAllUncompiled->Name = L"MenuSelectAllUncompiled";
 			this->MenuSelectAllUncompiled->Text = L"Uncompiled Scripts";
-			//
+			// 
 			// BottomToolbarSelectionCount
-			//
+			// 
 			this->BottomToolbarSelectionCount->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
 			this->BottomToolbarSelectionCount->Name = L"BottomToolbarSelectionCount";
 			this->BottomToolbarSelectionCount->Text = L"0 selected";
-			//
+			// 
 			// ScriptTextPreview
-			//
+			// 
 			this->ScriptTextPreview->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
 				| System::Windows::Forms::AnchorStyles::Left)
 				| System::Windows::Forms::AnchorStyles::Right));
 			this->ScriptTextPreview->BackColor = System::Drawing::Color::Black;
-			//
-			//
-			//
+			// 
+			// 
+			// 
 			this->ScriptTextPreview->Border->Class = L"TextBoxBorder";
 			this->ScriptTextPreview->Border->CornerType = DevComponents::DotNetBar::eCornerType::Square;
 			this->ScriptTextPreview->DisabledBackColor = System::Drawing::Color::Black;
@@ -224,11 +227,12 @@ namespace UIComponents {
 			this->ScriptTextPreview->ReadOnly = true;
 			this->ScriptTextPreview->ScrollBars = System::Windows::Forms::ScrollBars::Both;
 			this->ScriptTextPreview->Size = System::Drawing::Size(406, 568);
+			this->ScriptTextPreview->TabIndex = 7;
 			this->ScriptTextPreview->TabStop = false;
 			this->ScriptTextPreview->WordWrap = false;
-			//
+			// 
 			// ScriptList
-			//
+			// 
 			this->ScriptList->AllColumns->Add(this->ScriptListCFlags);
 			this->ScriptList->AllColumns->Add(this->ScriptListCScriptName);
 			this->ScriptList->AllColumns->Add(this->ScriptListCFormID);
@@ -243,9 +247,12 @@ namespace UIComponents {
 					this->ScriptListCScriptName, this->ScriptListCFormID, this->ScriptListCType, this->ScriptListCParentPlugin
 			});
 			this->ScriptList->Cursor = System::Windows::Forms::Cursors::Default;
+			this->ScriptList->EmptyListMsg = L"Doesn\'t look like anything to me...";
+			this->ScriptList->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->ColorManager->SetEnableAmbientSettings(this->ScriptList, DevComponents::DotNetBar::eAmbientSettings::ChildControls);
 			this->ScriptList->ForeColor = System::Drawing::Color::White;
 			this->ScriptList->FullRowSelect = true;
-			this->ScriptList->GridLines = true;
 			this->ScriptList->HideSelection = false;
 			this->ScriptList->Location = System::Drawing::Point(3, 0);
 			this->ScriptList->Name = L"ScriptList";
@@ -255,40 +262,40 @@ namespace UIComponents {
 			this->ScriptList->UseCompatibleStateImageBehavior = false;
 			this->ScriptList->View = System::Windows::Forms::View::Details;
 			this->ScriptList->VirtualMode = true;
-			//
+			// 
 			// ScriptListCFlags
-			//
+			// 
 			this->ScriptListCFlags->MaximumWidth = 20;
 			this->ScriptListCFlags->MinimumWidth = 20;
 			this->ScriptListCFlags->Text = L"";
 			this->ScriptListCFlags->Width = 20;
-			//
+			// 
 			// ScriptListCScriptName
-			//
+			// 
 			this->ScriptListCScriptName->Text = L"Name";
 			this->ScriptListCScriptName->Width = 180;
-			//
+			// 
 			// ScriptListCFormID
-			//
+			// 
 			this->ScriptListCFormID->Text = L"Form ID";
 			this->ScriptListCFormID->Width = 75;
-			//
+			// 
 			// ScriptListCType
-			//
+			// 
 			this->ScriptListCType->Text = L"Type";
 			this->ScriptListCType->Width = 54;
-			//
+			// 
 			// ScriptListCParentPlugin
-			//
+			// 
 			this->ScriptListCParentPlugin->Text = L"Parent Plugin";
 			this->ScriptListCParentPlugin->Width = 114;
-			//
+			// 
 			// DeferredSelectionUpdateTimer
-			//
+			// 
 			this->DeferredSelectionUpdateTimer->Enabled = true;
-			//
-			// ScriptEditorSelectScripts
-			//
+			// 
+			// ScriptSelectionDialog
+			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(900, 574);
@@ -298,7 +305,7 @@ namespace UIComponents {
 			this->Controls->Add(this->ScriptList);
 			this->DoubleBuffered = true;
 			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::SizableToolWindow;
-			this->Name = L"ScriptEditorSelectScripts";
+			this->Name = L"ScriptSelectionDialog";
 			this->ShowIcon = false;
 			this->Text = L"Select Scripts";
 			this->BottomToolbarContainer->ResumeLayout(false);

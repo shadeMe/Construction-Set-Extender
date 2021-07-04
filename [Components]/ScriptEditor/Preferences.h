@@ -769,25 +769,27 @@ public:
 };
 
 
-ref class PreferencesDialog : public System::Windows::Forms::Form
+ref class PreferencesDialog : public DevComponents::DotNetBar::Metro::MetroForm
 {
 	static PreferencesDialog^ ActiveDialog = nullptr;
 
 	System::ComponentModel::Container^ components;
 
-	PropertyGrid^			PropertyGrid;
-	ToolStrip^				ToolStripSettingCategories;
-	ToolStripLabel^			ToolStripLabelCategories;
-	Label^					LabelCurrentCategory;
+	DevComponents::DotNetBar::AdvPropertyGrid^ PropertyGrid;
+	DevComponents::DotNetBar::Bar^ TopBar;
+	DevComponents::DotNetBar::LabelItem^ LabelCategories;
+	DevComponents::DotNetBar::LabelItem^ LabelCurrentCategory;
+	DevComponents::DotNetBar::Bar^ SidebarSettingsCategories;
+	DevComponents::DotNetBar::PanelEx^ ContainerPropertyGrid;
 
-	void ToolStripCategoryButton_Click(Object^ Sender, EventArgs^ E);
+	void SidebarSettingsCategoryButton_Click(Object^ Sender, EventArgs^ E);
 	void Dialog_Cancel(Object^ Sender, CancelEventArgs^ E);
 
 	void InitializeComponent();
 	bool PopulateCategories();
 	bool SwitchCategory(SettingsGroup^ Group);
 
-	Dictionary<SettingsGroup^, ToolStripButton^>^ RegisteredCategories;
+	Dictionary<SettingsGroup^, DevComponents::DotNetBar::ButtonItem^>^ RegisteredCategories;
 	SettingsGroup^ CurrentSelection;
 	SettingsGroup^ CurrentSelectionSnapshot;
 public:

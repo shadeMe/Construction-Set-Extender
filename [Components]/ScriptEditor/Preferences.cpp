@@ -1,4 +1,4 @@
-#include "Preferences.h"
+﻿#include "Preferences.h"
 #include "[Common]\NativeWrapper.h"
 #include "IntelliSenseBackend.h"
 #include "IScriptEditorView.h"
@@ -427,11 +427,11 @@ SettingsHolder^ SettingsHolder::Get()
 }
 
 
-void PreferencesDialog::ToolStripCategoryButton_Click(Object^ Sender, EventArgs^ E)
+void PreferencesDialog::SidebarSettingsCategoryButton_Click(Object^ Sender, EventArgs^ E)
 {
 	Debug::Assert(CurrentSelection != nullptr);
 
-	auto Button = safe_cast<ToolStripButton^>(Sender);
+	auto Button = safe_cast<DevComponents::DotNetBar::ButtonItem^>(Sender);
 	auto Group = safe_cast<SettingsGroup^>(Button->Tag);
 
 	if (Button == RegisteredCategories[CurrentSelection])
@@ -449,8 +449,8 @@ void PreferencesDialog::Dialog_Cancel(Object^ Sender, CancelEventArgs^ E)
 		{
 			ValidationMessage = ValidationMessage->TrimEnd();
 			auto MsgBoxResult = MessageBox::Show("Some values are invalid!\n\n" + ValidationMessage
-												+ "\n\nAre you sure you want to close and revert the above changes?",
-												view::IScriptEditorView::MainWindowDefaultTitle, MessageBoxButtons::YesNo, MessageBoxIcon::Stop);
+												 + "\n\nAre you sure you want to close and revert the above changes?",
+												 view::IScriptEditorView::MainWindowDefaultTitle, MessageBoxButtons::YesNo, MessageBoxIcon::Stop);
 			if (MsgBoxResult == Windows::Forms::DialogResult::No)
 			{
 				E->Cancel = true;
@@ -464,75 +464,117 @@ void PreferencesDialog::Dialog_Cancel(Object^ Sender, CancelEventArgs^ E)
 
 void PreferencesDialog::InitializeComponent(void)
 {
-	this->PropertyGrid = (gcnew System::Windows::Forms::PropertyGrid());
-	this->ToolStripSettingCategories = (gcnew System::Windows::Forms::ToolStrip());
-	this->ToolStripLabelCategories = (gcnew System::Windows::Forms::ToolStripLabel());
-	this->LabelCurrentCategory = (gcnew System::Windows::Forms::Label());
-	this->ToolStripSettingCategories->SuspendLayout();
+	this->PropertyGrid = (gcnew DevComponents::DotNetBar::AdvPropertyGrid());
+	this->TopBar = (gcnew DevComponents::DotNetBar::Bar());
+	this->LabelCategories = (gcnew DevComponents::DotNetBar::LabelItem());
+	this->LabelCurrentCategory = (gcnew DevComponents::DotNetBar::LabelItem());
+	this->SidebarSettingsCategories = (gcnew DevComponents::DotNetBar::Bar());
+	this->ContainerPropertyGrid = (gcnew DevComponents::DotNetBar::PanelEx());
+	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->PropertyGrid))->BeginInit();
+	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->TopBar))->BeginInit();
+	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->SidebarSettingsCategories))->BeginInit();
+	this->ContainerPropertyGrid->SuspendLayout();
 	this->SuspendLayout();
 	//
 	// PropertyGrid
 	//
-	this->PropertyGrid->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
-		| System::Windows::Forms::AnchorStyles::Left)
-		| System::Windows::Forms::AnchorStyles::Right));
-	this->PropertyGrid->Location = System::Drawing::Point(67, 12);
+	this->PropertyGrid->Dock = System::Windows::Forms::DockStyle::Fill;
+	this->PropertyGrid->Location = System::Drawing::Point(0, 0);
 	this->PropertyGrid->Name = L"PropertyGrid";
-	this->PropertyGrid->Size = System::Drawing::Size(355, 437);
-	this->PropertyGrid->TabIndex = 1;
+	this->PropertyGrid->Size = System::Drawing::Size(398, 490);
+	this->PropertyGrid->HelpType = DevComponents::DotNetBar::ePropertyGridHelpType::Panel;
+	this->PropertyGrid->TabIndex = 0;
 	//
-	// ToolStripSettingCategories
+	// TopBar
 	//
-	this->ToolStripSettingCategories->AutoSize = false;
-	this->ToolStripSettingCategories->Dock = System::Windows::Forms::DockStyle::Left;
-	this->ToolStripSettingCategories->GripStyle = System::Windows::Forms::ToolStripGripStyle::Hidden;
-	this->ToolStripSettingCategories->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->ToolStripLabelCategories });
-	this->ToolStripSettingCategories->Location = System::Drawing::Point(0, 0);
-	this->ToolStripSettingCategories->Name = L"ToolStripSettingCategories";
-	this->ToolStripSettingCategories->RenderMode = System::Windows::Forms::ToolStripRenderMode::System;
-	this->ToolStripSettingCategories->Size = System::Drawing::Size(64, 461);
-	this->ToolStripSettingCategories->TabIndex = 2;
+	this->TopBar->AntiAlias = true;
+	this->TopBar->Dock = System::Windows::Forms::DockStyle::Top;
+	this->TopBar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
+	this->TopBar->IsMaximized = false;
+	this->TopBar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(1) { this->LabelCategories });
+	this->TopBar->Location = System::Drawing::Point(0, 0);
+	this->TopBar->Name = L"TopBar";
+	this->TopBar->PaddingBottom = 8;
+	this->TopBar->PaddingTop = 8;
+	this->TopBar->Size = System::Drawing::Size(434, 41);
+	this->TopBar->Stretch = true;
+	this->TopBar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+	this->TopBar->TabIndex = 1;
+	this->TopBar->TabStop = false;
+	this->TopBar->Text = L"bar1";
 	//
-	// ToolStripLabelCategories
+	// LabelCategories
 	//
-	this->ToolStripLabelCategories->Name = L"ToolStripLabelCategories";
-	this->ToolStripLabelCategories->Padding = System::Windows::Forms::Padding(5);
-	this->ToolStripLabelCategories->Size = System::Drawing::Size(62, 25);
-	this->ToolStripLabelCategories->Text = L"Categories";
+	this->LabelCategories->Name = L"LabelCategories";
+	this->LabelCategories->Symbol = L"";
+	this->LabelCategories->Text = L"Settings Category";
 	//
 	// LabelCurrentCategory
 	//
-	this->LabelCurrentCategory->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-	this->LabelCurrentCategory->AutoSize = true;
-	this->LabelCurrentCategory->Font = (gcnew System::Drawing::Font(L"Segoe UI", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-		static_cast<System::Byte>(0)));
-	this->LabelCurrentCategory->Location = System::Drawing::Point(292, 9);
+	this->LabelCurrentCategory->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
 	this->LabelCurrentCategory->Name = L"LabelCurrentCategory";
-	this->LabelCurrentCategory->Size = System::Drawing::Size(130, 21);
-	this->LabelCurrentCategory->TabIndex = 3;
 	this->LabelCurrentCategory->Text = L"Current Category";
-	this->LabelCurrentCategory->TextAlign = System::Drawing::ContentAlignment::MiddleRight;
 	//
-	// OptionsDialog
+	// SidebarSettingsCategories
+	//
+	this->SidebarSettingsCategories->AntiAlias = true;
+	this->SidebarSettingsCategories->Dock = System::Windows::Forms::DockStyle::Left;
+	this->SidebarSettingsCategories->DockOrientation = DevComponents::DotNetBar::eOrientation::Vertical;
+	this->SidebarSettingsCategories->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
+	this->SidebarSettingsCategories->IsMaximized = false;
+	this->SidebarSettingsCategories->ItemSpacing = 5;
+	this->SidebarSettingsCategories->Location = System::Drawing::Point(0, 41);
+	this->SidebarSettingsCategories->Name = L"SidebarSettingsCategories";
+	this->SidebarSettingsCategories->PaddingLeft = 15;
+	this->SidebarSettingsCategories->PaddingRight = 15;
+	this->SidebarSettingsCategories->Size = System::Drawing::Size(36, 490);
+	this->SidebarSettingsCategories->Stretch = true;
+	this->SidebarSettingsCategories->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+	this->SidebarSettingsCategories->TabIndex = 2;
+	this->SidebarSettingsCategories->TabStop = false;
+	this->SidebarSettingsCategories->Text = L"bar2";
+	//
+	// ContainerPropertyGrid
+	//
+	this->ContainerPropertyGrid->CanvasColor = System::Drawing::SystemColors::Control;
+	this->ContainerPropertyGrid->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+	this->ContainerPropertyGrid->Controls->Add(this->PropertyGrid);
+	this->ContainerPropertyGrid->DisabledBackColor = System::Drawing::Color::Empty;
+	this->ContainerPropertyGrid->Dock = System::Windows::Forms::DockStyle::Fill;
+	this->ContainerPropertyGrid->Location = System::Drawing::Point(36, 41);
+	this->ContainerPropertyGrid->Name = L"ContainerPropertyGrid";
+	this->ContainerPropertyGrid->Size = System::Drawing::Size(398, 490);
+	this->ContainerPropertyGrid->Style->Alignment = System::Drawing::StringAlignment::Center;
+	this->ContainerPropertyGrid->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
+	this->ContainerPropertyGrid->Style->Border = DevComponents::DotNetBar::eBorderType::SingleLine;
+	this->ContainerPropertyGrid->Style->BorderColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBorder;
+	this->ContainerPropertyGrid->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelText;
+	this->ContainerPropertyGrid->Style->GradientAngle = 90;
+	this->ContainerPropertyGrid->TabIndex = 3;
+	this->ContainerPropertyGrid->Text = L"panelEx1";
+	//
+	// ScriptEditorPreferences
 	//
 	this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 	this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-	this->ClientSize = System::Drawing::Size(434, 461);
-	this->Controls->Add(this->LabelCurrentCategory);
-	this->Controls->Add(this->ToolStripSettingCategories);
-	this->Controls->Add(this->PropertyGrid);
+	this->ClientSize = System::Drawing::Size(434, 531);
+	this->Controls->Add(this->ContainerPropertyGrid);
+	this->Controls->Add(this->SidebarSettingsCategories);
+	this->Controls->Add(this->TopBar);
+	this->DoubleBuffered = true;
 	this->MinimizeBox = false;
-	this->MinimumSize = System::Drawing::Size(450, 500);
-	this->Name = L"OptionsDialog";
+	this->MinimumSize = System::Drawing::Size(450, 550);
+	this->Name = L"ScriptEditorPreferences";
 	this->ShowIcon = false;
 	this->StartPosition = System::Windows::Forms::FormStartPosition::CenterParent;
-	this->Text = L"Script Editor Preferences";
-	this->ToolStripSettingCategories->ResumeLayout(false);
-	this->ToolStripSettingCategories->PerformLayout();
+	this->Text = L"Preferences";
+	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->PropertyGrid))->EndInit();
+	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->TopBar))->EndInit();
+	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->SidebarSettingsCategories))->EndInit();
+	this->ContainerPropertyGrid->ResumeLayout(false);
 	this->ResumeLayout(false);
-	this->PerformLayout();
 
-	this->ToolStripSettingCategories->Renderer = gcnew CustomToolStripSystemRenderer;
+	this->PropertyGrid->Toolbar->Items->Add(LabelCurrentCategory);
 	this->Closing += gcnew CancelEventHandler(this, &PreferencesDialog::Dialog_Cancel);
 }
 
@@ -542,21 +584,22 @@ bool PreferencesDialog::PopulateCategories()
 	{
 		for each (SettingsGroup^ Group in SettingsHolder::Get()->AllGroups)
 		{
-			ToolStripButton^ NewButton = gcnew ToolStripButton;
+			auto NewButton = gcnew DevComponents::DotNetBar::ButtonItem;
 			auto ImageResources = view::components::CommonIcons::Get()->ResourceManager;
 
 			NewButton->Text = Group->GetCategoryName();
+			NewButton->Tooltip = Group->GetCategoryName();
 			NewButton->Image = ImageResources->CreateImage(Group->GetIconName());
-			NewButton->Click += gcnew System::EventHandler(this, &PreferencesDialog::ToolStripCategoryButton_Click);
+			NewButton->Click += gcnew System::EventHandler(this, &PreferencesDialog::SidebarSettingsCategoryButton_Click);
 			NewButton->Tag = Group;
-			NewButton->CheckState = CheckState::Unchecked;
+			NewButton->Checked = false;
 
 			if (NewButton->Image)
-				NewButton->DisplayStyle = ToolStripItemDisplayStyle::Image;
+				NewButton->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::Default;
 			else
-				NewButton->DisplayStyle = ToolStripItemDisplayStyle::Text;
+				NewButton->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::TextOnlyAlways;
 
-			ToolStripSettingCategories->Items->Add(NewButton);
+			SidebarSettingsCategories->Items->Add(NewButton);
 			RegisteredCategories->Add(Group, NewButton);
 		}
 	}
@@ -587,13 +630,13 @@ bool PreferencesDialog::SwitchCategory(SettingsGroup^ Group)
 	CurrentSelection = Group;
 	CurrentSelectionSnapshot = CurrentSelection->Clone();
 
-	ToolStripButton^ NewButton = RegisteredCategories[CurrentSelection];
-	NewButton->CheckState = CheckState::Checked;
+	auto NewButton = RegisteredCategories[CurrentSelection];
+	NewButton->Checked = true;
 
 	if (OldSelection != nullptr)
 	{
-		ToolStripButton^ OldButton = RegisteredCategories[OldSelection];
-		OldButton->CheckState = CheckState::Unchecked;
+		auto OldButton = RegisteredCategories[OldSelection];
+		OldButton->Checked = false;
 	}
 
 	PropertyGrid->SelectedObject = CurrentSelection;
@@ -603,7 +646,7 @@ bool PreferencesDialog::SwitchCategory(SettingsGroup^ Group)
 
 PreferencesDialog::PreferencesDialog()
 {
-	RegisteredCategories = gcnew Dictionary<SettingsGroup^, ToolStripButton^>;
+	RegisteredCategories = gcnew Dictionary<SettingsGroup^, DevComponents::DotNetBar::ButtonItem^>;
 	CurrentSelection = nullptr;
 	CurrentSelectionSnapshot = nullptr;
 

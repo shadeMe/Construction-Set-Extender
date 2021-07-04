@@ -287,6 +287,7 @@ void ScriptSelectionDialog::InitializeComponent()
 	this->ScriptListCType = (gcnew BrightIdeasSoftware::OLVColumn());
 	this->ScriptListCParentPlugin = (gcnew BrightIdeasSoftware::OLVColumn());
 	this->DeferredSelectionUpdateTimer = (gcnew System::Windows::Forms::Timer(this->components));
+	this->ColorManager = (gcnew DevComponents::DotNetBar::StyleManagerAmbient(this->components));
 	this->BottomToolbarContainer->SuspendLayout();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->BottomToolbar))->BeginInit();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ScriptList))->BeginInit();
@@ -419,12 +420,19 @@ void ScriptSelectionDialog::InitializeComponent()
 	this->ScriptList->AllColumns->Add(this->ScriptListCParentPlugin);
 	this->ScriptList->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
 		| System::Windows::Forms::AnchorStyles::Left));
+	this->ScriptList->CellEditUseWholeCell = false;
 	this->ScriptList->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(5) {
 		this->ScriptListCFlags,
 			this->ScriptListCScriptName, this->ScriptListCFormID, this->ScriptListCType, this->ScriptListCParentPlugin
 	});
+	this->ScriptList->Cursor = System::Windows::Forms::Cursors::Default;
+	this->ScriptList->EmptyListMsg = L"Doesn\'t look like anything to me...";
+	this->ScriptList->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+		static_cast<System::Byte>(0)));
+	this->ColorManager->SetEnableAmbientSettings(this->ScriptList, DevComponents::DotNetBar::eAmbientSettings::All);
 	this->ScriptList->FullRowSelect = true;
 	this->ScriptList->HideSelection = false;
+	this->ScriptList->Location = System::Drawing::Point(3, 0);
 	this->ScriptList->Name = L"ScriptList";
 	this->ScriptList->ShowGroups = false;
 	this->ScriptList->Size = System::Drawing::Size(482, 533);
@@ -519,6 +527,19 @@ void ScriptSelectionDialog::FinalizeComponents()
 	ScriptListCParentPlugin->Tag = ScriptCollectionSorter::eSortField::ParentPlugin;
 
 	ScriptList->VirtualListDataSource = gcnew FastScriptListViewDataSource(ScriptList);
+
+	auto EmptyMsgOverlay = safe_cast<BrightIdeasSoftware::TextOverlay^>(ScriptList->EmptyListMsgOverlay);
+	EmptyMsgOverlay->TextColor = Color::White;
+	EmptyMsgOverlay->BackColor = Color::FromArgb(75, 29, 32, 33);
+	EmptyMsgOverlay->BorderWidth = 0.f;
+
+	/*bool DarkMode = preferences::SettingsHolder::Get()->Appearance->DarkMode;
+	auto BackColor = DarkMode ? DevComponents::DotNetBar::StyleManager::MetroColorGeneratorParameters.VisualStudio2012Dark.CanvasColor : DevComponents::DotNetBar::StyleManager::MetroColorGeneratorParameters.VisualStudio2012Light.CanvasColor;
+	auto AccentColor = preferences::SettingsHolder::Get()->Appearance->AccentColor;
+	auto ForeColor = DarkMode ? Color::White : Color::Black;
+
+	ScriptList->ForeColor = ForeColor;
+	ScriptList->BackColor = BackColor;*/
 }
 
 

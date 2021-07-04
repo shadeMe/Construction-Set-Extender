@@ -87,6 +87,7 @@ namespace UIComponents {
 	private: DevComponents::DotNetBar::ButtonItem^ ToolbarOpenLog;
 	private: DevComponents::DotNetBar::ButtonItem^ ToolbarOpenSyncedFile;
 	private: System::Windows::Forms::Timer^ DeferredSelectionUpdateTimer;
+    private: DevComponents::DotNetBar::StyleManagerAmbient^ ColorManager;
 
 	private: System::ComponentModel::IContainer^ components;
 
@@ -134,6 +135,7 @@ namespace UIComponents {
 			this->ToolbarOpenLog = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ToolbarOpenSyncedFile = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->DeferredSelectionUpdateTimer = (gcnew System::Windows::Forms::Timer(this->components));
+			this->ColorManager = (gcnew DevComponents::DotNetBar::StyleManagerAmbient(this->components));
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewSyncedScripts))->BeginInit();
 			this->GroupSyncSettings->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->NumericAutoSyncSeconds))->BeginInit();
@@ -183,7 +185,6 @@ namespace UIComponents {
 			// 
 			this->ListViewSyncedScripts->AllColumns->Add(this->ColScriptName);
 			this->ListViewSyncedScripts->AllColumns->Add(this->ColLastSyncTime);
-			this->ListViewSyncedScripts->BackColor = System::Drawing::Color::White;
 			this->ListViewSyncedScripts->CellEditUseWholeCell = false;
 			this->ListViewSyncedScripts->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(2) {
 				this->ColScriptName,
@@ -191,9 +192,11 @@ namespace UIComponents {
 			});
 			this->ListViewSyncedScripts->Cursor = System::Windows::Forms::Cursors::Default;
 			this->ListViewSyncedScripts->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->ListViewSyncedScripts->ForeColor = System::Drawing::Color::Black;
+			this->ListViewSyncedScripts->EmptyListMsg = L"Doesn\'t look like anything to me...";
+			this->ListViewSyncedScripts->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75F, System::Drawing::FontStyle::Regular,
+				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+			this->ColorManager->SetEnableAmbientSettings(this->ListViewSyncedScripts, DevComponents::DotNetBar::eAmbientSettings::ChildControls);
 			this->ListViewSyncedScripts->FullRowSelect = true;
-			this->ListViewSyncedScripts->GridLines = true;
 			this->ListViewSyncedScripts->HideSelection = false;
 			this->ListViewSyncedScripts->Location = System::Drawing::Point(0, 37);
 			this->ListViewSyncedScripts->Name = L"ListViewSyncedScripts";

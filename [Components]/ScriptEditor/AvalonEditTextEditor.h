@@ -78,7 +78,7 @@ protected:
 	int													OffsetAtCurrentMousePos;
 	int													LastMouseHoverOffset;
 
-	bool												IsFocused;
+	bool												ActivatedInView;
 
 	Timer^												ScrollBarSyncTimer;
 	DotNetBar::ScrollBarAdv^							ExternalVerticalScrollBar;

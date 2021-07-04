@@ -58,7 +58,7 @@ ref class IntelliSenseInterfaceView : public IIntelliSenseInterfaceView
 	void HideListViewToolTip();
 	void SelectFirstItemOnShow(AnimatedForm^ Sender);
 
-	static const float kDimmedOpacity = 0.15f;
+	static const float kDimmedOpacity = 0.1f;
 public:
 	IntelliSenseInterfaceView();
 	~IntelliSenseInterfaceView();

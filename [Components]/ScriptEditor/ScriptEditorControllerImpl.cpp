@@ -420,7 +420,8 @@ void ScriptEditorController::SetDocumentDependentViewComponentsEnabled(bool Enab
 			throw gcnew NotImplementedException;
 	}
 
-	View->GetComponentByRole(view::eViewRole::NavigationBar)->AsCrumbBar()->Visible = Enabled ? preferences::SettingsHolder::Get()->Appearance->ShowScopeBar : false;
+	// ### TODO This causes a huge spike in CPU activity; investigate!
+	//View->GetComponentByRole(view::eViewRole::NavigationBar)->AsCrumbBar()->Visible = Enabled ? preferences::SettingsHolder::Get()->Appearance->ShowScopeBar : false;
 	View->GetComponentByRole(view::eViewRole::StatusBar_LineNumber)->AsLabel()->Visible = Enabled;
 	View->GetComponentByRole(view::eViewRole::StatusBar_ColumnNumber)->AsLabel()->Visible = Enabled;
 	View->GetComponentByRole(view::eViewRole::StatusBar_CompiledScriptSize)->AsProgressBar()->Visible = Enabled;
@@ -670,10 +671,13 @@ model::IScriptDocument^ ScriptEditorController::ImportDocumentFromDisk(String^ D
 	try
 	{
 		auto FileParser = gcnew StreamReader(DiskFilePath);
-		auto Contents = FileParser->ReadToEnd()->Replace("\r\n", "\n");
+		FileContents = FileParser->ReadToEnd()->Replace("\r\n", "\n");
 		FileParser->Close();
 
-		auto AnalysisData = (gcnew obScriptParsing::AnalysisData())->PerformAnalysis(gcnew obScriptParsing::AnalysisData::Params);
+		auto AnalysisParams = gcnew obScriptParsing::AnalysisData::Params;
+		AnalysisParams->ScriptText = FileContents;
+
+		auto AnalysisData = gcnew obScriptParsing::AnalysisData(AnalysisParams);
 		if (AnalysisData->Name != "")
 		{
 			DisposibleDataAutoPtr<componentDLLInterface::ScriptData> ExistingScriptData(

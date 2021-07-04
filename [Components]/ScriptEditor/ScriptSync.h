@@ -274,6 +274,7 @@ ref class DiskSyncDialog : public DevComponents::DotNetBar::Metro::MetroForm
 	DevComponents::DotNetBar::ButtonItem^ ToolbarOpenLog;
 	DevComponents::DotNetBar::ButtonItem^ ToolbarOpenSyncedFile;
 	System::Windows::Forms::Timer^ DeferredSelectionUpdateTimer;
+	DevComponents::DotNetBar::StyleManagerAmbient^ ColorManager;
 	System::ComponentModel::IContainer^ components;
 
 	SyncStartEventHandler^ DiskSyncSyncStartHandler;

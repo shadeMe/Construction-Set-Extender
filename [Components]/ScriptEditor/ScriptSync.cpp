@@ -495,11 +495,10 @@ bool DiskSync::Start(String^ WorkingDir, List<String^>^ SyncedScriptEditorIDs)
 			Existing->Add(gcnew Tuple<String ^, DateTime>(EID, System::IO::File::GetLastWriteTime(Data->FilePath)));
 	}
 
+	SyncInProgress = true;
 
 	SyncStartEventArgs^ StartEventArgs = gcnew SyncStartEventArgs(SyncedScripts, Existing);
 	SyncStart(this, StartEventArgs);
-
-	SyncInProgress = true;
 
 	WriteToConsoleContext("Syncing === STARTED!");
 	for each (SyncedScriptData ^ Data in SyncedScripts)
@@ -532,10 +531,10 @@ void DiskSync::Stop()
 	UInt32 Failed = 0;
 	DoSyncFromDiskLoop(false, Failed);
 
+	SyncInProgress = false;
+
 	SyncStopEventArgs^ StopEventArgs = gcnew SyncStopEventArgs(SyncedScripts->Count, Failed);
 	SyncStop(this, StopEventArgs);
-
-	SyncInProgress = false;
 
 	if (StopEventArgs->RemoveLogFiles)
 	{
@@ -668,6 +667,7 @@ void DiskSyncDialog::InitializeComponent(void)
 	this->ToolbarOpenLog = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->ToolbarOpenSyncedFile = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->DeferredSelectionUpdateTimer = (gcnew System::Windows::Forms::Timer(this->components));
+	this->ColorManager = (gcnew DevComponents::DotNetBar::StyleManagerAmbient(this->components));
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewSyncedScripts))->BeginInit();
 	this->GroupSyncSettings->SuspendLayout();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->NumericAutoSyncSeconds))->BeginInit();
@@ -717,7 +717,6 @@ void DiskSyncDialog::InitializeComponent(void)
 	//
 	this->ListViewSyncedScripts->AllColumns->Add(this->ColScriptName);
 	this->ListViewSyncedScripts->AllColumns->Add(this->ColLastSyncTime);
-	this->ListViewSyncedScripts->BackColor = System::Drawing::Color::Black;
 	this->ListViewSyncedScripts->CellEditUseWholeCell = false;
 	this->ListViewSyncedScripts->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(2) {
 		this->ColScriptName,
@@ -725,8 +724,11 @@ void DiskSyncDialog::InitializeComponent(void)
 	});
 	this->ListViewSyncedScripts->Cursor = System::Windows::Forms::Cursors::Default;
 	this->ListViewSyncedScripts->Dock = System::Windows::Forms::DockStyle::Fill;
+	this->ListViewSyncedScripts->EmptyListMsg = L"Doesn\'t look like anything to me...";
+	this->ListViewSyncedScripts->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75F, System::Drawing::FontStyle::Regular,
+		System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+	this->ColorManager->SetEnableAmbientSettings(this->ListViewSyncedScripts, DevComponents::DotNetBar::eAmbientSettings::All);
 	this->ListViewSyncedScripts->FullRowSelect = true;
-	this->ListViewSyncedScripts->GridLines = true;
 	this->ListViewSyncedScripts->HideSelection = false;
 	this->ListViewSyncedScripts->Location = System::Drawing::Point(0, 37);
 	this->ListViewSyncedScripts->Name = L"ListViewSyncedScripts";
@@ -1171,6 +1173,19 @@ void DiskSyncDialog::FinalizeComponents()
 	this->ListViewSyncedScripts->SmallImageList->Images->Add(view::components::CommonIcons::Get()->InProgress);
 	this->ListViewSyncedScripts->SmallImageList->Images->Add(view::components::CommonIcons::Get()->Success);
 	this->ListViewSyncedScripts->SmallImageList->Images->Add(view::components::CommonIcons::Get()->Error);
+
+	auto EmptyMsgOverlay = safe_cast<BrightIdeasSoftware::TextOverlay^>(ListViewSyncedScripts->EmptyListMsgOverlay);
+	EmptyMsgOverlay->TextColor = Color::White;
+	EmptyMsgOverlay->BackColor = Color::FromArgb(75, 29, 32, 33);
+	EmptyMsgOverlay->BorderWidth = 0.f;
+
+	//bool DarkMode = preferences::SettingsHolder::Get()->Appearance->DarkMode;
+	//auto BackColor = DarkMode ? DevComponents::DotNetBar::StyleManager::MetroColorGeneratorParameters.VisualStudio2012Dark.CanvasColor : DevComponents::DotNetBar::StyleManager::MetroColorGeneratorParameters.VisualStudio2012Light.CanvasColor;
+	//auto AccentColor = preferences::SettingsHolder::Get()->Appearance->AccentColor;
+	//auto ForeColor = DarkMode ? Color::White : Color::Black;
+
+	//ListViewSyncedScripts->ForeColor = ForeColor;
+	//ListViewSyncedScripts->BackColor = BackColor;
 
 	UpdateToolbarEnabledState();
 }

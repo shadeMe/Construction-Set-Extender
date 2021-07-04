@@ -13,7 +13,7 @@ namespace intellisense
 {
 
 
-ref class CodeSnippetCollection;
+ref struct CodeSnippetCollection;
 
 [Flags]
 static enum class eDatabaseLookupFilter

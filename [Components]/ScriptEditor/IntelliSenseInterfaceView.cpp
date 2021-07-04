@@ -45,6 +45,7 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView()
 	Form->ShowIcon = false;
 	Form->ControlBox = false;
 	Form->Controls->Add(ListView);
+	Form->Margin = Padding(0);
 
 	ListView->View = View::Details;
 	ListView->Dock = DockStyle::Fill;
@@ -57,6 +58,7 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView()
 	ListView->HeaderStyle = ColumnHeaderStyle::None;
 	ListView->HideSelection = true;
 	ListView->Font = gcnew Font(SystemFonts::DialogFont->FontFamily, 9.25);
+	ListView->Margin = Padding(0);
 
 	ListViewDefaultColumn = gcnew BrightIdeasSoftware::OLVColumn;
 	ListViewDefaultColumn->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&IntelliSenseInterfaceView::ListViewAspectGetter);

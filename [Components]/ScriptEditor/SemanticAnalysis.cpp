@@ -659,6 +659,12 @@ AnalysisData::AnalysisData()
 	AnalysisMessages = gcnew List<UserMessage^>();
 }
 
+AnalysisData::AnalysisData(Params^ Parameters)
+	: AnalysisData()
+{
+	PerformAnalysis(Parameters);
+}
+
 AnalysisData::~AnalysisData()
 {
 	Variables->Clear();

@@ -288,6 +288,7 @@ ref struct AnalysisData
 	};
 
 	AnalysisData();
+	AnalysisData(Params^ Parameters);
 	~AnalysisData();
 
 	AnalysisData^ PerformAnalysis(Params^ Parameters);

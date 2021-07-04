@@ -269,7 +269,7 @@ void AvalonEditTextEditor::StopMiddleMouseScroll()
 
 void AvalonEditTextEditor::UpdateCodeFoldings()
 {
-	if (IsFocused)
+	if (ActivatedInView)
 	{
 		if (CodeFoldingStrategy != nullptr)
 		{
@@ -784,7 +784,7 @@ System::String^ AvalonEditTextEditor::GetCurrentLineText(bool ClipAtCaretPos)
 
 bool AvalonEditTextEditor::RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::Event Type, System::Windows::Input::KeyEventArgs^ K, System::Windows::Input::MouseButtonEventArgs^ M)
 {
-	Debug::Assert(IsFocused == true);
+	Debug::Assert(ActivatedInView == true);
 
 	if (TextFieldDisplayingStaticText)
 		return false;
@@ -826,7 +826,7 @@ bool AvalonEditTextEditor::RaiseIntelliSenseInput(intellisense::IntelliSenseInpu
 
 void AvalonEditTextEditor::RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::Event Type, int Offset, Windows::Point Location)
 {
-	Debug::Assert(IsFocused == true);
+	Debug::Assert(ActivatedInView == true);
 
 	if (GetTextLength() == 0)
 		return;
@@ -1051,7 +1051,7 @@ void AvalonEditTextEditor::TextField_TextCopied( Object^ Sender, AvalonEdit::Edi
 
 void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::Input::KeyEventArgs^ E)
 {
-	if (IsFocused == false)
+	if (ActivatedInView == false)
 		return;
 
 	LastKeyThatWentDown = E->Key;
@@ -1146,7 +1146,7 @@ void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::In
 
 void AvalonEditTextEditor::TextField_KeyUp(Object^ Sender, System::Windows::Input::KeyEventArgs^ E)
 {
-	if (IsFocused == false)
+	if (ActivatedInView == false)
 		return;
 
 	if (E->Key == KeyToPreventHandling)
@@ -1283,7 +1283,7 @@ void AvalonEditTextEditor::MiddleMouseScrollTimer_Tick(Object^ Sender, EventArgs
 
 void AvalonEditTextEditor::ScrollBarSyncTimer_Tick( Object^ Sender, EventArgs^ E )
 {
-	if (IsFocused == false)
+	if (ActivatedInView == false)
 		return;
 
 	SynchronizingInternalScrollBars = false;
@@ -1314,6 +1314,7 @@ void AvalonEditTextEditor::SetTextAnimation_Completed( Object^ Sender, EventArgs
 	SetTextPrologAnimationCache->Completed -= SetTextAnimationCompletedHandler;
 	SetTextPrologAnimationCache = nullptr;
 
+	SAFEDELETE_CLR(AnimationPrimitive->Fill);
 	TextFieldPanel->Children->Remove(AnimationPrimitive);
 	TextFieldPanel->Children->Add(TextField);
 
@@ -1548,7 +1549,7 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 
 	MiddleMouseScrollTimer->Interval = 16;
 
-	IsFocused = false;
+	ActivatedInView = false;
 
 	LastKnownMouseClickOffset = 0;
 	OffsetAtCurrentMousePos = -1;
@@ -1756,7 +1757,7 @@ void AvalonEditTextEditor::UpdateSyntaxHighlighting(bool Regenerate)
 
 void AvalonEditTextEditor::Bind()
 {
-	IsFocused = true;
+	ActivatedInView = true;
 	ScrollBarSyncTimer->Start();
 	FocusTextArea();
 	ScrollToCaret();
@@ -1764,7 +1765,7 @@ void AvalonEditTextEditor::Bind()
 
 void AvalonEditTextEditor::Unbind()
 {
-	IsFocused = false;
+	ActivatedInView = false;
 	ScrollBarSyncTimer->Stop();
 	Windows::Input::Keyboard::ClearFocus();
 }
@@ -1867,6 +1868,8 @@ void AvalonEditTextEditor::FadeOutCurrentTextView()
 	if (Disposing)
 		return;
 	else if (SetTextAnimating)
+		return;
+	else if (!ActivatedInView)
 		return;
 
 	SetTextAnimating = true;

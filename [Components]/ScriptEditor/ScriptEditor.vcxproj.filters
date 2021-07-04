@@ -19,11 +19,11 @@
     <Filter Include="Resources\Icons">
       <UniqueIdentifier>{b99490d6-f992-4da0-a02e-27f5fdbe860d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Components\AvalonEdit">
-      <UniqueIdentifier>{6996c544-3d88-418b-8970-822abf06a6de}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Components\Model-View-Controller">
       <UniqueIdentifier>{affe00f9-0d71-40f3-bcf8-24c3ae7640e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\Text Editor">
+      <UniqueIdentifier>{6996c544-3d88-418b-8970-822abf06a6de}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -32,13 +32,13 @@
     </ClCompile>
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="AvalonEditComponents.cpp">
-      <Filter>Components\AvalonEdit</Filter>
+      <Filter>Components\Text Editor</Filter>
     </ClCompile>
     <ClCompile Include="AvalonEditTextEditor.cpp">
-      <Filter>Components\AvalonEdit</Filter>
+      <Filter>Components\Text Editor</Filter>
     </ClCompile>
     <ClCompile Include="AvalonEditSyntaxHighlighting.cpp">
-      <Filter>Components\AvalonEdit</Filter>
+      <Filter>Components\Text Editor</Filter>
     </ClCompile>
     <ClCompile Include="SnippetManager.cpp">
       <Filter>Components</Filter>
@@ -71,9 +71,6 @@
       <Filter>Components</Filter>
     </ClCompile>
     <ClCompile Include="ScriptPreprocessor.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="ITextEditor.cpp">
       <Filter>Components</Filter>
     </ClCompile>
     <ClCompile Include="ScriptEditorInstanceManager.cpp">
@@ -109,6 +106,9 @@
     <ClCompile Include="IScriptEditorController.cpp">
       <Filter>Components\Model-View-Controller</Filter>
     </ClCompile>
+    <ClCompile Include="ITextEditor.cpp">
+      <Filter>Components\Text Editor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\[Common]\MiscUtilities.h">
@@ -123,13 +123,13 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="AvalonEditSyntaxHighlighting.h">
-      <Filter>Components\AvalonEdit</Filter>
+      <Filter>Components\Text Editor</Filter>
     </ClInclude>
     <ClInclude Include="AvalonEditComponents.h">
-      <Filter>Components\AvalonEdit</Filter>
+      <Filter>Components\Text Editor</Filter>
     </ClInclude>
     <ClInclude Include="AvalonEditTextEditor.h">
-      <Filter>Components\AvalonEdit</Filter>
+      <Filter>Components\Text Editor</Filter>
     </ClInclude>
     <ClInclude Include="SnippetManager.h">
       <Filter>Components</Filter>
@@ -165,9 +165,6 @@
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="ScriptPreprocessor.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="ITextEditor.h">
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="ScriptEditorInstanceManager.h">
@@ -208,6 +205,9 @@
     </ClInclude>
     <ClInclude Include="ScriptEditorViewImplComponents.h">
       <Filter>Components\Model-View-Controller</Filter>
+    </ClInclude>
+    <ClInclude Include="ITextEditor.h">
+      <Filter>Components\Text Editor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -473,10 +473,20 @@
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Save\SaveStatusBar2_16x.png">
       <Filter>Resources\Icons</Filter>
     </Image>
-    <Image Include="Images\error-large.png" />
-    <Image Include="Images\warning-large.png" />
-    <Image Include="Images\blocked-yellow-large.png" />
-    <Image Include="Images\info-large.png" />
-    <Image Include="Images\success-large.png" />
+    <Image Include="Images\blocked-yellow-large.png">
+      <Filter>Resources\Icons</Filter>
+    </Image>
+    <Image Include="Images\error-large.png">
+      <Filter>Resources\Icons</Filter>
+    </Image>
+    <Image Include="Images\info-large.png">
+      <Filter>Resources\Icons</Filter>
+    </Image>
+    <Image Include="Images\success-large.png">
+      <Filter>Resources\Icons</Filter>
+    </Image>
+    <Image Include="Images\warning-large.png">
+      <Filter>Resources\Icons</Filter>
+    </Image>
   </ItemGroup>
 </Project>
