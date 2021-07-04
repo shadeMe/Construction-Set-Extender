@@ -74,7 +74,15 @@ int KeyCombo::GetHashCode()
 
 System::String^ KeyCombo::ToString()
 {
-	return Modifiers.ToString() + " + " + Main.ToString();
+	String^ ModifierString = "";
+	if (Control)
+		ModifierString += "Ctrl";
+	if (Shift)
+		ModifierString += (Control ? " + " : "") + "Shift";
+	if (Alt)
+		ModifierString += (Control || Shift ? " + " : "") + "Alt";
+
+	return ModifierString->Trim() + " + " + Main.ToString();
 }
 
 KeyCombo^ KeyCombo::FromKeyEvent(KeyEventArgs^ E)

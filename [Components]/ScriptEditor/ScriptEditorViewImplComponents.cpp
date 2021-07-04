@@ -313,9 +313,8 @@ System::String^ Button::GetterText()
 	case eSourceType::ButtonItem:
 		return ButtonItem->Text;
 	case eSourceType::ButtonX:
-		return ButtonX->Text;
 	case eSourceType::CheckBoxX:
-		return CheckBoxX->Text;
+		return TextBuffer;
 	}
 
 	return nullptr;
@@ -329,7 +328,7 @@ System::String^ Button::GetterShortcutKey()
 		return ButtonItem->AlternateShortCutText;
 	case eSourceType::ButtonX:
 	case eSourceType::CheckBoxX:
-		throw gcnew NotImplementedException();
+		return ShortcutKeyBuffer;
 	}
 
 	return nullptr;
@@ -340,9 +339,8 @@ System::String^ Button::GetterTooltip()
 	switch (SourceType)
 	{
 	case eSourceType::ButtonItem:
-		return ButtonItem->Tooltip;
 	case eSourceType::ButtonX:
-		return ButtonX->Tooltip;
+		return TooltipBuffer;
 	case eSourceType::CheckBoxX:
 		throw gcnew NotImplementedException();
 	}
@@ -403,16 +401,17 @@ void Button::SetterText(String^ Value)
 		ButtonItem->Text = Value;
 		break;
 	case eSourceType::ButtonX:
-		ButtonX->Text = Value;
-		break;
 	case eSourceType::CheckBoxX:
-		CheckBoxX->Text = Value;
+		TextBuffer = Value;
+		CombineTextAndShortcut();
 		break;
 	}
 }
 
 void Button::SetterShortcutKey(String^ Value)
 {
+	ShortcutKeyBuffer = Value;
+
 	switch (SourceType)
 	{
 	case eSourceType::ButtonItem:
@@ -420,8 +419,12 @@ void Button::SetterShortcutKey(String^ Value)
 		break;
 	case eSourceType::ButtonX:
 	case eSourceType::CheckBoxX:
-		throw gcnew NotImplementedException();
+		CombineTextAndShortcut();
+		break;
 	}
+
+	if (SourceType != eSourceType::CheckBoxX)
+		CombineTooltipAndShortcut();
 }
 
 void Button::SetterTooltip(String^ Value)
@@ -429,11 +432,9 @@ void Button::SetterTooltip(String^ Value)
 	switch (SourceType)
 	{
 	case eSourceType::ButtonItem:
-		ButtonItem->Tooltip = Value;
-		break;
 	case eSourceType::ButtonX:
-		ButtonX->Tooltip = Value;
-		break;
+		TooltipBuffer = Value;
+		CombineTooltipAndShortcut();
 	case eSourceType::CheckBoxX:
 		throw gcnew NotImplementedException();
 	}
@@ -487,13 +488,55 @@ void Button::SetterEnabled(bool Value)
 	}
 }
 
+void Button::CombineTextAndShortcut()
+{
+	Debug::Assert(SourceType != eSourceType::ButtonItem);
+
+	String^ FinalText = "<div align=\"center\" valign=\"middle\">" + TextBuffer + "</div><div align=\"center\" valign=\"middle\" padding=\"0,0,2,0\"><font size=\"-1\">(" + ShortcutKeyBuffer + ")</font></div>";
+	if (ShortcutKeyBuffer->Length == 0)
+		FinalText = TextBuffer;
+
+	switch (SourceType)
+	{
+	case eSourceType::ButtonX:
+		ButtonX->Text = FinalText;
+		break;
+	case eSourceType::CheckBoxX:
+		CheckBoxX->Text = FinalText;
+		break;
+	}
+}
+
+void Button::CombineTooltipAndShortcut()
+{
+	Debug::Assert(SourceType != eSourceType::CheckBoxX);
+
+	String^ FinalText = TooltipBuffer + " (" + ShortcutKeyBuffer + ")";
+	if (ShortcutKeyBuffer->Length == 0)
+		FinalText = TooltipBuffer;
+
+	switch (SourceType)
+	{
+	case eSourceType::ButtonItem:
+		ButtonItem->Tooltip = FinalText;
+		break;
+	case eSourceType::ButtonX:
+		ButtonX->Tooltip = FinalText;
+		break;
+	}
+}
+
 Button::Button(DotNetBar::ButtonItem^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter)
 	: ViewComponent(eComponentType::Button, ViewRole, EventRouter)
 {
 	SourceType = eSourceType::ButtonItem;
 	ButtonItem = Source;
 	Tag_ = nullptr;
+	TextBuffer = "";
+	TooltipBuffer = Source->Tooltip;
+	ShortcutKeyBuffer = "";
 	InitEventHandlers();
+	CombineTooltipAndShortcut();
 }
 
 Button::Button(DotNetBar::ButtonX^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter)
@@ -502,7 +545,11 @@ Button::Button(DotNetBar::ButtonX^ Source, eViewRole ViewRole, ViewComponentEven
 	SourceType = eSourceType::ButtonX;
 	ButtonX = Source;
 	Tag_ = nullptr;
+	TextBuffer = Source->Text;
+	TooltipBuffer = Source->Tooltip;
+	ShortcutKeyBuffer = "";
 	InitEventHandlers();
+	CombineTooltipAndShortcut();
 }
 
 Button::Button(DotNetBar::Controls::CheckBoxX^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter)
@@ -511,6 +558,9 @@ Button::Button(DotNetBar::Controls::CheckBoxX^ Source, eViewRole ViewRole, ViewC
 	SourceType = eSourceType::CheckBoxX;
 	CheckBoxX = Source;
 	Tag_ = nullptr;
+	TextBuffer = Source->Text;
+	TooltipBuffer = "";
+	ShortcutKeyBuffer = "";
 	InitEventHandlers();
 }
 

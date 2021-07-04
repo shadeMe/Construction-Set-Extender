@@ -127,8 +127,8 @@ protected:
 														TextFieldVisualLineConstructionStartingHandler;
 	EventHandler<AvalonEdit::Search::SearchOptionsChangedEventArgs^>^
 														SearchPanelSearchOptionsChangedHandler;
-
 	model::components::IBackgroundSemanticAnalyzer::AnalysisCompleteEventHandler^ BackgroundAnalyzerAnalysisCompleteHandler;
+	EventHandler^										LineTrackingManagerLineAnchorInvalidatedHandler;
 
 	bool Disposing;
 
@@ -177,6 +177,7 @@ protected:
 	void	SetTextAnimation_Completed(Object^ Sender, EventArgs^ E);
 	void	ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
 	void	BackgroundAnalysis_AnalysisComplete(Object^ Sender, model::components::IBackgroundSemanticAnalyzer::AnalysisCompleteEventArgs^ E);
+	void	LineTrackingManager_LineAnchorInvalidated(Object^ Sender, EventArgs^ E);
 
 	String^				GetTokenAtIndex(int Index, bool SelectText,
 										int% OutStartIndex, int% OutEndIndex,

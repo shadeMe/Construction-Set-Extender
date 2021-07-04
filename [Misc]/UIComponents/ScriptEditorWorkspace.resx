@@ -139,10 +139,10 @@
   </data>
   <data name="ToolbarSaveScript.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAB4SURBVDhPY/j27Vs4EL8B4v8kYpCecJABb7QL1vxnCJ5D
-        EgbpAekFGYBVATEYrBfZgA/vPxKFh7MBpOJBagA2PyNjZLW0NQCdjy4OwjAD7hTPP4ahAZ2PLg7CMANk
-        kA1BV4isGVkchMEGgADMEJAASBGIJg5/+w8AaUzq1F5KxmIAAAAASUVORK5CYII=
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        xAAADsQBlSsOGwAAAHhJREFUOE9j+PbtWzgQvwHi/yRikJ5wkAFvtAvW/GcInkMSBukB6QUZgFUBMRis
+        F9mAD+8/EoWHswGk4kFqADY/I2NktbQ1AJ2PLg7CMAPuFM8/hqEBnY8uDsIwA2SQDUFXiKwZWRyEwQaA
+        AMwQkABIEYgmDn/7DwBpTOrUXkrGYgAAAABJRU5ErkJggg==
 </value>
   </data>
   <data name="ToolbarSaveAllScripts.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
@@ -412,12 +412,12 @@
   </data>
   <data name="HelpMenuWiki.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADaSURBVDhPlZI7DoMwEER9NnqknIcqlVtETxfOQU/lI8AN
-        kghB6/hZNrL52VlpMN6dmfVP5MS6rrWBDlC7Ujog932vy7LURVHYcRiGfBM6erEHc/KOch8QQ7HHXwZZ
-        K1iW5WGSikIANc/zyJ69CePhDIz4OU2Trqoq6sSc/M40gu0MCefu1Vnh5/21I3Py3ELbtlbQNM3WwBqY
-        j6ITZC8MR/LUEUopN3FoECWvwL73uciAbmcr8P9JgxTuDLLOAPIZsm6BOjx368dIvQPqjnoddDBLOrzE
-        285CiB9Y+f5byOkBvAAAAABJRU5ErkJggg==
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        wwAADsMBx2+oZAAAANpJREFUOE+VkjsOgzAQRH02eqSchyqVW0RPF85BT+UjwA2SCEHr+Fk2svnZWWkw
+        3p2Z9U/kxLqutYEOULtSOiD3fa/LstRFUdhxGIZ8Ezp6sQdz8o5yHxBDscdfBlkrWJblYZKKQgA1z/PI
+        nr0J4+EMjPg5TZOuqirqxJz8zjSC7QwJ5+7VWeHn/bUjc/LcQtu2VtA0zdbAGpiPohNkLwxH8tQRSik3
+        cWgQJa/Avve5yIBuZyvw/0mDFO4Mss4A8hmyboE6PHfrx0i9A+qOeh10MEs6vMTbzkKIH1j5/lvI6QG8
+        AAAAAElFTkSuQmCC
 </value>
   </data>
   <data name="HelpMenuObseDocs.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">

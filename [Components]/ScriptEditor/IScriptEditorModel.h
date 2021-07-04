@@ -285,7 +285,6 @@ interface class IScriptDocument
 	UInt32 GetWarningCount(UInt32 Line);
 
 	void AddBookmark(UInt32 Line, String^ BookmarkText);
-	void RemoveBookmark(UInt32 Line, String^ BookmarkText);
 	void RemoveBookmark(components::ScriptBookmark^ Bookmark);
 	List<components::ScriptBookmark^>^ GetBookmarks(UInt32 Line);
 	UInt32 GetBookmarkCount(UInt32 Line);

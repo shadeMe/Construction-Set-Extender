@@ -45,6 +45,7 @@ ref class ScriptDocument : public IScriptDocument
 	eBatchUpdateSource ActiveBatchUpdateSource;
 	int ActiveBatchUpdateCounter;
 	List<UInt16>^ LineBytecodeOffsets;
+	List<Tuple<UInt32, String^>^>^ BookmarksBuffer;
 
 	textEditor::avalonEdit::AvalonEditTextEditor^ Editor;
 	intellisense::IntelliSenseInterfaceModel^ IntelliSense;
@@ -95,7 +96,9 @@ ref class ScriptDocument : public IScriptDocument
 	void AddMessage(UInt32 Line, String^ Text, ScriptDiagnosticMessage::eMessageType Type, ScriptDiagnosticMessage::eMessageSource Source);
 	void ClearMessages(ScriptDiagnosticMessage::eMessageSource SourceFilter, ScriptDiagnosticMessage::eMessageType TypeFilter);
 
-	void ClearBookmarks();
+	void AddBookmark(UInt32 Line, String^ BookmarkText, bool MarkAsModified);
+	void RemoveBookmark(UInt32 Line, String^ BookmarkText, bool MarkAsModified);
+	void ClearBookmarks(bool MarkAsModified);
 
 	void AddFindResult(String^ Query, UInt32 Line, String^ PreviewText, UInt32 Hits);
 	void ClearFindResults();
@@ -105,6 +108,9 @@ ref class ScriptDocument : public IScriptDocument
 	ScriptTextMetadata^ PrepareMetadataForSerialization(bool HasPreprocessorDirectives);
 	bool CalculateLineBytecodeOffsets(String^ PreprocessedScriptText, UInt8* BytecodeData, UInt16 BytecodeLength);
 	bool AreLineBytecodeOffsetsValid();
+
+	void CacheBookmarksAndReset();
+	void RestoreCachedBookmarks();
 public:
 	ScriptDocument();
 	virtual ~ScriptDocument();
@@ -147,7 +153,6 @@ public:
 	virtual UInt32 GetWarningCount(UInt32 Line);
 
 	virtual void AddBookmark(UInt32 Line, String^ BookmarkText);
-	virtual void RemoveBookmark(UInt32 Line, String^ BookmarkText);
 	virtual void RemoveBookmark(ScriptBookmark^ Bookmark);
 	virtual List<ScriptBookmark^>^ GetBookmarks(UInt32 Line);
 	virtual UInt32 GetBookmarkCount(UInt32 Line);

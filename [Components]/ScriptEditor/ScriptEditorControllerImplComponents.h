@@ -217,11 +217,13 @@ ref class InputManager
 	{
 		KeyCombo^ SecondChord;
 		IAction^ Action;
+		List<view::eViewRole>^ ActionRoles;
 
-		ChordData(KeyCombo^ SecondChord, IAction^ Action);
-		ChordData(IAction^ Action);
+		ChordData(KeyCombo^ SecondChord, IAction^ Action, ...array<view::eViewRole>^ ActionRoles);
+		ChordData(IAction^ Action, ...array<view::eViewRole>^ ActionRoles);
 
 		virtual bool Equals(Object^ obj) override;
+		void UpdateViewComponentShortcutTexts(KeyCombo^ Primary, view::IScriptEditorView^ View);
 	};
 
 	// mutually-exclusive tuple
@@ -232,6 +234,7 @@ ref class InputManager
 	List<Keys>^ BlacklistedKeyCodes;
 	Dictionary<KeyCombo^, ChordDataUnion^>^ KeyChordCommands;
 	KeyCombo^ LastActiveFirstChord;
+	view::IScriptEditorView^ ParentView;
 	view::components::IContextMenu^ TextEditorContextMenu;
 
 	ChordData^ LookupDoubleKeyChordCommand(KeyCombo^ First, KeyCombo^ Second);
@@ -239,16 +242,17 @@ ref class InputManager
 	bool HasSecondKeyOfChord(KeyCombo^ First);
 	bool IsBound(KeyCombo^ Combo);
 public:
-	InputManager(view::components::IContextMenu^ TextEditorContextMenu);
+	InputManager(view::IScriptEditorView^ ParentView);
 	~InputManager();
 
-	void AddKeyChordCommand(IAction^ Action, KeyCombo^ Primary, KeyCombo^ Secondary, bool OverwriteExisting);
-	void AddKeyChordCommand(IAction^ Action, KeyCombo^ Primary, bool OverwriteExisting);
+	void AddKeyChordCommand(IAction^ Action, KeyCombo^ Primary, KeyCombo^ Secondary, bool OverwriteExisting, ...array<view::eViewRole>^ ActionRoles);
+	void AddKeyChordCommand(IAction^ Action, KeyCombo^ Primary, bool OverwriteExisting, ...array<view::eViewRole>^ ActionRoles);
 
 	void HandleKeyDown(KeyEventArgs^ E, IScriptEditorController^ Controller);
 	void HandleTextEditorMouseClick(textEditor::TextEditorMouseClickEventArgs^ E, IScriptEditorController^ Controller);
 
 	bool IsKeyBlacklisted(Keys Key);
+	void RefreshViewComponentShortcutTexts();
 };
 
 

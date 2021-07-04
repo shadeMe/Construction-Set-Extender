@@ -76,64 +76,77 @@ public:
 		Closing
 	};
 
-	BracketSearchData(Char Symbol, int StartOffset) :
-		Symbol(Symbol),
-		StartOffset(StartOffset)
-	{
-		EndOffset = -1;
-		Mismatching = false;
-	}
+	BracketSearchData(Char Symbol, int StartOffset);
 
-	eBracketType GetType()
-	{
-		switch (Symbol)
-		{
-		case '(':
-		case ')':
-			return eBracketType::Curved;
-		case '[':
-		case ']':
-			return eBracketType::Square;
-		case '{':
-		case '}':
-			return eBracketType::Squiggly;
-		default:
-			return eBracketType::Invalid;
-		}
-	}
-
-	eBracketState GetKind()
-	{
-		switch (Symbol)
-		{
-		case '(':
-		case '[':
-		case '{':
-			return eBracketState::Opening;
-		case ')':
-		case ']':
-		case '}':
-			return eBracketState::Closing;
-		default:
-			return eBracketState::Invalid;
-		}
-	}
-	int GetStartOffset() { return StartOffset; }
+	eBracketType GetType();
+	eBracketState GetKind();
+	int GetStartOffset();
 };
 
-ref struct BackgroundRenderSegment
+ref struct LineAnchor : public ILineAnchor
+{
+	TextAnchor^ Anchor_;
+public:
+	LineAnchor(AvalonEdit::TextEditor^ Parent, UInt32 Line, bool AllowDeletion);
+
+	virtual property UInt32 Line
+	{
+		UInt32 get() { return Anchor_->Line; }
+		void set(UInt32 s) {}
+	}
+	virtual property bool Valid
+	{
+		bool get() { return !Anchor_->IsDeleted; }
+		void set(bool s) {}
+	}
+	property TextAnchor^ Anchor
+	{
+		TextAnchor^ get() { return Anchor_; }
+	}
+};
+
+ref struct StaticDocumentSegment
 {
 	property UInt32 Line;
 	property int StartOffset;
 	property int EndOffset;
 	property bool Enabled;
 
-	BackgroundRenderSegment()
+	StaticDocumentSegment();
+};
+
+ref class AnchoredDocumentSegment
+{
+	TextAnchor^ StartOffsetAnchor;
+	TextAnchor^ EndOffsetAnchor;
+public:
+	AnchoredDocumentSegment(TextAnchor^ Start, TextAnchor^ End);
+
+	property UInt32 Line
 	{
-		Line = 0;
-		StartOffset = 0;
-		EndOffset = 0;
-		Enabled = true;
+		UInt32 get() { return StartOffsetAnchor->Line; }
+	}
+	property int StartOffset
+	{
+		int get() { return StartOffsetAnchor->Offset; }
+	}
+	property int EndOffset
+	{
+		int get() { return EndOffsetAnchor->Offset; }
+	}
+	property bool Enabled;
+	property bool Valid
+	{
+		bool get() { return !StartOffsetAnchor->IsDeleted && !EndOffsetAnchor->IsDeleted; }
+	}
+
+	property TextAnchor^ StartAnchor
+	{
+		TextAnchor^ get() { return StartOffsetAnchor; }
+	}
+	property TextAnchor^ EndAnchor
+	{
+		TextAnchor^ get() { return EndOffsetAnchor; }
 	}
 };
 
@@ -164,10 +177,9 @@ public:
 	LineTrackingManagerBgRenderer(AvalonEdit::TextEditor^ Parent);
 	~LineTrackingManagerBgRenderer();
 
-
-	property List<BackgroundRenderSegment^>^ ErrorSquiggles;
-	property List<BackgroundRenderSegment^>^ FindResults;
-	property BackgroundRenderSegment^ OpenCloseBraces;
+	property List<AnchoredDocumentSegment^>^ ErrorSquiggles;
+	property List<AnchoredDocumentSegment^>^ FindResults;
+	property StaticDocumentSegment^ OpenCloseBraces;
 	property KnownLayer Layer
 	{
 		virtual KnownLayer get() { return KnownLayer::Background; }
@@ -178,59 +190,43 @@ public:
 };
 
 
-ref struct AvalonEditLineAnchor : public ILineAnchor
-{
-	TextAnchor^ Anchor;
-public:
-	AvalonEditLineAnchor(AvalonEdit::TextEditor^ Parent, UInt32 Line, bool AllowDeletion);
-
-	virtual property UInt32 Line
-	{
-		UInt32 get() { return Anchor->Line; }
-		void set(UInt32 s) {}
-	}
-	virtual property bool Valid
-	{
-		bool get() { return !Anchor->IsDeleted; }
-		void set(bool s) {}
-	}
-};
-
 ref class LineTrackingManager
 {
-	ref struct FindResultSegment
-	{
-		TextAnchor^ Start;
-		TextAnchor^ End;
-	};
-
 	AvalonEdit::TextEditor^ ParentEditor;
 	model::IScriptDocument^ ParentScriptDocument;
-	List<AvalonEditLineAnchor^>^ TrackedLineAnchors;
-	Dictionary<FindResultSegment^, BackgroundRenderSegment^>^ TrackedFindResultSegments;
+	Dictionary<TextAnchor^, LineAnchor^>^ TrackedLineAnchors;
+	Dictionary<TextAnchor^, AnchoredDocumentSegment^>^ StartAnchorToFindResultSegments;
+	Dictionary<TextAnchor^, AnchoredDocumentSegment^>^ EndAnchorToFindResultSegments;
+	List<TextAnchor^>^ AnchorDeletionAccumulator;
 	LineTrackingManagerBgRenderer^ LineBgRenderer;
+	Timer^ DeferredAnchorDeletionTimer;
 
 	model::IScriptDocument::StateChangeEventHandler^ ParentModelStateChangedHandler;
 	EventHandler^ ParentEditorTextChangedHandler;
-
+	EventHandler^ TextAnchorDeletedHandler;
+	EventHandler^ DeferredAnchorDeletionTimerTickHandler;
 
 	void ParentEditor_TextChanged(Object^ Sender, EventArgs^ E);
 	void ParentModel_StateChanged(Object^ Sender, model::IScriptDocument::StateChangeEventArgs^ E);
+	void TextAnchor_Deleted(Object^ Sender, EventArgs^ E);
+	void DeferredAnchorDeletionTimer_Tick(Object^ Sender, EventArgs^ E);
 
 	TextAnchor^ CreateAnchor(int Offset, bool AllowDeletion);
+	AnchoredDocumentSegment^ CreateAnchoredSegment(int StartOffset, int EndOffset, bool AllowDeletion);
 public:
 	LineTrackingManager(AvalonEdit::TextEditor^ ParentEditor, model::IScriptDocument^ ParentScriptDocument);
 	~LineTrackingManager();
+
+	event EventHandler^ LineAnchorInvalidated;
 
 	property LineTrackingManagerBgRenderer^ LineBackgroundRenderer
 	{
 		LineTrackingManagerBgRenderer^ get() { return LineBgRenderer; }
 	}
 
-	AvalonEditLineAnchor^ CreateLineAnchor(UInt32 Line, bool AllowDeletion);
+	LineAnchor^ CreateLineAnchor(UInt32 Line, bool AllowDeletion);
 	void TrackFindResultSegment(UInt32 Start, UInt32 End);
 	void ClearFindResultSegments();
-	bool RemoveDeletedLineAnchors(); // returns true if any line anchors were removed
 };
 
 

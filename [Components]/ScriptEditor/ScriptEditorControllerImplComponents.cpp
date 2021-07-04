@@ -592,6 +592,8 @@ System::Object^ FindReplaceHelper::FindReplaceResultsListLineNumberAspectGetter(
 	auto Model = safe_cast<model::components::ScriptFindResult^>(E);
 	if (Model == nullptr)
 		return nullptr;
+	else if (!Model->Valid)
+		return nullptr;
 
 	return Model->Line;
 }
@@ -974,17 +976,19 @@ void FindReplaceHelper::ShowFindReplacePane(IScriptEditorController^ Controller)
 	FindReplaceFindDropdown->Focus();
 }
 
-InputManager::ChordData::ChordData(KeyCombo^ SecondChord, IAction^ Action)
+InputManager::ChordData::ChordData(KeyCombo^ SecondChord, IAction^ Action, ...array<view::eViewRole>^ ActionRoles)
 {
 	this->SecondChord = SecondChord;
 	this->Action = Action;
+	this->ActionRoles = gcnew List<view::eViewRole>;
+
+	for each (auto Role in ActionRoles)
+		this->ActionRoles->Add(Role);
 }
 
-
-InputManager::ChordData::ChordData(IAction^ Action)
+InputManager::ChordData::ChordData(IAction^ Action, ...array<view::eViewRole>^ ActionRoles)
+	: ChordData(nullptr, Action, ActionRoles)
 {
-	this->SecondChord = nullptr;
-	this->Action = Action;
 }
 
 bool InputManager::ChordData::Equals(Object^ obj)
@@ -996,6 +1000,15 @@ bool InputManager::ChordData::Equals(Object^ obj)
 
 	auto Other = safe_cast<ChordData^>(obj);
 	return this->SecondChord->Equals(Other->SecondChord) && this->Action->Equals(Other->Action);
+}
+
+void InputManager::ChordData::UpdateViewComponentShortcutTexts(KeyCombo^ Primary, view::IScriptEditorView^ View)
+{
+	for each (auto Role in ActionRoles)
+	{
+		auto Component = View->GetComponentByRole(Role)->AsButton();
+		Component->ShortcutKey = Primary->ToString() + (SecondChord ?  ", " + SecondChord->ToString() : "");
+	}
 }
 
 InputManager::ChordData^ InputManager::LookupDoubleKeyChordCommand(KeyCombo^ First, KeyCombo^ Second)
@@ -1038,9 +1051,10 @@ bool InputManager::IsBound(KeyCombo^ Combo)
 	return KeyChordCommands->ContainsKey(Combo);
 }
 
-InputManager::InputManager(view::components::IContextMenu^ TextEditorContextMenu)
+InputManager::InputManager(view::IScriptEditorView^ ParentView)
 {
-	this->TextEditorContextMenu = TextEditorContextMenu;
+	this->ParentView = ParentView;
+	this->TextEditorContextMenu = ParentView->GetComponentByRole(view::eViewRole::TextEditor_ContextMenu)->AsContextMenu();
 
 	BlacklistedKeyCodes = gcnew List<Keys>;
 	KeyChordCommands = gcnew Dictionary<KeyCombo^, ChordDataUnion^>;
@@ -1053,19 +1067,20 @@ InputManager::~InputManager()
 {
 	KeyChordCommands->Clear();
 	TextEditorContextMenu = nullptr;
+	ParentView = nullptr;
 }
 
-void InputManager::AddKeyChordCommand(IAction^ Action, KeyCombo^ Primary, KeyCombo^ Secondary, bool OverwriteExisting)
+void InputManager::AddKeyChordCommand(IAction^ Action, KeyCombo^ Primary, KeyCombo^ Secondary, bool OverwriteExisting, ...array<view::eViewRole>^ ActionRoles)
 {
 	ChordDataUnion^ ExistingValue = nullptr;
 	if (!KeyChordCommands->TryGetValue(Primary, ExistingValue))
 	{
 		if (Secondary == nullptr)
-			ExistingValue = gcnew ChordDataUnion(gcnew ChordData(Action), nullptr);
+			ExistingValue = gcnew ChordDataUnion(gcnew ChordData(Action, ActionRoles), nullptr);
 		else
 		{
 			ExistingValue = gcnew ChordDataUnion(nullptr, gcnew List<ChordData^>);
-			ExistingValue->Item2->Add(gcnew ChordData(Secondary, Action));
+			ExistingValue->Item2->Add(gcnew ChordData(Secondary, Action, ActionRoles));
 		}
 
 		KeyChordCommands->Add(Primary, ExistingValue);
@@ -1080,7 +1095,7 @@ void InputManager::AddKeyChordCommand(IAction^ Action, KeyCombo^ Primary, KeyCom
 		{
 			if (Secondary == nullptr)
 				throw gcnew ArgumentException("Primary key chord '" + Primary->ToString() + "' has already been bound to at least one secondary key chord");
-			else if (ExistingValue->Item2->Contains(gcnew ChordData(Secondary, Action)))
+			else if (ExistingValue->Item2->Contains(gcnew ChordData(Secondary, Action, ActionRoles)))
 				throw gcnew ArgumentException("Key chord '" + Primary->ToString() + ", " + Secondary->ToString() + "' has already been bound to a different command");
 		}
 	}
@@ -1110,14 +1125,14 @@ void InputManager::AddKeyChordCommand(IAction^ Action, KeyCombo^ Primary, KeyCom
 				}
 			}
 
-			ExistingValue->Item2->Add(gcnew ChordData(Secondary, Action));
+			ExistingValue->Item2->Add(gcnew ChordData(Secondary, Action, ActionRoles));
 		}
 	}
 }
 
-void InputManager::AddKeyChordCommand(IAction^ Action, KeyCombo^ Primary, bool OverwriteExisting)
+void InputManager::AddKeyChordCommand(IAction^ Action, KeyCombo^ Primary, bool OverwriteExisting, ...array<view::eViewRole>^ ActionRoles)
 {
-	AddKeyChordCommand(Action, Primary, nullptr, OverwriteExisting);
+	AddKeyChordCommand(Action, Primary, nullptr, OverwriteExisting, ActionRoles);
 }
 
 void InputManager::HandleKeyDown(KeyEventArgs^ E, IScriptEditorController^ Controller)
@@ -1200,6 +1215,17 @@ void InputManager::HandleTextEditorMouseClick(textEditor::TextEditorMouseClickEv
 bool InputManager::IsKeyBlacklisted(Keys Key)
 {
 	return BlacklistedKeyCodes->Contains(Key);
+}
+
+void InputManager::RefreshViewComponentShortcutTexts()
+{
+	for each (auto% Entry in KeyChordCommands)
+	{
+		if (Entry.Value->Item1)
+			Entry.Value->Item1->UpdateViewComponentShortcutTexts(Entry.Key, ParentView);
+		else for each (auto Itr in Entry.Value->Item2)
+			Itr->UpdateViewComponentShortcutTexts(Entry.Key, ParentView);
+	}
 }
 
 

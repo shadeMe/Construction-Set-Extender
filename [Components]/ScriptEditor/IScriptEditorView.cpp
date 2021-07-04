@@ -36,10 +36,15 @@ CommonIcons::CommonIcons()
 	Transparent = IconResources->CreateImage("Transparent");
 	UnsavedChanges = IconResources->CreateImage("Dirty");
 	Info = IconResources->CreateImage("Info");
+	InfoLarge = IconResources->CreateImage("Info-Large");
 	Warning = IconResources->CreateImage("Warning");
+	WarningLarge = IconResources->CreateImage("Warning-Large");
 	Error = IconResources->CreateImage("Error");
+	ErrorLarge = IconResources->CreateImage("Error-Large");
+	BlockedLarge = IconResources->CreateImage("Blocked-Large");
 	Invalid = IconResources->CreateImage("Invalid");
 	Success = IconResources->CreateImage("Success");
+	SuccessLarge = IconResources->CreateImage("Success-Large");
 	InProgress = IconResources->CreateImage("InProgress");
 }
 

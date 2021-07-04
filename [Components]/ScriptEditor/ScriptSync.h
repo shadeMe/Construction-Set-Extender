@@ -181,7 +181,7 @@ public:
 	event SyncPreCompileEventHandler^ ScriptPreCompile;
 	event SyncPostCompileEventHandler^ ScriptPostCompile;
 
-	void Start(String^ WorkingDir, List<String^>^ SyncedScriptEditorIDs);
+	bool Start(String^ WorkingDir, List<String^>^ SyncedScriptEditorIDs);
 	void Stop();
 	bool IsScriptBeingSynced(String^ ScriptEditorID);
 	String^ GetSyncLogContents(String^ ScriptEditorID);
@@ -241,73 +241,66 @@ ref struct SyncedScriptListViewWrapper
 	void Reset();
 };
 
-ref class DiskSyncDialog : public System::Windows::Forms::Form
+ref class DiskSyncDialog : public DevComponents::DotNetBar::Metro::MetroForm
 {
 	static DiskSyncDialog^ Singleton = nullptr;
 
+	DevComponents::DotNetBar::ButtonX^ ButtonOpenWorkingDir;
+	BrightIdeasSoftware::OLVColumn^ ColLastSyncTime;
+	BrightIdeasSoftware::OLVColumn^ ColScriptName;
+	DevComponents::DotNetBar::LabelX^ LabelSelectedScriptLog;
+	BrightIdeasSoftware::FastObjectListView^ ListViewSyncedScripts;
+	DevComponents::DotNetBar::ButtonX^ ButtonStartStopSync;
+	DevComponents::DotNetBar::ButtonX^ ButtonSelectWorkingDir;
+	System::Windows::Forms::FolderBrowserDialog^ FolderDlgWorkingDir;
+	DevComponents::DotNetBar::LabelX^ LabelWorkingDir;
+	DevComponents::DotNetBar::Controls::GroupPanel^ GroupSyncSettings;
+	DevComponents::DotNetBar::Controls::GroupPanel^ GroupStartupFileHandling;
+	System::Windows::Forms::RadioButton^ RadioPromptForFileHandling;
+	System::Windows::Forms::RadioButton^ RadioUseExistingFiles;
+	System::Windows::Forms::RadioButton^ RadioOverwriteExistingFiles;
+	System::Windows::Forms::CheckBox^ CheckboxAutoDeleteLogs;
+	DevComponents::DotNetBar::LabelX^ LabelSeconds;
+	System::Windows::Forms::CheckBox^ CheckboxAutoSync;
+	DevComponents::Editors::IntegerInput^ NumericAutoSyncSeconds;
+	DevComponents::DotNetBar::Controls::TextBoxX^ TextBoxSelectedScriptLog;
+	DevComponents::DotNetBar::Controls::TextBoxX^ TextBoxWorkingDir;
+	DevComponents::DotNetBar::PanelEx^ LeftPanel;
+	DevComponents::DotNetBar::Bar^ Toolbar;
+	DevComponents::DotNetBar::ButtonItem^ ToolbarSyncToDisk;
+	DevComponents::DotNetBar::LabelItem^ ToolbarLabelSyncedScripts;
+	DevComponents::DotNetBar::ButtonItem^ ToolbarSelectScripts;
+	DevComponents::DotNetBar::ButtonItem^ ToolbarSyncFromDisk;
+	DevComponents::DotNetBar::ButtonItem^ ToolbarOpenLog;
+	DevComponents::DotNetBar::ButtonItem^ ToolbarOpenSyncedFile;
+	System::Windows::Forms::Timer^ DeferredSelectionUpdateTimer;
+	System::ComponentModel::IContainer^ components;
 
-	System::ComponentModel::Container^ components;
+	SyncStartEventHandler^ DiskSyncSyncStartHandler;
+	SyncStopEventHandler^ DiskSyncSyncStopHandler;
+	SyncWriteToDiskEventHandler^ DiskSyncSyncWriteToDiskHandler;
+	SyncPreCompileEventHandler^ DiskSyncSyncPreCompileHandler;
+	SyncPostCompileEventHandler^ DiskSyncSyncPostCompileHandler;
 
-	Label^ LabelWorkingDir;
-	FolderBrowserDialog^ FolderDlgWorkingDir;
-	TextBox^ TextBoxWorkingDir;
-	Button^ ButtonSelectWorkingDir;
-
-	GroupBox^ GroupSyncSettings;
-	CheckBox^ CheckboxAutoSync;
-	Label^ LabelSeconds;
-	NumericUpDown^ NumericAutoSyncSeconds;
-	GroupBox^ GroupStartupFileHandling;
-	RadioButton^				RadioPromptForFileHandling;
-	RadioButton^				RadioUseExistingFiles;
-	RadioButton^				RadioOverwriteExistingFiles;
-	Label^						LabelScriptsToSync;
-	Button^						ButtonSelectScripts;
-	Button^						ButtonStartStopSync;
-	CheckBox^					CheckboxAutoDeleteLogs;
-	BrightIdeasSoftware::FastObjectListView^
-								ListViewSyncedScripts;
-	BrightIdeasSoftware::OLVColumn^
-								ColScriptName;
-	BrightIdeasSoftware::OLVColumn^
-								ColLastSyncTime;
-	System::Windows::Forms::ContextMenuStrip^
-								LVSyncedStripsContextMenu;
-	ToolStripMenuItem^			SyncToDiskToolStripMenuItem;
-	ToolStripMenuItem^			SyncFromDiskToolStripMenuItem;
-	ToolStripSeparator^			ToolStripSeparator1;
-	ToolStripMenuItem^			OpenLogToolStripMenuItem;
-	ToolStripMenuItem^			OpenSyncedFileToolStripMenuItem;
-	Button^						ButtonOpenWorkingDir;
-	TextBox^					TextBoxSelectedScriptLog;
-	Label^						LabelSelectedScriptLog;
-
-	SyncStartEventHandler^		DiskSyncSyncStartHandler;
-	SyncStopEventHandler^		DiskSyncSyncStopHandler;
-	SyncWriteToDiskEventHandler^
-								DiskSyncSyncWriteToDiskHandler;
-	SyncPreCompileEventHandler^
-								DiskSyncSyncPreCompileHandler;
-	SyncPostCompileEventHandler^
-								DiskSyncSyncPostCompileHandler;
-
-	Dictionary<String^, SyncedScriptListViewWrapper^>^
-								SyncedScripts;
+	Dictionary<String^, SyncedScriptListViewWrapper^>^ SyncedScripts;
 
 	void InitializeComponent();
+	void FinalizeComponents();
 
 	void ButtonSelectWorkingDir_Click(Object^ Sender, EventArgs^ E);
 	void ButtonOpenWorkingDir_Click(Object^ Sender, EventArgs^ E);
-	void ButtonSelectScripts_Click(Object^ Sender, EventArgs^ E);
 	void ButtonStartStopSync_Click(Object^ Sender, EventArgs^ E);
-	void SyncToDiskToolStripMenuItem_Click(Object^ Sender, EventArgs^ E);
-	void SyncFromDiskToolStripMenuItem_Click(Object^ Sender, EventArgs^ E);
-	void OpenLogToolStripMenuItem_Click(Object^ Sender, EventArgs^ E);
-	void OpenSyncedFileToolStripMenuItem_Click(Object^ Sender, EventArgs^ E);
+
+	void ToolbarSelectScripts_Click(Object^ Sender, EventArgs^ E);
+	void ToolbarSyncToDisk_Click(Object^ Sender, EventArgs^ E);
+	void ToolbarSyncFromDisk_Click(Object^ Sender, EventArgs^ E);
+	void ToolbarOpenLog_Click(Object^ Sender, EventArgs^ E);
+	void ToolbarOpenSyncedFile_Click(Object^ Sender, EventArgs^ E);
+
 	void CheckboxAutoSync_Click(Object^ Sender, EventArgs^ E);
 	void NumericAutoSyncSeconds_ValueChanged(Object^ Sender, EventArgs^ E);
-	void ListViewSyncedScripts_CellRightClick(Object^ Sender, BrightIdeasSoftware::CellRightClickEventArgs^ E);
-	void ListViewSyncedScripts_SelectedIndexChanged(Object^ Sender, EventArgs^ E);
+	void ListViewSyncedScripts_SelectionChanged(Object^ Sender, EventArgs^ E);
+	void DeferredSelectionUpdateTimer_Tick(Object^ Sender, EventArgs^ E);
 
 	void Dialog_Cancel(Object^ Sender, CancelEventArgs^ E);
 
@@ -319,6 +312,7 @@ ref class DiskSyncDialog : public System::Windows::Forms::Form
 
 	bool IsSyncInProgress();
 	String^ GetOutputMessagesForScript(String^ EditorID);
+	void UpdateToolbarEnabledState();
 
 	static Object^ ListViewAspectScriptNameGetter(Object^ RowObject);
 	static Object^ ListViewImageScriptNameGetter(Object^ RowObject);

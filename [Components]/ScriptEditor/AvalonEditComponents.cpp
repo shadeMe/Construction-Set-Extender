@@ -78,6 +78,82 @@ System::Windows::Point TransformToPixels(System::Windows::Point In)
 	return TransformToPixels(In.X, In.Y);
 }
 
+BracketSearchData::BracketSearchData(Char Symbol, int StartOffset) :
+	Symbol(Symbol),
+	StartOffset(StartOffset)
+{
+	EndOffset = -1;
+	Mismatching = false;
+}
+
+BracketSearchData::eBracketType BracketSearchData::GetType()
+{
+	switch (Symbol)
+	{
+	case '(':
+	case ')':
+		return eBracketType::Curved;
+	case '[':
+	case ']':
+		return eBracketType::Square;
+	case '{':
+	case '}':
+		return eBracketType::Squiggly;
+	default:
+		return eBracketType::Invalid;
+	}
+}
+
+BracketSearchData::eBracketState BracketSearchData::GetKind()
+{
+	switch (Symbol)
+	{
+	case '(':
+	case '[':
+	case '{':
+		return eBracketState::Opening;
+	case ')':
+	case ']':
+	case '}':
+		return eBracketState::Closing;
+	default:
+		return eBracketState::Invalid;
+	}
+}
+
+int BracketSearchData::GetStartOffset()
+{
+	return StartOffset;
+}
+
+LineAnchor::LineAnchor(AvalonEdit::TextEditor^ Parent, UInt32 Line, bool AllowDeletion)
+{
+	if (Line > Parent->LineCount)
+		Line = Parent->LineCount;
+
+	auto LineStartOffset = Parent->Document->GetLineByNumber(Line)->Offset;
+	if (LineStartOffset > Parent->Document->TextLength)
+		LineStartOffset = Parent->Document->TextLength;
+
+	Anchor_ = Parent->Document->CreateAnchor(LineStartOffset);
+	Anchor_->SurviveDeletion = AllowDeletion == false;
+}
+
+
+StaticDocumentSegment::StaticDocumentSegment()
+{
+	Line = 0;
+	StartOffset = 0;
+	EndOffset = 0;
+	Enabled = true;
+}
+
+AnchoredDocumentSegment::AnchoredDocumentSegment(TextAnchor^ Start, TextAnchor^ End)
+	: StartOffsetAnchor(Start), EndOffsetAnchor(End)
+{
+	Enabled = true;
+}
+
 
 void LineTrackingManagerBgRenderer::RenderBackground(TextView^ Destination, System::Windows::Media::DrawingContext^ DrawingContext, int StartOffset, int EndOffset, Windows::Media::Color Background, Windows::Media::Color Border, Double BorderThickness, bool ColorEntireLine)
 {
@@ -201,11 +277,11 @@ void LineTrackingManagerBgRenderer::DoErrorSquiggles(TextView^ textView, System:
 {
 	Color Buffer = preferences::SettingsHolder::Get()->Appearance->UnderlineColorError;
 
-	Windows::Media::Color RenderColor = Windows::Media::Color::FromArgb(255, Buffer.R, Buffer.G, Buffer.B);
+	auto RenderColor = Windows::Media::Color::FromArgb(255, Buffer.R, Buffer.G, Buffer.B);
 
 	for each (auto Itr in ErrorSquiggles)
 	{
-		if (Itr->Enabled)
+		if (Itr->Enabled && Itr->Valid)
 			RenderSquiggle(textView, drawingContext, Itr->StartOffset, Itr->EndOffset, RenderColor);
 	}
 }
@@ -216,7 +292,7 @@ void LineTrackingManagerBgRenderer::DoFindResults(TextView^ textView, System::Wi
 
 	for each (auto Itr in FindResults)
 	{
-		if (!Itr->Enabled)
+		if (!Itr->Enabled || !Itr->Valid)
 			continue;
 
 		RenderBackground(textView,
@@ -273,9 +349,9 @@ LineTrackingManagerBgRenderer::LineTrackingManagerBgRenderer(AvalonEdit::TextEdi
 {
 	ParentEditor = Parent;
 
-	ErrorSquiggles = gcnew List<BackgroundRenderSegment^>;
-	FindResults = gcnew List<BackgroundRenderSegment^>;
-	OpenCloseBraces = gcnew BackgroundRenderSegment;
+	ErrorSquiggles = gcnew List<AnchoredDocumentSegment^>;
+	FindResults = gcnew List<AnchoredDocumentSegment^>;
+	OpenCloseBraces = gcnew StaticDocumentSegment;
 }
 
 LineTrackingManagerBgRenderer::~LineTrackingManagerBgRenderer()
@@ -311,20 +387,6 @@ void LineTrackingManagerBgRenderer::Redraw()
 	ParentEditor->TextArea->TextView->InvalidateLayer(Layer);
 }
 
-
-AvalonEditLineAnchor::AvalonEditLineAnchor(AvalonEdit::TextEditor^ Parent, UInt32 Line, bool AllowDeletion)
-{
-	if (Line > Parent->LineCount)
-		Line = Parent->LineCount;
-
-	auto LineStartOffset = Parent->Document->GetLineByNumber(Line)->Offset;
-	if (LineStartOffset > Parent->Document->TextLength)
-		LineStartOffset = Parent->Document->TextLength;
-
-	Anchor = Parent->Document->CreateAnchor(LineStartOffset);
-	Anchor->SurviveDeletion = AllowDeletion == false;
-}
-
 void LineTrackingManager::ParentEditor_TextChanged(Object^ Sender, EventArgs^ E)
 {
 	// disable compiler error indicators for the changed line
@@ -342,14 +404,14 @@ void LineTrackingManager::ParentEditor_TextChanged(Object^ Sender, EventArgs^ E)
 	}
 
 	// disable find result indicators for modified segments
-	for each (auto% FindResult in TrackedFindResultSegments)
+	for each (auto% Segment in StartAnchorToFindResultSegments)
 	{
-		if (FindResult.Key->Start->IsDeleted || FindResult.Key->End->IsDeleted)
+		if (!Segment.Value->Valid)
 			continue;
 
-		if (Caret >= FindResult.Value->StartOffset && Caret <= FindResult.Value->EndOffset)
+		if (Caret >= Segment.Value->StartOffset && Caret <= Segment.Value->EndOffset)
 		{
-			FindResult.Value->Enabled = false;
+			Segment.Value->Enabled = false;
 			RefreshBg = true;
 		}
 	}
@@ -365,6 +427,7 @@ void LineTrackingManager::ParentModel_StateChanged(Object^ Sender, model::IScrip
 
 	// update the error squiggles
 	LineBgRenderer->ErrorSquiggles->Clear();
+
 	auto ProcessedLines = gcnew List<UInt32>;
 	for each (auto Itr in E->Messages)
 	{
@@ -379,13 +442,51 @@ void LineTrackingManager::ParentModel_StateChanged(Object^ Sender, model::IScrip
 		ISegment^ WhitespaceLeading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(ParentEditor->TextArea->Document, Line);
 		ISegment^ WhitespaceTrailing = AvalonEdit::Document::TextUtilities::GetTrailingWhitespace(ParentEditor->TextArea->Document, Line);
 
-		auto NewSegment = gcnew BackgroundRenderSegment;
-		NewSegment->Line = Itr->Line;
-		NewSegment->StartOffset = WhitespaceLeading->EndOffset;
-		NewSegment->EndOffset = WhitespaceTrailing->Offset;
-		LineBgRenderer->ErrorSquiggles->Add(NewSegment);
+		auto NewSegment = CreateAnchoredSegment(WhitespaceLeading->EndOffset, WhitespaceTrailing->Offset, true);
 		ProcessedLines->Add(Itr->Line);
+		LineBgRenderer->ErrorSquiggles->Add(NewSegment);
 	}
+}
+
+void LineTrackingManager::TextAnchor_Deleted(Object^ Sender, EventArgs^ E)
+{
+	auto Anchor = safe_cast<TextAnchor^>(Sender);
+
+	AnchorDeletionAccumulator->Add(Anchor);
+
+	if (!DeferredAnchorDeletionTimer->Enabled)
+		DeferredAnchorDeletionTimer->Start();
+}
+
+void LineTrackingManager::DeferredAnchorDeletionTimer_Tick(Object^ Sender, EventArgs^ E)
+{
+	DeferredAnchorDeletionTimer->Stop();
+
+	if (AnchorDeletionAccumulator->Count == 0)
+		return;
+
+	int DeletedLineAnchors = 0;
+	for each (auto Anchor in AnchorDeletionAccumulator)
+	{
+		Anchor->Deleted -= TextAnchorDeletedHandler;
+
+		if (TrackedLineAnchors->ContainsKey(Anchor))
+		{
+			TrackedLineAnchors->Remove(Anchor);
+			++DeletedLineAnchors;
+		}
+
+		AnchoredDocumentSegment^ FindSegment = nullptr;
+		if (StartAnchorToFindResultSegments->TryGetValue(Anchor, FindSegment) || EndAnchorToFindResultSegments->TryGetValue(Anchor, FindSegment))
+		{
+			StartAnchorToFindResultSegments->Remove(FindSegment->StartAnchor);
+			EndAnchorToFindResultSegments->Remove(FindSegment->EndAnchor);
+		}
+	}
+
+	AnchorDeletionAccumulator->Clear();
+	if (DeletedLineAnchors > 0)
+		LineAnchorInvalidated(this, EventArgs::Empty);
 }
 
 LineTrackingManager::LineTrackingManager(AvalonEdit::TextEditor^ ParentEditor, model::IScriptDocument^ ParentScriptDocument)
@@ -393,30 +494,55 @@ LineTrackingManager::LineTrackingManager(AvalonEdit::TextEditor^ ParentEditor, m
 	this->ParentEditor = ParentEditor;
 	this->ParentScriptDocument = ParentScriptDocument;
 
-	TrackedLineAnchors = gcnew List<AvalonEditLineAnchor^>;
-	TrackedFindResultSegments = gcnew Dictionary<FindResultSegment^, BackgroundRenderSegment^>;
+	TrackedLineAnchors = gcnew Dictionary<TextAnchor^, LineAnchor^>;
+	StartAnchorToFindResultSegments = gcnew Dictionary<TextAnchor^, AnchoredDocumentSegment^>;
+	EndAnchorToFindResultSegments = gcnew Dictionary<TextAnchor^, AnchoredDocumentSegment^>;
+	AnchorDeletionAccumulator = gcnew List<TextAnchor^>;
 	LineBgRenderer = gcnew LineTrackingManagerBgRenderer(ParentEditor);
+	DeferredAnchorDeletionTimer = gcnew Timer;
+
+	DeferredAnchorDeletionTimer->Interval = 1000;
+	DeferredAnchorDeletionTimer->Enabled = false;
 
 	ParentModelStateChangedHandler = gcnew model::IScriptDocument::StateChangeEventHandler(this, &LineTrackingManager::ParentModel_StateChanged);
 	ParentEditorTextChangedHandler = gcnew EventHandler(this, &LineTrackingManager::ParentEditor_TextChanged);
+	TextAnchorDeletedHandler = gcnew EventHandler(this, &LineTrackingManager::TextAnchor_Deleted);
+	DeferredAnchorDeletionTimerTickHandler = gcnew EventHandler(this, &LineTrackingManager::DeferredAnchorDeletionTimer_Tick);
 
-	this->ParentEditor->TextArea->TextView->BackgroundRenderers->Add(LineBgRenderer);
+	ParentEditor->TextArea->TextView->BackgroundRenderers->Add(LineBgRenderer);
 
-	this->ParentEditor->TextChanged += ParentEditorTextChangedHandler;
-	this->ParentScriptDocument->StateChanged += ParentModelStateChangedHandler;
+	ParentEditor->TextChanged += ParentEditorTextChangedHandler;
+	ParentScriptDocument->StateChanged += ParentModelStateChangedHandler;
+	DeferredAnchorDeletionTimer->Tick += DeferredAnchorDeletionTimerTickHandler;
 }
 
 LineTrackingManager::~LineTrackingManager()
 {
+	DeferredAnchorDeletionTimer->Enabled = false;
+
+	for each (auto Anchor in TrackedLineAnchors->Keys)
+		Anchor->Deleted -= DeferredAnchorDeletionTimerTickHandler;
+
+	for each (auto Anchor in StartAnchorToFindResultSegments->Keys)
+		Anchor->Deleted -= DeferredAnchorDeletionTimerTickHandler;
+
+	for each (auto Anchor in EndAnchorToFindResultSegments->Keys)
+		Anchor->Deleted -= DeferredAnchorDeletionTimerTickHandler;
+
 	TrackedLineAnchors->Clear();
-	TrackedFindResultSegments->Clear();
+	StartAnchorToFindResultSegments->Clear();
+	EndAnchorToFindResultSegments->Clear();
+	AnchorDeletionAccumulator->Clear();
 
 	ParentEditor->TextArea->TextView->BackgroundRenderers->Remove(LineBgRenderer);
 
 	ParentEditor->TextChanged -= ParentEditorTextChangedHandler;
 	ParentScriptDocument->StateChanged -= ParentModelStateChangedHandler;
+	DeferredAnchorDeletionTimer->Tick -= DeferredAnchorDeletionTimerTickHandler;
 
-	SAFEDELETE_CLR(ParentEditorTextChangedHandler);
+	SAFEDELETE_CLR(TextAnchorDeletedHandler);
+	SAFEDELETE_CLR(ParentModelStateChangedHandler);
+	SAFEDELETE_CLR(DeferredAnchorDeletionTimerTickHandler);
 	SAFEDELETE_CLR(ParentModelStateChangedHandler);
 	SAFEDELETE_CLR(LineBgRenderer);
 
@@ -434,55 +560,53 @@ TextAnchor^ LineTrackingManager::CreateAnchor(int Offset, bool AllowDeletion)
 	return New;
 }
 
-AvalonEditLineAnchor^ LineTrackingManager::CreateLineAnchor(UInt32 Line, bool AllowDeletion)
+AnchoredDocumentSegment^ LineTrackingManager::CreateAnchoredSegment(int StartOffset, int EndOffset, bool AllowDeletion)
 {
-	auto NewLineAnchor = gcnew AvalonEditLineAnchor(ParentEditor, Line, AllowDeletion);;
-	TrackedLineAnchors->Add(NewLineAnchor);
+	auto StartAnchor = CreateAnchor(StartOffset, AllowDeletion);
+	StartAnchor->Deleted += TextAnchorDeletedHandler;
+
+	auto EndAnchor = CreateAnchor(EndOffset, AllowDeletion);
+	EndAnchor->Deleted += TextAnchorDeletedHandler;
+
+	auto NewSegment = gcnew AnchoredDocumentSegment(StartAnchor, EndAnchor);
+	return NewSegment;
+}
+
+LineAnchor^ LineTrackingManager::CreateLineAnchor(UInt32 Line, bool AllowDeletion)
+{
+	auto NewLineAnchor = gcnew LineAnchor(ParentEditor, Line, AllowDeletion);
+	NewLineAnchor->Anchor->Deleted += TextAnchorDeletedHandler;
+
+	TrackedLineAnchors->Add(NewLineAnchor->Anchor, NewLineAnchor);
 	return NewLineAnchor;
 }
 
 void LineTrackingManager::TrackFindResultSegment(UInt32 Start, UInt32 End)
 {
-	auto NewSegment = gcnew FindResultSegment;
-	NewSegment->Start = CreateAnchor(Start, false);
-	NewSegment->End = CreateAnchor(End, false);
+	auto NewSegment = CreateAnchoredSegment(Start, End, true);
 
-	auto BgRendererSegment = gcnew BackgroundRenderSegment;
-	BgRendererSegment->StartOffset = NewSegment->Start->Offset;
-	BgRendererSegment->EndOffset = NewSegment->End->Offset;
+	StartAnchorToFindResultSegments->Add(NewSegment->StartAnchor, NewSegment);
+	EndAnchorToFindResultSegments->Add(NewSegment->EndAnchor, NewSegment);
 
-	TrackedFindResultSegments->Add(NewSegment, BgRendererSegment);
-	LineBgRenderer->FindResults->Add(BgRendererSegment);
-
+	LineBgRenderer->FindResults->Add(NewSegment);
 	LineBgRenderer->Redraw();
 }
 
 void LineTrackingManager::ClearFindResultSegments()
 {
-	TrackedFindResultSegments->Clear();
+	for each (auto % Segment in EndAnchorToFindResultSegments)
+	{
+		Segment.Value->StartAnchor->Deleted -= TextAnchorDeletedHandler;
+		Segment.Value->EndAnchor->Deleted -= TextAnchorDeletedHandler;
+	}
+
+	StartAnchorToFindResultSegments->Clear();
+	EndAnchorToFindResultSegments->Clear();
+
 	LineBgRenderer->FindResults->Clear();
 	LineBgRenderer->Redraw();
 }
 
-bool LineTrackingManager::RemoveDeletedLineAnchors()
-{
-	auto Invalidated = gcnew List<AvalonEditLineAnchor^>;
-
-	for each (auto Itr in TrackedLineAnchors)
-	{
-		if (Itr->Anchor->IsDeleted)
-			Invalidated->Add(Itr);
-	}
-
-	for each (auto Itr in Invalidated)
-		TrackedLineAnchors->Remove(Itr);
-
-	if (Invalidated->Count == 0)
-		return false;
-
-	LineBgRenderer->Redraw();
-	return true;
-}
 
 void ObScriptIndentStrategy::IndentLines(AvalonEdit::Document::TextDocument^ document, Int32 beginLine, Int32 endLine)
 {
@@ -791,7 +915,7 @@ Windows::Media::HitTestResult^ IconMargin::HitTestCore(Windows::Media::PointHitT
 
 Windows::Size IconMargin::MeasureOverride(Windows::Size availableSize)
 {
-	return Windows::Size(22, 0);
+	return Windows::Size(24, 0);
 }
 
 void IconMargin::OnRender(Windows::Media::DrawingContext^ drawingContext)
@@ -802,9 +926,6 @@ void IconMargin::OnRender(Windows::Media::DrawingContext^ drawingContext)
 	auto BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B));
 
 	drawingContext->DrawRectangle(BackgroundBrush, nullptr, Windows::Rect(0, 0, renderSize.Width, renderSize.Height));
-	//drawingContext->DrawLine(gcnew Windows::Media::Pen(Windows::SystemColors::ControlDarkBrush, 1),
-	//						Windows::Point(renderSize.Width - 0.5, 0),
-	//						Windows::Point(renderSize.Width - 0.5, renderSize.Height));
 
 	AvalonEdit::Rendering::TextView^ textView = this->TextView;
 
@@ -1205,6 +1326,8 @@ void ScriptBytecodeOffsetMargin::RemoveFromTextArea(AvalonEdit::TextEditor^ Fiel
 	Field->TextArea->LeftMargins->RemoveAt(MarginIdx - 1);
 	Field->TextArea->LeftMargins->RemoveAt(MarginIdx - 1);
 }
+
+
 
 
 } // namespace avalonEdit

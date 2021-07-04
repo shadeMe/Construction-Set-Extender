@@ -460,10 +460,6 @@ void ScriptSelectionDialog::InitializeComponent()
 	this->ScriptListCParentPlugin->Text = L"Parent Plugin";
 	this->ScriptListCParentPlugin->Width = 114;
 	//
-	// DeferredSelectionUpdateTimer
-	//
-	this->DeferredSelectionUpdateTimer->Enabled = true;
-	//
 	// ScriptEditorSelectScripts
 	//
 	this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);

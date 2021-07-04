@@ -404,10 +404,15 @@ public:
 	property Image^ Transparent;
 	property Image^ UnsavedChanges;
 	property Image^ Info;
+	property Image^ InfoLarge;
 	property Image^ Warning;
+	property Image^ WarningLarge;
 	property Image^ Error;
+	property Image^ ErrorLarge;
+	property Image^ BlockedLarge;
 	property Image^ Invalid;
 	property Image^ Success;
+	property Image^ SuccessLarge;
 	property Image^ InProgress;
 
 	property ImageResourceManager^ ResourceManager

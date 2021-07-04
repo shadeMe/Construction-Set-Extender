@@ -473,5 +473,10 @@
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Save\SaveStatusBar2_16x.png">
       <Filter>Resources\Icons</Filter>
     </Image>
+    <Image Include="Images\error-large.png" />
+    <Image Include="Images\warning-large.png" />
+    <Image Include="Images\blocked-yellow-large.png" />
+    <Image Include="Images\info-large.png" />
+    <Image Include="Images\success-large.png" />
   </ItemGroup>
 </Project>

@@ -52,19 +52,18 @@ ActiveDocumentActionCollection::~ActiveDocumentActionCollection()
 
 void ActiveDocumentActionCollection::CreateDefaultKeyBindings(components::InputManager^ InputManager)
 {
-	InputManager->AddKeyChordCommand(Copy, KeyCombo::New(Keys::Control, Keys::C), false);
-	InputManager->AddKeyChordCommand(Paste, KeyCombo::New(Keys::Control, Keys::V), false);
-	InputManager->AddKeyChordCommand(Comment, KeyCombo::New(Keys::Control, Keys::K), KeyCombo::New(Keys::Control, Keys::C), false);
-	InputManager->AddKeyChordCommand(Uncomment, KeyCombo::New(Keys::Control, Keys::K), KeyCombo::New(Keys::Control, Keys::U), false);
-	InputManager->AddKeyChordCommand(AddBookmark, KeyCombo::New(Keys::Control, Keys::B), false);
-	InputManager->AddKeyChordCommand(GoToLine, KeyCombo::New(Keys::Control, Keys::G), false);
+	InputManager->AddKeyChordCommand(Copy, KeyCombo::New(Keys::Control, Keys::C), false, view::eViewRole::TextEditor_ContextMenu_Copy);
+	InputManager->AddKeyChordCommand(Paste, KeyCombo::New(Keys::Control, Keys::V), false, view::eViewRole::TextEditor_ContextMenu_Paste);
+	InputManager->AddKeyChordCommand(Comment, KeyCombo::New(Keys::Control, Keys::K), KeyCombo::New(Keys::Control, Keys::C), false, view::eViewRole::MainToolbar_Edit_Comment);
+	InputManager->AddKeyChordCommand(Uncomment, KeyCombo::New(Keys::Control, Keys::K), KeyCombo::New(Keys::Control, Keys::U), false, view::eViewRole::MainToolbar_Edit_Uncomment);
+	InputManager->AddKeyChordCommand(AddBookmark, KeyCombo::New(Keys::Control, Keys::B), false, view::eViewRole::MainToolbar_Edit_AddBookmark, view::eViewRole::MainToolbar_Edit_AddBookmark);
+	InputManager->AddKeyChordCommand(GoToLine, KeyCombo::New(Keys::Control, Keys::G), false, view::eViewRole::MainToolbar_Edit_GoToLine);
 
-	InputManager->AddKeyChordCommand(AddVarInteger, KeyCombo::New(Keys::Control, Keys::L), KeyCombo::New(Keys::Control, Keys::I), false);
-	InputManager->AddKeyChordCommand(AddVarFloat, KeyCombo::New(Keys::Control, Keys::L), KeyCombo::New(Keys::Control, Keys::F), false);
-	InputManager->AddKeyChordCommand(AddVarReference, KeyCombo::New(Keys::Control, Keys::L), KeyCombo::New(Keys::Control, Keys::R), false);
-	InputManager->AddKeyChordCommand(AddVarString, KeyCombo::New(Keys::Control, Keys::L), KeyCombo::New(Keys::Control, Keys::S), false);
-	InputManager->AddKeyChordCommand(AddVarArray, KeyCombo::New(Keys::Control, Keys::L), KeyCombo::New(Keys::Control, Keys::A), false);
-
+	InputManager->AddKeyChordCommand(AddVarInteger, KeyCombo::New(Keys::Control, Keys::L), KeyCombo::New(Keys::Control, Keys::I), false, view::eViewRole::TextEditor_ContextMenu_AddVar_Integer);
+	InputManager->AddKeyChordCommand(AddVarFloat, KeyCombo::New(Keys::Control, Keys::L), KeyCombo::New(Keys::Control, Keys::F), false, view::eViewRole::TextEditor_ContextMenu_AddVar_Float);
+	InputManager->AddKeyChordCommand(AddVarReference, KeyCombo::New(Keys::Control, Keys::L), KeyCombo::New(Keys::Control, Keys::R), false, view::eViewRole::TextEditor_ContextMenu_AddVar_Reference);
+	InputManager->AddKeyChordCommand(AddVarString, KeyCombo::New(Keys::Control, Keys::L), KeyCombo::New(Keys::Control, Keys::S), false, view::eViewRole::TextEditor_ContextMenu_AddVar_String);
+	InputManager->AddKeyChordCommand(AddVarArray, KeyCombo::New(Keys::Control, Keys::L), KeyCombo::New(Keys::Control, Keys::A), false, view::eViewRole::TextEditor_ContextMenu_AddVar_Array);
 }
 
 ViewActionCollection::ViewActionCollection()
@@ -101,18 +100,18 @@ ViewActionCollection::~ViewActionCollection()
 
 void ViewActionCollection::CreateDefaultKeyBindings(components::InputManager^ InputManager)
 {
-	InputManager->AddKeyChordCommand(CurrentTabNewScript, KeyCombo::New(Keys::Control, Keys::N), false);
-	InputManager->AddKeyChordCommand(CurrentTabOpenScript, KeyCombo::New(Keys::Control, Keys::O), false);
-	InputManager->AddKeyChordCommand(CurrentTabSaveScript, KeyCombo::New(Keys::Control, Keys::S), false);
-	InputManager->AddKeyChordCommand(CurrentTabPreviousScript, KeyCombo::New(Keys::Control | Keys::Alt, Keys::Left), false);
-	InputManager->AddKeyChordCommand(CurrentTabNextScript, KeyCombo::New(Keys::Control | Keys::Alt, Keys::Right), false);
-	InputManager->AddKeyChordCommand(SaveAllTabs, KeyCombo::New(Keys::Control | Keys::Shift, Keys::S), false);
-	InputManager->AddKeyChordCommand(NewTabWithNewScript, KeyCombo::New(Keys::Control, Keys::T), KeyCombo::New(Keys::Control, Keys::N), false);
-	InputManager->AddKeyChordCommand(NewTabWithExistingScript, KeyCombo::New(Keys::Control, Keys::T), KeyCombo::New(Keys::Control, Keys::O), false);
+	InputManager->AddKeyChordCommand(CurrentTabNewScript, KeyCombo::New(Keys::Control, Keys::N), false, view::eViewRole::MainToolbar_NewScript);
+	InputManager->AddKeyChordCommand(CurrentTabOpenScript, KeyCombo::New(Keys::Control, Keys::O), false, view::eViewRole::MainToolbar_OpenScript);
+	InputManager->AddKeyChordCommand(CurrentTabSaveScript, KeyCombo::New(Keys::Control, Keys::S), false, view::eViewRole::MainToolbar_SaveScript);
+	InputManager->AddKeyChordCommand(CurrentTabPreviousScript, KeyCombo::New(Keys::Control | Keys::Alt, Keys::Left), false, view::eViewRole::MainToolbar_PreviousScript);
+	InputManager->AddKeyChordCommand(CurrentTabNextScript, KeyCombo::New(Keys::Control | Keys::Alt, Keys::Right), false, view::eViewRole::MainToolbar_NextScript);
+	InputManager->AddKeyChordCommand(SaveAllTabs, KeyCombo::New(Keys::Control | Keys::Shift, Keys::S), false, view::eViewRole::MainToolbar_SaveAllScripts);
+	InputManager->AddKeyChordCommand(NewTabWithNewScript, KeyCombo::New(Keys::Control, Keys::T), KeyCombo::New(Keys::Control, Keys::N), false, view::eViewRole::MainTabStrip_NewTab_NewScript, view::eViewRole::EmptyWorkspacePanel_NewScript);
+	InputManager->AddKeyChordCommand(NewTabWithExistingScript, KeyCombo::New(Keys::Control, Keys::T), KeyCombo::New(Keys::Control, Keys::O), false, view::eViewRole::MainTabStrip_NewTab_ExistingScript, view::eViewRole::EmptyWorkspacePanel_OpenScript);
 	InputManager->AddKeyChordCommand(PreviousTab, KeyCombo::New(Keys::Control | Keys::Shift, Keys::Tab), false);
 	InputManager->AddKeyChordCommand(NextTab, KeyCombo::New(Keys::Control, Keys::Tab), false);
 	InputManager->AddKeyChordCommand(CloseCurrentTab, KeyCombo::New(Keys::Control, Keys::F4), false);
-	InputManager->AddKeyChordCommand(ShowFindReplacePane, KeyCombo::New(Keys::Control | Keys::Shift, Keys::F), false);
+	InputManager->AddKeyChordCommand(ShowFindReplacePane, KeyCombo::New(Keys::Control | Keys::Shift, Keys::F), false, view::eViewRole::MainToolbar_Edit_FindReplace);
 }
 
 NewTabCreationParams::NewTabCreationParams()
@@ -212,8 +211,8 @@ void AddNewVariableToDocument(obScriptParsing::Variable::eDataType DataType, mod
 
 	if (!Document->TextEditor->InsertVariable(VariableName, DataType))
 	{
-		View->ShowNotification("Could not insert new variable '" + VariableName + "'! Ensure that there are no other variables with the same name.",
-							   view::components::CommonIcons::Get()->Error, 3500);
+		View->ShowNotification("Could not insert new variable '" + VariableName + "'!\nEnsure that there are no other variables with the same name.",
+							   view::components::CommonIcons::Get()->BlockedLarge, 3500);
 	}
 }
 
@@ -576,7 +575,7 @@ void ScriptEditorController::AttachDocumentToView(model::IScriptDocument^ Docume
 	NewTabItem->Text = Document->ScriptEditorID;
 	if (NewTabItem->Text->Length == 0)
 		NewTabItem->Text = UnsavedScriptDisplayText;
-	NewTabItem->Tooltip = NewTabItem->Text + "(" + Document->ScriptFormID.ToString("X8") + ")";
+	NewTabItem->Tooltip = NewTabItem->Text + " (" + Document->ScriptFormID.ToString("X8") + ")";
 	NewTabItem->Image = Document->Dirty ? view::components::CommonIcons::Get()->UnsavedChanges : nullptr;
 
 	TabStrip->AddTab(NewTabItem);
@@ -697,9 +696,9 @@ model::IScriptDocument^ ScriptEditorController::ImportDocumentFromDisk(String^ D
 	{
 		NewOrExisting = Model->AllocateNewDocument();
 		LoadNewUnsavedScriptIntoDocument(NewOrExisting);
+		NewOrExisting->TextEditor->SetText(FileContents, true);
 	}
 
-	NewOrExisting->TextEditor->SetText(FileContents, true);
 	NewOrExisting->Dirty = true;
 
 	return NewOrExisting;
@@ -747,6 +746,7 @@ void ScriptEditorController::LoadExistingScriptIntoDocument(model::IScriptDocume
 		return;
 
 	Document->Initialize(ExistingScriptData.get(), ShouldUseAutoRecoveryFile(gcnew String(ExistingScriptData->EditorID)));
+	ValidateDocumentSyncingStatus(Document);
 }
 
 bool ScriptEditorController::SaveDocument(model::IScriptDocument^ Document, model::IScriptDocument::eSaveOperation SaveOperation)
@@ -759,11 +759,12 @@ bool ScriptEditorController::SaveDocument(model::IScriptDocument^ Document, mode
 	bool SaveResult = Document->Save(SaveOperation);
 	if (!SaveResult && BoundDocument == Document)
 	{
-		View->ShowNotification("Script compilation failed. Check the message log for more information.",
-							   view::components::CommonIcons::Get()->Error,
+		View->ShowNotification("Script compilation failed.\nCheck the message log for more information.",
+							   view::components::CommonIcons::Get()->ErrorLarge,
 							   3000);
 	}
 
+	ValidateDocumentSyncingStatus(Document);
 	return SaveResult;
 }
 
@@ -776,7 +777,10 @@ void ScriptEditorController::LoadNextScriptIntoDocument(model::IScriptDocument^ 
 
 	DisposibleDataAutoPtr<componentDLLInterface::ScriptData> Data(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetNextScriptInList(Document->ScriptNativeObject));
 	if (Data)
+	{
 		Document->Initialize(Data.get(), ShouldUseAutoRecoveryFile(gcnew String(Data->EditorID)));
+		ValidateDocumentSyncingStatus(Document);
+	}
 }
 
 void ScriptEditorController::LoadPreviousScriptIntoDocument(model::IScriptDocument^ Document)
@@ -788,7 +792,10 @@ void ScriptEditorController::LoadPreviousScriptIntoDocument(model::IScriptDocume
 
 	DisposibleDataAutoPtr<componentDLLInterface::ScriptData> Data(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreviousScriptInList(Document->ScriptNativeObject));
 	if (Data)
+	{
 		Document->Initialize(Data.get(), ShouldUseAutoRecoveryFile(gcnew String(Data->EditorID)));
+		ValidateDocumentSyncingStatus(Document);
+	}
 }
 
 bool ScriptEditorController::CloseAndRemoveDocument(model::IScriptDocument^ Document, bool% OutOperationCancelled)
@@ -824,8 +831,8 @@ void ScriptEditorController::ValidateDocumentSyncingStatus(model::IScriptDocumen
 	else if (BoundDocument != Document)
 		return;
 
-	View->ShowNotification("The current script is actively being synced from/to disk. Modifying it inside the script editor will cause inconsistent and unexpected behaviour.",
-						   view::components::CommonIcons::Get()->Warning,
+	View->ShowNotification("The current script is actively being synced from/to disk.\nModifying it inside the script editor will result in inconsistent and unexpected behaviour.",
+						   view::components::CommonIcons::Get()->WarningLarge,
 						   5000);
 }
 
@@ -1359,11 +1366,11 @@ void ScriptEditorController::ViewEventHandler_MainToolbarMenuView(view::ViewComp
 
 			if (GotTurnedOn)
 			{
-				View->ShowNotification("Displaying script preprocessor output. Certain actions are disabled in this mode.",
-									   view::components::CommonIcons::Get()->Info, 4000);
+				View->ShowNotification("Displaying script preprocessor output.\nCertain actions are disabled in this mode.",
+									   view::components::CommonIcons::Get()->InfoLarge, 4000);
 			}
 			else if (!Success)
-				View->ShowNotification("This operation cannot be performed until the unsaved changes are saved.", view::components::CommonIcons::Get()->Info, 4000);
+				View->ShowNotification("This operation cannot be performed until the unsaved changes are saved.", view::components::CommonIcons::Get()->BlockedLarge, 4000);
 		}
 
 		break;
@@ -1419,16 +1426,15 @@ void ScriptEditorController::ViewEventHandler_MainToolbarMenuTools(view::ViewCom
 	case view::eViewRole::MainToolbar_Tools_SanitiseScript:
 		if (!BoundDocument->SanitizeScriptText())
 		{
-			View->ShowNotification("Operation failed! Please fix all structural errors in the script before trying again.",
-								   view::components::CommonIcons::Get()->Error, 5000);
+			View->ShowNotification("Operation failed!\nPlease fix all structural errors in the script before trying again.",
+								   view::components::CommonIcons::Get()->ErrorLarge, 5000);
 		}
 
 		break;
 	case view::eViewRole::MainToolbar_Tools_AttachScript:
 		if (BoundDocument->UnsavedNewScript)
 		{
-			View->ShowNotification("Please save the current script first.",
-								   view::components::CommonIcons::Get()->Info, 3000);
+			View->ShowNotification("This operation cannot be performed until the unsaved changes are saved.", view::components::CommonIcons::Get()->BlockedLarge, 4000);
 			break;
 		}
 
@@ -1438,14 +1444,13 @@ void ScriptEditorController::ViewEventHandler_MainToolbarMenuTools(view::ViewCom
 	case view::eViewRole::MainToolbar_Tools_RecompileScriptDependencies:
 		if (BoundDocument->UnsavedNewScript)
 		{
-			View->ShowNotification("Please save the current script first.",
-								   view::components::CommonIcons::Get()->Info, 3000);
+			View->ShowNotification("This operation cannot be performed until the unsaved changes are saved.", view::components::CommonIcons::Get()->BlockedLarge, 4000);
 			break;
 		}
 
 		nativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileDependencies(CString(BoundDocument->ScriptEditorID).c_str());
-		View->ShowNotification("Operation complete!\n\nScript variables used as condition parameters will need to be corrected manually. The results have been logged to the console.",
-							   view::components::CommonIcons::Get()->Success, 6000);
+		View->ShowNotification("Operation complete!\nScript variables used as condition parameters will need to be corrected manually.\nThe results have been logged to the console.",
+							   view::components::CommonIcons::Get()->SuccessLarge, 6000);
 		break;
 	case view::eViewRole::MainToolbar_Tools_DocumentScript:
 		View->ShowNotification("Implement this, you!",
@@ -1530,8 +1535,8 @@ void ScriptEditorController::ViewEventHandler_MainToolbarMenuTools(view::ViewCom
 			break;
 
 		nativeWrapper::g_CSEInterfaceTable->ScriptEditor.RecompileAllScriptsInActiveFile();
-		View->ShowNotification("All scripts in the active plugin file have been recompiled. Results have been logged to the console.",
-							   view::components::CommonIcons::Get()->Info, 4000);
+		View->ShowNotification("All scripts in the active plugin file have been recompiled.\nResults have been logged to the console.",
+							   view::components::CommonIcons::Get()->SuccessLarge, 4000);
 		break;
 	}
 	case view::eViewRole::MainToolbar_Tools_DeleteScripts:
@@ -1548,7 +1553,7 @@ void ScriptEditorController::ViewEventHandler_MainToolbarMenuTools(view::ViewCom
 		if (DeletedScripts > 0)
 		{
 			View->ShowNotification("Marked " + DeletedScripts + " script(s) as deleted.",
-								   view::components::CommonIcons::Get()->Success, 4000);
+								   view::components::CommonIcons::Get()->SuccessLarge, 4000);
 		}
 
 		break;
@@ -1784,7 +1789,7 @@ void ScriptEditorController::ModelEventHandler_DocumentStateChanged(Object^ Send
 		TabItem->Text = E->EditorId;
 		if (TabItem->Text->Length == 0)
 			TabItem->Text = UnsavedScriptDisplayText;
-		TabItem->Tooltip = TabItem->Text + "(" + E->FormId.ToString("X8") + ")";
+		TabItem->Tooltip = TabItem->Text + " (" + E->FormId.ToString("X8") + ")";
 
 		if (Document == BoundDocument)
 		{
@@ -1826,7 +1831,7 @@ void ScriptEditorController::ModelEventHandler_DocumentStateChanged(Object^ Send
 		if (E->FindResults->Count > 0)
 			QueryLabel->Text = E->FindResults[0]->Query;
 		else
-			QueryLabel->Text = "--";
+			QueryLabel->Text = "-";
 
 		break;
 	}
@@ -1880,6 +1885,8 @@ System::Object^ ScriptTextAnnotationListLineNumberAspectGetter(Object^ E)
 {
 	auto Model = safe_cast<model::components::ScriptLineAnnotation^>(E);
 	if (Model == nullptr)
+		return nullptr;
+	else if (!Model->Valid)
 		return nullptr;
 
 	return Model->Line;
@@ -1998,6 +2005,7 @@ void ScriptEditorController::InitViewComponents()
 		BookmarksListView->AddColumn(ColumnText);
 	}
 
+	InputManager->RefreshViewComponentShortcutTexts();
 	ResetViewComponentsToUnboundState();
 }
 
@@ -2064,7 +2072,7 @@ ScriptEditorController::ScriptEditorController(model::IFactory^ ModelFactory, vi
 
 	DocumentNavigationHelper = gcnew components::DocumentNavigationHelper(ChildView);
 	FindReplaceHelper = gcnew components::FindReplaceHelper(ChildView);;
-	InputManager = gcnew components::InputManager(ChildView->GetComponentByRole(view::eViewRole::TextEditor_ContextMenu)->AsContextMenu());
+	InputManager = gcnew components::InputManager(ChildView);
 
 	ActiveDocumentActions = gcnew ActiveDocumentActionCollection;
 	ActiveDocumentActions->Copy->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_Copy);

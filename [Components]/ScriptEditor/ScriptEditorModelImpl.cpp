@@ -393,9 +393,11 @@ void ScriptDocument::ClearMessages(ScriptDiagnosticMessage::eMessageSource Sourc
 	}
 }
 
-void ScriptDocument::ClearBookmarks()
+void ScriptDocument::ClearBookmarks(bool MarkAsModified)
 {
 	Bookmarks->Clear();
+	if (MarkAsModified)
+		Dirty = true;
 	OnStateChangedBookmarks();
 }
 
@@ -475,6 +477,33 @@ bool ScriptDocument::AreLineBytecodeOffsetsValid()
 	return true;
 }
 
+void ScriptDocument::CacheBookmarksAndReset()
+{
+	BookmarksBuffer->Clear();
+
+	for each (auto Bookmark in Bookmarks)
+	{
+		Debug::Assert(Bookmark->Valid);
+		BookmarksBuffer->Add(gcnew Tuple<UInt32, String^>(Bookmark->Line, Bookmark->Text));
+	}
+
+	ClearBookmarks(false);
+}
+
+void ScriptDocument::RestoreCachedBookmarks()
+{
+	BeginBatchUpdate(eBatchUpdateSource::Bookmarks);
+	{
+		Debug::Assert(Bookmarks->Count == 0);
+
+		for each (auto Bookmark in BookmarksBuffer)
+			AddBookmark(Bookmark->Item1, Bookmark->Item2, false);
+	}
+	EndBatchUpdate(eBatchUpdateSource::Bookmarks);
+
+	BookmarksBuffer->Clear();
+}
+
 ScriptDocument::ScriptDocument()
 {
 	Type = IScriptDocument::eScriptType::Object;
@@ -491,6 +520,7 @@ ScriptDocument::ScriptDocument()
 	ActiveBatchUpdateSource = eBatchUpdateSource::None;
 	ActiveBatchUpdateCounter = 0;
 	LineBytecodeOffsets = gcnew List<UInt16>;
+	BookmarksBuffer = gcnew List<Tuple<UInt32, String^>^>;
 
 	BgAnalyzer = gcnew BackgroundSemanticAnalyzer(this);
 	Editor = gcnew textEditor::avalonEdit::AvalonEditTextEditor(this);
@@ -589,7 +619,7 @@ void ScriptDocument::Initialize(componentDLLInterface::ScriptData* ScriptData, b
 	ScriptType = safe_cast<IScriptDocument::eScriptType>(ScriptData->Type);
 
 	ClearMessages(ScriptDiagnosticMessage::eMessageSource::All, ScriptDiagnosticMessage::eMessageType::All);
-	ClearBookmarks();
+	ClearBookmarks(false);
 	ClearFindResults();
 
 	auto RawScriptText = gcnew String(ScriptData->Text);
@@ -600,6 +630,7 @@ void ScriptDocument::Initialize(componentDLLInterface::ScriptData* ScriptData, b
 		auto AutoRecoveryFile = gcnew ScriptTextAutoRecoveryCache(EditorID);
 		RawScriptText = AutoRecoveryFile->Read();
 		AutoRecoveryFile->Delete(false);
+
 	}
 
 	String^ ExtractedScriptText = "";
@@ -626,7 +657,7 @@ void ScriptDocument::Initialize(componentDLLInterface::ScriptData* ScriptData, b
 	}
 	EndBatchUpdate(eBatchUpdateSource::Bookmarks);
 	intellisense::IntelliSenseBackend::Get()->Refresh(false);
-	Dirty = UnsavedNewScript ? true : false;
+	Dirty = UnsavedNewScript || UseAutoRecoveryFile ? true : false;
 }
 
 bool ScriptDocument::Save(IScriptDocument::eSaveOperation SaveOperation)
@@ -679,6 +710,9 @@ List<ScriptDiagnosticMessage^>^ ScriptDocument::GetMessages(UInt32 Line, ScriptD
 
 	for each (auto Itr in Messages)
 	{
+		if (!Itr->Valid)
+			continue;
+
 		if (Itr->Line == Line)
 		{
 			bool MatchedSource = SourceFilter == ScriptDiagnosticMessage::eMessageSource::All || Itr->Source == SourceFilter;
@@ -697,6 +731,9 @@ UInt32 ScriptDocument::GetErrorCount(UInt32 Line)
 	UInt32 Count = 0;
 	for each (auto Itr in Messages)
 	{
+		if (!Itr->Valid)
+			continue;
+
 		if ((Itr->Line == 0 || Itr->Line == Line) && Itr->Type == ScriptDiagnosticMessage::eMessageType::Error)
 			++Count;
 	}
@@ -709,6 +746,9 @@ UInt32 ScriptDocument::GetWarningCount(UInt32 Line)
 	UInt32 Count = 0;
 	for each (auto Itr in Messages)
 	{
+		if (!Itr->Valid)
+			continue;
+
 		if ((Itr->Line == 0 || Itr->Line == Line) && Itr->Type == ScriptDiagnosticMessage::eMessageType::Warning)
 			++Count;
 	}
@@ -717,6 +757,11 @@ UInt32 ScriptDocument::GetWarningCount(UInt32 Line)
 }
 
 void ScriptDocument::AddBookmark(UInt32 Line, String^ BookmarkText)
+{
+	AddBookmark(Line, BookmarkText, true);
+}
+
+void ScriptDocument::AddBookmark(UInt32 Line, String^ BookmarkText, bool MarkAsModified)
 {
 	if (Line > TextEditor->LineCount)
 		Line = TextEditor->LineCount;
@@ -727,22 +772,29 @@ void ScriptDocument::AddBookmark(UInt32 Line, String^ BookmarkText)
 	auto LineAnchor = TextEditor->CreateLineAnchor(Line);
 	auto NewBookmark= gcnew ScriptBookmark(LineAnchor, BookmarkText->Replace("\t", ""));
 	Bookmarks->Add(NewBookmark);
+
+	if (MarkAsModified)
+		Dirty = true;
+
 	OnStateChangedBookmarks();
 }
 
-void ScriptDocument::RemoveBookmark(UInt32 Line, String^ BookmarkText)
+void ScriptDocument::RemoveBookmark(UInt32 Line, String^ BookmarkText, bool MarkAsModified)
 {
 	auto ToRemove = LookupBookmark(Line, BookmarkText);
 	if (ToRemove)
 	{
 		Bookmarks->Remove(ToRemove);
+		if (MarkAsModified)
+			Dirty = true;
+
 		OnStateChangedBookmarks();
 	}
 }
 
 void ScriptDocument::RemoveBookmark(ScriptBookmark^ Bookmark)
 {
-	RemoveBookmark(Bookmark->Line, Bookmark->Text);
+	RemoveBookmark(Bookmark->Line, Bookmark->Text, true);
 }
 
 List<ScriptBookmark^>^ ScriptDocument::GetBookmarks(UInt32 Line)
@@ -750,6 +802,9 @@ List<ScriptBookmark^>^ ScriptDocument::GetBookmarks(UInt32 Line)
 	auto OutBookmarks = gcnew List<ScriptBookmark^>;
 	for each (auto Itr in Bookmarks)
 	{
+		if (!Itr->Valid)
+			continue;
+
 		if (Itr->Line == Line)
 			OutBookmarks->Add(Itr);
 	}
@@ -762,6 +817,9 @@ UInt32 ScriptDocument::GetBookmarkCount(UInt32 Line)
 	UInt32 Count = 0;
 	for each (auto Itr in Bookmarks)
 	{
+		if (!Itr->Valid)
+			continue;
+
 		if (Itr->Line == Line)
 			++Count;
 	}
@@ -790,10 +848,19 @@ bool ScriptDocument::TogglePreprocessorOutput(bool Enabled)
 	Debug::Assert(TextEditor->DisplayingStaticText == !Enabled);
 
 	if (Enabled)
+	{
+		// cache bookmarks beforehand to prevent their invalidation
+		// due to the deletion of their text anchors
+		CacheBookmarksAndReset();
 		TextEditor->BeginDisplayingStaticText(PreprocessedScriptText);
+	}
 	else
+	{
 		TextEditor->EndDisplayingStaticText();
+		RestoreCachedBookmarks();
+	}
 
+	BackgroundAnalyzer->DoSynchronousAnalysis(true);
 	Editor->ToggleScriptBytecodeOffsetMargin(Enabled);
 	return true;
 }
@@ -827,7 +894,11 @@ bool ScriptDocument::SanitizeScriptText()
 
 	bool Result = Agent->SanitizeScriptText(Operation, gcnew obScriptParsing::Sanitizer::GetSanitizedIdentifier(GetSanitizedIdentifier));
 	if (Result)
+	{
+		CacheBookmarksAndReset();
 		TextEditor->SetText(Agent->Output, false);
+		RestoreCachedBookmarks();
+	}
 
 	return Result;
 }
@@ -851,7 +922,7 @@ bool ScriptDocument::LoadScriptTextFromDisk(String^ DiskFilePath)
 	try
 	{
 		auto FileContents = File::ReadAllText(DiskFilePath);
-		TextEditor->SetText(FileContents, false);
+		TextEditor->SetText(FileContents, true);
 		return true;
 	}
 	catch (Exception^ E)

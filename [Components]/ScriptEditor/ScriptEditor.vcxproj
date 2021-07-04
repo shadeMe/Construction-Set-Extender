@@ -358,7 +358,12 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\WebDestination\WebDestination_16x.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\WebURL\WebURL_16x.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Wizard\Wizard_16x.png" />
+    <Image Include="Images\blocked-yellow-large.png" />
+    <Image Include="Images\error-large.png" />
+    <Image Include="Images\info-large.png" />
+    <Image Include="Images\success-large.png" />
     <Image Include="Images\transparent_16.png" />
+    <Image Include="Images\warning-large.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

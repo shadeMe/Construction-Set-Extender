@@ -583,10 +583,11 @@ void ScriptEditorWorkspace::InitializeComponents()
 	// ToolbarMenuEdit
 	//
 	this->ToolbarMenuEdit->AutoExpandOnClick = true;
+	this->ToolbarMenuEdit->BeginGroup = true;
 	this->ToolbarMenuEdit->ImageFixedSize = System::Drawing::Size(12, 12);
 	this->ToolbarMenuEdit->ImagePaddingHorizontal = 15;
 	this->ToolbarMenuEdit->ImagePaddingVertical = 10;
-	this->ToolbarMenuEdit->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
+	this->ToolbarMenuEdit->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Center;
 	this->ToolbarMenuEdit->Name = L"ToolbarMenuEdit";
 	this->ToolbarMenuEdit->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(5) {
 		this->EditMenuFindReplace,
@@ -1988,6 +1989,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->ToolbarSaveScript->ImagePosition = DevComponents::DotNetBar::eImagePosition::Right;
 	this->ToolbarSaveScript->Name = L"ToolbarSaveScript";
 	this->ToolbarSaveScript->Text = L"Save Script";
+	this->ToolbarSaveScript->Tooltip = L"Save Script";
 	//
 	// EmptyWorkspacePanel
 	//
@@ -2123,11 +2125,11 @@ void ScriptEditorWorkspace::FinalizeComponents()
 	auto ImageResources =  gcnew ImageResourceManager("ScriptEditor.Icons");
 
 	auto NewTabButton = gcnew DevComponents::DotNetBar::ButtonItem();
-	NewTabButton->Name = L"NewTabButton";
 	NewTabButton->Text = L"New Tab...";
 	NewTabButton->Image = ImageResources->CreateImage("NewTab");
 	NewTabButton->Tooltip = L"New Tab";
 	NewTabButton->AutoExpandOnClick = true;
+	NewTabButton->ButtonStyle = eButtonStyle::Default;
 	NewTabButton->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 
 	auto NewTabNewScriptButton = gcnew DevComponents::DotNetBar::ButtonItem();
@@ -2348,7 +2350,8 @@ void ScriptEditorWorkspace::ShowNotification(String^ Message, Image^ Image, int 
 		DotNetBar::ToastNotification::CustomGlowColor = Color::FromArgb(75, AccentColor.R, AccentColor.G, AccentColor.B);
 	}
 
-	DotNetBar::ToastNotification::Show(this, Message, Image, DurationInMs, eToastGlowColor::Custom);
+	String^ WrappedMessage = "<div align=\"left\" valign=\"middle\" padding=\"10,0,0,0\">" + Message->Replace("\n", "<br/>") + "</div>";
+	DotNetBar::ToastNotification::Show(this, WrappedMessage, Image, DurationInMs, eToastGlowColor::Custom);
 }
 
 Forms::DialogResult ScriptEditorWorkspace::ShowMessageBox(String^ Message, MessageBoxButtons Buttons, MessageBoxIcon Icon)
@@ -2390,6 +2393,7 @@ void ScriptEditorWorkspace::Reveal(Rectangle InitialBounds)
 	{
 		auto ParentWindowHandle = safe_cast<IntPtr>(nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetMainWindowHandle());
 		this->ShowInTaskbar = false;
+		this->MinimizeBox = false;
 		this->Show(gcnew WindowHandleWrapper(ParentWindowHandle));
 	}
 	else

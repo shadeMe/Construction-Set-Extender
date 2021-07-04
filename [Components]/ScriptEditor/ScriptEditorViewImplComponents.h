@@ -113,6 +113,9 @@ ref class Button : public ViewComponent, IButton
 	CheckBoxX^ CheckBoxX;
 	eSourceType SourceType;
 	Object^ Tag_;
+	String^ TextBuffer;
+	String^ TooltipBuffer;
+	String^ ShortcutKeyBuffer;
 
 	EventHandler^ DelegateClick;
 	DotNetBarManager::PopupOpenEventHandler^ DelegatePopupOpen;
@@ -136,6 +139,9 @@ ref class Button : public ViewComponent, IButton
 	void SetterChecked(bool Value);
 	void SetterVisible(bool Value);
 	void SetterEnabled(bool Value);
+
+	void CombineTextAndShortcut();
+	void CombineTooltipAndShortcut();
 public:
 	Button(DotNetBar::ButtonItem^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);
 	Button(DotNetBar::ButtonX^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);

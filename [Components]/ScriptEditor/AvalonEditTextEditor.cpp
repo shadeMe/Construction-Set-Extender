@@ -1414,11 +1414,15 @@ void AvalonEditTextEditor::BackgroundAnalysis_AnalysisComplete(Object^ Sender, m
 
 	SemanticAnalysisCache = E->Result->Clone();
 
-	LineTracker->RemoveDeletedLineAnchors();
 	UpdateCodeFoldings();
 	UpdateSyntaxHighlighting(false);
 
 	RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::Event::SemanticAnalysisCompleted);
+}
+
+void AvalonEditTextEditor::LineTrackingManager_LineAnchorInvalidated(Object^ Sender, EventArgs^ E)
+{
+	OnLineAnchorInvalidated();
 }
 
 void AvalonEditTextEditor::TextField_VisualLineConstructionStarting(Object^ Sender, VisualLineConstructionStartEventArgs^ E)
@@ -1576,6 +1580,9 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	SemanticAnalysisCache = gcnew obScriptParsing::AnalysisData();
 
 	LineTracker = gcnew LineTrackingManager(TextField, ParentScriptDocument);
+	LineTrackingManagerLineAnchorInvalidatedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::LineTrackingManager_LineAnchorInvalidated);
+	LineTracker->LineAnchorInvalidated += LineTrackingManagerLineAnchorInvalidatedHandler;
+
 	IconBarMargin = gcnew DefaultIconMargin(TextField, ParentScriptDocument, WindowHandle);
 
 	if (preferences::SettingsHolder::Get()->Appearance->ShowIconMargin)
@@ -1684,6 +1691,7 @@ AvalonEditTextEditor::~AvalonEditTextEditor()
 	preferences::SettingsHolder::Get()->PreferencesChanged -= ScriptEditorPreferencesSavedHandler;
 	TextField->TextArea->TextView->VisualLineConstructionStarting -= TextFieldVisualLineConstructionStartingHandler;
 	InlineSearchPanel->SearchOptionsChanged -= SearchPanelSearchOptionsChangedHandler;
+	LineTracker->LineAnchorInvalidated -= LineTrackingManagerLineAnchorInvalidatedHandler;
 
 	SAFEDELETE_CLR(TextFieldTextChangedHandler);
 	SAFEDELETE_CLR(TextFieldCaretPositionChangedHandler);
@@ -1709,6 +1717,8 @@ AvalonEditTextEditor::~AvalonEditTextEditor()
 	SAFEDELETE_CLR(TextFieldVisualLineConstructionStartingHandler);
 	SAFEDELETE_CLR(SetTextAnimationCompletedHandler);
 	SAFEDELETE_CLR(SearchPanelSearchOptionsChangedHandler);
+	SAFEDELETE_CLR(LineTrackingManagerLineAnchorInvalidatedHandler);
+	SAFEDELETE_CLR(BackgroundAnalyzerAnalysisCompleteHandler);
 
 	TextFieldPanel->Children->Clear();
 	WPFHost->Child = nullptr;
@@ -2080,7 +2090,7 @@ bool AvalonEditTextEditor::InsertVariable(String^ VariableName, obScriptParsing:
 
 ILineAnchor^ AvalonEditTextEditor::CreateLineAnchor(UInt32 Line)
 {
-	return LineTracker->CreateLineAnchor(Line, false);
+	return LineTracker->CreateLineAnchor(Line, true);
 }
 
 void AvalonEditTextEditor::InvokeDefaultCopy()
@@ -2146,7 +2156,7 @@ void AvalonEditTextEditor::BeginDisplayingStaticText(String^ TextToDisplay)
 	TextField->Document->UndoStack->StartUndoGroup();
 	SetText(TextToDisplay, false);
 
-	// ### TODO clear all line anchors
+	LineTracker->ClearFindResultSegments();
 
 	TextFieldDisplayingStaticText = true;
 	OnStaticTextDisplayChanged();

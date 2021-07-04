@@ -681,6 +681,7 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 	Stack<ControlBlock^>^ BlockStack = gcnew Stack<ControlBlock^>();
 	Stack<ControlBlock^>^ IfStack = gcnew Stack<ControlBlock^>();
 	bool SaveDefinitionComments = false;
+	bool VariableDeclarationsParsed = false;
 
 	Name = "";
 	Description = "";
@@ -723,7 +724,9 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 			if (SaveDefinitionComments && Parser->GetFirstTokenType() == eScriptTokenType::Comment)
 			{
 				Description += ReadLine->Substring(Parser->Indices[0] + 1)->Trim() + "\n";
-				NextVariableLine = CurrentLine + 1;
+
+				if (!VariableDeclarationsParsed)
+					NextVariableLine = CurrentLine + 1;
 			}
 
 			String^ FirstToken = Parser->Tokens[0];
@@ -748,7 +751,8 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 				if (EncounteredProblem == false)
 					Name = SecondToken;
 
-				NextVariableLine = CurrentLine + 1;
+				if (!VariableDeclarationsParsed)
+					NextVariableLine = CurrentLine + 1;
 
 				break;
 			case eScriptTokenType::Variable:
@@ -784,13 +788,14 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 					if (EncounteredProblem == false)
 						Variables->Add(gcnew Variable(SecondToken, Variable::GetVariableDataType(FirstToken), Comment, CurrentLine));
 
-					NextVariableLine = CurrentLine + 1;
+					if (!VariableDeclarationsParsed)
+						NextVariableLine = CurrentLine + 1;
 				}
 
 				break;
 			case eScriptTokenType::Begin:
 				SaveDefinitionComments = false;
-				NextVariableLine = CurrentLine - 1;
+				VariableDeclarationsParsed = true;
 
 				if (Operations.HasFlag(eOperation::FillControlBlocks))
 				{

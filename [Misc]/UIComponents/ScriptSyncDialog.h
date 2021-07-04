@@ -86,6 +86,7 @@ namespace UIComponents {
 	private: DevComponents::DotNetBar::ButtonItem^ ToolbarSyncFromDisk;
 	private: DevComponents::DotNetBar::ButtonItem^ ToolbarOpenLog;
 	private: DevComponents::DotNetBar::ButtonItem^ ToolbarOpenSyncedFile;
+	private: System::Windows::Forms::Timer^ DeferredSelectionUpdateTimer;
 
 	private: System::ComponentModel::IContainer^ components;
 
@@ -102,6 +103,7 @@ namespace UIComponents {
 		/// </summary>
 		void InitializeComponent(void)
 		{
+			this->components = (gcnew System::ComponentModel::Container());
 			System::ComponentModel::ComponentResourceManager^ resources = (gcnew System::ComponentModel::ComponentResourceManager(ScriptSyncDialog::typeid));
 			this->ButtonOpenWorkingDir = (gcnew DevComponents::DotNetBar::ButtonX());
 			this->ColLastSyncTime = (gcnew BrightIdeasSoftware::OLVColumn());
@@ -131,6 +133,7 @@ namespace UIComponents {
 			this->ToolbarSyncFromDisk = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ToolbarOpenLog = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ToolbarOpenSyncedFile = (gcnew DevComponents::DotNetBar::ButtonItem());
+			this->DeferredSelectionUpdateTimer = (gcnew System::Windows::Forms::Timer(this->components));
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewSyncedScripts))->BeginInit();
 			this->GroupSyncSettings->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->NumericAutoSyncSeconds))->BeginInit();
@@ -180,7 +183,7 @@ namespace UIComponents {
 			// 
 			this->ListViewSyncedScripts->AllColumns->Add(this->ColScriptName);
 			this->ListViewSyncedScripts->AllColumns->Add(this->ColLastSyncTime);
-			this->ListViewSyncedScripts->BackColor = System::Drawing::Color::Black;
+			this->ListViewSyncedScripts->BackColor = System::Drawing::Color::White;
 			this->ListViewSyncedScripts->CellEditUseWholeCell = false;
 			this->ListViewSyncedScripts->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(2) {
 				this->ColScriptName,
@@ -188,6 +191,7 @@ namespace UIComponents {
 			});
 			this->ListViewSyncedScripts->Cursor = System::Windows::Forms::Cursors::Default;
 			this->ListViewSyncedScripts->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->ListViewSyncedScripts->ForeColor = System::Drawing::Color::Black;
 			this->ListViewSyncedScripts->FullRowSelect = true;
 			this->ListViewSyncedScripts->GridLines = true;
 			this->ListViewSyncedScripts->HideSelection = false;

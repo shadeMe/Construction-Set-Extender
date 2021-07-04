@@ -328,6 +328,7 @@ private: DevComponents::DotNetBar::ButtonX^ GetStartedButtonNewScript;
 			this->ContainerMainToolbar = (gcnew DevComponents::DotNetBar::Bar());
 			this->ToolbarNewScript = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ToolbarOpenScript = (gcnew DevComponents::DotNetBar::ButtonItem());
+			this->ToolbarSaveScript = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ToolbarSaveScriptDropdown = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ToolbarSaveScriptAndActivePlugin = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ToolbarSaveScriptNoCompile = (gcnew DevComponents::DotNetBar::ButtonItem());
@@ -347,13 +348,13 @@ private: DevComponents::DotNetBar::ButtonX^ GetStartedButtonNewScript;
 			this->EditMenuUncomment = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ToolbarMenuView = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ViewMenuPreprocessorOutputBytecodeOffsets = (gcnew DevComponents::DotNetBar::ButtonItem());
-			this->ViewMenuIconMargin = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ViewMenuMessages = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ViewMenuBookmarks = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ViewMenuOutline = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ViewMenuFindResults = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ViewMenuGlobalFindResults = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ViewMenuNavBreadcrumb = (gcnew DevComponents::DotNetBar::ButtonItem());
+			this->ViewMenuIconMargin = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ViewMenuDarkMode = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ToolbarMenuTools = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->ToolsMenuSanitiseScript = (gcnew DevComponents::DotNetBar::ButtonItem());
@@ -445,6 +446,9 @@ private: DevComponents::DotNetBar::ButtonX^ GetStartedButtonNewScript;
 			this->DockSiteCenter = (gcnew DevComponents::DotNetBar::DockSite());
 			this->CenterDockBar = (gcnew DevComponents::DotNetBar::Bar());
 			this->PanelDocumentContent = (gcnew System::Windows::Forms::Panel());
+			this->EmptyWorkspacePanel = (gcnew DevComponents::DotNetBar::PanelEx());
+			this->GetStartedButtonOpenScript = (gcnew DevComponents::DotNetBar::ButtonX());
+			this->GetStartedButtonNewScript = (gcnew DevComponents::DotNetBar::ButtonX());
 			this->ContextMenuProvider = (gcnew DevComponents::DotNetBar::ContextMenuBar());
 			this->ContextMenuTextEditor = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->TextEditorContextMenuCopy = (gcnew DevComponents::DotNetBar::ButtonItem());
@@ -456,10 +460,6 @@ private: DevComponents::DotNetBar::ButtonX^ GetStartedButtonNewScript;
 			this->StatusBarColumnNumber = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->StatusBarPreprocessorOutputFlag = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->StatusBarScriptBytecodeLength = (gcnew DevComponents::DotNetBar::CircularProgressItem());
-			this->ToolbarSaveScript = (gcnew DevComponents::DotNetBar::ButtonItem());
-			this->EmptyWorkspacePanel = (gcnew DevComponents::DotNetBar::PanelEx());
-			this->GetStartedButtonNewScript = (gcnew DevComponents::DotNetBar::ButtonX());
-			this->GetStartedButtonOpenScript = (gcnew DevComponents::DotNetBar::ButtonX());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MainTabStrip))->BeginInit();
 			this->MainTabStrip->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContainerMainToolbar))->BeginInit();
@@ -496,9 +496,9 @@ private: DevComponents::DotNetBar::ButtonX^ GetStartedButtonNewScript;
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->CenterDockBar))->BeginInit();
 			this->CenterDockBar->SuspendLayout();
 			this->PanelDocumentContent->SuspendLayout();
+			this->EmptyWorkspacePanel->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContextMenuProvider))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->StatusBar))->BeginInit();
-			this->EmptyWorkspacePanel->SuspendLayout();
 			this->SuspendLayout();
 			// 
 			// MainTabStrip
@@ -636,6 +636,16 @@ private: DevComponents::DotNetBar::ButtonX^ GetStartedButtonNewScript;
 			this->ToolbarOpenScript->Tooltip = L"Open Script";
 			this->ToolbarOpenScript->Click += gcnew System::EventHandler(this, &ScriptEditorWorkspace::ToolbarOpenScript_Click);
 			// 
+			// ToolbarSaveScript
+			// 
+			this->ToolbarSaveScript->BeginGroup = true;
+			this->ToolbarSaveScript->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolbarSaveScript.Image")));
+			this->ToolbarSaveScript->ImagePaddingHorizontal = 10;
+			this->ToolbarSaveScript->ImagePosition = DevComponents::DotNetBar::eImagePosition::Right;
+			this->ToolbarSaveScript->Name = L"ToolbarSaveScript";
+			this->ToolbarSaveScript->Text = L"Save Script";
+			this->ToolbarSaveScript->Tooltip = L"Save Script";
+			// 
 			// ToolbarSaveScriptDropdown
 			// 
 			this->ToolbarSaveScriptDropdown->AutoExpandOnClick = true;
@@ -730,10 +740,11 @@ private: DevComponents::DotNetBar::ButtonX^ GetStartedButtonNewScript;
 			// ToolbarMenuEdit
 			// 
 			this->ToolbarMenuEdit->AutoExpandOnClick = true;
+			this->ToolbarMenuEdit->BeginGroup = true;
 			this->ToolbarMenuEdit->ImageFixedSize = System::Drawing::Size(12, 12);
 			this->ToolbarMenuEdit->ImagePaddingHorizontal = 15;
 			this->ToolbarMenuEdit->ImagePaddingVertical = 10;
-			this->ToolbarMenuEdit->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
+			this->ToolbarMenuEdit->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Center;
 			this->ToolbarMenuEdit->Name = L"ToolbarMenuEdit";
 			this->ToolbarMenuEdit->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(5) {
 				this->EditMenuFindReplace,
@@ -796,11 +807,6 @@ private: DevComponents::DotNetBar::ButtonX^ GetStartedButtonNewScript;
 			this->ViewMenuPreprocessorOutputBytecodeOffsets->Name = L"ViewMenuPreprocessorOutputBytecodeOffsets";
 			this->ViewMenuPreprocessorOutputBytecodeOffsets->Text = L"&Preprocessed Script Text &amp;<br/>Script Bytecode Offsets";
 			// 
-			// ViewMenuIconMargin
-			// 
-			this->ViewMenuIconMargin->Name = L"ViewMenuIconMargin";
-			this->ViewMenuIconMargin->Text = L"&Icon Margin";
-			// 
 			// ViewMenuMessages
 			// 
 			this->ViewMenuMessages->BeginGroup = true;
@@ -839,6 +845,11 @@ private: DevComponents::DotNetBar::ButtonX^ GetStartedButtonNewScript;
 			this->ViewMenuNavBreadcrumb->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ViewMenuNavBreadcrumb.Image")));
 			this->ViewMenuNavBreadcrumb->Name = L"ViewMenuNavBreadcrumb";
 			this->ViewMenuNavBreadcrumb->Text = L"&Navigation Bar";
+			// 
+			// ViewMenuIconMargin
+			// 
+			this->ViewMenuIconMargin->Name = L"ViewMenuIconMargin";
+			this->ViewMenuIconMargin->Text = L"&Icon Margin";
 			// 
 			// ViewMenuDarkMode
 			// 
@@ -1997,6 +2008,57 @@ private: DevComponents::DotNetBar::ButtonX^ GetStartedButtonNewScript;
 			this->PanelDocumentContent->Size = System::Drawing::Size(572, 568);
 			this->PanelDocumentContent->TabIndex = 10;
 			// 
+			// EmptyWorkspacePanel
+			// 
+			this->EmptyWorkspacePanel->CanvasColor = System::Drawing::SystemColors::Control;
+			this->EmptyWorkspacePanel->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+			this->EmptyWorkspacePanel->Controls->Add(this->GetStartedButtonOpenScript);
+			this->EmptyWorkspacePanel->Controls->Add(this->GetStartedButtonNewScript);
+			this->EmptyWorkspacePanel->DisabledBackColor = System::Drawing::Color::Empty;
+			this->EmptyWorkspacePanel->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->EmptyWorkspacePanel->Location = System::Drawing::Point(0, 0);
+			this->EmptyWorkspacePanel->Name = L"EmptyWorkspacePanel";
+			this->EmptyWorkspacePanel->Size = System::Drawing::Size(572, 568);
+			this->EmptyWorkspacePanel->Style->Alignment = System::Drawing::StringAlignment::Center;
+			this->EmptyWorkspacePanel->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
+			this->EmptyWorkspacePanel->Style->Border = DevComponents::DotNetBar::eBorderType::SingleLine;
+			this->EmptyWorkspacePanel->Style->BorderColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBorder;
+			this->EmptyWorkspacePanel->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelText;
+			this->EmptyWorkspacePanel->Style->GradientAngle = 90;
+			this->EmptyWorkspacePanel->TabIndex = 5;
+			// 
+			// GetStartedButtonOpenScript
+			// 
+			this->GetStartedButtonOpenScript->AccessibleRole = System::Windows::Forms::AccessibleRole::PushButton;
+			this->GetStartedButtonOpenScript->Anchor = System::Windows::Forms::AnchorStyles::None;
+			this->GetStartedButtonOpenScript->ColorTable = DevComponents::DotNetBar::eButtonColor::OrangeWithBackground;
+			this->GetStartedButtonOpenScript->ImagePosition = DevComponents::DotNetBar::eImagePosition::Top;
+			this->GetStartedButtonOpenScript->ImageTextSpacing = 10;
+			this->GetStartedButtonOpenScript->Location = System::Drawing::Point(105, 299);
+			this->GetStartedButtonOpenScript->Name = L"GetStartedButtonOpenScript";
+			this->GetStartedButtonOpenScript->Size = System::Drawing::Size(365, 144);
+			this->GetStartedButtonOpenScript->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+			this->GetStartedButtonOpenScript->Symbol = L"";
+			this->GetStartedButtonOpenScript->SymbolSize = 20;
+			this->GetStartedButtonOpenScript->TabIndex = 1;
+			this->GetStartedButtonOpenScript->Text = L"<font size=\"+8\">Edit an Existing Script</font>";
+			// 
+			// GetStartedButtonNewScript
+			// 
+			this->GetStartedButtonNewScript->AccessibleRole = System::Windows::Forms::AccessibleRole::PushButton;
+			this->GetStartedButtonNewScript->Anchor = System::Windows::Forms::AnchorStyles::None;
+			this->GetStartedButtonNewScript->ColorTable = DevComponents::DotNetBar::eButtonColor::OrangeWithBackground;
+			this->GetStartedButtonNewScript->ImagePosition = DevComponents::DotNetBar::eImagePosition::Top;
+			this->GetStartedButtonNewScript->ImageTextSpacing = 10;
+			this->GetStartedButtonNewScript->Location = System::Drawing::Point(105, 133);
+			this->GetStartedButtonNewScript->Name = L"GetStartedButtonNewScript";
+			this->GetStartedButtonNewScript->Size = System::Drawing::Size(365, 144);
+			this->GetStartedButtonNewScript->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+			this->GetStartedButtonNewScript->Symbol = L"";
+			this->GetStartedButtonNewScript->SymbolSize = 20;
+			this->GetStartedButtonNewScript->TabIndex = 0;
+			this->GetStartedButtonNewScript->Text = L"<font size=\"+8\">Create a New Script</font>";
+			// 
 			// ContextMenuProvider
 			// 
 			this->ContextMenuProvider->AntiAlias = true;
@@ -2133,66 +2195,6 @@ private: DevComponents::DotNetBar::ButtonX^ GetStartedButtonNewScript;
 			this->StatusBarScriptBytecodeLength->TextPadding->Right = 5;
 			this->StatusBarScriptBytecodeLength->Visible = false;
 			// 
-			// ToolbarSaveScript
-			// 
-			this->ToolbarSaveScript->BeginGroup = true;
-			this->ToolbarSaveScript->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolbarSaveScript.Image")));
-			this->ToolbarSaveScript->ImagePaddingHorizontal = 10;
-			this->ToolbarSaveScript->ImagePosition = DevComponents::DotNetBar::eImagePosition::Right;
-			this->ToolbarSaveScript->Name = L"ToolbarSaveScript";
-			this->ToolbarSaveScript->Text = L"Save Script";
-			// 
-			// EmptyWorkspacePanel
-			// 
-			this->EmptyWorkspacePanel->CanvasColor = System::Drawing::SystemColors::Control;
-			this->EmptyWorkspacePanel->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-			this->EmptyWorkspacePanel->Controls->Add(this->GetStartedButtonOpenScript);
-			this->EmptyWorkspacePanel->Controls->Add(this->GetStartedButtonNewScript);
-			this->EmptyWorkspacePanel->DisabledBackColor = System::Drawing::Color::Empty;
-			this->EmptyWorkspacePanel->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->EmptyWorkspacePanel->Location = System::Drawing::Point(0, 0);
-			this->EmptyWorkspacePanel->Name = L"EmptyWorkspacePanel";
-			this->EmptyWorkspacePanel->Size = System::Drawing::Size(572, 568);
-			this->EmptyWorkspacePanel->Style->Alignment = System::Drawing::StringAlignment::Center;
-			this->EmptyWorkspacePanel->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBackground;
-			this->EmptyWorkspacePanel->Style->Border = DevComponents::DotNetBar::eBorderType::SingleLine;
-			this->EmptyWorkspacePanel->Style->BorderColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelBorder;
-			this->EmptyWorkspacePanel->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::PanelText;
-			this->EmptyWorkspacePanel->Style->GradientAngle = 90;
-			this->EmptyWorkspacePanel->TabIndex = 5;
-			// 
-			// GetStartedButtonNewScript
-			// 
-			this->GetStartedButtonNewScript->AccessibleRole = System::Windows::Forms::AccessibleRole::PushButton;
-			this->GetStartedButtonNewScript->Anchor = System::Windows::Forms::AnchorStyles::None;
-			this->GetStartedButtonNewScript->ColorTable = DevComponents::DotNetBar::eButtonColor::OrangeWithBackground;
-			this->GetStartedButtonNewScript->ImagePosition = DevComponents::DotNetBar::eImagePosition::Top;
-			this->GetStartedButtonNewScript->ImageTextSpacing = 10;
-			this->GetStartedButtonNewScript->Location = System::Drawing::Point(105, 133);
-			this->GetStartedButtonNewScript->Name = L"GetStartedButtonNewScript";
-			this->GetStartedButtonNewScript->Size = System::Drawing::Size(365, 144);
-			this->GetStartedButtonNewScript->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-			this->GetStartedButtonNewScript->Symbol = L"";
-			this->GetStartedButtonNewScript->SymbolSize = 20;
-			this->GetStartedButtonNewScript->TabIndex = 0;
-			this->GetStartedButtonNewScript->Text = L"<font size=\"+8\">Create a New Script</font>";
-			// 
-			// GetStartedButtonOpenScript
-			// 
-			this->GetStartedButtonOpenScript->AccessibleRole = System::Windows::Forms::AccessibleRole::PushButton;
-			this->GetStartedButtonOpenScript->Anchor = System::Windows::Forms::AnchorStyles::None;
-			this->GetStartedButtonOpenScript->ColorTable = DevComponents::DotNetBar::eButtonColor::OrangeWithBackground;
-			this->GetStartedButtonOpenScript->ImagePosition = DevComponents::DotNetBar::eImagePosition::Top;
-			this->GetStartedButtonOpenScript->ImageTextSpacing = 10;
-			this->GetStartedButtonOpenScript->Location = System::Drawing::Point(105, 299);
-			this->GetStartedButtonOpenScript->Name = L"GetStartedButtonOpenScript";
-			this->GetStartedButtonOpenScript->Size = System::Drawing::Size(365, 144);
-			this->GetStartedButtonOpenScript->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-			this->GetStartedButtonOpenScript->Symbol = L"";
-			this->GetStartedButtonOpenScript->SymbolSize = 20;
-			this->GetStartedButtonOpenScript->TabIndex = 1;
-			this->GetStartedButtonOpenScript->Text = L"<font size=\"+8\">Edit an Existing Script</font>";
-			// 
 			// ScriptEditorWorkspace
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -2252,9 +2254,9 @@ private: DevComponents::DotNetBar::ButtonX^ GetStartedButtonNewScript;
 			this->CenterDockBar->ResumeLayout(false);
 			this->CenterDockBar->PerformLayout();
 			this->PanelDocumentContent->ResumeLayout(false);
+			this->EmptyWorkspacePanel->ResumeLayout(false);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContextMenuProvider))->EndInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->StatusBar))->EndInit();
-			this->EmptyWorkspacePanel->ResumeLayout(false);
 			this->ResumeLayout(false);
 
 		}
