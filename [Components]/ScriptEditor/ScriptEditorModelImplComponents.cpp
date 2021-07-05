@@ -32,8 +32,8 @@ obScriptParsing::AnalysisData^ BackgroundSemanticAnalyzer::PerformBackgroundTask
 
 void BackgroundSemanticAnalyzer::Preferences_Saved(Object^ Sender, EventArgs^ E)
 {
-	if (Mode == ExecutionMode::IdleQueue)
-		SetExecutionMode(ExecutionMode::IdleQueue);		// re-init timer
+	if (Mode == eExecutionMode::IdleQueue)
+		SetExecutionMode(eExecutionMode::IdleQueue);		// re-init timer
 }
 
 void BackgroundSemanticAnalyzer::ParentScriptDocument_StateChanged(Object^ Sender, model::IScriptDocument::StateChangeEventArgs^ E)
@@ -44,16 +44,14 @@ void BackgroundSemanticAnalyzer::ParentScriptDocument_StateChanged(Object^ Sende
 
 void BackgroundSemanticAnalyzer::QueuePollTimer_Tick(Object^ Sender, EventArgs^ E)
 {
-	if (Paused)
-		return;
-
 	switch (Mode)
 	{
-	case ExecutionMode::IdlePoll:
+	case eExecutionMode::IdlePoll:
 		HandleActiveAnalysisTaskPolling();
 		break;
-	case ExecutionMode::IdleQueue:
-		HandleAnalysisTaskQueueing();
+	case eExecutionMode::IdleQueue:
+		if (!Paused)
+			HandleAnalysisTaskQueueing(false);
 		break;
 	}
 }
@@ -61,11 +59,10 @@ void BackgroundSemanticAnalyzer::QueuePollTimer_Tick(Object^ Sender, EventArgs^ 
 obScriptParsing::AnalysisData::Params^ BackgroundSemanticAnalyzer::GenerateAnalysisParameters()
 {
 	auto AnalysisParams = gcnew obScriptParsing::AnalysisData::Params;
-
-	bool Throwaway = false;
-	AnalysisParams->ScriptText = ParentScriptDocument->ScriptText;
-	if (AnalysisParams->ScriptText->Length == 0)
+	if (ParentScriptDocument->ScriptText->Length == 0)
 		return AnalysisParams;
+
+	AnalysisParams->ScriptText = ParentScriptDocument->ScriptText;
 
 	switch (ParentScriptDocument->ScriptType)
 	{
@@ -93,8 +90,7 @@ obScriptParsing::AnalysisData::Params^ BackgroundSemanticAnalyzer::GenerateAnaly
 	if (preferences::SettingsHolder::Get()->Validator->NoQuestVariableRefCounting)
 		AnalysisParams->Ops = AnalysisParams->Ops | obScriptParsing::AnalysisData::eOperation::SuppressQuestVariableRefCount;
 
-	AnalysisParams->ScriptCommandIdentifiers = intellisense::IntelliSenseBackend::Get()->CreateIndentifierSnapshot(
-		intellisense::eDatabaseLookupFilter::Command);
+	AnalysisParams->ScriptCommandIdentifiers = intellisense::IntelliSenseBackend::Get()->CreateIndentifierSnapshot(intellisense::eDatabaseLookupFilter::Command);
 
 	auto Filter = intellisense::eDatabaseLookupFilter::All & ~intellisense::eDatabaseLookupFilter::Snippet;
 	Filter = Filter & ~intellisense::eDatabaseLookupFilter::Command;
@@ -103,11 +99,11 @@ obScriptParsing::AnalysisData::Params^ BackgroundSemanticAnalyzer::GenerateAnaly
 	return AnalysisParams;
 }
 
-bool BackgroundSemanticAnalyzer::QueueBackgroundTask()
+bool BackgroundSemanticAnalyzer::QueueBackgroundTask(bool Force)
 {
-	if (Paused)
+	if (!Force && Paused)
 		return false;
-	else if (!ModificationsSinceLastAnalysis)
+	else if (!Force && !ModificationsSinceLastAnalysis)
 		return false;
 
 	auto AnalysisParams = GenerateAnalysisParameters();
@@ -120,17 +116,19 @@ bool BackgroundSemanticAnalyzer::QueueBackgroundTask()
 	return true;
 }
 
-void BackgroundSemanticAnalyzer::SetExecutionMode(ExecutionMode Mode)
+void BackgroundSemanticAnalyzer::SetExecutionMode(eExecutionMode Mode)
 {
+	this->Mode = Mode;
+
 	switch (Mode)
 	{
-	case ExecutionMode::IdlePoll:
+	case eExecutionMode::IdlePoll:
 		QueuePollTimer->Interval = kTimerPollInterval;
 		QueuePollTimer->Stop();
 		QueuePollTimer->Start();
 
 		break;
-	case ExecutionMode::IdleQueue:
+	case eExecutionMode::IdleQueue:
 		QueuePollTimer->Interval = preferences::SettingsHolder::Get()->IntelliSense->BackgroundAnalysisInterval * 1000;
 		QueuePollTimer->Stop();
 		QueuePollTimer->Start();
@@ -140,21 +138,19 @@ void BackgroundSemanticAnalyzer::SetExecutionMode(ExecutionMode Mode)
 		break;
 
 	}
-
-	this->Mode = Mode;
 }
 
-bool BackgroundSemanticAnalyzer::HandleAnalysisTaskQueueing()
+bool BackgroundSemanticAnalyzer::HandleAnalysisTaskQueueing(bool Force)
 {
 	Debug::Assert(ActiveAnalysisTask == nullptr);
 
-	if ((DateTime::Now - LastAnalysisTimestamp).TotalMilliseconds < QueuePollTimer->Interval)
+	if (!Force && (DateTime::Now - LastAnalysisTimestamp).TotalMilliseconds < QueuePollTimer->Interval)
 		return false;
 
-	if (!QueueBackgroundTask())
+	if (!QueueBackgroundTask(Force))
 		return false;
 
-	SetExecutionMode(ExecutionMode::IdlePoll);
+	SetExecutionMode(eExecutionMode::IdlePoll);
 	return true;
 }
 
@@ -180,7 +176,7 @@ bool BackgroundSemanticAnalyzer::HandleActiveAnalysisTaskPolling()
 	LastAnalysisTimestamp = DateTime::Now;
 	ModificationsSinceLastAnalysis = false;
 
-	SetExecutionMode(ExecutionMode::IdleQueue);
+	SetExecutionMode(eExecutionMode::IdleQueue);
 
 	if (!Error)
 		SemanticAnalysisComplete(this, gcnew IBackgroundSemanticAnalyzer::AnalysisCompleteEventArgs(LastAnalysisData, true));
@@ -200,7 +196,7 @@ BackgroundSemanticAnalyzer::BackgroundSemanticAnalyzer(model::IScriptDocument^ P
 	LastAnalysisTimestamp = DateTime::Now;
 	LastAnalysisData = nullptr;
 	ModificationsSinceLastAnalysis = false;
-	Mode = ExecutionMode::IdleQueue;
+	Mode = eExecutionMode::IdleQueue;
 	Paused = true;
 
 	PreferencesChangedHandler = gcnew EventHandler(this, &BackgroundSemanticAnalyzer::Preferences_Saved);
@@ -214,7 +210,7 @@ BackgroundSemanticAnalyzer::BackgroundSemanticAnalyzer(model::IScriptDocument^ P
 
 BackgroundSemanticAnalyzer::~BackgroundSemanticAnalyzer()
 {
-	WaitForBackgroundTask();
+	CleanupActiveBgTask();
 	QueuePollTimer->Stop();
 
 	preferences::SettingsHolder::Get()->PreferencesChanged -= PreferencesChangedHandler;
@@ -232,7 +228,7 @@ void BackgroundSemanticAnalyzer::Pause()
 {
 	Debug::Assert(Paused == false);
 
-	WaitForBackgroundTask();
+	CleanupActiveBgTask();
 	QueuePollTimer->Stop();
 	Paused = true;
 }
@@ -245,13 +241,15 @@ void BackgroundSemanticAnalyzer::Resume()
 	QueuePollTimer->Start();
 }
 
-void BackgroundSemanticAnalyzer::WaitForBackgroundTask()
+void BackgroundSemanticAnalyzer::CleanupActiveBgTask()
 {
-	if (ActiveAnalysisTask)
-	{
-		ActiveAnalysisTask->Wait();
-		HandleActiveAnalysisTaskPolling();
-	}
+	if (ActiveAnalysisTask == nullptr)
+		return;
+
+	ActiveAnalysisTask = nullptr;
+	LastAnalysisTimestamp = DateTime::Now;
+	ModificationsSinceLastAnalysis = false;
+	SetExecutionMode(eExecutionMode::IdleQueue);
 }
 
 obScriptParsing::AnalysisData^ BackgroundSemanticAnalyzer::DoSynchronousAnalysis(bool RaiseCompletionEvent)
@@ -267,6 +265,14 @@ obScriptParsing::AnalysisData^ BackgroundSemanticAnalyzer::DoSynchronousAnalysis
 		SemanticAnalysisComplete(this, gcnew IBackgroundSemanticAnalyzer::AnalysisCompleteEventArgs(AnalysisResult, false));
 
 	return AnalysisResult;
+}
+
+void BackgroundSemanticAnalyzer::QueueImmediaterBgAnalysis()
+{
+	if (ActiveAnalysisTask)
+		return;
+
+	HandleAnalysisTaskQueueing(true);
 }
 
 void NavigationHelper::ParentScriptDocument_LineChanged(Object^ Sender, EventArgs^ E)

@@ -75,6 +75,7 @@ public:
 ref class Form : public ViewComponent, IForm
 {
 	Forms::Form^ Source;
+	int UpdateCounter;
 	CancelEventHandler^ DelegateClosing;
 	KeyEventHandler^ DelegateKeyDown;
 
@@ -454,6 +455,8 @@ ref class Container : public ViewComponent, IContainer
 public:
 	Container(Control^ Source, eViewRole ViewRole);
 	virtual ~Container();
+
+	ImplPropertySimple(bool, Visible, Source->Visible);
 
 	virtual void AddControl(Control^ Control);
 	virtual void RemoveControl(Control^ Control);

@@ -23,7 +23,7 @@ ref class BackgroundSemanticAnalyzer : public model::components::IBackgroundSema
 {
 	static const UInt32 kTimerPollInterval = 100;	// in ms
 
-	static enum class ExecutionMode
+	static enum class eExecutionMode
 	{
 		IdlePoll,
 		IdleQueue,
@@ -37,7 +37,7 @@ ref class BackgroundSemanticAnalyzer : public model::components::IBackgroundSema
 	obScriptParsing::AnalysisData^ LastAnalysisData;
 	DateTime LastAnalysisTimestamp;
 	bool ModificationsSinceLastAnalysis;
-	ExecutionMode Mode;
+	eExecutionMode Mode;
 	bool Paused;
 
 	EventHandler^ PreferencesChangedHandler;
@@ -51,10 +51,10 @@ ref class BackgroundSemanticAnalyzer : public model::components::IBackgroundSema
 	void QueuePollTimer_Tick(Object^ Sender, EventArgs^ E);
 
 	obScriptParsing::AnalysisData::Params^ GenerateAnalysisParameters();
-	bool QueueBackgroundTask();
-	void SetExecutionMode(ExecutionMode Mode);
+	bool QueueBackgroundTask(bool Force);
+	void SetExecutionMode(eExecutionMode Mode);
 
-	bool HandleAnalysisTaskQueueing();
+	bool HandleAnalysisTaskQueueing(bool Force);
 	bool HandleActiveAnalysisTaskPolling();
 public:
 	BackgroundSemanticAnalyzer(model::IScriptDocument^ ParentScriptDocument);
@@ -64,10 +64,11 @@ public:
 
 	virtual event IBackgroundSemanticAnalyzer::AnalysisCompleteEventHandler^ SemanticAnalysisComplete;
 
-	void WaitForBackgroundTask();
+	void CleanupActiveBgTask();
 	virtual void Pause();
 	virtual void Resume();
 	virtual obScriptParsing::AnalysisData^ DoSynchronousAnalysis(bool RaiseCompletionEvent);
+	virtual void QueueImmediaterBgAnalysis();
 };
 
 

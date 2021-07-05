@@ -1750,10 +1750,9 @@ AvalonEditTextEditor::~AvalonEditTextEditor()
 
 void AvalonEditTextEditor::UpdateSyntaxHighlighting(bool Regenerate)
 {
-	delete TextField->SyntaxHighlighting;
+	SAFEDELETE_CLR(TextField->SyntaxHighlighting);
 	TextField->SyntaxHighlighting = CreateSyntaxHighlightDefinitions(Regenerate);
 }
-
 
 void AvalonEditTextEditor::Bind()
 {
@@ -1761,6 +1760,9 @@ void AvalonEditTextEditor::Bind()
 	ScrollBarSyncTimer->Start();
 	FocusTextArea();
 	ScrollToCaret();
+
+	if (!SemanticAnalysisData->Valid)
+		ParentScriptDocument->BackgroundAnalyzer->QueueImmediaterBgAnalysis();
 }
 
 void AvalonEditTextEditor::Unbind()
@@ -1804,7 +1806,9 @@ void AvalonEditTextEditor::SetText(String^ Text, bool ResetUndoStack)
 		SetSelectionLength(0);
 	}
 
-	ParentScriptDocument->BackgroundAnalyzer->DoSynchronousAnalysis(true);
+	if (ActivatedInView)
+		ParentScriptDocument->BackgroundAnalyzer->QueueImmediaterBgAnalysis();
+
 	OnTextUpdated();
 }
 

@@ -644,9 +644,18 @@ AnalysisData::UserMessage::UserMessage(UInt32 Line, String^ Message, bool Critic
 {
 }
 
+AnalysisData::Params::Params()
+{
+	ScriptText = "";
+	Type = eScriptType::None;
+	Ops = eOperation::None;
+	ScriptCommandIdentifiers = gcnew System::Collections::Generic::HashSet<String^>;
+	FormIdentifiers = gcnew System::Collections::Generic::HashSet<String^>;
+}
+
 AnalysisData::AnalysisData()
 {
-	Name = "Unknown";
+	Name = "";
 	Description = "";
 	Variables = gcnew List<Variable^>();
 	NextVariableLine = 0;

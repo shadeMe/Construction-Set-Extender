@@ -176,6 +176,7 @@ Form::Form(Forms::Form^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ Ev
 	: ViewComponent(eComponentType::Form, ViewRole, EventRouter)
 {
 	this->Source = Source;
+	UpdateCounter = 0;
 
 	DelegateClosing = gcnew CancelEventHandler(this, &Form::Handler_Closing);
 	DelegateKeyDown = gcnew KeyEventHandler(this, &Form::Handler_KeyDown);
@@ -213,15 +214,26 @@ void Form::Bounds::set(Rectangle v)
 
 void Form::BeginUpdate()
 {
-	Source->SuspendLayout();
-	nativeWrapper::SetControlRedraw(Source, false);
+	Debug::Assert(UpdateCounter >= 0);
+
+	if (UpdateCounter++ == 0)
+	{
+		Source->SuspendLayout();
+		nativeWrapper::SetControlRedraw(Source, false);
+	}
 }
 
 void Form::EndUpdate()
 {
-	nativeWrapper::SetControlRedraw(Source, true);
-	Source->ResumeLayout(false);
-	Source->Refresh();
+	--UpdateCounter;
+	Debug::Assert(UpdateCounter >= 0);
+
+	if (UpdateCounter == 0)
+	{
+		nativeWrapper::SetControlRedraw(Source, true);
+		Source->ResumeLayout(false);
+		Source->Refresh();
+	}
 }
 
 void Form::Redraw()
@@ -511,6 +523,9 @@ void Button::CombineTextAndShortcut()
 void Button::CombineTooltipAndShortcut()
 {
 	Debug::Assert(SourceType != eSourceType::CheckBoxX);
+
+	if (TooltipBuffer->Length == 0)
+		return;
 
 	String^ FinalText = TooltipBuffer + " (" + ShortcutKeyBuffer + ")";
 	if (ShortcutKeyBuffer->Length == 0)

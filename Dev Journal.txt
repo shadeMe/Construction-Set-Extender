@@ -58,7 +58,6 @@ SE		---->
 
 	IMMEDIATE		=
 
-
 	BUGFIX			=
 		> The font selector in the preferences dialog is bugged (works in 10.0)
 		> Editor doesn't acquire focus after switching scripts/on opening and general focus related wonkiness

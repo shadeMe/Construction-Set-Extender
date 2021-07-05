@@ -860,7 +860,6 @@ bool ScriptDocument::TogglePreprocessorOutput(bool Enabled)
 		RestoreCachedBookmarks();
 	}
 
-	BackgroundAnalyzer->DoSynchronousAnalysis(true);
 	Editor->ToggleScriptBytecodeOffsetMargin(Enabled);
 	return true;
 }

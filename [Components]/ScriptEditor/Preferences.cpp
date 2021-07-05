@@ -200,7 +200,6 @@ SettingsGroup^ SettingsGroup::Clone()
 	return safe_cast<SettingsGroup^>(this->MemberwiseClone());
 }
 
-
 bool GeneralSettings::Validate(SettingsGroup^ OldValue, String^% OutMessage)
 {
 	bool Success = true;
@@ -651,12 +650,14 @@ PreferencesDialog::PreferencesDialog()
 	CurrentSelectionSnapshot = nullptr;
 
 	InitializeComponent();
+	PropertyGrid->GridLinesColor = DevComponents::DotNetBar::StyleManager::MetroColorGeneratorParameters.CanvasColor;
+
 	if (PopulateCategories() == false)
 	{
 		MessageBox::Show("The preferences dialog couldn't be initialized. Check the console for more information.",
-							view::IScriptEditorView::MainWindowDefaultTitle,
-							MessageBoxButtons::OK,
-							MessageBoxIcon::Error);
+						 view::IScriptEditorView::MainWindowDefaultTitle,
+						 MessageBoxButtons::OK,
+						 MessageBoxIcon::Error);
 		this->Close();
 		return;
 	}
@@ -676,7 +677,6 @@ PreferencesDialog::PreferencesDialog()
 	Debug::Assert(ActiveDialog == nullptr);
 	ActiveDialog = this;
 
-	this->Hide();
 	this->ShowDialog();
 
 	// We need to instantiate these classes explicitly as the linker

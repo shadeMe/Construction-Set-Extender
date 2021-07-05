@@ -217,8 +217,6 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->ToolsMenuSanitiseScript = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->ToolsMenuAttachScript = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->ToolsMenuCompileDepends = (gcnew DevComponents::DotNetBar::ButtonItem());
-	this->ToolsMenuDocumentScript = (gcnew DevComponents::DotNetBar::ButtonItem());
-	this->ToolsMenuModifyVarIndices = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->ToolsMenuImport = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->MenuImportCurrentTab = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->MenuImportMultipleTabs = (gcnew DevComponents::DotNetBar::ButtonItem());
@@ -703,9 +701,9 @@ void ScriptEditorWorkspace::InitializeComponents()
 	//
 	this->ToolbarMenuTools->AutoExpandOnClick = true;
 	this->ToolbarMenuTools->Name = L"ToolbarMenuTools";
-	this->ToolbarMenuTools->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(12) {
+	this->ToolbarMenuTools->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(10) {
 		this->ToolsMenuSanitiseScript,
-			this->ToolsMenuAttachScript, this->ToolsMenuCompileDepends, this->ToolsMenuDocumentScript, this->ToolsMenuModifyVarIndices, this->ToolsMenuImport,
+			this->ToolsMenuAttachScript, this->ToolsMenuCompileDepends, this->ToolsMenuImport,
 			this->ToolsMenuExport, this->ToolsMenuCompileActiveFileScripts, this->ToolsMenuDeleteScripts, this->ToolsMenuScriptSync, this->ToolsMenuCodeSnippets,
 			this->ToolsMenuPreferences
 	});
@@ -728,19 +726,6 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->ToolsMenuCompileDepends->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolsMenuCompileDepends.Image")));
 	this->ToolsMenuCompileDepends->Name = L"ToolsMenuCompileDepends";
 	this->ToolsMenuCompileDepends->Text = L"Recompile Script &Dependencies";
-	//
-	// ToolsMenuDocumentScript
-	//
-	this->ToolsMenuDocumentScript->BeginGroup = true;
-	this->ToolsMenuDocumentScript->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolsMenuDocumentScript.Image")));
-	this->ToolsMenuDocumentScript->Name = L"ToolsMenuDocumentScript";
-	this->ToolsMenuDocumentScript->Text = L"Doc&ument Script...";
-	//
-	// ToolsMenuModifyVarIndices
-	//
-	this->ToolsMenuModifyVarIndices->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"ToolsMenuModifyVarIndices.Image")));
-	this->ToolsMenuModifyVarIndices->Name = L"ToolsMenuModifyVarIndices";
-	this->ToolsMenuModifyVarIndices->Text = L"Modif&y Variable Indices...";
 	//
 	// ToolsMenuImport
 	//
@@ -2047,6 +2032,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 	this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 	this->ClientSize = System::Drawing::Size(1030, 890);
+	this->StartPosition = System::Windows::Forms::FormStartPosition::Manual;
 	this->Controls->Add(this->DockSiteCenter);
 	this->Controls->Add(this->DockSiteRightEx);
 	this->Controls->Add(this->DockSiteLeftEx);
@@ -2121,6 +2107,8 @@ void ScriptEditorWorkspace::FinalizeComponents()
 	MainTabStrip->Tabs->Clear();
 	MainTabStrip->Controls->Remove(this->DummySuperTabControlPanel1);
 	MainTabStrip->Controls->Remove(this->DummySuperTabControlPanel2);
+	MainTabStrip->TabAlignment = eTabStripAlignment::Left;
+	MainTabStrip->Dock = DockStyle::Left;
 
 	auto ImageResources =  gcnew ImageResourceManager("ScriptEditor.Icons");
 
@@ -2205,8 +2193,6 @@ void ScriptEditorWorkspace::InitializeViewComponents()
 	SetupViewComponentButton(ToolsMenuSanitiseScript, eViewRole::MainToolbar_Tools_SanitiseScript);
 	SetupViewComponentButton(ToolsMenuAttachScript, eViewRole::MainToolbar_Tools_AttachScript);
 	SetupViewComponentButton(ToolsMenuCompileDepends, eViewRole::MainToolbar_Tools_RecompileScriptDependencies);
-	SetupViewComponentButton(ToolsMenuDocumentScript, eViewRole::MainToolbar_Tools_DocumentScript);
-	SetupViewComponentButton(ToolsMenuModifyVarIndices, eViewRole::MainToolbar_Tools_ModifyVariableIndices);
 
 	SetupViewComponentButton(MenuImportCurrentTab, eViewRole::MainToolbar_Tools_Import_IntoCurrentScript);
 	SetupViewComponentButton(MenuImportMultipleTabs, eViewRole::MainToolbar_Tools_Import_IntoTabs);
@@ -2387,6 +2373,7 @@ List<String^>^ ScriptEditorWorkspace::SelectExistingScripts(String^ DefaultSelec
 
 void ScriptEditorWorkspace::Reveal(Rectangle InitialBounds)
 {
+	this->Location = Drawing::Point(InitialBounds.Left, InitialBounds.Top);
 	this->Size = Drawing::Size(InitialBounds.Width, InitialBounds.Height);
 
 	if (preferences::SettingsHolder::Get()->General->HideInTaskbar)
@@ -2398,8 +2385,6 @@ void ScriptEditorWorkspace::Reveal(Rectangle InitialBounds)
 	}
 	else
 		this->Show();
-
-	this->Location = Drawing::Point(InitialBounds.Left, InitialBounds.Top);
 
 	this->Focus();
 	this->BringToFront();

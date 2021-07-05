@@ -251,7 +251,11 @@ ref struct AnalysisData
 
 	property bool HasCriticalMessages
 	{
-		virtual bool get() { return GetHasCriticalMessages(); }
+		bool get() { return GetHasCriticalMessages(); }
+	}
+	property bool Valid
+	{
+		bool get() { return Name->Length != 0; }
 	}
 
 	[Flags]
@@ -277,14 +281,7 @@ ref struct AnalysisData
 		property System::Collections::Generic::HashSet<String^>^ ScriptCommandIdentifiers;
 		property System::Collections::Generic::HashSet<String^>^ FormIdentifiers;
 
-		Params()
-		{
-			ScriptText = "";
-			Type = eScriptType::None;
-			Ops = eOperation::None;
-			ScriptCommandIdentifiers = gcnew System::Collections::Generic::HashSet<String^>;
-			FormIdentifiers = gcnew System::Collections::Generic::HashSet<String^>;
-		}
+		Params();
 	};
 
 	AnalysisData();

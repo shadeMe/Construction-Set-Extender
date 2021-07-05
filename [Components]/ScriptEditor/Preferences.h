@@ -210,7 +210,7 @@ ref struct AppearanceSettings : public SettingsGroup
 	[Category("General")]
 	[Description("Default text font")]
 	//[Editor(CustomFontEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
-	property Font^ TextFont;
+	property Drawing::Font^ TextFont;
 
 	[Category("General")]
 	[Description("Word wrap text")]
@@ -535,7 +535,7 @@ ref struct AppearanceSettings : public SettingsGroup
 	AppearanceSettings()
 	{
 		TabSize = 4;
-		TextFont = gcnew Font("Segoe UI", 12);
+		TextFont = Control::DefaultFont;
 		WordWrap = false;
 		ShowTabs = false;
 		ShowSpaces = false;

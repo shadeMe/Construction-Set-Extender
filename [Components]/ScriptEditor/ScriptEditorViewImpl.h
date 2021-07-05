@@ -65,8 +65,6 @@ ref class ScriptEditorWorkspace : public MetroForm, IScriptEditorView
 	DevComponents::DotNetBar::ButtonItem^ ToolsMenuSanitiseScript;
 	DevComponents::DotNetBar::ButtonItem^ ToolsMenuAttachScript;
 	DevComponents::DotNetBar::ButtonItem^ ToolsMenuCompileDepends;
-	DevComponents::DotNetBar::ButtonItem^ ToolsMenuDocumentScript;
-	DevComponents::DotNetBar::ButtonItem^ ToolsMenuModifyVarIndices;
 	DevComponents::DotNetBar::ButtonItem^ TextEditorContextMenuAddVar;
 	DevComponents::DotNetBar::ButtonItem^ MenuAddVarInteger;
 	DevComponents::DotNetBar::ButtonItem^ MenuAddVarFloat;

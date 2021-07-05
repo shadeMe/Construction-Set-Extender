@@ -281,9 +281,8 @@ protected:
 
 	static Windows::Media::Imaging::BitmapSource^ GetIconSource();
 
-	ref class AdornmentData
+	ref struct AdornmentData
 	{
-	public:
 		UInt32 JumpLine;
 		AvalonEditTextEditor^ Parent;
 	};

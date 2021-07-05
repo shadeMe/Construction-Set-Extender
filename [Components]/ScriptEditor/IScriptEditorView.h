@@ -350,6 +350,8 @@ interface class ICrumbBar : public IViewComponent
 
 interface class IContainer : public IViewComponent
 {
+	property bool Visible;
+
 	void AddControl(Control^ Control);
 	void RemoveControl(Control^ Control);
 	void Invalidate();
@@ -469,8 +471,6 @@ public enum class eViewRole
 	MainToolbar_Tools_SanitiseScript,
 	MainToolbar_Tools_AttachScript,
 	MainToolbar_Tools_RecompileScriptDependencies,
-	MainToolbar_Tools_DocumentScript,
-	MainToolbar_Tools_ModifyVariableIndices,
 
 	MainToolbar_Tools_Import_IntoCurrentScript,
 	MainToolbar_Tools_Import_IntoTabs,

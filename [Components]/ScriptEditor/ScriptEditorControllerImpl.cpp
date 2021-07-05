@@ -314,6 +314,7 @@ void ScriptEditorController::SetBoundDocument(model::IScriptDocument^ Document)
 
 	BoundDocument = Document;
 
+	View->GetComponentByRole(view::eViewRole::TextEditor_ViewPortContainer)->AsContainer()->AddControl(BoundDocument->TextEditor->Container);
 	BoundDocument->TextEditor->Container->Visible = true;
 	BoundDocument->TextEditor->Container->BringToFront();
 	BoundDocument->TextEditor->Container->Focus();
@@ -322,9 +323,9 @@ void ScriptEditorController::SetBoundDocument(model::IScriptDocument^ Document)
 	BoundDocument->TextEditor->MouseClick += DelegateModelMouseClick;
 	BoundDocument->NavigationHelper->NavigationChanged += DelegateModelNavigationChanged;
 
+	BoundDocument->BackgroundAnalyzer->Resume();
 	BoundDocument->IntelliSenseModel->Bind(View->IntelliSenseView);
 	BoundDocument->TextEditor->Bind();
-	BoundDocument->BackgroundAnalyzer->Resume();
 
 	BoundDocument->PushStateToSubscribers();
 
@@ -350,6 +351,7 @@ void ScriptEditorController::UnbindBoundDocument()
 
 	BoundDocument->TextEditor->Container->SendToBack();
 	BoundDocument->TextEditor->Container->Visible = false;
+	View->GetComponentByRole(view::eViewRole::TextEditor_ViewPortContainer)->AsContainer()->RemoveControl(BoundDocument->TextEditor->Container);
 
 	ResetViewComponentsToUnboundState();
 
@@ -379,8 +381,6 @@ void ScriptEditorController::SetDocumentDependentViewComponentsEnabled(bool Enab
 		view::eViewRole::MainToolbar_Tools_SanitiseScript,
 		view::eViewRole::MainToolbar_Tools_AttachScript,
 		view::eViewRole::MainToolbar_Tools_RecompileScriptDependencies,
-		view::eViewRole::MainToolbar_Tools_DocumentScript,
-		view::eViewRole::MainToolbar_Tools_ModifyVariableIndices,
 		view::eViewRole::MainToolbar_Tools_Import_IntoCurrentScript,
 		view::eViewRole::MainToolbar_Tools_Import_IntoTabs,
 		view::eViewRole::MainToolbar_Tools_Export_CurrentScript,
@@ -447,8 +447,6 @@ void ScriptEditorController::SetDocumentPreprocessorOutputDisplayDependentViewCo
 		view::eViewRole::MainToolbar_Tools_SanitiseScript,
 		view::eViewRole::MainToolbar_Tools_AttachScript,
 		view::eViewRole::MainToolbar_Tools_RecompileScriptDependencies,
-		view::eViewRole::MainToolbar_Tools_DocumentScript,
-		view::eViewRole::MainToolbar_Tools_ModifyVariableIndices,
 		view::eViewRole::MainToolbar_Tools_Import_IntoCurrentScript,
 		view::eViewRole::MainToolbar_Tools_Import_IntoTabs,
 		view::eViewRole::MainToolbar_Tools_Export_CurrentScript,
@@ -583,8 +581,7 @@ void ScriptEditorController::AttachDocumentToView(model::IScriptDocument^ Docume
 
 	// we need to start subscribe to certain changes in state even when the document isn't active
 	Document->StateChanged += DelegateModelDocumentStateChanged;
-
-	View->GetComponentByRole(view::eViewRole::TextEditor_ViewPortContainer)->AsContainer()->AddControl(Document->TextEditor->Container);
+	View->GetComponentByRole(view::eViewRole::EmptyWorkspacePanel)->AsContainer()->Visible = false;
 }
 
 void ScriptEditorController::DetachDocumentFromView(model::IScriptDocument^ Document)
@@ -602,8 +599,7 @@ void ScriptEditorController::DetachDocumentFromView(model::IScriptDocument^ Docu
 	FindReplaceHelper->InvalidateScriptDocumentInGlobalResultsCache(Document);
 
 	Document->StateChanged -= DelegateModelDocumentStateChanged;
-
-	View->GetComponentByRole(view::eViewRole::TextEditor_ViewPortContainer)->AsContainer()->RemoveControl(Document->TextEditor->Container);
+	View->GetComponentByRole(view::eViewRole::EmptyWorkspacePanel)->AsContainer()->Visible = TabStrip->TabCount == 0;
 }
 
 void ScriptEditorController::ActivateDocumentInView(model::IScriptDocument^ Document)
@@ -924,8 +920,6 @@ void ScriptEditorController::ViewEventHandler_ComponentEvent(Object^ Sender, vie
 	case view::eViewRole::MainToolbar_Tools_SanitiseScript:
 	case view::eViewRole::MainToolbar_Tools_AttachScript:
 	case view::eViewRole::MainToolbar_Tools_RecompileScriptDependencies:
-	case view::eViewRole::MainToolbar_Tools_DocumentScript:
-	case view::eViewRole::MainToolbar_Tools_ModifyVariableIndices:
 	case view::eViewRole::MainToolbar_Tools_Import_IntoCurrentScript:
 	case view::eViewRole::MainToolbar_Tools_Import_IntoTabs:
 	case view::eViewRole::MainToolbar_Tools_Export_CurrentScript:
@@ -1455,14 +1449,6 @@ void ScriptEditorController::ViewEventHandler_MainToolbarMenuTools(view::ViewCom
 		nativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileDependencies(CString(BoundDocument->ScriptEditorID).c_str());
 		View->ShowNotification("Operation complete!\nScript variables used as condition parameters will need to be corrected manually.\nThe results have been logged to the console.",
 							   view::components::CommonIcons::Get()->SuccessLarge, 6000);
-		break;
-	case view::eViewRole::MainToolbar_Tools_DocumentScript:
-		View->ShowNotification("Implement this, you!",
-							   view::components::CommonIcons::Get()->Invalid, 3000);
-		break;
-	case view::eViewRole::MainToolbar_Tools_ModifyVariableIndices:
-		View->ShowNotification("Implement this, you!",
-							   view::components::CommonIcons::Get()->Invalid, 3000);
 		break;
 	case view::eViewRole::MainToolbar_Tools_Import_IntoCurrentScript:
 	{
