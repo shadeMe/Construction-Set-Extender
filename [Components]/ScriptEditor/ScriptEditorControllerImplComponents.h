@@ -215,15 +215,15 @@ ref class InputManager
 {
 	ref struct ChordData
 	{
-		KeyCombo^ SecondChord;
-		IAction^ Action;
+		utilities::KeyCombo^ SecondChord;
+		utilities::IAction^ Action;
 		List<view::eViewRole>^ ActionRoles;
 
-		ChordData(KeyCombo^ SecondChord, IAction^ Action, ...array<view::eViewRole>^ ActionRoles);
-		ChordData(IAction^ Action, ...array<view::eViewRole>^ ActionRoles);
+		ChordData(utilities::KeyCombo^ SecondChord, utilities::IAction^ Action, ...array<view::eViewRole>^ ActionRoles);
+		ChordData(utilities::IAction^ Action, ...array<view::eViewRole>^ ActionRoles);
 
 		virtual bool Equals(Object^ obj) override;
-		void UpdateViewComponentShortcutTexts(KeyCombo^ Primary, view::IScriptEditorView^ View);
+		void UpdateViewComponentShortcutTexts(utilities::KeyCombo^ Primary, view::IScriptEditorView^ View);
 	};
 
 	// mutually-exclusive tuple
@@ -232,21 +232,21 @@ ref class InputManager
 	using ChordDataUnion = Tuple<ChordData^, List<ChordData^>^>;
 
 	List<Keys>^ BlacklistedKeyCodes;
-	Dictionary<KeyCombo^, ChordDataUnion^>^ KeyChordCommands;
-	KeyCombo^ LastActiveFirstChord;
+	Dictionary<utilities::KeyCombo^, ChordDataUnion^>^ KeyChordCommands;
+	utilities::KeyCombo^ LastActiveFirstChord;
 	view::IScriptEditorView^ ParentView;
 	view::components::IContextMenu^ TextEditorContextMenu;
 
-	ChordData^ LookupDoubleKeyChordCommand(KeyCombo^ First, KeyCombo^ Second);
-	ChordData^ LookupSingleKeyChordCommand(KeyCombo^ First);
-	bool HasSecondKeyOfChord(KeyCombo^ First);
-	bool IsBound(KeyCombo^ Combo);
+	ChordData^ LookupDoubleKeyChordCommand(utilities::KeyCombo^ First, utilities::KeyCombo^ Second);
+	ChordData^ LookupSingleKeyChordCommand(utilities::KeyCombo^ First);
+	bool HasSecondKeyOfChord(utilities::KeyCombo^ First);
+	bool IsBound(utilities::KeyCombo^ Combo);
 public:
 	InputManager(view::IScriptEditorView^ ParentView);
 	~InputManager();
 
-	void AddKeyChordCommand(IAction^ Action, KeyCombo^ Primary, KeyCombo^ Secondary, bool OverwriteExisting, ...array<view::eViewRole>^ ActionRoles);
-	void AddKeyChordCommand(IAction^ Action, KeyCombo^ Primary, bool OverwriteExisting, ...array<view::eViewRole>^ ActionRoles);
+	void AddKeyChordCommand(utilities::IAction^ Action, utilities::KeyCombo^ Primary, utilities::KeyCombo^ Secondary, bool OverwriteExisting, ...array<view::eViewRole>^ ActionRoles);
+	void AddKeyChordCommand(utilities::IAction^ Action, utilities::KeyCombo^ Primary, bool OverwriteExisting, ...array<view::eViewRole>^ ActionRoles);
 
 	void HandleKeyDown(KeyEventArgs^ E, IScriptEditorController^ Controller);
 	void HandleTextEditorMouseClick(textEditor::TextEditorMouseClickEventArgs^ E, IScriptEditorController^ Controller);

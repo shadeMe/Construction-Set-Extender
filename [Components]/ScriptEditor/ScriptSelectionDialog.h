@@ -8,6 +8,10 @@ namespace scriptEditor
 {
 
 
+namespace selectScript
+{
+
+
 ref struct NativeScriptDataWrapper
 {
 	componentDLLInterface::ScriptData* ScriptData;
@@ -152,6 +156,9 @@ public:
 	ScriptSelectionDialog(Params^ Parameters);
 	~ScriptSelectionDialog();
 };
+
+
+} // namespace selectScript
 
 
 } // namespace scriptEditor

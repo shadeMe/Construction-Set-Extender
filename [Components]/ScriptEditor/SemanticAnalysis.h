@@ -119,11 +119,11 @@ ref struct Variable
 		[System::Runtime::Serialization::EnumMember]
 		Float,
 		[System::Runtime::Serialization::EnumMember]
-		Ref,
+		Reference,
 		[System::Runtime::Serialization::EnumMember]
-		StringVar,
+		String,
 		[System::Runtime::Serialization::EnumMember]
-		ArrayVar
+		Array
 	};
 
 	String^ Name;

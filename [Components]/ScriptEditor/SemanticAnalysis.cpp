@@ -364,15 +364,15 @@ Variable::eDataType Variable::GetVariableDataType(String^ TypeToken)
 	eDataType VarType = eDataType::None;
 
 	if (!String::Compare(TypeToken, "ref", true) || !String::Compare(TypeToken, "reference", true))
-		VarType = Variable::eDataType::Ref;
+		VarType = Variable::eDataType::Reference;
 	else if (!String::Compare(TypeToken, "short", true) || !String::Compare(TypeToken, "long", true) || !String::Compare(TypeToken, "int", true))
 		VarType = Variable::eDataType::Integer;
 	else if (!String::Compare(TypeToken, "float", true))
 		VarType = Variable::eDataType::Float;
 	else if (!String::Compare(TypeToken, "string_var", true))
-		VarType = Variable::eDataType::StringVar;
+		VarType = Variable::eDataType::String;
 	else if (!String::Compare(TypeToken, "array_var", true))
-		VarType = Variable::eDataType::ArrayVar;
+		VarType = Variable::eDataType::Array;
 
 	return VarType;
 }
@@ -385,11 +385,11 @@ String^ Variable::GetVariableDataTypeToken(Variable::eDataType Type)
 		return "int";
 	case eDataType::Float:
 		return "float";
-	case eDataType::Ref:
+	case eDataType::Reference:
 		return "ref";
-	case eDataType::StringVar:
+	case eDataType::String:
 		return "string_var";
-	case eDataType::ArrayVar:
+	case eDataType::Array:
 		return "array_var";
 	default:
 		return "unk";
@@ -404,11 +404,11 @@ String^ Variable::GetVariableDataTypeDescription(Variable::eDataType Type)
 		return "Integer";
 	case eDataType::Float:
 		return "Float";
-	case eDataType::Ref:
+	case eDataType::Reference:
 		return "Reference";
-	case eDataType::StringVar:
+	case eDataType::String:
 		return "String";
-	case eDataType::ArrayVar:
+	case eDataType::Array:
 		return "Array";
 	default:
 		return "Unknown";

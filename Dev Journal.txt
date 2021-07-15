@@ -65,8 +65,8 @@ SE		---->
 
 
 	ENHANCEMENT		=
-		> Tabs on the side
 		> Fuzzy search for IntelliSense
+			>> Automatic switching between prefix/fuzzy
 		> Prevent the creation of duplicate script editor IDs
 		> Language server impl for external editors
 

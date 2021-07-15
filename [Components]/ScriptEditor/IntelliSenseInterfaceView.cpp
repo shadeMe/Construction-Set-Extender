@@ -19,7 +19,8 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView()
 {
 	BoundModel = nullptr;
 
-	Form = gcnew AnimatedForm(true);
+	Form = gcnew utilities::AnimatedForm(true);
+	ColorManager = gcnew DotNetBar::StyleManagerAmbient;
 
 	ListView = gcnew BrightIdeasSoftware::FastObjectListView;
 
@@ -29,7 +30,7 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView()
 	ListViewItemActivateHandler = gcnew EventHandler(this, &IntelliSenseInterfaceView::ListView_ItemActivate);
 	ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceView::ScriptEditorPreferences_Saved);
 	ListViewFormatRowHandler = gcnew EventHandler<BrightIdeasSoftware::FormatRowEventArgs^>(this, &IntelliSenseInterfaceView::ListView_FormatRow);
-	SelectFirstItemOnShowHandler = gcnew AnimatedForm::TransitionCompleteHandler(this, &IntelliSenseInterfaceView::SelectFirstItemOnShow);
+	SelectFirstItemOnShowHandler = gcnew utilities::AnimatedForm::TransitionCompleteHandler(this, &IntelliSenseInterfaceView::SelectFirstItemOnShow);
 
 	ListView->KeyDown += ListViewKeyDownHandler;
 	ListView->KeyUp += ListViewKeyUpHandler;
@@ -46,6 +47,7 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView()
 	Form->ControlBox = false;
 	Form->Controls->Add(ListView);
 	Form->Margin = Padding(0);
+	Form->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
 
 	ListView->View = View::Details;
 	ListView->Dock = DockStyle::Fill;
@@ -57,12 +59,18 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView()
 	ListView->GridLines = false;
 	ListView->HeaderStyle = ColumnHeaderStyle::None;
 	ListView->HideSelection = true;
-	ListView->Font = gcnew Font(SystemFonts::DialogFont->FontFamily, 9.25);
+	//ListView->Font = gcnew Font(SystemFonts::DialogFont->FontFamily, 9.25);
+	ListView->Font = preferences::SettingsHolder::Get()->Appearance->TextFont;
 	ListView->Margin = Padding(0);
+	ListView->ForeColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
+	ListView->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
+	ColorManager->SetEnableAmbientSettings(ListView, DotNetBar::eAmbientSettings::None);
 
 	ListViewDefaultColumn = gcnew BrightIdeasSoftware::OLVColumn;
 	ListViewDefaultColumn->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&IntelliSenseInterfaceView::ListViewAspectGetter);
 	ListViewDefaultColumn->ImageGetter = gcnew BrightIdeasSoftware::ImageGetterDelegate(&IntelliSenseInterfaceView::ListViewImageGetter);
+	ListViewDefaultColumn->FillsFreeSpace = true;
+	ListViewDefaultColumn->Width = 100;
 	ListView->AllColumns->Add(ListViewDefaultColumn);
 	ListView->Columns->Add(ListViewDefaultColumn);
 
@@ -86,7 +94,7 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView()
 	InsightPopup->MinimumTooltipSize = Size(180, 25);
 	InsightPopup->MarkupLinkClick += gcnew DotNetBar::MarkupLinkClickEventHandler(&IntelliSenseInterfaceView::SuperTooltip_MarkupLinkClick);
 
-	MaximumVisibleItemCount = preferences::SettingsHolder::Get()->IntelliSense->MaxSuggestionsToDisplay;
+	MaximumVisibleItemCount = preferences::SettingsHolder::Get()->IntelliSense->MaxVisiblePopupItems;
 	InsightPopupDisplayDuration = preferences::SettingsHolder::Get()->IntelliSense->InsightToolTipDisplayDuration;
 	WindowWidth = preferences::SettingsHolder::Get()->IntelliSense->WindowWidth;
 
@@ -125,9 +133,13 @@ IntelliSenseInterfaceView::~IntelliSenseInterfaceView()
 
 void IntelliSenseInterfaceView::ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E)
 {
-	MaximumVisibleItemCount = preferences::SettingsHolder::Get()->IntelliSense->MaxSuggestionsToDisplay;
+	MaximumVisibleItemCount = preferences::SettingsHolder::Get()->IntelliSense->MaxVisiblePopupItems;
 	InsightPopupDisplayDuration = preferences::SettingsHolder::Get()->IntelliSense->InsightToolTipDisplayDuration;
 	WindowWidth = preferences::SettingsHolder::Get()->IntelliSense->WindowWidth;
+	Form->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
+	ListView->ForeColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
+	ListView->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
+	ListView->Font = preferences::SettingsHolder::Get()->Appearance->TextFont;
 }
 
 void IntelliSenseInterfaceView::ListView_SelectionChanged(Object^ Sender, EventArgs^ E)
@@ -284,7 +296,7 @@ void IntelliSenseInterfaceView::HideListViewToolTip()
 	ListViewPopup->HideTooltip();
 }
 
-void IntelliSenseInterfaceView::SelectFirstItemOnShow(AnimatedForm^ Sender)
+void IntelliSenseInterfaceView::SelectFirstItemOnShow(utilities::AnimatedForm^ Sender)
 {
 	if (BoundModel->DataStore->Count)
 	{
@@ -316,7 +328,7 @@ void IntelliSenseInterfaceView::Unbind()
 	}
 }
 
-void IntelliSenseInterfaceView::ChangeSelection(IIntelliSenseInterfaceView::MoveDirection Direction)
+void IntelliSenseInterfaceView::ChangeSelection(IIntelliSenseInterfaceView::eMoveDirection Direction)
 {
 	if (!Visible)
 		return;
@@ -327,12 +339,12 @@ void IntelliSenseInterfaceView::ChangeSelection(IIntelliSenseInterfaceView::Move
 
 	switch (Direction)
 	{
-	case IIntelliSenseInterfaceView::MoveDirection::Down:
+	case IIntelliSenseInterfaceView::eMoveDirection::Down:
 		if (SelectedIndex < ListView->GetItemCount() - 1)
 			++SelectedIndex;
 
 		break;
-	case IIntelliSenseInterfaceView::MoveDirection::Up:
+	case IIntelliSenseInterfaceView::eMoveDirection::Up:
 		if (SelectedIndex > 0)
 			--SelectedIndex;
 
@@ -418,7 +430,7 @@ void IntelliSenseInterfaceView::Update()
 			Form->SetSize(DisplaySize);
 
 			// the column width needs to be (re)set after the form (and its docked listview) have been resized
-			ListViewDefaultColumn->Width = ListView->Width - 4 - SystemInformation::HorizontalScrollBarHeight;
+			ListViewDefaultColumn->Width = ListView->Width - 4 - (BoundModel->DataStore->Count > MaximumVisibleItemCount ? SystemInformation::HorizontalScrollBarHeight : 0);
 		}
 		catch (Exception^ E) {
 			DebugPrint("IntelliSenseInterfaceView::Update Exception! Message - " + E->Message);

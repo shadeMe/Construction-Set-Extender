@@ -8,6 +8,10 @@ namespace scriptEditor
 {
 
 
+namespace utilities
+{
+
+
 IAction::IAction(String^ Name, String^ Description)
 {
 	Name_ = Name;
@@ -246,6 +250,19 @@ InputBoxResult^ InputBox::Show(String^ Prompt, String^ Title, String^ Default, I
 	return Form->Result;
 }
 
+Windows::Forms::CreateParams^ AnimatedForm::CreateParams::get()
+{
+	auto Params = MetroForm::CreateParams;
+	if (ShowFormWithoutActivation)
+	{
+		const int WS_EX_NOACTIVATE = 0x08000000;
+		const int WS_EX_TOOLWINDOW = 0x00000080;
+		Params->ExStyle |= WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW;
+	}
+
+	return Params;
+}
+
 void AnimatedForm::WndProc(Message% m)
 {
 	const int WM_SYSCOMMAND = 0x0112;
@@ -278,8 +295,6 @@ void AnimatedForm::WndProc(Message% m)
 
 			if (m.LParam != IntPtr::Zero)
 				nativeWrapper::SetActiveWindow(m.LParam);
-			else
-				nativeWrapper::SetActiveWindow(IntPtr::Zero);	// Could not find sender, just de-activate it.
 
 			m.Result = IntPtr::Zero;
 			return;
@@ -302,7 +317,7 @@ AnimatedForm::StartTransitionParams::StartTransitionParams()
 
 void AnimatedForm::FadeTimer_Tick(Object^ Sender, EventArgs^ E)
 {
-	const auto kTransitionTime = 100;		// in ms
+	const auto kTransitionTime = 32;		// in ms
 
 	auto NumTicksReqd = kTransitionTime / static_cast<double>(FadeTimer->Interval);
 	auto PerTickDelta = 1.0 / NumTicksReqd;
@@ -416,7 +431,7 @@ AnimatedForm::AnimatedForm( bool ShowFormWithoutActivation )
 
 	FadeTimerTickHandler = gcnew EventHandler(this, &AnimatedForm::FadeTimer_Tick);
 	FadeTimer = gcnew Timer();
-	FadeTimer->Interval = 10;
+	FadeTimer->Interval = 8;
 	FadeTimer->Tick += FadeTimerTickHandler;
 	FadeTimer->Enabled = false;
 
@@ -536,6 +551,169 @@ void AnimatedForm::SetNextActiveTransitionCompleteHandler(TransitionCompleteHand
 
 	ActiveTransitionCompleteHandler = NewHandler;
 }
+
+generic <typename TValue>
+CaselessFuzzyTrie<TValue>::FuzzyMatchResult^ CaselessFuzzyTrie<TValue>::MapToFuzzyMatchResultSelector(TValue Value)
+{
+	return gcnew FuzzyMatchResult(Value, 0);
+}
+
+generic <typename TValue>
+Gma::DataStructures::StringSearch::TraversalResult CaselessFuzzyTrie<TValue>::LevenshteinMatcher::ForEachTrieNode(Gma::DataStructures::StringSearch::ITrieTraversalNode<TValue>^ Node)
+{
+	// http://stevehanov.ca/blog/?id=114
+	auto NewPrefix = Node->Prefix + Node->Key;
+
+	int PartitionIndex = -1;
+
+	for (int i = 0; i < CurrentPrefix->Length; ++i)
+	{
+		if (i >= NewPrefix->Length)
+		{
+			PartitionIndex = i;
+			break;
+		}
+		else if (NewPrefix[i] != CurrentPrefix[i])
+		{
+			PartitionIndex = i;
+			break;
+		}
+	}
+
+	List<List<int>^>^ ReusableRows = nullptr;
+	if (PartitionIndex == -1)
+		ReusableRows = MatchTable;
+	else if (PartitionIndex <= MatchTable->Count)
+		ReusableRows = MatchTable->GetRange(0, PartitionIndex + 1);		// +1 as the first row does not correspond to a character in the prefix
+	else
+	{
+		ReusableRows = gcnew List<List<int>^>;
+		auto NewRow = gcnew List<int>(Query->Length + 1);
+		for (int k = 0; k < Query->Length + 1; ++k)
+			NewRow->Insert(k, k);
+		ReusableRows->Add(NewRow);
+	}
+
+	Debug::Assert(ReusableRows->Count > 0);
+
+	// calculate costs for each new character in the new prefix
+	bool MaxCostExceeded = false;
+	for (int i = ReusableRows->Count, j = NewPrefix->Length + 1; i < j; ++i)
+	{
+		auto PreviousRow = ReusableRows[i - 1];
+		auto NewRow = gcnew List<int>(PreviousRow->Count);
+
+		NewRow->Insert(0, PreviousRow[0] + 1);
+
+		int InsertCost, DeleteCost, ReplaceCost;
+		for (int k = 1; k < PreviousRow->Count; ++k)
+		{
+			InsertCost = NewRow[k - 1] + 1;
+			DeleteCost = PreviousRow[k] + 1;
+
+			ReplaceCost = PreviousRow[k - 1];
+			if (Query[k - 1] != NewPrefix[i - 1])
+				++ReplaceCost;
+
+			NewRow->Insert(k, Math::Min(InsertCost, Math::Min(DeleteCost, ReplaceCost)));
+		}
+
+		auto LowestCost = System::Linq::Enumerable::Min(NewRow);
+		if (LowestCost > MaxEditDistance)
+		{
+			// exit early
+			MaxCostExceeded = true;
+			NewPrefix = NewPrefix->Substring(0, ReusableRows->Count - 1);
+			break;
+		}
+
+		ReusableRows->Add(NewRow);
+	}
+
+	auto Cost = ReusableRows[ReusableRows->Count - 1][Query->Length];
+	if (Cost <= MaxEditDistance && Node->ValueCount > 0)
+	{
+		//Debug::Assert(!MaxCostExceeded);
+
+		for each (auto Value in Node->Values)
+		{
+			if (Predicate == nullptr || Predicate(Value))
+				MatchedValues->Add(gcnew FuzzyMatchResult(Value, Cost));
+		}
+	}
+
+	MatchTable = ReusableRows;
+	CurrentPrefix = NewPrefix;
+
+	return MaxCostExceeded ? Gma::DataStructures::StringSearch::TraversalResult::IgnoreChildren : Gma::DataStructures::StringSearch::TraversalResult::TraverseChildren;
+}
+
+generic <typename TValue>
+CaselessFuzzyTrie<TValue>::LevenshteinMatcher::LevenshteinMatcher(String^ Query, int MaxEditDistance, System::Func<TValue, bool>^ Predicate)
+{
+	this->Query = Query;
+	this->MaxEditDistance = MaxEditDistance;
+	this->Predicate = Predicate;
+
+	CurrentPrefix = "";
+	MatchedValues = gcnew List<FuzzyMatchResult^>;
+
+	MatchTable = gcnew List<List<int>^>;
+	auto NewRow = gcnew List<int>(Query->Length + 1);
+	for (int k = 0; k < Query->Length + 1; ++k)
+		NewRow->Insert(k, k);
+	MatchTable->Add(NewRow);
+}
+
+generic <typename TValue>
+System::Collections::Generic::IEnumerable<CaselessFuzzyTrie<TValue>::FuzzyMatchResult^>^ CaselessFuzzyTrie<TValue>::LevenshteinMatcher::Match(Gma::DataStructures::StringSearch::ITrie<TValue>^ Trie)
+{
+	Trie->Traverse(gcnew Gma::DataStructures::StringSearch::TraversalHandler<TValue>(this, &LevenshteinMatcher::ForEachTrieNode));
+	return MatchedValues;
+}
+
+generic <typename TValue>
+CaselessFuzzyTrie<TValue>::FuzzyMatchResult::FuzzyMatchResult(TValue Value, int Cost)
+	: Value(Value), Cost(Cost)
+{
+}
+
+generic <typename TValue>
+void CaselessFuzzyTrie<TValue>::Add(String^ Key, TValue Value)
+{
+	PatriciaTrie::Add(Key->ToLower(), Value);
+}
+
+generic <typename TValue>
+System::Collections::Generic::IEnumerable<TValue>^ CaselessFuzzyTrie<TValue>::Retrieve(String^ Query)
+{
+	return Retrieve(Query, nullptr);
+}
+
+generic <typename TValue>
+System::Collections::Generic::IEnumerable<TValue>^ CaselessFuzzyTrie<TValue>::Retrieve(String^ Query, System::Func<TValue, bool>^ Predicate)
+{
+	return PatriciaTrie::Retrieve(Query->ToLower(), Predicate);
+}
+
+generic <typename TValue>
+System::Collections::Generic::IEnumerable<CaselessFuzzyTrie<TValue>::FuzzyMatchResult^>^ CaselessFuzzyTrie<TValue>::LevenshteinMatch(String^ Query, UInt32 MaxEditDistanceCost)
+{
+	return LevenshteinMatch(Query, MaxEditDistanceCost, nullptr);
+}
+
+generic <typename TValue>
+System::Collections::Generic::IEnumerable<CaselessFuzzyTrie<TValue>::FuzzyMatchResult^>^ CaselessFuzzyTrie<TValue>::LevenshteinMatch(String^ Query, UInt32 MaxEditDistanceCost, System::Func<TValue, bool>^ Predicate)
+{
+	if (Query->Length == 0)
+		return System::Linq::Enumerable::Select(Retrieve(String::Empty), gcnew Func<TValue, CaselessFuzzyTrie<TValue>::FuzzyMatchResult^>(MapToFuzzyMatchResultSelector));
+
+	auto Matcher = gcnew LevenshteinMatcher(Query->ToLower(), MaxEditDistanceCost, Predicate);
+	return Matcher->Match(this);
+}
+
+
+} // namespace utilities
 
 
 } // namespace scriptEditor

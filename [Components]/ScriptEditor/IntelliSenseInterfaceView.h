@@ -21,11 +21,12 @@ ref class IntelliSenseInterfaceView : public IIntelliSenseInterfaceView
 {
 	IIntelliSenseInterfaceModel^ BoundModel;
 
-	AnimatedForm^ Form;
+	utilities::AnimatedForm^ Form;
 	BrightIdeasSoftware::ObjectListView^ ListView;
 	BrightIdeasSoftware::OLVColumn^ ListViewDefaultColumn;
 	DotNetBar::SuperTooltip^ ListViewPopup;
 	DotNetBar::SuperTooltip^ InsightPopup;
+	DotNetBar::StyleManagerAmbient^ ColorManager;
 
 	property UInt32 MaximumVisibleItemCount;
 	property UInt32 InsightPopupDisplayDuration;
@@ -52,11 +53,11 @@ ref class IntelliSenseInterfaceView : public IIntelliSenseInterfaceView
 	KeyEventHandler^ ListViewKeyDownHandler;
 	KeyEventHandler^ ListViewKeyUpHandler;
 	EventHandler<BrightIdeasSoftware::FormatRowEventArgs^>^ ListViewFormatRowHandler;
-	AnimatedForm::TransitionCompleteHandler^ SelectFirstItemOnShowHandler;
+	utilities::AnimatedForm::TransitionCompleteHandler^ SelectFirstItemOnShowHandler;
 
 	void ShowListViewToolTip(IntelliSenseItem^ Item);
 	void HideListViewToolTip();
-	void SelectFirstItemOnShow(AnimatedForm^ Sender);
+	void SelectFirstItemOnShow(utilities::AnimatedForm^ Sender);
 
 	static const float kDimmedOpacity = 0.1f;
 public:
@@ -88,7 +89,7 @@ public:
 	virtual void Bind(IIntelliSenseInterfaceModel^ To);
 	virtual void Unbind();
 
-	virtual void ChangeSelection(IIntelliSenseInterfaceView::MoveDirection Direction);
+	virtual void ChangeSelection(IIntelliSenseInterfaceView::eMoveDirection Direction);
 	virtual void DimOpacity();
 	virtual void ResetOpacity();
 

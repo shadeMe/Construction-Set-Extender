@@ -9,6 +9,10 @@ namespace scriptEditor
 {
 
 
+namespace utilities
+{
+
+
 ref class IAction abstract
 {
 protected:
@@ -124,6 +128,11 @@ protected:
 		bool get() override { return ShowFormWithoutActivation; }
 	}
 
+	virtual property Windows::Forms::CreateParams^ CreateParams
+	{
+		Windows::Forms::CreateParams^ get() override;
+	}
+
 	virtual void WndProc(Message% m) override;
 
 	static enum class eTransition
@@ -192,6 +201,52 @@ public:
 	void SetSize(Drawing::Size WindowSize);
 	void SetNextActiveTransitionCompleteHandler(TransitionCompleteHandler^ NewHandler);
 };
+
+
+generic <typename TValue>
+ref class CaselessFuzzyTrie : public Gma::DataStructures::StringSearch::PatriciaTrie<TValue>
+{
+public:
+	ref struct FuzzyMatchResult
+	{
+		TValue Value;
+		int Cost;
+
+		FuzzyMatchResult(TValue Value, int Cost);
+	};
+private:
+	static FuzzyMatchResult^ MapToFuzzyMatchResultSelector(TValue Value);
+
+	ref struct LevenshteinMatcher
+	{
+		String^ Query;
+		int MaxEditDistance;
+		List<List<int>^>^ MatchTable;
+		String^ CurrentPrefix;
+		System::Func<TValue, bool>^ Predicate;
+		List<FuzzyMatchResult^>^ MatchedValues;
+
+		Gma::DataStructures::StringSearch::TraversalResult ForEachTrieNode(Gma::DataStructures::StringSearch::ITrieTraversalNode<TValue>^ Node);
+	public:
+		LevenshteinMatcher(String^ Query, int MaxEditDistance, System::Func<TValue, bool>^ Predicate);
+
+		property IEnumerable<FuzzyMatchResult^>^ Matches
+		{
+			IEnumerable<FuzzyMatchResult^>^ get() { return MatchedValues; }
+		}
+
+		IEnumerable<FuzzyMatchResult^>^ Match(Gma::DataStructures::StringSearch::ITrie<TValue>^ Trie);
+	};
+public:
+	virtual void Add(String^ Key, TValue Value) override;
+	virtual IEnumerable<TValue>^ Retrieve(String^ Query) override; // pass an empty string to retrieve all items
+	virtual IEnumerable<TValue>^ Retrieve(String^ Query, System::Func<TValue, bool>^ Predicate) override;
+	virtual IEnumerable<FuzzyMatchResult^>^ LevenshteinMatch(String^ Query, UInt32 MaxEditDistanceCost); // pass an empty string to retrieve all items
+	virtual IEnumerable<FuzzyMatchResult^>^ LevenshteinMatch(String^ Query, UInt32 MaxEditDistanceCost, System::Func<TValue, bool>^ Predicate);
+};
+
+
+} // namespace utilities
 
 
 } // namespace scriptEditor

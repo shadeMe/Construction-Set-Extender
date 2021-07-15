@@ -1,5 +1,6 @@
 #pragma once
 #include "IntelliSenseItem.h"
+#include "Utilities.h"
 
 namespace cse
 {
@@ -41,12 +42,21 @@ static enum class eDatabaseLookupOptions
 	OnlyCommandsThatNeedCallingObject = 1 << 0,
 };
 
+
+public enum class eFilterMode
+{
+	Prefix,
+	Fuzzy
+};
+
 ref struct FetchIntelliSenseItemsArgs
 {
 	property String^ IdentifierToMatch;
-	property eStringMatchType MatchType;
+	property eFilterMode FilterMode;
 	property eDatabaseLookupFilter FilterBy;
 	property eDatabaseLookupOptions Options;
+	property UInt32 FuzzyMatchMaxCost;
+	property int NumItemsToFetch;
 
 	FetchIntelliSenseItemsArgs();
 };
@@ -74,37 +84,107 @@ ref struct ContextualIntelliSenseLookupResult
 	ContextualIntelliSenseLookupResult();
 };
 
+
+// memory is cheap (for our use case, anyway), so we store both a case-insensitive hashmap and a radix trie
+// for constant time lookup of individual identifiers and fast prefix/fuzzy matching respectively
+ref struct IntelliSenseItemCollection
+{
+	using FuzzyMatchT = utilities::CaselessFuzzyTrie<IntelliSenseItem^>::FuzzyMatchResult;
+private:
+	static int FuzzyMatchResultSortKeySelector(FuzzyMatchT^ Item);
+	static IntelliSenseItem^ FuzzyMatchResultMapToItemSelector(FuzzyMatchT^ Item);
+
+	Dictionary<String^, IntelliSenseItem^>^ Dict_;
+	utilities::CaselessFuzzyTrie<IntelliSenseItem^>^ Trie_;
+public:
+	IntelliSenseItemCollection();
+
+	property Dictionary<String^, IntelliSenseItem^>^ Dict
+	{
+		Dictionary<String^, IntelliSenseItem^>^ get() { return Dict_; }
+	}
+
+	property utilities::CaselessFuzzyTrie<IntelliSenseItem^>^ Trie
+	{
+		utilities::CaselessFuzzyTrie<IntelliSenseItem^>^ get() { return Trie_; }
+	}
+
+	property UInt32 Count
+	{
+		UInt32 get() { return Dict->Count; }
+	}
+
+	void Add(String^ Identifier, IntelliSenseItem^ Item);
+	IEnumerable<FuzzyMatchT^>^ FuzzyMatch(String^ Query, UInt32 MaxEditDistanceCost, System::Func<IntelliSenseItem^, bool>^ Predicate);
+	IEnumerable<IntelliSenseItem^>^ PrefixMatch(String^ Query, System::Func<IntelliSenseItem^, bool>^ Predicate);
+	IntelliSenseItem^ Lookup(String^ Identifier, bool IgnoreItemsWithoutInsightInfo);
+	void Reset();
+
+	static IEnumerable<IntelliSenseItem^>^ SortAndExtractFuzzyMatches(IEnumerable<FuzzyMatchT^>^ FuzzyMatches);
+};
+
+
 ref class IntelliSenseBackend
 {
+	ref struct UpdateTaskPayload
+	{
+		System::Diagnostics::Stopwatch^ Stopwatch;
+
+		List<nativeWrapper::MarshalledScriptData^>^ IncomingScripts;
+		List<nativeWrapper::MarshalledFormData^>^ IncomingQuests;
+		List<nativeWrapper::MarshalledVariableData^>^ IncomingGlobals;
+		List<nativeWrapper::MarshalledFormData^>^ IncomingForms;
+
+		IntelliSenseItemCollection^ OutgoingScripts;
+		IntelliSenseItemCollection^ OutgoingGlobalVariables;
+		IntelliSenseItemCollection^ OutgoingQuests;
+		IntelliSenseItemCollection^ OutgoingForms;
+
+		UpdateTaskPayload();
+	};
+
 	static IntelliSenseBackend^ Singleton = nullptr;
 
-	Timer^ UpdateTimer;
-	DateTime LastUpdateTimestamp;
+	static const UInt32 kTimerPollInterval = 100;	// in ms
 
-	Dictionary<String^, IntelliSenseItemScriptCommand^>^ ScriptCommands;
-	Dictionary<String^, IntelliSenseItemGameSetting^>^ GameSettings;
-	Dictionary<String^, IntelliSenseItemScript^>^ Scripts;
-	Dictionary<String^, IntelliSenseItemGlobalVariable^>^ GlobalVariables;
-	Dictionary<String^, IntelliSenseItemQuest^>^ Quests;
-	Dictionary<String^, IntelliSenseItemForm^>^ Forms;
-	Dictionary<String^, IntelliSenseItemCodeSnippet^>^ Snippets;
+	static enum class eTimerMode
+	{
+		IdlePoll,
+		IdleQueue,
+	};
+
+	using UpdateTaskT = System::Threading::Tasks::Task<UpdateTaskPayload^>;
+
+	Timer^ UpdateTimer;
+	eTimerMode UpdateTimerMode;
+	DateTime LastUpdateTimestamp;
+	UpdateTaskT^ ActiveUpdateTask;
+
+	IntelliSenseItemCollection^ ScriptCommands;
+	IntelliSenseItemCollection^ GameSettings;
+	IntelliSenseItemCollection^ Scripts;
+	IntelliSenseItemCollection^ GlobalVariables;
+	IntelliSenseItemCollection^ Quests;
+	IntelliSenseItemCollection^ Forms;
+	IntelliSenseItemCollection^ Snippets;
 	CodeSnippetCollection^ SnippetCollection;
 
+	void Preferences_Saved(Object^ Sender, EventArgs^ E);
 	void UpdateTimer_Tick(Object^ Sender, EventArgs^ E);
-	void UpdateDatabase();
-	String^ GetVariableValueString(componentDLLInterface::VariableData* Data);
-	void RefreshCodeSnippetIntelliSenseItems();
 
-	generic <typename T>
-	where T : IntelliSenseItem
-	static void DoFetch(Dictionary<String^, T>^% Source,
-						FetchIntelliSenseItemsArgs^ Args,
-						List<IntelliSenseItem^>^% OutFetched);
+	static UpdateTaskPayload^ PerformBackgroundUpdateTask(Object^ Input);
+	bool HandleActiveUpdateTaskPolling();
+	bool HandleUpdateTaskQueuing(bool Force);
+	void SetUpdateTimerMode(eTimerMode Mode);
+	UpdateTaskPayload^ GenerateUpdateTaskPayload(componentDLLInterface::IntelliSenseUpdateData* NativeData);
+
+	void RefreshCodeSnippetIntelliSenseItems();
 
 	IntelliSenseItem^ LookupIntelliSenseItem(String^ Identifier, bool OnlyWithInsightInfo);
 	bool IsCallableObject(IntelliSenseItem^ Item);
 	bool IsObjectReference(IntelliSenseItem^ Item);
-	bool TryGetAttachedScriptData(String^ Identifier, DisposibleDataAutoPtr<componentDLLInterface::ScriptData>* OutData);
+	bool TryGetAttachedScriptData(String^ Identifier, nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptData>* OutData);
+	IntelliSenseItem^ LookupIntelliSenseItem(String^ Indentifier);
 
 	IntelliSenseBackend();
 public:
@@ -118,23 +198,15 @@ public:
 	void InitializeScriptCommands(componentDLLInterface::CommandTableData* Data);
 	void InitializeGameSettings(componentDLLInterface::IntelliSenseUpdateData* Data);
 
-	String^ GetScriptCommandDeveloperURL(String^ CommandName);
-
-	bool IsUserFunction(String^ Identifier);
-	bool IsScriptCommand(String^ Identifier, bool CheckCommandShorthand);
-	bool IsForm(String^ Identifier);
-
 	HashSet<String^>^ CreateIndentifierSnapshot(eDatabaseLookupFilter Categories);
+	String^ SanitizeIdentifier(String^ Identifier);
 
 	bool HasAttachedScript(String^ Identifier);
 	IntelliSenseItemScript^ GetAttachedScript(String^ Identifier);
 	IntelliSenseItemScript^ GetAttachedScript(IntelliSenseItem^ Item);
 
-	List<IntelliSenseItem^>^ FetchIntelliSenseItems(FetchIntelliSenseItemsArgs^ FetchArgs);
+	IEnumerable<IntelliSenseItem^>^ FetchIntelliSenseItems(FetchIntelliSenseItemsArgs^ FetchArgs);
 	ContextualIntelliSenseLookupResult^ ContextualIntelliSenseLookup(ContextualIntelliSenseLookupArgs^ LookupArgs);
-	IntelliSenseItem^ LookupIntelliSenseItem(String^ Indentifier);
-
-	String^ SanitizeIdentifier(String^ Identifier);
 
 	void Refresh(bool Force);
 	void ShowCodeSnippetManager();

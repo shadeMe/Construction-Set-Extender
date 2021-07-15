@@ -250,12 +250,21 @@ bool IntelliSenseSettings::Validate(SettingsGroup^ OldValue, String^% OutMessage
 	}
 
 	const UInt32 kMinMaxSuggestionsToDisplay = 3, kMaxMaxSuggestionsToDisplay = 20;
-	if (MaxSuggestionsToDisplay < kMinMaxSuggestionsToDisplay || MaxSuggestionsToDisplay > kMaxMaxSuggestionsToDisplay)
+	if (MaxVisiblePopupItems < kMinMaxSuggestionsToDisplay || MaxVisiblePopupItems > kMaxMaxSuggestionsToDisplay)
 	{
 		Success = false;
-		Errors += "MaxSuggestionsToDisplay must be between " + kMinMaxSuggestionsToDisplay + " and " + kMaxMaxSuggestionsToDisplay;
+		Errors += "MaxVisiblePopupItems must be between " + kMinMaxSuggestionsToDisplay + " and " + kMaxMaxSuggestionsToDisplay;
 		Errors += "\n";
-		MaxSuggestionsToDisplay = Old->MaxSuggestionsToDisplay;
+		MaxVisiblePopupItems = Old->MaxVisiblePopupItems;
+	}
+
+	const UInt32 kMinFuzzyFilterMaxCost = 2, kMaxFuzzyFilterMaxCost = 10;
+	if (FuzzyFilterMaxCost < kMinFuzzyFilterMaxCost || FuzzyFilterMaxCost > kMaxFuzzyFilterMaxCost)
+	{
+		Success = false;
+		Errors += "FuzzyFilterMaxCost must be between " + kMinFuzzyFilterMaxCost + " and " + kMaxFuzzyFilterMaxCost;
+		Errors += "\n";
+		FuzzyFilterMaxCost = Old->FuzzyFilterMaxCost;
 	}
 
 	const UInt32 kMinInsightToolTipDisplayDuration = 1, kMaxInsightToolTipDisplayDuration = 60;
@@ -313,6 +322,15 @@ bool AppearanceSettings::Validate(SettingsGroup^ OldValue, String^% OutMessage)
 	bool Success = true;
 	String^ Errors = "";
 	AppearanceSettings^ Old = safe_cast<AppearanceSettings^>(OldValue);
+
+	const UInt32 kMinTabStripVerticalWidth = 50, kMaxTabStripVerticalWidth = 250;
+	if (TabStripVerticalWidth < kMinTabStripVerticalWidth || TabStripVerticalWidth > kMaxTabStripVerticalWidth)
+	{
+		Success = false;
+		Errors = "TabStripVerticalWidth must be between " + kMinTabStripVerticalWidth + " and " + kMaxTabStripVerticalWidth;
+		Errors += "\n";
+		TabStripVerticalWidth = Old->TabStripVerticalWidth;
+	}
 
 	const UInt32 kMinTabSize = 1, kMaxTabSize = 10;
 	if (TabSize < kMinTabSize || TabSize > kMaxTabSize)
@@ -650,7 +668,15 @@ PreferencesDialog::PreferencesDialog()
 	CurrentSelectionSnapshot = nullptr;
 
 	InitializeComponent();
+
+	auto IsDarkMode = SettingsHolder::Get()->Appearance->DarkMode;
 	PropertyGrid->GridLinesColor = DevComponents::DotNetBar::StyleManager::MetroColorGeneratorParameters.CanvasColor;
+	PropertyGrid->HelpPanel->ApplyPanelStyle(DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled);
+	for each (DevComponents::DotNetBar::ElementStyle^ Style in PropertyGrid->PropertyTree->Styles)
+	{
+		if (Style->Name == "CategoryStyle")
+			Style->TextColor = IsDarkMode ? Color::White : Color::Black;
+	}
 
 	if (PopulateCategories() == false)
 	{

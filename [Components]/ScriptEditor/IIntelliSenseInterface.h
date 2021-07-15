@@ -19,7 +19,7 @@ interface class IIntelliSenseInterfaceView;
 
 ref struct IntelliSenseInputEventArgs
 {
-	static enum class Event
+	static enum class eEvent
 	{
 		KeyDown,
 		KeyUp,
@@ -27,13 +27,13 @@ ref struct IntelliSenseInputEventArgs
 		MouseUp
 	};
 
-	property Event				Type;
+	property eEvent Type;
 
-	property KeyEventArgs^		KeyEvent;
-	property MouseEventArgs^	MouseEvent;
-	property bool				Handled;
+	property KeyEventArgs^ KeyEvent;
+	property MouseEventArgs^ MouseEvent;
+	property bool Handled;
 
-	IntelliSenseInputEventArgs(Event Type, KeyEventArgs^ Source)
+	IntelliSenseInputEventArgs(eEvent Type, KeyEventArgs^ Source)
 	{
 		this->Type = Type;
 		this->KeyEvent = Source;
@@ -41,7 +41,7 @@ ref struct IntelliSenseInputEventArgs
 		this->Handled = false;
 	}
 
-	IntelliSenseInputEventArgs(Event Type, MouseEventArgs^ Source)
+	IntelliSenseInputEventArgs(eEvent Type, MouseEventArgs^ Source)
 	{
 		this->Type = Type;
 		this->KeyEvent = nullptr;
@@ -52,7 +52,7 @@ ref struct IntelliSenseInputEventArgs
 
 ref struct IntelliSenseContextChangeEventArgs
 {
-	static enum class Event
+	static enum class eEvent
 	{
 		Reset,
 
@@ -63,20 +63,19 @@ ref struct IntelliSenseContextChangeEventArgs
 		SemanticAnalysisCompleted
 	};
 
-	property Event		Type;
+	property eEvent Type;
 
-	property int		CaretPos;
-	property UInt32		CurrentLineNumber;
-	property int		CurrentLineStartPos;
-	property bool		CurrentLineInsideViewport;
+	property int CaretPos;
+	property UInt32 CurrentLineNumber;
+	property int CurrentLineStartPos;
+	property bool CurrentLineInsideViewport;
 
-	property String^	ClippedLineText;				// clipped to the caret pos
-	property obScriptParsing::AnalysisData^
-						SemanticAnalysisData;
+	property String^ ClippedLineText;				// clipped to the caret pos
+	property obScriptParsing::AnalysisData^ SemanticAnalysisData;
 
-	property Point		DisplayScreenCoords;
+	property Point DisplayScreenCoords;
 
-	IntelliSenseContextChangeEventArgs(Event Type)
+	IntelliSenseContextChangeEventArgs(eEvent Type)
 	{
 		this->Type = Type;
 
@@ -94,24 +93,24 @@ ref struct IntelliSenseContextChangeEventArgs
 
 ref struct IntelliSenseInsightHoverEventArgs
 {
-	static enum class Event
+	static enum class eEvent
 	{
 		HoverStart,
 		HoverStop
 	};
 
-	property Event			Type;
+	property eEvent Type;
 
-	property UInt32			Line;
-	property String^		HoveredToken;
-	property String^		PreviousToken;		// relative to the hovered token
-	property bool			DotOperatorInUse;
-	property bool			HoveringOverComment;
+	property UInt32 Line;
+	property String^ HoveredToken;
+	property String^ PreviousToken;		// relative to the hovered token
+	property bool DotOperatorInUse;
+	property bool HoveringOverComment;
 
-	property List<String^>^	ErrorMessagesForHoveredLine;
-	property Point			DisplayScreenCoords;
+	property List<String^>^ ErrorMessagesForHoveredLine;
+	property Point DisplayScreenCoords;
 
-	IntelliSenseInsightHoverEventArgs(Event Type)
+	IntelliSenseInsightHoverEventArgs(eEvent Type)
 	{
 		this->Type = Type;
 
@@ -131,31 +130,30 @@ delegate void IntelliSenseContextChangeEventHandler(Object^ Sender, IntelliSense
 
 interface class IIntelliSenseInterfaceConsumer
 {
-	event IntelliSenseInputEventHandler^			IntelliSenseInput;
-	event IntelliSenseInsightHoverEventHandler^		IntelliSenseInsightHover;
-	event IntelliSenseContextChangeEventHandler^	IntelliSenseContextChange;
+	event IntelliSenseInputEventHandler^ IntelliSenseInput;
+	event IntelliSenseInsightHoverEventHandler^ IntelliSenseInsightHover;
+	event IntelliSenseContextChangeEventHandler^ IntelliSenseContextChange;
 };
 
 
 interface class IIntelliSenseInterfaceModel
 {
 public:
-	property List<IntelliSenseItem^>^	DataStore;
+	property List<IntelliSenseItem^>^ DataStore;
 
-	void	Bind(IIntelliSenseInterfaceView^ To);
-	void	Unbind();
-	bool	IsLocalVariable(String^ Identifier);
+	void Bind(IIntelliSenseInterfaceView^ To);
+	void Unbind();
+	bool IsLocalVariable(String^ Identifier);
 };
 
 ref class IntelliSenseShowInsightToolTipArgs : public IRichTooltipContentProvider
 {
-	String^		TooltipHeaderText_;
-	String^		TooltipBodyText_;
-	Image^		TooltipBodyImage_;
-	String^		TooltipFooterText_;
-	Image^		TooltipFooterImage_;
-	IRichTooltipContentProvider::eBackgroundColor
-				TooltipBgColor_;
+	String^ TooltipHeaderText_;
+	String^ TooltipBodyText_;
+	Image^ TooltipBodyImage_;
+	String^ TooltipFooterText_;
+	Image^ TooltipFooterImage_;
+	IRichTooltipContentProvider::eBackgroundColor TooltipBgColor_;
 public:
 	virtual property String^ TooltipHeaderText
 	{
@@ -206,31 +204,31 @@ public:
 interface class IIntelliSenseInterfaceView
 {
 public:
-	static enum	class MoveDirection
+	static enum	class eMoveDirection
 	{
 		Up,
 		Down,
 	};
 
-	event EventHandler^					ItemSelected;
-	event EventHandler^					Dismissed;
+	event EventHandler^ ItemSelected;
+	event EventHandler^ Dismissed;
 
-	property bool						Visible;
-	property IntelliSenseItem^			Selection;
+	property bool Visible;
+	property IntelliSenseItem^ Selection;
 
-	void				Bind(IIntelliSenseInterfaceModel^ To);
-	void				Unbind();
+	void Bind(IIntelliSenseInterfaceModel^ To);
+	void Unbind();
 
-	void				ChangeSelection(MoveDirection Direction);
-	void				DimOpacity();
-	void				ResetOpacity();
+	void ChangeSelection(eMoveDirection Direction);
+	void DimOpacity();
+	void ResetOpacity();
 
-	void				ShowInsightToolTip(IntelliSenseShowInsightToolTipArgs^ Args);
-	void				HideInsightToolTip();
+	void ShowInsightToolTip(IntelliSenseShowInsightToolTipArgs^ Args);
+	void HideInsightToolTip();
 
-	void				Update();			// refreshes the item list
-	void				Show(Drawing::Point Location, IntPtr Parent);
-	void				Hide();
+	void Update();			// refreshes the item list
+	void Show(Drawing::Point Location, IntPtr Parent);
+	void Hide();
 };
 
 

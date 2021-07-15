@@ -245,7 +245,7 @@ void AvalonEditTextEditor::HandleTextChangeEvent()
 		return;
 	}
 
-	RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::Event::TextChanged);
+	RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::eEvent::TextChanged);
 }
 
 void AvalonEditTextEditor::StartMiddleMouseScroll(System::Windows::Input::MouseButtonEventArgs^ E)
@@ -553,7 +553,9 @@ String^ AvalonEditTextEditor::SanitizeUnicodeString( String^ In )
 void AvalonEditTextEditor::SetFont(Font^ FontObject)
 {
 	TextField->FontFamily = gcnew Windows::Media::FontFamily(FontObject->FontFamily->Name);
-	TextField->FontSize = FontObject->Size;
+	// https://docs.microsoft.com/en-us/dotnet/desktop/wpf/advanced/windows-forms-and-wpf-property-mapping?view=netframeworkdesktop-4.8
+	TextField->FontSize = FontObject->SizeInPoints * 96.f / 72.f;
+
 	if (FontObject->Style == Drawing::FontStyle::Bold)
 		TextField->FontWeight = Windows::FontWeights::Bold;
 	else
@@ -782,7 +784,7 @@ System::String^ AvalonEditTextEditor::GetCurrentLineText(bool ClipAtCaretPos)
 	return Contents;
 }
 
-bool AvalonEditTextEditor::RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::Event Type, System::Windows::Input::KeyEventArgs^ K, System::Windows::Input::MouseButtonEventArgs^ M)
+bool AvalonEditTextEditor::RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::eEvent Type, System::Windows::Input::KeyEventArgs^ K, System::Windows::Input::MouseButtonEventArgs^ M)
 {
 	Debug::Assert(ActivatedInView == true);
 
@@ -792,8 +794,8 @@ bool AvalonEditTextEditor::RaiseIntelliSenseInput(intellisense::IntelliSenseInpu
 	intellisense::IntelliSenseInputEventArgs^ E = nullptr;
 	switch (Type)
 	{
-	case intellisense::IntelliSenseInputEventArgs::Event::KeyDown:
-	case intellisense::IntelliSenseInputEventArgs::Event::KeyUp:
+	case intellisense::IntelliSenseInputEventArgs::eEvent::KeyDown:
+	case intellisense::IntelliSenseInputEventArgs::eEvent::KeyUp:
 		{
 			Int32 KeyState = System::Windows::Input::KeyInterop::VirtualKeyFromKey(K->Key);
 
@@ -808,8 +810,8 @@ bool AvalonEditTextEditor::RaiseIntelliSenseInput(intellisense::IntelliSenseInpu
 
 			break;
 		}
-	case intellisense::IntelliSenseInputEventArgs::Event::MouseDown:
-	case intellisense::IntelliSenseInputEventArgs::Event::MouseUp:
+	case intellisense::IntelliSenseInputEventArgs::eEvent::MouseDown:
+	case intellisense::IntelliSenseInputEventArgs::eEvent::MouseUp:
 		{
 			// Left unimplemented as it's currently not consumed by IntelliSense
 			break;
@@ -824,7 +826,7 @@ bool AvalonEditTextEditor::RaiseIntelliSenseInput(intellisense::IntelliSenseInpu
 	return E->Handled;
 }
 
-void AvalonEditTextEditor::RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::Event Type, int Offset, Windows::Point Location)
+void AvalonEditTextEditor::RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::eEvent Type, int Offset, Windows::Point Location)
 {
 	Debug::Assert(ActivatedInView == true);
 
@@ -834,7 +836,7 @@ void AvalonEditTextEditor::RaiseIntelliSenseInsightHover(intellisense::IntelliSe
 	intellisense::IntelliSenseInsightHoverEventArgs^ E = gcnew intellisense::IntelliSenseInsightHoverEventArgs(Type);
 	E->Type = Type;
 
-	if (E->Type == intellisense::IntelliSenseInsightHoverEventArgs::Event::HoverStop)
+	if (E->Type == intellisense::IntelliSenseInsightHoverEventArgs::eEvent::HoverStop)
 	{
 		IntelliSenseInsightHover(this, E);
 		return;
@@ -878,14 +880,14 @@ void AvalonEditTextEditor::RaiseIntelliSenseInsightHover(intellisense::IntelliSe
 	IntelliSenseInsightHover(this, E);
 }
 
-void AvalonEditTextEditor::RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::Event Type)
+void AvalonEditTextEditor::RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::eEvent Type)
 {
 	if (TextFieldDisplayingStaticText)
 		return;
 
 	intellisense::IntelliSenseContextChangeEventArgs^ E = gcnew intellisense::IntelliSenseContextChangeEventArgs(Type);
 
-	if (Type == intellisense::IntelliSenseContextChangeEventArgs::Event::Reset)
+	if (Type == intellisense::IntelliSenseContextChangeEventArgs::eEvent::Reset)
 	{
 		IntelliSenseContextChange(this, E);
 		return;
@@ -896,10 +898,10 @@ void AvalonEditTextEditor::RaiseIntelliSenseContextChange(intellisense::IntelliS
 	E->CurrentLineStartPos = TextField->Document->GetLineByNumber(CurrentLine)->Offset;
 	E->ClippedLineText = GetCurrentLineText(true);
 
-	if (Type == intellisense::IntelliSenseContextChangeEventArgs::Event::ScrollOffsetChanged)
+	if (Type == intellisense::IntelliSenseContextChangeEventArgs::eEvent::ScrollOffsetChanged)
 		E->CurrentLineInsideViewport = GetLineVisible(CurrentLine, true);
 
-	if (Type == intellisense::IntelliSenseContextChangeEventArgs::Event::SemanticAnalysisCompleted)
+	if (Type == intellisense::IntelliSenseContextChangeEventArgs::eEvent::SemanticAnalysisCompleted)
 		E->SemanticAnalysisData = SemanticAnalysisCache;
 
 	auto DisplayScreenCoords = PointToScreen(GetPositionFromCharIndex(Caret, true));
@@ -1021,7 +1023,7 @@ void AvalonEditTextEditor::TextField_CaretPositionChanged(Object^ Sender, EventA
 	if (TextField->TextArea->Selection->IsEmpty)
 		SearchBracesForHighlighting(Caret);
 
-	RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::Event::CaretPosChanged);
+	RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::eEvent::CaretPosChanged);
 }
 
 void AvalonEditTextEditor::TextField_ScrollOffsetChanged(Object^ Sender, EventArgs^ E)
@@ -1033,7 +1035,7 @@ void AvalonEditTextEditor::TextField_ScrollOffsetChanged(Object^ Sender, EventAr
 	System::Windows::Vector Delta = CurrentOffset - PreviousScrollOffsetBuffer;
 	PreviousScrollOffsetBuffer = CurrentOffset;
 
-	RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::Event::ScrollOffsetChanged);
+	RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::eEvent::ScrollOffsetChanged);
 }
 
 void AvalonEditTextEditor::TextField_TextCopied( Object^ Sender, AvalonEdit::Editing::TextEventArgs^ E )
@@ -1067,7 +1069,7 @@ void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::In
 		return;
 	}
 
-	if (RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::Event::KeyDown, E, nullptr))
+	if (RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::eEvent::KeyDown, E, nullptr))
 	{
 		HandleKeyEventForKey(E->Key);
 		E->Handled = true;
@@ -1154,7 +1156,7 @@ void AvalonEditTextEditor::TextField_KeyUp(Object^ Sender, System::Windows::Inpu
 		E->Handled = true;
 		KeyToPreventHandling = System::Windows::Input::Key::None;
 	}
-	else if (RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::Event::KeyUp, E, nullptr))
+	else if (RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::eEvent::KeyUp, E, nullptr))
 		E->Handled = true;
 }
 
@@ -1196,14 +1198,14 @@ void AvalonEditTextEditor::TextField_MouseWheel(Object^ Sender, System::Windows:
 
 void AvalonEditTextEditor::TextField_MouseHover(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
 {
-	RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::Event::HoverStop,
+	RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::eEvent::HoverStop,
 								-1, Windows::Point(0, 0));
 
 	Nullable<AvalonEdit::TextViewPosition> ViewLocation = TextField->GetPositionFromPoint(E->GetPosition(TextField));
 	if (ViewLocation.HasValue)
 	{
 		LastMouseHoverOffset = TextField->Document->GetOffset(ViewLocation.Value.Line, ViewLocation.Value.Column);
-		RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::Event::HoverStart,
+		RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::eEvent::HoverStart,
 									LastMouseHoverOffset, TransformToPixels(E->GetPosition(TextField)));
 	}
 	else
@@ -1217,7 +1219,7 @@ void AvalonEditTextEditor::TextField_MouseHoverStopped(Object^ Sender, System::W
 	if (LastMouseHoverOffset == OffsetAtCurrentMousePos)
 		return;
 
-	RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::Event::HoverStop,
+	RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::eEvent::HoverStop,
 								-1, Windows::Point(0, 0));
 }
 
@@ -1405,6 +1407,7 @@ void AvalonEditTextEditor::ScriptEditorPreferences_Saved( Object^ Sender, EventA
 
 	InlineSearchPanel->MarkerBrush = gcnew Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B));
 
+	UpdateCodeFoldings();
 	RefreshTextView();
 }
 
@@ -1418,7 +1421,7 @@ void AvalonEditTextEditor::BackgroundAnalysis_AnalysisComplete(Object^ Sender, m
 	UpdateCodeFoldings();
 	UpdateSyntaxHighlighting(false);
 
-	RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::Event::SemanticAnalysisCompleted);
+	RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::eEvent::SemanticAnalysisCompleted);
 }
 
 void AvalonEditTextEditor::LineTrackingManager_LineAnchorInvalidated(Object^ Sender, EventArgs^ E)
@@ -1793,7 +1796,7 @@ void AvalonEditTextEditor::SetText(String^ Text, bool ResetUndoStack)
 	Text = SanitizeUnicodeString(Text);
 
 	SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::SuppressOnce);
-	RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::Event::Reset);
+	RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::eEvent::Reset);
 	FadeOutCurrentTextView();
 
 	if (ResetUndoStack)

@@ -172,6 +172,20 @@ void Form::Handler_KeyDown(Object^ Sender, KeyEventArgs^ E)
 	RaiseEvent(IForm::eEvent::KeyDown, EventArgs);
 }
 
+void Form::Handler_LocationChanged(Object^ Sender, EventArgs^ E)
+{
+	auto EventArgs = gcnew IForm::LocationChangedEventArgs;
+
+	RaiseEvent(IForm::eEvent::LocationChanged, EventArgs);
+}
+
+void Form::Handler_SizeChanged(Object^ Sender, EventArgs^ E)
+{
+	auto EventArgs = gcnew IForm::SizeChangedEventArgs;
+
+	RaiseEvent(IForm::eEvent::SizeChanged, EventArgs);
+}
+
 Form::Form(Forms::Form^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter)
 	: ViewComponent(eComponentType::Form, ViewRole, EventRouter)
 {
@@ -180,20 +194,42 @@ Form::Form(Forms::Form^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ Ev
 
 	DelegateClosing = gcnew CancelEventHandler(this, &Form::Handler_Closing);
 	DelegateKeyDown = gcnew KeyEventHandler(this, &Form::Handler_KeyDown);
+	DelegateLocationChanged = gcnew EventHandler(this, &Form::Handler_LocationChanged);
+	DelegateSizeChanged = gcnew EventHandler(this, &Form::Handler_SizeChanged);
 
 	Source->Closing += DelegateClosing;
 	Source->KeyDown += DelegateKeyDown;
+	Source->LocationChanged += DelegateLocationChanged;
+	Source->SizeChanged += DelegateSizeChanged;
 }
 
 Form::~Form()
 {
 	Source->Closing -= DelegateClosing;
 	Source->KeyDown -= DelegateKeyDown;
+	Source->LocationChanged -= DelegateLocationChanged;
+	Source->SizeChanged -= DelegateSizeChanged;
 
 	SAFEDELETE_CLR(DelegateClosing);
 	SAFEDELETE_CLR(DelegateKeyDown);
+	SAFEDELETE_CLR(DelegateLocationChanged);
+	SAFEDELETE_CLR(DelegateSizeChanged);
 
 	Source = nullptr;
+}
+
+String^ Form::Text::get()
+{
+	// since we want to hide the title bar altogether, we need to manually use the Win32 API to
+	// set and get the window text to ensure that the window has a caption in the taskbar/task switcher
+	auto Sb = gcnew System::Text::StringBuilder(0x200, 0x200);
+	nativeWrapper::GetWindowText(Source->Handle, Sb, Sb->MaxCapacity);
+	return Sb->ToString();
+}
+
+void Form::Text::set(String^ v)
+{
+	nativeWrapper::SetWindowText(Source->Handle, v);
 }
 
 Rectangle Form::Bounds::get()
@@ -214,8 +250,10 @@ void Form::Bounds::set(Rectangle v)
 
 void Form::BeginUpdate()
 {
-	Debug::Assert(UpdateCounter >= 0);
+	if (!Source->Visible)
+		return;
 
+	Debug::Assert(UpdateCounter >= 0);
 	if (UpdateCounter++ == 0)
 	{
 		Source->SuspendLayout();
@@ -225,9 +263,11 @@ void Form::BeginUpdate()
 
 void Form::EndUpdate()
 {
+	if (!Source->Visible)
+		return;
+
 	--UpdateCounter;
 	Debug::Assert(UpdateCounter >= 0);
-
 	if (UpdateCounter == 0)
 	{
 		nativeWrapper::SetControlRedraw(Source, true);
@@ -238,6 +278,9 @@ void Form::EndUpdate()
 
 void Form::Redraw()
 {
+	if (!Source->Visible)
+		return;
+
 	Source->Invalidate(true);
 }
 
@@ -279,22 +322,40 @@ void Button::Handler_PopupOpen(Object^ Sender, PopupOpenEventArgs^ E)
 	}
 }
 
+void Button::Handler_MouseEnter(Object^ Sender, EventArgs^ E)
+{
+	MouseOver = true;
+}
+
+void Button::Handler_MouseLeave(Object^ Sender, EventArgs^ E)
+{
+	MouseOver = false;
+}
+
 void Button::InitEventHandlers()
 {
 	DelegateClick = gcnew EventHandler(this, &Button::Handler_Click);
 	DelegatePopupOpen = gcnew DotNetBarManager::PopupOpenEventHandler(this, &Button::Handler_PopupOpen);
+	DelegateMouseEnter = gcnew EventHandler(this, &Button::Handler_MouseEnter);
+	DelegateMouseLeave = gcnew EventHandler(this, &Button::Handler_MouseLeave);
 
 	switch (SourceType)
 	{
 	case eSourceType::ButtonItem:
 		ButtonItem->Click += DelegateClick;
 		ButtonItem->PopupOpen += DelegatePopupOpen;
+		ButtonItem->MouseEnter += DelegateMouseEnter;
+		ButtonItem->MouseLeave += DelegateMouseLeave;
 		break;
 	case eSourceType::ButtonX:
 		ButtonX->Click += DelegateClick;
+		ButtonX->MouseEnter += DelegateMouseEnter;
+		ButtonX->MouseLeave += DelegateMouseLeave;
 		break;
 	case eSourceType::CheckBoxX:
 		CheckBoxX->Click += DelegateClick;
+		CheckBoxX->MouseEnter += DelegateMouseEnter;
+		CheckBoxX->MouseLeave += DelegateMouseLeave;
 		break;
 	}
 }
@@ -306,17 +367,25 @@ void Button::DeinitEventHandlers()
 	case eSourceType::ButtonItem:
 		ButtonItem->Click -= DelegateClick;
 		ButtonItem->PopupOpen -= DelegatePopupOpen;
+		ButtonItem->MouseEnter -= DelegateMouseEnter;
+		ButtonItem->MouseLeave -= DelegateMouseLeave;
 		break;
 	case eSourceType::ButtonX:
 		ButtonX->Click -= DelegateClick;
+		ButtonX->MouseEnter -= DelegateMouseEnter;
+		ButtonX->MouseLeave -= DelegateMouseLeave;
 		break;
 	case eSourceType::CheckBoxX:
 		CheckBoxX->Click -= DelegateClick;
+		CheckBoxX->MouseEnter -= DelegateMouseEnter;
+		CheckBoxX->MouseLeave -= DelegateMouseLeave;
 		break;
 	}
 
 	SAFEDELETE_CLR(DelegateClick);
 	SAFEDELETE_CLR(DelegatePopupOpen);
+	SAFEDELETE_CLR(DelegateMouseEnter);
+	SAFEDELETE_CLR(DelegateMouseLeave);
 }
 
 System::String^ Button::GetterText()
@@ -354,6 +423,21 @@ System::String^ Button::GetterTooltip()
 	case eSourceType::ButtonItem:
 	case eSourceType::ButtonX:
 		return TooltipBuffer;
+	case eSourceType::CheckBoxX:
+		throw gcnew NotImplementedException();
+	}
+
+	return nullptr;
+}
+
+Drawing::Image^ Button::GetterImage()
+{
+	switch (SourceType)
+	{
+	case eSourceType::ButtonItem:
+		return ButtonItem->Image;
+	case eSourceType::ButtonX:
+		return ButtonX->Image;
 	case eSourceType::CheckBoxX:
 		throw gcnew NotImplementedException();
 	}
@@ -448,6 +532,22 @@ void Button::SetterTooltip(String^ Value)
 	case eSourceType::ButtonX:
 		TooltipBuffer = Value;
 		CombineTooltipAndShortcut();
+		break;
+	case eSourceType::CheckBoxX:
+		throw gcnew NotImplementedException();
+	}
+}
+
+void Button::SetterImage(Drawing::Image^ Value)
+{
+	switch (SourceType)
+	{
+	case eSourceType::ButtonItem:
+		ButtonItem->Image = Value;
+		break;
+	case eSourceType::ButtonX:
+		ButtonX->Image = Value;
+		break;
 	case eSourceType::CheckBoxX:
 		throw gcnew NotImplementedException();
 	}
@@ -461,8 +561,8 @@ void Button::SetterChecked(bool Value)
 		ButtonItem->Checked = Value;
 		break;
 	case eSourceType::ButtonX:
-		break;
 		ButtonX->Checked = Value;
+		break;
 	case eSourceType::CheckBoxX:
 		CheckBoxX->Checked = Value;
 		break;
@@ -551,6 +651,7 @@ Button::Button(DotNetBar::ButtonItem^ Source, eViewRole ViewRole, ViewComponentE
 	TextBuffer = "";
 	TooltipBuffer = Source->Tooltip;
 	ShortcutKeyBuffer = "";
+	MouseOver = false;
 	InitEventHandlers();
 	CombineTooltipAndShortcut();
 }
@@ -564,6 +665,7 @@ Button::Button(DotNetBar::ButtonX^ Source, eViewRole ViewRole, ViewComponentEven
 	TextBuffer = Source->Text;
 	TooltipBuffer = Source->Tooltip;
 	ShortcutKeyBuffer = "";
+	MouseOver = false;
 	InitEventHandlers();
 	CombineTooltipAndShortcut();
 }
@@ -576,6 +678,7 @@ Button::Button(DotNetBar::Controls::CheckBoxX^ Source, eViewRole ViewRole, ViewC
 	Tag_ = nullptr;
 	TextBuffer = Source->Text;
 	TooltipBuffer = "";
+	MouseOver = false;
 	ShortcutKeyBuffer = "";
 	InitEventHandlers();
 }
@@ -859,6 +962,11 @@ TabStripItem::~TabStripItem()
 	ParentTabStrip_ = nullptr;
 }
 
+void TabStripItem::Close()
+{
+	Source->Close();
+}
+
 TabStripItem^ TabStripItem::FromSuperTabItem(SuperTabItem^ SuperTabItem)
 {
 	return safe_cast<TabStripItem^>(SuperTabItem->Tag);
@@ -933,10 +1041,39 @@ void TabStrip::Handler_TabMoved(Object^ Sender, DotNetBar::SuperTabStripTabMoved
 
 void TabStrip::Handler_TabStripMouseDown(Object^ Sender, MouseEventArgs^ E)
 {
+	HandleTabStripMouseEvent(ITabStrip::eEvent::TabStripMouseDown, E);
 }
 
 void TabStrip::Handler_TabStripMouseUp(Object^ Sender, MouseEventArgs^ E)
 {
+	HandleTabStripMouseEvent(ITabStrip::eEvent::TabStripMouseUp, E);
+}
+
+void TabStrip::Handler_TabStripMouseMove(Object^ Sender, MouseEventArgs^ E)
+{
+	HandleTabStripMouseEvent(ITabStrip::eEvent::TabStripMouseMove, E);
+}
+
+void TabStrip::Handler_TabStripDoubleClick(Object^ Sender, MouseEventArgs^ E)
+{
+	HandleTabStripMouseEvent(ITabStrip::eEvent::TabStripMouseDoubleClick, E);
+}
+
+void TabStrip::HandleTabStripMouseEvent(ITabStrip::eEvent Event, MouseEventArgs^ E)
+{
+	auto EventArgs = gcnew ITabStrip::TabStripMouseEventArgs;
+	EventArgs->MouseEvent = E;
+
+	auto MouseOverTab = GetMouseOverTab();
+	if (MouseOverTab)
+	{
+		EventArgs->MouseOverTab = TabStripItem::FromSuperTabItem(MouseOverTab);
+		EventArgs->IsMouseOverNonTabButton = false;
+	}
+	else
+		EventArgs->IsMouseOverNonTabButton = GetMouseOverBaseItem(true) != nullptr;
+
+	RaiseEvent(Event, EventArgs);
 }
 
 SuperTabItem^ TabStrip::GetMouseOverTab()
@@ -952,6 +1089,56 @@ SuperTabItem^ TabStrip::GetMouseOverTab()
 	}
 
 	return nullptr;
+}
+
+DevComponents::DotNetBar::BaseItem^ FindMouseOverBaseItem(DotNetBar::SubItemsCollection^ Collection, bool IgnoreTabItems)
+{
+	for each (auto Itr in Collection)
+	{
+		auto BaseItem = dynamic_cast<DotNetBar::BaseItem^>(Itr);
+		if (BaseItem == nullptr)
+			continue;
+
+		auto IsTabItem = Itr->GetType() == DotNetBar::SuperTabItem::typeid;
+		auto IsButtonItem = Itr->GetType() == DotNetBar::ButtonItem::typeid;
+
+		if (IgnoreTabItems && IsTabItem)
+			continue;
+
+		if (IsTabItem)
+		{
+			auto Item = safe_cast<DotNetBar::SuperTabItem^>(Itr);
+			if (Item->IsMouseOver)
+				return Item;
+		}
+		else if (IsButtonItem)
+		{
+			auto Item = safe_cast<DotNetBar::ButtonItem^>(Itr);
+
+			// can be false for button items in the tab overflow menu
+			if (Item->Tag && Item->Tag->GetType() != DotNetBar::SuperTabItem::typeid)
+			{
+				auto Wrapped = Button::FromDotNetBarBaseItem(Item);
+				if (Wrapped && Wrapped->IsMouseOver)
+					return Item;
+			}
+		}
+
+		auto MouseOverSubItem = FindMouseOverBaseItem(BaseItem->SubItems, IgnoreTabItems);
+		if (MouseOverSubItem)
+			return MouseOverSubItem;
+	}
+
+	return nullptr;
+}
+
+DevComponents::DotNetBar::BaseItem^ TabStrip::GetMouseOverBaseItem(bool IgnoreTabItems)
+{
+	auto ItemInTabStrip = FindMouseOverBaseItem(Source->Tabs, IgnoreTabItems);
+	if (ItemInTabStrip == nullptr && Source->ControlBox->Visible)
+		ItemInTabStrip = FindMouseOverBaseItem(Source->ControlBox->SubItems, IgnoreTabItems);
+
+	return ItemInTabStrip;
 }
 
 void TabStrip::SelectTab(SuperTabItem^ Tab)
@@ -985,6 +1172,8 @@ TabStrip::TabStrip(DotNetBar::SuperTabControl^ Source, eViewRole ViewRole, ViewC
 	DelegateTabMoved = gcnew EventHandler<DotNetBar::SuperTabStripTabMovedEventArgs^>(this, &TabStrip::Handler_TabMoved);
 	DelegateTabStripMouseDown = gcnew EventHandler<MouseEventArgs^>(this, &TabStrip::Handler_TabStripMouseDown);
 	DelegateTabStripMouseUp = gcnew EventHandler<MouseEventArgs^>(this, &TabStrip::Handler_TabStripMouseUp);
+	DelegateTabStripMouseMove = gcnew EventHandler<MouseEventArgs^>(this, &TabStrip::Handler_TabStripMouseMove);
+	DelegateTabStripDoubleClick = gcnew EventHandler<MouseEventArgs^>(this, &TabStrip::Handler_TabStripDoubleClick);
 
 	Source->TabItemClose += DelegateTabItemClose;
 	Source->SelectedTabChanged += DelegateSelectedTabChanged;
@@ -993,6 +1182,8 @@ TabStrip::TabStrip(DotNetBar::SuperTabControl^ Source, eViewRole ViewRole, ViewC
 	Source->TabMoved += DelegateTabMoved;
 	Source->TabStripMouseDown += DelegateTabStripMouseDown;
 	Source->TabStripMouseUp += DelegateTabStripMouseUp;
+	Source->TabStripMouseMove += DelegateTabStripMouseMove;
+	Source->TabStripMouseDoubleClick += DelegateTabStripDoubleClick;
 
 	Source->TabStrip->Tag = this;
 }
@@ -1006,6 +1197,8 @@ TabStrip::~TabStrip()
 	Source->TabMoved -= DelegateTabMoved;
 	Source->TabStripMouseDown -= DelegateTabStripMouseDown;
 	Source->TabStripMouseUp -= DelegateTabStripMouseUp;
+	Source->TabStripMouseMove -= DelegateTabStripMouseMove;
+	Source->TabStripMouseDoubleClick -= DelegateTabStripDoubleClick;
 
 	SAFEDELETE_CLR(DelegateTabItemClose);
 	SAFEDELETE_CLR(DelegateSelectedTabChanged);
@@ -1014,6 +1207,8 @@ TabStrip::~TabStrip()
 	SAFEDELETE_CLR(DelegateTabMoved);
 	SAFEDELETE_CLR(DelegateTabStripMouseDown);
 	SAFEDELETE_CLR(DelegateTabStripMouseUp);
+	SAFEDELETE_CLR(DelegateTabStripMouseMove);
+	SAFEDELETE_CLR(DelegateTabStripDoubleClick);
 
 	Source->TabStrip->Tag = nullptr;
 	Source = nullptr;
@@ -1037,6 +1232,16 @@ void TabStrip::ActiveTab::set(ITabStripItem^ v)
 	SelectTab(TabItem->Source);
 }
 
+ITabStripItem^ TabStrip::MouseOverTab::get()
+{
+	auto Tab = GetMouseOverTab();
+	if (Tab == nullptr)
+		return nullptr;
+
+	return TabStripItem::FromSuperTabItem(Tab);
+}
+
+
 UInt32 TabStrip::TabCount::get()
 {
 	UInt32 Count = 0;
@@ -1048,6 +1253,18 @@ UInt32 TabStrip::TabCount::get()
 	return Count;
 }
 
+System::Collections::Generic::IEnumerable<ITabStripItem^>^ TabStrip::Tabs::get()
+{
+	auto Out = gcnew List<ITabStripItem^>;
+
+	for each (auto Itr in Source->Tabs)
+	{
+		if (Itr->GetType() == DotNetBar::SuperTabItem::typeid)
+			Out->Add(TabStripItem::FromSuperTabItem(safe_cast<DotNetBar::SuperTabItem^>(Itr)));
+	}
+
+	return Out;
+}
 
 ITabStripItem^ TabStrip::AllocateNewTab()
 {
@@ -1523,38 +1740,185 @@ void CrumbBar::AddItem(ICrumbBarItem^ Item)
 	Source->Items->Add(CrumbItem->Source);
 }
 
-
-Container::Container(Control^ Source, eViewRole ViewRole)
-	: ViewComponent(eComponentType::Container, ViewRole, nullptr)
+void Container::Handler_MouseDown(Object^ Sender, MouseEventArgs^ E)
 {
-	this->Source = Source;
+	auto EventArgs = gcnew IContainer::ContainerMouseEventArgs;
+	EventArgs->MouseEvent = E;
+
+	RaiseEvent(IContainer::eEvent::MouseDown, EventArgs);
+}
+
+void Container::Handler_MouseUp(Object^ Sender, MouseEventArgs^ E)
+{
+	auto EventArgs = gcnew IContainer::ContainerMouseEventArgs;
+	EventArgs->MouseEvent = E;
+
+	RaiseEvent(IContainer::eEvent::MouseUp, EventArgs);
+}
+
+void Container::Handler_MouseMove(Object^ Sender, MouseEventArgs^ E)
+{
+	auto EventArgs = gcnew IContainer::ContainerMouseEventArgs;
+	EventArgs->MouseEvent = E;
+
+	RaiseEvent(IContainer::eEvent::MouseMove, EventArgs);
+}
+
+void Container::Handler_DoubleClick(Object^ Sender, EventArgs^ E)
+{
+	auto EventArgs = gcnew IContainer::ContainerMouseEventArgs;
+
+	RaiseEvent(IContainer::eEvent::DoubleClick, EventArgs);
+}
+
+void Container::InitEventHandlers()
+{
+	DelegateMouseDown = gcnew MouseEventHandler(this, &Container::Handler_MouseDown);
+	DelegateMouseUp = gcnew MouseEventHandler(this, &Container::Handler_MouseUp);
+	DelegateMouseMove = gcnew MouseEventHandler(this, &Container::Handler_MouseMove);
+	DelegateDoubleClick = gcnew EventHandler(this, &Container::Handler_DoubleClick);
+
+	switch (SourceType)
+	{
+	case eSourceType::Control:
+		BasicControl->MouseDown += DelegateMouseDown;
+		BasicControl->MouseUp += DelegateMouseUp;
+		BasicControl->MouseMove += DelegateMouseMove;
+		BasicControl->DoubleClick += DelegateDoubleClick;
+
+		break;
+	case eSourceType::BaseItem:
+		DotNetBarBaseItem->MouseDown += DelegateMouseDown;
+		DotNetBarBaseItem->MouseUp += DelegateMouseUp;
+		DotNetBarBaseItem->MouseMove += DelegateMouseMove;
+		DotNetBarBaseItem->DoubleClick += DelegateDoubleClick;
+
+		break;
+	}
+}
+
+void Container::DeinitEventHandlers()
+{
+	switch (SourceType)
+	{
+	case eSourceType::Control:
+		BasicControl->MouseDown -= DelegateMouseDown;
+		BasicControl->MouseUp -= DelegateMouseUp;
+		BasicControl->MouseMove -= DelegateMouseMove;
+		BasicControl->DoubleClick -= DelegateDoubleClick;
+
+		break;
+	case eSourceType::BaseItem:
+		DotNetBarBaseItem->MouseDown -= DelegateMouseDown;
+		DotNetBarBaseItem->MouseUp -= DelegateMouseUp;
+		DotNetBarBaseItem->MouseMove -= DelegateMouseMove;
+		DotNetBarBaseItem->DoubleClick -= DelegateDoubleClick;
+
+		break;
+	}
+}
+
+bool Container::GetterVisible()
+{
+	switch (SourceType)
+	{
+	case eSourceType::Control:
+		return BasicControl->Visible;
+	case eSourceType::BaseItem:
+		return DotNetBarBaseItem->Visible;
+	}
+
+	return false;
+}
+
+void Container::SetterVisible(bool Value)
+{
+	switch (SourceType)
+	{
+	case eSourceType::Control:
+		BasicControl->Visible = Value;
+		break;
+	case eSourceType::BaseItem:
+		DotNetBarBaseItem->Visible = Value;
+		break;
+	}
+}
+
+Container::Container(Control^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter)
+	: ViewComponent(eComponentType::Container, ViewRole, EventRouter)
+{
+	this->BasicControl = Source;
+	SourceType = eSourceType::Control;
+
+	InitEventHandlers();
+}
+
+Container::Container(DotNetBar::BaseItem^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter)
+	: ViewComponent(eComponentType::Container, ViewRole, EventRouter)
+{
+	this->DotNetBarBaseItem = Source;
+	SourceType = eSourceType::BaseItem;
+
+	InitEventHandlers();
 }
 
 Container::~Container()
 {
-	Source = nullptr;
+	DeinitEventHandlers();
+
+	SAFEDELETE_CLR(DelegateMouseDown);
+	SAFEDELETE_CLR(DelegateMouseUp);
+	SAFEDELETE_CLR(DelegateMouseMove);
+	SAFEDELETE_CLR(DelegateDoubleClick);
+
+	BasicControl = nullptr;
+	DotNetBarBaseItem = nullptr;
 }
 
 void Container::AddControl(Control^ Control)
 {
-	Source->Controls->Add(Control);
+	switch (SourceType)
+	{
+	case eSourceType::Control:
+		BasicControl->Controls->Add(Control);
+		break;
+	case eSourceType::BaseItem:
+		throw gcnew NotImplementedException;
+	}
 }
 
 void Container::RemoveControl(Control^ Control)
 {
-	Source->Controls->Remove(Control);
+	switch (SourceType)
+	{
+	case eSourceType::Control:
+		BasicControl->Controls->Remove(Control);
+		break;
+	case eSourceType::BaseItem:
+		throw gcnew NotImplementedException;
+	}
 }
 
 void Container::Invalidate()
 {
-	if (Source->GetType() == DotNetBar::Bar::typeid)
+	switch (SourceType)
 	{
-		auto SourceBar = safe_cast<DotNetBar::Bar^>(Source);
-		SourceBar->RecalcLayout();
-		SourceBar->RecalcSize();
-	}
+	case eSourceType::Control:
+		if (BasicControl->GetType() == DotNetBar::Bar::typeid)
+		{
+			auto SourceBar = safe_cast<DotNetBar::Bar^>(BasicControl);
+			SourceBar->RecalcLayout();
+			SourceBar->RecalcSize();
+		}
 
-	Source->Refresh();
+		BasicControl->Refresh();
+
+		break;
+	case eSourceType::BaseItem:
+		DotNetBarBaseItem->RecalcSize();
+		DotNetBarBaseItem->Refresh();
+		break;
+	}
 }
 
 ContextMenu::ContextMenu(ContextMenuBar^ Provider, ButtonItem^ Root, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter)

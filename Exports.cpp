@@ -121,7 +121,6 @@ ScriptData* LookupScriptableByEditorID(const char* EditorID)
 		{
 			Result = new ScriptData();
 			Result->FillScriptData(CS_CAST(Form, TESForm, Script));
-			Result->ParentID = nullptr;
 		}
 		else
 		{
@@ -133,7 +132,6 @@ ScriptData* LookupScriptableByEditorID(const char* EditorID)
 				{
 					Result = new ScriptData();
 					Result->FillScriptData(FormScript);
-					Result->ParentID = Form->editorID.c_str();				// EditorID of the script's parent form
 				}
 			}
 		}

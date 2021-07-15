@@ -12,6 +12,10 @@ namespace scriptEditor
 {
 
 
+namespace selectScript
+{
+
+
 NativeScriptDataWrapper::NativeScriptDataWrapper(componentDLLInterface::ScriptData* Data)
 {
 	ScriptData = Data;
@@ -749,6 +753,9 @@ ScriptSelectionDialog::~ScriptSelectionDialog()
 		delete components;
 	}
 }
+
+
+} // namespace selectScript
 
 
 } // namespace scriptEditor

@@ -27,6 +27,9 @@ using namespace System;
 
 ref class ScriptEditorWorkspace : public MetroForm, IScriptEditorView
 {
+protected:
+	virtual void WndProc(Message% m) override;
+private:
 	static DevComponents::DotNetBar::StyleManager^ StyleManager = gcnew DevComponents::DotNetBar::StyleManager;
 
 	DevComponents::DotNetBar::SuperTabControl^ MainTabStrip;
@@ -145,6 +148,7 @@ ref class ScriptEditorWorkspace : public MetroForm, IScriptEditorView
 	DevComponents::DotNetBar::SuperTabItem^ AnotherDummyTabItem;
 	DevComponents::DotNetBar::SuperTabControlPanel^ DummySuperTabControlPanel1;
 	DevComponents::DotNetBar::SuperTabItem^ DummyTabItem;
+	DevComponents::DotNetBar::LabelItem^ StatusBarDocumentDescription;
 	DevComponents::DotNetBar::LabelItem^ StatusBarLineNumber;
 	DevComponents::DotNetBar::LabelItem^ StatusBarColumnNumber;
 	DevComponents::DotNetBar::CircularProgressItem^ StatusBarScriptBytecodeLength;
@@ -167,6 +171,17 @@ ref class ScriptEditorWorkspace : public MetroForm, IScriptEditorView
 	DevComponents::DotNetBar::PanelEx^ EmptyWorkspacePanel;
 	DevComponents::DotNetBar::ButtonX^ GetStartedButtonOpenScript;
 	DevComponents::DotNetBar::ButtonX^ GetStartedButtonNewScript;
+	DevComponents::DotNetBar::ButtonItem^ ContextMenuTabStrip;
+	DevComponents::DotNetBar::ButtonItem^ TabStripContextMenuCloseAllOthers;
+	DevComponents::DotNetBar::ButtonItem^ TabStripContextMenuCloseThis;
+	DevComponents::DotNetBar::ButtonItem^ TabStripContextMenuCloseSaved;
+	DevComponents::DotNetBar::ButtonItem^ TabStripContextMenuCloseAll;
+	DevComponents::DotNetBar::ButtonItem^ TabStripContextMenuPopOut;
+	DevComponents::DotNetBar::ButtonItem^ TabStripContextMenuTabLayout;
+	DevComponents::DotNetBar::ButtonItem^ MenuTabLayoutTop;
+	DevComponents::DotNetBar::ButtonItem^ MenuTabLayoutBottom;
+	DevComponents::DotNetBar::ButtonItem^ MenuTabLayoutLeft;
+	DevComponents::DotNetBar::ButtonItem^ MenuTabLayoutRight;
 	System::ComponentModel::IContainer^ components;
 
 	ref struct ViewComponentData
@@ -188,6 +203,10 @@ ref class ScriptEditorWorkspace : public MetroForm, IScriptEditorView
 	void FinalizeComponents();
 	void InitializeViewComponents();
 	void DeinitializeViewComponents();
+	void SetTabStripLocation(eTabStripAlignment Location, int VerticalTabStripWidth);
+	void ConvertMouseDownEventToWindowMoveEvent();
+	void CreateAndRegisterWindowChromeButtons(eViewRole ParentContainerRole);
+	void RefreshWindowChromeButtonVisibility(eTabStripAlignment TabStripLocation);
 
 	void RegisterViewComponent(components::ViewComponent^ ViewComponent, Object^ Source, eViewRole Role);
 	void SetupViewComponentForm(Forms::Form^ Source);
@@ -203,6 +222,7 @@ ref class ScriptEditorWorkspace : public MetroForm, IScriptEditorView
 	void SetupViewComponentDockablePane(DockContainerItem^ Source, eViewRole Role);
 	void SetupViewComponentCrumbBar(DotNetBar::CrumbBar^ Source);
 	void SetupViewComponentContainer(Control^ Source, eViewRole Role);
+	void SetupViewComponentContainer(DotNetBar::BaseItem^ Source, eViewRole Role);
 	void SetupViewComponentContextMenu(ContextMenuBar^ Provider, ButtonItem^ ContextMenuRoot, eViewRole Role);
 public:
 	ScriptEditorWorkspace();

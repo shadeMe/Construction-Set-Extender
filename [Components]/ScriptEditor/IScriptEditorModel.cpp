@@ -202,7 +202,7 @@ System::String^ ScriptTextAutoRecoveryCache::GetCacheFilePath(String^ ScriptEdit
 		return String::Empty;
 
 	auto AutoRecoveryDir = gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath());
-	DisposibleDataAutoPtr<componentDLLInterface::ScriptData> ScriptData(
+	nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptData> ScriptData(
 		nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(
 			CString(ScriptEditorId).c_str()));
 

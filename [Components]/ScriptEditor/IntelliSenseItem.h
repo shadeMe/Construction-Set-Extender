@@ -19,14 +19,6 @@ namespace intellisense
 ref class IntelliSenseInterface;
 ref class CodeSnippet;
 
-static enum class eStringMatchType
-{
-	StartsWith,
-	Substring,
-	FullMatch
-};
-
-bool DoStringMatch(String^ Source, String^ Target, eStringMatchType Comparison);
 
 ref class IntelliSenseItem : public IRichTooltipContentProvider
 {
@@ -75,13 +67,13 @@ public:
 
 	virtual void Insert(textEditor::ITextEditor^ Editor);
 
-	virtual bool MatchesToken(String^ Token, eStringMatchType Comparison);
-	virtual bool HasInsightInfo();
-
 	virtual String^ GetIdentifier() abstract;
-	virtual String^ GetSubstitution() abstract;
+	virtual String^ GetAlternateIdentifier();
+	virtual bool HasAlternateIdentifier();
+	virtual String^ GetSubstitution();
 	virtual String^ GetItemTypeName();
 	eItemType GetItemType();
+	virtual bool HasInsightInfo();
 
 	virtual property String^ TooltipHeaderText
 	{
@@ -172,9 +164,9 @@ public:
 								  const componentDLLInterface::ObScriptCommandInfo* CommandInfo,
 								  String^ DeveloperUrl);
 
-	virtual bool MatchesToken(String^ Token, eStringMatchType Comparison) override;
 	virtual String^ GetIdentifier() override;
-	virtual String^ GetSubstitution() override;
+	virtual String^ GetAlternateIdentifier() override;
+	virtual bool HasAlternateIdentifier() override;
 	bool RequiresCallingRef();
 	String^ GetShorthand();
 	String^ GetDocumentationUrl();
@@ -193,7 +185,6 @@ public:
 
 	virtual String^ GetItemTypeName() override;
 	virtual String^ GetIdentifier() override;
-	virtual String^ GetSubstitution() override;
 	String^ GetComment();
 	obScriptParsing::Variable::eDataType GetDataType();
 	String^ GetDataTypeID();
@@ -226,10 +217,9 @@ protected:
 
 	IntelliSenseItemForm();
 public:
-	IntelliSenseItemForm(componentDLLInterface::FormData* Data, componentDLLInterface::ScriptData* AttachedScript);
+	IntelliSenseItemForm(nativeWrapper::MarshalledFormData^ Data);
 
 	virtual String^ GetIdentifier() override;
-	virtual String^ GetSubstitution() override;
 	virtual String^ GetItemTypeName() override;
 	bool IsObjectReference();
 	bool HasAttachedScript();
@@ -242,7 +232,7 @@ protected:
 	obScriptParsing::Variable::eDataType DataType;
 	String^ Value;
 public:
-	IntelliSenseItemGlobalVariable(componentDLLInterface::FormData* Data, obScriptParsing::Variable::eDataType Type, String^ Value);
+	IntelliSenseItemGlobalVariable(nativeWrapper::MarshalledVariableData^ Data);
 
 	virtual String^ GetItemTypeName() override;
 	void SetValue(String^ Val);
@@ -256,7 +246,7 @@ public:
 ref class IntelliSenseItemGameSetting : public IntelliSenseItemGlobalVariable
 {
 public:
-	IntelliSenseItemGameSetting(componentDLLInterface::FormData* Data, obScriptParsing::Variable::eDataType Type, String^ Value);
+	IntelliSenseItemGameSetting(nativeWrapper::MarshalledVariableData^ Data);
 
 	virtual String^ GetItemTypeName() override;
 };
@@ -264,7 +254,7 @@ public:
 ref class IntelliSenseItemQuest : public IntelliSenseItemForm
 {
 public:
-	IntelliSenseItemQuest(componentDLLInterface::FormData* Data, componentDLLInterface::ScriptData* AttachedScript);
+	IntelliSenseItemQuest(nativeWrapper::MarshalledFormData^ Data);
 };
 
 ref class IntelliSenseItemScript : public IntelliSenseItemForm
@@ -277,7 +267,7 @@ protected:
 	String^ CommentDescription;
 	obScriptParsing::AnalysisData^ InitialAnalysisData;
 public:
-	IntelliSenseItemScript(componentDLLInterface::ScriptData* ScriptData);
+	IntelliSenseItemScript(nativeWrapper::MarshalledScriptData^ ScriptData);
 
 	static property IntelliSenseItemScript^ Default
 	{
@@ -298,7 +288,7 @@ protected:
 	List<int>^ ParameterIndices;
 	int ReturnVarIndex;
 public:
-	IntelliSenseItemUserFunction(componentDLLInterface::ScriptData* ScriptData);
+	IntelliSenseItemUserFunction(nativeWrapper::MarshalledScriptData^ ScriptData);
 };
 
 ref class IntelliSenseItemCodeSnippet : public IntelliSenseItem
@@ -309,20 +299,11 @@ public:
 	IntelliSenseItemCodeSnippet(CodeSnippet^ Source);
 
 	virtual void Insert(textEditor::ITextEditor^ Editor) override;
-	virtual bool MatchesToken(String^ Token, eStringMatchType Comparison) override;
 	virtual bool HasInsightInfo() override;
 	virtual String^ GetIdentifier() override;
+	virtual String^ GetAlternateIdentifier() override;
+	virtual bool HasAlternateIdentifier() override;
 	virtual String^ GetSubstitution() override;
-};
-
-ref class IntelliSenseItemSorter : public System::Collections::Generic::IComparer<IntelliSenseItem^>
-{
-protected:
-	SortOrder Order;
-public:
-	IntelliSenseItemSorter(SortOrder Order) : Order(Order) {}
-
-	virtual int Compare(IntelliSenseItem^ X, IntelliSenseItem^ Y);
 };
 
 

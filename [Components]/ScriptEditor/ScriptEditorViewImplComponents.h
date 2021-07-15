@@ -78,14 +78,22 @@ ref class Form : public ViewComponent, IForm
 	int UpdateCounter;
 	CancelEventHandler^ DelegateClosing;
 	KeyEventHandler^ DelegateKeyDown;
+	EventHandler^ DelegateLocationChanged;
+	EventHandler^ DelegateSizeChanged;
 
 	void Handler_Closing(Object^ Sender, CancelEventArgs^ E);
 	void Handler_KeyDown(Object^ Sender, KeyEventArgs^ E);
+	void Handler_LocationChanged(Object^ Sender, EventArgs^ E);
+	void Handler_SizeChanged(Object^ Sender, EventArgs^ E);
 public:
 	Form(Forms::Form^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);
 	virtual ~Form();
 
-	ImplPropertySimple(String^, Text, Source->Text);
+	property String^ Text
+	{
+		virtual String^ get();
+		virtual void set(String^ v);
+	}
 	property Rectangle Bounds
 	{
 		virtual Rectangle get();
@@ -117,12 +125,17 @@ ref class Button : public ViewComponent, IButton
 	String^ TextBuffer;
 	String^ TooltipBuffer;
 	String^ ShortcutKeyBuffer;
+	bool MouseOver;
 
 	EventHandler^ DelegateClick;
 	DotNetBarManager::PopupOpenEventHandler^ DelegatePopupOpen;
+	EventHandler^ DelegateMouseEnter;
+	EventHandler^ DelegateMouseLeave;
 
 	void Handler_Click(Object^ Sender, EventArgs^ E);
 	void Handler_PopupOpen(Object^ Sender, PopupOpenEventArgs^ E);
+	void Handler_MouseEnter(Object^ Sender, EventArgs^ E);
+	void Handler_MouseLeave(Object^ Sender, EventArgs^ E);
 
 	void InitEventHandlers();
 	void DeinitEventHandlers();
@@ -130,6 +143,7 @@ ref class Button : public ViewComponent, IButton
 	String^ GetterText();
 	String^ GetterShortcutKey();
 	String^ GetterTooltip();
+	Image^ GetterImage();
 	bool GetterChecked();
 	bool GetterVisible();
 	bool GetterEnabled();
@@ -137,6 +151,7 @@ ref class Button : public ViewComponent, IButton
 	void SetterText(String^ Value);
 	void SetterShortcutKey(String^ Value);
 	void SetterTooltip(String^ Value);
+	void SetterImage(Image^ Value);
 	void SetterChecked(bool Value);
 	void SetterVisible(bool Value);
 	void SetterEnabled(bool Value);
@@ -152,10 +167,12 @@ public:
 	ImplPropertyWithAccessors(String^, Text);
 	ImplPropertyWithAccessors(String^, Tooltip);
 	ImplPropertyWithAccessors(String^, ShortcutKey);
+	ImplPropertyWithAccessors(Drawing::Image^, Image);
 	ImplPropertySimple(Object^, Tag, Tag_);
 	ImplPropertyWithAccessors(bool, Checked);
 	ImplPropertyWithAccessors(bool, Visible);
 	ImplPropertyWithAccessors(bool, Enabled);
+	ImplPropertyGetOnly(bool, IsMouseOver, MouseOver);
 	ImplPropertyGetOnly(DotNetBar::ButtonItem^, SourceButtonItem, ButtonItem);
 
 	virtual void PerformClick();
@@ -218,6 +235,7 @@ public:
 	virtual ~Label();
 
 	ImplPropertySimple(String^, Text, Source->Text);
+	ImplPropertySimple(Drawing::Image^, Image, Source->Image);
 	ImplPropertySimple(bool, Visible, Source->Visible);
 };
 
@@ -238,6 +256,8 @@ public:
 	ImplPropertyGetOnly(SuperTabItem^, Source, Source_);
 	ImplPropertyGetOnly(ITabStrip^, Parent, ParentTabStrip_);
 
+	virtual void Close();
+
 	static TabStripItem^ FromSuperTabItem(SuperTabItem^ SuperTabItem);
 	static TabStripItem^ New(ITabStrip^ ParentTabStrip);
 };
@@ -254,6 +274,8 @@ ref class TabStrip : public ViewComponent, ITabStrip
 	EventHandler<DotNetBar::SuperTabStripTabMovedEventArgs^>^ DelegateTabMoved;
 	EventHandler<MouseEventArgs^>^ DelegateTabStripMouseDown;
 	EventHandler<MouseEventArgs^>^ DelegateTabStripMouseUp;
+	EventHandler<MouseEventArgs^>^ DelegateTabStripMouseMove;
+	EventHandler<MouseEventArgs^>^ DelegateTabStripDoubleClick;
 
 	void Handler_TabItemClose(Object^ Sender, DotNetBar::SuperTabStripTabItemCloseEventArgs ^ E);
 	void Handler_SelectedTabChanged(Object^ Sender, DotNetBar::SuperTabStripSelectedTabChangedEventArgs^ E);
@@ -262,8 +284,12 @@ ref class TabStrip : public ViewComponent, ITabStrip
 	void Handler_TabMoved(Object^ Sender, DotNetBar::SuperTabStripTabMovedEventArgs^ E);
 	void Handler_TabStripMouseDown(Object^ Sender, MouseEventArgs^ E);
 	void Handler_TabStripMouseUp(Object^ Sender, MouseEventArgs^ E);
+	void Handler_TabStripMouseMove(Object^ Sender, MouseEventArgs^ E);
+	void Handler_TabStripDoubleClick(Object^ Sender, MouseEventArgs^ E);
+	void HandleTabStripMouseEvent(ITabStrip::eEvent Event, MouseEventArgs^ E);
 
 	SuperTabItem^ GetMouseOverTab();
+	BaseItem^ GetMouseOverBaseItem(bool IgnoreTabItems);
 	void SelectTab(SuperTabItem^ Tab);
 	SuperTabItem^ GetFirstTabItem();
 public:
@@ -275,10 +301,20 @@ public:
 		virtual ITabStripItem^ get();
 		virtual void set(ITabStripItem^ v);
 	}
+	property ITabStripItem^ MouseOverTab
+	{
+		virtual ITabStripItem^ get();
+		ImplPropertySetInvalid(ITabStripItem^);
+	}
 	property UInt32 TabCount
 	{
 		virtual UInt32 get();
 		ImplPropertySetInvalid(UInt32);
+	}
+	property IEnumerable<ITabStripItem^>^ Tabs
+	{
+		virtual IEnumerable<ITabStripItem^>^ get();
+		ImplPropertySetInvalid(IEnumerable<ITabStripItem^>^);
 	}
 
 	virtual ITabStripItem^ AllocateNewTab();
@@ -451,12 +487,37 @@ public:
 
 ref class Container : public ViewComponent, IContainer
 {
-	Control^ Source;
+	static enum class eSourceType
+	{
+		Control,
+		BaseItem,
+	};
+
+	Control^ BasicControl;
+	DotNetBar::BaseItem^ DotNetBarBaseItem;
+	eSourceType SourceType;
+
+	MouseEventHandler^ DelegateMouseDown;
+	MouseEventHandler^ DelegateMouseUp;
+	MouseEventHandler^ DelegateMouseMove;
+	EventHandler^ DelegateDoubleClick;
+
+	void Handler_MouseDown(Object^ Sender, MouseEventArgs^ E);
+	void Handler_MouseUp(Object^ Sender, MouseEventArgs^ E);
+	void Handler_MouseMove(Object^ Sender, MouseEventArgs^ E);
+	void Handler_DoubleClick(Object^ Sender, EventArgs^ E);
+
+	void InitEventHandlers();
+	void DeinitEventHandlers();
+
+	bool GetterVisible();
+	void SetterVisible(bool Value);
 public:
-	Container(Control^ Source, eViewRole ViewRole);
+	Container(Control^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);
+	Container(DotNetBar::BaseItem^ Source, eViewRole ViewRole,ViewComponentEventRaiser^ EventRouter );
 	virtual ~Container();
 
-	ImplPropertySimple(bool, Visible, Source->Visible);
+	ImplPropertyWithAccessors(bool, Visible);
 
 	virtual void AddControl(Control^ Control);
 	virtual void RemoveControl(Control^ Control);
@@ -472,6 +533,8 @@ ref class ContextMenu : public ViewComponent, IContextMenu
 public:
 	ContextMenu(ContextMenuBar^ Provider, ButtonItem^ Root, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);
 	virtual ~ContextMenu();
+
+	ImplPropertySimple(bool, Expanded, Popup->Expanded);
 
 	virtual void Show(Drawing::Point ScreenCoords);
 	virtual void Hide();

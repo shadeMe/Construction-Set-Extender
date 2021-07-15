@@ -133,9 +133,9 @@ protected:
 	bool Disposing;
 
 
-	bool	RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::Event Type, System::Windows::Input::KeyEventArgs^ K, System::Windows::Input::MouseButtonEventArgs^ M);
-	void	RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::Event Type, int Offset, Windows::Point Location);
-	void	RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::Event Type);
+	bool	RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::eEvent Type, System::Windows::Input::KeyEventArgs^ K, System::Windows::Input::MouseButtonEventArgs^ M);
+	void	RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::eEvent Type, int Offset, Windows::Point Location);
+	void	RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::eEvent Type);
 
 	void	OnScriptModified(bool ModificationState);
 	bool	OnKeyDown(System::Windows::Input::KeyEventArgs^ E);			// returns true if handled

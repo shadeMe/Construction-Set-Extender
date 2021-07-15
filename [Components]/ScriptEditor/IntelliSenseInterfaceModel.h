@@ -1,7 +1,9 @@
 #pragma once
 
+#include "Macros.h"
 #include "IntelliSenseItem.h"
 #include "IIntelliSenseInterface.h"
+#include "IntelliSenseBackend.h"
 
 namespace cse
 {
@@ -17,7 +19,7 @@ namespace intellisense
 
 ref struct IntelliSenseModelContext
 {
-	static enum class OperationType
+	static enum class eOperationType
 	{
 		Default,
 		Call,
@@ -26,77 +28,56 @@ ref struct IntelliSenseModelContext
 		Snippet
 	};
 
-	property bool						Valid;
-	property int						CaretPos;
-	property UInt32						Line;
-	property bool						InsideCommentOrStringLiteral;
-	property bool						LineVisible;
+	property bool Valid;
+	property int CaretPos;
+	property UInt32 Line;
+	property bool InsideCommentOrStringLiteral;
+	property bool LineVisible;
 
-	property OperationType				Operation;
+	property eOperationType Operation;
 
-	property IntelliSenseItem^			CallingObject;
-	property IntelliSenseItemScript^	CallingObjectScript;
-	property bool						CallingObjectIsObjectReference;
+	property IntelliSenseItem^ CallingObject;
+	property IntelliSenseItemScript^ CallingObjectScript;
+	property IntelliSenseItemCollection^ CallingObjectScriptVariables;
+	property bool CallingObjectIsObjectReference;
 
-	property String^					FilterString;
-	property Point						DisplayScreenCoords;
+	property String^ FilterString;
+	property Point DisplayScreenCoords;
 
+	IntelliSenseModelContext();
 
-	IntelliSenseModelContext()
-	{
-		Reset();
-	}
-
-	void Reset()
-	{
-		Valid = false;
-		CaretPos = -1;
-		Line = 0;
-		LineVisible = true;
-
-		Operation = OperationType::Default;
-
-		CallingObject = nullptr;
-		CallingObjectScript = nullptr;
-		CallingObjectIsObjectReference = false;
-
-		FilterString = String::Empty;
-		DisplayScreenCoords = Point(0, 0);
-	}
+	void Reset();
 };
 
 ref struct IntelliSenseModelContextUpdateDiff
 {
-	property bool		CaretPosChanged;
-	property UInt32		OldCaretPos;
-	property bool		LineChanged;
-	property UInt32		OldLine;
-	property bool		OperationInvoked;
+	property bool CaretPosChanged;
+	property UInt32 OldCaretPos;
+	property bool LineChanged;
+	property UInt32 OldLine;
+	property bool OperationInvoked;
+	property IntelliSenseItemScript^ OldCallingObjectScript;
+	property bool CallingObjectScriptChanged;
 
-	IntelliSenseModelContextUpdateDiff()
-	{
-		Reset();
-	}
+	IntelliSenseModelContextUpdateDiff();
 
-	void Reset()
-	{
-		CaretPosChanged = false;
-		OldCaretPos = -1;
-		LineChanged = false;
-		OldLine = 0;
-		OperationInvoked = false;
-	}
+	void Reset();
 };
 
 ref class IntelliSenseInterfaceModel : public IIntelliSenseInterfaceModel
 {
-	static enum class PopupDisplayMode
+	static property int MaximumNumberOfSuggestions
+	{
+		int get() { return 100; }
+	}
+
+	static enum class ePopupDisplayMode
 	{
 		Manual,
 		Automatic
 	};
 
-	static enum class PopupShowReason
+	static enum class ePopupShowReason
 	{
 		None,
 		UserInvoked,
@@ -104,7 +85,7 @@ ref class IntelliSenseInterfaceModel : public IIntelliSenseInterfaceModel
 		PopupThresholdReached,
 	};
 
-	static enum class PopupHideReason
+	static enum class ePopupHideReason
 	{
 		None,
 		UserDismissed,
@@ -112,43 +93,39 @@ ref class IntelliSenseInterfaceModel : public IIntelliSenseInterfaceModel
 		ContextChanged,
 	};
 
-	static enum class PopupSuppressionMode
+	static enum class ePopupSuppressionMode
 	{
 		NoSuppression,
 		UntilNextTriggerKeyPress,
 	};
 
-	static enum class ContextChangeEventHandlingMode
+	static enum class eContextChangeEventHandlingMode
 	{
 		Handle,
 		CacheAndIgnore,
 	};
 
 
-	textEditor::ITextEditor^		ParentEditor;
-	IIntelliSenseInterfaceView^			BoundView;
+	textEditor::ITextEditor^ ParentEditor;
+	IIntelliSenseInterfaceView^ BoundView;
 
-	IntelliSenseModelContext^			Context;
-	IntelliSenseModelContextUpdateDiff^	LastContextUpdateDiff;
+	IntelliSenseModelContext^ Context;
+	IntelliSenseModelContextUpdateDiff^ LastContextUpdateDiff;
 
-	Dictionary<IntelliSenseContextChangeEventArgs::Event, IntelliSenseContextChangeEventArgs^>^
-										CachedContextChangeEventArgs;
+	Dictionary<IntelliSenseContextChangeEventArgs::eEvent, IntelliSenseContextChangeEventArgs^>^ CachedContextChangeEventArgs;
 
+	IntelliSenseItemCollection^ LocalVariables;
+	List<IntelliSenseItem^>^ EnumeratedItems;
 
-	List<IntelliSenseItemScriptVariable^>^
-										LocalVariables;
-	List<IntelliSenseItem^>^			EnumeratedItems;
+	ePopupDisplayMode DisplayMode;
+	ePopupSuppressionMode SuppressionMode;
+	ePopupShowReason ShowReason;
+	ePopupHideReason HideReason;
+	eContextChangeEventHandlingMode ContextChangeHandlingMode;
 
-	PopupDisplayMode					DisplayMode;
-	PopupSuppressionMode				SuppressionMode;
-	PopupShowReason						ShowReason;
-	PopupHideReason						HideReason;
-	ContextChangeEventHandlingMode		ContextChangeHandlingMode;
-
-	property bool						AutomaticallyPopup;
-	property UInt32						PopupThresholdLength;
-	property bool						UseSubstringFiltering;
-	property bool						InsertSuggestionOnEnterKey;
+	property bool AutomaticallyPopup;
+	property UInt32 PopupThresholdLength;
+	property bool InsertSuggestionOnEnterKey;
 
 	property bool Bound
 	{
@@ -159,67 +136,61 @@ ref class IntelliSenseInterfaceModel : public IIntelliSenseInterfaceModel
 		bool get() { return BoundView->Visible; }
 	}
 
-	void									ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
-	void									ParentEditor_InputEventHandler(Object^ Sender, IntelliSenseInputEventArgs^ E);
-	void									ParentEditor_InsightHoverEventHandler(Object^ Sender, IntelliSenseInsightHoverEventArgs^ E);
-	void									ParentEditor_ContextChangeEventHandler(Object^ Sender, IntelliSenseContextChangeEventArgs^ E);
-	void									BoundView_ItemSelected(Object^ Sender, EventArgs^ E);
-	void									BoundView_Dismissed(Object^ Sender, EventArgs^ E);
+	void ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
+	void ParentEditor_InputEventHandler(Object^ Sender, IntelliSenseInputEventArgs^ E);
+	void ParentEditor_InsightHoverEventHandler(Object^ Sender, IntelliSenseInsightHoverEventArgs^ E);
+	void ParentEditor_ContextChangeEventHandler(Object^ Sender, IntelliSenseContextChangeEventArgs^ E);
+	void BoundView_ItemSelected(Object^ Sender, EventArgs^ E);
+	void BoundView_Dismissed(Object^ Sender, EventArgs^ E);
 
-	EventHandler^							ScriptEditorPreferencesSavedHandler;
-	IntelliSenseInputEventHandler^			ParentEditorInputEventHandler;
-	IntelliSenseInsightHoverEventHandler^	ParentEditorInsightHoverEventHandler;
-	IntelliSenseContextChangeEventHandler^	ParentEditorContextChangeEventHandler;
-	EventHandler^							BoundViewItemSelectedHandler;
-	EventHandler^							BoundViewDismissedHandler;
+	EventHandler^ ScriptEditorPreferencesSavedHandler;
+	IntelliSenseInputEventHandler^ ParentEditorInputEventHandler;
+	IntelliSenseInsightHoverEventHandler^ ParentEditorInsightHoverEventHandler;
+	IntelliSenseContextChangeEventHandler^ ParentEditorContextChangeEventHandler;
+	EventHandler^ BoundViewItemSelectedHandler;
+	EventHandler^ BoundViewDismissedHandler;
 
-	void						SetContextChangeEventHandlingMode(ContextChangeEventHandlingMode Mode);
+	void SetContextChangeEventHandlingMode(eContextChangeEventHandlingMode Mode);
 
-	void						OnParentReset();
-	void						OnTriggerKeyPress();
-	void						OnCaretPosChanged(IntelliSenseContextChangeEventArgs^ E);
-	void						OnUserInvoked();
-	void						OnUserDismissed();
-	void						OnSelectionCompleted();
-	void						OnScrollOffsetChanged(IntelliSenseContextChangeEventArgs^ E);
-	void						OnTextChanged(IntelliSenseContextChangeEventArgs^ E);
+	void OnParentReset();
+	void OnTriggerKeyPress();
+	void OnCaretPosChanged(IntelliSenseContextChangeEventArgs^ E);
+	void OnUserInvoked();
+	void OnUserDismissed();
+	void OnSelectionCompleted();
+	void OnScrollOffsetChanged(IntelliSenseContextChangeEventArgs^ E);
+	void OnTextChanged(IntelliSenseContextChangeEventArgs^ E);
 
 
-	void						UpdateContext(IntelliSenseContextChangeEventArgs^ Args);
-	void						ResetContext();
+	void UpdateContext(IntelliSenseContextChangeEventArgs^ Args);
+	void ResetContext();
 
-	bool						HandleKeyboardInput(IntelliSenseInputEventArgs::Event Type, KeyEventArgs^ E);
-	bool						IsTriggerKey(KeyEventArgs^ E);
-	bool						HandleMouseInput(IntelliSenseInputEventArgs::Event Type, MouseEventArgs^ E);
+	bool HandleKeyboardInput(IntelliSenseInputEventArgs::eEvent Type, KeyEventArgs^ E);
+	bool IsTriggerKey(KeyEventArgs^ E);
+	bool HandleMouseInput(IntelliSenseInputEventArgs::eEvent Type, MouseEventArgs^ E);
 
-	void						ShowInsightTooltip(IntelliSenseInsightHoverEventArgs^ E);
-	void						HideInsightTooltip();
+	void ShowInsightTooltip(IntelliSenseInsightHoverEventArgs^ E);
+	void HideInsightTooltip();
 
-	void						ShowPopup(PopupShowReason Reason);
-	bool						UpdatePopup();
-	void						HidePopup(PopupHideReason Reason);
-	void						RelocatePopup();
+	void ShowPopup(ePopupShowReason Reason);
+	bool UpdatePopup();
+	void HidePopup(ePopupHideReason Reason);
+	void RelocatePopup();
 
-	void						PopulateDataStore();
-	generic <typename T> where T : IntelliSenseItem
-	void						EnumerateIntelliSenseItems(IEnumerable<T>^ Items, eStringMatchType MatchType);
+	void PopulateDataStore();
 
-	IntelliSenseItemScriptVariable^
-								LookupLocalVariable(String^ Identifier);
-	void						UpdateLocalVariables(obScriptParsing::AnalysisData^ Data);
+	IntelliSenseItemScriptVariable^ LookupLocalVariable(String^ Identifier);
+	void UpdateLocalVariables(obScriptParsing::AnalysisData^ Data);
+	void EnumerateVariables(IntelliSenseItemCollection^ ScriptVariables, String^ MatchIdentifier, eFilterMode MatchType, UInt32 FuzzyMatchingMaxCost);
 public:
 	IntelliSenseInterfaceModel(textEditor::ITextEditor^ Parent);
 	~IntelliSenseInterfaceModel();
 
-	virtual property List<IntelliSenseItem^>^ DataStore
-	{
-		virtual List<IntelliSenseItem^>^ get() { return EnumeratedItems; }
-		virtual void set(List<IntelliSenseItem^>^) {}
-	}
+	ImplPropertyGetOnly(List<IntelliSenseItem^>^, DataStore, EnumeratedItems);
 
-	virtual void	Bind(IIntelliSenseInterfaceView^ To);
-	virtual void	Unbind();
-	virtual bool	IsLocalVariable(String^ Identifier);
+	virtual void Bind(IIntelliSenseInterfaceView^ To);
+	virtual void Unbind();
+	virtual bool IsLocalVariable(String^ Identifier);
 };
 
 

@@ -20,18 +20,18 @@ namespace controllerImpl
 
 ActiveDocumentActionCollection::ActiveDocumentActionCollection()
 {
-	Copy = gcnew BasicAction("Copy", "Copies the current selection or line");
-	Paste = gcnew BasicAction("Paste", "Pastes the contents of the clipboard at the caret location");
-	Comment = gcnew BasicAction("Comment", "Comments the current selection or line");
-	Uncomment = gcnew BasicAction("Uncomment", "Uncomments the current selection or line");
-	AddBookmark = gcnew BasicAction("Add Bookmark", "Adds a new bookmark at the current line");
-	GoToLine = gcnew BasicAction("Go to Line", "Jumps to a given line in the document");
+	Copy = gcnew utilities::BasicAction("Copy", "Copies the current selection or line");
+	Paste = gcnew utilities::BasicAction("Paste", "Pastes the contents of the clipboard at the caret location");
+	Comment = gcnew utilities::BasicAction("Comment", "Comments the current selection or line");
+	Uncomment = gcnew utilities::BasicAction("Uncomment", "Uncomments the current selection or line");
+	AddBookmark = gcnew utilities::BasicAction("Add Bookmark", "Adds a new bookmark at the current line");
+	GoToLine = gcnew utilities::BasicAction("Go to Line", "Jumps to a given line in the document");
 
-	AddVarInteger = gcnew BasicAction("Add New Variable (Integer)", "Adds a new integer variable to the script's variable declaration");
-	AddVarFloat = gcnew BasicAction("Add New Variable (Float)", "Adds a new float variable to the script's variable declaration");
-	AddVarReference = gcnew BasicAction("Add New Variable (Reference)", "Adds a new reference variable to the script's variable declaration");
-	AddVarString = gcnew BasicAction("Add New Variable (String)", "Adds a new string variable to the script's variable declaration");
-	AddVarArray = gcnew BasicAction("Add New Variable (Array)", "Adds a new array variable to the script's variable declaration");
+	AddVarInteger = gcnew utilities::BasicAction("Add New Variable (Integer)", "Adds a new integer variable to the script's variable declaration");
+	AddVarFloat = gcnew utilities::BasicAction("Add New Variable (Float)", "Adds a new float variable to the script's variable declaration");
+	AddVarReference = gcnew utilities::BasicAction("Add New Variable (Reference)", "Adds a new reference variable to the script's variable declaration");
+	AddVarString = gcnew utilities::BasicAction("Add New Variable (String)", "Adds a new string variable to the script's variable declaration");
+	AddVarArray = gcnew utilities::BasicAction("Add New Variable (Array)", "Adds a new array variable to the script's variable declaration");
 }
 
 ActiveDocumentActionCollection::~ActiveDocumentActionCollection()
@@ -52,34 +52,34 @@ ActiveDocumentActionCollection::~ActiveDocumentActionCollection()
 
 void ActiveDocumentActionCollection::CreateDefaultKeyBindings(components::InputManager^ InputManager)
 {
-	InputManager->AddKeyChordCommand(Copy, KeyCombo::New(Keys::Control, Keys::C), false, view::eViewRole::TextEditor_ContextMenu_Copy);
-	InputManager->AddKeyChordCommand(Paste, KeyCombo::New(Keys::Control, Keys::V), false, view::eViewRole::TextEditor_ContextMenu_Paste);
-	InputManager->AddKeyChordCommand(Comment, KeyCombo::New(Keys::Control, Keys::K), KeyCombo::New(Keys::Control, Keys::C), false, view::eViewRole::MainToolbar_Edit_Comment);
-	InputManager->AddKeyChordCommand(Uncomment, KeyCombo::New(Keys::Control, Keys::K), KeyCombo::New(Keys::Control, Keys::U), false, view::eViewRole::MainToolbar_Edit_Uncomment);
-	InputManager->AddKeyChordCommand(AddBookmark, KeyCombo::New(Keys::Control, Keys::B), false, view::eViewRole::MainToolbar_Edit_AddBookmark, view::eViewRole::MainToolbar_Edit_AddBookmark);
-	InputManager->AddKeyChordCommand(GoToLine, KeyCombo::New(Keys::Control, Keys::G), false, view::eViewRole::MainToolbar_Edit_GoToLine);
+	InputManager->AddKeyChordCommand(Copy, utilities::KeyCombo::New(Keys::Control, Keys::C), false, view::eViewRole::TextEditor_ContextMenu_Copy);
+	InputManager->AddKeyChordCommand(Paste, utilities::KeyCombo::New(Keys::Control, Keys::V), false, view::eViewRole::TextEditor_ContextMenu_Paste);
+	InputManager->AddKeyChordCommand(Comment, utilities::KeyCombo::New(Keys::Control, Keys::K), utilities::KeyCombo::New(Keys::Control, Keys::C), false, view::eViewRole::MainToolbar_Edit_Comment);
+	InputManager->AddKeyChordCommand(Uncomment, utilities::KeyCombo::New(Keys::Control, Keys::K), utilities::KeyCombo::New(Keys::Control, Keys::U), false, view::eViewRole::MainToolbar_Edit_Uncomment);
+	InputManager->AddKeyChordCommand(AddBookmark, utilities::KeyCombo::New(Keys::Control, Keys::B), false, view::eViewRole::MainToolbar_Edit_AddBookmark, view::eViewRole::MainToolbar_Edit_AddBookmark);
+	InputManager->AddKeyChordCommand(GoToLine, utilities::KeyCombo::New(Keys::Control, Keys::G), false, view::eViewRole::MainToolbar_Edit_GoToLine);
 
-	InputManager->AddKeyChordCommand(AddVarInteger, KeyCombo::New(Keys::Control, Keys::L), KeyCombo::New(Keys::Control, Keys::I), false, view::eViewRole::TextEditor_ContextMenu_AddVar_Integer);
-	InputManager->AddKeyChordCommand(AddVarFloat, KeyCombo::New(Keys::Control, Keys::L), KeyCombo::New(Keys::Control, Keys::F), false, view::eViewRole::TextEditor_ContextMenu_AddVar_Float);
-	InputManager->AddKeyChordCommand(AddVarReference, KeyCombo::New(Keys::Control, Keys::L), KeyCombo::New(Keys::Control, Keys::R), false, view::eViewRole::TextEditor_ContextMenu_AddVar_Reference);
-	InputManager->AddKeyChordCommand(AddVarString, KeyCombo::New(Keys::Control, Keys::L), KeyCombo::New(Keys::Control, Keys::S), false, view::eViewRole::TextEditor_ContextMenu_AddVar_String);
-	InputManager->AddKeyChordCommand(AddVarArray, KeyCombo::New(Keys::Control, Keys::L), KeyCombo::New(Keys::Control, Keys::A), false, view::eViewRole::TextEditor_ContextMenu_AddVar_Array);
+	InputManager->AddKeyChordCommand(AddVarInteger, utilities::KeyCombo::New(Keys::Control, Keys::L), utilities::KeyCombo::New(Keys::Control, Keys::I), false, view::eViewRole::TextEditor_ContextMenu_AddVar_Integer);
+	InputManager->AddKeyChordCommand(AddVarFloat, utilities::KeyCombo::New(Keys::Control, Keys::L), utilities::KeyCombo::New(Keys::Control, Keys::F), false, view::eViewRole::TextEditor_ContextMenu_AddVar_Float);
+	InputManager->AddKeyChordCommand(AddVarReference, utilities::KeyCombo::New(Keys::Control, Keys::L), utilities::KeyCombo::New(Keys::Control, Keys::R), false, view::eViewRole::TextEditor_ContextMenu_AddVar_Reference);
+	InputManager->AddKeyChordCommand(AddVarString, utilities::KeyCombo::New(Keys::Control, Keys::L), utilities::KeyCombo::New(Keys::Control, Keys::S), false, view::eViewRole::TextEditor_ContextMenu_AddVar_String);
+	InputManager->AddKeyChordCommand(AddVarArray, utilities::KeyCombo::New(Keys::Control, Keys::L), utilities::KeyCombo::New(Keys::Control, Keys::A), false, view::eViewRole::TextEditor_ContextMenu_AddVar_Array);
 }
 
 ViewActionCollection::ViewActionCollection()
 {
-	CurrentTabNewScript = gcnew BasicAction("New Script (Current Tab)", "Create a new script in the current tab");
-	CurrentTabOpenScript = gcnew BasicAction("Open Script (Current Tab)", "Open an existing script in the current tab");
-	CurrentTabSaveScript = gcnew BasicAction("Save Script (Current Tab)", "Compile and save the script open in the current tab");
-	CurrentTabPreviousScript = gcnew BasicAction("Previous Script (Current Tab)", "Open the previous script relative to the script in the current tab");
-	CurrentTabNextScript = gcnew BasicAction("Next Script (Current Tab)", "Open the next script relative to the script in the current tab");
-	SaveAllTabs = gcnew BasicAction("Save All Open Scripts", "Compile and save all scripts in all open tabs");
-	NewTabWithNewScript = gcnew BasicAction("Open New Tab with New Script", "Open a new tab and initialize it with a new script");
-	NewTabWithExistingScript = gcnew BasicAction("Open New Tab with Existing Script", "Open a new tab and load an existing script into it");
-	PreviousTab = gcnew BasicAction("Previous Tab", "Switch to the previous tab");
-	NextTab = gcnew BasicAction("Next Tab", "Switch to the next tab");
-	CloseCurrentTab = gcnew BasicAction("Close Current Tab", "Attempt to close the current tab (unsaved changes can be saved)");
-	ShowFindReplacePane = gcnew BasicAction("Show Find/Replace Window", "Display the find/replace window");
+	CurrentTabNewScript = gcnew utilities::BasicAction("New Script (Current Tab)", "Create a new script in the current tab");
+	CurrentTabOpenScript = gcnew utilities::BasicAction("Open Script (Current Tab)", "Open an existing script in the current tab");
+	CurrentTabSaveScript = gcnew utilities::BasicAction("Save Script (Current Tab)", "Compile and save the script open in the current tab");
+	CurrentTabPreviousScript = gcnew utilities::BasicAction("Previous Script (Current Tab)", "Open the previous script relative to the script in the current tab");
+	CurrentTabNextScript = gcnew utilities::BasicAction("Next Script (Current Tab)", "Open the next script relative to the script in the current tab");
+	SaveAllTabs = gcnew utilities::BasicAction("Save All Open Scripts", "Compile and save all scripts in all open tabs");
+	NewTabWithNewScript = gcnew utilities::BasicAction("Open New Tab with New Script", "Open a new tab and initialize it with a new script");
+	NewTabWithExistingScript = gcnew utilities::BasicAction("Open New Tab with Existing Script", "Open a new tab and load an existing script into it");
+	PreviousTab = gcnew utilities::BasicAction("Previous Tab", "Switch to the previous tab");
+	NextTab = gcnew utilities::BasicAction("Next Tab", "Switch to the next tab");
+	CloseCurrentTab = gcnew utilities::BasicAction("Close Current Tab", "Attempt to close the current tab (unsaved changes can be saved)");
+	ShowFindReplacePane = gcnew utilities::BasicAction("Show Find/Replace Window", "Display the find/replace window");
 }
 
 ViewActionCollection::~ViewActionCollection()
@@ -100,18 +100,18 @@ ViewActionCollection::~ViewActionCollection()
 
 void ViewActionCollection::CreateDefaultKeyBindings(components::InputManager^ InputManager)
 {
-	InputManager->AddKeyChordCommand(CurrentTabNewScript, KeyCombo::New(Keys::Control, Keys::N), false, view::eViewRole::MainToolbar_NewScript);
-	InputManager->AddKeyChordCommand(CurrentTabOpenScript, KeyCombo::New(Keys::Control, Keys::O), false, view::eViewRole::MainToolbar_OpenScript);
-	InputManager->AddKeyChordCommand(CurrentTabSaveScript, KeyCombo::New(Keys::Control, Keys::S), false, view::eViewRole::MainToolbar_SaveScript);
-	InputManager->AddKeyChordCommand(CurrentTabPreviousScript, KeyCombo::New(Keys::Control | Keys::Alt, Keys::Left), false, view::eViewRole::MainToolbar_PreviousScript);
-	InputManager->AddKeyChordCommand(CurrentTabNextScript, KeyCombo::New(Keys::Control | Keys::Alt, Keys::Right), false, view::eViewRole::MainToolbar_NextScript);
-	InputManager->AddKeyChordCommand(SaveAllTabs, KeyCombo::New(Keys::Control | Keys::Shift, Keys::S), false, view::eViewRole::MainToolbar_SaveAllScripts);
-	InputManager->AddKeyChordCommand(NewTabWithNewScript, KeyCombo::New(Keys::Control, Keys::T), KeyCombo::New(Keys::Control, Keys::N), false, view::eViewRole::MainTabStrip_NewTab_NewScript, view::eViewRole::EmptyWorkspacePanel_NewScript);
-	InputManager->AddKeyChordCommand(NewTabWithExistingScript, KeyCombo::New(Keys::Control, Keys::T), KeyCombo::New(Keys::Control, Keys::O), false, view::eViewRole::MainTabStrip_NewTab_ExistingScript, view::eViewRole::EmptyWorkspacePanel_OpenScript);
-	InputManager->AddKeyChordCommand(PreviousTab, KeyCombo::New(Keys::Control | Keys::Shift, Keys::Tab), false);
-	InputManager->AddKeyChordCommand(NextTab, KeyCombo::New(Keys::Control, Keys::Tab), false);
-	InputManager->AddKeyChordCommand(CloseCurrentTab, KeyCombo::New(Keys::Control, Keys::F4), false);
-	InputManager->AddKeyChordCommand(ShowFindReplacePane, KeyCombo::New(Keys::Control | Keys::Shift, Keys::F), false, view::eViewRole::MainToolbar_Edit_FindReplace);
+	InputManager->AddKeyChordCommand(CurrentTabNewScript, utilities::KeyCombo::New(Keys::Control, Keys::N), false, view::eViewRole::MainToolbar_NewScript);
+	InputManager->AddKeyChordCommand(CurrentTabOpenScript, utilities::KeyCombo::New(Keys::Control, Keys::O), false, view::eViewRole::MainToolbar_OpenScript);
+	InputManager->AddKeyChordCommand(CurrentTabSaveScript, utilities::KeyCombo::New(Keys::Control, Keys::S), false, view::eViewRole::MainToolbar_SaveScript);
+	InputManager->AddKeyChordCommand(CurrentTabPreviousScript, utilities::KeyCombo::New(Keys::Control | Keys::Alt, Keys::Left), false, view::eViewRole::MainToolbar_PreviousScript);
+	InputManager->AddKeyChordCommand(CurrentTabNextScript, utilities::KeyCombo::New(Keys::Control | Keys::Alt, Keys::Right), false, view::eViewRole::MainToolbar_NextScript);
+	InputManager->AddKeyChordCommand(SaveAllTabs, utilities::KeyCombo::New(Keys::Control | Keys::Shift, Keys::S), false, view::eViewRole::MainToolbar_SaveAllScripts);
+	InputManager->AddKeyChordCommand(NewTabWithNewScript, utilities::KeyCombo::New(Keys::Control, Keys::T), utilities::KeyCombo::New(Keys::Control, Keys::N), false, view::eViewRole::MainTabStrip_NewTab_NewScript, view::eViewRole::EmptyWorkspacePanel_NewScript);
+	InputManager->AddKeyChordCommand(NewTabWithExistingScript, utilities::KeyCombo::New(Keys::Control, Keys::T), utilities::KeyCombo::New(Keys::Control, Keys::O), false, view::eViewRole::MainTabStrip_NewTab_ExistingScript, view::eViewRole::EmptyWorkspacePanel_OpenScript);
+	InputManager->AddKeyChordCommand(PreviousTab, utilities::KeyCombo::New(Keys::Control | Keys::Shift, Keys::Tab), false);
+	InputManager->AddKeyChordCommand(NextTab, utilities::KeyCombo::New(Keys::Control, Keys::Tab), false);
+	InputManager->AddKeyChordCommand(CloseCurrentTab, utilities::KeyCombo::New(Keys::Control, Keys::F4), false);
+	InputManager->AddKeyChordCommand(ShowFindReplacePane, utilities::KeyCombo::New(Keys::Control | Keys::Shift, Keys::F), false, view::eViewRole::MainToolbar_Edit_FindReplace);
 }
 
 NewTabCreationParams::NewTabCreationParams()
@@ -228,17 +228,17 @@ void ScriptEditorController::ActiveDocumentAction_AddVarFloat()
 
 void ScriptEditorController::ActiveDocumentAction_AddVarReference()
 {
-	AddNewVariableToDocument(obScriptParsing::Variable::eDataType::Ref, BoundDocument, View);
+	AddNewVariableToDocument(obScriptParsing::Variable::eDataType::Reference, BoundDocument, View);
 }
 
 void ScriptEditorController::ActiveDocumentAction_AddVarString()
 {
-	AddNewVariableToDocument(obScriptParsing::Variable::eDataType::StringVar, BoundDocument, View);
+	AddNewVariableToDocument(obScriptParsing::Variable::eDataType::String, BoundDocument, View);
 }
 
 void ScriptEditorController::ActiveDocumentAction_AddVarArray()
 {
-	AddNewVariableToDocument(obScriptParsing::Variable::eDataType::ArrayVar, BoundDocument, View);
+	AddNewVariableToDocument(obScriptParsing::Variable::eDataType::Array, BoundDocument, View);
 }
 
 void ScriptEditorController::ViewAction_CurrentTabNewScript()
@@ -422,6 +422,7 @@ void ScriptEditorController::SetDocumentDependentViewComponentsEnabled(bool Enab
 
 	// ### TODO This causes a huge spike in CPU activity; investigate!
 	//View->GetComponentByRole(view::eViewRole::NavigationBar)->AsCrumbBar()->Visible = Enabled ? preferences::SettingsHolder::Get()->Appearance->ShowScopeBar : false;
+	View->GetComponentByRole(view::eViewRole::StatusBar_DocumentDescription)->AsLabel()->Visible = Enabled;
 	View->GetComponentByRole(view::eViewRole::StatusBar_LineNumber)->AsLabel()->Visible = Enabled;
 	View->GetComponentByRole(view::eViewRole::StatusBar_ColumnNumber)->AsLabel()->Visible = Enabled;
 	View->GetComponentByRole(view::eViewRole::StatusBar_CompiledScriptSize)->AsProgressBar()->Visible = Enabled;
@@ -676,7 +677,7 @@ model::IScriptDocument^ ScriptEditorController::ImportDocumentFromDisk(String^ D
 		auto AnalysisData = gcnew obScriptParsing::AnalysisData(AnalysisParams);
 		if (AnalysisData->Name != "")
 		{
-			DisposibleDataAutoPtr<componentDLLInterface::ScriptData> ExistingScriptData(
+			nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptData> ExistingScriptData(
 				nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CString(AnalysisData->Name).c_str())
 			);
 
@@ -719,7 +720,7 @@ void ScriptEditorController::LoadNewUnsavedScriptIntoDocument(model::IScriptDocu
 	if (!HandleVolatileDocumentStateBeforeDestructiveOperation(Document))
 		return;
 
-	DisposibleDataAutoPtr<componentDLLInterface::ScriptData> NewScriptInstance(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.CreateNewScript());
+	nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptData> NewScriptInstance(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.CreateNewScript());
 	Document->Initialize(NewScriptInstance.get(), false);
 }
 
@@ -730,7 +731,7 @@ void ScriptEditorController::LoadExistingScriptIntoDocument(model::IScriptDocume
 	if (!HandleVolatileDocumentStateBeforeDestructiveOperation(Document))
 		return;
 
-	DisposibleDataAutoPtr<componentDLLInterface::ScriptData> ExistingScriptData(
+	nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptData> ExistingScriptData(
 		nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CString(ExistingScriptEditorId).c_str())
 	);
 	Debug::Assert(ExistingScriptData);
@@ -738,7 +739,7 @@ void ScriptEditorController::LoadExistingScriptIntoDocument(model::IScriptDocume
 	Document->Initialize(ExistingScriptData.get(), ShouldUseAutoRecoveryFile(ExistingScriptEditorId));
 }
 
-void ScriptEditorController::LoadExistingScriptIntoDocument(model::IScriptDocument^ Document, DisposibleDataAutoPtr<componentDLLInterface::ScriptData> ExistingScriptData)
+void ScriptEditorController::LoadExistingScriptIntoDocument(model::IScriptDocument^ Document, nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptData> ExistingScriptData)
 {
 	Debug::Assert(Document != nullptr);
 
@@ -775,7 +776,7 @@ void ScriptEditorController::LoadNextScriptIntoDocument(model::IScriptDocument^ 
 	if (!HandleVolatileDocumentStateBeforeDestructiveOperation(Document))
 		return;
 
-	DisposibleDataAutoPtr<componentDLLInterface::ScriptData> Data(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetNextScriptInList(Document->ScriptNativeObject));
+	nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptData> Data(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetNextScriptInList(Document->ScriptNativeObject));
 	if (Data)
 	{
 		Document->Initialize(Data.get(), ShouldUseAutoRecoveryFile(gcnew String(Data->EditorID)));
@@ -790,7 +791,7 @@ void ScriptEditorController::LoadPreviousScriptIntoDocument(model::IScriptDocume
 	if (!HandleVolatileDocumentStateBeforeDestructiveOperation(Document))
 		return;
 
-	DisposibleDataAutoPtr<componentDLLInterface::ScriptData> Data(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreviousScriptInList(Document->ScriptNativeObject));
+	nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptData> Data(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreviousScriptInList(Document->ScriptNativeObject));
 	if (Data)
 	{
 		Document->Initialize(Data.get(), ShouldUseAutoRecoveryFile(gcnew String(Data->EditorID)));
@@ -983,10 +984,21 @@ void ScriptEditorController::ViewEventHandler_ComponentEvent(Object^ Sender, vie
 	case view::eViewRole::TextEditor_ContextMenu_JumpToAttachedScript:
 		ViewEventHandler_TextEditorContextMenu(E);
 		break;
+	case view::eViewRole::MainTabStrip_ContextMenu:
+	case view::eViewRole::MainTabStrip_ContextMenu_Close:
+	case view::eViewRole::MainTabStrip_ContextMenu_CloseOthers:
+	case view::eViewRole::MainTabStrip_ContextMenu_CloseSaved:
+	case view::eViewRole::MainTabStrip_ContextMenu_CloseAll:
+	case view::eViewRole::MainTabStrip_ContextMenu_PopOut:
+		ViewEventHandler_TabStripContextMenu(E);
+		break;
 	case view::eViewRole::EmptyWorkspacePanel:
 	case view::eViewRole::EmptyWorkspacePanel_NewScript:
 	case view::eViewRole::EmptyWorkspacePanel_OpenScript:
 		ViewEventHandler_EmptyWorkspacePanel(E);
+		break;
+	case view::eViewRole::StatusBar:
+		// placeholder, nothing to actually handle here
 		break;
 	default:
 		throw gcnew ArgumentException("Unknown view component role " + E->Component->Role.ToString());
@@ -1699,15 +1711,109 @@ void ScriptEditorController::ViewEventHandler_TextEditorContextMenu(view::ViewCo
 			if (AttachedScript)
 			{
 				Button->Text = "Open Attached Script";
-				Button->Visible = true;
+				Button->Enabled = true;
 				Button->Tag = AttachedScript->GetIdentifier();
 			}
 			else
-				Button->Visible = false;
+				Button->Enabled = false;
 		}
 
 		break;
 	}
+	}
+}
+
+void ScriptEditorController::ViewEventHandler_TabStripContextMenu(view::ViewComponentEvent^ E)
+{
+	auto EventType = safe_cast<view::components::IButton::eEvent>(E->EventType);
+	bool OnClick = EventType == view::components::IButton::eEvent::Click;
+	auto OnPopup = EventType == view::components::IButton::eEvent::PopupOpening;
+
+	auto TabStrip = View->GetComponentByRole(view::eViewRole::MainTabStrip)->AsTabStrip();
+	auto Button = E->Component->AsButton();
+
+	if (OnPopup)
+		Button->Tag = TabStrip->MouseOverTab;
+
+	switch (E->Component->Role)
+	{
+	case view::eViewRole::MainTabStrip_ContextMenu_Close:
+		if (OnPopup)
+			Button->Enabled = Button->Tag != nullptr;
+		else if (OnClick)
+			safe_cast<view::components::ITabStripItem^>(Button->Tag)->Close();
+
+		break;
+	case view::eViewRole::MainTabStrip_ContextMenu_CloseOthers:
+		if (OnPopup)
+			Button->Enabled = Button->Tag != nullptr && TabStrip->TabCount > 1;
+		else if (OnClick)
+		{
+			for each (auto Tab in TabStrip->Tabs)
+			{
+				if (Tab != Button->Tag)
+					Tab->Close();
+			}
+		}
+
+		break;
+	case view::eViewRole::MainTabStrip_ContextMenu_CloseSaved:
+		if (OnPopup)
+		{
+			bool DocWithNoModifications = false;
+			for each (auto Doc in Model->Documents)
+			{
+				if (!Doc->Dirty)
+				{
+					DocWithNoModifications = true;
+					break;
+				}
+			}
+
+			Button->Enabled = DocWithNoModifications;
+		}
+		else if (OnClick)
+		{
+			for each (auto Tab in TabStrip->Tabs)
+			{
+				auto Doc = safe_cast<model::IScriptDocument^>(Tab->Tag);
+				if (!Doc->Dirty)
+					Tab->Close();
+			}
+		}
+
+		break;
+	case view::eViewRole::MainTabStrip_ContextMenu_CloseAll:
+		if (OnPopup)
+			Button->Enabled = TabStrip->TabCount > 0;
+		else if (OnClick)
+		{
+			for each (auto Tab in TabStrip->Tabs)
+				Tab->Close();
+		}
+
+		break;
+	case view::eViewRole::MainTabStrip_ContextMenu_PopOut:
+		if (OnPopup)
+			Button->Enabled = TabStrip->MouseOverTab != nullptr;
+		else if (OnClick)
+		{
+			auto Document = safe_cast<model::IScriptDocument^>(safe_cast<view::components::ITabStripItem^>(Button->Tag)->Tag);
+			auto NewBounds = View->GetComponentByRole(view::eViewRole::MainWindow)->AsForm()->Bounds;
+			NewBounds.X = NewBounds.X + 25;
+			if (NewBounds.X >= Screen::PrimaryScreen->Bounds.Width)
+				NewBounds.X = 50;
+
+			NewBounds.Y = NewBounds.Y + 25;
+			if (NewBounds.Y >= Screen::PrimaryScreen->Bounds.Height)
+				NewBounds.Y = 50;
+
+			auto NewController = New();
+			NewController->RelocateDocument(Document, this);
+			NewController->View->Reveal(NewBounds);
+		}
+
+		break;
 	}
 }
 
@@ -1736,6 +1842,12 @@ void ScriptEditorController::ModelEventHandler_DocumentStateChanged(Object^ Send
 		Debug::Assert(TabItem != nullptr);
 
 		TabItem->Image = E->Dirty ? view::components::CommonIcons::Get()->UnsavedChanges : nullptr;
+
+		if (Document == BoundDocument)
+		{
+			auto StatusBarDocDesc = View->GetComponentByRole(view::eViewRole::StatusBar_DocumentDescription)->AsLabel();
+			StatusBarDocDesc->Image = TabItem->Image;
+		}
 
 		break;
 	}
@@ -1779,12 +1891,15 @@ void ScriptEditorController::ModelEventHandler_DocumentStateChanged(Object^ Send
 		TabItem->Text = E->EditorId;
 		if (TabItem->Text->Length == 0)
 			TabItem->Text = UnsavedScriptDisplayText;
-		TabItem->Tooltip = TabItem->Text + " (" + E->FormId.ToString("X8") + ")";
+		TabItem->Tooltip = TabItem->Text + "  (" + E->FormId.ToString("X8") + ")";
 
 		if (Document == BoundDocument)
 		{
 			auto Form = View->GetComponentByRole(view::eViewRole::MainWindow)->AsForm();
 			Form->Text = TabItem->Tooltip + " -- " + view::IScriptEditorView::MainWindowDefaultTitle;
+
+			auto StatusBarDocDesc = View->GetComponentByRole(view::eViewRole::StatusBar_DocumentDescription)->AsLabel();
+			StatusBarDocDesc->Text = TabItem->Text + "  (" + E->FormId.ToString("X8") + ")";
 		}
 
 		break;
@@ -1841,10 +1956,10 @@ void ScriptEditorController::ModelEventHandler_DocumentStateChanged(Object^ Send
 			break;
 
 		auto StatusBarLabelLine = View->GetComponentByRole(view::eViewRole::StatusBar_LineNumber)->AsLabel();
-		StatusBarLabelLine->Text = "Line " + E->Line.ToString();
+		StatusBarLabelLine->Text = "Ln " + E->Line.ToString();
 
 		auto StatusBarLabelCol = View->GetComponentByRole(view::eViewRole::StatusBar_ColumnNumber)->AsLabel();
-		StatusBarLabelCol->Text = "Column " + E->Column.ToString();
+		StatusBarLabelCol->Text = "Col " + E->Column.ToString();
 
 		break;
 	}
@@ -2065,32 +2180,32 @@ ScriptEditorController::ScriptEditorController(model::IFactory^ ModelFactory, vi
 	InputManager = gcnew components::InputManager(ChildView);
 
 	ActiveDocumentActions = gcnew ActiveDocumentActionCollection;
-	ActiveDocumentActions->Copy->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_Copy);
-	ActiveDocumentActions->Paste->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_Paste);
-	ActiveDocumentActions->Comment->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_Comment);
-	ActiveDocumentActions->Uncomment->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_Uncomment);
-	ActiveDocumentActions->AddBookmark->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_AddBookmark);
-	ActiveDocumentActions->GoToLine->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_GoToLine);
-	ActiveDocumentActions->AddVarInteger->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_AddVarInteger);
-	ActiveDocumentActions->AddVarFloat->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_AddVarFloat);
-	ActiveDocumentActions->AddVarReference->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_AddVarReference);
-	ActiveDocumentActions->AddVarString->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_AddVarString);
-	ActiveDocumentActions->AddVarArray->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_AddVarArray);
+	ActiveDocumentActions->Copy->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_Copy);
+	ActiveDocumentActions->Paste->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_Paste);
+	ActiveDocumentActions->Comment->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_Comment);
+	ActiveDocumentActions->Uncomment->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_Uncomment);
+	ActiveDocumentActions->AddBookmark->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_AddBookmark);
+	ActiveDocumentActions->GoToLine->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_GoToLine);
+	ActiveDocumentActions->AddVarInteger->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_AddVarInteger);
+	ActiveDocumentActions->AddVarFloat->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_AddVarFloat);
+	ActiveDocumentActions->AddVarReference->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_AddVarReference);
+	ActiveDocumentActions->AddVarString->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_AddVarString);
+	ActiveDocumentActions->AddVarArray->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_AddVarArray);
 	ActiveDocumentActions->CreateDefaultKeyBindings(InputManager);
 
 	ViewActions = gcnew ViewActionCollection;
-	ViewActions->CurrentTabNewScript->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_CurrentTabNewScript);
-	ViewActions->CurrentTabOpenScript->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_CurrentTabOpenScript);
-	ViewActions->CurrentTabSaveScript->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_CurrentTabSaveScript);
-	ViewActions->CurrentTabPreviousScript->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_CurrentTabPreviousScript);
-	ViewActions->CurrentTabNextScript->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_CurrentTabNextScript);
-	ViewActions->SaveAllTabs->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_SaveAllTabs);
-	ViewActions->NewTabWithNewScript->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_NewTabWithNewScript);
-	ViewActions->NewTabWithExistingScript->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_NewTabWithExistingScript);
-	ViewActions->PreviousTab->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_PreviousTab);
-	ViewActions->NextTab->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_NextTab);
-	ViewActions->CloseCurrentTab->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_CloseCurrentTab);
-	ViewActions->ShowFindReplacePane->InvokeDelegate = gcnew BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_ShowFindReplacePane);
+	ViewActions->CurrentTabNewScript->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_CurrentTabNewScript);
+	ViewActions->CurrentTabOpenScript->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_CurrentTabOpenScript);
+	ViewActions->CurrentTabSaveScript->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_CurrentTabSaveScript);
+	ViewActions->CurrentTabPreviousScript->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_CurrentTabPreviousScript);
+	ViewActions->CurrentTabNextScript->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_CurrentTabNextScript);
+	ViewActions->SaveAllTabs->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_SaveAllTabs);
+	ViewActions->NewTabWithNewScript->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_NewTabWithNewScript);
+	ViewActions->NewTabWithExistingScript->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_NewTabWithExistingScript);
+	ViewActions->PreviousTab->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_PreviousTab);
+	ViewActions->NextTab->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_NextTab);
+	ViewActions->CloseCurrentTab->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_CloseCurrentTab);
+	ViewActions->ShowFindReplacePane->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ViewAction_ShowFindReplacePane);
 	ViewActions->CreateDefaultKeyBindings(InputManager);
 
 	DeferredUiActionTimer = gcnew Timer;

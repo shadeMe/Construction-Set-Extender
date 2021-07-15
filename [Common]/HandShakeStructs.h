@@ -34,6 +34,7 @@ namespace componentDLLInterface
 		const char* DescriptionComponent;
 		bool ObjectReference;
 		const char* BaseFormEditorID;
+		const char* AttachedScriptEditorID;
 
 		virtual bool IsValid() { return (EditorID) ? true : false; }
 		void FillFormData(TESForm* Form);
@@ -68,7 +69,6 @@ namespace componentDLLInterface
 		UInt16 Type;
 		void* ByteCode;
 		UInt16 Length;
-		const char* ParentID;
 		bool UDF;
 		bool Compiled;
 

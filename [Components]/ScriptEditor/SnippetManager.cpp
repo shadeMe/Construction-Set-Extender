@@ -533,9 +533,9 @@ void CodeSnippetManagerDialog::FinalizeComponents()
 
 	AddVarMenuInteger->Tag = obScriptParsing::Variable::eDataType::Integer;
 	AddVarMenuFloat->Tag = obScriptParsing::Variable::eDataType::Float;
-	AddVarMenuRef->Tag = obScriptParsing::Variable::eDataType::Ref;
-	AddVarMenuString->Tag = obScriptParsing::Variable::eDataType::StringVar;
-	AddVarMenuArray->Tag = obScriptParsing::Variable::eDataType::ArrayVar;
+	AddVarMenuRef->Tag = obScriptParsing::Variable::eDataType::Reference;
+	AddVarMenuString->Tag = obScriptParsing::Variable::eDataType::String;
+	AddVarMenuArray->Tag = obScriptParsing::Variable::eDataType::Array;
 
 	ToolbarAddSnippet->Click += gcnew System::EventHandler(this, &CodeSnippetManagerDialog::ToolbarAddSnippet_Click);
 	ToolbarRemoveSnippet->Click += gcnew System::EventHandler(this, &CodeSnippetManagerDialog::ToolbarRemoveSnippet_Click);
@@ -668,7 +668,7 @@ void CodeSnippetManagerDialog::ButtonApply_Click( Object^ Sender, EventArgs^ E )
 
 void CodeSnippetManagerDialog::ToolbarAddSnippet_Click( Object^ Sender, EventArgs^ E )
 {
-	auto Result = InputBox::Show("Enter Snippet Name", "New Snippet", "", Handle);
+	auto Result = utilities::InputBox::Show("Enter Snippet Name", "New Snippet", "", Handle);
 	if (Result->ReturnCode == System::Windows::Forms::DialogResult::Cancel || Result->Text == "")
 		return;
 	else if (WorkingCopy->Lookup(Result->Text))
@@ -704,7 +704,7 @@ void CodeSnippetManagerDialog::VariablesToolbarAddVar_Click( Object^ Sender, Eve
 	auto MenuItem = safe_cast<DevComponents::DotNetBar::ButtonItem^>(Sender);
 	auto VarType = safe_cast<obScriptParsing::Variable::eDataType>(MenuItem->Tag);
 
-	auto Result = InputBox::Show("Enter Variable Name", "Add Variable", "", Handle);
+	auto Result = utilities::InputBox::Show("Enter Variable Name", "Add Variable", "", Handle);
 	if (Result->ReturnCode == System::Windows::Forms::DialogResult::Cancel || Result->Text == "")
 		return;
 	else if (ActiveSelectionBuffer->LookupVariable(Result->Text))

@@ -17,21 +17,6 @@ namespace intellisense
 {
 
 
-bool DoStringMatch(String^ Source, String^ Target, eStringMatchType Comparison)
-{
-	switch (Comparison)
-	{
-	case eStringMatchType::StartsWith:
-		return Source->StartsWith(Target, System::StringComparison::CurrentCultureIgnoreCase);
-	case eStringMatchType::Substring:
-		return Source->IndexOf(Target, System::StringComparison::CurrentCultureIgnoreCase) != -1;
-	case eStringMatchType::FullMatch:
-		return Source->Equals(Target, System::StringComparison::CurrentCultureIgnoreCase);
-	default:
-		return false;
-	}
-}
-
 Image^ IntelliSenseItem::GetItemTypeIcon(eItemType Type)
 {
 	if (ItemTypeIcons->Count == 0)
@@ -93,14 +78,24 @@ void IntelliSenseItem::Insert(textEditor::ITextEditor^ Editor)
 	Editor->SetTokenAtCaretPos(GetSubstitution());
 }
 
-bool IntelliSenseItem::MatchesToken( String^ Token, eStringMatchType Comparison )
-{
-	return DoStringMatch(GetIdentifier(), Token, Comparison);
-}
-
 bool IntelliSenseItem::HasInsightInfo()
 {
 	return true;
+}
+
+bool IntelliSenseItem::HasAlternateIdentifier()
+{
+	return false;
+}
+
+System::String^ IntelliSenseItem::GetSubstitution()
+{
+	return GetIdentifier();
+}
+
+System::String^ IntelliSenseItem::GetAlternateIdentifier()
+{
+	return String::Empty;
 }
 
 ScriptCommandParameter::ScriptCommandParameter(componentDLLInterface::ObScriptCommandInfo::ParamInfo* ParamInfo)
@@ -241,23 +236,14 @@ String^ IntelliSenseItemScriptCommand::GetIdentifier()
 	return Name;
 }
 
+System::String^ IntelliSenseItemScriptCommand::GetAlternateIdentifier()
+{
+	return Shorthand;
+}
+
 bool IntelliSenseItemScriptCommand::RequiresCallingRef()
 {
 	return RequireCallingRef;
-}
-
-String^ IntelliSenseItemScriptCommand::GetSubstitution()
-{
-	return GetIdentifier();
-}
-
-bool IntelliSenseItemScriptCommand::MatchesToken(String^ Token, eStringMatchType Comparison)
-{
-	bool Found = DoStringMatch(Name, Token, Comparison);
-	if (!Found)
-		Found = DoStringMatch(Shorthand, Token, Comparison);
-
-	return Found;
 }
 
 String^ IntelliSenseItemScriptCommand::GetShorthand()
@@ -268,6 +254,11 @@ String^ IntelliSenseItemScriptCommand::GetShorthand()
 System::String^ IntelliSenseItemScriptCommand::GetDocumentationUrl()
 {
 	return DocumentationUrl;
+}
+
+bool IntelliSenseItemScriptCommand::HasAlternateIdentifier()
+{
+	return true;
 }
 
 IntelliSenseItemScriptVariable::IntelliSenseItemScriptVariable(String^ Name, String^ Comment,
@@ -319,26 +310,20 @@ obScriptParsing::Variable::eDataType IntelliSenseItemScriptVariable::GetDataType
 	return DataType;
 }
 
-String^ IntelliSenseItemScriptVariable::GetSubstitution()
-{
-	return GetIdentifier();
-}
-
 String^ IntelliSenseItemForm::GetFormTypeIdentifier()
 {
 	return gcnew String(nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(TypeID));
 }
 
-IntelliSenseItemForm::IntelliSenseItemForm( componentDLLInterface::FormData* Data,
-											componentDLLInterface::ScriptData* AttachedScript) :
+IntelliSenseItemForm::IntelliSenseItemForm(nativeWrapper::MarshalledFormData^ Data) :
 	IntelliSenseItem(eItemType::Form)
 {
-	TypeID = Data->TypeID;
-	FormID = Data->FormID;
-	EditorID = gcnew String(Data->EditorID);
-	Flags = Data->Flags;
-	BaseForm = Data->ObjectReference == false;
-	AttachedScriptEditorID = AttachedScript && AttachedScript->IsValid() ? gcnew String(AttachedScript->EditorID) : String::Empty;
+	TypeID = Data->FormType;
+	FormID = Data->FormId;
+	EditorID = Data->EditorId;
+	Flags = Data->FormFlags;
+	BaseForm = !Data->IsObjectRef;
+	AttachedScriptEditorID = Data->AttachedScriptEditorId;
 
 	HelpTextHeader = GenerateHelpTextHeader(EditorID);
 
@@ -346,10 +331,10 @@ IntelliSenseItemForm::IntelliSenseItemForm( componentDLLInterface::FormData* Dat
 	String^ kCellStart = "<span width=\"75\">", ^kCellEnd = "</span>";
 
 	HelpTextBody = "<span>FormID: " + FormID.ToString("X8") + "</span><br/>";
-	if (Data->ParentPluginName)
-		HelpTextBody = "<span>Source file: " + gcnew String(Data->ParentPluginName) + "</span><br/>";
+	if (Data->SourcePluginName)
+		HelpTextBody = "<span>Source file: " + Data->SourcePluginName + "</span><br/>";
 	if (Data->NameComponent)
-		HelpTextBody += "<span>Name: " + gcnew String(Data->NameComponent) + "</span><br/>";
+		HelpTextBody += "<span>Name: " + Data->NameComponent + "</span><br/>";
 
 	String^ FlagsDesc = "";
 	auto CheckedFlags = gcnew Dictionary<eFormFlags, String^>;
@@ -379,10 +364,10 @@ IntelliSenseItemForm::IntelliSenseItemForm( componentDLLInterface::FormData* Dat
 	}
 
 	if (Data->DescriptionComponent)
-		HelpTextBody += "<p width=\"250\">Description: " + gcnew String(Data->DescriptionComponent) + "</p>";
+		HelpTextBody += "<p width=\"250\">Description: " + Data->DescriptionComponent + "</p>";
 
-	if (Data->ObjectReference && Data->BaseFormEditorID)
-		HelpTextBody += "<br/><span>Base form: " + gcnew String(Data->BaseFormEditorID) + "</span>";
+	if (Data->IsObjectRef && Data->BaseFormEditorId->Length != 0)
+		HelpTextBody += "<br/><span>Base form: " + Data->BaseFormEditorId + "</span>";
 
 	if (AttachedScriptEditorID->Length)
 		HelpTextBody += "<br/><span>Attached script: " + AttachedScriptEditorID + "</span>";
@@ -406,10 +391,6 @@ String^ IntelliSenseItemForm::GetIdentifier()
 	return EditorID;
 }
 
-String^ IntelliSenseItemForm::GetSubstitution()
-{
-	return GetIdentifier();
-}
 
 System::String^ IntelliSenseItemForm::GetItemTypeName()
 {
@@ -432,14 +413,27 @@ System::String^ IntelliSenseItemForm::GetAttachedScriptEditorID()
 }
 
 
-IntelliSenseItemGlobalVariable::IntelliSenseItemGlobalVariable(componentDLLInterface::FormData* Data,
-	obScriptParsing::Variable::eDataType Type, String^ Value) :
-	IntelliSenseItemForm(Data, nullptr)
+IntelliSenseItemGlobalVariable::IntelliSenseItemGlobalVariable(nativeWrapper::MarshalledVariableData^ Data) :
+	IntelliSenseItemForm(Data)
 
 {
-	this->ItemType = IntelliSenseItem::eItemType::GlobalVariable;
-	this->DataType = Type;
-	this->Value = Value;
+	ItemType = IntelliSenseItem::eItemType::GlobalVariable;
+	switch (Data->VariableType)
+	{
+	case nativeWrapper::MarshalledVariableData::eVariableType::Integer:
+		DataType = obScriptParsing::Variable::eDataType::Integer;
+		break;
+	case nativeWrapper::MarshalledVariableData::eVariableType::Float:
+		DataType = obScriptParsing::Variable::eDataType::Float;
+		break;
+	case nativeWrapper::MarshalledVariableData::eVariableType::String:
+		DataType = obScriptParsing::Variable::eDataType::String;
+		break;
+	default:
+		DataType = obScriptParsing::Variable::eDataType::None;
+	}
+
+	Value = Data->ValueAsString;
 
 	// the body text is generated on demand to reflect any changes to the variable's in-editor value
 	HelpTextHeader = GenerateHelpTextHeader(EditorID);
@@ -472,9 +466,8 @@ System::String^ IntelliSenseItemGlobalVariable::TooltipBodyText::get()
 	return HelpTextBody;
 }
 
-IntelliSenseItemGameSetting::IntelliSenseItemGameSetting(componentDLLInterface::FormData* Data,
-	obScriptParsing::Variable::eDataType Type, String^ Value) :
-	IntelliSenseItemGlobalVariable(Data, Type, Value)
+IntelliSenseItemGameSetting::IntelliSenseItemGameSetting(nativeWrapper::MarshalledVariableData^ Data) :
+	IntelliSenseItemGlobalVariable(Data)
 {
 	this->ItemType = IntelliSenseItem::eItemType::GameSetting;
 
@@ -488,9 +481,8 @@ System::String^ IntelliSenseItemGameSetting::GetItemTypeName()
 	return IntelliSenseItem::GetItemTypeName();
 }
 
-IntelliSenseItemQuest::IntelliSenseItemQuest(componentDLLInterface::FormData* Data,
-											componentDLLInterface::ScriptData* AttachedScript)
-	: IntelliSenseItemForm(Data, AttachedScript)
+IntelliSenseItemQuest::IntelliSenseItemQuest(nativeWrapper::MarshalledFormData^ Data)
+	: IntelliSenseItemForm(Data)
 {
 	this->ItemType = IntelliSenseItem::eItemType::Quest;
 
@@ -509,8 +501,8 @@ IntelliSenseItemScript::IntelliSenseItemScript() :
 	CommentDescription = String::Empty;
 }
 
-IntelliSenseItemScript::IntelliSenseItemScript(componentDLLInterface::ScriptData* ScriptData) :
-	IntelliSenseItemForm(ScriptData, nullptr)
+IntelliSenseItemScript::IntelliSenseItemScript(nativeWrapper::MarshalledScriptData^ ScriptData) :
+	IntelliSenseItemForm(ScriptData)
 {
 	this->ItemType = IntelliSenseItem::eItemType::Script;
 
@@ -518,7 +510,7 @@ IntelliSenseItemScript::IntelliSenseItemScript(componentDLLInterface::ScriptData
 	InitialAnalysisData = gcnew obScriptParsing::AnalysisData();
 	auto AnalysisParams = gcnew obScriptParsing::AnalysisData::Params;
 
-	AnalysisParams->ScriptText = gcnew String(ScriptData->Text);
+	AnalysisParams->ScriptText = gcnew String(ScriptData->ScriptText);
 	AnalysisParams->Ops = obScriptParsing::AnalysisData::eOperation::FillVariables |
 						obScriptParsing::AnalysisData::eOperation::FillControlBlocks |
 						obScriptParsing::AnalysisData::eOperation::FillUDFData;
@@ -537,13 +529,17 @@ IntelliSenseItemScript::IntelliSenseItemScript(componentDLLInterface::ScriptData
 
 	// regenerate after changing type
 	HelpTextFooter = GenerateHelpTextFooter();
+
+	// release the analysis data if it won't be used by the UDF subclass
+	if (!InitialAnalysisData->IsUDF)
+		InitialAnalysisData = nullptr;
 }
 
 IntelliSenseItemScriptVariable ^ IntelliSenseItemScript::LookupVariable(String ^ VariableName)
 {
 	for each (auto Itr in Variables)
 	{
-		if (Itr->MatchesToken(VariableName, eStringMatchType::FullMatch))
+		if (String::Compare(Itr->GetIdentifier(), VariableName, true) == 0)
 			return Itr;
 	}
 
@@ -566,7 +562,7 @@ IEnumerable<IntelliSenseItemScriptVariable^>^ IntelliSenseItemScript::GetVariabl
 	return Variables;
 }
 
-IntelliSenseItemUserFunction::IntelliSenseItemUserFunction(componentDLLInterface::ScriptData* ScriptData) :
+IntelliSenseItemUserFunction::IntelliSenseItemUserFunction(nativeWrapper::MarshalledScriptData^ ScriptData) :
 	IntelliSenseItemScript(ScriptData)
 {
 	this->ItemType = eItemType::UserFunction;
@@ -633,6 +629,9 @@ IntelliSenseItemUserFunction::IntelliSenseItemUserFunction(componentDLLInterface
 
 	// regenerate after changing type
 	HelpTextFooter = GenerateHelpTextFooter();
+
+	// no longer useful, release it
+	InitialAnalysisData = nullptr;
 }
 
 IntelliSenseItemCodeSnippet::IntelliSenseItemCodeSnippet(CodeSnippet^ Source) :
@@ -668,18 +667,14 @@ void IntelliSenseItemCodeSnippet::Insert(textEditor::ITextEditor^ Editor)
 	Editor->ScrollToCaret();
 }
 
-bool IntelliSenseItemCodeSnippet::MatchesToken( String^ Token, eStringMatchType Comparison )
-{
-	bool Found = DoStringMatch(Parent->Name, Token, Comparison);
-	if (!Found)
-		Found = DoStringMatch(Parent->Shorthand, Token, Comparison);
-
-	return Found;
-}
-
 String^ IntelliSenseItemCodeSnippet::GetIdentifier()
 {
 	return "[" + Parent->Shorthand + "] " + Parent->Name;
+}
+
+System::String^ IntelliSenseItemCodeSnippet::GetAlternateIdentifier()
+{
+	return Parent->Shorthand;
 }
 
 String^ IntelliSenseItemCodeSnippet::GetSubstitution()
@@ -692,16 +687,9 @@ bool IntelliSenseItemCodeSnippet::HasInsightInfo()
 	return false;
 }
 
-int IntelliSenseItemSorter::Compare(IntelliSenseItem^ X, IntelliSenseItem^ Y)
+bool IntelliSenseItemCodeSnippet::HasAlternateIdentifier()
 {
-	int Result = X->GetItemType() < Y->GetItemType();
-	if (X->GetItemType() == Y->GetItemType());
-	Result = String::Compare(X->GetIdentifier(), Y->GetIdentifier(), true);
-
-	if (Order == SortOrder::Descending)
-		Result *= -1;
-
-	return Result;
+	return true;
 }
 
 

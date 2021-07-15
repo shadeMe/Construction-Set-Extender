@@ -104,6 +104,8 @@ interface class IForm : public IViewComponent
 	{
 		Closing,
 		KeyDown,
+		LocationChanged,
+		SizeChanged,
 	};
 
 	ref struct ClosingEventArgs
@@ -115,6 +117,12 @@ interface class IForm : public IViewComponent
 	{
 		property KeyEventArgs^ KeyEvent;
 	};
+
+	ref struct LocationChangedEventArgs
+	{};
+
+	ref struct SizeChangedEventArgs
+	{};
 };
 
 
@@ -123,10 +131,12 @@ interface class IButton : public IViewComponent
 	property String^ Text;
 	property String^ ShortcutKey;
 	property String^ Tooltip;
+	property Image^ Image;
 	property Object^ Tag;
 	property bool Checked;
 	property bool Visible;
 	property bool Enabled;
+	property bool IsMouseOver;
 
 	void PerformClick();
 
@@ -178,6 +188,7 @@ interface class IComboBox : public IViewComponent
 interface class ILabel : public IViewComponent
 {
 	property String^ Text;
+	property Image^ Image;
 	property bool Visible;
 };
 
@@ -189,13 +200,17 @@ interface class ITabStripItem : public IViewComponent
 	property Image^ Image;
 	property Object^ Tag;
 	property ITabStrip^ Parent;
+
+	void Close();
 };
 
 
 interface class ITabStrip
 {
 	property ITabStripItem^ ActiveTab;
+	property ITabStripItem^ MouseOverTab;
 	property UInt32 TabCount;
+	property IEnumerable<ITabStripItem^>^ Tabs;
 
 	ITabStripItem^ AllocateNewTab();
 	void AddTab(ITabStripItem^ Tab);
@@ -211,6 +226,10 @@ interface class ITabStrip
 		TabMoved,
 		TabClosing,
 		ActiveTabChanged,
+		TabStripMouseDown,
+		TabStripMouseUp,
+		TabStripMouseMove,
+		TabStripMouseDoubleClick
 	};
 
 	ref struct TabClickEventArgs
@@ -239,6 +258,13 @@ interface class ITabStrip
 	{
 		property ITabStripItem^ OldValue;
 		property ITabStripItem^ NewValue;
+	};
+
+	ref struct TabStripMouseEventArgs
+	{
+		property MouseEventArgs^ MouseEvent;
+		property ITabStripItem^ MouseOverTab;
+		property bool IsMouseOverNonTabButton;
 	};
 };
 
@@ -355,11 +381,26 @@ interface class IContainer : public IViewComponent
 	void AddControl(Control^ Control);
 	void RemoveControl(Control^ Control);
 	void Invalidate();
+
+	static enum class eEvent
+	{
+		MouseDown,
+		MouseUp,
+		MouseMove,
+		DoubleClick
+	};
+
+	ref struct ContainerMouseEventArgs
+	{
+		property MouseEventArgs^ MouseEvent;
+	};
 };
 
 
 interface class IContextMenu : public IViewComponent
 {
+	property bool Expanded;
+
 	// context menus will raise the IButton::eEvent::PopupOpening once when they are about to open
 	// the event subscriber should - just for this single invocation - interpret the component as an IButton
 
@@ -438,7 +479,24 @@ public enum class eViewRole
 	MainTabStrip_NewTab,
 	MainTabStrip_NewTab_NewScript,
 	MainTabStrip_NewTab_ExistingScript,
+	MainTabStrip_WindowChromeMinimize,
+	MainTabStrip_WindowChromeMaximize,
+	MainTabStrip_WindowChromeRestore,
+	MainTabStrip_WindowChromeClose,
 
+	MainTabStrip_ContextMenu,
+	MainTabStrip_ContextMenu_Close,
+	MainTabStrip_ContextMenu_CloseOthers,
+	MainTabStrip_ContextMenu_CloseSaved,
+	MainTabStrip_ContextMenu_CloseAll,
+	MainTabStrip_ContextMenu_PopOut,
+	MainTabStrip_ContextMenu_TabLayout,
+	MainTabStrip_ContextMenu_TabLayout_Top,
+	MainTabStrip_ContextMenu_TabLayout_Bottom,
+	MainTabStrip_ContextMenu_TabLayout_Left,
+	MainTabStrip_ContextMenu_TabLayout_Right,
+
+	MainToolbar,
 	MainToolbar_NewScript,
 	MainToolbar_OpenScript,
 	MainToolbar_SaveScript,
@@ -487,7 +545,14 @@ public enum class eViewRole
 	MainToolbar_Help_Wiki,
 	MainToolbar_Help_OBSE,
 
+	MainToolbar_WindowChromeDraggableSpacer,
+	MainToolbar_WindowChromeMinimize,
+	MainToolbar_WindowChromeMaximize,
+	MainToolbar_WindowChromeRestore,
+	MainToolbar_WindowChromeClose,
+
 	StatusBar,
+	StatusBar_DocumentDescription,
 	StatusBar_LineNumber,
 	StatusBar_ColumnNumber,
 	StatusBar_PreprocessorOutput,

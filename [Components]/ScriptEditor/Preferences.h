@@ -1,5 +1,6 @@
 #pragma once
 #include "ScriptSync.h"
+#include "IntelliSenseBackend.h"
 
 namespace cse
 {
@@ -115,24 +116,28 @@ ref struct IntelliSenseSettings : public SettingsGroup
 	property UInt32 WindowWidth;
 
 	[Category("Suggestions")]
-	[Description("Automatically display suggestions")]
+	[Description("Automatically display suggestions on typing")]
 	property bool ShowSuggestions;
 
 	[Category("Suggestions")]
-	[Description("Character threshold for automatic suggestions")]
+	[Description("Automatic suggestions will be shown after the current token at caret location is at least this many characters long")]
 	property UInt32 SuggestionCharThreshold;
 
 	[Category("Suggestions")]
-	[Description("Insert suggestions with ENTER key")]
+	[Description("Insert suggestions with the ENTER key")]
 	property bool InsertSuggestionsWithEnterKey;
 
 	[Category("Suggestions")]
-	[Description("Filter suggestions using substring search")]
-	property bool UseSubstringSearch;
+	[Description("Maximum number of items visible at once in the popup window")]
+	property UInt32 MaxVisiblePopupItems;
 
 	[Category("Suggestions")]
-	[Description("Maximum number of suggestions to display")]
-	property UInt32 MaxSuggestionsToDisplay;
+	[Description("Filter mode for suggestions")]
+	property intellisense::eFilterMode SuggestionsFilter;
+
+	[Category("Suggestions")]
+	[Description("Maximum cost for fuzzy filtering")]
+	property UInt32 FuzzyFilterMaxCost;
 
 
 	[Category("Insight Info")]
@@ -154,8 +159,7 @@ ref struct IntelliSenseSettings : public SettingsGroup
 
 
 	[Category("Background Analysis")]
-	[Description("Background semantic analysis interval in Earth seconds. "
-					"This settings affects the latency/accuracy of multiple script editor features")]
+	[Description("Background semantic analysis interval in Earth seconds. This settings affects the latency/accuracy of multiple script editor features")]
 	property UInt32 BackgroundAnalysisInterval;
 
 	IntelliSenseSettings()
@@ -164,8 +168,10 @@ ref struct IntelliSenseSettings : public SettingsGroup
 		ShowSuggestions = true;
 		SuggestionCharThreshold = 5;
 		InsertSuggestionsWithEnterKey = true;
-		UseSubstringSearch = false;
-		MaxSuggestionsToDisplay = 7;
+		MaxVisiblePopupItems = 10;
+		SuggestionsFilter = intellisense::eFilterMode::Prefix;
+		FuzzyFilterMaxCost = 2;
+
 		ShowInsightToolTip = true;
 		InsightToolTipDisplayDuration = 8;
 		ShowErrorsInInsightToolTip = true;
@@ -202,6 +208,14 @@ ref struct AppearanceSettings : public SettingsGroup
 {
 	static String^ CategoryName = "Appearance";
 	static String^ IconName = "Appearance";
+
+	[Category("General")]
+	[Description("Location of the tab strip")]
+	property DevComponents::DotNetBar::eTabStripAlignment TabStripLocation;
+
+	[Category("General")]
+	[Description("Width of the vertical tab strip")]
+	property UInt32 TabStripVerticalWidth;
 
 	[Category("General")]
 	[Description("Display size of tab characters")]
@@ -534,8 +548,10 @@ ref struct AppearanceSettings : public SettingsGroup
 
 	AppearanceSettings()
 	{
+		TabStripLocation = DevComponents::DotNetBar::eTabStripAlignment::Top;
+		TabStripVerticalWidth = 125;
 		TabSize = 4;
-		TextFont = Control::DefaultFont;
+		TextFont = gcnew Drawing::Font("Consolas", 9);
 		WordWrap = false;
 		ShowTabs = false;
 		ShowSpaces = false;
@@ -724,7 +740,7 @@ ref struct ScriptSyncSettings : public SettingsGroup
 
 	[Category("General")]
 	[Description("Handling of existing files in the working directory at sync start")]
-	property scriptEditor::scriptSync::SyncStartEventArgs::eExistingFileHandlingOperation ExistingFileHandlingOp;
+	property scriptSync::SyncStartEventArgs::eExistingFileHandlingOperation ExistingFileHandlingOp;
 
 	[Category("General")]
 	[Description("Automatically delete log files at sync end")]
@@ -734,7 +750,7 @@ ref struct ScriptSyncSettings : public SettingsGroup
 	{
 		AutoSyncChanges = true;
 		AutoSyncInterval = 5;
-		ExistingFileHandlingOp = scriptEditor::scriptSync::SyncStartEventArgs::eExistingFileHandlingOperation::Prompt;
+		ExistingFileHandlingOp = scriptSync::SyncStartEventArgs::eExistingFileHandlingOperation::Prompt;
 		AutoDeleteLogs = false;
 	}
 

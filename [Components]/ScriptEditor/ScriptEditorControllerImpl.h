@@ -20,18 +20,18 @@ using namespace controller;
 
 ref struct ActiveDocumentActionCollection
 {
-	property BasicAction^ Copy;
-	property BasicAction^ Paste;
-	property BasicAction^ Comment;
-	property BasicAction^ Uncomment;
-	property BasicAction^ AddBookmark;
-	property BasicAction^ GoToLine;
+	property utilities::BasicAction^ Copy;
+	property utilities::BasicAction^ Paste;
+	property utilities::BasicAction^ Comment;
+	property utilities::BasicAction^ Uncomment;
+	property utilities::BasicAction^ AddBookmark;
+	property utilities::BasicAction^ GoToLine;
 
-	property BasicAction^ AddVarInteger;
-	property BasicAction^ AddVarFloat;
-	property BasicAction^ AddVarReference;
-	property BasicAction^ AddVarString;
-	property BasicAction^ AddVarArray;
+	property utilities::BasicAction^ AddVarInteger;
+	property utilities::BasicAction^ AddVarFloat;
+	property utilities::BasicAction^ AddVarReference;
+	property utilities::BasicAction^ AddVarString;
+	property utilities::BasicAction^ AddVarArray;
 
 
 	ActiveDocumentActionCollection();
@@ -42,20 +42,20 @@ ref struct ActiveDocumentActionCollection
 
 ref struct ViewActionCollection
 {
-	property BasicAction^ CurrentTabNewScript;
-	property BasicAction^ CurrentTabOpenScript;
-	property BasicAction^ CurrentTabSaveScript;
-	property BasicAction^ CurrentTabPreviousScript;
-	property BasicAction^ CurrentTabNextScript;
-	property BasicAction^ SaveAllTabs;
+	property utilities::BasicAction^ CurrentTabNewScript;
+	property utilities::BasicAction^ CurrentTabOpenScript;
+	property utilities::BasicAction^ CurrentTabSaveScript;
+	property utilities::BasicAction^ CurrentTabPreviousScript;
+	property utilities::BasicAction^ CurrentTabNextScript;
+	property utilities::BasicAction^ SaveAllTabs;
 
-	property BasicAction^ NewTabWithNewScript;
-	property BasicAction^ NewTabWithExistingScript;
-	property BasicAction^ PreviousTab;
-	property BasicAction^ NextTab;
-	property BasicAction^ CloseCurrentTab;
+	property utilities::BasicAction^ NewTabWithNewScript;
+	property utilities::BasicAction^ NewTabWithExistingScript;
+	property utilities::BasicAction^ PreviousTab;
+	property utilities::BasicAction^ NextTab;
+	property utilities::BasicAction^ CloseCurrentTab;
 
-	property BasicAction^ ShowFindReplacePane;
+	property utilities::BasicAction^ ShowFindReplacePane;
 
 	ViewActionCollection();
 	~ViewActionCollection();
@@ -167,7 +167,7 @@ ref class ScriptEditorController : public IScriptEditorController
 
 	void LoadNewUnsavedScriptIntoDocument(model::IScriptDocument^ Document);
 	void LoadExistingScriptIntoDocument(model::IScriptDocument^ Document, String^ ExistingScriptEditorId);
-	void LoadExistingScriptIntoDocument(model::IScriptDocument^ Document, DisposibleDataAutoPtr<componentDLLInterface::ScriptData> ExistingScriptData);
+	void LoadExistingScriptIntoDocument(model::IScriptDocument^ Document, nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptData> ExistingScriptData);
 	bool SaveDocument(model::IScriptDocument^ Document, model::IScriptDocument::eSaveOperation SaveOperation);
 	void LoadNextScriptIntoDocument(model::IScriptDocument^ Document);
 	void LoadPreviousScriptIntoDocument(model::IScriptDocument^ Document);
@@ -190,6 +190,7 @@ ref class ScriptEditorController : public IScriptEditorController
 	void ViewEventHandler_MessagesPanel(view::ViewComponentEvent^ E);
 	void ViewEventHandler_BookmarksPanel(view::ViewComponentEvent^ E);
 	void ViewEventHandler_TextEditorContextMenu(view::ViewComponentEvent^ E);
+	void ViewEventHandler_TabStripContextMenu(view::ViewComponentEvent^ E);
 	void ViewEventHandler_EmptyWorkspacePanel(view::ViewComponentEvent^ E);
 
 	void ModelEventHandler_DocumentStateChanged(Object^ Sender, model::IScriptDocument::StateChangeEventArgs^ E);

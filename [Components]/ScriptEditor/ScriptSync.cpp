@@ -194,7 +194,7 @@ bool DiskSync::SyncToDisk(SyncedScriptData^ SyncedScript, bool Overwrite)
 	}
 
 	CString EID(SyncedScript->EditorID);
-	DisposibleDataAutoPtr<componentDLLInterface::ScriptData> NativeScript
+	nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptData> NativeScript
 	(nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(EID.c_str()));
 	Debug::Assert(NativeScript);
 
@@ -363,7 +363,7 @@ bool DiskSync::DoPreprocessingAndAnalysis(componentDLLInterface::ScriptData* Scr
 void DiskSync::CompileScript(SyncedScriptData^ SyncedScript, String^ ImportedScriptText, bool% OutSuccess, List<String^>^% OutMessages)
 {
 	CString EID(SyncedScript->EditorID);
-	DisposibleDataAutoPtr<componentDLLInterface::ScriptData> NativeScript
+	nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptData> NativeScript
 						(nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(EID.c_str()));
 	Debug::Assert(NativeScript);
 
@@ -386,7 +386,7 @@ void DiskSync::CompileScript(SyncedScriptData^ SyncedScript, String^ ImportedScr
 	Metadata->HasPreprocessorDirectives = ContainsPreprocessorDirectives;
 	CompilationData->SerializedMetadata = model::components::ScriptTextMetadataHelper::SerializeMetadata(Metadata);
 
-	DisposibleDataAutoPtr<componentDLLInterface::ScriptCompileData> CompilationResult(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.AllocateCompileData());
+	nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptCompileData> CompilationResult(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.AllocateCompileData());
 
 	CString ScriptTextToCompile(CompilationData->PreprocessedScriptText->Replace("\n", "\r\n"));
 	CompilationResult->Script.Text = ScriptTextToCompile.c_str();
@@ -1221,12 +1221,12 @@ void DiskSyncDialog::ToolbarSelectScripts_Click(Object^ Sender, EventArgs^ E)
 {
 	Debug::Assert(IsSyncInProgress() == false);
 
-	auto Params = gcnew ScriptSelectionDialog::Params;
+	auto Params = gcnew selectScript::ScriptSelectionDialog::Params;
 	Params->ShowDeletedScripts = false;
 	Params->PreventSyncedScriptSelection = true;
 	Params->ParentWindowHandle = this->Handle;
 
-	ScriptSelectionDialog ScriptSelection(Params);
+	selectScript::ScriptSelectionDialog ScriptSelection(Params);
 	if (ScriptSelection.HasResult == false || ScriptSelection.ResultData->SelectionCount == 0)
 		return;
 

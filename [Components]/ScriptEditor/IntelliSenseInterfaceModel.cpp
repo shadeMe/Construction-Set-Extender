@@ -14,6 +14,46 @@ namespace intellisense
 {
 
 
+IntelliSenseModelContext::IntelliSenseModelContext()
+{
+	CallingObjectScriptVariables = gcnew IntelliSenseItemCollection;
+	Reset();
+}
+
+void IntelliSenseModelContext::Reset()
+{
+	Valid = false;
+	CaretPos = -1;
+	Line = 0;
+	LineVisible = true;
+
+	Operation = eOperationType::Default;
+
+	CallingObject = nullptr;
+	CallingObjectScript = nullptr;
+	CallingObjectIsObjectReference = false;
+	// CallingObjectScriptVariables is reset elsewhere
+
+	FilterString = String::Empty;
+	DisplayScreenCoords = Point(0, 0);
+}
+
+IntelliSenseModelContextUpdateDiff::IntelliSenseModelContextUpdateDiff()
+{
+	Reset();
+}
+
+void IntelliSenseModelContextUpdateDiff::Reset()
+{
+	CaretPosChanged = false;
+	OldCaretPos = -1;
+	LineChanged = false;
+	OldLine = 0;
+	OperationInvoked = false;
+	OldCallingObjectScript = nullptr;
+	CallingObjectScriptChanged = false;
+}
+
 IntelliSenseInterfaceModel::IntelliSenseInterfaceModel(textEditor::ITextEditor^ Parent)
 {
 	Debug::Assert(Parent != nullptr);
@@ -23,20 +63,19 @@ IntelliSenseInterfaceModel::IntelliSenseInterfaceModel(textEditor::ITextEditor^ 
 
 	Context = gcnew IntelliSenseModelContext;
 	LastContextUpdateDiff = gcnew IntelliSenseModelContextUpdateDiff;
-	CachedContextChangeEventArgs = gcnew Dictionary<IntelliSenseContextChangeEventArgs::Event, IntelliSenseContextChangeEventArgs ^>;
+	CachedContextChangeEventArgs = gcnew Dictionary<IntelliSenseContextChangeEventArgs::eEvent, IntelliSenseContextChangeEventArgs ^>;
 	EnumeratedItems = gcnew List<IntelliSenseItem^>;
-	LocalVariables = gcnew List<IntelliSenseItemScriptVariable ^>;
+	LocalVariables = gcnew IntelliSenseItemCollection;
 
 	AutomaticallyPopup = preferences::SettingsHolder::Get()->IntelliSense->ShowSuggestions;
 	PopupThresholdLength = preferences::SettingsHolder::Get()->IntelliSense->SuggestionCharThreshold;
-	UseSubstringFiltering = preferences::SettingsHolder::Get()->IntelliSense->UseSubstringSearch;
 	InsertSuggestionOnEnterKey = preferences::SettingsHolder::Get()->IntelliSense->InsertSuggestionsWithEnterKey;
 
-	DisplayMode = AutomaticallyPopup ? PopupDisplayMode::Automatic : PopupDisplayMode::Manual;
-	SuppressionMode = PopupSuppressionMode::NoSuppression;
-	ShowReason = PopupShowReason::None;
-	HideReason = PopupHideReason::None;
-	ContextChangeHandlingMode = ContextChangeEventHandlingMode::Handle;
+	DisplayMode = AutomaticallyPopup ? ePopupDisplayMode::Automatic : ePopupDisplayMode::Manual;
+	SuppressionMode = ePopupSuppressionMode::NoSuppression;
+	ShowReason = ePopupShowReason::None;
+	HideReason = ePopupHideReason::None;
+	ContextChangeHandlingMode = eContextChangeEventHandlingMode::Handle;
 
 	ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceModel::ScriptEditorPreferences_Saved);
 	ParentEditorInputEventHandler = gcnew IntelliSenseInputEventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_InputEventHandler);
@@ -75,20 +114,19 @@ void IntelliSenseInterfaceModel::ScriptEditorPreferences_Saved(Object^ Sender, E
 {
 	if (Bound)
 	{
-		HidePopup(PopupHideReason::None);
+		HidePopup(ePopupHideReason::None);
 		HideInsightTooltip();
 		BoundView->Hide();
 	}
 
 	AutomaticallyPopup = preferences::SettingsHolder::Get()->IntelliSense->ShowSuggestions;
 	PopupThresholdLength = preferences::SettingsHolder::Get()->IntelliSense->SuggestionCharThreshold;
-	UseSubstringFiltering = preferences::SettingsHolder::Get()->IntelliSense->UseSubstringSearch;
 	InsertSuggestionOnEnterKey = preferences::SettingsHolder::Get()->IntelliSense->InsertSuggestionsWithEnterKey;
 
-	DisplayMode = AutomaticallyPopup ? PopupDisplayMode::Automatic : PopupDisplayMode::Manual;
-	SuppressionMode = PopupSuppressionMode::NoSuppression;
-	ShowReason = PopupShowReason::None;
-	HideReason = PopupHideReason::None;
+	DisplayMode = AutomaticallyPopup ? ePopupDisplayMode::Automatic : ePopupDisplayMode::Manual;
+	SuppressionMode = ePopupSuppressionMode::NoSuppression;
+	ShowReason = ePopupShowReason::None;
+	HideReason = ePopupHideReason::None;
 }
 
 
@@ -98,12 +136,12 @@ void IntelliSenseInterfaceModel::ParentEditor_InputEventHandler(Object^ Sender, 
 
 	switch (E->Type)
 	{
-	case IntelliSenseInputEventArgs::Event::KeyDown:
-	case IntelliSenseInputEventArgs::Event::KeyUp:
+	case IntelliSenseInputEventArgs::eEvent::KeyDown:
+	case IntelliSenseInputEventArgs::eEvent::KeyUp:
 		E->Handled = HandleKeyboardInput(E->Type, E->KeyEvent);
 		break;
-	case IntelliSenseInputEventArgs::Event::MouseDown:
-	case IntelliSenseInputEventArgs::Event::MouseUp:
+	case IntelliSenseInputEventArgs::eEvent::MouseDown:
+	case IntelliSenseInputEventArgs::eEvent::MouseUp:
 		E->Handled = HandleMouseInput(E->Type, E->MouseEvent);
 		break;
 	}
@@ -116,7 +154,7 @@ void IntelliSenseInterfaceModel::ParentEditor_InsightHoverEventHandler(Object^ S
 	if (preferences::SettingsHolder::Get()->IntelliSense->ShowInsightToolTip == false)
 		return;
 
-	if (E->Type == IntelliSenseInsightHoverEventArgs::Event::HoverStart)
+	if (E->Type == IntelliSenseInsightHoverEventArgs::eEvent::HoverStart)
 		ShowInsightTooltip(E);
 	else
 		HideInsightTooltip();
@@ -127,7 +165,7 @@ void IntelliSenseInterfaceModel::ParentEditor_ContextChangeEventHandler(Object^ 
 	if (!Bound)
 		return;
 
-	if (ContextChangeHandlingMode == ContextChangeEventHandlingMode::CacheAndIgnore)
+	if (ContextChangeHandlingMode == eContextChangeEventHandlingMode::CacheAndIgnore)
 	{
 		// Cache the last received argument of each type
 		CachedContextChangeEventArgs[E->Type] = E;
@@ -136,19 +174,19 @@ void IntelliSenseInterfaceModel::ParentEditor_ContextChangeEventHandler(Object^ 
 
 	switch (E->Type)
 	{
-	case IntelliSenseContextChangeEventArgs::Event::Reset:
+	case IntelliSenseContextChangeEventArgs::eEvent::Reset:
 		OnParentReset();
 		break;
-	case IntelliSenseContextChangeEventArgs::Event::TextChanged:
+	case IntelliSenseContextChangeEventArgs::eEvent::TextChanged:
 		OnTextChanged(E);
 		break;
-	case IntelliSenseContextChangeEventArgs::Event::CaretPosChanged:
+	case IntelliSenseContextChangeEventArgs::eEvent::CaretPosChanged:
 		OnCaretPosChanged(E);
 		break;
-	case IntelliSenseContextChangeEventArgs::Event::ScrollOffsetChanged:
+	case IntelliSenseContextChangeEventArgs::eEvent::ScrollOffsetChanged:
 		OnScrollOffsetChanged(E);
 		break;
-	case IntelliSenseContextChangeEventArgs::Event::SemanticAnalysisCompleted:
+	case IntelliSenseContextChangeEventArgs::eEvent::SemanticAnalysisCompleted:
 		UpdateLocalVariables(E->SemanticAnalysisData);
 		break;
 	}
@@ -165,17 +203,17 @@ void IntelliSenseInterfaceModel::BoundView_Dismissed(Object^ Sender, EventArgs^ 
 	OnUserDismissed();
 }
 
-void IntelliSenseInterfaceModel::SetContextChangeEventHandlingMode(ContextChangeEventHandlingMode Mode)
+void IntelliSenseInterfaceModel::SetContextChangeEventHandlingMode(eContextChangeEventHandlingMode Mode)
 {
 	if (ContextChangeHandlingMode == Mode)
 		return;
 
 	switch (Mode)
 	{
-	case ContextChangeEventHandlingMode::Handle:
+	case eContextChangeEventHandlingMode::Handle:
 		ContextChangeHandlingMode = Mode;
 		break;
-	case ContextChangeEventHandlingMode::CacheAndIgnore:
+	case eContextChangeEventHandlingMode::CacheAndIgnore:
 		CachedContextChangeEventArgs->Clear();
 		ContextChangeHandlingMode = Mode;
 		break;
@@ -184,7 +222,7 @@ void IntelliSenseInterfaceModel::SetContextChangeEventHandlingMode(ContextChange
 
 void IntelliSenseInterfaceModel::OnParentReset()
 {
-	HidePopup(PopupHideReason::ContextChanged);
+	HidePopup(ePopupHideReason::ContextChanged);
 	HideInsightTooltip();
 	ResetContext();
 	EnumeratedItems->Clear();
@@ -195,11 +233,11 @@ void IntelliSenseInterfaceModel::OnTriggerKeyPress()
 	if (Visible)
 		return;
 
-	if (DisplayMode == PopupDisplayMode::Manual)
+	if (DisplayMode == ePopupDisplayMode::Manual)
 		return;
 
-	if (SuppressionMode == PopupSuppressionMode::UntilNextTriggerKeyPress)
-		SuppressionMode = PopupSuppressionMode::NoSuppression;
+	if (SuppressionMode == ePopupSuppressionMode::UntilNextTriggerKeyPress)
+		SuppressionMode = ePopupSuppressionMode::NoSuppression;
 }
 
 void IntelliSenseInterfaceModel::OnCaretPosChanged(IntelliSenseContextChangeEventArgs^ E)
@@ -213,7 +251,7 @@ void IntelliSenseInterfaceModel::OnCaretPosChanged(IntelliSenseContextChangeEven
 
 	if (LastContextUpdateDiff->LineChanged && Visible)
 	{
-		HidePopup(PopupHideReason::ContextChanged);
+		HidePopup(ePopupHideReason::ContextChanged);
 		return;
 	}
 
@@ -226,8 +264,8 @@ void IntelliSenseInterfaceModel::OnUserInvoked()
 	if (Visible)
 		return;
 
-	SuppressionMode = PopupSuppressionMode::NoSuppression;
-	ShowPopup(PopupShowReason::UserInvoked);
+	SuppressionMode = ePopupSuppressionMode::NoSuppression;
+	ShowPopup(ePopupShowReason::UserInvoked);
 
 }
 
@@ -236,11 +274,11 @@ void IntelliSenseInterfaceModel::OnUserDismissed()
 	if (!Visible)
 		return;
 
-	if (DisplayMode == PopupDisplayMode::Manual)
+	if (DisplayMode == ePopupDisplayMode::Manual)
 		return;
 
-	SuppressionMode = PopupSuppressionMode::UntilNextTriggerKeyPress;
-	HidePopup(PopupHideReason::UserDismissed);
+	SuppressionMode = ePopupSuppressionMode::UntilNextTriggerKeyPress;
+	HidePopup(ePopupHideReason::UserDismissed);
 }
 
 void IntelliSenseInterfaceModel::OnSelectionCompleted()
@@ -252,23 +290,23 @@ void IntelliSenseInterfaceModel::OnSelectionCompleted()
 
 	// Updating the parent editor's text will unleash a
 	// flurry of context change events, most of which are superfluous
-	SetContextChangeEventHandlingMode(ContextChangeEventHandlingMode::CacheAndIgnore);
+	SetContextChangeEventHandlingMode(eContextChangeEventHandlingMode::CacheAndIgnore);
 	{
 		// Cache the selection before hiding the view as it resets the selection
 		auto Selection = BoundView->Selection;
 
-		HidePopup(PopupHideReason::SelectionComplete);
+		HidePopup(ePopupHideReason::SelectionComplete);
 
 		if (Selection)
 			Selection->Insert(ParentEditor);
 
 		ParentEditor->FocusTextArea();
 	}
-	SetContextChangeEventHandlingMode(ContextChangeEventHandlingMode::Handle);
+	SetContextChangeEventHandlingMode(eContextChangeEventHandlingMode::Handle);
 
 	// Update the context with the last CaretPosChanged event args
-	if (CachedContextChangeEventArgs->ContainsKey(IntelliSenseContextChangeEventArgs::Event::CaretPosChanged))
-		OnCaretPosChanged(CachedContextChangeEventArgs[IntelliSenseContextChangeEventArgs::Event::CaretPosChanged]);
+	if (CachedContextChangeEventArgs->ContainsKey(IntelliSenseContextChangeEventArgs::eEvent::CaretPosChanged))
+		OnCaretPosChanged(CachedContextChangeEventArgs[IntelliSenseContextChangeEventArgs::eEvent::CaretPosChanged]);
 }
 
 void IntelliSenseInterfaceModel::OnScrollOffsetChanged(IntelliSenseContextChangeEventArgs^ E)
@@ -284,7 +322,7 @@ void IntelliSenseInterfaceModel::OnScrollOffsetChanged(IntelliSenseContextChange
 	if (Context->LineVisible)
 		RelocatePopup();
 	else
-		HidePopup(PopupHideReason::ContextChanged);
+		HidePopup(ePopupHideReason::ContextChanged);
 }
 
 void IntelliSenseInterfaceModel::OnTextChanged(IntelliSenseContextChangeEventArgs^ E)
@@ -295,27 +333,27 @@ void IntelliSenseInterfaceModel::OnTextChanged(IntelliSenseContextChangeEventArg
 
 	if (!Visible)
 	{
-		if (DisplayMode == PopupDisplayMode::Manual)
+		if (DisplayMode == ePopupDisplayMode::Manual)
 			return;
 		else if (LastContextUpdateDiff->LineChanged)
 			return;
 
 		if (LastContextUpdateDiff->OperationInvoked)
-			ShowPopup(PopupShowReason::OperationInvoked);
+			ShowPopup(ePopupShowReason::OperationInvoked);
 		else if (Context->FilterString->Length >= PopupThresholdLength)
-			ShowPopup(PopupShowReason::PopupThresholdReached);
+			ShowPopup(ePopupShowReason::PopupThresholdReached);
 	}
 	else
 	{
 		if (!Context->Valid)
 		{
-			HidePopup(PopupHideReason::ContextChanged);
+			HidePopup(ePopupHideReason::ContextChanged);
 			return;
 		}
 
-		if (DisplayMode == PopupDisplayMode::Manual)
+		if (DisplayMode == ePopupDisplayMode::Manual)
 			UpdatePopup();
-		else if (ShowReason != PopupShowReason::None)
+		else if (ShowReason != ePopupShowReason::None)
 			UpdatePopup();
 	}
 }
@@ -326,7 +364,7 @@ void IntelliSenseInterfaceModel::UpdateContext(IntelliSenseContextChangeEventArg
 
 	if (Context->CaretPos == Args->CaretPos && Context->Line == Args->CurrentLineNumber)
 	{
-		if (Args->Type == IntelliSenseContextChangeEventArgs::Event::ScrollOffsetChanged)
+		if (Args->Type == IntelliSenseContextChangeEventArgs::eEvent::ScrollOffsetChanged)
 		{
 			Context->LineVisible = Args->CurrentLineInsideViewport;
 			Context->DisplayScreenCoords = Args->DisplayScreenCoords;
@@ -337,6 +375,7 @@ void IntelliSenseInterfaceModel::UpdateContext(IntelliSenseContextChangeEventArg
 
 	LastContextUpdateDiff->OldCaretPos = Context->CaretPos;
 	LastContextUpdateDiff->OldLine = Context->Line;
+	LastContextUpdateDiff->OldCallingObjectScript = Context->CallingObjectScript;
 
 	Context->Reset();
 
@@ -383,7 +422,7 @@ void IntelliSenseInterfaceModel::UpdateContext(IntelliSenseContextChangeEventArg
 	bool ResolvedOp = false;
 
 	Context->FilterString = CurrentToken;
-	Context->Operation = IntelliSenseModelContext::OperationType::Default;
+	Context->Operation = IntelliSenseModelContext::eOperationType::Default;
 
 
 	if (!ResolvedOp)
@@ -393,7 +432,7 @@ void IntelliSenseInterfaceModel::UpdateContext(IntelliSenseContextChangeEventArg
 		case obScriptParsing::eScriptTokenType::Call:
 			if ((UsingPreviousToken ? PreviousTokenDelimiter : CurrentTokenDelimiter) == ' ')
 			{
-				Context->Operation = IntelliSenseModelContext::OperationType::Call;
+				Context->Operation = IntelliSenseModelContext::eOperationType::Call;
 
 				ResolvedOp = PossibleOperationInvocation;
 			}
@@ -402,7 +441,7 @@ void IntelliSenseInterfaceModel::UpdateContext(IntelliSenseContextChangeEventArg
 		case obScriptParsing::eScriptTokenType::Let:
 			if ((UsingPreviousToken ? PreviousTokenDelimiter : CurrentTokenDelimiter) == ' ')
 			{
-				Context->Operation = IntelliSenseModelContext::OperationType::Assign;
+				Context->Operation = IntelliSenseModelContext::eOperationType::Assign;
 
 				ResolvedOp = PossibleOperationInvocation;
 			}
@@ -412,10 +451,10 @@ void IntelliSenseInterfaceModel::UpdateContext(IntelliSenseContextChangeEventArg
 
 	if ((UsingPreviousToken ? PreviousTokenDelimiter : CurrentTokenDelimiter) == '.')
 	{
-		Context->Operation = IntelliSenseModelContext::OperationType::Dot;
+		Context->Operation = IntelliSenseModelContext::eOperationType::Dot;
 
 		IntelliSenseItemScriptVariable^ RefVar = LookupLocalVariable(UsingPreviousToken ? PreviousToken : CurrentToken);
-		if (RefVar && RefVar->GetDataType() == obScriptParsing::Variable::eDataType::Ref)
+		if (RefVar && RefVar->GetDataType() == obScriptParsing::Variable::eDataType::Reference)
 		{
 			Context->CallingObject = RefVar;
 			Context->CallingObjectIsObjectReference = true;
@@ -427,7 +466,7 @@ void IntelliSenseInterfaceModel::UpdateContext(IntelliSenseContextChangeEventArg
 			auto LookupResult = IntelliSenseBackend::Get()->ContextualIntelliSenseLookup(LookupArgs);
 
 			if (LookupResult->CurrentToken == nullptr)
-				Context->Operation = IntelliSenseModelContext::OperationType::Default;
+				Context->Operation = IntelliSenseModelContext::eOperationType::Default;
 			else
 			{
 				Context->CallingObject = LookupResult->CurrentToken;
@@ -450,7 +489,7 @@ void IntelliSenseInterfaceModel::UpdateContext(IntelliSenseContextChangeEventArg
 
 		if (CurrentToken[0] == '`')
 		{
-			Context->Operation = IntelliSenseModelContext::OperationType::Snippet;
+			Context->Operation = IntelliSenseModelContext::eOperationType::Snippet;
 			if (CurrentToken->Length > 1)
 				Context->FilterString = CurrentToken->Remove(0, 1);
 			else
@@ -458,6 +497,19 @@ void IntelliSenseInterfaceModel::UpdateContext(IntelliSenseContextChangeEventArg
 
 			ResolvedOp = true;
 			PossibleOperationInvocation = true;
+		}
+	}
+
+	if (Context->CallingObjectScript != LastContextUpdateDiff->OldCallingObjectScript)
+	{
+		LastContextUpdateDiff->CallingObjectScriptChanged = true;
+
+		// cache the calling object's variables for quick lookup/retrieval
+		Context->CallingObjectScriptVariables->Reset();
+		if (Context->CallingObjectScript != nullptr)
+		{
+			for each (auto Var in Context->CallingObjectScript->GetVariables())
+				Context->CallingObjectScriptVariables->Add(Var->GetIdentifier(), Var);
 		}
 	}
 
@@ -471,14 +523,14 @@ void IntelliSenseInterfaceModel::ResetContext()
 	LastContextUpdateDiff->Reset();
 }
 
-bool IntelliSenseInterfaceModel::HandleKeyboardInput(IntelliSenseInputEventArgs::Event Type, KeyEventArgs^ E)
+bool IntelliSenseInterfaceModel::HandleKeyboardInput(IntelliSenseInputEventArgs::eEvent Type, KeyEventArgs^ E)
 {
 	Debug::Assert(Bound == true);
 
 	if (IsTriggerKey(E))
 		OnTriggerKeyPress();
 
-	bool KeyUp = Type == IntelliSenseInputEventArgs::Event::KeyUp;
+	bool KeyUp = Type == IntelliSenseInputEventArgs::eEvent::KeyUp;
 	bool PopupInvocation = E->KeyCode == Keys::Enter && E->Control;
 
 	if (!Visible && !PopupInvocation)
@@ -521,12 +573,12 @@ bool IntelliSenseInterfaceModel::HandleKeyboardInput(IntelliSenseInputEventArgs:
 
 		break;
 	case Keys::Up:
-		BoundView->ChangeSelection(IIntelliSenseInterfaceView::MoveDirection::Up);
+		BoundView->ChangeSelection(IIntelliSenseInterfaceView::eMoveDirection::Up);
 		E->Handled = true;
 
 		break;
 	case Keys::Down:
-		BoundView->ChangeSelection(IIntelliSenseInterfaceView::MoveDirection::Down);
+		BoundView->ChangeSelection(IIntelliSenseInterfaceView::eMoveDirection::Down);
 		E->Handled = true;
 
 		break;
@@ -561,7 +613,7 @@ bool IntelliSenseInterfaceModel::IsTriggerKey(KeyEventArgs^ E)
 	}
 }
 
-bool IntelliSenseInterfaceModel::HandleMouseInput(IntelliSenseInputEventArgs::Event Type, MouseEventArgs^ E)
+bool IntelliSenseInterfaceModel::HandleMouseInput(IntelliSenseInputEventArgs::eEvent Type, MouseEventArgs^ E)
 {
 	;// Nothing right now
 	return false;
@@ -629,20 +681,20 @@ void IntelliSenseInterfaceModel::HideInsightTooltip()
 	BoundView->HideInsightToolTip();
 }
 
-void IntelliSenseInterfaceModel::ShowPopup(PopupShowReason Reason)
+void IntelliSenseInterfaceModel::ShowPopup(ePopupShowReason Reason)
 {
 	switch (SuppressionMode)
 	{
-	case PopupSuppressionMode::NoSuppression:
+	case ePopupSuppressionMode::NoSuppression:
 		break;
-	case PopupSuppressionMode::UntilNextTriggerKeyPress:
+	case ePopupSuppressionMode::UntilNextTriggerKeyPress:
 		return;
 	}
 
 	if (UpdatePopup())
 	{
 		ShowReason = Reason;
-		HideReason = PopupHideReason::None;
+		HideReason = ePopupHideReason::None;
 	}
 }
 
@@ -651,7 +703,7 @@ bool IntelliSenseInterfaceModel::UpdatePopup()
 	PopulateDataStore();
 	if (EnumeratedItems->Count == 0)
 	{
-		HidePopup(PopupHideReason::ContextChanged);
+		HidePopup(ePopupHideReason::ContextChanged);
 		return false;
 	}
 
@@ -662,13 +714,13 @@ bool IntelliSenseInterfaceModel::UpdatePopup()
 	return true;
 }
 
-void IntelliSenseInterfaceModel::HidePopup(PopupHideReason Reason)
+void IntelliSenseInterfaceModel::HidePopup(ePopupHideReason Reason)
 {
 	BoundView->Hide();
 	EnumeratedItems->Clear();
 
 	HideReason = Reason;
-	ShowReason = PopupShowReason::None;
+	ShowReason = ePopupShowReason::None;
 }
 
 void IntelliSenseInterfaceModel::RelocatePopup()
@@ -682,35 +734,35 @@ void IntelliSenseInterfaceModel::RelocatePopup()
 		ParentEditor->FocusTextArea();
 	}
 	else
-		HidePopup(PopupHideReason::ContextChanged);
+		HidePopup(ePopupHideReason::ContextChanged);
 }
 
 void IntelliSenseInterfaceModel::PopulateDataStore()
 {
-	eStringMatchType MatchType = UseSubstringFiltering ? eStringMatchType::Substring : eStringMatchType::StartsWith;
-
 	FetchIntelliSenseItemsArgs^ FetchArgs = gcnew FetchIntelliSenseItemsArgs;
 	FetchArgs->IdentifierToMatch = Context->FilterString;
-	FetchArgs->MatchType = MatchType;
+	FetchArgs->FilterMode = preferences::SettingsHolder::Get()->IntelliSense->SuggestionsFilter;
+	FetchArgs->FuzzyMatchMaxCost = preferences::SettingsHolder::Get()->IntelliSense->FuzzyFilterMaxCost;
+	FetchArgs->NumItemsToFetch = MaximumNumberOfSuggestions;
 
 	EnumeratedItems->Clear();
 
 	switch (Context->Operation)
 	{
-	case IntelliSenseModelContext::OperationType::Default:
-		EnumerateIntelliSenseItems(LocalVariables, MatchType);
+	case IntelliSenseModelContext::eOperationType::Default:
+		EnumerateVariables(LocalVariables, FetchArgs->IdentifierToMatch, FetchArgs->FilterMode, FetchArgs->FuzzyMatchMaxCost);
 
 		FetchArgs->FilterBy = FetchArgs->FilterBy & ~eDatabaseLookupFilter::Snippet;
 		EnumeratedItems->AddRange(IntelliSenseBackend::Get()->FetchIntelliSenseItems(FetchArgs));
 
 		break;
-	case IntelliSenseModelContext::OperationType::Call:
+	case IntelliSenseModelContext::eOperationType::Call:
 		FetchArgs->FilterBy = eDatabaseLookupFilter::UserFunction;
 		EnumeratedItems->AddRange(IntelliSenseBackend::Get()->FetchIntelliSenseItems(FetchArgs));
 
 		break;
-	case IntelliSenseModelContext::OperationType::Assign:
-		EnumerateIntelliSenseItems(LocalVariables, MatchType);
+	case IntelliSenseModelContext::eOperationType::Assign:
+		EnumerateVariables(LocalVariables, FetchArgs->IdentifierToMatch, FetchArgs->FilterMode, FetchArgs->FuzzyMatchMaxCost);
 
 		FetchArgs->FilterBy = FetchArgs->FilterBy & ~eDatabaseLookupFilter::Command;
 		FetchArgs->FilterBy = FetchArgs->FilterBy & ~eDatabaseLookupFilter::Script;
@@ -721,9 +773,9 @@ void IntelliSenseInterfaceModel::PopulateDataStore()
 		EnumeratedItems->AddRange(IntelliSenseBackend::Get()->FetchIntelliSenseItems(FetchArgs));
 
 		break;
-	case IntelliSenseModelContext::OperationType::Dot:
+	case IntelliSenseModelContext::eOperationType::Dot:
 		if (Context->CallingObjectScript != nullptr)
-			EnumerateIntelliSenseItems(Context->CallingObjectScript->GetVariables(), MatchType);
+			EnumerateVariables(Context->CallingObjectScriptVariables, FetchArgs->IdentifierToMatch, FetchArgs->FilterMode, FetchArgs->FuzzyMatchMaxCost);
 
 		if (Context->CallingObjectIsObjectReference)
 		{
@@ -733,7 +785,7 @@ void IntelliSenseInterfaceModel::PopulateDataStore()
 		}
 
 		break;
-	case IntelliSenseModelContext::OperationType::Snippet:
+	case IntelliSenseModelContext::eOperationType::Snippet:
 		FetchArgs->FilterBy = eDatabaseLookupFilter::Snippet;
 		EnumeratedItems->AddRange(IntelliSenseBackend::Get()->FetchIntelliSenseItems(FetchArgs));
 
@@ -743,30 +795,14 @@ void IntelliSenseInterfaceModel::PopulateDataStore()
 	if (EnumeratedItems->Count == 1)
 	{
 		IntelliSenseItem^ Item = EnumeratedItems[0];
-		if (Item->MatchesToken(Context->FilterString, eStringMatchType::FullMatch))
+		if (!String::Compare(Item->GetIdentifier(), Context->FilterString, true))
 			EnumeratedItems->Clear();			// do not show when enumerable == current token
-	}
-}
-
-generic <typename T> where T : IntelliSenseItem
-void IntelliSenseInterfaceModel::EnumerateIntelliSenseItems(IEnumerable<T>^ Items, eStringMatchType MatchType)
-{
-	for each (IntelliSenseItem ^ Itr in Items)
-	{
-		if (Context->FilterString->Length == 0 || Itr->MatchesToken(Context->FilterString, MatchType))
-			EnumeratedItems->Add(Itr);
 	}
 }
 
 IntelliSenseItemScriptVariable^ IntelliSenseInterfaceModel::LookupLocalVariable(String^ Identifier)
 {
-	for each (IntelliSenseItemScriptVariable ^ Itr in LocalVariables)
-	{
-		if (Itr->MatchesToken(Identifier, eStringMatchType::FullMatch))
-			return Itr;
-	}
-
-	return nullptr;
+	return safe_cast<IntelliSenseItemScriptVariable^>(LocalVariables->Lookup(Identifier, false));
 }
 
 void IntelliSenseInterfaceModel::UpdateLocalVariables(obScriptParsing::AnalysisData^ Data)
@@ -774,11 +810,34 @@ void IntelliSenseInterfaceModel::UpdateLocalVariables(obScriptParsing::AnalysisD
 	if (Data == nullptr)
 		return;
 
-	LocalVariables->Clear();
+	LocalVariables->Reset();
 	for each (auto Itr in Data->Variables)
 	{
 		auto NewVar = gcnew IntelliSenseItemScriptVariable(Itr->Name, Itr->Comment, Itr->Type, String::Empty);
-		LocalVariables->Add(NewVar);
+		LocalVariables->Add(Itr->Name, NewVar);
+	}
+}
+
+void IntelliSenseInterfaceModel::EnumerateVariables(IntelliSenseItemCollection^ ScriptVariables, String^ MatchIdentifier, eFilterMode MatchType, UInt32 FuzzyMatchingMaxCost)
+{
+	if (MatchIdentifier->Length == 0)
+	{
+		EnumeratedItems->AddRange(ScriptVariables->PrefixMatch(String::Empty, nullptr));
+		return;
+	}
+
+	switch (MatchType)
+	{
+	case eFilterMode::Prefix:
+		EnumeratedItems->AddRange(ScriptVariables->PrefixMatch(MatchIdentifier, nullptr));
+		break;
+	case eFilterMode::Fuzzy:
+	{
+		auto Matches = ScriptVariables->FuzzyMatch(MatchIdentifier, FuzzyMatchingMaxCost, nullptr);
+		EnumeratedItems->AddRange(ScriptVariables->SortAndExtractFuzzyMatches(Matches));
+
+		break;
+	}
 	}
 }
 
@@ -792,10 +851,10 @@ void IntelliSenseInterfaceModel::Bind(IIntelliSenseInterfaceView^ To)
 	BoundView->ItemSelected += BoundViewItemSelectedHandler;
 	BoundView->Dismissed += BoundViewDismissedHandler;
 
-	SuppressionMode = PopupSuppressionMode::NoSuppression;
-	ShowReason = PopupShowReason::None;
-	HideReason = PopupHideReason::None;
-	ContextChangeHandlingMode = ContextChangeEventHandlingMode::Handle;
+	SuppressionMode = ePopupSuppressionMode::NoSuppression;
+	ShowReason = ePopupShowReason::None;
+	HideReason = ePopupHideReason::None;
+	ContextChangeHandlingMode = eContextChangeEventHandlingMode::Handle;
 }
 
 void IntelliSenseInterfaceModel::Unbind()
@@ -803,7 +862,7 @@ void IntelliSenseInterfaceModel::Unbind()
 	if (Bound)
 	{
 		HideInsightTooltip();
-		HidePopup(PopupHideReason::ContextChanged);
+		HidePopup(ePopupHideReason::ContextChanged);
 
 		BoundView->ItemSelected -= BoundViewItemSelectedHandler;
 		BoundView->Dismissed -= BoundViewDismissedHandler;
@@ -812,10 +871,10 @@ void IntelliSenseInterfaceModel::Unbind()
 		BoundView->Unbind();
 		BoundView = nullptr;
 
-		SuppressionMode = PopupSuppressionMode::NoSuppression;
-		ShowReason = PopupShowReason::None;
-		HideReason = PopupHideReason::None;
-		ContextChangeHandlingMode = ContextChangeEventHandlingMode::Handle;
+		SuppressionMode = ePopupSuppressionMode::NoSuppression;
+		ShowReason = ePopupShowReason::None;
+		HideReason = ePopupHideReason::None;
+		ContextChangeHandlingMode = eContextChangeEventHandlingMode::Handle;
 	}
 }
 

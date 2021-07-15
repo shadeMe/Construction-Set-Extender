@@ -59,10 +59,15 @@ namespace componentDLLInterface
 
 		auto Description = CS_CAST(Form, TESForm, TESDescription);
 		DescriptionComponent = Description ? Description->description.c_str() : nullptr;
+
+		TESForm* ScriptableForm = !ObjectReference ? Form : (CS_CAST(Form, TESForm, TESObjectREFR))->baseForm;
+		auto ScriptableFormComponent = CS_CAST(ScriptableForm, TESForm, TESScriptableForm);
+		if (ScriptableFormComponent && ScriptableFormComponent->script)
+			AttachedScriptEditorID = ScriptableFormComponent->script->editorID.c_str();
 	}
 
 	FormData::FormData()
-		: EditorID(nullptr), FormID(0), TypeID(0), Flags(0), ParentForm(nullptr), ParentPluginName(nullptr), ObjectReference(false), BaseFormEditorID(nullptr)
+		: EditorID(nullptr), FormID(0), TypeID(0), Flags(0), ParentForm(nullptr), ParentPluginName(nullptr), ObjectReference(false), BaseFormEditorID(nullptr), AttachedScriptEditorID(nullptr)
 	{
 		kHandShakeStructCounters[kCounter_FormData]++;
 	}
@@ -92,7 +97,7 @@ namespace componentDLLInterface
 	}
 
 	ScriptData::ScriptData()
-		: FormData(), Text(0), Type(0), ByteCode(0), Length(0), ParentID(0), UDF(false), Compiled(false)
+		: FormData(), Text(0), Type(0), ByteCode(0), Length(0), UDF(false), Compiled(false)
 	{
 		kHandShakeStructCounters[kCounter_ScriptData]++;
 	}

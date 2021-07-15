@@ -665,7 +665,7 @@ bool ScriptDocument::Save(IScriptDocument::eSaveOperation SaveOperation)
 	Debug::Assert(ScriptNativeObject != nullptr);
 
 	bool Result = false;
-	DisposibleDataAutoPtr<componentDLLInterface::ScriptCompileData> CompileInteropData(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.AllocateCompileData());
+	nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptCompileData> CompileInteropData(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.AllocateCompileData());
 	auto Data = BeginScriptCompilation();
 	{
 		if (Data->CanCompile)

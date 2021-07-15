@@ -396,6 +396,9 @@ void LineTrackingManager::ParentEditor_TextChanged(Object^ Sender, EventArgs^ E)
 
 	for each (auto Error in LineBgRenderer->ErrorSquiggles)
 	{
+		if (!Error->Valid)
+			continue;
+
 		if (Error->Line == Line)
 		{
 			Error->Enabled = false;
@@ -779,10 +782,7 @@ VisualLineElement^ StructureVisualizerRenderer::ConstructElement(Int32 offset)
 		{
 			DocumentLine^ BlockStart = CurrentContext->Document->GetLineByNumber(Block->StartLine);
 			if (BlockStart)
-			{
-				return gcnew InlineObjectElement(0,
-													GenerateAdornment(Block->StartLine, CurrentContext->Document->GetText(BlockStart)));
-			}
+				return gcnew InlineObjectElement(0, GenerateAdornment(Block->StartLine, CurrentContext->Document->GetText(BlockStart)));
 		}
 	}
 
@@ -799,16 +799,14 @@ void StructureVisualizerRenderer::OnMouseClick(Object^ Sender, Windows::Input::M
 
 Windows::UIElement^ StructureVisualizerRenderer::GenerateAdornment(UInt32 JumpLine, String^ ElementText)
 {
-	Color ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
-
 	Font^ CustomFont = gcnew Font(preferences::SettingsHolder::Get()->Appearance->TextFont->FontFamily->Name,
-									preferences::SettingsHolder::Get()->Appearance->TextFont->Size - 2,
-									FontStyle::Italic);
+								  preferences::SettingsHolder::Get()->Appearance->TextFont->Size - 1);
 
-	auto ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(100,
-													ForegroundColor.R,
-													ForegroundColor.G,
-													ForegroundColor.B));
+	Color ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
+	auto ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(150,
+																		 ForegroundColor.R,
+																		 ForegroundColor.G,
+																		 ForegroundColor.B));
 	auto BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(0, 0, 0, 0));
 
 	ElementText = ElementText->Replace("\t", "");
@@ -833,8 +831,8 @@ Windows::UIElement^ StructureVisualizerRenderer::GenerateAdornment(UInt32 JumpLi
 	{
 		auto Icon = gcnew Windows::Controls::Image();
 		Icon->Source = IconData;
-		Icon->Width = 14;
-		Icon->Height = 14;
+		Icon->Width = 16;
+		Icon->Height = 16;
 		Icon->HorizontalAlignment = Windows::HorizontalAlignment::Center;
 		Icon->VerticalAlignment = Windows::VerticalAlignment::Bottom;
 		Panel->Children->Add(Icon);
@@ -842,7 +840,7 @@ Windows::UIElement^ StructureVisualizerRenderer::GenerateAdornment(UInt32 JumpLi
 
 	auto AdornmentLabel = gcnew Windows::Controls::Label();
 	AdornmentLabel->FontFamily = gcnew Windows::Media::FontFamily(CustomFont->FontFamily->Name);
-	AdornmentLabel->FontSize = CustomFont->Size;
+	AdornmentLabel->FontSize = CustomFont->SizeInPoints * 96.f / 72.f;
 	AdornmentLabel->FontStyle = Windows::FontStyles::Italic;
 	AdornmentLabel->Foreground = ForegroundBrush;
 	AdornmentLabel->Background = BackgroundBrush;
@@ -1326,8 +1324,6 @@ void ScriptBytecodeOffsetMargin::RemoveFromTextArea(AvalonEdit::TextEditor^ Fiel
 	Field->TextArea->LeftMargins->RemoveAt(MarginIdx - 1);
 	Field->TextArea->LeftMargins->RemoveAt(MarginIdx - 1);
 }
-
-
 
 
 } // namespace avalonEdit

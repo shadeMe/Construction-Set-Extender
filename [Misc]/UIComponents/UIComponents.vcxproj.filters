@@ -34,9 +34,6 @@
     <ClCompile Include="PreferencesDialog.cpp">
       <Filter>Header Files\ScriptEditor</Filter>
     </ClCompile>
-    <ClCompile Include="RefactorListViewDialog.cpp">
-      <Filter>Header Files\ScriptEditor</Filter>
-    </ClCompile>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="TagBrowser.cpp" />
@@ -72,9 +69,6 @@
       <Filter>Header Files\ScriptEditor</Filter>
     </ClInclude>
     <ClInclude Include="PreferencesDialog.h">
-      <Filter>Header Files\ScriptEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="RefactorListViewDialog.h">
       <Filter>Header Files\ScriptEditor</Filter>
     </ClInclude>
     <ClInclude Include="InputPromptDialog.h">

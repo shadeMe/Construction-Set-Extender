@@ -7,6 +7,7 @@
 
 #include "[Common]\NativeWrapper.h"
 
+
 namespace cse
 {
 
@@ -22,9 +23,11 @@ namespace intellisense
 FetchIntelliSenseItemsArgs::FetchIntelliSenseItemsArgs()
 {
 	IdentifierToMatch = String::Empty;
-	MatchType = eStringMatchType::StartsWith;
+	FilterMode = preferences::SettingsHolder::Get()->IntelliSense->SuggestionsFilter;
 	FilterBy = eDatabaseLookupFilter::All;
 	Options = eDatabaseLookupOptions::None;
+	FuzzyMatchMaxCost = 0;
+	NumItemsToFetch = -1;
 }
 
 ContextualIntelliSenseLookupArgs::ContextualIntelliSenseLookupArgs()
@@ -46,238 +49,314 @@ ContextualIntelliSenseLookupResult::ContextualIntelliSenseLookupResult()
 	PreviousTokenIsObjectReference = false;
 }
 
+int IntelliSenseItemCollection::FuzzyMatchResultSortKeySelector(utilities::CaselessFuzzyTrie<IntelliSenseItem^>::FuzzyMatchResult^ Item)
+{
+	return Item->Cost;
+}
+
+IntelliSenseItem^ IntelliSenseItemCollection::FuzzyMatchResultMapToItemSelector(utilities::CaselessFuzzyTrie<IntelliSenseItem^>::FuzzyMatchResult^ Item)
+{
+	return Item->Value;
+}
+
+IntelliSenseItemCollection::IntelliSenseItemCollection()
+{
+	Dict_ = gcnew Dictionary<String^, IntelliSenseItem^>(StringComparer::CurrentCultureIgnoreCase);
+	Trie_ = gcnew utilities::CaselessFuzzyTrie<IntelliSenseItem^>;
+}
+
+void IntelliSenseItemCollection::Add(String^ Identifier, IntelliSenseItem^ Item)
+{
+	Dict->Add(Identifier, Item);
+	Trie->Add(Identifier, Item);
+}
+
+IEnumerable<IntelliSenseItemCollection::FuzzyMatchT^>^ IntelliSenseItemCollection::FuzzyMatch(String^ Query,
+																							  UInt32 MaxEditDistanceCost,
+																							  System::Func<IntelliSenseItem^, bool>^ Predicate)
+{
+	auto Matches = Predicate ? Trie->LevenshteinMatch(Query, MaxEditDistanceCost, Predicate) : Trie->LevenshteinMatch(Query, MaxEditDistanceCost);
+	return Matches;
+}
+
+IEnumerable<IntelliSenseItem^>^ IntelliSenseItemCollection::PrefixMatch(String^ Query,  System::Func<IntelliSenseItem^, bool>^ Predicate)
+{
+	return Predicate ? Trie->Retrieve(Query, Predicate) : Trie->Retrieve(Query);
+}
+
+IntelliSenseItem^ IntelliSenseItemCollection::Lookup(String^ Identifier, bool IgnoreItemsWithoutInsightInfo)
+{
+	IntelliSenseItem^ Item;
+	if (Dict->TryGetValue(Identifier, Item))
+	{
+		if (!IgnoreItemsWithoutInsightInfo || Item->HasInsightInfo())
+			return Item;
+	}
+
+	return nullptr;
+}
+
+void IntelliSenseItemCollection::Reset()
+{
+	Dict_->Clear();
+	Trie_ = gcnew utilities::CaselessFuzzyTrie<IntelliSenseItem^>;
+}
+
+System::Collections::Generic::IEnumerable<IntelliSenseItem^>^ IntelliSenseItemCollection::SortAndExtractFuzzyMatches(IEnumerable<FuzzyMatchT^>^ FuzzyMatches)
+{
+	auto Sorted = System::Linq::Enumerable::OrderBy(FuzzyMatches, gcnew Func<FuzzyMatchT^, int>(IntelliSenseItemCollection::FuzzyMatchResultSortKeySelector));
+	auto MapToItems = System::Linq::Enumerable::Select(Sorted, gcnew Func<FuzzyMatchT^, IntelliSenseItem^>(IntelliSenseItemCollection::FuzzyMatchResultMapToItemSelector));
+	return MapToItems;
+}
+
+IntelliSenseBackend::UpdateTaskPayload::UpdateTaskPayload()
+{
+	Stopwatch = gcnew System::Diagnostics::Stopwatch;
+
+	IncomingScripts = gcnew List<nativeWrapper::MarshalledScriptData^>;
+	IncomingQuests = gcnew List<nativeWrapper::MarshalledFormData^>;
+	IncomingGlobals = gcnew List<nativeWrapper::MarshalledVariableData^>;
+	IncomingForms = gcnew List<nativeWrapper::MarshalledFormData^>;
+
+	OutgoingScripts = gcnew IntelliSenseItemCollection;
+	OutgoingGlobalVariables = gcnew IntelliSenseItemCollection;
+	OutgoingQuests = gcnew IntelliSenseItemCollection;
+	OutgoingForms = gcnew IntelliSenseItemCollection;
+}
+
+void IntelliSenseBackend::Preferences_Saved(Object^ Sender, EventArgs^ E)
+{
+	if (UpdateTimerMode == eTimerMode::IdleQueue)
+		SetUpdateTimerMode(eTimerMode::IdleQueue);		// re-init timer
+}
+
 void IntelliSenseBackend::UpdateTimer_Tick(Object^ Sender, EventArgs^ E)
 {
-	UpdateDatabase();
+	switch (UpdateTimerMode)
+	{
+	case eTimerMode::IdlePoll:
+		HandleActiveUpdateTaskPolling();
+		break;
+	case eTimerMode::IdleQueue:
+		HandleUpdateTaskQueuing(false);
+		break;
+	}
 }
 
-void IntelliSenseBackend::UpdateDatabase()
+IntelliSenseBackend::UpdateTaskPayload^ IntelliSenseBackend::PerformBackgroundUpdateTask(Object^ Input)
 {
-	if (nativeWrapper::g_CSEInterfaceTable->ScriptEditor.CanUpdateIntelliSenseDatabase() == false)
-		return;
+	auto Payload = safe_cast<UpdateTaskPayload^>(Input);
 
-	System::Diagnostics::Stopwatch^ Profiler = gcnew System::Diagnostics::Stopwatch();
-	Profiler->Start();
-
-	try
+	Payload->Stopwatch->Reset();
+	Payload->Stopwatch->Start();
 	{
-		nativeWrapper::WriteToMainWindowStatusBar(2, "Updating IntelliSense DB...");
-		DisposibleDataAutoPtr<componentDLLInterface::IntelliSenseUpdateData> DataHandlerData
-			(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetIntelliSenseUpdateData());
-
-		Scripts->Clear();
-		GlobalVariables->Clear();
-		Quests->Clear();
-		Forms->Clear();
-
-		for (int i = 0; i < DataHandlerData->ScriptCount; ++i)
+		for each (auto Datum in Payload->IncomingScripts)
 		{
-			componentDLLInterface::ScriptData* Data = &DataHandlerData->ScriptListHead[i];
-			if (Data->IsValid() == false)
-				continue;
+			auto NewItem = Datum->IsUdf ? gcnew IntelliSenseItemUserFunction(Datum) : gcnew IntelliSenseItemScript(Datum);
 
-			String^ EditorID = gcnew String(Data->EditorID);
-			IntelliSenseItemScript^ NewItem = Data->UDF ? gcnew IntelliSenseItemUserFunction(Data) : gcnew IntelliSenseItemScript(Data);
-
-			IntelliSenseItemScript^ Existing = nullptr;
-			if (!Scripts->TryGetValue(EditorID, Existing))
-				Scripts->Add(EditorID, NewItem);
+			IntelliSenseItem^ Existing = nullptr;
+			if (!Payload->OutgoingScripts->Dict->TryGetValue(Datum->EditorId, Existing))
+				Payload->OutgoingScripts->Add(Datum->EditorId, NewItem);
 		}
 
-		for (int i = 0; i < DataHandlerData->QuestCount; ++i)
+		for each (auto Datum in Payload->IncomingQuests)
 		{
-			componentDLLInterface::QuestData* Data = &DataHandlerData->QuestListHead[i];
-			if (Data->IsValid() == false)
-				continue;
+			auto NewItem = gcnew IntelliSenseItemQuest(Datum);
 
-			String^ EditorID = gcnew String(Data->EditorID);
-			DisposibleDataAutoPtr<componentDLLInterface::ScriptData> AttachedScript
-				(nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CString(EditorID).c_str()));
-			IntelliSenseItemQuest^ NewItem = gcnew IntelliSenseItemQuest(Data, AttachedScript.get());
-
-			IntelliSenseItemQuest^ Existing = nullptr;
-			if (!Quests->TryGetValue(EditorID, Existing))
-				Quests->Add(EditorID, NewItem);
+			IntelliSenseItem^ Existing = nullptr;
+			if (!Payload->OutgoingQuests->Dict->TryGetValue(Datum->EditorId, Existing))
+				Payload->OutgoingQuests->Add(Datum->EditorId, NewItem);
 		}
 
-		for (int i = 0; i < DataHandlerData->GlobalCount; ++i)
+		for each (auto Datum in Payload->IncomingGlobals)
 		{
-			componentDLLInterface::GlobalData* Data = &DataHandlerData->GlobalListHead[i];
-			if (Data->IsValid() == false)
-				continue;
+			auto NewItem = gcnew IntelliSenseItemGlobalVariable(Datum);
 
-			String^ EditorID = gcnew String(Data->EditorID);
-			obScriptParsing::Variable::eDataType VarType;
-
-			switch (Data->Type)
-			{
-			case componentDLLInterface::GlobalData::kType_Int:
-				VarType = obScriptParsing::Variable::eDataType::Integer;
-				break;
-			case componentDLLInterface::GlobalData::kType_Float:
-				VarType = obScriptParsing::Variable::eDataType::Float;
-				break;
-			case componentDLLInterface::GlobalData::kType_String:
-				VarType = obScriptParsing::Variable::eDataType::StringVar;
-				break;
-			default:
-				VarType = obScriptParsing::Variable::eDataType::None;
-			}
-
-			auto NewItem = gcnew IntelliSenseItemGlobalVariable(Data, VarType, GetVariableValueString(Data));
-
-			IntelliSenseItemGlobalVariable^ Existing = nullptr;
-			if (!GlobalVariables->TryGetValue(EditorID, Existing))
-				GlobalVariables->Add(EditorID, NewItem);
+			IntelliSenseItem^ Existing = nullptr;
+			if (!Payload->OutgoingGlobalVariables->Dict->TryGetValue(Datum->EditorId, Existing))
+				Payload->OutgoingGlobalVariables->Add(Datum->EditorId, NewItem);
 		}
 
-		for (int i = 0; i < DataHandlerData->MiscFormListCount; ++i)
+		for each (auto Datum in Payload->IncomingForms)
 		{
-			componentDLLInterface::FormData* Data = &DataHandlerData->MiscFormListHead[i];
-			if (Data->IsValid() == false)
-				continue;
+			auto NewItem = gcnew IntelliSenseItemForm(Datum);
 
-			String^ EditorID = gcnew String(Data->EditorID);
-			DisposibleDataAutoPtr<componentDLLInterface::ScriptData> AttachedScript
-				(nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CString(EditorID).c_str()));
-
-			IntelliSenseItemForm^ NewItem = gcnew IntelliSenseItemForm(Data, AttachedScript.get());
-
-			IntelliSenseItemForm^ Existing = nullptr;
-			if (!Forms->TryGetValue(EditorID, Existing))
-				Forms->Add(EditorID, NewItem);
+			IntelliSenseItem^ Existing = nullptr;
+			if (!Payload->OutgoingForms->Dict->TryGetValue(Datum->EditorId, Existing))
+				Payload->OutgoingForms->Add(Datum->EditorId, NewItem);
 		}
-
-		nativeWrapper::WriteToMainWindowStatusBar(2, "IntelliSense DB updated.");
-		nativeWrapper::WriteToMainWindowStatusBar(3, "[" +
-			Profiler->ElapsedMilliseconds.ToString() + "ms | " +
-			DataHandlerData->ScriptCount + " Script(s) | " +
-			DataHandlerData->QuestCount + " Quest(s) | " +
-			DataHandlerData->GlobalCount + " Global(s) | " +
-			DataHandlerData->MiscFormListCount + " Forms" +
-			"]");
 	}
-	catch (Exception^ E)
-	{
-		DebugPrint("Couldn't update IntelliSense DB!\n\tException: " + E->Message, true);
-		nativeWrapper::WriteToMainWindowStatusBar(2, "IntelliSense DB Error!");
-	}
+	Payload->Stopwatch->Stop();
 
-	Profiler->Stop();
-
-	LastUpdateTimestamp = DateTime::Now;
+	return Payload;
 }
 
-System::String^ IntelliSenseBackend::GetVariableValueString(componentDLLInterface::VariableData* Data)
+bool IntelliSenseBackend::HandleActiveUpdateTaskPolling()
 {
-	switch (Data->Type)
+	Debug::Assert(ActiveUpdateTask != nullptr);
+
+	bool Error = false;
+	switch (ActiveUpdateTask->Status)
 	{
-	case componentDLLInterface::GlobalData::kType_Int:
-		return Data->Value.i.ToString();
-	case componentDLLInterface::GlobalData::kType_Float:
-		return Data->Value.f.ToString();
-	case componentDLLInterface::GlobalData::kType_String:
-		return gcnew String(Data->Value.s);
+	case System::Threading::Tasks::TaskStatus::Faulted:
+		DebugPrint("IntelliSense Backend update task failed! Exception: " + ActiveUpdateTask->Exception->ToString(), true);
+		nativeWrapper::WriteToMainWindowStatusBar(2, "IntelliSense Backend Error!");
+		Error = true;
+
+		break;
+	case System::Threading::Tasks::TaskStatus::RanToCompletion:
+	{
+		Scripts = ActiveUpdateTask->Result->OutgoingScripts;
+		GlobalVariables = ActiveUpdateTask->Result->OutgoingGlobalVariables;
+		Quests = ActiveUpdateTask->Result->OutgoingQuests;
+		Forms = ActiveUpdateTask->Result->OutgoingForms;
+
+		nativeWrapper::WriteToMainWindowStatusBar(2, "IntelliSense Backend updated");
+		String^ UpdateStr = "[" +
+			ActiveUpdateTask->Result->Stopwatch->ElapsedMilliseconds.ToString() + " ms | " +
+			Scripts->Count + " Script(s) | " +
+			Quests->Count + " Quest(s) | " +
+			GlobalVariables->Count + " Global(s) | " +
+			Forms->Count + " Forms" +
+			"]";
+
+		nativeWrapper::WriteToMainWindowStatusBar(3, UpdateStr);
+		//DebugPrint(UpdateStr);
+
+		break;
+	}
 	default:
-		return String::Empty;
+		return false;
 	}
+
+	ActiveUpdateTask = nullptr;
+	LastUpdateTimestamp = DateTime::Now;
+
+	SetUpdateTimerMode(eTimerMode::IdleQueue);
+	return true;
+}
+
+bool IntelliSenseBackend::HandleUpdateTaskQueuing(bool Force)
+{
+	if (!nativeWrapper::g_CSEInterfaceTable->ScriptEditor.CanUpdateIntelliSenseDatabase())
+		return false;
+	else if (!Force && (DateTime::Now - LastUpdateTimestamp).TotalMilliseconds < UpdateTimer->Interval)
+		return false;
+
+	Debug::Assert(ActiveUpdateTask == nullptr);
+
+	nativeWrapper::WriteToMainWindowStatusBar(2, "Updating IntelliSense DB...");
+
+	nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::IntelliSenseUpdateData> DataHandlerData
+		(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetIntelliSenseUpdateData());
+	auto UpdatePayload = GenerateUpdateTaskPayload(DataHandlerData.get());
+	auto TaskDelegate = gcnew System::Func<Object^, UpdateTaskPayload^>(&IntelliSenseBackend::PerformBackgroundUpdateTask);
+	ActiveUpdateTask = UpdateTaskT::Factory->StartNew(TaskDelegate, UpdatePayload);
+
+	SetUpdateTimerMode(eTimerMode::IdlePoll);
+	return true;
+}
+
+void IntelliSenseBackend::SetUpdateTimerMode(eTimerMode Mode)
+{
+	this->UpdateTimerMode = Mode;
+
+	switch (Mode)
+	{
+	case eTimerMode::IdlePoll:
+		UpdateTimer->Interval = kTimerPollInterval;
+		UpdateTimer->Stop();
+		UpdateTimer->Start();
+
+		break;
+	case eTimerMode::IdleQueue:
+		UpdateTimer->Interval = preferences::SettingsHolder::Get()->IntelliSense->DatabaseUpdateInterval * 60 * 1000;
+		UpdateTimer->Stop();
+		UpdateTimer->Start();
+
+		break;
+	default:
+		break;
+
+	}
+}
+
+IntelliSenseBackend::UpdateTaskPayload^ IntelliSenseBackend::GenerateUpdateTaskPayload(componentDLLInterface::IntelliSenseUpdateData* NativeData)
+{
+	auto Payload = gcnew UpdateTaskPayload;
+
+	for (int i = 0; i < NativeData->ScriptCount; ++i)
+	{
+		componentDLLInterface::ScriptData* Data = &NativeData->ScriptListHead[i];
+		if (Data->IsValid())
+			Payload->IncomingScripts->Add(gcnew nativeWrapper::MarshalledScriptData(Data));
+	}
+
+	for (int i = 0; i < NativeData->QuestCount; ++i)
+	{
+		componentDLLInterface::QuestData* Data = &NativeData->QuestListHead[i];
+		if (Data->IsValid())
+			Payload->IncomingQuests->Add(gcnew nativeWrapper::MarshalledFormData(Data));
+	}
+
+	for (int i = 0; i < NativeData->GlobalCount; ++i)
+	{
+		componentDLLInterface::GlobalData* Data = &NativeData->GlobalListHead[i];
+		if (Data->IsValid())
+			Payload->IncomingGlobals->Add(gcnew nativeWrapper::MarshalledVariableData(Data));
+	}
+
+	for (int i = 0; i < NativeData->MiscFormListCount; ++i)
+	{
+		componentDLLInterface::FormData* Data = &NativeData->MiscFormListHead[i];
+		if (Data->IsValid())
+			Payload->IncomingForms->Add(gcnew nativeWrapper::MarshalledFormData(Data));
+	}
+
+	return Payload;
 }
 
 void IntelliSenseBackend::RefreshCodeSnippetIntelliSenseItems()
 {
-	Snippets->Clear();
+	Snippets->Reset();
 
-	for each (CodeSnippet ^ Itr in SnippetCollection->LoadedSnippets)
-		Snippets->Add(Itr->Name, gcnew IntelliSenseItemCodeSnippet(Itr));
-}
-
-generic <typename T> where T : IntelliSenseItem
-void IntelliSenseBackend::DoFetch(Dictionary<String^, T>^% Source, FetchIntelliSenseItemsArgs^ Args, List<IntelliSenseItem^>^% OutFetched)
-{
-	if (Args->IdentifierToMatch->Length == 0)
+	for each (auto Itr in SnippetCollection->LoadedSnippets)
 	{
-		OutFetched->AddRange(safe_cast<Collections::Generic::IEnumerable<IntelliSenseItem^>^>(Source->Values));
-		return;
-	}
-
-	for each (T Itr in Source->Values)
-	{
-		if (Itr->MatchesToken(Args->IdentifierToMatch, Args->MatchType))
-			OutFetched->Add(Itr);
+		auto Item = gcnew IntelliSenseItemCodeSnippet(Itr);
+		Snippets->Dict->Add(Itr->Name, Item);
+		Snippets->Trie->Add(Itr->Name, Item);
 	}
 }
 
 IntelliSenseItem^ IntelliSenseBackend::LookupIntelliSenseItem(String^ Identifier, bool OnlyWithInsightInfo)
 {
-	IntelliSenseItem^ Out = nullptr;
 	if (Identifier == String::Empty)
-		return Out;
+		return nullptr;
 
-	if (ScriptCommands->ContainsKey(Identifier))
-	{
-		Out = ScriptCommands[Identifier];
-		if (OnlyWithInsightInfo == false || Out->HasInsightInfo())
-			goto exit;
-		else
-			Out = nullptr;
-	}
+	IntelliSenseItem^ Item = nullptr;
 
-	if (GameSettings->ContainsKey(Identifier))
-	{
-		Out = GameSettings[Identifier];
-		if (OnlyWithInsightInfo == false || Out->HasInsightInfo())
-			goto exit;
-		else
-			Out = nullptr;
-	}
+	if ((Item = ScriptCommands->Lookup(Identifier, OnlyWithInsightInfo)))
+		return Item;
 
-	if (Scripts->ContainsKey(Identifier))
-	{
-		Out = Scripts[Identifier];
-		if (OnlyWithInsightInfo == false || Out->HasInsightInfo())
-			goto exit;
-		else
-			Out = nullptr;
-	}
+	if ((Item = GameSettings->Lookup(Identifier, OnlyWithInsightInfo)))
+		return Item;
 
-	if (GlobalVariables->ContainsKey(Identifier))
-	{
-		Out = GlobalVariables[Identifier];
-		if (OnlyWithInsightInfo == false || Out->HasInsightInfo())
-			goto exit;
-		else
-			Out = nullptr;
-	}
+	if ((Item = Scripts->Lookup(Identifier, OnlyWithInsightInfo)))
+		return Item;
 
-	if (Quests->ContainsKey(Identifier))
-	{
-		Out = Quests[Identifier];
-		if (OnlyWithInsightInfo == false || Out->HasInsightInfo())
-			goto exit;
-		else
-			Out = nullptr;
-	}
+	if ((Item = GlobalVariables->Lookup(Identifier, OnlyWithInsightInfo)))
+		return Item;
 
-	if (Forms->ContainsKey(Identifier))
-	{
-		Out = Forms[Identifier];
-		if (OnlyWithInsightInfo == false || Out->HasInsightInfo())
-			goto exit;
-		else
-			Out = nullptr;
-	}
+	if ((Item = Quests->Lookup(Identifier, OnlyWithInsightInfo)))
+		return Item;
 
-	if (Snippets->ContainsKey(Identifier))
-	{
-		Out = Snippets[Identifier];
-		if (OnlyWithInsightInfo == false || Out->HasInsightInfo())
-			goto exit;
-		else
-			Out = nullptr;
-	}
+	if ((Item = Forms->Lookup(Identifier, OnlyWithInsightInfo)))
+		return Item;
 
-	exit:
-	return Out;
+	if ((Item = Snippets->Lookup(Identifier, OnlyWithInsightInfo)))
+		return Item;
+
+	return Item;
 }
 
 IntelliSenseItem^ IntelliSenseBackend::LookupIntelliSenseItem(String^ Indentifier)
@@ -293,7 +372,7 @@ bool IntelliSenseBackend::IsCallableObject(IntelliSenseItem^ Item)
 	{
 		auto Form = safe_cast<IntelliSenseItemForm^>(Item);
 
-		if (Form->MatchesToken("player", eStringMatchType::FullMatch))
+		if (!String::Compare("player", Form->GetIdentifier(), true))
 			return true;		// special-case
 
 		return Form->IsObjectReference() && Form->HasAttachedScript();
@@ -308,31 +387,32 @@ bool IntelliSenseBackend::IsObjectReference(IntelliSenseItem^ Item)
 		return false;
 
 	// special-case player
-	return safe_cast<IntelliSenseItemForm^>(Item)->IsObjectReference() || Item->MatchesToken("player", eStringMatchType::FullMatch);
+	return safe_cast<IntelliSenseItemForm^>(Item)->IsObjectReference() || !String::Compare("player", Item->GetIdentifier(), true);
 }
 
 IntelliSenseBackend::IntelliSenseBackend()
 {
 	DebugPrint("Initializing IntelliSense");
 
-	ScriptCommands = gcnew Dictionary<String ^, IntelliSenseItemScriptCommand ^>(StringComparer::CurrentCultureIgnoreCase);
-	GameSettings = gcnew Dictionary<String ^, IntelliSenseItemGameSetting ^>(StringComparer::CurrentCultureIgnoreCase);
-	Scripts = gcnew Dictionary<String ^, IntelliSenseItemScript ^>(StringComparer::CurrentCultureIgnoreCase);
-	GlobalVariables = gcnew Dictionary<String ^, IntelliSenseItemGlobalVariable^>(StringComparer::CurrentCultureIgnoreCase);
-	Quests = gcnew Dictionary<String ^, IntelliSenseItemQuest ^>(StringComparer::CurrentCultureIgnoreCase);
-	Forms = gcnew Dictionary<String^, IntelliSenseItemForm^>(StringComparer::CurrentCultureIgnoreCase);
-	Snippets = gcnew Dictionary<String^, IntelliSenseItemCodeSnippet^>(StringComparer::CurrentCultureIgnoreCase);
+	ScriptCommands = gcnew IntelliSenseItemCollection;
+	GameSettings = gcnew IntelliSenseItemCollection;
+	Scripts = gcnew IntelliSenseItemCollection;
+	GlobalVariables = gcnew IntelliSenseItemCollection;
+	Quests = gcnew IntelliSenseItemCollection;
+	Forms = gcnew IntelliSenseItemCollection;
+	Snippets = gcnew IntelliSenseItemCollection;
 	SnippetCollection = gcnew CodeSnippetCollection;
-
-	UInt32 UpdateTimerInterval = preferences::SettingsHolder::Get()->IntelliSense->DatabaseUpdateInterval;
 
 	UpdateTimer = gcnew Timer();
 	UpdateTimer->Tick += gcnew EventHandler(this, &IntelliSenseBackend::UpdateTimer_Tick);
-	UpdateTimer->Interval = UpdateTimerInterval * 60 * 1000;
+	UpdateTimer->Interval = preferences::SettingsHolder::Get()->IntelliSense->DatabaseUpdateInterval * 60 * 1000;
+	UpdateTimerMode = eTimerMode::IdleQueue;
 
 	UpdateTimer->Start();
 	SnippetCollection->Load(gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetSnippetCachePath()));
 	RefreshCodeSnippetIntelliSenseItems();
+
+	preferences::SettingsHolder::Get()->PreferencesChanged += gcnew System::EventHandler(this, &IntelliSenseBackend::Preferences_Saved);
 
 	LastUpdateTimestamp = DateTime::MinValue;
 
@@ -348,12 +428,13 @@ IntelliSenseBackend::~IntelliSenseBackend()
 	SnippetCollection->Save(gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetSnippetCachePath()));
 	SAFEDELETE_CLR(SnippetCollection);
 
-	ScriptCommands->Clear();
-	GameSettings->Clear();
-	Scripts->Clear();
-	GlobalVariables->Clear();
-	Quests->Clear();
-	Forms->Clear();
+	ScriptCommands->Reset();
+	GameSettings->Reset();
+	Scripts->Reset();
+	GlobalVariables->Reset();
+	Quests->Reset();
+	Forms->Reset();
+	Snippets->Reset();
 
 	Singleton = nullptr;
 }
@@ -387,8 +468,8 @@ void IntelliSenseBackend::InitializeScriptCommands(componentDLLInterface::Comman
 
 		auto NewCommand = gcnew IntelliSenseItemScriptCommand(Data, Itr, DevUrl);
 
-		IntelliSenseItemScriptCommand^ ExistingCommand = nullptr;
-		if (ScriptCommands->TryGetValue(Name, ExistingCommand))
+		IntelliSenseItem^ ExistingCommand = nullptr;
+		if (ScriptCommands->Dict->TryGetValue(Name, ExistingCommand))
 		{
 #ifndef NDEBUG
 			DebugPrint("\tIdentifier '" + Name + "' was bound to more than one script command");
@@ -418,72 +499,15 @@ void IntelliSenseBackend::InitializeGameSettings(componentDLLInterface::IntelliS
 		if (!GMST->IsValid())
 			continue;
 
-		String^ EditorID = gcnew String(GMST->EditorID);
-		obScriptParsing::Variable::eDataType VarType;
+		auto Wrapper = gcnew nativeWrapper::MarshalledVariableData(GMST);
+		auto NewItem = gcnew IntelliSenseItemGameSetting(Wrapper);
 
-		switch (GMST->Type)
-		{
-		case componentDLLInterface::GlobalData::kType_Int:
-			VarType = obScriptParsing::Variable::eDataType::Integer;
-			break;
-		case componentDLLInterface::GlobalData::kType_Float:
-			VarType = obScriptParsing::Variable::eDataType::Float;
-			break;
-		case componentDLLInterface::GlobalData::kType_String:
-			VarType = obScriptParsing::Variable::eDataType::StringVar;
-			break;
-		default:
-			VarType = obScriptParsing::Variable::eDataType::None;
-		}
-
-		auto NewItem = gcnew IntelliSenseItemGameSetting(GMST, VarType, GetVariableValueString(GMST));
-
-		IntelliSenseItemGameSetting^ Existing = nullptr;
-		if (!GameSettings->TryGetValue(EditorID, Existing))
-			GameSettings->Add(EditorID, NewItem);
+		IntelliSenseItem^ Existing = nullptr;
+		if (!GameSettings->Dict->TryGetValue(Wrapper->EditorId, Existing))
+			GameSettings->Add(Wrapper->EditorId, NewItem);
 	}
 
 	DebugPrint(String::Format("\tParsed {0} Game Settings", Data->GMSTCount));
-}
-
-System::String^ IntelliSenseBackend::GetScriptCommandDeveloperURL(String^ CommandName)
-{
-	IntelliSenseItemScriptCommand^ Command = nullptr;
-	if (ScriptCommands->TryGetValue(CommandName, Command) == false)
-		return String::Empty;
-
-	return Command->GetDocumentationUrl();
-}
-
-bool IntelliSenseBackend::IsUserFunction(String^ Identifier)
-{
-	IntelliSenseItemScript^ Script = nullptr;
-	if (Scripts->TryGetValue(Identifier, Script) == false)
-		return false;
-
-	return Script->GetItemType() == IntelliSenseItem::eItemType::UserFunction;
-}
-
-bool IntelliSenseBackend::IsScriptCommand(String^ Identifier, bool CheckCommandShorthand)
-{
-	if (CheckCommandShorthand == false)
-		return ScriptCommands->ContainsKey(Identifier);
-
-	for each (IntelliSenseItemScriptCommand ^ Itr in ScriptCommands->Values)
-	{
-		if (Identifier->Equals(Itr->GetShorthand(), System::StringComparison::CurrentCultureIgnoreCase))
-			return true;
-	}
-
-	return false;
-}
-
-bool IntelliSenseBackend::IsForm(String^ Identifier)
-{
-	DisposibleDataAutoPtr<componentDLLInterface::FormData> FormData
-	(nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupFormByEditorID(CString(Identifier).c_str()));
-
-	return FormData && FormData->IsValid();
 }
 
 generic <typename T> where T: IntelliSenseItem
@@ -498,21 +522,21 @@ System::Collections::Generic::HashSet<String^>^ IntelliSenseBackend::CreateInden
 	auto Out = gcnew HashSet<String^>(StringComparer::CurrentCultureIgnoreCase);
 
 	if (Categories.HasFlag(eDatabaseLookupFilter::Command))
-		AddIndentifierToCollection(ScriptCommands, Out);
+		AddIndentifierToCollection(ScriptCommands->Dict, Out);
 
 	if (Categories.HasFlag(eDatabaseLookupFilter::GlobalVariable))
-		AddIndentifierToCollection(GlobalVariables, Out);
+		AddIndentifierToCollection(GlobalVariables->Dict, Out);
 
 	if (Categories.HasFlag(eDatabaseLookupFilter::Quest))
-		AddIndentifierToCollection(Quests, Out);
+		AddIndentifierToCollection(Quests->Dict, Out);
 
 	if (Categories.HasFlag(eDatabaseLookupFilter::Script))
-		AddIndentifierToCollection(Scripts, Out);
+		AddIndentifierToCollection(Scripts->Dict, Out);
 
 	if (Categories.HasFlag(eDatabaseLookupFilter::UserFunction) &&
 		Categories.HasFlag(eDatabaseLookupFilter::Script) == false)
 	{
-		for each (auto% Itr in Scripts)
+		for each (auto% Itr in Scripts->Dict)
 		{
 			if (Itr.Value->GetItemType() == IntelliSenseItem::eItemType::UserFunction)
 				Out->Add(Itr.Key);
@@ -520,15 +544,15 @@ System::Collections::Generic::HashSet<String^>^ IntelliSenseBackend::CreateInden
 	}
 
 	if (Categories.HasFlag(eDatabaseLookupFilter::GameSetting))
-		AddIndentifierToCollection(GameSettings, Out);
+		AddIndentifierToCollection(GameSettings->Dict, Out);
 
 	if (Categories.HasFlag(eDatabaseLookupFilter::Form))
-		AddIndentifierToCollection(Forms, Out);
+		AddIndentifierToCollection(Forms->Dict, Out);
 
 	if (Categories.HasFlag(eDatabaseLookupFilter::ObjectReference) &&
 		Categories.HasFlag(eDatabaseLookupFilter::Form) == false)
 	{
-		for each (auto % Itr in Forms)
+		for each (auto % Itr in Forms->Dict)
 		{
 			if (safe_cast<IntelliSenseItemForm^>(Itr.Value)->IsObjectReference())
 				Out->Add(Itr.Key);
@@ -536,7 +560,7 @@ System::Collections::Generic::HashSet<String^>^ IntelliSenseBackend::CreateInden
 	}
 
 	if (Categories.HasFlag(eDatabaseLookupFilter::Snippet))
-		AddIndentifierToCollection(Snippets, Out);
+		AddIndentifierToCollection(Snippets->Dict, Out);
 
 	return Out;
 }
@@ -566,8 +590,11 @@ IntelliSenseItemScript^ IntelliSenseBackend::GetAttachedScript(IntelliSenseItem^
 		auto Form = safe_cast<IntelliSenseItemForm^>(Item);
 		if (Form->HasAttachedScript())
 		{
-			if (Scripts->TryGetValue(Form->GetAttachedScriptEditorID(), Result) == false)
+			IntelliSenseItem^ Existing;
+			if (!Scripts->Dict->TryGetValue(Form->GetAttachedScriptEditorID(), Existing))
 				DebugPrint("Couldn't find attached script for the following form: " + Form->GetIdentifier(), true);
+			else
+				Result = safe_cast<IntelliSenseItemScript^>(Existing);
 		}
 
 		break;
@@ -583,9 +610,9 @@ IntelliSenseItemScript^ IntelliSenseBackend::GetAttachedScript(IntelliSenseItem^
 	return Result;
 }
 
-bool IntelliSenseBackend::TryGetAttachedScriptData(String^ Identifier, DisposibleDataAutoPtr<componentDLLInterface::ScriptData>* OutData)
+bool IntelliSenseBackend::TryGetAttachedScriptData(String^ Identifier, nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptData>* OutData)
 {
-	DisposibleDataAutoPtr<componentDLLInterface::ScriptData> ScriptData
+	nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptData> ScriptData
 	(nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CString(Identifier).c_str()));
 
 	if (ScriptData && ScriptData->IsValid())
@@ -599,71 +626,152 @@ bool IntelliSenseBackend::TryGetAttachedScriptData(String^ Identifier, Disposibl
 	return false;
 }
 
-List<IntelliSenseItem^>^ IntelliSenseBackend::FetchIntelliSenseItems(FetchIntelliSenseItemsArgs^ FetchArgs)
+bool PredicateCommandNeedsCallingRef(IntelliSenseItem^ Command)
+{
+	return safe_cast<IntelliSenseItemScriptCommand^>(Command)->RequiresCallingRef();
+}
+
+bool PredicateIsUserFunction(IntelliSenseItem^ Script)
+{
+	return safe_cast<IntelliSenseItemScript^>(Script)->IsUserDefinedFunction();
+}
+
+bool PredicateIsObjectReference(IntelliSenseItem^ Form)
+{
+	return safe_cast<IntelliSenseItemForm^>(Form)->IsObjectReference();
+}
+
+
+IEnumerable<IntelliSenseItem^>^ DoFetchPrefixMatch(IntelliSenseItemCollection^ DataStore,
+												   FetchIntelliSenseItemsArgs^ FetchArgs,
+												   Func<IntelliSenseItem^, bool>^ Predicate,
+												   IEnumerable<IntelliSenseItem^>^ ConcatMatchesWith)
+{
+	auto Count = System::Linq::Enumerable::Count(ConcatMatchesWith);
+	if (Count > FetchArgs->NumItemsToFetch)
+		return System::Linq::Enumerable::Take(ConcatMatchesWith, FetchArgs->NumItemsToFetch);
+	else if (Count == FetchArgs->NumItemsToFetch)
+		return ConcatMatchesWith;
+
+	auto Matches = DataStore->PrefixMatch(FetchArgs->IdentifierToMatch, Predicate);
+	if (ConcatMatchesWith == nullptr)
+		return Matches;
+
+	return System::Linq::Enumerable::Concat(ConcatMatchesWith, Matches);
+}
+
+IEnumerable<IntelliSenseItemCollection::FuzzyMatchT^>^ DoFetchFuzzyMatch(IntelliSenseItemCollection^ DataStore,
+																		 FetchIntelliSenseItemsArgs^ FetchArgs,
+																		 Func<IntelliSenseItem^, bool>^ Predicate,
+																		 IEnumerable<IntelliSenseItemCollection::FuzzyMatchT^>^ ConcatMatchesWith)
+{
+	auto Count = System::Linq::Enumerable::Count(ConcatMatchesWith);
+	if (Count > FetchArgs->NumItemsToFetch)
+		return System::Linq::Enumerable::Take(ConcatMatchesWith, FetchArgs->NumItemsToFetch);
+	else if (Count == FetchArgs->NumItemsToFetch)
+		return ConcatMatchesWith;
+
+	auto Matches = DataStore->FuzzyMatch(FetchArgs->IdentifierToMatch, FetchArgs->FuzzyMatchMaxCost, Predicate);
+	if (ConcatMatchesWith == nullptr)
+		return Matches;
+
+	return System::Linq::Enumerable::Concat(ConcatMatchesWith, Matches);
+}
+
+
+IEnumerable<IntelliSenseItem^>^ IntelliSenseBackend::FetchIntelliSenseItems(FetchIntelliSenseItemsArgs^ Args)
 {
 	Refresh(false);
 
-	List<IntelliSenseItem^>^ Fetched = gcnew List<IntelliSenseItem ^>;
+	auto PredicateScriptCommandNeedsCallingRef = gcnew Func<IntelliSenseItem^, bool>(&PredicateCommandNeedsCallingRef);
+	if (!Args->Options.HasFlag(eDatabaseLookupOptions::OnlyCommandsThatNeedCallingObject))
+		PredicateScriptCommandNeedsCallingRef = nullptr;
 
-	if (FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::Command))
+	auto PredicateScriptIsUdf = gcnew Func<IntelliSenseItem^, bool>(&PredicateIsUserFunction);
+	auto PredicateFormIsRef = gcnew Func<IntelliSenseItem^, bool>(&PredicateIsObjectReference);
+
+	switch (Args->FilterMode)
 	{
-		List<IntelliSenseItem^>^ AllCommands = gcnew List<IntelliSenseItem^>;
-		DoFetch(ScriptCommands, FetchArgs, AllCommands);
+	case eFilterMode::Prefix:
+	{
+		auto Results = System::Linq::Enumerable::Empty<IntelliSenseItem^>();
 
-		if (!FetchArgs->Options.HasFlag(eDatabaseLookupOptions::OnlyCommandsThatNeedCallingObject))
-			Fetched = AllCommands;
-		else for each (IntelliSenseItem ^ Itr in AllCommands)
+		if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::Command))
+			Results = DoFetchPrefixMatch(ScriptCommands, Args, PredicateScriptCommandNeedsCallingRef, Results);
+
+		if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::GlobalVariable))
+			Results = DoFetchPrefixMatch(GlobalVariables, Args, nullptr, Results);
+
+		if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::Quest))
+			Results = DoFetchPrefixMatch(Quests, Args, nullptr, Results);
+
+		if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::UserFunction) &&
+			!Args->FilterBy.HasFlag(eDatabaseLookupFilter::Script))
 		{
-			if (safe_cast<IntelliSenseItemScriptCommand^>(Itr)->RequiresCallingRef())
-				Fetched->Add(Itr);
+			Results = DoFetchPrefixMatch(Scripts, Args, PredicateScriptIsUdf, Results);
 		}
+		else if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::Script))
+			Results = DoFetchPrefixMatch(Scripts, Args, nullptr, Results);
+
+		if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::GameSetting))
+			Results = DoFetchPrefixMatch(GameSettings, Args, nullptr, Results);
+
+		if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::ObjectReference) &&
+			!Args->FilterBy.HasFlag(eDatabaseLookupFilter::Form))
+		{
+			Results = DoFetchPrefixMatch(Forms, Args, PredicateFormIsRef, Results);
+		}
+		else if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::Form))
+			Results = DoFetchPrefixMatch(Forms, Args, nullptr, Results);
+
+		if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::Snippet))
+			Results = DoFetchPrefixMatch(Snippets, Args, nullptr, Results);
+
+		return System::Linq::Enumerable::Take(Results, Args->NumItemsToFetch);
+	}
+	case eFilterMode::Fuzzy:
+	{
+		auto Results = System::Linq::Enumerable::Empty<IntelliSenseItemCollection::FuzzyMatchT^>();
+		auto Cost = Args->FuzzyMatchMaxCost;
+		Debug::Assert(Cost > 0);
+
+		if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::Command))
+			Results = DoFetchFuzzyMatch(ScriptCommands, Args, PredicateScriptCommandNeedsCallingRef, Results);
+
+		if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::GlobalVariable))
+			Results = DoFetchFuzzyMatch(GlobalVariables, Args, nullptr, Results);
+
+		if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::Quest))
+			Results = DoFetchFuzzyMatch(Quests, Args, nullptr, Results);
+
+		if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::UserFunction) &&
+			!Args->FilterBy.HasFlag(eDatabaseLookupFilter::Script))
+		{
+			Results = DoFetchFuzzyMatch(Scripts, Args, PredicateScriptIsUdf, Results);
+		}
+		else if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::Script))
+			Results = DoFetchFuzzyMatch(Scripts, Args, nullptr, Results);
+
+		if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::GameSetting))
+			Results = DoFetchFuzzyMatch(GameSettings, Args, nullptr, Results);
+
+		if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::ObjectReference) &&
+			!Args->FilterBy.HasFlag(eDatabaseLookupFilter::Form))
+		{
+			Results = DoFetchFuzzyMatch(Forms, Args, PredicateFormIsRef, Results);
+		}
+		else if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::Form))
+			Results = DoFetchFuzzyMatch(Forms, Args, nullptr, Results);
+
+		if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::Snippet))
+			Results = DoFetchFuzzyMatch(Snippets, Args, nullptr, Results);
+
+		auto Sorted = IntelliSenseItemCollection::SortAndExtractFuzzyMatches(Results);
+		return System::Linq::Enumerable::Take(Sorted, Args->NumItemsToFetch);
+	}
 	}
 
-	if (FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::GlobalVariable))
-		DoFetch(GlobalVariables, FetchArgs, Fetched);
-
-	if (FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::Quest))
-		DoFetch(Quests, FetchArgs, Fetched);
-
-	if (FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::Script))
-		DoFetch(Scripts, FetchArgs, Fetched);
-
-	if (FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::UserFunction) &&
-		FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::Script) == false)
-	{
-		List<IntelliSenseItem^>^ AllScriptTypes = gcnew List<IntelliSenseItem^>;
-		DoFetch(Scripts, FetchArgs, AllScriptTypes);
-
-		for each (IntelliSenseItem ^ Script in AllScriptTypes)
-		{
-			if (Script->GetItemType() == IntelliSenseItem::eItemType::UserFunction)
-				Fetched->Add(Script);
-		}
-	}
-
-	if (FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::GameSetting))
-		DoFetch(GameSettings, FetchArgs, Fetched);
-
-	if (FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::Form))
-		DoFetch(Forms, FetchArgs, Fetched);
-
-	if (FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::ObjectReference) &&
-		FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::Form) == false)
-	{
-		List<IntelliSenseItem^>^ AllForms = gcnew List<IntelliSenseItem^>;
-		DoFetch(Forms, FetchArgs, AllForms);
-
-		for each (IntelliSenseItem ^ Form in AllForms)
-		{
-			if (safe_cast<IntelliSenseItemForm^>(Form)->IsObjectReference())
-				Fetched->Add(Form);
-		}
-	}
-
-	if (FetchArgs->FilterBy.HasFlag(eDatabaseLookupFilter::Snippet))
-		DoFetch(Snippets, FetchArgs, Fetched);
-
-	return Fetched;
+	return nullptr;
 }
 
 ContextualIntelliSenseLookupResult^ IntelliSenseBackend::ContextualIntelliSenseLookup(ContextualIntelliSenseLookupArgs^ LookupArgs)
@@ -687,8 +795,8 @@ ContextualIntelliSenseLookupResult^ IntelliSenseBackend::ContextualIntelliSenseL
 				if (RemoteVar)
 				{
 					Result->CurrentToken = RemoteVar;
-					Result->CurrentTokenIsCallableObject = RemoteVar->GetDataType() == obScriptParsing::Variable::eDataType::Ref;
-					Result->CurrentTokenIsObjectReference = RemoteVar->GetDataType() == obScriptParsing::Variable::eDataType::Ref;
+					Result->CurrentTokenIsCallableObject = RemoteVar->GetDataType() == obScriptParsing::Variable::eDataType::Reference;
+					Result->CurrentTokenIsObjectReference = RemoteVar->GetDataType() == obScriptParsing::Variable::eDataType::Reference;
 				}
 			}
 		}
@@ -718,9 +826,10 @@ System::String^ IntelliSenseBackend::SanitizeIdentifier(String^ Identifier)
 
 void IntelliSenseBackend::Refresh(bool Force)
 {
-	auto ElapsedTimeSinceLastUpdate = DateTime::Now - LastUpdateTime;
-	if (Force || ElapsedTimeSinceLastUpdate.TotalMilliseconds > UpdateTimer->Interval)
-		UpdateDatabase();
+	if (ActiveUpdateTask)
+		return;
+
+	HandleUpdateTaskQueuing(Force);
 }
 
 void IntelliSenseBackend::ShowCodeSnippetManager()
@@ -741,6 +850,8 @@ void IntelliSenseBackend::Deinitialize()
 {
 	delete Singleton;
 }
+
+
 
 
 } // namespace intelliSense
