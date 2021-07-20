@@ -346,13 +346,6 @@ namespace bgsee
 			switch (MessageData->message)
 			{
 			case WM_CREATE:
-			{
-				char ClassName[100];
-				GetClassName(MessageData->hwnd, ClassName, ARRAYSIZE(ClassName));
-
-				if (strcmp(ClassName, "ComboBox") == 0 && IsDebuggerPresent())
-					DebugBreak();
-			}
 				if (IsWindowBlacklisted(MessageData->hwnd, MessageData->message))
 					break;
 
