@@ -278,8 +278,8 @@ ref struct AnalysisData
 		property String^ ScriptText;
 		property eScriptType Type;
 		property eOperation Ops;
-		property System::Collections::Generic::HashSet<String^>^ ScriptCommandIdentifiers;
-		property System::Collections::Generic::HashSet<String^>^ FormIdentifiers;
+		property System::Collections::Generic::ICollection<String^>^ ScriptCommandIdentifiers;
+		property System::Collections::Generic::ICollection<String^>^ FormIdentifiers;
 
 		Params();
 	};
@@ -397,6 +397,39 @@ public:
 	property Node^ CurrentScope;
 
 	Node^ GetContainingNode(UInt32 Line);
+};
+
+
+interface class IObScriptIdentifiers
+{
+	property IEnumerable<String^>^ ScriptKeywords
+	{
+		IEnumerable<String^>^ get();
+	}
+
+	property IEnumerable<String^>^ ScriptBlocks
+	{
+		IEnumerable<String^>^ get();
+	}
+};
+
+
+ref class ObseIdentifiers : public IObScriptIdentifiers
+{
+	List<String^>^ Keywords;
+	List<String^>^ Blocks;
+public:
+	ObseIdentifiers();
+
+	property IEnumerable<String^>^ ScriptKeywords
+	{
+		virtual IEnumerable<String^>^ get() { return Keywords; }
+	}
+
+	property IEnumerable<String^>^ ScriptBlocks
+	{
+		virtual IEnumerable<String^>^ get() { return Blocks; }
+	}
 };
 
 

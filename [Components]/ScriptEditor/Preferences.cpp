@@ -31,8 +31,7 @@ System::Object^ CustomColorEditor::EditValue(ITypeDescriptorContext^ context, IS
 	Picker->FullOpen = true;
 	Picker->AnyColor = true;
 
-	auto ParentWindowHandle = PreferencesDialog::GetActiveInstance()->Handle;
-	if (Picker->ShowDialog(gcnew WindowHandleWrapper(ParentWindowHandle)) == Windows::Forms::DialogResult::OK)
+	if (Picker->ShowDialog() == Windows::Forms::DialogResult::OK)
 		return Picker->Color;
 
 	return value;
@@ -54,30 +53,17 @@ void CustomColorEditor::PaintValue(System::Drawing::Design::PaintValueEventArgs^
 
 System::Drawing::Design::UITypeEditorEditStyle CustomFontEditor::GetEditStyle(ITypeDescriptorContext^ context)
 {
-	return System::Drawing::Design::UITypeEditorEditStyle::Modal;
+	// ### For unidentifiable reasons, spawning a FontDialog leads to a bizzare bug
+	// where only the "Incosonalta" font is show in the avaliable fonts list.
+	// After spending far too much time figuring out why (the issue is not in the public 10.0 build)
+	// I'm disabling the picker altogether. The property can still be expanded, wherein a dropdown list
+	// will *correctly* show all available fonts, as well as other pertinent sub-properties.
+	return System::Drawing::Design::UITypeEditorEditStyle::None;
 }
 
 System::Object^ CustomFontEditor::EditValue(ITypeDescriptorContext^ context, IServiceProvider^ provider, Object^ value)
 {
-	auto FontDlg = gcnew FontDialog;
-	FontDlg->MinSize = 10;
-	FontDlg->MaxSize = 32;
-	FontDlg->ShowApply = false;
-	FontDlg->ShowColor = false;
-	FontDlg->ShowHelp = false;
-	FontDlg->FontMustExist = false;
-	//FontDlg->ScriptsOnly = false;
-	//FontDlg->AllowScriptChange = false;
-
-	//auto Font = safe_cast<System::Drawing::Font^>(value);
-	//if (Font != nullptr)
-	//	FontDlg->Font = Font;
-
-	auto ParentWindowHandle = PreferencesDialog::GetActiveInstance()->Handle;
-	if (FontDlg->ShowDialog(gcnew WindowHandleWrapper(ParentWindowHandle)) == DialogResult::OK)
-		return FontDlg->Font;
-
-	return value;
+	return nullptr;
 }
 
 System::String^ SettingsGroup::GetCategoryName()
@@ -692,17 +678,6 @@ PreferencesDialog::PreferencesDialog()
 	Enumerator.MoveNext();
 	SwitchCategory(Enumerator.Current);
 
-	// ### HACK! In order to correctly blacklist the font and color common dialogs from being
-	// affected by the custom editor color theme, we'll need to ensure that they are instantiated
-	// as child windows of a Winforms dialog (which they aren't by default)
-	// So, we need the handle of the parent form in order to pass it to their respective
-	// ShowDialog() calls. Since this can't be accessed directly through the custom service provider API,
-	// we'll need to cache the handle elsewhere. This means we can only have one active preferences dialog,
-	// which is fine as long as we show it as an application-wide modal dialog
-
-	Debug::Assert(ActiveDialog == nullptr);
-	ActiveDialog = this;
-
 	this->ShowDialog();
 
 	// We need to instantiate these classes explicitly as the linker
@@ -720,9 +695,6 @@ PreferencesDialog::PreferencesDialog()
 
 PreferencesDialog::~PreferencesDialog()
 {
-	Debug::Assert(ActiveDialog == this);
-	ActiveDialog = nullptr;
-
 	if (components)
 	{
 		delete components;

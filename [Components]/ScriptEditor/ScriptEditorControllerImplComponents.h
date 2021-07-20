@@ -213,6 +213,9 @@ public:
 
 ref class InputManager
 {
+	static utilities::KeyCombo^ SystemMenuActivateKey = gcnew utilities::KeyCombo(Keys::None, Keys::Alt);
+	static utilities::KeyCombo^ SystemMenuDeactivateKey = gcnew utilities::KeyCombo(Keys::Menu, Keys::Alt);
+
 	ref struct ChordData
 	{
 		utilities::KeyCombo^ SecondChord;
@@ -241,6 +244,7 @@ ref class InputManager
 	ChordData^ LookupSingleKeyChordCommand(utilities::KeyCombo^ First);
 	bool HasSecondKeyOfChord(utilities::KeyCombo^ First);
 	bool IsBound(utilities::KeyCombo^ Combo);
+	void FocusActiveDocumentTextEditor(IScriptEditorController^ Controller);
 public:
 	InputManager(view::IScriptEditorView^ ParentView);
 	~InputManager();
@@ -248,6 +252,7 @@ public:
 	void AddKeyChordCommand(utilities::IAction^ Action, utilities::KeyCombo^ Primary, utilities::KeyCombo^ Secondary, bool OverwriteExisting, ...array<view::eViewRole>^ ActionRoles);
 	void AddKeyChordCommand(utilities::IAction^ Action, utilities::KeyCombo^ Primary, bool OverwriteExisting, ...array<view::eViewRole>^ ActionRoles);
 
+	void HandleInputFocusChange(view::ViewComponentEvent^ E, IScriptEditorController^ Controller);
 	void HandleKeyDown(KeyEventArgs^ E, IScriptEditorController^ Controller);
 	void HandleTextEditorMouseClick(textEditor::TextEditorMouseClickEventArgs^ E, IScriptEditorController^ Controller);
 

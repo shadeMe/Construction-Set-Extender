@@ -31,7 +31,7 @@ ref class AvalonEditTextEditor : public ITextEditor
 {
 	static const UInt32	kSetTextFadeAnimationDuration = 150;		// in ms
 
-	static AvalonEditXSHDManager^ SyntaxHighlightingManager = gcnew AvalonEditXSHDManager();
+	static void OnTextEditorSettingDataHandler(Object^ Sender, System::Windows::DataObjectSettingDataEventArgs^ E);
 protected:
 	static enum class eIntelliSenseTextChangeEventHandling
 	{
@@ -76,9 +76,10 @@ protected:
 	bool												IsMiddleMouseScrolling;
 	Timer^												MiddleMouseScrollTimer;
 	int													OffsetAtCurrentMousePos;
-	int													LastMouseHoverOffset;
+	Timer^												MouseHoverEndTimer;
 
 	bool												ActivatedInView;
+	bool												IsMouseHovering;
 
 	Timer^												ScrollBarSyncTimer;
 	DotNetBar::ScrollBarAdv^							ExternalVerticalScrollBar;
@@ -117,16 +118,14 @@ protected:
 	System::Windows::Input::MouseEventHandler^			TextFieldMiddleMouseScrollMoveHandler;
 	System::Windows::Input::MouseButtonEventHandler^	TextFieldMiddleMouseScrollDownHandler;
 	EventHandler^										MiddleMouseScrollTimerTickHandler;
+	EventHandler^										MouseHoverEndTimerTickHandler;
 	EventHandler^										ScrollBarSyncTimerTickHandler;
 	EventHandler^										SemanticAnalysisTimerTickHandler;
 	EventHandler^										ExternalScrollBarValueChangedHandler;
 	EventHandler^										SetTextAnimationCompletedHandler;
 	EventHandler^										ScriptEditorPreferencesSavedHandler;
 	AvalonEditTextEventHandler^							TextFieldTextCopiedHandler;
-	EventHandler<VisualLineConstructionStartEventArgs^>^
-														TextFieldVisualLineConstructionStartingHandler;
-	EventHandler<AvalonEdit::Search::SearchOptionsChangedEventArgs^>^
-														SearchPanelSearchOptionsChangedHandler;
+	EventHandler<AvalonEdit::Search::SearchOptionsChangedEventArgs^>^ SearchPanelSearchOptionsChangedHandler;
 	model::components::IBackgroundSemanticAnalyzer::AnalysisCompleteEventHandler^ BackgroundAnalyzerAnalysisCompleteHandler;
 	EventHandler^										LineTrackingManagerLineAnchorInvalidatedHandler;
 
@@ -167,10 +166,10 @@ protected:
 	void	TextField_MiddleMouseScrollMove(Object^ Sender, System::Windows::Input::MouseEventArgs^ E);
 	void	TextField_MiddleMouseScrollDown(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E);
 
-	void	TextField_VisualLineConstructionStarting(Object^ Sender, VisualLineConstructionStartEventArgs^ E);
 	void	SearchPanel_SearchOptionsChanged(Object^ Sender, AvalonEdit::Search::SearchOptionsChangedEventArgs^ E);
 
 	void	MiddleMouseScrollTimer_Tick(Object^ Sender, EventArgs^ E);
+	void	MouseHoverEndTimer_Tick(Object^ Sender, EventArgs^ E);
 	void	ScrollBarSyncTimer_Tick(Object^ Sender, EventArgs^ E);
 
 	void	ExternalScrollBar_ValueChanged(Object^ Sender, EventArgs^ E);
@@ -201,13 +200,11 @@ protected:
 	void				StartMiddleMouseScroll(System::Windows::Input::MouseButtonEventArgs^ E);
 	void				StopMiddleMouseScroll();
 	void				UpdateCodeFoldings();
-	void				UpdateSyntaxHighlighting(bool Regenerate);
 	void				SynchronizeExternalScrollBars();
 	void				ResetExternalScrollBars();
 	void				MoveTextSegment(AvalonEdit::Document::ISegment^ Segment, eMoveSegmentDirection Direction);
 	RTBitmap^			RenderFrameworkElement(System::Windows::FrameworkElement^ Element);
 	void				SearchBracesForHighlighting(int CaretPos);
-	AvalonEditHighlightingDefinition^ CreateSyntaxHighlightDefinitions(bool UpdateStableDefs);
 	String^				SanitizeUnicodeString(String^ In);							// removes unsupported characters
 	void				SetFont(Font^ FontObject);
 	void				SetTabCharacterSize(int PixelWidth);						// AvalonEdit uses character lengths
@@ -289,9 +286,10 @@ public:
 		obScriptParsing::AnalysisData^ get() { return SemanticAnalysisCache; }
 	}
 	ImplPropertyGetOnly(bool, DisplayingStaticText, TextFieldDisplayingStaticText);
+	ImplPropertyGetOnly(bool, Focused, TextField->TextArea->IsFocused || TextField->TextArea->IsKeyboardFocused || TextField->TextArea->IsMouseCaptured);
 
-	virtual void	Bind();
-	virtual void	Unbind();
+	virtual void Bind();
+	virtual void Unbind();
 
 	virtual String^ GetText();
 	virtual String^ GetText(UInt32 LineNumber);

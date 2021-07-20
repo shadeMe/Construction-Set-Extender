@@ -1663,6 +1663,115 @@ void Structurizer::ParseControlBlock(ControlBlock^ Block, Node^ Parent)
 }
 
 
+ObseIdentifiers::ObseIdentifiers()
+{
+	Keywords = gcnew List<String^>();
+	{
+		Keywords->Add("Int");
+		Keywords->Add("Short");
+		Keywords->Add("Long");
+		Keywords->Add("Ref");
+		Keywords->Add("Reference");
+		Keywords->Add("Float");
+		Keywords->Add("Array_Var");
+		Keywords->Add("String_Var");
+		Keywords->Add("Return");
+		Keywords->Add("If");
+		Keywords->Add("Else");
+		Keywords->Add("ElseIf");
+		Keywords->Add("EndIf");
+		Keywords->Add("ScriptName");
+		Keywords->Add("Scn");
+		Keywords->Add("Set");
+		Keywords->Add("To");
+		Keywords->Add("Let");
+		Keywords->Add("TestExpr");
+		Keywords->Add("TypeOf");
+		Keywords->Add("ToString");
+		Keywords->Add("Eval");
+		Keywords->Add("ForEach");
+		Keywords->Add("While");
+		Keywords->Add("Continue");
+		Keywords->Add("Break");
+		Keywords->Add("Loop");
+		Keywords->Add("Call");
+		Keywords->Add("SetFunctionValue");
+		Keywords->Add("Player");
+		Keywords->Add("PlayerRef");
+	}
+
+	Blocks = gcnew List<String^>();
+	{
+		Blocks->Add("Begin");
+		Blocks->Add("End");
+		Blocks->Add("GameMode");
+		Blocks->Add("MenuMode");
+		Blocks->Add("OnActivate");
+		Blocks->Add("OnActorEquip");
+		Blocks->Add("OnActorUnequip");
+		Blocks->Add("OnAdd");
+		Blocks->Add("OnAlarm");
+		Blocks->Add("OnAlarmVictim");
+		Blocks->Add("OnDeath");
+		Blocks->Add("OnDrop");
+		Blocks->Add("OnEquip");
+		Blocks->Add("OnHit");
+		Blocks->Add("OnHitWith");
+		Blocks->Add("OnKnockout");
+		Blocks->Add("OnLoad");
+		Blocks->Add("OnMagicEffectHit");
+		Blocks->Add("OnMurder");
+		Blocks->Add("OnPackageChange");
+		Blocks->Add("OnPackageDone");
+		Blocks->Add("OnPackageStart");
+		Blocks->Add("OnReset");
+		Blocks->Add("OnSell");
+		Blocks->Add("OnTrigger");
+		Blocks->Add("OnTriggerActor");
+		Blocks->Add("OnTriggerMob");
+		Blocks->Add("OnUnequip");
+		Blocks->Add("ScriptEffectFinish");
+		Blocks->Add("ScriptEffectStart");
+		Blocks->Add("ScriptEffectUpdate");
+		Blocks->Add("Function");
+
+		// OBSE compiler overridden blocks
+		Blocks->Add("_Begin");
+		Blocks->Add("_End");
+		Blocks->Add("_GameMode");
+		Blocks->Add("_MenuMode");
+		Blocks->Add("_OnActivate");
+		Blocks->Add("_OnActorEquip");
+		Blocks->Add("_OnActorUnequip");
+		Blocks->Add("_OnAdd");
+		Blocks->Add("_OnAlarm");
+		Blocks->Add("_OnAlarmVictim");
+		Blocks->Add("_OnDeath");
+		Blocks->Add("_OnDrop");
+		Blocks->Add("_OnEquip");
+		Blocks->Add("_OnHit");
+		Blocks->Add("_OnHitWith");
+		Blocks->Add("_OnKnockout");
+		Blocks->Add("_OnLoad");
+		Blocks->Add("_OnMagicEffectHit");
+		Blocks->Add("_OnMurder");
+		Blocks->Add("_OnPackageChange");
+		Blocks->Add("_OnPackageDone");
+		Blocks->Add("_OnPackageStart");
+		Blocks->Add("_OnReset");
+		Blocks->Add("_OnSell");
+		Blocks->Add("_OnTrigger");
+		Blocks->Add("_OnTriggerActor");
+		Blocks->Add("_OnTriggerMob");
+		Blocks->Add("_OnUnequip");
+		Blocks->Add("_ScriptEffectFinish");
+		Blocks->Add("_ScriptEffectStart");
+		Blocks->Add("_ScriptEffectUpdate");
+		Blocks->Add("_Function");
+	}
+}
+
+
 } // namespace obScriptParsing
 
 

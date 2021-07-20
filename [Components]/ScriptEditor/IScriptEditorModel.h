@@ -224,6 +224,15 @@ interface class IScriptDocument
 		DontCompile,
 	};
 
+	ref struct PerLineAnnotationCounts
+	{
+		property UInt32 ErrorCount;
+		property UInt32 WarningCount;
+		property UInt32 BookmarkCount;
+
+		PerLineAnnotationCounts();
+	};
+
 	ref struct StateChangeEventArgs
 	{
 		static enum class eEventType
@@ -289,6 +298,8 @@ interface class IScriptDocument
 	void RemoveBookmark(components::ScriptBookmark^ Bookmark);
 	List<components::ScriptBookmark^>^ GetBookmarks(UInt32 Line);
 	UInt32 GetBookmarkCount(UInt32 Line);
+
+	Dictionary<UInt32, PerLineAnnotationCounts^>^ CountAnnotationsForLineRange(UInt32 StartLine, UInt32 EndLine);	// Line -> ErrorCount, WarningCount, BookmarkCount
 
 	void PushStateToSubscribers();
 

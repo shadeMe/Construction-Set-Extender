@@ -186,6 +186,20 @@ void Form::Handler_SizeChanged(Object^ Sender, EventArgs^ E)
 	RaiseEvent(IForm::eEvent::SizeChanged, EventArgs);
 }
 
+void Form::Handler_Activated(Object^ Sender, EventArgs^ E)
+{
+	auto EventArgs = gcnew IForm::FocusChangeEventArgs;
+
+	RaiseEvent(IForm::eEvent::FocusEnter, EventArgs);
+}
+
+void Form::Handler_Deactivate(Object^ Sender, EventArgs^ E)
+{
+	auto EventArgs = gcnew IForm::FocusChangeEventArgs;
+
+	RaiseEvent(IForm::eEvent::FocusLeave, EventArgs);
+}
+
 Form::Form(Forms::Form^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter)
 	: ViewComponent(eComponentType::Form, ViewRole, EventRouter)
 {
@@ -196,11 +210,15 @@ Form::Form(Forms::Form^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ Ev
 	DelegateKeyDown = gcnew KeyEventHandler(this, &Form::Handler_KeyDown);
 	DelegateLocationChanged = gcnew EventHandler(this, &Form::Handler_LocationChanged);
 	DelegateSizeChanged = gcnew EventHandler(this, &Form::Handler_SizeChanged);
+	DelegateActivated = gcnew EventHandler(this, &Form::Handler_Activated);
+	DelegateDeactivate = gcnew EventHandler(this, &Form::Handler_Deactivate);
 
 	Source->Closing += DelegateClosing;
 	Source->KeyDown += DelegateKeyDown;
 	Source->LocationChanged += DelegateLocationChanged;
 	Source->SizeChanged += DelegateSizeChanged;
+	Source->Activated += DelegateActivated;
+	Source->Deactivate += DelegateDeactivate;
 }
 
 Form::~Form()
@@ -209,11 +227,15 @@ Form::~Form()
 	Source->KeyDown -= DelegateKeyDown;
 	Source->LocationChanged -= DelegateLocationChanged;
 	Source->SizeChanged -= DelegateSizeChanged;
+	Source->Activated -= DelegateActivated;
+	Source->Deactivate -= DelegateDeactivate;
 
 	SAFEDELETE_CLR(DelegateClosing);
 	SAFEDELETE_CLR(DelegateKeyDown);
 	SAFEDELETE_CLR(DelegateLocationChanged);
 	SAFEDELETE_CLR(DelegateSizeChanged);
+	SAFEDELETE_CLR(DelegateActivated);
+	SAFEDELETE_CLR(DelegateDeactivate);
 
 	Source = nullptr;
 }
@@ -1438,6 +1460,9 @@ void ObjectListView::Handler_PreferencesChanged(Object^ Sender, EventArgs^ E)
 
 	Source->ForeColor = ForeColor;
 	Source->BackColor = BackColor;
+
+	if (Source->GetType() == BrightIdeasSoftware::TreeListView::typeid)
+		safe_cast<BrightIdeasSoftware::TreeListView^>(Source)->TreeColumnRenderer->LinePen = gcnew Pen(ForeColor, 1);
 }
 
 bool ObjectListView::Wrapper_CanExpandGetter(Object^ Model)
@@ -1630,10 +1655,19 @@ void DockablePane::Focus()
 	if (!ParentBar->AutoHideVisible)
 		ParentBar->AutoHideVisible = true;
 
+	ParentBar->Focus();
 	Source->Focus();
-	Source->Control->Focus();
-}
 
+	Source->Control->Focus();
+	for each (Control^ Itr in Source->Control->Controls)
+	{
+		if (Itr->CanFocus)
+		{
+			Itr->Focus();
+			break;
+		}
+	}
+}
 
 CrumbBarItem::CrumbBarItem(DotNetBar::CrumbBarItem^ Source)
 	: ViewComponent(eComponentType::CrumbBarItem, eViewRole::None, nullptr)
@@ -1831,6 +1865,19 @@ bool Container::GetterVisible()
 	return false;
 }
 
+bool Container::GetterFocused()
+{
+	switch (SourceType)
+	{
+	case eSourceType::Control:
+		return BasicControl->ContainsFocus;
+	case eSourceType::BaseItem:
+		return DotNetBarBaseItem->Focused;
+	}
+
+	return false;
+}
+
 void Container::SetterVisible(bool Value)
 {
 	switch (SourceType)
@@ -1917,6 +1964,19 @@ void Container::Invalidate()
 	case eSourceType::BaseItem:
 		DotNetBarBaseItem->RecalcSize();
 		DotNetBarBaseItem->Refresh();
+		break;
+	}
+}
+
+void Container::Focus()
+{
+	switch (SourceType)
+	{
+	case eSourceType::Control:
+		BasicControl->Focus();
+		break;
+	case eSourceType::BaseItem:
+		DotNetBarBaseItem->Focus();
 		break;
 	}
 }

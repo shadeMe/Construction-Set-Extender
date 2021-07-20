@@ -91,7 +91,7 @@ System::String^ KeyCombo::ToString()
 
 KeyCombo^ KeyCombo::FromKeyEvent(KeyEventArgs^ E)
 {
-	UInt32 Modifiers;
+	UInt32 Modifiers = 0;
 	if (E->Control)
 		Modifiers |= safe_cast<UInt32>(Keys::Control);
 	if (E->Shift)
@@ -631,10 +631,8 @@ Gma::DataStructures::StringSearch::TraversalResult CaselessFuzzyTrie<TValue>::Le
 	}
 
 	auto Cost = ReusableRows[ReusableRows->Count - 1][Query->Length];
-	if (Cost <= MaxEditDistance && Node->ValueCount > 0)
+	if (/*!MaxCostExceeded && */Cost <= MaxEditDistance && Node->ValueCount > 0)
 	{
-		//Debug::Assert(!MaxCostExceeded);
-
 		for each (auto Value in Node->Values)
 		{
 			if (Predicate == nullptr || Predicate(Value))
@@ -679,6 +677,21 @@ CaselessFuzzyTrie<TValue>::FuzzyMatchResult::FuzzyMatchResult(TValue Value, int 
 }
 
 generic <typename TValue>
+bool CaselessFuzzyTrie<TValue>::FuzzyMatchResult::Equals(FuzzyMatchResult^ obj)
+{
+	if (obj == nullptr)
+		return false;
+
+	return Object::ReferenceEquals(this->Value, obj->Value);
+}
+
+generic <typename TValue>
+int CaselessFuzzyTrie<TValue>::FuzzyMatchResult::GetHashCode()
+{
+	return Value->GetHashCode();
+}
+
+generic <typename TValue>
 void CaselessFuzzyTrie<TValue>::Add(String^ Key, TValue Value)
 {
 	PatriciaTrie::Add(Key->ToLower(), Value);
@@ -710,6 +723,68 @@ System::Collections::Generic::IEnumerable<CaselessFuzzyTrie<TValue>::FuzzyMatchR
 
 	auto Matcher = gcnew LevenshteinMatcher(Query->ToLower(), MaxEditDistanceCost, Predicate);
 	return Matcher->Match(this);
+}
+
+DevComponents::DotNetBar::eTooltipColor MapRichTooltipBackgroundColorToDotNetBar(IRichTooltipContentProvider::eBackgroundColor BgColor)
+{
+	switch (BgColor)
+	{
+	case IRichTooltipContentProvider::eBackgroundColor::Default:
+		return DevComponents::DotNetBar::eTooltipColor::System;
+	case IRichTooltipContentProvider::eBackgroundColor::Blue:
+		return DevComponents::DotNetBar::eTooltipColor::Blue;
+	case IRichTooltipContentProvider::eBackgroundColor::Yellow:
+		return DevComponents::DotNetBar::eTooltipColor::Yellow;
+	case IRichTooltipContentProvider::eBackgroundColor::Green:
+		return DevComponents::DotNetBar::eTooltipColor::Green;
+	case IRichTooltipContentProvider::eBackgroundColor::Red:
+		return DevComponents::DotNetBar::eTooltipColor::Red;
+	case IRichTooltipContentProvider::eBackgroundColor::Magenta:
+		return DevComponents::DotNetBar::eTooltipColor::Magenta;
+	case IRichTooltipContentProvider::eBackgroundColor::BlueMist:
+		return DevComponents::DotNetBar::eTooltipColor::BlueMist;
+	case IRichTooltipContentProvider::eBackgroundColor::Lemon:
+		return DevComponents::DotNetBar::eTooltipColor::Lemon;
+	case IRichTooltipContentProvider::eBackgroundColor::Apple:
+		return DevComponents::DotNetBar::eTooltipColor::Apple;
+	case IRichTooltipContentProvider::eBackgroundColor::Silver:
+		return DevComponents::DotNetBar::eTooltipColor::Silver;
+	case IRichTooltipContentProvider::eBackgroundColor::Gray:
+		return DevComponents::DotNetBar::eTooltipColor::Gray;
+	default:
+		return DevComponents::DotNetBar::eTooltipColor::Default;
+	}
+}
+
+SuperTooltipColorSwapper::SuperTooltipColorSwapper(Color Text, Color Background)
+{
+	TextColor = Text;
+	BackColor = Background;
+}
+
+void SuperTooltipColorSwapper::ShowTooltip(DevComponents::DotNetBar::SuperTooltip^ Tooltip, Object^ Sender, Point ScreenPosition)
+{
+	// temporarily modify the global color table before the tooltip is shown
+	auto GlobalRenderer = dynamic_cast<DevComponents::DotNetBar::Rendering::Office2007Renderer^>(DevComponents::DotNetBar::Rendering::GlobalManager::Renderer);
+	if (GlobalRenderer == nullptr)
+	{
+		Tooltip->ShowTooltip(Sender, ScreenPosition);
+		return;
+	}
+
+	auto OldTextColor = GlobalRenderer->ColorTable->SuperTooltip->TextColor;
+	auto OldBgColor1 = GlobalRenderer->ColorTable->SuperTooltip->BackgroundColors->Start;
+	auto OldBgColor2 = GlobalRenderer->ColorTable->SuperTooltip->BackgroundColors->End;
+
+	GlobalRenderer->ColorTable->SuperTooltip->TextColor = TextColor;
+	GlobalRenderer->ColorTable->SuperTooltip->BackgroundColors->Start = BackColor;
+	GlobalRenderer->ColorTable->SuperTooltip->BackgroundColors->End = BackColor;
+	{
+		Tooltip->ShowTooltip(Sender, ScreenPosition);
+	}
+	GlobalRenderer->ColorTable->SuperTooltip->TextColor = OldTextColor;
+	GlobalRenderer->ColorTable->SuperTooltip->BackgroundColors->Start = OldBgColor1;
+	GlobalRenderer->ColorTable->SuperTooltip->BackgroundColors->End = OldBgColor2;
 }
 
 

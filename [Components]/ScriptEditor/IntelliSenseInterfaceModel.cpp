@@ -640,7 +640,7 @@ void IntelliSenseInterfaceModel::ShowInsightTooltip(IntelliSenseInsightHoverEven
 		ShowArgs->TooltipBodyText += "</div>";
 
 		ShowArgs->TooltipBodyText = ShowArgs->TooltipBodyText->Replace("\n", "<br/>");
-		ShowArgs->TooltipBgColor = IRichTooltipContentProvider::eBackgroundColor::Red;
+		ShowArgs->TooltipBgColor = utilities::IRichTooltipContentProvider::eBackgroundColor::Red;
 	}
 	else if (!E->HoveringOverComment)
 	{

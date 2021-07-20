@@ -3,6 +3,7 @@
 #include "[Common]\HandShakeStructs.h"
 #include "SemanticAnalysis.h"
 #include "ITextEditor.h"
+#include "Utilities.h"
 
 namespace cse
 {
@@ -20,7 +21,7 @@ ref class IntelliSenseInterface;
 ref class CodeSnippet;
 
 
-ref class IntelliSenseItem : public IRichTooltipContentProvider
+ref class IntelliSenseItem : public utilities::IRichTooltipContentProvider
 {
 	static array<String^>^ ItemTypeID =
 	{
@@ -61,6 +62,7 @@ protected:
 
 	String^ GenerateHelpTextHeader(String^ Identifier);
 	String^ GenerateHelpTextFooter();
+	String^ WrapHelpTextInActiveFont(String^ HelpText);
 public:
 	IntelliSenseItem();
 	IntelliSenseItem(eItemType Type);
@@ -77,12 +79,12 @@ public:
 
 	virtual property String^ TooltipHeaderText
 	{
-		String^ get() { return HelpTextHeader; }
+		String^ get() { return WrapHelpTextInActiveFont(HelpTextHeader); }
 		void set(String^ set) {}
 	}
 	virtual property String^ TooltipBodyText
 	{
-		String^ get() { return HelpTextBody; }
+		String^ get() { return WrapHelpTextInActiveFont(HelpTextBody); }
 		void set(String^ set) {}
 	}
 	virtual property Image^	TooltipBodyImage
@@ -92,7 +94,7 @@ public:
 	}
 	virtual property String^ TooltipFooterText
 	{
-		String^ get() { return HelpTextFooter; }
+		String^ get() { return WrapHelpTextInActiveFont(HelpTextFooter); }
 		void set(String^ set) {}
 	}
 	virtual property Image^	TooltipFooterImage

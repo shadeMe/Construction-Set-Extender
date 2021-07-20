@@ -1121,6 +1121,7 @@ void DiskSyncDialog::InitializeComponent(void)
 	this->MaximizeBox = false;
 	this->Name = L"ScriptSyncDialog";
 	this->Text = L"Sync Scripts To Disk";
+	this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ListViewSyncedScripts))->EndInit();
 	this->GroupSyncSettings->ResumeLayout(false);
 	this->GroupSyncSettings->PerformLayout();

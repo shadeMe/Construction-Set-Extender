@@ -150,6 +150,40 @@ public:
 	}
 };
 
+
+ref class CustomBrushes
+{
+	static CustomBrushes^ Singleton = nullptr;
+
+	void RecreateAll();
+
+	void Preferences_Changed(Object^ Sender, EventArgs^ E);
+
+	CustomBrushes();
+public:
+	ref struct BgRendererBrush
+	{
+		property System::Windows::Media::Brush^ Background;
+		property System::Windows::Media::Pen^ Border;
+
+		BgRendererBrush(Color BackColor, int Alpha);
+	};
+
+	property System::Windows::Media::Brush^ ForeColor;
+	property System::Windows::Media::Brush^ ForeColorPartlyTransparent;
+	property System::Windows::Media::Brush^ BackColor;
+	property System::Windows::Media::Brush^ Transparent;
+
+	property BgRendererBrush^ SelectionMatch;
+	property BgRendererBrush^ CurrentLine;
+	property BgRendererBrush^ FindResults;
+	property System::Windows::Media::Pen^ ErrorSquigly;
+	property BgRendererBrush^ ValidBrace;
+	property BgRendererBrush^ InvalidBrace;
+
+	static CustomBrushes^ Get();
+};
+
 ref class LineTrackingManagerBgRenderer : public AvalonEdit::Rendering::IBackgroundRenderer
 {
 	AvalonEdit::TextEditor^ ParentEditor;
@@ -158,21 +192,18 @@ ref class LineTrackingManagerBgRenderer : public AvalonEdit::Rendering::IBackgro
 	void RenderBackground(TextView^ Destination,
 						  System::Windows::Media::DrawingContext^ DrawingContext,
 						  int StartOffset, int EndOffset,
-						  Windows::Media::Color Background,
-						  Windows::Media::Color Border,
-						  Double BorderThickness,
+						  CustomBrushes::BgRendererBrush^ Brush,
 						  bool ColorEntireLine);
 	void RenderSquiggle(TextView^ Destination,
 					 	System::Windows::Media::DrawingContext^ DrawingContext,
 					 	int StartOffset, int EndOffset,
-					 	Windows::Media::Color Color);
+					 	System::Windows::Media::Pen^ Pen);
 
-	void DoCurrentLineBackground(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext);
-	void DoLineLimitBackground(DocumentLine^ Line, TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext);
+	void DoCurrentLineBackground(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext, int FirstVisibleLine, int LastVisibleLine);
 	void DoSelectedStringBackground(String^ SelectionText, DocumentLine^ Line, TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext);
-	void DoErrorSquiggles(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext);
-	void DoFindResults(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext);
-	void DoBraceIndicators(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext);
+	void DoErrorSquiggles(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext, int FirstVisibleLine, int LastVisibleLine);
+	void DoFindResults(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext, int FirstVisibleLine, int LastVisibleLine);
+	void DoBraceIndicators(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext, int FirstVisibleLine, int LastVisibleLine);
 public:
 	LineTrackingManagerBgRenderer(AvalonEdit::TextEditor^ Parent);
 	~LineTrackingManagerBgRenderer();
@@ -276,11 +307,6 @@ ref class StructureVisualizerRenderer : public VisualLineElementGenerator
 protected:
 	static void	OnMouseClick(Object^ Sender, Windows::Input::MouseButtonEventArgs^ E);
 
-	static Windows::Media::Imaging::BitmapSource^ ElementIcon = nullptr;
-	static int InstanceCounter = 0;
-
-	static Windows::Media::Imaging::BitmapSource^ GetIconSource();
-
 	ref struct AdornmentData
 	{
 		UInt32 JumpLine;
@@ -299,7 +325,7 @@ public:
 };
 
 // derived from ICSharpCode.AvalonEdit.AddIn.IconBarMargin
-ref class IconMargin : public AbstractMargin
+ref class IconMarginBase : public AbstractMargin
 {
 protected:
 	MouseHoverLogic^ HoverLogic;
@@ -315,7 +341,6 @@ protected:
 	virtual void OnTextViewChanged(AvalonEdit::Rendering::TextView^ oldTextView, AvalonEdit::Rendering::TextView^ newTextView) override;
 	virtual Windows::Media::HitTestResult^ HitTestCore(Windows::Media::PointHitTestParameters^ hitTestParameters) override;
 	virtual Windows::Size MeasureOverride(Windows::Size availableSize) override;
-	virtual void OnRender(Windows::Media::DrawingContext^ drawingContext) override;
 	virtual void OnMouseDown(System::Windows::Input::MouseButtonEventArgs^ e) override;
 	virtual void OnMouseMove(System::Windows::Input::MouseEventArgs^ e) override;
 	virtual void OnMouseUp(System::Windows::Input::MouseButtonEventArgs^ e) override;
@@ -327,17 +352,12 @@ protected:
 	virtual void HandleHoverStart(int Line, System::Windows::Input::MouseEventArgs^ E) abstract;
 	virtual void HandleHoverStop() abstract;
 	virtual void HandleClick(int Line) abstract;
-	virtual bool GetRenderData(int Line,
-							   Windows::Media::Imaging::BitmapSource^% OutIcon,
-							   double% OutOpacity,
-							   int% Width,
-							   int% Height) abstract;		// return false to skip rendering the line
 public:
-	IconMargin();
-	virtual ~IconMargin();
+	IconMarginBase();
+	virtual ~IconMarginBase();
 };
 
-ref class DefaultIconMargin : public IconMargin
+ref class DefaultIconMargin : public IconMarginBase
 {
 	static int InstanceCounter = 0;
 
@@ -357,14 +377,11 @@ protected:
 
 	void ParentModel_StateChanged(Object^ Sender, model::IScriptDocument::StateChangeEventArgs^ E);
 
+	virtual void OnRender(Windows::Media::DrawingContext^ drawingContext) override;
+
 	virtual void HandleHoverStart(int Line, System::Windows::Input::MouseEventArgs^ E) override;
 	virtual void HandleHoverStop() override;
 	virtual void HandleClick(int Line) override;
-	virtual bool GetRenderData(int Line,
-							   Windows::Media::Imaging::BitmapSource^% OutIcon,
-							   double% OutOpacity,
-							   int% Width,
-							   int% Height) override;
 public:
 	DefaultIconMargin(AvalonEdit::TextEditor^ ParentEditor, model::IScriptDocument^ ParentScriptDocument, IntPtr ToolTipParent);
 	virtual ~DefaultIconMargin();

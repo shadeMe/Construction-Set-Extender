@@ -220,9 +220,6 @@
     <EmbeddedResource Include="..\..\[Misc]\UIComponents\CodeSnippetsDialog.resx">
       <Filter>Resources</Filter>
     </EmbeddedResource>
-    <EmbeddedResource Include="..\..\[Misc]\UIComponents\PreferencesDialog.resx">
-      <Filter>Resources</Filter>
-    </EmbeddedResource>
     <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptSelectionDialog.resx">
       <Filter>Resources</Filter>
     </EmbeddedResource>
@@ -485,10 +482,8 @@
     <Image Include="Images\warning-large.png">
       <Filter>Resources\Icons</Filter>
     </Image>
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Minimize\Minimize_16x.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ChromeClose\ChromeClose_16x.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ChromeMinimize\ChromeMinimize_16x.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ChromeMaximize\ChromeMaximize_16x.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ChromeRestore\ChromeRestore_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Script\Script_16x.png">
+      <Filter>Resources\Icons</Filter>
+    </Image>
   </ItemGroup>
 </Project>

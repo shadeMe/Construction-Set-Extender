@@ -80,11 +80,15 @@ ref class Form : public ViewComponent, IForm
 	KeyEventHandler^ DelegateKeyDown;
 	EventHandler^ DelegateLocationChanged;
 	EventHandler^ DelegateSizeChanged;
+	EventHandler^ DelegateActivated;
+	EventHandler^ DelegateDeactivate;
 
 	void Handler_Closing(Object^ Sender, CancelEventArgs^ E);
 	void Handler_KeyDown(Object^ Sender, KeyEventArgs^ E);
 	void Handler_LocationChanged(Object^ Sender, EventArgs^ E);
 	void Handler_SizeChanged(Object^ Sender, EventArgs^ E);
+	void Handler_Activated(Object^ Sender, EventArgs^ E);
+	void Handler_Deactivate(Object^ Sender, EventArgs^ E);
 public:
 	Form(Forms::Form^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);
 	virtual ~Form();
@@ -511,6 +515,7 @@ ref class Container : public ViewComponent, IContainer
 	void DeinitEventHandlers();
 
 	bool GetterVisible();
+	bool GetterFocused();
 	void SetterVisible(bool Value);
 public:
 	Container(Control^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);
@@ -518,10 +523,12 @@ public:
 	virtual ~Container();
 
 	ImplPropertyWithAccessors(bool, Visible);
+	ImplPropertyGetOnlyAccessor(bool, Focused);
 
 	virtual void AddControl(Control^ Control);
 	virtual void RemoveControl(Control^ Control);
 	virtual void Invalidate();
+	virtual void Focus();
 };
 
 

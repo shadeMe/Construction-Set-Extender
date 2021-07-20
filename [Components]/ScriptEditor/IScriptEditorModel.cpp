@@ -280,6 +280,13 @@ System::DateTime ScriptTextAutoRecoveryCache::LastWriteTime::get()
 } // namespace components
 
 
+IScriptDocument::PerLineAnnotationCounts::PerLineAnnotationCounts()
+{
+	ErrorCount = 0;
+	WarningCount = 0;
+	BookmarkCount = 0;
+}
+
 IScriptDocument::StateChangeEventArgs::StateChangeEventArgs()
 {
 	EventType = eEventType::None;

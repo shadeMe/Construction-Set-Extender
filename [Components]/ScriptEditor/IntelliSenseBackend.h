@@ -94,6 +94,17 @@ private:
 	static int FuzzyMatchResultSortKeySelector(FuzzyMatchT^ Item);
 	static IntelliSenseItem^ FuzzyMatchResultMapToItemSelector(FuzzyMatchT^ Item);
 
+	ref class PrefixToEditDistanceMatcher
+	{
+		int QueryLength;
+		int MinimumEditDistance;
+	public:
+		PrefixToEditDistanceMatcher(String^ Query, int LevenshteinMaxEditDistance);
+
+		FuzzyMatchT^ CreateFuzzyMatch(IntelliSenseItem^ Item);
+		bool FuzzyMatchHasMinimumEditDistance(FuzzyMatchT^ Match);
+	};
+
 	Dictionary<String^, IntelliSenseItem^>^ Dict_;
 	utilities::CaselessFuzzyTrie<IntelliSenseItem^>^ Trie_;
 public:
@@ -115,8 +126,9 @@ public:
 	}
 
 	void Add(String^ Identifier, IntelliSenseItem^ Item);
-	IEnumerable<FuzzyMatchT^>^ FuzzyMatch(String^ Query, UInt32 MaxEditDistanceCost, System::Func<IntelliSenseItem^, bool>^ Predicate);
+	IEnumerable<FuzzyMatchT^>^ LevenshteinMatch(String^ Query, UInt32 MaxEditDistanceCost, System::Func<IntelliSenseItem^, bool>^ Predicate);
 	IEnumerable<IntelliSenseItem^>^ PrefixMatch(String^ Query, System::Func<IntelliSenseItem^, bool>^ Predicate);
+	IEnumerable<FuzzyMatchT^>^ FuzzyMatch(String^ Query, UInt32 MaxEditDistanceCost, System::Func<IntelliSenseItem^, bool>^ Predicate);
 	IntelliSenseItem^ Lookup(String^ Identifier, bool IgnoreItemsWithoutInsightInfo);
 	void Reset();
 
@@ -198,7 +210,7 @@ public:
 	void InitializeScriptCommands(componentDLLInterface::CommandTableData* Data);
 	void InitializeGameSettings(componentDLLInterface::IntelliSenseUpdateData* Data);
 
-	HashSet<String^>^ CreateIndentifierSnapshot(eDatabaseLookupFilter Categories);
+	ICollection<String^>^ CreateIndentifierSnapshot(eDatabaseLookupFilter Categories);
 	String^ SanitizeIdentifier(String^ Identifier);
 
 	bool HasAttachedScript(String^ Identifier);

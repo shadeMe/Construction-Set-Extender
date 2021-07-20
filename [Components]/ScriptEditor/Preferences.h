@@ -223,7 +223,7 @@ ref struct AppearanceSettings : public SettingsGroup
 
 	[Category("General")]
 	[Description("Default text font")]
-	//[Editor(CustomFontEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+	[Editor(CustomFontEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
 	property Drawing::Font^ TextFont;
 
 	[Category("General")]
@@ -338,12 +338,6 @@ ref struct AppearanceSettings : public SettingsGroup
 	property Color BackColorCurrentLine_LM;
 
 	[Category("Highlighting (Light Mode)")]
-	[Description("Highlighting background color for lines exceeding the character limit (512)")]
-	[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
-	[TypeConverter(CustomColorConverter::typeid)]
-	property Color BackColorCharLimit_LM;
-
-	[Category("Highlighting (Light Mode)")]
 	[Description("Highlighting color for error squigglies")]
 	[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
 	[TypeConverter(CustomColorConverter::typeid)]
@@ -356,8 +350,18 @@ ref struct AppearanceSettings : public SettingsGroup
 	property Color BackColorFindResults_LM;
 
 	[Category("Highlighting (Light Mode)")]
+	[Description("Highlighting background color for task keywords such as TODO, FIXME, etc in comments")]
+	[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+	[TypeConverter(CustomColorConverter::typeid)]
+	property Color BackColorTaskComment_LM;
+
+	[Category("Highlighting (Light Mode)")]
 	[Description("Use bold-face font style for all highlighted text")]
 	property bool BoldFaceHighlightedText_LM;
+
+	[Category("Highlighting (Light Mode)")]
+	[Description("Use italics font style for all keywords and script blocks")]
+	property bool KeywordsAndBlocksInItalic_LM;
 
 
 	[Category("Highlighting (Dark Mode)")]
@@ -427,12 +431,6 @@ ref struct AppearanceSettings : public SettingsGroup
 	property Color BackColorCurrentLine_DM;
 
 	[Category("Highlighting (Dark Mode)")]
-	[Description("Highlighting background color for lines exceeding the character limit (512)")]
-	[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
-	[TypeConverter(CustomColorConverter::typeid)]
-	property Color BackColorCharLimit_DM;
-
-	[Category("Highlighting (Dark Mode)")]
 	[Description("Highlighting color for error squigglies")]
 	[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
 	[TypeConverter(CustomColorConverter::typeid)]
@@ -445,8 +443,18 @@ ref struct AppearanceSettings : public SettingsGroup
 	property Color BackColorFindResults_DM;
 
 	[Category("Highlighting (Dark Mode)")]
+	[Description("Highlighting background color for task keywords such as TODO, FIXME, etc in comments")]
+	[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+	[TypeConverter(CustomColorConverter::typeid)]
+	property Color BackColorTaskComment_DM;
+
+	[Category("Highlighting (Dark Mode)")]
 	[Description("Use bold-face font style for all highlighted text")]
 	property bool BoldFaceHighlightedText_DM;
+
+	[Category("Highlighting (Dark Mode)")]
+	[Description("Use italics font style for all keywords and script blocks")]
+	property bool KeywordsInBlocksItalic_DM;
 
 
 	// convenience accessors
@@ -523,12 +531,6 @@ ref struct AppearanceSettings : public SettingsGroup
 	}
 
 	[Browsable(false)]
-	property Color BackColorCharLimit
-	{
-		Color get() { return !DarkMode ? BackColorCharLimit_LM : BackColorCharLimit_DM; }
-	}
-
-	[Browsable(false)]
 	property Color UnderlineColorError
 	{
 		Color get() { return !DarkMode ? UnderlineColorError_LM : UnderlineColorError_DM; }
@@ -541,18 +543,30 @@ ref struct AppearanceSettings : public SettingsGroup
 	}
 
 	[Browsable(false)]
+	property Color BackColorTaskComment
+	{
+		Color get() { return !DarkMode ? BackColorTaskComment_LM : BackColorTaskComment_DM; }
+	}
+
+	[Browsable(false)]
 	property bool BoldFaceHighlightedText
 	{
 		bool get() { return !DarkMode ? BoldFaceHighlightedText_LM : BoldFaceHighlightedText_DM; }
 	}
 
+	[Browsable(false)]
+	property bool KeywordsAndBlocksInItalic
+	{
+		bool get() { return !DarkMode ? KeywordsAndBlocksInItalic_LM : KeywordsInBlocksItalic_DM; }
+	}
+
 	AppearanceSettings()
 	{
 		TabStripLocation = DevComponents::DotNetBar::eTabStripAlignment::Top;
-		TabStripVerticalWidth = 125;
+		TabStripVerticalWidth = 150;
 		TabSize = 4;
 		TextFont = gcnew Drawing::Font("Consolas", 9);
-		WordWrap = false;
+		WordWrap = true;
 		ShowTabs = false;
 		ShowSpaces = false;
 		DarkMode = false;
@@ -575,10 +589,11 @@ ref struct AppearanceSettings : public SettingsGroup
 		ForeColorLocalVariables_LM = Color::FromArgb(20, 153, 182);
 		BackColorSelection_LM = Color::FromArgb(143, 70, 115);
 		BackColorCurrentLine_LM = Color::FromArgb(102, 92, 84);
-		BackColorCharLimit_LM = Color::FromArgb(139, 0, 139);
 		UnderlineColorError_LM = Color::FromArgb(255, 0, 0);
 		BackColorFindResults_LM = Color::FromArgb(255, 255, 224);
+		BackColorTaskComment_LM = Color::FromArgb(150, 255, 255, 224);
 		BoldFaceHighlightedText_LM = false;
+		KeywordsAndBlocksInItalic_LM = true;
 
 		ForeColor_DM = Color::FromArgb(253, 244, 193);
 		BackColor_DM = Color::FromArgb(45, 45, 48);
@@ -591,10 +606,11 @@ ref struct AppearanceSettings : public SettingsGroup
 		ForeColorLocalVariables_DM = Color::FromArgb(20, 153, 182);
 		BackColorSelection_DM = Color::FromArgb(143, 70, 115);
 		BackColorCurrentLine_DM = Color::FromArgb(102, 92, 84);
-		BackColorCharLimit_DM = Color::FromArgb(139, 0, 139);
 		UnderlineColorError_DM = Color::FromArgb(255, 0, 0);
 		BackColorFindResults_DM = Color::FromArgb(255, 255, 224);
+		BackColorTaskComment_LM = Color::FromArgb(150, 0, 0, 0);
 		BoldFaceHighlightedText_DM = false;
+		KeywordsInBlocksItalic_DM = true;
 	}
 
 	virtual bool Validate(SettingsGroup^ OldValue, String^% OutMessage) override;
@@ -787,8 +803,6 @@ public:
 
 ref class PreferencesDialog : public DevComponents::DotNetBar::Metro::MetroForm
 {
-	static PreferencesDialog^ ActiveDialog = nullptr;
-
 	System::ComponentModel::Container^ components;
 
 	DevComponents::DotNetBar::AdvPropertyGrid^ PropertyGrid;
@@ -811,8 +825,6 @@ ref class PreferencesDialog : public DevComponents::DotNetBar::Metro::MetroForm
 public:
 	PreferencesDialog();
 	~PreferencesDialog();
-
-	static PreferencesDialog^ GetActiveInstance() { return ActiveDialog; }
 };
 
 

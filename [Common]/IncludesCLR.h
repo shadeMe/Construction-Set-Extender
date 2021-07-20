@@ -25,4 +25,4 @@ using namespace System::Runtime::InteropServices;
 
 typedef unsigned char UInt8;
 
-#define SAFEDELETE_CLR(Identifier)		delete Identifier; Identifier = nullptr
+#define SAFEDELETE_CLR(Identifier)		if (Identifier) { delete Identifier; Identifier = nullptr; }

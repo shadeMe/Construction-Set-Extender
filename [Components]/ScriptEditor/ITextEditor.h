@@ -103,6 +103,7 @@ interface class ITextEditor : public intellisense::IIntelliSenseInterfaceConsume
 	property int Caret;
 	property bool Modified;
 	property bool DisplayingStaticText;
+	property bool Focused;
 
 	// methods
 	void Bind();	// called when the parent model is bound to a view, i.e., when the text editor is activated

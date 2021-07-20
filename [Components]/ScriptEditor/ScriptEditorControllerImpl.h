@@ -26,6 +26,7 @@ ref struct ActiveDocumentActionCollection
 	property utilities::BasicAction^ Uncomment;
 	property utilities::BasicAction^ AddBookmark;
 	property utilities::BasicAction^ GoToLine;
+	property utilities::BasicAction^ JumpToScriptAtCaret;
 
 	property utilities::BasicAction^ AddVarInteger;
 	property utilities::BasicAction^ AddVarFloat;
@@ -121,6 +122,7 @@ ref class ScriptEditorController : public IScriptEditorController
 	void ActiveDocumentAction_Uncomment();
 	void ActiveDocumentAction_AddBookmark();
 	void ActiveDocumentAction_GoToLine();
+	void ActiveDocumentAction_JumpToScriptAtCaret();
 
 	void ActiveDocumentAction_AddVarInteger();
 	void ActiveDocumentAction_AddVarFloat();

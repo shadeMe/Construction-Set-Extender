@@ -17,6 +17,7 @@ namespace viewImpl
 void ScriptEditorWorkspace::WndProc(Message% m)
 {
 	const int WM_NCHITTEST = 0x84;
+	const int WM_NCPAINT = 0x85;
 	const int WM_NCACTIVATE = 0x86;
 	const int HT_CLIENT = 0x1;
 	const int HT_CAPTION = 0x2;
@@ -24,16 +25,39 @@ void ScriptEditorWorkspace::WndProc(Message% m)
 	switch (m.Msg)
 	{
 	case WM_NCACTIVATE:
-		// prevent any further handling as we don't actually have a title bar to speak of
+		// revert to default handling as we do not have a title bar to speak of
 		m.Result = (IntPtr)1;
 		break;
 	default:
 		MetroForm::WndProc(m);
 	}
 
-	// allow the form to be moved when dragging inside any non-client area
-	if (m.Msg == WM_NCHITTEST && m.Result == (IntPtr)HT_CLIENT)
-		m.Result = (IntPtr)HT_CAPTION;
+	switch (m.Msg)
+	{
+	case WM_NCPAINT:
+		MainTabStrip->Refresh();
+		ContainerMainToolbar->Refresh();
+
+		break;
+	case WM_NCHITTEST:
+		// allow the form to be moved when dragging inside any non-client area
+		if (m.Result == (IntPtr)HT_CLIENT)
+			m.Result = (IntPtr)HT_CAPTION;
+		break;
+	}
+
+}
+
+void ScriptEditorWorkspace::PaintNonClientArea(Graphics^ g)
+{
+	// just draw the window border and skip the caption area to prevent flickering
+	nativeWrapper::RECT Rect;
+	Rect.Left = Rect.Right = 0;
+	Rect.Top = Rect.Bottom = 200;
+
+	nativeWrapper::AdjustWindowRectEx(&Rect, this->CreateParams->Style, false, this->CreateParams->ExStyle);
+	auto BorderSize = Math::Abs(Rect.Left);
+	MetroForm::PaintFormBorder(g, BorderSize, false);
 }
 
 void ScriptEditorWorkspace::HandleViewComponentEvent(ViewComponentEvent^ E)
@@ -265,6 +289,26 @@ void ScriptEditorWorkspace::HandleViewComponentEvent(ViewComponentEvent^ E)
 		return;
 
 	ComponentEvent(this, E);
+
+	// perform any UI-related fixups after the event is handled by subscribers
+	switch (E->Component->Role)
+	{
+	case eViewRole::MainTabStrip:
+	{
+		auto EventType = safe_cast<view::components::ITabStrip::eEvent>(E->EventType);
+		switch (EventType)
+		{
+		case view::components::ITabStrip::eEvent::TabMoved:
+		case view::components::ITabStrip::eEvent::ActiveTabChanged:
+			MainTabStrip->Refresh();
+			ContainerMainToolbar->Refresh();
+
+			break;
+		}
+
+		break;
+	}
+	}
 }
 
 void ScriptEditorWorkspace::HandlePreferencesChanged(Object^ Sender, EventArgs^ E)
@@ -286,6 +330,18 @@ void ScriptEditorWorkspace::HandlePreferencesChanged(Object^ Sender, EventArgs^ 
 		SetTabStripLocation(preferences::SettingsHolder::Get()->Appearance->TabStripLocation, preferences::SettingsHolder::Get()->Appearance->TabStripVerticalWidth);
 	}
 	MainTabStrip->ResumeLayout(true);
+
+	DotNetBar::TextMarkup::MarkupSettings::NormalHyperlink->TextColor = !preferences::SettingsHolder::Get()->Appearance->DarkMode ? TextMarkupHyperlinkLightModeColor : TextMarkupHyperlinkDarkModeColor;
+	DotNetBar::TextMarkup::MarkupSettings::VisitedHyperlink->TextColor = !preferences::SettingsHolder::Get()->Appearance->DarkMode ? TextMarkupHyperlinkLightModeColor : TextMarkupHyperlinkDarkModeColor;
+	DotNetBar::TextMarkup::MarkupSettings::MouseOverHyperlink->TextColor = !preferences::SettingsHolder::Get()->Appearance->DarkMode ? TextMarkupHyperlinkLightModeColor : TextMarkupHyperlinkDarkModeColor;
+}
+
+void ScriptEditorWorkspace::HandleControlAdded(Object^ Sender, ControlEventArgs^ E)
+{
+	// prevent auto-hide dockable panels from closing when they have input focus
+	auto AutoHidePane = dynamic_cast<AutoHidePanel^>(E->Control);
+	if (AutoHidePane != nullptr)
+		AutoHidePane->EnableFocusCollapse = false;
 }
 
 void ScriptEditorWorkspace::SetTabStripLocation(eTabStripAlignment Location, int VerticalTabStripWidth)
@@ -378,10 +434,10 @@ void ScriptEditorWorkspace::CreateAndRegisterWindowChromeButtons(eViewRole Paren
 	CloseButton->ItemAlignment = eItemAlignment::Far;
 
 	auto DraggableSpacer = gcnew DevComponents::DotNetBar::LabelItem();
-	DraggableSpacer->Text = gcnew String(' ', 15);
+	DraggableSpacer->Text = gcnew String(' ', 25);
+	DraggableSpacer->TextAlignment = StringAlignment::Far;
+	DraggableSpacer->ImagePosition = eImagePosition::Right;
 	DraggableSpacer->ItemAlignment = eItemAlignment::Far;
-	//DraggableSpacer->BorderType = eBorderType::Sunken;
-	//DraggableSpacer->BorderSide = eBorderSide::All;
 
 	switch (ParentContainerRole)
 	{
@@ -707,28 +763,28 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->GetStartedButtonOpenScript = (gcnew DevComponents::DotNetBar::ButtonX());
 	this->GetStartedButtonNewScript = (gcnew DevComponents::DotNetBar::ButtonX());
 	this->ContextMenuProvider = (gcnew DevComponents::DotNetBar::ContextMenuBar());
+	this->ContextMenuTabStrip = (gcnew DevComponents::DotNetBar::ButtonItem());
+	this->TabStripContextMenuCloseThis = (gcnew DevComponents::DotNetBar::ButtonItem());
+	this->TabStripContextMenuCloseAllOthers = (gcnew DevComponents::DotNetBar::ButtonItem());
+	this->TabStripContextMenuCloseSaved = (gcnew DevComponents::DotNetBar::ButtonItem());
+	this->TabStripContextMenuCloseAll = (gcnew DevComponents::DotNetBar::ButtonItem());
+	this->TabStripContextMenuPopOut = (gcnew DevComponents::DotNetBar::ButtonItem());
+	this->TabStripContextMenuTabLayout = (gcnew DevComponents::DotNetBar::ButtonItem());
+	this->MenuTabLayoutTop = (gcnew DevComponents::DotNetBar::ButtonItem());
+	this->MenuTabLayoutBottom = (gcnew DevComponents::DotNetBar::ButtonItem());
+	this->MenuTabLayoutLeft = (gcnew DevComponents::DotNetBar::ButtonItem());
+	this->MenuTabLayoutRight = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->ContextMenuTextEditor = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->TextEditorContextMenuCopy = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->TextEditorContextMenuPaste = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->TextEditorContextMenuJumpToScript = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->NavigationBar = (gcnew DevComponents::DotNetBar::CrumbBar());
 	this->StatusBar = (gcnew DevComponents::DotNetBar::Bar());
-	this->StatusBarDocumentDescription = (gcnew DevComponents::DotNetBar::LabelItem());
 	this->StatusBarLineNumber = (gcnew DevComponents::DotNetBar::LabelItem());
 	this->StatusBarColumnNumber = (gcnew DevComponents::DotNetBar::LabelItem());
+	this->StatusBarDocumentDescription = (gcnew DevComponents::DotNetBar::LabelItem());
 	this->StatusBarPreprocessorOutputFlag = (gcnew DevComponents::DotNetBar::LabelItem());
 	this->StatusBarScriptBytecodeLength = (gcnew DevComponents::DotNetBar::CircularProgressItem());
-	this->ContextMenuTabStrip = (gcnew DevComponents::DotNetBar::ButtonItem());
-	this->TabStripContextMenuTabLayout = (gcnew DevComponents::DotNetBar::ButtonItem());
-	this->TabStripContextMenuCloseAllOthers = (gcnew DevComponents::DotNetBar::ButtonItem());
-	this->TabStripContextMenuCloseThis = (gcnew DevComponents::DotNetBar::ButtonItem());
-	this->TabStripContextMenuCloseSaved = (gcnew DevComponents::DotNetBar::ButtonItem());
-	this->TabStripContextMenuCloseAll = (gcnew DevComponents::DotNetBar::ButtonItem());
-	this->MenuTabLayoutTop = (gcnew DevComponents::DotNetBar::ButtonItem());
-	this->MenuTabLayoutBottom = (gcnew DevComponents::DotNetBar::ButtonItem());
-	this->MenuTabLayoutLeft = (gcnew DevComponents::DotNetBar::ButtonItem());
-	this->MenuTabLayoutRight = (gcnew DevComponents::DotNetBar::ButtonItem());
-	this->TabStripContextMenuPopOut = (gcnew DevComponents::DotNetBar::ButtonItem());
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MainTabStrip))->BeginInit();
 	this->MainTabStrip->SuspendLayout();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContainerMainToolbar))->BeginInit();
@@ -813,6 +869,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 		static_cast<System::Byte>(0)));
 	this->MainTabStrip->TabIndex = 1;
 	this->MainTabStrip->Tabs->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(2) { this->DummyTabItem, this->AnotherDummyTabItem });
+	this->MainTabStrip->TabStop = false;
 	this->MainTabStrip->TabStyle = DevComponents::DotNetBar::eSuperTabStyle::Office2010BackstageBlue;
 	this->MainTabStrip->TextAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
 	//
@@ -1396,6 +1453,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->MessagesList->ShowGroups = false;
 	this->MessagesList->Size = System::Drawing::Size(343, 167);
 	this->MessagesList->TabIndex = 0;
+	this->MessagesList->TabStop = false;
 	this->MessagesList->UseCompatibleStateImageBehavior = false;
 	this->MessagesList->View = System::Windows::Forms::View::Details;
 	this->MessagesList->VirtualMode = true;
@@ -1465,7 +1523,8 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->BookmarksList->Name = L"BookmarksList";
 	this->BookmarksList->ShowGroups = false;
 	this->BookmarksList->Size = System::Drawing::Size(192, 167);
-	this->BookmarksList->TabIndex = 1;
+	this->BookmarksList->TabIndex = 0;
+	this->BookmarksList->TabStop = false;
 	this->BookmarksList->UseCompatibleStateImageBehavior = false;
 	this->BookmarksList->View = System::Windows::Forms::View::Details;
 	this->BookmarksList->VirtualMode = true;
@@ -1576,7 +1635,8 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindResultsList->Name = L"FindResultsList";
 	this->FindResultsList->ShowGroups = false;
 	this->FindResultsList->Size = System::Drawing::Size(189, 148);
-	this->FindResultsList->TabIndex = 2;
+	this->FindResultsList->TabIndex = 0;
+	this->FindResultsList->TabStop = false;
 	this->FindResultsList->UseCompatibleStateImageBehavior = false;
 	this->FindResultsList->View = System::Windows::Forms::View::Details;
 	this->FindResultsList->VirtualMode = true;
@@ -1676,6 +1736,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->GlobalFindResultsList->ShowGroups = false;
 	this->GlobalFindResultsList->Size = System::Drawing::Size(233, 167);
 	this->GlobalFindResultsList->TabIndex = 0;
+	this->GlobalFindResultsList->TabStop = false;
 	this->GlobalFindResultsList->UseCompatibleStateImageBehavior = false;
 	this->GlobalFindResultsList->View = System::Windows::Forms::View::Details;
 	this->GlobalFindResultsList->VirtualMode = true;
@@ -1757,6 +1818,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->OutlineTreeView->ShowGroups = false;
 	this->OutlineTreeView->Size = System::Drawing::Size(150, 564);
 	this->OutlineTreeView->TabIndex = 0;
+	this->OutlineTreeView->TabStop = false;
 	this->OutlineTreeView->UseCompatibleStateImageBehavior = false;
 	this->OutlineTreeView->View = System::Windows::Forms::View::Details;
 	this->OutlineTreeView->VirtualMode = true;
@@ -1852,7 +1914,8 @@ void ScriptEditorWorkspace::InitializeComponents()
 			this->FindWindowLCIReplaceDropdown, this->FindWindowLCILookIn, this->FindWindowLayoutGroupSettings, this->FindWindowLayouyGroupButtons
 	});
 	this->FindWindowLayoutControl->Size = System::Drawing::Size(282, 564);
-	this->FindWindowLayoutControl->TabIndex = 19;
+	this->FindWindowLayoutControl->TabIndex = 0;
+	this->FindWindowLayoutControl->TabStop = false;
 	//
 	// FindWindowDropdownFind
 	//
@@ -1864,7 +1927,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowDropdownFind->Name = L"FindWindowDropdownFind";
 	this->FindWindowDropdownFind->Size = System::Drawing::Size(228, 23);
 	this->FindWindowDropdownFind->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-	this->FindWindowDropdownFind->TabIndex = 0;
+	this->FindWindowDropdownFind->TabIndex = 1;
 	//
 	// FindWindowDropdownReplace
 	//
@@ -1876,7 +1939,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowDropdownReplace->Name = L"FindWindowDropdownReplace";
 	this->FindWindowDropdownReplace->Size = System::Drawing::Size(228, 23);
 	this->FindWindowDropdownReplace->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-	this->FindWindowDropdownReplace->TabIndex = 1;
+	this->FindWindowDropdownReplace->TabIndex = 2;
 	//
 	// FindWindowComboLookIn
 	//
@@ -1891,7 +1954,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowComboLookIn->Name = L"FindWindowComboLookIn";
 	this->FindWindowComboLookIn->Size = System::Drawing::Size(228, 23);
 	this->FindWindowComboLookIn->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-	this->FindWindowComboLookIn->TabIndex = 2;
+	this->FindWindowComboLookIn->TabIndex = 3;
 	//
 	// FindWindowCheckboxMatchCase
 	//
@@ -1906,7 +1969,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowCheckboxMatchCase->Name = L"FindWindowCheckboxMatchCase";
 	this->FindWindowCheckboxMatchCase->Size = System::Drawing::Size(266, 22);
 	this->FindWindowCheckboxMatchCase->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-	this->FindWindowCheckboxMatchCase->TabIndex = 3;
+	this->FindWindowCheckboxMatchCase->TabIndex = 4;
 	this->FindWindowCheckboxMatchCase->Text = L"Match case";
 	//
 	// FindWindowCheckboxUseRegEx
@@ -1922,7 +1985,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowCheckboxUseRegEx->Name = L"FindWindowCheckboxUseRegEx";
 	this->FindWindowCheckboxUseRegEx->Size = System::Drawing::Size(266, 22);
 	this->FindWindowCheckboxUseRegEx->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-	this->FindWindowCheckboxUseRegEx->TabIndex = 5;
+	this->FindWindowCheckboxUseRegEx->TabIndex = 6;
 	this->FindWindowCheckboxUseRegEx->Text = L"Use regular expressions";
 	//
 	// FindWindowCheckBoxMatchWholeWord
@@ -1938,7 +2001,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowCheckBoxMatchWholeWord->Name = L"FindWindowCheckBoxMatchWholeWord";
 	this->FindWindowCheckBoxMatchWholeWord->Size = System::Drawing::Size(266, 22);
 	this->FindWindowCheckBoxMatchWholeWord->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-	this->FindWindowCheckBoxMatchWholeWord->TabIndex = 4;
+	this->FindWindowCheckBoxMatchWholeWord->TabIndex = 5;
 	this->FindWindowCheckBoxMatchWholeWord->Text = L"Match whole word";
 	//
 	// FindWindowCheckBoxIgnoreComments
@@ -1954,7 +2017,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowCheckBoxIgnoreComments->Name = L"FindWindowCheckBoxIgnoreComments";
 	this->FindWindowCheckBoxIgnoreComments->Size = System::Drawing::Size(266, 22);
 	this->FindWindowCheckBoxIgnoreComments->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-	this->FindWindowCheckBoxIgnoreComments->TabIndex = 6;
+	this->FindWindowCheckBoxIgnoreComments->TabIndex = 7;
 	this->FindWindowCheckBoxIgnoreComments->Text = L"Ignore comments";
 	//
 	// FindWindowButtonFind
@@ -2281,7 +2344,8 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->GetStartedButtonOpenScript->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->GetStartedButtonOpenScript->Symbol = L"";
 	this->GetStartedButtonOpenScript->SymbolSize = 20;
-	this->GetStartedButtonOpenScript->TabIndex = 1;
+	this->GetStartedButtonOpenScript->TabIndex = 0;
+	this->GetStartedButtonOpenScript->TabStop = false;
 	this->GetStartedButtonOpenScript->Text = L"<font size=\"+8\">Edit an Existing Script</font>";
 	//
 	// GetStartedButtonNewScript
@@ -2298,6 +2362,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->GetStartedButtonNewScript->Symbol = L"";
 	this->GetStartedButtonNewScript->SymbolSize = 20;
 	this->GetStartedButtonNewScript->TabIndex = 0;
+	this->GetStartedButtonNewScript->TabStop = false;
 	this->GetStartedButtonNewScript->Text = L"<font size=\"+8\">Create a New Script</font>";
 	//
 	// ContextMenuProvider
@@ -2317,6 +2382,73 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->ContextMenuProvider->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->ContextMenuProvider->TabIndex = 0;
 	this->ContextMenuProvider->TabStop = false;
+	//
+	// ContextMenuTabStrip
+	//
+	this->ContextMenuTabStrip->AutoExpandOnClick = true;
+	this->ContextMenuTabStrip->Name = L"ContextMenuTabStrip";
+	this->ContextMenuTabStrip->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(6) {
+		this->TabStripContextMenuCloseThis,
+			this->TabStripContextMenuCloseAllOthers, this->TabStripContextMenuCloseSaved, this->TabStripContextMenuCloseAll, this->TabStripContextMenuPopOut,
+			this->TabStripContextMenuTabLayout
+	});
+	this->ContextMenuTabStrip->Text = L"Tab Strip";
+	//
+	// TabStripContextMenuCloseThis
+	//
+	this->TabStripContextMenuCloseThis->Name = L"TabStripContextMenuCloseThis";
+	this->TabStripContextMenuCloseThis->Text = L"Close";
+	//
+	// TabStripContextMenuCloseAllOthers
+	//
+	this->TabStripContextMenuCloseAllOthers->Name = L"TabStripContextMenuCloseAllOthers";
+	this->TabStripContextMenuCloseAllOthers->Text = L"Close Others";
+	//
+	// TabStripContextMenuCloseSaved
+	//
+	this->TabStripContextMenuCloseSaved->Name = L"TabStripContextMenuCloseSaved";
+	this->TabStripContextMenuCloseSaved->Text = L"Close Saved";
+	//
+	// TabStripContextMenuCloseAll
+	//
+	this->TabStripContextMenuCloseAll->Name = L"TabStripContextMenuCloseAll";
+	this->TabStripContextMenuCloseAll->Text = L"Close All";
+	//
+	// TabStripContextMenuPopOut
+	//
+	this->TabStripContextMenuPopOut->BeginGroup = true;
+	this->TabStripContextMenuPopOut->Name = L"TabStripContextMenuPopOut";
+	this->TabStripContextMenuPopOut->Text = L"Pop Out";
+	//
+	// TabStripContextMenuTabLayout
+	//
+	this->TabStripContextMenuTabLayout->BeginGroup = true;
+	this->TabStripContextMenuTabLayout->Name = L"TabStripContextMenuTabLayout";
+	this->TabStripContextMenuTabLayout->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(4) {
+		this->MenuTabLayoutTop,
+			this->MenuTabLayoutBottom, this->MenuTabLayoutLeft, this->MenuTabLayoutRight
+	});
+	this->TabStripContextMenuTabLayout->Text = L"Tab Layout";
+	//
+	// MenuTabLayoutTop
+	//
+	this->MenuTabLayoutTop->Name = L"MenuTabLayoutTop";
+	this->MenuTabLayoutTop->Text = L"Top";
+	//
+	// MenuTabLayoutBottom
+	//
+	this->MenuTabLayoutBottom->Name = L"MenuTabLayoutBottom";
+	this->MenuTabLayoutBottom->Text = L"Bottom";
+	//
+	// MenuTabLayoutLeft
+	//
+	this->MenuTabLayoutLeft->Name = L"MenuTabLayoutLeft";
+	this->MenuTabLayoutLeft->Text = L"Left";
+	//
+	// MenuTabLayoutRight
+	//
+	this->MenuTabLayoutRight->Name = L"MenuTabLayoutRight";
+	this->MenuTabLayoutRight->Text = L"Right";
 	//
 	// ContextMenuTextEditor
 	//
@@ -2366,7 +2498,8 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->NavigationBar->PathSeparator = L";";
 	this->NavigationBar->Size = System::Drawing::Size(572, 22);
 	this->NavigationBar->Style = DevComponents::DotNetBar::eCrumbBarStyle::Office2007;
-	this->NavigationBar->TabIndex = 9;
+	this->NavigationBar->TabIndex = 0;
+	this->NavigationBar->TabStop = false;
 	//
 	// StatusBar
 	//
@@ -2390,8 +2523,8 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->StatusBar->ForeColor = System::Drawing::Color::Black;
 	this->StatusBar->IsMaximized = false;
 	this->StatusBar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(5) {
-		this->StatusBarLineNumber, this->StatusBarColumnNumber, this->StatusBarDocumentDescription,
-			this->StatusBarPreprocessorOutputFlag, this->StatusBarScriptBytecodeLength
+		this->StatusBarLineNumber,
+			this->StatusBarColumnNumber, this->StatusBarDocumentDescription, this->StatusBarPreprocessorOutputFlag, this->StatusBarScriptBytecodeLength
 	});
 	this->StatusBar->ItemSpacing = 10;
 	this->StatusBar->Location = System::Drawing::Point(0, 860);
@@ -2406,28 +2539,30 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->StatusBar->TabIndex = 13;
 	this->StatusBar->TabStop = false;
 	//
-	// StatusBarDocumentDescription
-	//
-	this->StatusBarDocumentDescription->Name = L"StatusBarDocumentDescription";
-	this->StatusBarDocumentDescription->Text = L"Script Name";
-	this->StatusBarDocumentDescription->PaddingLeft = 15;
-	//
 	// StatusBarLineNumber
 	//
+	this->StatusBarLineNumber->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Center;
 	this->StatusBarLineNumber->Name = L"StatusBarLineNumber";
 	this->StatusBarLineNumber->Text = L"Line 0";
 	//
 	// StatusBarColumnNumber
 	//
+	this->StatusBarColumnNumber->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Center;
 	this->StatusBarColumnNumber->Name = L"StatusBarColumnNumber";
 	this->StatusBarColumnNumber->Text = L"Column 0";
+	//
+	// StatusBarDocumentDescription
+	//
+	this->StatusBarDocumentDescription->Name = L"StatusBarDocumentDescription";
+	this->StatusBarDocumentDescription->PaddingLeft = 15;
+	this->StatusBarDocumentDescription->Text = L"Script Name";
 	//
 	// StatusBarPreprocessorOutputFlag
 	//
 	this->StatusBarPreprocessorOutputFlag->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"StatusBarPreprocessorOutputFlag.Image")));
 	this->StatusBarPreprocessorOutputFlag->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
 	this->StatusBarPreprocessorOutputFlag->Name = L"StatusBarPreprocessorOutputFlag";
-	this->StatusBarPreprocessorOutputFlag->PaddingLeft = 10;
+	this->StatusBarPreprocessorOutputFlag->PaddingLeft = 15;
 	this->StatusBarPreprocessorOutputFlag->Text = L"Preprocessor Output <b>ON</b>";
 	this->StatusBarPreprocessorOutputFlag->Visible = false;
 	//
@@ -2443,73 +2578,6 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->StatusBarScriptBytecodeLength->TextPadding->Left = 5;
 	this->StatusBarScriptBytecodeLength->TextPadding->Right = 5;
 	this->StatusBarScriptBytecodeLength->Visible = false;
-	//
-	// ContextMenuTabStrip
-	//
-	this->ContextMenuTabStrip->AutoExpandOnClick = true;
-	this->ContextMenuTabStrip->Name = L"ContextMenuTabStrip";
-	this->ContextMenuTabStrip->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(6) {
-		this->TabStripContextMenuCloseThis,
-			this->TabStripContextMenuCloseAllOthers, this->TabStripContextMenuCloseSaved, this->TabStripContextMenuCloseAll, this->TabStripContextMenuPopOut,
-			this->TabStripContextMenuTabLayout
-	});
-	this->ContextMenuTabStrip->Text = L"Tab Strip";
-	//
-	// TabStripContextMenuTabLayout
-	//
-	this->TabStripContextMenuTabLayout->BeginGroup = true;
-	this->TabStripContextMenuTabLayout->Name = L"TabStripContextMenuTabLayout";
-	this->TabStripContextMenuTabLayout->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(4) {
-		this->MenuTabLayoutTop,
-			this->MenuTabLayoutBottom, this->MenuTabLayoutLeft, this->MenuTabLayoutRight
-	});
-	this->TabStripContextMenuTabLayout->Text = L"Tab Layout";
-	//
-	// TabStripContextMenuCloseAllOthers
-	//
-	this->TabStripContextMenuCloseAllOthers->Name = L"TabStripContextMenuCloseAllOthers";
-	this->TabStripContextMenuCloseAllOthers->Text = L"Close Others";
-	//
-	// TabStripContextMenuCloseThis
-	//
-	this->TabStripContextMenuCloseThis->Name = L"TabStripContextMenuCloseThis";
-	this->TabStripContextMenuCloseThis->Text = L"Close";
-	//
-	// TabStripContextMenuCloseSaved
-	//
-	this->TabStripContextMenuCloseSaved->Name = L"TabStripContextMenuCloseSaved";
-	this->TabStripContextMenuCloseSaved->Text = L"Close Saved";
-	//
-	// TabStripContextMenuCloseAll
-	//
-	this->TabStripContextMenuCloseAll->Name = L"TabStripContextMenuCloseAll";
-	this->TabStripContextMenuCloseAll->Text = L"Close All";
-	//
-	// MenuTabLayoutTop
-	//
-	this->MenuTabLayoutTop->Name = L"MenuTabLayoutTop";
-	this->MenuTabLayoutTop->Text = L"Top";
-	//
-	// MenuTabLayoutBottom
-	//
-	this->MenuTabLayoutBottom->Name = L"MenuTabLayoutBottom";
-	this->MenuTabLayoutBottom->Text = L"Bottom";
-	//
-	// MenuTabLayoutLeft
-	//
-	this->MenuTabLayoutLeft->Name = L"MenuTabLayoutLeft";
-	this->MenuTabLayoutLeft->Text = L"Left";
-	//
-	// MenuTabLayoutRight
-	//
-	this->MenuTabLayoutRight->Name = L"MenuTabLayoutRight";
-	this->MenuTabLayoutRight->Text = L"Right";
-	//
-	// TabStripContextMenuPopOut
-	//
-	this->TabStripContextMenuPopOut->BeginGroup = true;
-	this->TabStripContextMenuPopOut->Name = L"TabStripContextMenuPopOut";
-	this->TabStripContextMenuPopOut->Text = L"Pop Out";
 	//
 	// ScriptEditorWorkspace
 	//
@@ -2530,10 +2598,12 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->Controls->Add(this->StatusBar);
 	this->Controls->Add(this->MainTabStrip);
 	this->DoubleBuffered = true;
+	this->ForeColor = System::Drawing::Color::Black;
 	this->KeyPreview = true;
 	this->Name = L"ScriptEditorWorkspace";
 	this->RenderFormIcon = false;
 	this->RenderFormText = false;
+	this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
 	this->StartPosition = System::Windows::Forms::FormStartPosition::Manual;
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MainTabStrip))->EndInit();
 	this->MainTabStrip->ResumeLayout(false);
@@ -2634,12 +2704,19 @@ void ScriptEditorWorkspace::FinalizeComponents()
 	SetObjectListViewTextOverlay(FindResultsList, ListViewOverlayForeColor, ListViewOverlayBackColor);
 	SetObjectListViewTextOverlay(GlobalFindResultsList, ListViewOverlayForeColor, ListViewOverlayBackColor);
 
-	auto AccentColor = preferences::SettingsHolder::Get()->Appearance->AccentColor;
-	if (preferences::SettingsHolder::Get()->Appearance->DarkMode)
-		StyleManager->ChangeStyle(eStyle::VisualStudio2012Dark, AccentColor);
-	else
-		StyleManager->ChangeStyle(eStyle::VisualStudio2012Light, AccentColor);
-	StyleManager->MetroColorParameters = DotNetBar::Metro::ColorTables::MetroColorGeneratorParameters(StyleManager->MetroColorParameters.CanvasColor, AccentColor);
+	// init preferences-dependent state
+	HandlePreferencesChanged(nullptr, nullptr);
+
+	// ### TODO doesn't work correctly; panes go missing, etc
+	//try
+	//{
+	//	if (System::IO::File::Exists(DockablePanelLayoutFileName))
+	//		DockManager->LoadLayout(DockablePanelLayoutFileName);
+	//}
+	//catch (Exception^ E)
+	//{
+	//	DebugPrint("Couldn't load script editor UI layout from disk! Exception: " + E->ToString());
+	//}
 
 	this->ResumeLayout();
 }
@@ -2662,6 +2739,7 @@ void ScriptEditorWorkspace::InitializeViewComponents()
 	SetupViewComponentButton(MenuTabLayoutLeft, eViewRole::MainTabStrip_ContextMenu_TabLayout_Left);
 	SetupViewComponentButton(MenuTabLayoutRight, eViewRole::MainTabStrip_ContextMenu_TabLayout_Right);
 
+	SetupViewComponentContainer(ContainerMainToolbar, eViewRole::MainToolbar);
 	SetupViewComponentButton(ToolbarNewScript, eViewRole::MainToolbar_NewScript);
 	SetupViewComponentButton(ToolbarOpenScript, eViewRole::MainToolbar_OpenScript);
 	SetupViewComponentButton(ToolbarSaveScript, eViewRole::MainToolbar_SaveScript);
@@ -2784,10 +2862,14 @@ ScriptEditorWorkspace::ScriptEditorWorkspace()
 	ViewComponents = gcnew Dictionary<eViewRole, ViewComponentData^>;
 	DelegateViewComponentEventRouter = gcnew components::ViewComponentEventRaiser(this, &ScriptEditorWorkspace::HandleViewComponentEvent);
 	DelegatePreferencesChanged = gcnew EventHandler(this, &ScriptEditorWorkspace::HandlePreferencesChanged);
+	DelegateControlAdded = gcnew ControlEventHandler(this, &ScriptEditorWorkspace::HandleControlAdded);
 	IntelliSenseInterface = gcnew intellisense::IntelliSenseInterfaceView;
 
 	SkipViewComponentEventProcessing = true;
 	{
+		// we need to hook this event up before we initialize the dock manager
+		this->ControlAdded += DelegateControlAdded;
+
 		InitializeComponents();
 		InitializeViewComponents();
 		FinalizeComponents();
@@ -2799,13 +2881,23 @@ ScriptEditorWorkspace::ScriptEditorWorkspace()
 
 ScriptEditorWorkspace::~ScriptEditorWorkspace()
 {
+	this->ControlAdded -= DelegateControlAdded;
 	preferences::SettingsHolder::Get()->PreferencesChanged -= DelegatePreferencesChanged;
-
-	DeinitializeViewComponents();
-	SAFEDELETE_CLR(IntelliSenseInterface);
 
 	auto Bounds = this->WindowState == FormWindowState::Normal ? this->Bounds : this->RestoreBounds;
 	nativeWrapper::g_CSEInterfaceTable->ScriptEditor.SaveEditorBoundsToINI(Bounds.Left, Bounds.Top, Bounds.Width, Bounds.Height);
+
+	//try
+	//{
+	//	DockManager->SaveLayout(DockablePanelLayoutFileName);
+	//}
+	//catch (Exception^ E)
+	//{
+	//	DebugPrint("Couldn't save script editor UI layout to disk! Exception: " + E->ToString());
+	//}
+
+	DeinitializeViewComponents();
+	SAFEDELETE_CLR(IntelliSenseInterface);
 
 	if (components)
 	{
@@ -2890,9 +2982,6 @@ void ScriptEditorWorkspace::Reveal(Rectangle InitialBounds)
 
 	this->Focus();
 	this->BringToFront();
-
-	MainTabStrip->Refresh();
-	ContainerMainToolbar->Refresh();
 }
 
 void ScriptEditorWorkspace::BeginUpdate()

@@ -1,5 +1,9 @@
 #pragma once
 
+#include "IScriptEditorModel.h"
+#include "SemanticAnalysis.h"
+
+
 namespace cse
 {
 
@@ -16,239 +20,165 @@ namespace avalonEdit
 {
 
 
-// in retrospect, directly using AvalonEdit's XSHD interfaces would have taken less effort
-ref class XSHDColor;
+using namespace ICSharpCode;
 
-typedef ICSharpCode::AvalonEdit::Highlighting::IHighlightingDefinition		AvalonEditHighlightingDefinition;
 
-// base interfaces
-ref class IXSHDElement
+interface class IXshdElement
+{
+	virtual String^ Serialize();
+};
+
+ref struct XshdPropertyName : public IXshdElement
+{
+	property String^ Name;
+
+	XshdPropertyName();
+	XshdPropertyName(String^ Name);
+
+	virtual String^ Serialize();
+};
+
+ref struct XshdPropertyColor : public IXshdElement
+{
+	property Color Foreground;
+	property Color Background;
+
+	XshdPropertyColor();
+	XshdPropertyColor(Drawing::Color ForeColor, Drawing::Color BackColor);
+
+	virtual String^ Serialize();
+};
+
+ref struct XshdPropertyFont : public IXshdElement
+{
+	property Windows::FontWeight Weight;
+	property Windows::FontStyle Style;
+
+	XshdPropertyFont();
+	XshdPropertyFont(bool Bold, bool Italic);
+
+	virtual String^ Serialize();
+};
+
+
+ref struct XshdColor : public IXshdElement
+{
+	property XshdPropertyName^ Name;
+	property XshdPropertyColor^ Color;
+	property XshdPropertyFont^ Font;
+
+	XshdColor(String^ Name);
+	XshdColor(String^ Name, Drawing::Color ForeColor, Drawing::Color BackColor, bool Bold, bool Italic);
+
+	void Update(Drawing::Color ForeColor, Drawing::Color BackColor, bool Bold, bool Italic);
+	virtual String^ Serialize();
+	String^ SerializeAsProperty();
+};
+
+ref struct XshdKeywords : public IXshdElement
+{
+private:
+	property HashSet<String^>^ Words;
+public:
+	property XshdColor^ Color;
+
+	XshdKeywords(XshdColor^ NamedColor);
+
+	void AddKeyword(String^ Keyword);
+	void ClearKeywords();
+	virtual String^ Serialize();
+};
+
+ref struct XshdRuleSet : public IXshdElement
+{
+private:
+	property List<IXshdElement^>^ Children;
+public:
+	property XshdPropertyName^ Name;
+	property bool IgnoreCase;
+
+	XshdRuleSet();
+	XshdRuleSet(String^ Name);
+
+	void AddChild(IXshdElement^ Child);
+	XshdRuleSet^ ShallowCopy();
+	virtual String^ Serialize();
+	String^ SerializeAsProperty();
+};
+
+ref struct XshdRule : public IXshdElement
+{
+	property XshdColor^ Color;
+	property String^ Value;
+
+	XshdRule(XshdColor^ NamedColor);
+
+	virtual String^ Serialize();
+};
+
+ref struct XshdSpan : public IXshdElement
 {
 public:
-	virtual String^				Serialize() = 0;
+	property XshdColor^ Color;
+	property String^ Begin;
+	property String^ End;
+	property bool MultiLine;
+	property XshdRuleSet^ RuleSet;
 
-	String^						SerializeNameProperty(String^ Name);
-	String^						SerializeFontWeightProperty(bool Bold);
-	String^						SerializeColorProperty(Color Foreground, Color Background);
-	String^						SerializeNamedColorProperty(XSHDColor^ Color);
-};
-public interface class IXSHDPropertyName
-{
-	property String^		Name;
-};
-public interface class IXSHDPropertyValue
-{
-	property String^		Value;
-};
-public interface class IXSHDPropertyColor
-{
-	property Color			Foreground;
-	property Color			Background;
-};
-public interface class IXSHDPropertyFontWeight
-{
-	property bool			Bold;
+	XshdSpan(XshdColor^ NamedColor);
+	XshdSpan(XshdColor^ NamedColor, XshdRuleSet^ NamedRuleSet);
+
+	virtual String^ Serialize();
 };
 
-// elements
-ref class XSHDColor : public IXSHDElement, public IXSHDPropertyName, public IXSHDPropertyColor, public IXSHDPropertyFontWeight
+
+ref class SyntaxHighlightingManager
 {
-	String^					_Name;
-	Color					_Foreground;
-	Color					_Background;
-	bool					_Bold;
-public:
+	static SyntaxHighlightingManager^ Singleton = nullptr;
 
-	XSHDColor(String^ Name, Color Foreground, Color Background, bool Bold) :
-		_Name(Name), _Foreground(Foreground), _Background(Background), _Bold(Bold) {}
-
-		virtual String^			Serialize() override;
-
-		property String^		Name
-		{
-			virtual String^ get() { return _Name; }
-			virtual void set(String^ value) { _Name = value; }
-		}
-		property Color			Foreground
-		{
-			virtual Color get() { return _Foreground; }
-			virtual void set(Color value) { _Foreground = value; }
-		}
-		property Color			Background
-		{
-			virtual Color get() { return _Background; }
-			virtual void set(Color value) { _Background = value; }
-		}
-		property bool			Bold
-		{
-			virtual bool get() { return _Bold; }
-			virtual void set(bool value) { _Bold = value; }
-		}
-};
-
-ref class XSHDWord : public IXSHDElement, public IXSHDPropertyValue
-{
-	String^					_Value;
-public:
-	XSHDWord(String^ Value) : _Value(Value) {}
-
-	virtual String^			Serialize() override;
-
-	property String^		Value
+	ref struct Colors
 	{
-		virtual String^ get() { return _Value; }
-		virtual void set(String^ value) { _Value = value; }
-	}
-};
+		property XshdColor^ ColorComment;
+		property XshdColor^ ColorPreprocessor;
+		property XshdColor^ ColorKeyword;
+		property XshdColor^ ColorScriptBlock;
+		property XshdColor^ ColorDigit;
+		property XshdColor^ ColorString;
+		property XshdColor^ ColorLocalVariable;
+		property XshdColor^ ColorTaskComment;
 
-ref class XSHDKeywords : public IXSHDElement, public IXSHDPropertyColor, public IXSHDPropertyFontWeight
-{
-	XSHDColor^						NamedColor;
-	LinkedList<XSHDWord^>^			Words;
+		Colors();
 
-	Color							_Foreground;
-	Color							_Background;
-	bool							_Bold;
+		void UpdateFromPreferences();
+		String^ Serialize();
+	};
+
+	using BgAnalyserT = model::components::IBackgroundSemanticAnalyzer;
+
+	Colors^ HighlightingColors;
+	XshdRuleSet^ MainRuleSet;
+	XshdRuleSet^ CommentSpanRuleSet;
+	obScriptParsing::IObScriptIdentifiers^ ScriptIdentifiers;
+	Dictionary<BgAnalyserT^, AvalonEdit::TextEditor^>^ RegisteredEditors;
+
+	EventHandler^ DelegatePreferencesChanged;
+	model::components::IBackgroundSemanticAnalyzer::AnalysisCompleteEventHandler^ DelegateBgAnalysisComplete;
+
+	void Preferences_Changed(Object^ Sender, EventArgs^ E);
+	void BgAnalysis_Complete(Object^ Sender, BgAnalyserT::AnalysisCompleteEventArgs^ E);
+
+	XshdRuleSet^ GenerateMainRuleSet(Colors^ XshdColors, XshdRuleSet^ CommentSpanRules);
+	XshdRuleSet^ GenerateCommentSpanRuleSet(Colors^ XshdColors);
+
+	SyntaxHighlightingManager(obScriptParsing::IObScriptIdentifiers^ ScriptIdentifiers);
 public:
-	XSHDKeywords(XSHDColor^ NamedColor, Color Foreground, Color Background, bool Bold) : Words(gcnew LinkedList<XSHDWord^>()), NamedColor(NamedColor), _Foreground(Foreground), _Background(Background), _Bold(Bold) {}
+	~SyntaxHighlightingManager();
 
-	virtual String^			Serialize() override;
+	void RegisterScriptDocument(model::IScriptDocument^ Document, AvalonEdit::TextEditor^ TextEditor);
+	void DeregisterScriptDocument(model::IScriptDocument^ Document);
+	AvalonEdit::Highlighting::IHighlightingDefinition^ GenerateHighlightingDefinition(obScriptParsing::AnalysisData^ SemanticAnalysisData);
 
-	void					AddWord(XSHDWord^ Word);
-
-	property Color			Foreground
-	{
-		virtual Color get() { return _Foreground; }
-		virtual void set(Color value) { _Foreground = value; }
-	}
-	property Color			Background
-	{
-		virtual Color get() { return _Background; }
-		virtual void set(Color value) { _Background = value; }
-	}
-	property bool			Bold
-	{
-		virtual bool get() { return _Bold; }
-		virtual void set(bool value) { _Bold = value; }
-	}
-};
-
-ref class XSHDBegin : public IXSHDElement, public IXSHDPropertyValue
-{
-	XSHDColor^					NamedColor;
-
-	String^						_Value;
-public:
-	XSHDBegin(XSHDColor^ NamedColor, String^ Value) : NamedColor(NamedColor), _Value(Value) {}
-
-	virtual String^			Serialize() override;
-
-	property String^		Value
-	{
-		virtual String^ get() { return _Value; }
-		virtual void set(String^ value) { _Value = value; }
-	}
-};
-
-ref class XSHDEnd : public IXSHDElement, public IXSHDPropertyValue
-{
-	String^						_Value;
-public:
-	XSHDEnd(String^ Value) : _Value(Value) {}
-
-	virtual String^			Serialize() override;
-
-	property String^		Value
-	{
-		virtual String^ get() { return _Value; }
-		virtual void set(String^ value) { _Value = value; }
-	}
-};
-
-ref class XSHDRuleset;
-
-ref class XSHDSpan : public IXSHDElement
-{
-	XSHDColor^						NamedColor;
-	XSHDRuleset^					Ruleset;
-	bool							MultiLine;
-
-	LinkedList<IXSHDElement^>^		Children;
-public:
-	XSHDSpan(XSHDColor^ NamedColor, XSHDRuleset^ Ruleset, bool MultiLine) : Children(gcnew LinkedList<IXSHDElement^>()), NamedColor(NamedColor), Ruleset(Ruleset), MultiLine(MultiLine) {}
-
-	virtual String^					Serialize() override;
-
-	void							AddChild(IXSHDElement^ Child);
-};
-
-ref class XSHDRuleset : public IXSHDElement, public IXSHDPropertyName
-{
-	LinkedList<IXSHDElement^>^		Children;
-
-	String^							_Name;
-public:
-	XSHDRuleset(String^ Name) : Children(gcnew LinkedList<IXSHDElement^>()), _Name(Name) {}
-
-	virtual String^					Serialize() override;
-
-	void							AddChild(IXSHDElement^ Child);
-
-	property String^		Name
-	{
-		virtual String^ get() { return _Name; }
-		virtual void set(String^ value) { _Name = value; }
-	}
-};
-
-ref class XSHDRule : public IXSHDElement, public IXSHDPropertyValue
-{
-	XSHDColor^					NamedColor;
-
-	String^						_Value;
-public:
-	XSHDRule(XSHDColor^ NamedColor, String^ Value) : NamedColor(NamedColor), _Value(Value) {}
-
-	virtual String^			Serialize() override;
-
-	property String^		Value
-	{
-		virtual String^ get() { return _Value; }
-		virtual void set(String^ value) { _Value = value; }
-	}
-};
-
-ref class XSHDArbitrary : public IXSHDElement, public IXSHDPropertyValue
-{
-	String^						_Value;
-public:
-	XSHDArbitrary(String^ Value) : _Value(Value) {}
-
-	virtual String^			Serialize() override;
-
-	property String^		Value
-	{
-		virtual String^ get() { return _Value; }
-		virtual void set(String^ value) { _Value = value; }
-	}
-};
-
-// definition manager
-ref class AvalonEditXSHDManager
-{
-protected:
-	List<String^>^											GetKeywordList(void);
-	List<String^>^											GetBlockTypeList(void);
-
-	String^													CommentMarkerRuleset;
-	String^													StableDefinitions;			// XML of the base highlighting defs, updated
-	XSHDColor^												LocalVarsColor;
-public:
-	void													UpdateBaseDefinitions(void);
-	AvalonEditHighlightingDefinition^						GenerateHighlightingDefinition(List<String^>^ LocalVariables);
-
-	AvalonEditXSHDManager();
-	~AvalonEditXSHDManager();
+	static SyntaxHighlightingManager^ Get();
 };
 
 

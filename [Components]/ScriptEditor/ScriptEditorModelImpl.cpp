@@ -599,8 +599,12 @@ System::String^ ScriptDocument::PreprocessedScriptText::get()
 
 void ScriptDocument::ScriptType::set(IScriptDocument::eScriptType v)
 {
-	Type= v;
+	if (Type == v)
+		return;
+
+	Type = v;
 	OnStateChangedType(v);
+	Dirty = true;
 }
 
 void ScriptDocument::Initialize(componentDLLInterface::ScriptData* ScriptData, bool UseAutoRecoveryFile)
@@ -734,7 +738,7 @@ UInt32 ScriptDocument::GetErrorCount(UInt32 Line)
 		if (!Itr->Valid)
 			continue;
 
-		if ((Itr->Line == 0 || Itr->Line == Line) && Itr->Type == ScriptDiagnosticMessage::eMessageType::Error)
+		if ((Line == 0 || Itr->Line == Line) && Itr->Type == ScriptDiagnosticMessage::eMessageType::Error)
 			++Count;
 	}
 
@@ -749,7 +753,7 @@ UInt32 ScriptDocument::GetWarningCount(UInt32 Line)
 		if (!Itr->Valid)
 			continue;
 
-		if ((Itr->Line == 0 || Itr->Line == Line) && Itr->Type == ScriptDiagnosticMessage::eMessageType::Warning)
+		if ((Line == 0 || Itr->Line == Line) && Itr->Type == ScriptDiagnosticMessage::eMessageType::Warning)
 			++Count;
 	}
 
@@ -825,6 +829,41 @@ UInt32 ScriptDocument::GetBookmarkCount(UInt32 Line)
 	}
 
 	return Count;
+}
+
+Dictionary<UInt32, IScriptDocument::PerLineAnnotationCounts^>^ ScriptDocument::CountAnnotationsForLineRange(UInt32 StartLine, UInt32 EndLine)
+{
+	auto Counts = gcnew Dictionary<UInt32, IScriptDocument::PerLineAnnotationCounts^>;
+	for (int i = StartLine; i <= EndLine; ++i)
+		Counts->Add(i, gcnew IScriptDocument::PerLineAnnotationCounts);
+
+	for each (auto Itr in Messages)
+	{
+		if (!Itr->Valid)
+			continue;
+
+		auto MessageLine = Itr->Line;
+		if (MessageLine >= StartLine && MessageLine <= EndLine)
+		{
+			auto LineCounts = Counts[MessageLine];
+			if (Itr->Type == ScriptDiagnosticMessage::eMessageType::Error)
+				LineCounts->ErrorCount += 1;
+			else if (Itr->Type == ScriptDiagnosticMessage::eMessageType::Warning)
+				LineCounts->WarningCount += 1;
+		}
+	}
+
+	for each (auto Itr in Bookmarks)
+	{
+		if (!Itr->Valid)
+			continue;
+
+		auto BookMarkLine = Itr->Line;
+		if (BookMarkLine >= StartLine && BookMarkLine <= EndLine)
+			Counts[BookMarkLine]->BookmarkCount += 1;
+	}
+
+	return Counts;
 }
 
 void ScriptDocument::PushStateToSubscribers()

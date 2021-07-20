@@ -207,12 +207,15 @@ generic <typename TValue>
 ref class CaselessFuzzyTrie : public Gma::DataStructures::StringSearch::PatriciaTrie<TValue>
 {
 public:
-	ref struct FuzzyMatchResult
+	ref struct FuzzyMatchResult : public IEquatable<FuzzyMatchResult^>
 	{
 		TValue Value;
 		int Cost;
 
 		FuzzyMatchResult(TValue Value, int Cost);
+
+		virtual bool Equals(FuzzyMatchResult^ obj);
+		virtual int GetHashCode() override;
 	};
 private:
 	static FuzzyMatchResult^ MapToFuzzyMatchResultSelector(TValue Value);
@@ -243,6 +246,49 @@ public:
 	virtual IEnumerable<TValue>^ Retrieve(String^ Query, System::Func<TValue, bool>^ Predicate) override;
 	virtual IEnumerable<FuzzyMatchResult^>^ LevenshteinMatch(String^ Query, UInt32 MaxEditDistanceCost); // pass an empty string to retrieve all items
 	virtual IEnumerable<FuzzyMatchResult^>^ LevenshteinMatch(String^ Query, UInt32 MaxEditDistanceCost, System::Func<TValue, bool>^ Predicate);
+};
+
+
+// For use with DotNetBar::SuperToolTip
+// Text can include limited HTML-markup
+// c.f https://www.devcomponents.com/kb2/?p=515
+interface class IRichTooltipContentProvider
+{
+	static enum class eBackgroundColor
+	{
+		Default,
+		Blue,
+		Yellow,
+		Green,
+		Red,
+		Magenta,
+		BlueMist,
+		Lemon,
+		Apple,
+		Silver,
+		Gray
+	};
+
+	property String^ TooltipHeaderText;
+	property String^ TooltipBodyText;
+	property Image^ TooltipBodyImage;
+	property String^ TooltipFooterText;
+	property Image^ TooltipFooterImage;
+	property eBackgroundColor TooltipBgColor;
+};
+
+DevComponents::DotNetBar::eTooltipColor MapRichTooltipBackgroundColorToDotNetBar(IRichTooltipContentProvider::eBackgroundColor BgColor);
+
+
+// wraps a call to SuperToolTip::Show to override the text and background colors
+ref struct  SuperTooltipColorSwapper
+{
+	property Color TextColor;
+	property Color BackColor;
+
+	SuperTooltipColorSwapper(Color Text, Color Background);
+
+	void ShowTooltip(DevComponents::DotNetBar::SuperTooltip^ Tooltip, Object^ Sender, Point ScreenPosition);
 };
 
 

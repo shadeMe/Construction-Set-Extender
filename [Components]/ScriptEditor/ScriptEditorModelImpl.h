@@ -157,6 +157,8 @@ public:
 	virtual List<ScriptBookmark^>^ GetBookmarks(UInt32 Line);
 	virtual UInt32 GetBookmarkCount(UInt32 Line);
 
+	virtual Dictionary<UInt32, IScriptDocument::PerLineAnnotationCounts^>^ CountAnnotationsForLineRange(UInt32 StartLine, UInt32 EndLine);
+
 	virtual void PushStateToSubscribers();
 
 	virtual bool TogglePreprocessorOutput(bool Enabled);

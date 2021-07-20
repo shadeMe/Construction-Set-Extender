@@ -1051,6 +1051,12 @@ bool InputManager::IsBound(utilities::KeyCombo^ Combo)
 	return KeyChordCommands->ContainsKey(Combo);
 }
 
+void InputManager::FocusActiveDocumentTextEditor(IScriptEditorController^ Controller)
+{
+	if (Controller->ActiveDocument && !Controller->ActiveDocument->TextEditor->Focused)
+		Controller->ActiveDocument->TextEditor->FocusTextArea();
+}
+
 InputManager::InputManager(view::IScriptEditorView^ ParentView)
 {
 	this->ParentView = ParentView;
@@ -1135,10 +1141,36 @@ void InputManager::AddKeyChordCommand(utilities::IAction^ Action, utilities::Key
 	AddKeyChordCommand(Action, Primary, nullptr, OverwriteExisting, ActionRoles);
 }
 
+void InputManager::HandleInputFocusChange(view::ViewComponentEvent^ E, IScriptEditorController^ Controller)
+{
+	switch (E->Component->Role)
+	{
+	case view::eViewRole::MainWindow:
+	{
+		auto EventType = safe_cast<view::components::IForm::eEvent>(E->EventType);
+		if (EventType == view::components::IForm::eEvent::FocusLeave)
+		{
+			auto MainToolbar = Controller->View->GetComponentByRole(view::eViewRole::MainToolbar)->AsContainer();
+			if (MainToolbar->Focused)
+				FocusActiveDocumentTextEditor(Controller);
+		}
+
+		break;
+	}
+	}
+}
+
 void InputManager::HandleKeyDown(KeyEventArgs^ E, IScriptEditorController^ Controller)
 {
 	E->Handled = true;
 	TextEditorContextMenu->Hide();
+
+	switch (E->KeyCode)
+	{
+	case Keys::Escape:
+		FocusActiveDocumentTextEditor(Controller);
+		break;
+	}
 
 	if (LastActiveFirstChord)
 	{
@@ -1170,7 +1202,18 @@ void InputManager::HandleKeyDown(KeyEventArgs^ E, IScriptEditorController^ Contr
 	}
 
 	auto FirstKeyOfChord = utilities::KeyCombo::FromKeyEvent(E);
-	if (!IsBound(FirstKeyOfChord))
+
+	if (FirstKeyOfChord->Equals(SystemMenuActivateKey) || FirstKeyOfChord->Equals(SystemMenuDeactivateKey))
+	{
+		auto MainToolbar = Controller->View->GetComponentByRole(view::eViewRole::MainToolbar)->AsContainer();
+		if (MainToolbar->Focused)
+			FocusActiveDocumentTextEditor(Controller);
+		else if (Controller->ActiveDocument == nullptr || Controller->ActiveDocument->TextEditor->Focused)
+			MainToolbar->Focus();
+
+		return;
+	}
+	else if (!IsBound(FirstKeyOfChord))
 	{
 		E->Handled = false;
 		return;
@@ -1180,10 +1223,7 @@ void InputManager::HandleKeyDown(KeyEventArgs^ E, IScriptEditorController^ Contr
 	if (SingleKeyChordCommand)
 		SingleKeyChordCommand->Action->Invoke();
 	else
-	{
 		LastActiveFirstChord = FirstKeyOfChord;
-		//Controller->View->ShowNotification("(" + LastActiveFirstChord->ToString() + ") was pressed. Waiting for second key of chord...", nullptr, 2500);
-	}
 }
 
 void InputManager::HandleTextEditorMouseClick(textEditor::TextEditorMouseClickEventArgs^ E, IScriptEditorController^ Controller)

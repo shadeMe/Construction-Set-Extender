@@ -49,6 +49,17 @@ void SetControlRedraw(Control^ Window, bool Enabled)
 	SendMessageA(Window->Handle, WM_SETREDRAW, static_cast<IntPtr>(Enabled), static_cast<IntPtr>(0));
 }
 
+System::Windows::Forms::Control^ GetControlWithFocus()
+{
+	Control^ FocusedControl = nullptr;
+	IntPtr FocusedHandle = GetFocus();
+
+	if (FocusedHandle != IntPtr::Zero)
+		FocusedControl = Control::FromHandle(FocusedHandle);
+
+	return FocusedControl;
+}
+
 MarshalledFormData::MarshalledFormData(componentDLLInterface::FormData* NativeData)
 {
 	EditorId = gcnew String(NativeData->EditorID);

@@ -51,10 +51,10 @@ CSEPreprocessorToken::CSEPreprocessorToken(String^ Token, StandardOutputError^ E
 			{
 				String^ TokenBuffer = Itr;
 
-				DefineDirective::AccessoryOperatorType DefineOperator = DefineDirective::GetAccessoryOperatorFromToken(Itr);
+				DefineDirective::eAccessoryOperatorType DefineOperator = DefineDirective::GetAccessoryOperatorFromToken(Itr);
 				switch (DefineOperator)
 				{
-				case DefineDirective::AccessoryOperatorType::None:
+				case DefineDirective::eAccessoryOperatorType::None:
 					break;
 				default:
 					TokenBuffer = Itr->Substring(DefineDirective::AccessoryOperatorIdentifier[(int)DefineOperator]->Length);
@@ -82,6 +82,11 @@ CSEPreprocessorToken::CSEPreprocessorToken(String^ Token, StandardOutputError^ E
 		this->Token = Token;
 		ErrorOutput(PreprocessorInstance->GetInstanceData()->CurrentLine, "Failed to parse TOKEN '" + Token + "' - " + E->Message);
 	}
+}
+
+System::String^ CSEPreprocessorDirective::GetDirectiveKeyword(eDirectiveType DirectiveType, eEncodingType EncodingType)
+{
+	return EncodingIdentifier[safe_cast<int>(EncodingType)] + DirectiveIdentifier[safe_cast<int>(DirectiveType)];
 }
 
 String^ CSEPreprocessorDirective::GetMultilineValue(LineTrackingStringReader^% TextReader, String^% SliceStart, String^% SliceEnd)
@@ -177,8 +182,8 @@ bool DefineDirective::IsNameValid(String^ Name)
 DefineDirective::DefineDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber)
 {
 	this->Token = Token;
-	this->Type = DirectiveType::Define;
-	this->Encoding = EncodingType::SingleLine;
+	this->Type = eDirectiveType::Define;
+	this->Encoding = eEncodingType::SingleLine;
 
 	obScriptParsing::LineTokenizer^ LocalParser = gcnew obScriptParsing::LineTokenizer();
 
@@ -195,7 +200,7 @@ DefineDirective::DefineDirective(String^ Token, StandardOutputError^ ErrorOutput
 				throw gcnew InvalidOperationException("No value specified.");
 			}
 
-			int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::SingleLine] + DirectiveIdentifier[(int)DirectiveType::Define]);
+			int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)eEncodingType::SingleLine] + DirectiveIdentifier[(int)eDirectiveType::Define]);
 			Name = LocalParser->Tokens[Index + 1];
 			Value = Token->Substring(LocalParser->Indices[Index + 1] + Name->Length + 1);
 
@@ -221,8 +226,8 @@ DefineDirective::DefineDirective(String^ Token, StandardOutputError^ ErrorOutput
 DefineDirective::DefineDirective(String^ Token, LineTrackingStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 {
 	this->Token = Token;
-	this->Type = DirectiveType::Define;
-	this->Encoding = EncodingType::MultiLine;
+	this->Type = eDirectiveType::Define;
+	this->Encoding = eEncodingType::MultiLine;
 
 	obScriptParsing::LineTokenizer^ LocalParser = gcnew obScriptParsing::LineTokenizer();
 
@@ -237,7 +242,7 @@ DefineDirective::DefineDirective(String^ Token, LineTrackingStringReader^% TextR
 				throw gcnew InvalidOperationException("No name specified.");
 			}
 
-			int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::MultiLine] + DirectiveIdentifier[(int)DirectiveType::Define]);
+			int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)eEncodingType::MultiLine] + DirectiveIdentifier[(int)eDirectiveType::Define]);
 			Name = LocalParser->Tokens[Index + 1];
 			Value = GetMultilineValue(TextReader, SliceStart, SliceEnd);
 
@@ -266,11 +271,11 @@ DefineDirective::DefineDirective(String^ Token, LineTrackingStringReader^% TextR
 	}
 }
 
-String^ DefineDirective::GetValue(String^ Prefix, DefineDirective::AccessoryOperatorType ActiveOperator)
+String^ DefineDirective::GetValue(String^ Prefix, DefineDirective::eAccessoryOperatorType ActiveOperator)
 {
 	String^ Result = "";
 
-	if (Encoding == EncodingType::MultiLine)
+	if (Encoding == eEncodingType::MultiLine)
 	{
 		LineTrackingStringReader^ TextReader = gcnew LineTrackingStringReader(this->Value);
 		Result += "\n" + TextReader->ReadLine();
@@ -285,7 +290,7 @@ String^ DefineDirective::GetValue(String^ Prefix, DefineDirective::AccessoryOper
 
 	switch (ActiveOperator)
 	{
-	case AccessoryOperatorType::Stringize:
+	case eAccessoryOperatorType::Stringize:
 		Result = "\"" + Result + "\"";
 		break;
 	}
@@ -298,16 +303,16 @@ DefineDirective^ DefineDirective::CreateCopy()
 	return dynamic_cast<DefineDirective^>(this->MemberwiseClone());
 }
 
-DefineDirective::AccessoryOperatorType	DefineDirective::GetAccessoryOperatorFromToken(String^ Token)
+DefineDirective::eAccessoryOperatorType	DefineDirective::GetAccessoryOperatorFromToken(String^ Token)
 {
-	AccessoryOperatorType ActiveOperator = AccessoryOperatorType::None;
+	eAccessoryOperatorType ActiveOperator = eAccessoryOperatorType::None;
 
 	UInt32 Index = 0;
 	for each (String^ Itr in DefineDirective::AccessoryOperatorIdentifier)
 	{
 		if (Token->IndexOf(Itr) == 0 && Index != (UInt32)ActiveOperator)
 		{
-			ActiveOperator = (AccessoryOperatorType)Index;
+			ActiveOperator = (eAccessoryOperatorType)Index;
 			break;
 		}
 
@@ -324,9 +329,9 @@ String^ DefineDirective::GetToken()
 
 	switch (Encoding)
 	{
-	case EncodingType::SingleLine:
+	case eEncodingType::SingleLine:
 		return Token;
-	case EncodingType::MultiLine:
+	case eEncodingType::MultiLine:
 		return Token + "\n" + SliceStart + ";{\n" + ObfuscateToCompiler(Value) + "\n" + SliceEnd + ";}";
 	default:
 		return Token;
@@ -336,8 +341,8 @@ String^ DefineDirective::GetToken()
 ImportDirective::ImportDirective(String ^Token, StandardOutputError ^ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber)
 {
 	this->Token = Token;
-	this->Type = DirectiveType::Import;
-	this->Encoding = EncodingType::SingleLine;
+	this->Type = eDirectiveType::Import;
+	this->Encoding = eEncodingType::SingleLine;
 
 	obScriptParsing::LineTokenizer^ LocalParser = gcnew obScriptParsing::LineTokenizer();
 
@@ -352,7 +357,7 @@ ImportDirective::ImportDirective(String ^Token, StandardOutputError ^ErrorOutput
 				throw gcnew InvalidOperationException("No value specified.");
 			}
 
-			int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::SingleLine] + DirectiveIdentifier[(int)DirectiveType::Import]);
+			int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)eEncodingType::SingleLine] + DirectiveIdentifier[(int)eDirectiveType::Import]);
 			Filename = LocalParser->Tokens[Index + 1]->Replace("\"", "");
 			String^ Source = "";
 			String^ Result = "";
@@ -425,17 +430,17 @@ void EnumDirective::ParseComponentDefineDirectives(String^ Source, StandardOutpu
 		catch (...) { throw gcnew InvalidOperationException("Invalid value assigned to " + Name); }
 		PreviousValue = CurrentValue;
 
-		String^ DefineToken = ";" + EncodingIdentifier[(int)EncodingType::SingleLine] + DirectiveIdentifier[(int)DirectiveType::Define] + " " + Name + " " + ValueString;
-		ComponentDefineDirectives->AddLast(gcnew DefineDirective(DefineToken, ErrorOutput, PreprocessorInstance, LineNumber));
+		String^ DefineToken = ";" + EncodingIdentifier[(int)eEncodingType::SingleLine] + DirectiveIdentifier[(int)eDirectiveType::Define] + " " + Name + " " + ValueString;
+		ComponentDefineDirectives->Add(gcnew DefineDirective(DefineToken, ErrorOutput, PreprocessorInstance, LineNumber));
 	}
 }
 
 EnumDirective::EnumDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber)
 {
 	this->Token = Token;
-	this->Type = DirectiveType::Enum;
-	this->Encoding = EncodingType::SingleLine;
-	ComponentDefineDirectives = gcnew LinkedList<DefineDirective^>();
+	this->Type = eDirectiveType::Enum;
+	this->Encoding = eEncodingType::SingleLine;
+	ComponentDefineDirectives = gcnew List<DefineDirective^>();
 
 	obScriptParsing::LineTokenizer^ LocalParser = gcnew obScriptParsing::LineTokenizer();
 
@@ -452,7 +457,7 @@ EnumDirective::EnumDirective(String^ Token, StandardOutputError^ ErrorOutput, Pr
 				throw gcnew InvalidOperationException("No value specified.");
 			}
 
-			int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::SingleLine] + DirectiveIdentifier[(int)DirectiveType::Enum]);
+			int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)eEncodingType::SingleLine] + DirectiveIdentifier[(int)eDirectiveType::Enum]);
 			String^ Value;
 
 			Name = LocalParser->Tokens[Index + 1];
@@ -475,9 +480,9 @@ EnumDirective::EnumDirective(String^ Token, StandardOutputError^ ErrorOutput, Pr
 EnumDirective::EnumDirective(String^ Token, LineTrackingStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 {
 	this->Token = Token;
-	this->Type = DirectiveType::Enum;
-	this->Encoding = EncodingType::MultiLine;
-	ComponentDefineDirectives = gcnew LinkedList<DefineDirective^>();
+	this->Type = eDirectiveType::Enum;
+	this->Encoding = eEncodingType::MultiLine;
+	ComponentDefineDirectives = gcnew List<DefineDirective^>();
 
 	obScriptParsing::LineTokenizer^ LocalParser = gcnew obScriptParsing::LineTokenizer();
 
@@ -492,7 +497,7 @@ EnumDirective::EnumDirective(String^ Token, LineTrackingStringReader^% TextReade
 				throw gcnew InvalidOperationException("No name specified.");
 			}
 
-			int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::MultiLine] + DirectiveIdentifier[(int)DirectiveType::Enum]);
+			int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)eEncodingType::MultiLine] + DirectiveIdentifier[(int)eDirectiveType::Enum]);
 
 			Name = LocalParser->Tokens[Index + 1];
 			UInt32 LineNumber = TextReader->LineNumber;
@@ -525,16 +530,16 @@ String^ EnumDirective::GetToken()
 
 	switch (Encoding)
 	{
-	case EncodingType::SingleLine:
+	case eEncodingType::SingleLine:
 		return Token;
-	case EncodingType::MultiLine:
+	case eEncodingType::MultiLine:
 		return Token + "\n" + SliceStart + ";{\n" + ObfuscateToCompiler(Value) + "\n" + SliceEnd + ";}";
 	default:
 		return Token;
 	}
 }
 
-bool IfDirective::Operator::Evaluator( BuiltInOperators Type, String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance )
+bool IfDirective::Operator::Evaluator( eBuiltInOperators Type, String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance )
 {
 	bool Result = false;
 	try
@@ -551,7 +556,7 @@ bool IfDirective::Operator::Evaluator( BuiltInOperators Type, String^ LHS, Strin
 
 		switch (Type)
 		{
-		case IfDirective::Operator::BuiltInOperators::Equal:
+		case IfDirective::Operator::eBuiltInOperators::Equal:
 			if (LHSNumeric && RHSNumeric)
 				Result = (LHSInt == RHSInt);
 			else if (!LHSNumeric && !RHSNumeric)
@@ -560,21 +565,21 @@ bool IfDirective::Operator::Evaluator( BuiltInOperators Type, String^ LHS, Strin
 				throw gcnew InvalidOperationException("Mismatching operand types.");
 
 			break;
-		case IfDirective::Operator::BuiltInOperators::LessThanOrEqual:
+		case IfDirective::Operator::eBuiltInOperators::LessThanOrEqual:
 			if (LHSNumeric && RHSNumeric)
 				Result = (LHSInt <= RHSInt);
 			else
 				throw gcnew InvalidOperationException("Mismatching/invalid operand type(s).");
 
 			break;
-		case IfDirective::Operator::BuiltInOperators::GreaterThanOrEqual:
+		case IfDirective::Operator::eBuiltInOperators::GreaterThanOrEqual:
 			if (LHSNumeric && RHSNumeric)
 				Result = (LHSInt >= RHSInt);
 			else
 				throw gcnew InvalidOperationException("Mismatching/invalid operand type(s).");
 
 			break;
-		case IfDirective::Operator::BuiltInOperators::LessThan:
+		case IfDirective::Operator::eBuiltInOperators::LessThan:
 			if (LHSNumeric && RHSNumeric)
 				Result = (LHSInt < RHSInt);
 			else if (!LHSNumeric && !RHSNumeric)
@@ -583,7 +588,7 @@ bool IfDirective::Operator::Evaluator( BuiltInOperators Type, String^ LHS, Strin
 				throw gcnew InvalidOperationException("Mismatching/invalid operand type(s).");
 
 			break;
-		case IfDirective::Operator::BuiltInOperators::GreaterThan:
+		case IfDirective::Operator::eBuiltInOperators::GreaterThan:
 			if (LHSNumeric && RHSNumeric)
 				Result = (LHSInt > RHSInt);
 			else if (!LHSNumeric && !RHSNumeric)
@@ -592,7 +597,7 @@ bool IfDirective::Operator::Evaluator( BuiltInOperators Type, String^ LHS, Strin
 				throw gcnew InvalidOperationException("Mismatching/invalid operand type(s).");
 
 			break;
-		case IfDirective::Operator::BuiltInOperators::NotEqual:
+		case IfDirective::Operator::eBuiltInOperators::NotEqual:
 			if (LHSNumeric && RHSNumeric)
 				Result = (LHSInt != RHSInt);
 			else if (!LHSNumeric && !RHSNumeric)
@@ -601,14 +606,14 @@ bool IfDirective::Operator::Evaluator( BuiltInOperators Type, String^ LHS, Strin
 				throw gcnew InvalidOperationException("Mismatching/invalid operand type(s).");
 
 			break;
-		case IfDirective::Operator::BuiltInOperators::LogicalAND:
+		case IfDirective::Operator::eBuiltInOperators::LogicalAND:
 			if (LHSNumeric && RHSNumeric)
 				Result = (LHSInt && RHSInt);
 			else
 				throw gcnew InvalidOperationException("Mismatching/invalid operand type(s).");
 
 			break;
-		case IfDirective::Operator::BuiltInOperators::LogicalOR:
+		case IfDirective::Operator::eBuiltInOperators::LogicalOR:
 			if (LHSNumeric && RHSNumeric)
 				Result = (LHSInt || RHSInt);
 			else
@@ -658,10 +663,10 @@ bool IfDirective::ParseAsInt(String^ Source, int% Result)
 void IfDirective::ProcessOperands(String^ LHSSource, String^ RHSSource, String^% LHSResult, String^% RHSResult, Preprocessor^ PreprocessorInstance)
 {
 	String^ OperandBuffer = LHSSource;
-	DefineDirective::AccessoryOperatorType DefineOperator = DefineDirective::GetAccessoryOperatorFromToken(OperandBuffer);
+	DefineDirective::eAccessoryOperatorType DefineOperator = DefineDirective::GetAccessoryOperatorFromToken(OperandBuffer);
 	switch (DefineOperator)
 	{
-	case DefineDirective::AccessoryOperatorType::None:
+	case DefineDirective::eAccessoryOperatorType::None:
 		break;
 	default:
 		OperandBuffer = OperandBuffer->Substring(DefineDirective::AccessoryOperatorIdentifier[(int)DefineOperator]->Length);
@@ -674,7 +679,7 @@ void IfDirective::ProcessOperands(String^ LHSSource, String^ RHSSource, String^%
 	DefineOperator = DefineDirective::GetAccessoryOperatorFromToken(OperandBuffer);
 	switch (DefineOperator)
 	{
-	case DefineDirective::AccessoryOperatorType::None:
+	case DefineDirective::eAccessoryOperatorType::None:
 		break;
 	default:
 		OperandBuffer = OperandBuffer->Substring(DefineDirective::AccessoryOperatorIdentifier[(int)DefineOperator]->Length);
@@ -686,42 +691,42 @@ void IfDirective::ProcessOperands(String^ LHSSource, String^ RHSSource, String^%
 
 bool IfDirective::EqualityOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 {
-	return Operator::Evaluator(Operator::BuiltInOperators::Equal, LHS, RHS, ErrorOutput, PreprocessorInstance);
+	return Operator::Evaluator(Operator::eBuiltInOperators::Equal, LHS, RHS, ErrorOutput, PreprocessorInstance);
 }
 
 bool IfDirective::LessThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 {
-	return Operator::Evaluator(Operator::BuiltInOperators::LessThanOrEqual, LHS, RHS, ErrorOutput, PreprocessorInstance);
+	return Operator::Evaluator(Operator::eBuiltInOperators::LessThanOrEqual, LHS, RHS, ErrorOutput, PreprocessorInstance);
 }
 
 bool IfDirective::GreaterThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 {
-	return Operator::Evaluator(Operator::BuiltInOperators::GreaterThanOrEqual, LHS, RHS, ErrorOutput, PreprocessorInstance);
+	return Operator::Evaluator(Operator::eBuiltInOperators::GreaterThanOrEqual, LHS, RHS, ErrorOutput, PreprocessorInstance);
 }
 
 bool IfDirective::LessThanOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 {
-	return Operator::Evaluator(Operator::BuiltInOperators::LessThan, LHS, RHS, ErrorOutput, PreprocessorInstance);
+	return Operator::Evaluator(Operator::eBuiltInOperators::LessThan, LHS, RHS, ErrorOutput, PreprocessorInstance);
 }
 
 bool IfDirective::GreaterThanOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 {
-	return Operator::Evaluator(Operator::BuiltInOperators::GreaterThan, LHS, RHS, ErrorOutput, PreprocessorInstance);
+	return Operator::Evaluator(Operator::eBuiltInOperators::GreaterThan, LHS, RHS, ErrorOutput, PreprocessorInstance);
 }
 
 bool IfDirective::NotEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 {
-	return Operator::Evaluator(Operator::BuiltInOperators::NotEqual, LHS, RHS, ErrorOutput, PreprocessorInstance);
+	return Operator::Evaluator(Operator::eBuiltInOperators::NotEqual, LHS, RHS, ErrorOutput, PreprocessorInstance);
 }
 
 bool IfDirective::LogicalAndOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 {
-	return Operator::Evaluator(Operator::BuiltInOperators::LogicalAND, LHS, RHS, ErrorOutput, PreprocessorInstance);
+	return Operator::Evaluator(Operator::eBuiltInOperators::LogicalAND, LHS, RHS, ErrorOutput, PreprocessorInstance);
 }
 
 bool IfDirective::LogicalOrOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 {
-	return Operator::Evaluator(Operator::BuiltInOperators::LogicalOR, LHS, RHS, ErrorOutput, PreprocessorInstance);
+	return Operator::Evaluator(Operator::eBuiltInOperators::LogicalOR, LHS, RHS, ErrorOutput, PreprocessorInstance);
 }
 
 bool IfDirective::ConvertInfixExpressionToPostFix(String^ Source, String^% Result, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
@@ -895,8 +900,8 @@ bool IfDirective::CheckBaseCondition(String^ Base, StandardOutputError^ ErrorOut
 IfDirective::IfDirective(String^ Token, LineTrackingStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 {
 	this->Token = Token;
-	this->Type = DirectiveType::If;
-	this->Encoding = EncodingType::MultiLine;
+	this->Type = eDirectiveType::If;
+	this->Encoding = eEncodingType::MultiLine;
 
 	obScriptParsing::LineTokenizer^ LocalParser = gcnew obScriptParsing::LineTokenizer();
 
@@ -911,7 +916,7 @@ IfDirective::IfDirective(String^ Token, LineTrackingStringReader^% TextReader, S
 				throw gcnew InvalidOperationException("No condition specified.");
 			}
 
-			int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::MultiLine] + DirectiveIdentifier[(int)DirectiveType::If]);
+			int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)eEncodingType::MultiLine] + DirectiveIdentifier[(int)eDirectiveType::If]);
 			String^ ConditionString = Token->Substring(LocalParser->Indices[Index] + 4);
 			Block = GetMultilineValue(TextReader, SliceStart, SliceEnd);
 
@@ -969,7 +974,7 @@ void Preprocessor::RegisterDefineDirective(DefineDirective^ Directive)
 	DefineDirective^ ExistingDirective = LookupDefineDirectiveByName(Directive->GetName());
 
 	if (ExistingDirective != nullptr)
-		ExistingDirective->SetValue(Directive->GetValue(gcnew String(""), DefineDirective::AccessoryOperatorType::None));
+		ExistingDirective->SetValue(Directive->GetValue(gcnew String(""), DefineDirective::eAccessoryOperatorType::None));
 	else
 		RegisteredDefineDirectives->Add(Directive->CreateCopy());
 }
@@ -984,34 +989,34 @@ DefineDirective^ Preprocessor::LookupDefineDirectiveByName(String^ Name)
 	return nullptr;
 }
 
-CSEPreprocessorToken^ Preprocessor::CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType Encoding, String^ Identifier, String^ Token, LineTrackingStringReader^ TextReader, StandardOutputError^ ErrorOutput)
+CSEPreprocessorToken^ Preprocessor::CreateDirectiveFromIdentifier(CSEPreprocessorDirective::eEncodingType Encoding, String^ Identifier, String^ Token, LineTrackingStringReader^ TextReader, StandardOutputError^ ErrorOutput)
 {
 	UInt32 LineNumber = 0;
 	if (TextReader)
 		LineNumber = TextReader->LineNumber;
 
-	if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Define], true))
+	if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::eDirectiveType::Define], true))
 	{
-		if (Encoding == CSEPreprocessorDirective::EncodingType::SingleLine)
+		if (Encoding == CSEPreprocessorDirective::eEncodingType::SingleLine)
 			return gcnew DefineDirective(Token, ErrorOutput, this, LineNumber);
-		else if (Encoding == CSEPreprocessorDirective::EncodingType::MultiLine)
+		else if (Encoding == CSEPreprocessorDirective::eEncodingType::MultiLine)
 			return gcnew DefineDirective(Token, TextReader, ErrorOutput, this);
 	}
-	else if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Import], true))
+	else if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::eDirectiveType::Import], true))
 	{
-		if (Encoding == CSEPreprocessorDirective::EncodingType::SingleLine)
+		if (Encoding == CSEPreprocessorDirective::eEncodingType::SingleLine)
 			return gcnew ImportDirective(Token, ErrorOutput, this, LineNumber);
 	}
-	else if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Enum], true))
+	else if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::eDirectiveType::Enum], true))
 	{
-		if (Encoding == CSEPreprocessorDirective::EncodingType::SingleLine)
+		if (Encoding == CSEPreprocessorDirective::eEncodingType::SingleLine)
 			return gcnew EnumDirective(Token, ErrorOutput, this, LineNumber);
-		else if (Encoding == CSEPreprocessorDirective::EncodingType::MultiLine)
+		else if (Encoding == CSEPreprocessorDirective::eEncodingType::MultiLine)
 			return gcnew EnumDirective(Token, TextReader, ErrorOutput, this);
 	}
-	else if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::If], true))
+	else if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::eDirectiveType::If], true))
 	{
-		if (Encoding == CSEPreprocessorDirective::EncodingType::MultiLine)
+		if (Encoding == CSEPreprocessorDirective::eEncodingType::MultiLine)
 			return gcnew IfDirective(Token, TextReader, ErrorOutput, this);
 	}
 
@@ -1043,15 +1048,15 @@ bool Preprocessor::Preprocess(String^ Source, String^% Result, StandardOutputErr
 				String^ FirstToken = LocalParser->Tokens[0];
 				if (FirstToken[0] == ';' && FirstToken->Length >= 2)
 				{
-					CSEPreprocessorDirective::EncodingType Encoding = CSEPreprocessorDirective::EncodingType::Invalid;
+					CSEPreprocessorDirective::eEncodingType Encoding = CSEPreprocessorDirective::eEncodingType::Invalid;
 					bool TokenIsDirective = false;
 
-					if (FirstToken[1] == CSEPreprocessorDirective::EncodingIdentifier[(int)CSEPreprocessorDirective::EncodingType::SingleLine])
-						Encoding = CSEPreprocessorDirective::EncodingType::SingleLine;
-					else if (FirstToken[1] == CSEPreprocessorDirective::EncodingIdentifier[(int)CSEPreprocessorDirective::EncodingType::MultiLine])
-						Encoding = CSEPreprocessorDirective::EncodingType::MultiLine;
+					if (FirstToken[1] == CSEPreprocessorDirective::EncodingIdentifier[(int)CSEPreprocessorDirective::eEncodingType::SingleLine])
+						Encoding = CSEPreprocessorDirective::eEncodingType::SingleLine;
+					else if (FirstToken[1] == CSEPreprocessorDirective::EncodingIdentifier[(int)CSEPreprocessorDirective::eEncodingType::MultiLine])
+						Encoding = CSEPreprocessorDirective::eEncodingType::MultiLine;
 
-					if (Encoding != CSEPreprocessorDirective::EncodingType::Invalid)
+					if (Encoding != CSEPreprocessorDirective::eEncodingType::Invalid)
 					{
 						for each (String^ Directive in CSEPreprocessorDirective::DirectiveIdentifier)
 						{
@@ -1182,8 +1187,8 @@ bool Preprocessor::GetImportFilePath( String^ Source, String^% Result, Preproces
 	{
 		DataBuffer = Data;
 
-		CSEPreprocessorToken^ Directive = CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType::SingleLine,
-											CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Import],
+		CSEPreprocessorToken^ Directive = CreateDirectiveFromIdentifier(CSEPreprocessorDirective::eEncodingType::SingleLine,
+											CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::eDirectiveType::Import],
 											Source, nullptr, gcnew StandardOutputError(&DummyStandardErrorOutput));
 
 		if (Directive->GetValid())

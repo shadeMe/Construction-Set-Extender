@@ -60,13 +60,9 @@ SE		---->
 
 	BUGFIX			=
 		> The font selector in the preferences dialog is bugged (works in 10.0)
-		> Editor doesn't acquire focus after switching scripts/on opening and general focus related wonkiness
-			>> Even with the FocusHelper, the Tab key needs to be pressed to relinquish focus to the text editor. Not sure what else to do
-
 
 	ENHANCEMENT		=
-		> Fuzzy search for IntelliSense
-			>> Automatic switching between prefix/fuzzy
+		> Add label/filters for diffent message types a la VS error list
 		> Prevent the creation of duplicate script editor IDs
 		> Language server impl for external editors
 

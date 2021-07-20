@@ -318,7 +318,7 @@ void AvalonEditTextEditor::SynchronizeExternalScrollBars()
 			//ExternalHorizontalScrollBar->Enabled = false;
 			ExternalHorizontalScrollBar->Visible = false;
 		}
-		else if (!ExternalHorizontalScrollBar->Visible)
+		else if (!ExternalHorizontalScrollBar->Visible && !TextField->WordWrap)
 		{
 			//ExternalHorizontalScrollBar->Enabled = true;
 			ExternalHorizontalScrollBar->Visible = true;
@@ -360,16 +360,22 @@ RTBitmap^ AvalonEditTextEditor::RenderFrameworkElement(System::Windows::Framewor
 	double DpiX = 96; // this is the magic number
 	double DpiY = 96; // this is the magic number
 
-	System::Windows::Media::PixelFormat ReturnFormat = System::Windows::Media::PixelFormats::Default;
-	System::Windows::Media::VisualBrush^ ElementBrush = gcnew System::Windows::Media::VisualBrush(Element);
-	System::Windows::Media::DrawingVisual^ Visual = gcnew System::Windows::Media::DrawingVisual();
+	auto ReturnFormat = System::Windows::Media::PixelFormats::Default;
+	auto ElementBrush = gcnew System::Windows::Media::VisualBrush(Element);
+	ElementBrush->Freeze();
 
-	System::Windows::Media::DrawingContext^ Context = Visual->RenderOpen();
+	auto Visual = gcnew System::Windows::Media::DrawingVisual();
+
+	auto Context = Visual->RenderOpen();
 	Context->DrawRectangle(ElementBrush, nullptr, System::Windows::Rect(TopLeft, TopRight, Width, Height));
 	Context->Close();
 
+	delete Context;
+
 	RTBitmap^ Bitmap = gcnew RTBitmap(Width, Height, DpiX, DpiY, ReturnFormat);
 	Bitmap->Render(Visual);
+	if (Bitmap->CanFreeze)
+		Bitmap->Freeze();
 
 	return Bitmap;
 }
@@ -435,7 +441,7 @@ void AvalonEditTextEditor::SearchBracesForHighlighting( int CaretPos )
 	LineTracker->LineBackgroundRenderer->OpenCloseBraces->Enabled = false;
 
 	if (!TextField->TextArea->Selection->IsEmpty)
-		LineTracker->LineBackgroundRenderer->Redraw();
+		return;
 
 	DocumentLine^ CurrentLine = TextField->Document->GetLineByOffset(CaretPos);
 	int OpenBraceOffset = -1, CloseBraceOffset = -1, RelativeCaretPos = -1;
@@ -443,72 +449,69 @@ void AvalonEditTextEditor::SearchBracesForHighlighting( int CaretPos )
 	Stack<BracketSearchData^>^ BracketStack = gcnew Stack<BracketSearchData^>();
 	List<BracketSearchData^>^ ParsedBracketList = gcnew List<BracketSearchData^>();
 
-	if (CurrentLine != nullptr)
+	if (CurrentLine == nullptr)
+		return;
+
+	RelativeCaretPos = CaretPos - CurrentLine->Offset;
+	String^ Text = TextField->Document->GetText(CurrentLine);
+	if (!LocalParser->Tokenize(Text, true))
+		return;
+
+	for (int i = 0; i < LocalParser->TokenCount; i++)
 	{
-		RelativeCaretPos = CaretPos - CurrentLine->Offset;
-		String^ Text = TextField->Document->GetText(CurrentLine);
-		LocalParser->Tokenize(Text, true);
-		if (LocalParser->Valid)
+		String^ Token = LocalParser->Tokens[i];
+		Char Delimiter = LocalParser->Delimiters[i];
+		int TokenIndex = LocalParser->Indices[i];
+		int DelimiterIndex = TokenIndex + Token->Length;
+
+		if (LocalParser->GetCommentTokenIndex(-1) == i)
+			break;
+
+		if (BracketSearchData::ValidOpeningBrackets->IndexOf(Delimiter) != -1)
+			BracketStack->Push(gcnew BracketSearchData(Delimiter, DelimiterIndex));
+		else if (BracketSearchData::ValidClosingBrackets->IndexOf(Delimiter) != -1)
 		{
-			for (int i = 0; i < LocalParser->TokenCount; i++)
+			if (BracketStack->Count == 0)
 			{
-				String^ Token = LocalParser->Tokens[i];
-				Char Delimiter = LocalParser->Delimiters[i];
-				int TokenIndex = LocalParser->Indices[i];
-				int DelimiterIndex = TokenIndex + Token->Length;
-
-				if (LocalParser->GetCommentTokenIndex(-1) == i)
-					break;
-
-				if (BracketSearchData::ValidOpeningBrackets->IndexOf(Delimiter) != -1)
-				{
-					BracketStack->Push(gcnew BracketSearchData(Delimiter, DelimiterIndex));
-				}
-				else if (BracketSearchData::ValidClosingBrackets->IndexOf(Delimiter) != -1)
-				{
-					if (BracketStack->Count == 0)
-					{
-						BracketSearchData^ DelinquentBracket = gcnew BracketSearchData(Delimiter, -1);
-						DelinquentBracket->EndOffset = DelimiterIndex;
-						DelinquentBracket->Mismatching = true;
-						ParsedBracketList->Add(DelinquentBracket);
-					}
-					else
-					{
-						BracketSearchData^ CurrentBracket = BracketStack->Pop();
-						BracketSearchData Buffer(Delimiter, DelimiterIndex);
-
-						if (CurrentBracket->GetType() == Buffer.GetType() && CurrentBracket->GetKind() == BracketSearchData::eBracketState::Opening)
-							CurrentBracket->EndOffset = DelimiterIndex;
-						else
-							CurrentBracket->Mismatching = true;
-
-						ParsedBracketList->Add(CurrentBracket);
-					}
-				}
-			}
-
-			while (BracketStack->Count)
-			{
-				BracketSearchData^ DelinquentBracket = BracketStack->Pop();
-				DelinquentBracket->EndOffset = -1;
+				BracketSearchData^ DelinquentBracket = gcnew BracketSearchData(Delimiter, -1);
+				DelinquentBracket->EndOffset = DelimiterIndex;
 				DelinquentBracket->Mismatching = true;
 				ParsedBracketList->Add(DelinquentBracket);
 			}
-
-			if (ParsedBracketList->Count)
+			else
 			{
-				for each (BracketSearchData^ Itr in ParsedBracketList)
-				{
-					if	((Itr->GetStartOffset() <= RelativeCaretPos && Itr->EndOffset >= RelativeCaretPos) ||
-						(Itr->GetStartOffset() <= RelativeCaretPos && Itr->EndOffset == -1) ||
-						(Itr->GetStartOffset() == -1 && Itr->EndOffset >= RelativeCaretPos))
-					{
-						OpenBraceOffset = Itr->GetStartOffset();
-						CloseBraceOffset = Itr->EndOffset;
-						break;
-					}
-				}
+				BracketSearchData^ CurrentBracket = BracketStack->Pop();
+				BracketSearchData Buffer(Delimiter, DelimiterIndex);
+
+				if (CurrentBracket->GetType() == Buffer.GetType() && CurrentBracket->GetKind() == BracketSearchData::eBracketState::Opening)
+					CurrentBracket->EndOffset = DelimiterIndex;
+				else
+					CurrentBracket->Mismatching = true;
+
+				ParsedBracketList->Add(CurrentBracket);
+			}
+		}
+	}
+
+	while (BracketStack->Count)
+	{
+		BracketSearchData^ DelinquentBracket = BracketStack->Pop();
+		DelinquentBracket->EndOffset = -1;
+		DelinquentBracket->Mismatching = true;
+		ParsedBracketList->Add(DelinquentBracket);
+	}
+
+	if (ParsedBracketList->Count)
+	{
+		for each (BracketSearchData^ Itr in ParsedBracketList)
+		{
+			if	((Itr->GetStartOffset() <= RelativeCaretPos && Itr->EndOffset >= RelativeCaretPos) ||
+				(Itr->GetStartOffset() <= RelativeCaretPos && Itr->EndOffset == -1) ||
+				(Itr->GetStartOffset() == -1 && Itr->EndOffset >= RelativeCaretPos))
+			{
+				OpenBraceOffset = Itr->GetStartOffset();
+				CloseBraceOffset = Itr->EndOffset;
+				break;
 			}
 		}
 	}
@@ -520,27 +523,9 @@ void AvalonEditTextEditor::SearchBracesForHighlighting( int CaretPos )
 
 	LineTracker->LineBackgroundRenderer->OpenCloseBraces->StartOffset = OpenBraceOffset;
 	LineTracker->LineBackgroundRenderer->OpenCloseBraces->EndOffset = CloseBraceOffset;
-
-	BracketStack->Clear();
-	ParsedBracketList->Clear();
-
+	LineTracker->LineBackgroundRenderer->OpenCloseBraces->Line = CurrentLine->LineNumber;
+	LineTracker->LineBackgroundRenderer->OpenCloseBraces->Enabled = true;
 	LineTracker->LineBackgroundRenderer->Redraw();
-}
-
-AvalonEditHighlightingDefinition^ AvalonEditTextEditor::CreateSyntaxHighlightDefinitions( bool UpdateStableDefs )
-{
-	if (UpdateStableDefs)
-		SyntaxHighlightingManager->UpdateBaseDefinitions();
-
-	List<String^>^ LocalVars = gcnew List<String^>();
-	if (SemanticAnalysisCache)
-	{
-		for each (obScriptParsing::Variable^ Itr in SemanticAnalysisCache->Variables)
-			LocalVars->Add(Itr->Name);
-	}
-
-	AvalonEditHighlightingDefinition^ Result = SyntaxHighlightingManager->GenerateHighlightingDefinition(LocalVars);
-	return Result;
 }
 
 String^ AvalonEditTextEditor::SanitizeUnicodeString( String^ In )
@@ -763,6 +748,8 @@ void AvalonEditTextEditor::ToggleSearchPanel(bool State)
 		Query->Replace("\r\n", "")->Replace("\n", "");
 		InlineSearchPanel->SearchPattern = Query;
 		InlineSearchPanel->Reactivate();
+
+		WPFFocusHelper::Focus(InlineSearchPanel);
 	}
 	else
 	{
@@ -782,6 +769,14 @@ System::String^ AvalonEditTextEditor::GetCurrentLineText(bool ClipAtCaretPos)
 		Contents = Contents->Substring(0, Caret - Line->Offset);
 
 	return Contents;
+}
+
+void AvalonEditTextEditor::OnTextEditorSettingDataHandler(Object^ Sender, System::Windows::DataObjectSettingDataEventArgs^ E)
+{
+	auto TextEditor = safe_cast<AvalonEdit::TextEditor^>(Sender);
+
+	if (E->Format == System::Windows::DataFormats::Html)
+		E->CancelCommand();
 }
 
 bool AvalonEditTextEditor::RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::eEvent Type, System::Windows::Input::KeyEventArgs^ K, System::Windows::Input::MouseButtonEventArgs^ M)
@@ -1036,6 +1031,27 @@ void AvalonEditTextEditor::TextField_ScrollOffsetChanged(Object^ Sender, EventAr
 	PreviousScrollOffsetBuffer = CurrentOffset;
 
 	RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::eEvent::ScrollOffsetChanged);
+
+	if (preferences::SettingsHolder::Get()->Appearance->ShowBlockVisualizer)
+	{
+		// invalidate block end lines to update the structural analysis visual element generator
+		// this allows the skipping of blocks with visible starting lines
+		TextField->TextArea->TextView->EnsureVisualLines();
+
+		auto FirstVisibleLine = TextField->TextArea->TextView->VisualLines[0]->FirstDocumentLine->LineNumber;
+		auto LastVisibleLine = TextField->TextArea->TextView->VisualLines[TextField->TextArea->TextView->VisualLines->Count - 1]->FirstDocumentLine->LineNumber;
+
+		for each (auto Itr in SemanticAnalysisCache->ControlBlocks)
+		{
+			if (Itr->IsMalformed())
+				continue;
+			else if (Itr->EndLine < FirstVisibleLine || Itr->EndLine > LastVisibleLine)
+				continue;
+
+			auto DocLine = TextField->Document->GetLineByNumber(Itr->EndLine);
+			TextField->TextArea->TextView->Redraw(DocLine, Windows::Threading::DispatcherPriority::Background);
+		}
+	}
 }
 
 void AvalonEditTextEditor::TextField_TextCopied( Object^ Sender, AvalonEdit::Editing::TextEventArgs^ E )
@@ -1198,29 +1214,19 @@ void AvalonEditTextEditor::TextField_MouseWheel(Object^ Sender, System::Windows:
 
 void AvalonEditTextEditor::TextField_MouseHover(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
 {
-	RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::eEvent::HoverStop,
-								-1, Windows::Point(0, 0));
-
 	Nullable<AvalonEdit::TextViewPosition> ViewLocation = TextField->GetPositionFromPoint(E->GetPosition(TextField));
-	if (ViewLocation.HasValue)
-	{
-		LastMouseHoverOffset = TextField->Document->GetOffset(ViewLocation.Value.Line, ViewLocation.Value.Column);
-		RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::eEvent::HoverStart,
-									LastMouseHoverOffset, TransformToPixels(E->GetPosition(TextField)));
-	}
-	else
-		LastMouseHoverOffset = -1;
+	if (!ViewLocation.HasValue)
+		return;
+
+	auto MouseHoverOffset = TextField->Document->GetOffset(ViewLocation.Value.Line, ViewLocation.Value.Column);
+	RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::eEvent::HoverStart, MouseHoverOffset, TransformToPixels(E->GetPosition(TextField)));
+	IsMouseHovering = true;
 }
 
 void AvalonEditTextEditor::TextField_MouseHoverStopped(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
 {
-	// hacky workaround to prevent the insight tooltip from appearing and disappearing in rapid succession
-	// this can happen if the intellisense tooltip appears right under the cursor, triggering the hover stop event right away
-	if (LastMouseHoverOffset == OffsetAtCurrentMousePos)
-		return;
-
-	RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::eEvent::HoverStop,
-								-1, Windows::Point(0, 0));
+	MouseHoverEndTimer->Start();
+	IsMouseHovering = false;
 }
 
 void AvalonEditTextEditor::TextField_MouseMove(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
@@ -1283,6 +1289,16 @@ void AvalonEditTextEditor::MiddleMouseScrollTimer_Tick(Object^ Sender, EventArgs
 	}
 }
 
+void AvalonEditTextEditor::MouseHoverEndTimer_Tick(Object^ Sender, EventArgs^ E)
+{
+	MouseHoverEndTimer->Stop();
+
+	if (IsMouseHovering)
+		return;
+
+	RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::eEvent::HoverStop, -1, Windows::Point(0, 0));
+}
+
 void AvalonEditTextEditor::ScrollBarSyncTimer_Tick( Object^ Sender, EventArgs^ E )
 {
 	if (ActivatedInView == false)
@@ -1343,8 +1359,6 @@ void AvalonEditTextEditor::ScriptEditorPreferences_Saved( Object^ Sender, EventA
 	if (TextField->TextArea->IndentationStrategy != nullptr)
 		SAFEDELETE_CLR(TextField->TextArea->IndentationStrategy);
 
-	UpdateSyntaxHighlighting(true);
-
 	if (preferences::SettingsHolder::Get()->Appearance->ShowCodeFolding)
 		CodeFoldingStrategy = gcnew ObScriptCodeFoldingStrategy(this);
 
@@ -1373,19 +1387,10 @@ void AvalonEditTextEditor::ScriptEditorPreferences_Saved( Object^ Sender, EventA
 	WinFormsContainer->ForeColor = ForegroundColor;
 	WinFormsContainer->BackColor = BackgroundColor;
 
-	System::Windows::Media::SolidColorBrush^ ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255,
-																										ForegroundColor.R,
-																										ForegroundColor.G,
-																										ForegroundColor.B));
-	System::Windows::Media::SolidColorBrush^ BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255,
-																										BackgroundColor.R,
-																										BackgroundColor.G,
-																										BackgroundColor.B));
-
-	TextField->Foreground = ForegroundBrush;
-	TextField->Background = BackgroundBrush;
-	TextField->LineNumbersForeground = ForegroundBrush;
-	TextFieldPanel->Background = BackgroundBrush;
+	TextField->Foreground = CustomBrushes::Get()->ForeColor;
+	TextField->Background = CustomBrushes::Get()->BackColor;
+	TextField->LineNumbersForeground = CustomBrushes::Get()->ForeColor;
+	TextFieldPanel->Background = CustomBrushes::Get()->BackColor;
 
 	if (preferences::SettingsHolder::Get()->Appearance->ShowIconMargin)
 	{
@@ -1405,7 +1410,7 @@ void AvalonEditTextEditor::ScriptEditorPreferences_Saved( Object^ Sender, EventA
 
 	Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorFindResults;
 
-	InlineSearchPanel->MarkerBrush = gcnew Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B));
+	InlineSearchPanel->MarkerBrush = CustomBrushes::Get()->FindResults->Background;
 
 	UpdateCodeFoldings();
 	RefreshTextView();
@@ -1413,35 +1418,16 @@ void AvalonEditTextEditor::ScriptEditorPreferences_Saved( Object^ Sender, EventA
 
 void AvalonEditTextEditor::BackgroundAnalysis_AnalysisComplete(Object^ Sender, model::components::IBackgroundSemanticAnalyzer::AnalysisCompleteEventArgs^ E)
 {
-	if (SemanticAnalysisCache)
-		SAFEDELETE_CLR(SemanticAnalysisCache);
+	SAFEDELETE_CLR(SemanticAnalysisCache);
 
 	SemanticAnalysisCache = E->Result->Clone();
-
 	UpdateCodeFoldings();
-	UpdateSyntaxHighlighting(false);
-
 	RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::eEvent::SemanticAnalysisCompleted);
 }
 
 void AvalonEditTextEditor::LineTrackingManager_LineAnchorInvalidated(Object^ Sender, EventArgs^ E)
 {
 	OnLineAnchorInvalidated();
-}
-
-void AvalonEditTextEditor::TextField_VisualLineConstructionStarting(Object^ Sender, VisualLineConstructionStartEventArgs^ E)
-{
-	// invalidate block end lines to update the structural analysis visual element generator
-	// this allows the skipping of blocks with visible starting lines
-	for each (auto Itr in SemanticAnalysisCache->ControlBlocks)
-	{
-		if (Itr->IsMalformed() == false)
-		{
-			VisualLine^ Line = TextField->TextArea->TextView->GetVisualLine(Itr->EndLine);
-			if (Line)
-				TextField->TextArea->TextView->Redraw(Line, Windows::Threading::DispatcherPriority::Normal);
-		}
-	}
 }
 
 void AvalonEditTextEditor::SearchPanel_SearchOptionsChanged(Object^ Sender, AvalonEdit::Search::SearchOptionsChangedEventArgs^ E)
@@ -1471,6 +1457,7 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	ExternalVerticalScrollBar = gcnew DotNetBar::VScrollBarAdv();
 	ExternalHorizontalScrollBar = gcnew DotNetBar::ScrollBar::HScrollBarAdv();
 	ScrollBarSyncTimer = gcnew Timer();
+	MouseHoverEndTimer = gcnew Timer();
 
 	BackgroundAnalyzerAnalysisCompleteHandler = gcnew model::components::IBackgroundSemanticAnalyzer::AnalysisCompleteEventHandler(this, &AvalonEditTextEditor::BackgroundAnalysis_AnalysisComplete);
 	TextFieldTextChangedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::TextField_TextChanged);
@@ -1490,15 +1477,14 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	TextFieldMiddleMouseScrollMoveHandler = gcnew System::Windows::Input::MouseEventHandler(this, &AvalonEditTextEditor::TextField_MiddleMouseScrollMove);
 	TextFieldMiddleMouseScrollDownHandler = gcnew System::Windows::Input::MouseButtonEventHandler(this, &AvalonEditTextEditor::TextField_MiddleMouseScrollDown);
 	MiddleMouseScrollTimerTickHandler = gcnew EventHandler(this, &AvalonEditTextEditor::MiddleMouseScrollTimer_Tick);
+	MouseHoverEndTimerTickHandler = gcnew EventHandler(this, &AvalonEditTextEditor::MouseHoverEndTimer_Tick);
 	ScrollBarSyncTimerTickHandler = gcnew EventHandler(this, &AvalonEditTextEditor::ScrollBarSyncTimer_Tick);
 	ExternalScrollBarValueChangedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::ExternalScrollBar_ValueChanged);
 	SetTextAnimationCompletedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::SetTextAnimation_Completed);
 	ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::ScriptEditorPreferences_Saved);
-	TextFieldVisualLineConstructionStartingHandler = gcnew EventHandler<VisualLineConstructionStartEventArgs^>(this, &AvalonEditTextEditor::TextField_VisualLineConstructionStarting);
 	SearchPanelSearchOptionsChangedHandler = gcnew EventHandler<AvalonEdit::Search::SearchOptionsChangedEventArgs^>(this, &AvalonEditTextEditor::SearchPanel_SearchOptionsChanged);
 
 	System::Windows::NameScope::SetNameScope(TextFieldPanel, gcnew System::Windows::NameScope());
-	TextFieldPanel->Background = gcnew Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, 255, 255, 255));
 	TextFieldPanel->VerticalAlignment = System::Windows::VerticalAlignment::Stretch;
 
 	TextField->Name = "AvalonEditTextEditorInstance";
@@ -1513,16 +1499,15 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	TextField->ShowLineNumbers = true;
 	TextField->HorizontalScrollBarVisibility = System::Windows::Controls::ScrollBarVisibility::Hidden;
 	TextField->VerticalScrollBarVisibility = System::Windows::Controls::ScrollBarVisibility::Hidden;
-	UpdateSyntaxHighlighting(true);
+
+	SyntaxHighlightingManager::Get()->RegisterScriptDocument(ParentScriptDocument, TextField);
 
 	Color ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
 	Color BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
-	auto ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, ForegroundColor.R, ForegroundColor.G, ForegroundColor.B));
-	auto BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B));
 
-	TextField->Foreground = ForegroundBrush;
-	TextField->Background = BackgroundBrush;
-	TextField->LineNumbersForeground = ForegroundBrush;
+	TextField->Foreground = CustomBrushes::Get()->ForeColor;
+	TextField->Background = CustomBrushes::Get()->BackColor;
+	TextField->LineNumbersForeground = CustomBrushes::Get()->ForeColor;
 
 	TextField->TextArea->IndentationStrategy = nullptr;
 	if (preferences::SettingsHolder::Get()->General->AutoIndent)
@@ -1533,14 +1518,14 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorFindResults;
 
 	InlineSearchPanel = AvalonEdit::Search::SearchPanel::Install(TextField);
-	InlineSearchPanel->MarkerBrush = gcnew Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B));
+	InlineSearchPanel->MarkerBrush = CustomBrushes::Get()->FindResults->Background;
 	InlineSearchPanel->SearchOptionsChanged += SearchPanelSearchOptionsChangedHandler;
 
 	AnimationPrimitive->Name = "AnimationPrimitive";
 
 	TextFieldPanel->RegisterName(AnimationPrimitive->Name, AnimationPrimitive);
 	TextFieldPanel->RegisterName(TextField->Name, TextField);
-	TextFieldPanel->Background = BackgroundBrush;
+	TextFieldPanel->Background = CustomBrushes::Get()->BackColor;
 	TextFieldPanel->Children->Add(TextField);
 
 	InitializingFlag = false;
@@ -1551,14 +1536,14 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	IsMiddleMouseScrolling = false;
 
 	MiddleMouseScrollTimer->Interval = 16;
+	MouseHoverEndTimer->Interval = 200;
+	ScrollBarSyncTimer->Interval = 200;
 
 	ActivatedInView = false;
+	IsMouseHovering = false;
 
 	LastKnownMouseClickOffset = 0;
 	OffsetAtCurrentMousePos = -1;
-	LastMouseHoverOffset = -1;
-
-	ScrollBarSyncTimer->Interval = 200;
 
 	ExternalVerticalScrollBar->Dock = DockStyle::Right;
 	ExternalVerticalScrollBar->Size = Size(16, 100);
@@ -1636,14 +1621,15 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	TextField->PreviewMouseMove += TextFieldMiddleMouseScrollMoveHandler;
 	TextField->PreviewMouseDown += TextFieldMiddleMouseScrollDownHandler;
 	TextField->PreviewMouseMove += TextFieldMouseMoveHandler;
+	System::Windows::DataObject::AddSettingDataHandler(TextField, gcnew System::Windows::DataObjectSettingDataEventHandler(&AvalonEditTextEditor::OnTextEditorSettingDataHandler));
 
 	ParentScriptDocument->BackgroundAnalyzer->SemanticAnalysisComplete += BackgroundAnalyzerAnalysisCompleteHandler;
 	MiddleMouseScrollTimer->Tick += MiddleMouseScrollTimerTickHandler;
+	MouseHoverEndTimer->Tick += MouseHoverEndTimerTickHandler;
 	ScrollBarSyncTimer->Tick += ScrollBarSyncTimerTickHandler;
 	ExternalVerticalScrollBar->ValueChanged += ExternalScrollBarValueChangedHandler;
 	ExternalHorizontalScrollBar->ValueChanged += ExternalScrollBarValueChangedHandler;
 	preferences::SettingsHolder::Get()->PreferencesChanged += ScriptEditorPreferencesSavedHandler;
-	TextField->TextArea->TextView->VisualLineConstructionStarting += TextFieldVisualLineConstructionStartingHandler;
 }
 
 AvalonEditTextEditor::~AvalonEditTextEditor()
@@ -1652,6 +1638,8 @@ AvalonEditTextEditor::~AvalonEditTextEditor()
 
 	if (DisplayingStaticText)
 		EndDisplayingStaticText();
+
+	SyntaxHighlightingManager::Get()->DeregisterScriptDocument(ParentScriptDocument);
 
 	ParentScriptDocument->BackgroundAnalyzer->SemanticAnalysisComplete -= BackgroundAnalyzerAnalysisCompleteHandler;
 	ParentScriptDocument = nullptr;
@@ -1689,11 +1677,11 @@ AvalonEditTextEditor::~AvalonEditTextEditor()
 	TextField->PreviewMouseDown -= TextFieldMiddleMouseScrollDownHandler;
 	TextField->PreviewMouseMove -= TextFieldMouseMoveHandler;
 	MiddleMouseScrollTimer->Tick -= MiddleMouseScrollTimerTickHandler;
+	MouseHoverEndTimer->Tick -= MouseHoverEndTimerTickHandler;
 	ScrollBarSyncTimer->Tick -= ScrollBarSyncTimerTickHandler;
 	ExternalVerticalScrollBar->ValueChanged -= ExternalScrollBarValueChangedHandler;
 	ExternalHorizontalScrollBar->ValueChanged -= ExternalScrollBarValueChangedHandler;
 	preferences::SettingsHolder::Get()->PreferencesChanged -= ScriptEditorPreferencesSavedHandler;
-	TextField->TextArea->TextView->VisualLineConstructionStarting -= TextFieldVisualLineConstructionStartingHandler;
 	InlineSearchPanel->SearchOptionsChanged -= SearchPanelSearchOptionsChangedHandler;
 	LineTracker->LineAnchorInvalidated -= LineTrackingManagerLineAnchorInvalidatedHandler;
 
@@ -1714,11 +1702,11 @@ AvalonEditTextEditor::~AvalonEditTextEditor()
 	SAFEDELETE_CLR(TextFieldMiddleMouseScrollMoveHandler);
 	SAFEDELETE_CLR(TextFieldMiddleMouseScrollDownHandler);
 	SAFEDELETE_CLR(MiddleMouseScrollTimerTickHandler);
+	SAFEDELETE_CLR(MouseHoverEndTimerTickHandler);
 	SAFEDELETE_CLR(ScrollBarSyncTimerTickHandler);
 	SAFEDELETE_CLR(ExternalScrollBarValueChangedHandler);
 	SAFEDELETE_CLR(SemanticAnalysisTimerTickHandler);
 	SAFEDELETE_CLR(ScriptEditorPreferencesSavedHandler);
-	SAFEDELETE_CLR(TextFieldVisualLineConstructionStartingHandler);
 	SAFEDELETE_CLR(SetTextAnimationCompletedHandler);
 	SAFEDELETE_CLR(SearchPanelSearchOptionsChangedHandler);
 	SAFEDELETE_CLR(LineTrackingManagerLineAnchorInvalidatedHandler);
@@ -1751,16 +1739,11 @@ AvalonEditTextEditor::~AvalonEditTextEditor()
 	SAFEDELETE_CLR(TextField);
 }
 
-void AvalonEditTextEditor::UpdateSyntaxHighlighting(bool Regenerate)
-{
-	SAFEDELETE_CLR(TextField->SyntaxHighlighting);
-	TextField->SyntaxHighlighting = CreateSyntaxHighlightDefinitions(Regenerate);
-}
-
 void AvalonEditTextEditor::Bind()
 {
 	ActivatedInView = true;
 	ScrollBarSyncTimer->Start();
+	TextField->Focusable = true;
 	FocusTextArea();
 	ScrollToCaret();
 
@@ -1772,6 +1755,7 @@ void AvalonEditTextEditor::Unbind()
 {
 	ActivatedInView = false;
 	ScrollBarSyncTimer->Stop();
+	TextField->Focusable = false;
 	Windows::Input::Keyboard::ClearFocus();
 }
 
@@ -1884,6 +1868,9 @@ void AvalonEditTextEditor::FadeOutCurrentTextView()
 	TextFieldPanel->Children->Add(AnimationPrimitive);
 
 	AnimationPrimitive->Fill = gcnew System::Windows::Media::VisualBrush(TextField);
+	if (AnimationPrimitive->Fill->CanFreeze)
+		AnimationPrimitive->Fill->Freeze();
+
 	AnimationPrimitive->Height = TextField->ActualHeight;
 	AnimationPrimitive->Width = TextField->ActualWidth;
 
@@ -1929,6 +1916,9 @@ void AvalonEditTextEditor::ScrollToCaret()
 
 void AvalonEditTextEditor::FocusTextArea()
 {
+	if (!ActivatedInView)
+		return;
+
 	WinFormsContainer->Focus();
 	WPFHost->Focus();
 	TextFieldPanel->Focus();

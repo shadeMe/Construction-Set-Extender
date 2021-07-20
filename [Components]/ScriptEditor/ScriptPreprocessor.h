@@ -37,10 +37,10 @@ ref struct PreprocessorParams
 ref class CSEPreprocessorToken
 {
 protected:
-	String^												Token;
+	String^	Token;
 public:
-	virtual String^										GetToken() { return Token; }			// returns the preprocessed token
-	virtual bool										GetValid() { return true; }
+	virtual String^ GetToken() { return Token; }			// returns the preprocessed token
+	virtual bool GetValid() { return true; }
 
 	CSEPreprocessorToken(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
 };
@@ -48,20 +48,20 @@ public:
 ref class CSEPreprocessorDirective abstract : public CSEPreprocessorToken
 {
 public:
-	static enum class									EncodingType
+	static enum class eEncodingType
 	{
 		Invalid = 0,
 		SingleLine,
 		MultiLine
 	};
-	static array<Char>^									EncodingIdentifier =
+	static array<Char>^ EncodingIdentifier =
 	{
 		'~',
 		'#',
 		'@'
 	};
 
-	static enum class									DirectiveType
+	static enum class eDirectiveType
 	{
 		Invalid = 0,
 		Define,
@@ -69,7 +69,7 @@ public:
 		Enum,
 		If
 	};
-	static array<String^>^								DirectiveIdentifier =
+	static array<String^>^ DirectiveIdentifier =
 	{
 		"Invalid",
 		"Define",
@@ -77,39 +77,41 @@ public:
 		"Enum",
 		"If"
 	};
+
+	static String^ GetDirectiveKeyword(eDirectiveType DirectiveType, eEncodingType EncodingType);
 protected:
-	DirectiveType										Type;
-	EncodingType										Encoding;
-	bool												ErrorFlag;
+	eDirectiveType Type;
+	eEncodingType Encoding;
+	bool ErrorFlag;
 
-	String^												SliceStart;
-	String^												SliceEnd;
+	String^ SliceStart;
+	String^ SliceEnd;
 
-	String^												GetMultilineValue(LineTrackingStringReader^% TextReader, String^% SliceStart, String^% SliceEnd);
-	String^												ObfuscateToCompiler(String^ Token);
+	String^ GetMultilineValue(LineTrackingStringReader^% TextReader, String^% SliceStart, String^% SliceEnd);
+	String^ ObfuscateToCompiler(String^ Token);
 public:
-	CSEPreprocessorDirective() : CSEPreprocessorToken(nullptr, nullptr, nullptr), Type(DirectiveType::Invalid), Encoding(EncodingType::Invalid), ErrorFlag(false), SliceStart(""), SliceEnd("") {}
+	CSEPreprocessorDirective() : CSEPreprocessorToken(nullptr, nullptr, nullptr), Type(eDirectiveType::Invalid), Encoding(eEncodingType::Invalid), ErrorFlag(false), SliceStart(""), SliceEnd("") {}
 
-	virtual bool										GetValid() override { return ErrorFlag == false; }
+	virtual bool GetValid() override { return ErrorFlag == false; }
 
-	EncodingType										GetEncodingType() { return Encoding; }
-	DirectiveType										GetDirectiveType()	{ return Type; }
-	bool												GetErrorFlag() { return ErrorFlag; }
+	eEncodingType GetEncodingType() { return Encoding; }
+	eDirectiveType GetDirectiveType()	{ return Type; }
+	bool GetErrorFlag() { return ErrorFlag; }
 };
 
 ref class DefineDirective : public CSEPreprocessorDirective
 {
-	String^												Name;
-	String^												Value;
+	String^	Name;
+	String^	Value;
 
-	bool												IsNameValid(String^ Name);
+	bool IsNameValid(String^ Name);
 public:
-	static enum class									AccessoryOperatorType
+	static enum class eAccessoryOperatorType
 	{
 		None = 0,
 		Stringize
 	};
-	static array<String^>^								AccessoryOperatorIdentifier =
+	static array<String^>^ AccessoryOperatorIdentifier =
 	{
 		"",
 		"#"
@@ -118,48 +120,48 @@ public:
 	DefineDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber);						// used for single line definitions
 	DefineDirective(String^ Token, LineTrackingStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);			// used for multi line definitions
 
-	String^												GetName() { return Name; }
-	String^												GetValue(String^ Prefix, AccessoryOperatorType ActiveOperator);
-	void												SetValue(String^ Value) { this->Value = Value; }
-	DefineDirective^									CreateCopy();
+	String^	GetName() { return Name; }
+	String^	GetValue(String^ Prefix, eAccessoryOperatorType ActiveOperator);
+	void SetValue(String^ Value) { this->Value = Value; }
+	DefineDirective^ CreateCopy();
 
-	static AccessoryOperatorType						GetAccessoryOperatorFromToken(String^ Token);
+	static eAccessoryOperatorType GetAccessoryOperatorFromToken(String^ Token);
 
-	virtual	String^										GetToken() override;
+	virtual	String^ GetToken() override;
 };
 
 ref class ImportDirective : public CSEPreprocessorDirective
 {
-	String^												Filename;
-	String^												ImportSegment;
+	String^ Filename;
+	String^ ImportSegment;
 public:
 	ImportDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber);
 
-	virtual	String^										GetToken() override;
-	String^												GetFilename() { return Filename; }
+	virtual	String^ GetToken() override;
+	String^ GetFilename() { return Filename; }
 };
 
 ref class EnumDirective : public CSEPreprocessorDirective
 {
-	String^												Name;
-	String^												Value;
-	LinkedList<DefineDirective^>^						ComponentDefineDirectives;
+	String^ Name;
+	String^ Value;
+	List<DefineDirective^>^ ComponentDefineDirectives;
 
-	void												ParseComponentDefineDirectives(String^ Source, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber);
+	void ParseComponentDefineDirectives(String^ Source, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber);
 public:
 	EnumDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber);						// used for single line definitions
 	EnumDirective(String^ Token, LineTrackingStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);			// used for multi line definitions
 
-	virtual	String^										GetToken() override;
+	virtual	String^ GetToken() override;
 };
 
 ref class IfDirective : public CSEPreprocessorDirective
 {
 	ref struct Operator
 	{
-		delegate bool									Handler(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+		delegate bool Handler(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
 
-		static enum class								BuiltInOperators
+		static enum class eBuiltInOperators
 		{
 			Equal,
 			LessThanOrEqual,
@@ -171,7 +173,7 @@ ref class IfDirective : public CSEPreprocessorDirective
 			LogicalAND,
 			LogicalOR
 		};
-		static array<String^>^							BuiltInOperatorsIdentifier =
+		static array<String^>^ BuiltInOperatorsIdentifier =
 		{
 			"==",
 			"<=",
@@ -184,68 +186,68 @@ ref class IfDirective : public CSEPreprocessorDirective
 			"||"
 		};
 
-		static bool										Evaluator(BuiltInOperators Type, String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+		static bool Evaluator(eBuiltInOperators Type, String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
 	private:
-		String^											Identifier;
-		Handler^										EvaluationHandler;
-		UInt32											Precedence;
-		UInt32											OperandCount;
+		String^ Identifier;
+		Handler^ EvaluationHandler;
+		UInt32 Precedence;
+		UInt32 OperandCount;
 	public:
 		Operator(String^ Identifier, Handler^ EvaluationHandler, UInt32 Precedence, UInt32 OperandCount) :
 			Identifier(Identifier), EvaluationHandler(EvaluationHandler), Precedence(Precedence), OperandCount(OperandCount) {}
 
-			String^										GetIdentifier() { return Identifier; }
-			UInt32										GetPrecedence() { return Precedence; }
-			UInt32										GetOperandCount() { return OperandCount; }
-			bool											Evaluate(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance) { return EvaluationHandler(LHS, RHS, ErrorOutput, PreprocessorInstance); }
+			String^ GetIdentifier() { return Identifier; }
+			UInt32 GetPrecedence() { return Precedence; }
+			UInt32 GetOperandCount() { return OperandCount; }
+			bool Evaluate(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance) { return EvaluationHandler(LHS, RHS, ErrorOutput, PreprocessorInstance); }
 	};
 
-	static bool											ParseAsInt(String^ Source, int% Result);
-	static void											ProcessOperands(String^ LHSSource, String^ RHSSource, String^% LHSResult, String^% RHSResult, Preprocessor^ PreprocessorInstance);
+	static bool ParseAsInt(String^ Source, int% Result);
+	static void ProcessOperands(String^ LHSSource, String^ RHSSource, String^% LHSResult, String^% RHSResult, Preprocessor^ PreprocessorInstance);
 
-	static bool											EqualityOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
-	static bool											LessThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
-	static bool											GreaterThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
-	static bool											LessThanOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
-	static bool											GreaterThanOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
-	static bool											NotEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+	static bool EqualityOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+	static bool LessThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+	static bool GreaterThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+	static bool LessThanOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+	static bool GreaterThanOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+	static bool NotEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
 
-	static bool											LogicalAndOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
-	static bool											LogicalOrOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+	static bool LogicalAndOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+	static bool LogicalOrOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
 
-	static array<Operator^>^							OperatorList =
+	static array<Operator^>^ OperatorList =
 	{
-		gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::Equal],
+		gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::eBuiltInOperators::Equal],
 						gcnew Operator::Handler(&IfDirective::EqualityOperatorEvaluator), 2, 2),
-		gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::LessThanOrEqual],
+		gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::eBuiltInOperators::LessThanOrEqual],
 						gcnew Operator::Handler(&IfDirective::LessThanOrEqualOperatorEvaluator), 0, 2),
-		gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::GreaterThanOrEqual],
+		gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::eBuiltInOperators::GreaterThanOrEqual],
 						gcnew Operator::Handler(&IfDirective::GreaterThanOrEqualOperatorEvaluator), 1, 2),
-		gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::LessThan],
+		gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::eBuiltInOperators::LessThan],
 						gcnew Operator::Handler(&IfDirective::LessThanOperatorEvaluator), 0, 2),
-		gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::GreaterThan],
+		gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::eBuiltInOperators::GreaterThan],
 						gcnew Operator::Handler(&IfDirective::GreaterThanOperatorEvaluator), 1, 2),
-		gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::NotEqual],
+		gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::eBuiltInOperators::NotEqual],
 						gcnew Operator::Handler(&IfDirective::NotEqualOperatorEvaluator), 2, 2),
 
-		gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::LogicalAND],
+		gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::eBuiltInOperators::LogicalAND],
 						gcnew Operator::Handler(&IfDirective::LogicalAndOperatorEvaluator), 3, 2),
-		gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::LogicalOR],
+		gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::eBuiltInOperators::LogicalOR],
 						gcnew Operator::Handler(&IfDirective::LogicalOrOperatorEvaluator), 4, 2)
 	};
 
-	bool												ConvertInfixExpressionToPostFix(String^ Source, String^% Result, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
-	Operator^											LookupOperatorByIdentifier(String^ Identifier);
+	bool ConvertInfixExpressionToPostFix(String^ Source, String^% Result, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+	Operator^ LookupOperatorByIdentifier(String^ Identifier);
 
-	String^												BaseCondition;
-	String^												Block;
-	bool												ValidationResult;
+	String^ BaseCondition;
+	String^ Block;
+	bool ValidationResult;
 
-	bool												CheckBaseCondition(String^ Base, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+	bool CheckBaseCondition(String^ Base, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
 public:
 	IfDirective(String^ Token, LineTrackingStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
 
-	virtual	String^										GetToken() override;
+	virtual	String^ GetToken() override;
 };
 
 ref class Preprocessor
@@ -258,7 +260,7 @@ ref class Preprocessor
 	bool Busy;
 
 	void ProcessStandardDirectives(String^ Path, StandardOutputError^ ErrorOutput);
-	CSEPreprocessorToken^ CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType Encoding, String^ Identifier, String^ Token, LineTrackingStringReader^ TextReader, StandardOutputError^ ErrorOutput);
+	CSEPreprocessorToken^ CreateDirectiveFromIdentifier(CSEPreprocessorDirective::eEncodingType Encoding, String^ Identifier, String^ Token, LineTrackingStringReader^ TextReader, StandardOutputError^ ErrorOutput);
 public:
 	static Preprocessor^ Get();
 

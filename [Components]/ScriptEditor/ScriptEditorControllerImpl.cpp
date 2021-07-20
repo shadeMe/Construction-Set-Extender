@@ -26,6 +26,7 @@ ActiveDocumentActionCollection::ActiveDocumentActionCollection()
 	Uncomment = gcnew utilities::BasicAction("Uncomment", "Uncomments the current selection or line");
 	AddBookmark = gcnew utilities::BasicAction("Add Bookmark", "Adds a new bookmark at the current line");
 	GoToLine = gcnew utilities::BasicAction("Go to Line", "Jumps to a given line in the document");
+	JumpToScriptAtCaret = gcnew utilities::BasicAction("Jump to Attached Script", "Opens the script (attached to the form) at the caret location");
 
 	AddVarInteger = gcnew utilities::BasicAction("Add New Variable (Integer)", "Adds a new integer variable to the script's variable declaration");
 	AddVarFloat = gcnew utilities::BasicAction("Add New Variable (Float)", "Adds a new float variable to the script's variable declaration");
@@ -42,6 +43,7 @@ ActiveDocumentActionCollection::~ActiveDocumentActionCollection()
 	SAFEDELETE_CLR(Uncomment);
 	SAFEDELETE_CLR(AddBookmark);
 	SAFEDELETE_CLR(GoToLine);
+	SAFEDELETE_CLR(JumpToScriptAtCaret);
 
 	SAFEDELETE_CLR(AddVarInteger);
 	SAFEDELETE_CLR(AddVarFloat);
@@ -58,6 +60,7 @@ void ActiveDocumentActionCollection::CreateDefaultKeyBindings(components::InputM
 	InputManager->AddKeyChordCommand(Uncomment, utilities::KeyCombo::New(Keys::Control, Keys::K), utilities::KeyCombo::New(Keys::Control, Keys::U), false, view::eViewRole::MainToolbar_Edit_Uncomment);
 	InputManager->AddKeyChordCommand(AddBookmark, utilities::KeyCombo::New(Keys::Control, Keys::B), false, view::eViewRole::MainToolbar_Edit_AddBookmark, view::eViewRole::MainToolbar_Edit_AddBookmark);
 	InputManager->AddKeyChordCommand(GoToLine, utilities::KeyCombo::New(Keys::Control, Keys::G), false, view::eViewRole::MainToolbar_Edit_GoToLine);
+	InputManager->AddKeyChordCommand(JumpToScriptAtCaret, utilities::KeyCombo::New(Keys::Control, Keys::OemPipe), false, view::eViewRole::TextEditor_ContextMenu_JumpToAttachedScript);
 
 	InputManager->AddKeyChordCommand(AddVarInteger, utilities::KeyCombo::New(Keys::Control, Keys::L), utilities::KeyCombo::New(Keys::Control, Keys::I), false, view::eViewRole::TextEditor_ContextMenu_AddVar_Integer);
 	InputManager->AddKeyChordCommand(AddVarFloat, utilities::KeyCombo::New(Keys::Control, Keys::L), utilities::KeyCombo::New(Keys::Control, Keys::F), false, view::eViewRole::TextEditor_ContextMenu_AddVar_Float);
@@ -194,8 +197,15 @@ void ScriptEditorController::ActiveDocumentAction_GoToLine()
 		return;
 
 	int LineNumber = 0;
-	if (int::TryParse(LineNumberStr, LineNumber))
+	int::TryParse(LineNumberStr, LineNumber);
+
+	if (LineNumber >= 1 && LineNumber <= LineCount)
 		Document->TextEditor->ScrollToLine(LineNumber);
+	else
+	{
+		View->ShowNotification("Line number must be between 1 and " + LineCount + ".",
+							   view::components::CommonIcons::Get()->ErrorLarge, 3500);
+	}
 }
 
 void AddNewVariableToDocument(obScriptParsing::Variable::eDataType DataType, model::IScriptDocument^ Document, view::IScriptEditorView^ View)
@@ -214,6 +224,19 @@ void AddNewVariableToDocument(obScriptParsing::Variable::eDataType DataType, mod
 		View->ShowNotification("Could not insert new variable '" + VariableName + "'!\nEnsure that there are no other variables with the same name.",
 							   view::components::CommonIcons::Get()->BlockedLarge, 3500);
 	}
+}
+
+void ScriptEditorController::ActiveDocumentAction_JumpToScriptAtCaret()
+{
+	auto Document = BoundDocument;
+	if (Document == nullptr)
+		return;
+
+	auto TokenAtCaret = Document->TextEditor->GetTokenAtCaretPos();
+	auto AttachedScript = intellisense::IntelliSenseBackend::Get()->GetAttachedScript(TokenAtCaret);
+
+	if (AttachedScript)
+		ActivateOrCreateNewDocument(AttachedScript->GetIdentifier());
 }
 
 void ScriptEditorController::ActiveDocumentAction_AddVarInteger()
@@ -476,6 +499,8 @@ void ScriptEditorController::SetDocumentPreprocessorOutputDisplayDependentViewCo
 		else
 			throw gcnew NotImplementedException;
 	}
+
+	View->GetComponentByRole(view::eViewRole::StatusBar)->AsContainer()->Invalidate();
 }
 
 void ScriptEditorController::ResetViewComponentsToUnboundState()
@@ -617,10 +642,12 @@ void ScriptEditorController::ActivateDocumentInView(model::IScriptDocument^ Docu
 
 void ScriptEditorController::DisposeSelfOnViewClosure()
 {
-	Debug::Assert(View != nullptr);
+	Debug::Assert(ChildView != nullptr);
 	Debug::Assert(BoundDocument == nullptr);
 
-	View->ComponentEvent -= DelegateViewComponentEvent;
+	ChildView->ComponentEvent -= DelegateViewComponentEvent;
+	components::ViewTabTearingHelper::Get()->DeregisterTabStrip(ChildView->GetComponentByRole(view::eViewRole::MainTabStrip)->AsTabStrip());
+	ChildView = nullptr;
 
 	delete this;
 }
@@ -760,7 +787,8 @@ bool ScriptEditorController::SaveDocument(model::IScriptDocument^ Document, mode
 	bool SaveResult = Document->Save(SaveOperation);
 	if (!SaveResult && BoundDocument == Document)
 	{
-		View->ShowNotification("Script compilation failed.\nCheck the message log for more information.",
+		View->GetComponentByRole(view::eViewRole::Messages_DockPanel)->AsDockablePane()->Focus();
+		View->ShowNotification("Script compilation failed.",
 							   view::components::CommonIcons::Get()->ErrorLarge,
 							   3000);
 	}
@@ -886,6 +914,7 @@ void ScriptEditorController::ViewEventHandler_ComponentEvent(Object^ Sender, vie
 	case view::eViewRole::MainTabStrip_NewTab_ExistingScript:
 		ViewEventHandler_MainTabStrip(E);
 		break;
+	case view::eViewRole::MainToolbar:
 	case view::eViewRole::MainToolbar_NewScript:
 	case view::eViewRole::MainToolbar_OpenScript:
 	case view::eViewRole::MainToolbar_SaveScript:
@@ -1013,6 +1042,10 @@ void ScriptEditorController::ViewEventHandler_MainWindow(view::ViewComponentEven
 	{
 	case view::components::IForm::eEvent::KeyDown:
 		InputManager->HandleKeyDown(safe_cast<view::components::IForm::KeyDownEventArgs^>(E->EventArgs)->KeyEvent, this);
+		break;
+	case view::components::IForm::eEvent::FocusEnter:
+	case view::components::IForm::eEvent::FocusLeave:
+		InputManager->HandleInputFocusChange(E, this);
 		break;
 	case view::components::IForm::eEvent::Closing:
 	{
@@ -1729,6 +1762,7 @@ void ScriptEditorController::ViewEventHandler_TabStripContextMenu(view::ViewComp
 	bool OnClick = EventType == view::components::IButton::eEvent::Click;
 	auto OnPopup = EventType == view::components::IButton::eEvent::PopupOpening;
 
+	auto Form = View->GetComponentByRole(view::eViewRole::MainWindow)->AsForm();
 	auto TabStrip = View->GetComponentByRole(view::eViewRole::MainTabStrip)->AsTabStrip();
 	auto Button = E->Component->AsButton();
 
@@ -1749,11 +1783,15 @@ void ScriptEditorController::ViewEventHandler_TabStripContextMenu(view::ViewComp
 			Button->Enabled = Button->Tag != nullptr && TabStrip->TabCount > 1;
 		else if (OnClick)
 		{
-			for each (auto Tab in TabStrip->Tabs)
+			Form->BeginUpdate();
 			{
-				if (Tab != Button->Tag)
-					Tab->Close();
+				for each (auto Tab in TabStrip->Tabs)
+				{
+					if (Tab != Button->Tag)
+						Tab->Close();
+				}
 			}
+			Form->EndUpdate();
 		}
 
 		break;
@@ -1774,12 +1812,16 @@ void ScriptEditorController::ViewEventHandler_TabStripContextMenu(view::ViewComp
 		}
 		else if (OnClick)
 		{
-			for each (auto Tab in TabStrip->Tabs)
+			Form->BeginUpdate();
 			{
-				auto Doc = safe_cast<model::IScriptDocument^>(Tab->Tag);
-				if (!Doc->Dirty)
-					Tab->Close();
+				for each (auto Tab in TabStrip->Tabs)
+				{
+					auto Doc = safe_cast<model::IScriptDocument^>(Tab->Tag);
+					if (!Doc->Dirty)
+						Tab->Close();
+				}
 			}
+			Form->EndUpdate();
 		}
 
 		break;
@@ -1788,8 +1830,12 @@ void ScriptEditorController::ViewEventHandler_TabStripContextMenu(view::ViewComp
 			Button->Enabled = TabStrip->TabCount > 0;
 		else if (OnClick)
 		{
-			for each (auto Tab in TabStrip->Tabs)
-				Tab->Close();
+			Form->BeginUpdate();
+			{
+				for each (auto Tab in TabStrip->Tabs)
+					Tab->Close();
+			}
+			Form->EndUpdate();
 		}
 
 		break;
@@ -2186,6 +2232,7 @@ ScriptEditorController::ScriptEditorController(model::IFactory^ ModelFactory, vi
 	ActiveDocumentActions->Uncomment->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_Uncomment);
 	ActiveDocumentActions->AddBookmark->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_AddBookmark);
 	ActiveDocumentActions->GoToLine->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_GoToLine);
+	ActiveDocumentActions->JumpToScriptAtCaret->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_JumpToScriptAtCaret);
 	ActiveDocumentActions->AddVarInteger->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_AddVarInteger);
 	ActiveDocumentActions->AddVarFloat->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_AddVarFloat);
 	ActiveDocumentActions->AddVarReference->InvokeDelegate = gcnew utilities::BasicAction::InvokationDelegate(this, &ScriptEditorController::ActiveDocumentAction_AddVarReference);

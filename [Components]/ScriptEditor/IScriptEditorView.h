@@ -106,6 +106,8 @@ interface class IForm : public IViewComponent
 		KeyDown,
 		LocationChanged,
 		SizeChanged,
+		FocusEnter,
+		FocusLeave
 	};
 
 	ref struct ClosingEventArgs
@@ -122,6 +124,9 @@ interface class IForm : public IViewComponent
 	{};
 
 	ref struct SizeChangedEventArgs
+	{};
+
+	ref struct FocusChangeEventArgs
 	{};
 };
 
@@ -377,10 +382,12 @@ interface class ICrumbBar : public IViewComponent
 interface class IContainer : public IViewComponent
 {
 	property bool Visible;
+	property bool Focused;
 
 	void AddControl(Control^ Control);
 	void RemoveControl(Control^ Control);
 	void Invalidate();
+	void Focus();
 
 	static enum class eEvent
 	{
@@ -444,6 +451,7 @@ ref class CommonIcons
 
 	CommonIcons();
 public:
+	property Image^ ScriptEditor;
 	property Image^ Transparent;
 	property Image^ UnsavedChanges;
 	property Image^ Info;

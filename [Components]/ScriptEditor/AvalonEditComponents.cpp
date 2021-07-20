@@ -2,6 +2,7 @@
 #include "AvalonEditTextEditor.h"
 #include "IScriptEditorView.h"
 #include "Preferences.h"
+#include "Utilities.h"
 
 namespace cse
 {
@@ -154,33 +155,97 @@ AnchoredDocumentSegment::AnchoredDocumentSegment(TextAnchor^ Start, TextAnchor^ 
 	Enabled = true;
 }
 
-
-void LineTrackingManagerBgRenderer::RenderBackground(TextView^ Destination, System::Windows::Media::DrawingContext^ DrawingContext, int StartOffset, int EndOffset, Windows::Media::Color Background, Windows::Media::Color Border, Double BorderThickness, bool ColorEntireLine)
+CustomBrushes::BgRendererBrush::BgRendererBrush(Color BackColor, int Alpha)
 {
-	Destination->EnsureVisualLines();
+	auto BgColor = Windows::Media::Color::FromArgb(Alpha, BackColor.R, BackColor.G, BackColor.B);
+	Background = gcnew System::Windows::Media::SolidColorBrush(BgColor);
+	Background->Freeze();
+
+	auto BorderColor = Windows::Media::Color::FromArgb(Math::Max(255, Alpha + 50), BackColor.R, BackColor.G, BackColor.B);
+	auto BorderBrush = gcnew System::Windows::Media::SolidColorBrush(BorderColor);
+	BorderBrush->Freeze();
+
+	Border = gcnew System::Windows::Media::Pen(BorderBrush, 1);
+	Border->Freeze();
+}
+
+void CustomBrushes::RecreateAll()
+{
+	Color ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
+	Color BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
+	ForeColor = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, ForegroundColor.R, ForegroundColor.G, ForegroundColor.B));
+	ForeColorPartlyTransparent = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(150, ForegroundColor.R, ForegroundColor.G, ForegroundColor.B));
+	BackColor = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B));
+
+	ForeColor->Freeze();
+	ForeColorPartlyTransparent->Freeze();
+	BackColor->Freeze();
+
+	Transparent = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(0, 0, 0, 0));
+	Transparent->Freeze();
+
+	SelectionMatch = gcnew BgRendererBrush(preferences::SettingsHolder::Get()->Appearance->BackColorSelection, 120);
+	CurrentLine = gcnew BgRendererBrush(preferences::SettingsHolder::Get()->Appearance->BackColorCurrentLine, 120);
+	FindResults = gcnew BgRendererBrush(preferences::SettingsHolder::Get()->Appearance->BackColorFindResults, 120);
+
+	auto ErrorSquiglyColor = Windows::Media::Color::FromArgb(255,
+		preferences::SettingsHolder::Get()->Appearance->UnderlineColorError.R,
+		preferences::SettingsHolder::Get()->Appearance->UnderlineColorError.G,
+		preferences::SettingsHolder::Get()->Appearance->UnderlineColorError.B);
+
+	auto ErrorSquiglyBrush = gcnew Windows::Media::SolidColorBrush(ErrorSquiglyColor);
+	ErrorSquiglyBrush->Freeze();
+
+	ErrorSquigly = gcnew System::Windows::Media::Pen(ErrorSquiglyBrush, 1);
+	ErrorSquigly->Freeze();
+
+	ValidBrace = gcnew BgRendererBrush(Color::LightSlateGray, 120);
+	InvalidBrace = gcnew BgRendererBrush(Color::MediumVioletRed, 120);
+}
+
+void CustomBrushes::Preferences_Changed(Object^ Sender, EventArgs^ E)
+{
+	RecreateAll();
+}
+
+CustomBrushes::CustomBrushes()
+{
+	preferences::SettingsHolder::Get()->PreferencesChanged += gcnew System::EventHandler(this, &CustomBrushes::Preferences_Changed);
+
+	RecreateAll();
+}
+
+CustomBrushes^ CustomBrushes::Get()
+{
+	if (Singleton == nullptr)
+		Singleton = gcnew CustomBrushes;
+
+	return Singleton;
+}
+
+void LineTrackingManagerBgRenderer::RenderBackground(TextView^ Destination, System::Windows::Media::DrawingContext^ DrawingContext, int StartOffset, int EndOffset, CustomBrushes::BgRendererBrush^ Brush, bool ColorEntireLine)
+{
 	TextSegment^ Segment = gcnew TextSegment();
 	Segment->StartOffset = StartOffset;
 	Segment->EndOffset = EndOffset;
-	for each (Windows::Rect R in BackgroundGeometryBuilder::GetRectsForSegment(Destination, Segment, false))
+
+	for each (auto% R in BackgroundGeometryBuilder::GetRectsForSegment(Destination, Segment, false))
 	{
 		if (ColorEntireLine)
 		{
-			DrawingContext->DrawRoundedRectangle(gcnew System::Windows::Media::SolidColorBrush(Background),
-				gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(Border), BorderThickness),
-				Windows::Rect(R.Location, Windows::Size(Destination->ActualWidth + Destination->HorizontalOffset, R.Height)), 2, 2);
+			Windows::Rect Bounds(R.Location, Windows::Size(Destination->ActualWidth + Destination->HorizontalOffset, R.Height));
+			DrawingContext->DrawRoundedRectangle(Brush->Background, Brush->Border, Bounds, 2, 2);
 		}
 		else
 		{
-			DrawingContext->DrawRoundedRectangle(gcnew System::Windows::Media::SolidColorBrush(Background),
-				gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(Border), BorderThickness),
-				Windows::Rect(R.Location, Windows::Size(R.Width, R.Height)), 2, 2);
+			Windows::Rect Bounds(R.Location, Windows::Size(R.Width, R.Height));
+			DrawingContext->DrawRoundedRectangle(Brush->Background, Brush->Border, Bounds, 2, 2);
 		}
 	}
 }
 
-void LineTrackingManagerBgRenderer::RenderSquiggle(TextView^ Destination, System::Windows::Media::DrawingContext^ DrawingContext, int StartOffset, int EndOffset, Windows::Media::Color Color)
+void LineTrackingManagerBgRenderer::RenderSquiggle(TextView^ Destination, System::Windows::Media::DrawingContext^ DrawingContext, int StartOffset, int EndOffset, System::Windows::Media::Pen^ Pen)
 {
-	Destination->EnsureVisualLines();
 	TextSegment^ Segment = gcnew TextSegment();
 	Segment->StartOffset = StartOffset;
 	Segment->EndOffset = EndOffset;
@@ -189,8 +254,6 @@ void LineTrackingManagerBgRenderer::RenderSquiggle(TextView^ Destination, System
 	{
 		Windows::Point StartPoint = R.BottomLeft;
 		Windows::Point EndPoint = R.BottomRight;
-		Windows::Media::SolidColorBrush^ Brush = gcnew Windows::Media::SolidColorBrush(Color);
-		Brush->Freeze();
 
 		double Offset = 2.5;
 		int Count = Math::Max((int)((EndPoint.X - StartPoint.X) / Offset) + 1, 4);
@@ -206,45 +269,21 @@ void LineTrackingManagerBgRenderer::RenderSquiggle(TextView^ Destination, System
 		delete Context;
 
 		Geometry->Freeze();
-
-		Windows::Media::Pen^ Pen = gcnew System::Windows::Media::Pen(Brush, 1);
-		Pen->Freeze();
 		DrawingContext->DrawGeometry(Windows::Media::Brushes::Transparent, Pen, Geometry);
 	}
 }
 
-void LineTrackingManagerBgRenderer::DoCurrentLineBackground(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
+void LineTrackingManagerBgRenderer::DoCurrentLineBackground(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext, int FirstVisibleLine, int LastVisibleLine)
 {
 	if (!ParentEditor->TextArea->Selection->IsEmpty)
 		return;
 
 	DocumentLine^ Line = ParentEditor->Document->GetLineByNumber(ParentEditor->TextArea->Caret->Line);
-	Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorCurrentLine;
-	RenderBackground(textView,
-						drawingContext,
-						Line->Offset,
-						Line->EndOffset,
-						Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
-						Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
-						1,
-						true);
-}
-
-void LineTrackingManagerBgRenderer::DoLineLimitBackground(DocumentLine^ Line, TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
-{
-	if (Line->Length <= 512)
+	if (Line->LineNumber < FirstVisibleLine || Line->LineNumber > LastVisibleLine)
 		return;
 
-	Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorCharLimit;
-
-	RenderBackground(textView,
-						drawingContext,
-						Line->Offset,
-						Line->EndOffset,
-						Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
-						Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
-						1,
-						true);
+	Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorCurrentLine;
+	RenderBackground(textView, drawingContext, Line->Offset, Line->EndOffset, CustomBrushes::Get()->CurrentLine, true);
 }
 
 void LineTrackingManagerBgRenderer::DoSelectedStringBackground(String^ SelectionText, DocumentLine^ Line, TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
@@ -252,28 +291,22 @@ void LineTrackingManagerBgRenderer::DoSelectedStringBackground(String^ Selection
 	if (SelectionText->Length <= 1)
 		return;
 
-	Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorSelection;
-
 	String^ CurrentLine = ParentEditor->Document->GetText(Line);
 
 	int Index = 0, Start = 0;
 	while (Start < CurrentLine->Length && (Index = CurrentLine->IndexOf(SelectionText, Start, System::StringComparison::CurrentCultureIgnoreCase)) != -1)
 	{
 		int EndIndex = Index + SelectionText->Length;
-		RenderBackground(textView,
-						    drawingContext,
-						    Line->Offset + Index,
-						    Line->Offset + EndIndex,
-						    Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
-						    Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
-						    1,
-						    false);
+		RenderBackground(textView, drawingContext,
+						 Line->Offset + Index,
+						 Line->Offset + EndIndex,
+						 CustomBrushes::Get()->SelectionMatch, false);
 
 		Start = EndIndex + 1;
 	}
 }
 
-void LineTrackingManagerBgRenderer::DoErrorSquiggles(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
+void LineTrackingManagerBgRenderer::DoErrorSquiggles(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext, int FirstVisibleLine, int LastVisibleLine)
 {
 	Color Buffer = preferences::SettingsHolder::Get()->Appearance->UnderlineColorError;
 
@@ -281,12 +314,16 @@ void LineTrackingManagerBgRenderer::DoErrorSquiggles(TextView^ textView, System:
 
 	for each (auto Itr in ErrorSquiggles)
 	{
-		if (Itr->Enabled && Itr->Valid)
-			RenderSquiggle(textView, drawingContext, Itr->StartOffset, Itr->EndOffset, RenderColor);
+		if (!Itr->Enabled || !Itr->Valid)
+			continue;
+		else if (Itr->Line < FirstVisibleLine || Itr->Line > LastVisibleLine)
+			continue;
+
+		RenderSquiggle(textView, drawingContext, Itr->StartOffset, Itr->EndOffset, CustomBrushes::Get()->ErrorSquigly);
 	}
 }
 
-void LineTrackingManagerBgRenderer::DoFindResults(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
+void LineTrackingManagerBgRenderer::DoFindResults(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext, int FirstVisibleLine, int LastVisibleLine)
 {
 	Color Buffer = preferences::SettingsHolder::Get()->Appearance->BackColorFindResults;
 
@@ -294,27 +331,24 @@ void LineTrackingManagerBgRenderer::DoFindResults(TextView^ textView, System::Wi
 	{
 		if (!Itr->Enabled || !Itr->Valid)
 			continue;
+		else if (Itr->Line < FirstVisibleLine || Itr->Line > LastVisibleLine)
+			continue;
 
-		RenderBackground(textView,
-						drawingContext,
-						Itr->StartOffset,
-						Itr->EndOffset,
-						Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
-						Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
-						1,
-						false);
+		RenderBackground(textView, drawingContext,
+						 Itr->StartOffset,
+						 Itr->EndOffset,
+						 CustomBrushes::Get()->FindResults, false);
 	}
 }
 
-void LineTrackingManagerBgRenderer::DoBraceIndicators(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
+void LineTrackingManagerBgRenderer::DoBraceIndicators(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext, int FirstVisibleLine, int LastVisibleLine)
 {
 	if (!OpenCloseBraces->Enabled)
 		return;
 	else if (OpenCloseBraces->StartOffset == -1 && OpenCloseBraces->EndOffset == -1)
 		return;
-
-	auto ValidBraceColor = Color::LightSlateGray;
-	auto InvalidBraceColor = Color::MediumVioletRed;
+	else if (OpenCloseBraces->Line < FirstVisibleLine || OpenCloseBraces->Line > LastVisibleLine)
+		return;
 
 	auto Builder = gcnew BackgroundGeometryBuilder();
 	Builder->CornerRadius = 1;
@@ -340,9 +374,11 @@ void LineTrackingManagerBgRenderer::DoBraceIndicators(TextView^ textView, System
 	if (HighlightGeometry == nullptr)
 		return;
 
-	auto HighlightColor = OpenCloseBraces->StartOffset == -1 || OpenCloseBraces->EndOffset == -1 ? InvalidBraceColor : ValidBraceColor;
-	drawingContext->DrawGeometry(gcnew System::Windows::Media::SolidColorBrush(System::Windows::Media::Color::FromArgb(125, InvalidBraceColor.R, InvalidBraceColor.G, InvalidBraceColor.B)),
-									gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(System::Windows::Media::Color::FromArgb(150, 0, 0, 0)), 0), HighlightGeometry);
+	delete Builder;
+	HighlightGeometry->Freeze();
+
+	auto HighlightColor = OpenCloseBraces->StartOffset == -1 || OpenCloseBraces->EndOffset == -1 ? CustomBrushes::Get()->InvalidBrace : CustomBrushes::Get()->ValidBrace;
+	drawingContext->DrawGeometry(HighlightColor->Background, HighlightColor->Border, HighlightGeometry);
 }
 
 LineTrackingManagerBgRenderer::LineTrackingManagerBgRenderer(AvalonEdit::TextEditor^ Parent)
@@ -362,22 +398,24 @@ LineTrackingManagerBgRenderer::~LineTrackingManagerBgRenderer()
 void LineTrackingManagerBgRenderer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 {
 	textView->EnsureVisualLines();
+	if (!textView->VisualLinesValid)
+		return;
 
-	DoCurrentLineBackground(textView, drawingContext);
-	DoErrorSquiggles(textView, drawingContext);
-	DoFindResults(textView, drawingContext);
-	DoBraceIndicators(textView, drawingContext);
+	auto FirstVisibleLine = textView->VisualLines[0]->FirstDocumentLine->LineNumber;
+	auto LastVisibleLine = textView->VisualLines[textView->VisualLines->Count - 1]->FirstDocumentLine->LineNumber;
+
+	DoCurrentLineBackground(textView, drawingContext, FirstVisibleLine, LastVisibleLine);
+	DoErrorSquiggles(textView, drawingContext, FirstVisibleLine, LastVisibleLine);
+	DoFindResults(textView, drawingContext, FirstVisibleLine, LastVisibleLine);
+	DoBraceIndicators(textView, drawingContext, FirstVisibleLine, LastVisibleLine);
 
 	String^ SelectionText = "";
 	if (!ParentEditor->TextArea->Selection->IsEmpty)
 		SelectionText = ParentEditor->TextArea->Selection->GetText()->Replace("\t", "")->Replace(" ", "")->Replace("\n", "")->Replace("\r\n", "");
 
-	for each (auto Line in ParentEditor->Document->Lines)
+	for (int i = FirstVisibleLine; i <= LastVisibleLine; ++i)
 	{
-		if (ParentEditor->TextArea->TextView->GetVisualLine(Line->LineNumber) == nullptr)
-			continue;
-
-		DoLineLimitBackground(Line, textView, drawingContext);
+		auto Line = ParentEditor->Document->GetLineByNumber(i);
 		DoSelectedStringBackground(SelectionText, Line, textView, drawingContext);
 	}
 }
@@ -758,7 +796,6 @@ StructureVisualizerRenderer::StructureVisualizerRenderer(AvalonEditTextEditor^ P
 	VisualLineElementGenerator(),
 	ParentEditor(Parent)
 {
-	InstanceCounter++;
 }
 
 int StructureVisualizerRenderer::GetFirstInterestedOffset(Int32 startOffset)
@@ -799,19 +836,14 @@ void StructureVisualizerRenderer::OnMouseClick(Object^ Sender, Windows::Input::M
 
 Windows::UIElement^ StructureVisualizerRenderer::GenerateAdornment(UInt32 JumpLine, String^ ElementText)
 {
+	static const int kMaxTextLength = 50;
 	Font^ CustomFont = gcnew Font(preferences::SettingsHolder::Get()->Appearance->TextFont->FontFamily->Name,
 								  preferences::SettingsHolder::Get()->Appearance->TextFont->Size - 1);
 
-	Color ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
-	auto ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(150,
-																		 ForegroundColor.R,
-																		 ForegroundColor.G,
-																		 ForegroundColor.B));
-	auto BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(0, 0, 0, 0));
-
 	ElementText = ElementText->Replace("\t", "");
-	if (ElementText->Length > 100)
-		ElementText = ElementText->Substring(0, 100) + "...";
+	String^ TruncatedElementText = ElementText;
+	if (TruncatedElementText->Length > kMaxTextLength)
+		TruncatedElementText = TruncatedElementText->Substring(0, kMaxTextLength) + "...";
 
 	AdornmentData^ Data = gcnew AdornmentData;
 	Data->JumpLine = JumpLine;
@@ -826,54 +858,36 @@ Windows::UIElement^ StructureVisualizerRenderer::GenerateAdornment(UInt32 JumpLi
 	Panel->Tag = Data;
 	Panel->PreviewMouseDown += gcnew System::Windows::Input::MouseButtonEventHandler(OnMouseClick);
 
-	auto IconData = GetIconSource();
-	if (IconData)
-	{
-		auto Icon = gcnew Windows::Controls::Image();
-		Icon->Source = IconData;
-		Icon->Width = 16;
-		Icon->Height = 16;
-		Icon->HorizontalAlignment = Windows::HorizontalAlignment::Center;
-		Icon->VerticalAlignment = Windows::VerticalAlignment::Bottom;
-		Panel->Children->Add(Icon);
-	}
-
 	auto AdornmentLabel = gcnew Windows::Controls::Label();
 	AdornmentLabel->FontFamily = gcnew Windows::Media::FontFamily(CustomFont->FontFamily->Name);
 	AdornmentLabel->FontSize = CustomFont->SizeInPoints * 96.f / 72.f;
 	AdornmentLabel->FontStyle = Windows::FontStyles::Italic;
-	AdornmentLabel->Foreground = ForegroundBrush;
-	AdornmentLabel->Background = BackgroundBrush;
-	AdornmentLabel->Content = ElementText;
+	AdornmentLabel->Foreground = CustomBrushes::Get()->ForeColorPartlyTransparent;
+	AdornmentLabel->Background = CustomBrushes::Get()->Transparent;
+	AdornmentLabel->Content = TruncatedElementText;
 	AdornmentLabel->Padding = Windows::Thickness(0, 0, 0, 0);
 	AdornmentLabel->Margin = Windows::Thickness(5, 0, 0, 0);
 	AdornmentLabel->HorizontalAlignment = Windows::HorizontalAlignment::Center;
 	AdornmentLabel->VerticalAlignment = Windows::VerticalAlignment::Bottom;
+	auto AdornmentTooltip = gcnew Windows::Controls::ToolTip;
+	AdornmentTooltip->FontFamily = gcnew Windows::Media::FontFamily(CustomFont->FontFamily->Name);
+	AdornmentTooltip->FontSize = CustomFont->SizeInPoints * 96.f / 72.f;
+	AdornmentTooltip->Foreground = CustomBrushes::Get()->ForeColor;
+	AdornmentTooltip->Background = CustomBrushes::Get()->BackColor;
+	AdornmentTooltip->BorderBrush = CustomBrushes::Get()->BackColor;
+	AdornmentTooltip->Content = ElementText;
 	Panel->Children->Add(AdornmentLabel);
+	Panel->ToolTip = AdornmentTooltip;
 
 	return Panel;
 }
 
 StructureVisualizerRenderer::~StructureVisualizerRenderer()
 {
-	InstanceCounter--;
-	Debug::Assert(InstanceCounter >= 0);
-
 	ParentEditor = nullptr;
-
-	if (InstanceCounter == 0 && ElementIcon)
-		SAFEDELETE_CLR(ElementIcon);
 }
 
-Windows::Media::Imaging::BitmapSource^ StructureVisualizerRenderer::GetIconSource()
-{
-	if (ElementIcon == nullptr)
-		ElementIcon = WPFImageResourceGenerator::CreateImageSource("StructureVis");
-
-	return ElementIcon;
-}
-
-void IconMargin::OnHover(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
+void IconMarginBase::OnHover(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
 {
 	int Line = GetLineFromMousePosition(E);
 	if (Line < 1)
@@ -882,12 +896,12 @@ void IconMargin::OnHover(Object^ Sender, System::Windows::Input::MouseEventArgs^
 	HandleHoverStart(Line, E);
 }
 
-void IconMargin::OnHoverStopped(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
+void IconMarginBase::OnHoverStopped(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
 {
 	HandleHoverStop();
 }
 
-void IconMargin::OnTextViewChanged(AvalonEdit::Rendering::TextView^ oldTextView, AvalonEdit::Rendering::TextView^ newTextView)
+void IconMarginBase::OnTextViewChanged(AvalonEdit::Rendering::TextView^ oldTextView, AvalonEdit::Rendering::TextView^ newTextView)
 {
 	if (oldTextView)
 		oldTextView->VisualLinesChanged -= HandlerTextViewChanged;
@@ -900,69 +914,35 @@ void IconMargin::OnTextViewChanged(AvalonEdit::Rendering::TextView^ oldTextView,
 	InvalidateVisual();
 }
 
-void IconMargin::OnRedrawRequested(Object^ sender, EventArgs^ E)
+void IconMarginBase::OnRedrawRequested(Object^ sender, EventArgs^ E)
 {
 	if (this->TextView && this->TextView->VisualLinesValid)
 		InvalidateVisual();
 }
 
-Windows::Media::HitTestResult^ IconMargin::HitTestCore(Windows::Media::PointHitTestParameters^ hitTestParameters)
+Windows::Media::HitTestResult^ IconMarginBase::HitTestCore(Windows::Media::PointHitTestParameters^ hitTestParameters)
 {
 	return gcnew Windows::Media::PointHitTestResult(this, hitTestParameters->HitPoint);
 }
 
-Windows::Size IconMargin::MeasureOverride(Windows::Size availableSize)
+Windows::Size IconMarginBase::MeasureOverride(Windows::Size availableSize)
 {
 	return Windows::Size(24, 0);
 }
 
-void IconMargin::OnRender(Windows::Media::DrawingContext^ drawingContext)
-{
-	Windows::Size renderSize = this->RenderSize;
-
-	auto BackgroundColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
-	auto BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B));
-
-	drawingContext->DrawRectangle(BackgroundBrush, nullptr, Windows::Rect(0, 0, renderSize.Width, renderSize.Height));
-
-	AvalonEdit::Rendering::TextView^ textView = this->TextView;
-
-	if (textView && textView->VisualLinesValid)
-	{
-		Windows::Size pixelSize = PixelSnapHelpers::GetPixelSize(this);
-		for each (VisualLine^ line in textView->VisualLines)
-		{
-			int lineNumber = line->FirstDocumentLine->LineNumber;
-			Windows::Media::Imaging::BitmapSource^ icon = nullptr;
-			double opacity = 1.0;
-			int W = 16, H = 16;
-			if (GetRenderData(lineNumber, icon, opacity, W, H))
-			{
-				double lineMiddle = line->GetTextLineVisualYPosition(line->TextLines[0], VisualYPosition::TextMiddle) - textView->VerticalOffset;
-				Windows::Rect rect((16 - W)/2, PixelSnapHelpers::Round(lineMiddle - H/2, pixelSize.Height), W, H);
-				drawingContext->PushOpacity(opacity);
-				drawingContext->DrawImage(icon, rect);
-				drawingContext->Pop();
-			}
-		}
-	}
-
-	AbstractMargin::OnRender(drawingContext);
-}
-
-void IconMargin::OnMouseDown(System::Windows::Input::MouseButtonEventArgs^ e)
+void IconMarginBase::OnMouseDown(System::Windows::Input::MouseButtonEventArgs^ e)
 {
 	AbstractMargin::OnMouseDown(e);
 	if (e->ChangedButton == System::Windows::Input::MouseButton::Left)
 		e->Handled = true;
 }
 
-void IconMargin::OnMouseMove(System::Windows::Input::MouseEventArgs^ e)
+void IconMarginBase::OnMouseMove(System::Windows::Input::MouseEventArgs^ e)
 {
 	AbstractMargin::OnMouseMove(e);
 }
 
-void IconMargin::OnMouseUp(System::Windows::Input::MouseButtonEventArgs^ e)
+void IconMarginBase::OnMouseUp(System::Windows::Input::MouseButtonEventArgs^ e)
 {
 	AbstractMargin::OnMouseUp(e);
 	int line = GetLineFromMousePosition(e);
@@ -970,12 +950,12 @@ void IconMargin::OnMouseUp(System::Windows::Input::MouseButtonEventArgs^ e)
 		HandleClick(line);
 }
 
-void IconMargin::OnMouseLeave(System::Windows::Input::MouseEventArgs^ e)
+void IconMarginBase::OnMouseLeave(System::Windows::Input::MouseEventArgs^ e)
 {
 	AbstractMargin::OnMouseLeave(e);
 }
 
-int IconMargin::GetLineFromMousePosition(System::Windows::Input::MouseEventArgs^ e)
+int IconMarginBase::GetLineFromMousePosition(System::Windows::Input::MouseEventArgs^ e)
 {
 	VisualLine^ vl = GetVisualLineFromMousePosition(e);
 	if (vl == nullptr)
@@ -984,7 +964,7 @@ int IconMargin::GetLineFromMousePosition(System::Windows::Input::MouseEventArgs^
 	return vl->FirstDocumentLine->LineNumber;
 }
 
-VisualLine^ IconMargin::GetVisualLineFromMousePosition(System::Windows::Input::MouseEventArgs^ e)
+VisualLine^ IconMarginBase::GetVisualLineFromMousePosition(System::Windows::Input::MouseEventArgs^ e)
 {
 	AvalonEdit::Rendering::TextView^ textView = this->TextView;
 	if (textView == nullptr)
@@ -994,19 +974,19 @@ VisualLine^ IconMargin::GetVisualLineFromMousePosition(System::Windows::Input::M
 	return vl;
 }
 
-IconMargin::IconMargin()
+IconMarginBase::IconMarginBase()
 {
 	HoverLogic = gcnew MouseHoverLogic(this);
 
-	HandlerHover = gcnew EventHandler<System::Windows::Input::MouseEventArgs^>(this, &IconMargin::OnHover);
-	HandlerHoverStopped = gcnew EventHandler<System::Windows::Input::MouseEventArgs^>(this, &IconMargin::OnHoverStopped);
-	HandlerTextViewChanged = gcnew EventHandler(this, &IconMargin::OnRedrawRequested);
+	HandlerHover = gcnew EventHandler<System::Windows::Input::MouseEventArgs^>(this, &IconMarginBase::OnHover);
+	HandlerHoverStopped = gcnew EventHandler<System::Windows::Input::MouseEventArgs^>(this, &IconMarginBase::OnHoverStopped);
+	HandlerTextViewChanged = gcnew EventHandler(this, &IconMarginBase::OnRedrawRequested);
 
 	HoverLogic->MouseHover += HandlerHover;
 	HoverLogic->MouseHoverStopped += HandlerHoverStopped;
 }
 
-IconMargin::~IconMargin()
+IconMarginBase::~IconMarginBase()
 {
 	this->TextView = nullptr;
 
@@ -1053,12 +1033,58 @@ void DefaultIconMargin::ParentModel_StateChanged(Object^ Sender, model::IScriptD
 	}
 }
 
+void DefaultIconMargin::OnRender(Windows::Media::DrawingContext^ drawingContext)
+{
+	auto BackgroundBrush = CustomBrushes::Get()->BackColor;
+
+	drawingContext->DrawRectangle(BackgroundBrush, nullptr, Windows::Rect(0, 0, RenderSize.Width, RenderSize.Height));
+
+	if (TextView == nullptr || !TextView->VisualLinesValid)
+		return;
+
+	auto PixelSize = PixelSnapHelpers::GetPixelSize(this);
+	auto FirstVisibleLine = TextView->VisualLines[0]->FirstDocumentLine->LineNumber;
+	auto LastVisibleLine = TextView->VisualLines[TextView->VisualLines->Count - 1]->FirstDocumentLine->LineNumber;
+	auto LineAnnotationCounts = ParentScriptDocument->CountAnnotationsForLineRange(FirstVisibleLine, LastVisibleLine);
+
+	for each (auto VisualLine in TextView->VisualLines)
+	{
+		auto VisualLineNumber = VisualLine->FirstDocumentLine->LineNumber;
+		model::IScriptDocument::PerLineAnnotationCounts^ LineCounts = nullptr;
+		if (LineAnnotationCounts->TryGetValue(VisualLineNumber, LineCounts))
+		{
+			Windows::Media::Imaging::BitmapSource^ Icon = nullptr;
+			if (LineCounts->ErrorCount)
+				Icon = GetErrorIcon();
+			else if (LineCounts->WarningCount)
+				Icon = GetWarningIcon();
+			else if (LineCounts->BookmarkCount)
+				Icon = GetBookmarkIcon();
+
+			if (Icon == nullptr)
+				continue;
+
+			auto Width = 12;
+			auto Height = 12;
+			auto Opacity = 1.0;
+
+			double LineMiddle = VisualLine->GetTextLineVisualYPosition(VisualLine->TextLines[0], VisualYPosition::TextMiddle) - TextView->VerticalOffset;
+			Windows::Rect Rect((16 - Width) / 2, PixelSnapHelpers::Round(LineMiddle - Height/2, PixelSize.Height), Width, Height);
+			drawingContext->PushOpacity(Opacity);
+			drawingContext->DrawImage(Icon, Rect);
+			drawingContext->Pop();
+		}
+	}
+
+	AbstractMargin::OnRender(drawingContext);
+}
+
 void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::MouseEventArgs^ E)
 {
 	bool DisplayPopup = false;
 	String^ PopupTitle = "";
 	String^ PopupText = "";
-	auto PopupBgColor = IRichTooltipContentProvider::eBackgroundColor::Default;
+	auto PopupBgColor = utilities::IRichTooltipContentProvider::eBackgroundColor::Default;
 
 	Windows::Point DisplayLocation = TransformToPixels(E->GetPosition(ParentEditor));
 	DisplayLocation.X += System::Windows::SystemParameters::CursorWidth;
@@ -1075,7 +1101,7 @@ void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::Mouse
 														model::components::ScriptDiagnosticMessage::eMessageSource::All,
 														model::components::ScriptDiagnosticMessage::eMessageType::Error);
 
-		PopupBgColor = IRichTooltipContentProvider::eBackgroundColor::Red;
+		PopupBgColor = utilities::IRichTooltipContentProvider::eBackgroundColor::Red;
 		PopupTitle = Errors->Count + " error" + (Errors->Count == 1 ? "" : "s");
 
 		PopupText += kRowStart;
@@ -1090,7 +1116,7 @@ void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::Mouse
 														  model::components::ScriptDiagnosticMessage::eMessageSource::All,
 														  model::components::ScriptDiagnosticMessage::eMessageType::Warning);
 
-		PopupBgColor = IRichTooltipContentProvider::eBackgroundColor::Yellow;
+		PopupBgColor = utilities::IRichTooltipContentProvider::eBackgroundColor::Yellow;
 		PopupTitle = Warnings->Count + " warning" + (Warnings->Count == 1 ? "" : "s");
 
 		PopupText += kRowStart;
@@ -1103,7 +1129,7 @@ void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::Mouse
 		DisplayPopup = true;
 		auto Bookmarks = ParentScriptDocument->GetBookmarks(Line);
 
-		PopupBgColor = IRichTooltipContentProvider::eBackgroundColor::Blue;
+		PopupBgColor = utilities::IRichTooltipContentProvider::eBackgroundColor::Blue;
 		PopupTitle = Bookmarks->Count + " bookmark" + (Bookmarks->Count == 1 ? "" : "s");
 
 		PopupText += kRowStart;
@@ -1136,28 +1162,6 @@ void DefaultIconMargin::HandleHoverStop()
 void DefaultIconMargin::HandleClick(int Line)
 {
 	;//
-}
-
-bool DefaultIconMargin::GetRenderData(int Line, Windows::Media::Imaging::BitmapSource^% OutIcon, double% OutOpacity, int% Width, int% Height)
-{
-	auto ErrorCount = ParentScriptDocument->GetErrorCount(Line);
-	auto WarningCount = ParentScriptDocument->GetWarningCount(Line);
-	auto BookmarkCount = ParentScriptDocument->GetBookmarkCount(Line);
-
-	if (ErrorCount == 0 && WarningCount == 0 && BookmarkCount == 0)
-		return false;
-
-	if (ErrorCount)
-		OutIcon = GetErrorIcon();
-	else if (WarningCount)
-		OutIcon = GetWarningIcon();
-	else if (BookmarkCount)
-		OutIcon = GetBookmarkIcon();
-
-	Width = Height = 12;
-
-	OutOpacity = 1.0;
-	return true;
 }
 
 DefaultIconMargin::DefaultIconMargin(AvalonEdit::TextEditor^ ParentEditor, model::IScriptDocument^ ParentScriptDocument, IntPtr ToolTipParent)
@@ -1303,8 +1307,7 @@ void ScriptBytecodeOffsetMargin::AddToTextArea(AvalonEdit::TextEditor^ Field, Sc
 	Field->TextArea->LeftMargins->Insert(InsertAtIdx + 1, Margin);
 	Field->TextArea->LeftMargins->Insert(InsertAtIdx + 2, SecondSeparator);
 
-	auto ForegroundColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
-	auto ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, ForegroundColor.R, ForegroundColor.G, ForegroundColor.B));
+	auto ForegroundBrush = CustomBrushes::Get()->ForeColor;
 	auto ForegroundBinding = gcnew System::Windows::Data::Binding("LineNumbersForeground");
 	ForegroundBinding->Source = Field;
 

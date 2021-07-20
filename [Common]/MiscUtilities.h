@@ -98,45 +98,5 @@ public:
 
 void CopyStringToCharBuffer(String^% Source, char* Buffer, UInt32 Size);
 
-// Fix for the white bottom border when using the System toolstrip renderer
-// https://stackoverflow.com/questions/1918247/how-to-disable-the-line-under-tool-strip-in-winform-c
-ref class CustomToolStripSystemRenderer : public ToolStripSystemRenderer
-{
-protected:
-	virtual void OnRenderToolStripBorder(ToolStripRenderEventArgs^ e) override {}
-};
-
-// For use with DotNetBar::SuperToolTip
-// Text can include limited HTML-markup
-// c.f https://www.devcomponents.com/kb2/?p=515
-interface class IRichTooltipContentProvider
-{
-	static enum class eBackgroundColor
-	{
-		Default,
-		Blue,
-		Yellow,
-		Green,
-		Red,
-		Magenta,
-		BlueMist,
-		Lemon,
-		Apple,
-		Silver,
-		Gray
-	};
-
-	property String^ TooltipHeaderText;
-	property String^ TooltipBodyText;
-	property Image^ TooltipBodyImage;
-	property String^ TooltipFooterText;
-	property Image^ TooltipFooterImage;
-	property eBackgroundColor TooltipBgColor;
-};
-
-#ifdef CSE_SE
-DevComponents::DotNetBar::eTooltipColor MapRichTooltipBackgroundColorToDotNetBar(IRichTooltipContentProvider::eBackgroundColor BgColor);
-#endif
-
 
 } // namespace cse

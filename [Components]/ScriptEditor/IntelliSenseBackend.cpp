@@ -59,6 +59,22 @@ IntelliSenseItem^ IntelliSenseItemCollection::FuzzyMatchResultMapToItemSelector(
 	return Item->Value;
 }
 
+IntelliSenseItemCollection::PrefixToEditDistanceMatcher::PrefixToEditDistanceMatcher(String^ Query, int LevenshteinMaxEditDistance)
+{
+	QueryLength = Query->Length;
+	MinimumEditDistance = LevenshteinMaxEditDistance + 1;
+}
+
+IntelliSenseItemCollection::FuzzyMatchT^ IntelliSenseItemCollection::PrefixToEditDistanceMatcher::CreateFuzzyMatch(IntelliSenseItem^ Item)
+{
+	return gcnew FuzzyMatchT(Item, Math::Abs(QueryLength - Item->GetIdentifier()->Length));
+}
+
+bool IntelliSenseItemCollection::PrefixToEditDistanceMatcher::FuzzyMatchHasMinimumEditDistance(FuzzyMatchT^ Match)
+{
+	return Match->Cost >= MinimumEditDistance;
+}
+
 IntelliSenseItemCollection::IntelliSenseItemCollection()
 {
 	Dict_ = gcnew Dictionary<String^, IntelliSenseItem^>(StringComparer::CurrentCultureIgnoreCase);
@@ -71,7 +87,7 @@ void IntelliSenseItemCollection::Add(String^ Identifier, IntelliSenseItem^ Item)
 	Trie->Add(Identifier, Item);
 }
 
-IEnumerable<IntelliSenseItemCollection::FuzzyMatchT^>^ IntelliSenseItemCollection::FuzzyMatch(String^ Query,
+IEnumerable<IntelliSenseItemCollection::FuzzyMatchT^>^ IntelliSenseItemCollection::LevenshteinMatch(String^ Query,
 																							  UInt32 MaxEditDistanceCost,
 																							  System::Func<IntelliSenseItem^, bool>^ Predicate)
 {
@@ -82,6 +98,30 @@ IEnumerable<IntelliSenseItemCollection::FuzzyMatchT^>^ IntelliSenseItemCollectio
 IEnumerable<IntelliSenseItem^>^ IntelliSenseItemCollection::PrefixMatch(String^ Query,  System::Func<IntelliSenseItem^, bool>^ Predicate)
 {
 	return Predicate ? Trie->Retrieve(Query, Predicate) : Trie->Retrieve(Query);
+}
+
+IEnumerable<IntelliSenseItemCollection::FuzzyMatchT^>^ IntelliSenseItemCollection::FuzzyMatch(String^ Query, UInt32 MaxEditDistanceCost, System::Func<IntelliSenseItem^, bool>^ Predicate)
+{
+	/*
+	* 1. Collect all prefix matches for the query.
+	* 2. Calculate edit distance, i.e., difference in length between the match and the query, for all prefix matches and map to FuzzyMatchT.
+	* 3. Collect all possible Levenshtein matches for the query.
+	* 4. Combine matches.
+	*
+	* The results will eventually have to be sorted by edit distance.
+	*/
+
+	auto PrefixMatches = PrefixMatch(Query, Predicate);
+	auto PrefixMatcheToEditDistConverter = gcnew PrefixToEditDistanceMatcher(Query, MaxEditDistanceCost);
+	auto PrefixMatchesWithEditDistance = System::Linq::Enumerable::Select(PrefixMatches, gcnew Func<IntelliSenseItem^, FuzzyMatchT^>(PrefixMatcheToEditDistConverter, &PrefixToEditDistanceMatcher::CreateFuzzyMatch));
+	//PrefixMatchesWithEditDistance = System::Linq::Enumerable::Where(PrefixMatchesWithEditDistance, gcnew Func<FuzzyMatchT^, bool>(PrefixMatcheToEditDistConverter, &PrefixToEditDistanceMatcher::FuzzyMatchHasMinimumEditDistance));
+
+	auto LevenshteinMatches = LevenshteinMatch(Query, MaxEditDistanceCost, Predicate);
+	auto CombinedResults = System::Linq::Enumerable::Concat(PrefixMatchesWithEditDistance, LevenshteinMatches);
+
+	// Duplicate entries need to be removed (due to overlapping matches between the prefix and Levenshtein queries)
+	// NOTE: This means the equality comparer of FuzzyMatchT must IGNORE the cost and only compare the value
+	return System::Linq::Enumerable::Distinct(CombinedResults);
 }
 
 IntelliSenseItem^ IntelliSenseItemCollection::Lookup(String^ Identifier, bool IgnoreItemsWithoutInsightInfo)
@@ -105,6 +145,17 @@ void IntelliSenseItemCollection::Reset()
 System::Collections::Generic::IEnumerable<IntelliSenseItem^>^ IntelliSenseItemCollection::SortAndExtractFuzzyMatches(IEnumerable<FuzzyMatchT^>^ FuzzyMatches)
 {
 	auto Sorted = System::Linq::Enumerable::OrderBy(FuzzyMatches, gcnew Func<FuzzyMatchT^, int>(IntelliSenseItemCollection::FuzzyMatchResultSortKeySelector));
+	//int i = 0;
+	//DebugPrint("---------------------------------");
+	//for each (auto Itr in Sorted)
+	//{
+	//	if (i > 5)
+	//		break;
+
+	//	DebugPrint(String::Format("[{0}] {1}", Itr->Cost, Itr->Value->GetIdentifier()));
+	//	++i;
+	//}
+
 	auto MapToItems = System::Linq::Enumerable::Select(Sorted, gcnew Func<FuzzyMatchT^, IntelliSenseItem^>(IntelliSenseItemCollection::FuzzyMatchResultMapToItemSelector));
 	return MapToItems;
 }
@@ -517,7 +568,7 @@ void AddIndentifierToCollection(Dictionary<String^, T>^ Source, ICollection<Stri
 		Target->Add(Itr.Key);
 }
 
-System::Collections::Generic::HashSet<String^>^ IntelliSenseBackend::CreateIndentifierSnapshot(eDatabaseLookupFilter Categories)
+System::Collections::Generic::ICollection<String^>^ IntelliSenseBackend::CreateIndentifierSnapshot(eDatabaseLookupFilter Categories)
 {
 	auto Out = gcnew HashSet<String^>(StringComparer::CurrentCultureIgnoreCase);
 
@@ -735,6 +786,8 @@ IEnumerable<IntelliSenseItem^>^ IntelliSenseBackend::FetchIntelliSenseItems(Fetc
 		auto Cost = Args->FuzzyMatchMaxCost;
 		Debug::Assert(Cost > 0);
 
+		//
+
 		if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::Command))
 			Results = DoFetchFuzzyMatch(ScriptCommands, Args, PredicateScriptCommandNeedsCallingRef, Results);
 
@@ -850,8 +903,6 @@ void IntelliSenseBackend::Deinitialize()
 {
 	delete Singleton;
 }
-
-
 
 
 } // namespace intelliSense

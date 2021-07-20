@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SemanticAnalysis.h"
+#include "Utilities.h"
 
 namespace cse
 {
@@ -146,7 +147,7 @@ public:
 	bool IsLocalVariable(String^ Identifier);
 };
 
-ref class IntelliSenseShowInsightToolTipArgs : public IRichTooltipContentProvider
+ref class IntelliSenseShowInsightToolTipArgs : public utilities::IRichTooltipContentProvider
 {
 	String^ TooltipHeaderText_;
 	String^ TooltipBodyText_;

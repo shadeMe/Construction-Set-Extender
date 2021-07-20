@@ -4,6 +4,7 @@
 #include "SnippetManager.h"
 #include "[Common]\NativeWrapper.h"
 #include "IScriptEditorView.h"
+#include "Preferences.h"
 
 namespace cse
 {
@@ -45,6 +46,11 @@ System::String^ IntelliSenseItem::GenerateHelpTextHeader(String^ Identifier)
 System::String^ IntelliSenseItem::GenerateHelpTextFooter()
 {
 	return "<span align=\"left\">" + GetItemTypeName() + "</span>";
+}
+
+System::String^ IntelliSenseItem::WrapHelpTextInActiveFont(String^ HelpText)
+{
+	return "<font face=\"" + "Segoe UI" + "\">" + HelpText + "</font>";
 }
 
 IntelliSenseItem::IntelliSenseItem()
@@ -100,7 +106,6 @@ System::String^ IntelliSenseItem::GetAlternateIdentifier()
 
 ScriptCommandParameter::ScriptCommandParameter(componentDLLInterface::ObScriptCommandInfo::ParamInfo* ParamInfo)
 {
-
 	TypeName = gcnew String(ParamInfo->TypeIDString());
 	Description = ParamInfo->typeStr ? gcnew String(ParamInfo->typeStr) : "";
 	Optional = ParamInfo->isOptional;
@@ -223,6 +228,12 @@ IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(componentDLLInterfa
 	HelpTextFooter = GenerateHelpTextFooter();
 	HelpTextFooter += "<span align=\"right\">Links:&nbsp;&nbsp;<a href=\"" + WikiUrl + "\">Wiki</a>";
 
+	if (Source == eSourceType::OBSE)
+	{
+		String^ ObseCommandDocUrl = "https://htmlpreview.github.io/?https://github.com/llde/xOBSE/blob/master/obse_command_doc.html#" + Name;
+		HelpTextFooter += " | <a href=\"" + ObseCommandDocUrl + "\">OBSE</a>";
+	}
+
 	if (DocumentationUrl->Length &&
 		!WikiUrl->Equals(DocumentationUrl, StringComparison::CurrentCultureIgnoreCase))
 	{
@@ -273,7 +284,7 @@ IntelliSenseItemScriptVariable::IntelliSenseItemScriptVariable(String^ Name, Str
 
 	HelpTextBody = "Type: " + obScriptParsing::Variable::GetVariableDataTypeDescription(DataType) + "<br/>";
 	if (Comment->Length)
-		HelpTextBody += "<p width=\"200\" padding=\"0,0,5,0\">Comment: <i>" + Comment + "</i></p>";
+		HelpTextBody += "<p width=\"200\" padding=\"0,0,5,0\">Comment: " + Comment + "</p>";
 
 	if (ParentEditorID->Length)
 		HelpTextBody += "Parent script: " + ParentEditorID;
@@ -331,9 +342,9 @@ IntelliSenseItemForm::IntelliSenseItemForm(nativeWrapper::MarshalledFormData^ Da
 	String^ kCellStart = "<span width=\"75\">", ^kCellEnd = "</span>";
 
 	HelpTextBody = "<span>FormID: " + FormID.ToString("X8") + "</span><br/>";
-	if (Data->SourcePluginName)
+	if (Data->SourcePluginName->Length > 0)
 		HelpTextBody = "<span>Source file: " + Data->SourcePluginName + "</span><br/>";
-	if (Data->NameComponent)
+	if (Data->NameComponent->Length > 0)
 		HelpTextBody += "<span>Name: " + Data->NameComponent + "</span><br/>";
 
 	String^ FlagsDesc = "";
@@ -363,7 +374,7 @@ IntelliSenseItemForm::IntelliSenseItemForm(nativeWrapper::MarshalledFormData^ Da
 		HelpTextBody += "<div padding=\"15,0,2,10\" width=\"150\">" + FlagsDesc + "</div>";
 	}
 
-	if (Data->DescriptionComponent)
+	if (Data->DescriptionComponent->Length > 0)
 		HelpTextBody += "<p width=\"250\">Description: " + Data->DescriptionComponent + "</p>";
 
 	if (Data->IsObjectRef && Data->BaseFormEditorId->Length != 0)
@@ -463,7 +474,7 @@ System::String^ IntelliSenseItemGlobalVariable::TooltipBodyText::get()
 	if (TruncatedValue->Length)
 		HelpTextBody += "<p width=\"150\" padding=\"0,0,5,0\">Value: " + Value + "</p>";
 
-	return HelpTextBody;
+	return WrapHelpTextInActiveFont(HelpTextBody);
 }
 
 IntelliSenseItemGameSetting::IntelliSenseItemGameSetting(nativeWrapper::MarshalledVariableData^ Data) :
@@ -524,7 +535,7 @@ IntelliSenseItemScript::IntelliSenseItemScript(nativeWrapper::MarshalledScriptDa
 	CommentDescription = InitialAnalysisData->Description;
 
 	if (CommentDescription->Length)
-		HelpTextBody += "<p width=\"250\" padding=\"0,0,5,10\">Comment: <i>" + CommentDescription->Replace("\n", "<br/>") + "</i></p>";
+		HelpTextBody += "<p width=\"250\" padding=\"0,0,5,10\">Comment: " + CommentDescription->Replace("\n", "<br/>") + "</p>";
 	HelpTextBody += "Variables: " + Variables->Count;
 
 	// regenerate after changing type
@@ -643,7 +654,7 @@ IntelliSenseItemCodeSnippet::IntelliSenseItemCodeSnippet(CodeSnippet^ Source) :
 	HelpTextHeader = GenerateHelpTextHeader(Parent->Name + " (" + Parent->Shorthand + ")");
 
 	if (Parent->Description->Length)
-		HelpTextBody += "<p width=\"250\" padding=\"0,0,0,10\">Description: <i>" + Parent->Description + "</i></p>";
+		HelpTextBody += "<p width=\"250\" padding=\"0,0,0,10\">Description: " + Parent->Description + "</p>";
 
 	if (Parent->Variables->Count)
 		HelpTextBody += "New variables: " + Parent->Variables->Count;

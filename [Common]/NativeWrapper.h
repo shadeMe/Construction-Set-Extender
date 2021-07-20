@@ -10,8 +10,19 @@ namespace nativeWrapper
 {
 
 
-
+using namespace System::Data;
 using namespace System::Runtime::InteropServices;
+
+
+[Serializable, StructLayout(LayoutKind::Sequential)]
+value struct RECT
+{
+	int Left;
+	int Top;
+	int Right;
+	int Bottom;
+};
+
 
 extern componentDLLInterface::CSEInterfaceTable* g_CSEInterfaceTable;
 
@@ -52,11 +63,14 @@ bool ReleaseCapture();
 int GetWindowText(IntPtr hWnd, System::Text::StringBuilder^ lpString, int nMaxCount);
 [DllImport("user32.dll", CharSet = CharSet::Ansi, SetLastError = true)]
 bool SetWindowText(IntPtr hwnd, [MarshalAs(UnmanagedType::LPStr)]String^ lpString);
+[DllImport("user32.dll")]
+bool AdjustWindowRectEx(RECT* lpRect, int dwStyle, bool bMenu, int dwExStyle);
 
 void WriteToMainWindowStatusBar(int PanelIndex, String^ Message);
 void ShowNonActivatingWindow(Control^ Window, IntPtr ParentHandle);
 void PrintToConsole(UInt8 Source, String^% Message);
 void SetControlRedraw(Control^ Window, bool Enabled);
+Control^ GetControlWithFocus();
 
 void Initialize();
 

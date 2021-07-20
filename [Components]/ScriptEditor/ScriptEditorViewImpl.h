@@ -29,8 +29,12 @@ ref class ScriptEditorWorkspace : public MetroForm, IScriptEditorView
 {
 protected:
 	virtual void WndProc(Message% m) override;
+	virtual void PaintNonClientArea(Graphics^ g) override;
 private:
 	static DevComponents::DotNetBar::StyleManager^ StyleManager = gcnew DevComponents::DotNetBar::StyleManager;
+	static String^ DockablePanelLayoutFileName = "ScriptEditorUiLayout.xml";
+	static Color TextMarkupHyperlinkLightModeColor = Color::FromArgb(255, 31, 91, 252);
+	static Color TextMarkupHyperlinkDarkModeColor = Color::FromArgb(255, 114, 155, 253);
 
 	DevComponents::DotNetBar::SuperTabControl^ MainTabStrip;
 	DevComponents::DotNetBar::Bar^ ContainerMainToolbar;
@@ -193,11 +197,13 @@ private:
 	Dictionary<eViewRole, ViewComponentData^>^ ViewComponents;
 	components::ViewComponentEventRaiser^ DelegateViewComponentEventRouter;
 	EventHandler^ DelegatePreferencesChanged;
+	ControlEventHandler^ DelegateControlAdded;
 	intellisense::IIntelliSenseInterfaceView^ IntelliSenseInterface;
 	bool SkipViewComponentEventProcessing;
 
 	void HandleViewComponentEvent(ViewComponentEvent^ E);
 	void HandlePreferencesChanged(Object^ Sender, EventArgs^ E);
+	void HandleControlAdded(Object^ Sender, ControlEventArgs^ E);
 
 	void InitializeComponents();
 	void FinalizeComponents();

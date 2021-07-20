@@ -59,7 +59,6 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView()
 	ListView->GridLines = false;
 	ListView->HeaderStyle = ColumnHeaderStyle::None;
 	ListView->HideSelection = true;
-	//ListView->Font = gcnew Font(SystemFonts::DialogFont->FontFamily, 9.25);
 	ListView->Font = preferences::SettingsHolder::Get()->Appearance->TextFont;
 	ListView->Margin = Padding(0);
 	ListView->ForeColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
@@ -93,6 +92,9 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView()
 	InsightPopup->DefaultFont = gcnew Font(SystemFonts::DialogFont->FontFamily, 9.25);
 	InsightPopup->MinimumTooltipSize = Size(180, 25);
 	InsightPopup->MarkupLinkClick += gcnew DotNetBar::MarkupLinkClickEventHandler(&IntelliSenseInterfaceView::SuperTooltip_MarkupLinkClick);
+
+	TooltipColorSwapper = gcnew utilities::SuperTooltipColorSwapper(preferences::SettingsHolder::Get()->Appearance->ForeColor,
+																	preferences::SettingsHolder::Get()->Appearance->BackColor);
 
 	MaximumVisibleItemCount = preferences::SettingsHolder::Get()->IntelliSense->MaxVisiblePopupItems;
 	InsightPopupDisplayDuration = preferences::SettingsHolder::Get()->IntelliSense->InsightToolTipDisplayDuration;
@@ -140,6 +142,9 @@ void IntelliSenseInterfaceView::ScriptEditorPreferences_Saved(Object^ Sender, Ev
 	ListView->ForeColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
 	ListView->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
 	ListView->Font = preferences::SettingsHolder::Get()->Appearance->TextFont;
+
+	TooltipColorSwapper->TextColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
+	TooltipColorSwapper->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
 }
 
 void IntelliSenseInterfaceView::ListView_SelectionChanged(Object^ Sender, EventArgs^ E)
@@ -287,7 +292,7 @@ void IntelliSenseInterfaceView::ShowListViewToolTip(IntelliSenseItem^ Item)
 	else
 	{
 		ListViewPopup->SetSuperTooltip(Form, TooltipData);
-		ListViewPopup->ShowTooltip(Form, DesktopLocation);
+		TooltipColorSwapper->ShowTooltip(ListViewPopup, Form, DesktopLocation);
 	}
 }
 
@@ -395,12 +400,18 @@ void IntelliSenseInterfaceView::ShowInsightToolTip(IntelliSenseShowInsightToolTi
 
 	auto Control = Control::FromHandle(Args->ParentWindowHandle);
 	InsightPopup->SetSuperTooltip(Control, TooltipData);
-	InsightPopup->ShowTooltip(Control, Args->DisplayScreenCoords);
 	InsightPopup->TooltipDuration = InsightPopupDisplayDuration * 1000;
+
+	TooltipColorSwapper->ShowTooltip(InsightPopup, Control, Args->DisplayScreenCoords);
 }
 
 void IntelliSenseInterfaceView::HideInsightToolTip()
 {
+	// only hide if the cursor is outside bounds of the tooltip
+	// in this case, the tooltip will close itself after the mouse leaves its bounds
+	if (InsightPopup->IsTooltipVisible && InsightPopup->SuperTooltipControl->Bounds.Contains(Control::MousePosition))
+		return;
+
 	InsightPopup->HideTooltip();
 }
 

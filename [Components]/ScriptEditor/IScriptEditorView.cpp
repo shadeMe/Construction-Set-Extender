@@ -33,6 +33,7 @@ CommonIcons::CommonIcons()
 {
 	IconResources = gcnew ImageResourceManager("ScriptEditor.Icons");
 
+	ScriptEditor = IconResources->CreateImage("ScriptEditor");
 	Transparent = IconResources->CreateImage("Transparent");
 	UnsavedChanges = IconResources->CreateImage("Dirty");
 	Info = IconResources->CreateImage("Info");
