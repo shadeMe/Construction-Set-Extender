@@ -283,11 +283,45 @@ namespace bgsee
 		}
 	}
 
-	const std::vector<std::string> WindowSubclasser::BlacklistedWindowClasses
+	const std::vector<const char*> WindowSubclasser::BlacklistedWindowClasses
 	{
 		"WindowsForms",
 		"HwndWrapper"
 	};
+
+	bool IsWindowInAncestorChainBlacklisted(HWND hWnd, const std::vector<const char*>& BlacklistedWindowClassNames)
+	{
+		HWND NextWindow = hWnd;
+		char WindowClassName[0x200] = {};
+
+		while (NextWindow != NULL)
+		{
+			WindowClassName[0] = '\0';
+			GetClassName(NextWindow, WindowClassName, ARRAYSIZE(WindowClassName));
+
+			for (const auto& Itr : BlacklistedWindowClassNames)
+			{
+				if (strstr(static_cast<const char*>(WindowClassName), Itr) == WindowClassName)
+					return true;
+			}
+
+			auto Parent = GetAncestor(NextWindow, GA_PARENT);
+			auto Owner = GetWindow(NextWindow, GW_OWNER);
+
+			if (IsWindowInAncestorChainBlacklisted(Parent, BlacklistedWindowClassNames) ||
+				IsWindowInAncestorChainBlacklisted(Owner, BlacklistedWindowClassNames))
+			{
+				return true;
+			}
+
+			if (Parent == NextWindow)
+				break;
+
+			NextWindow = Parent;
+		}
+
+		return false;
+	}
 
 	bool WindowSubclasser::IsWindowBlacklisted(HWND hWnd, UINT uMsg) const
 	{
@@ -300,27 +334,7 @@ namespace bgsee
 			return true;
 
 		// skip all non-native windows/dialogs and their children, amongst others that we don't want to hook
-		HWND NextWindow = hWnd;
-		while (NextWindow != NULL)
-		{
-			WindowClassName[0] = '\0';
-			GetClassName(NextWindow, WindowClassName, ARRAYSIZE(WindowClassName));
-			std::string Wrapper(WindowClassName);
-
-			for (const auto& Itr : BlacklistedWindowClasses)
-			{
-				if (Wrapper.find(Itr) == 0)
-					return true;
-			}
-
-			auto NextAncestor = GetAncestor(NextWindow, GA_PARENT);
-			if (NextAncestor == NextWindow)
-				break;
-
-			NextWindow = NextAncestor;
-		}
-
-		return false;
+		return IsWindowInAncestorChainBlacklisted(hWnd, BlacklistedWindowClasses);
 	}
 
 	LRESULT WindowSubclasser::WindowsHookCallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
@@ -328,18 +342,29 @@ namespace bgsee
 		if (nCode == HC_ACTION)
 		{
 			auto MessageData = reinterpret_cast<CWPSTRUCT*>(lParam);
-			if (IsWindowBlacklisted(MessageData->hwnd, MessageData->message))
-				return CallNextHookEx(nullptr, nCode, wParam, lParam);
 
 			switch (MessageData->message)
 			{
 			case WM_CREATE:
+			{
+				char ClassName[100];
+				GetClassName(MessageData->hwnd, ClassName, ARRAYSIZE(ClassName));
+
+				if (strcmp(ClassName, "ComboBox") == 0 && IsDebuggerPresent())
+					DebugBreak();
+			}
+				if (IsWindowBlacklisted(MessageData->hwnd, MessageData->message))
+					break;
+
 				if (ShouldSubclassWindowOnCreation(MessageData->hwnd))
 					ApplyWindowSubclass(MessageData->hwnd);
 
 				break;
 			case WM_INITDIALOG:
 			{
+				if (IsWindowBlacklisted(MessageData->hwnd, MessageData->message))
+					break;
+
 				DialogCreationData CreationData;
 				if (DialogCreationData::TryGetFromLParam(MessageData->lParam, CreationData) == false)
 				{
@@ -363,6 +388,9 @@ namespace bgsee
 				break;
 			}
 			case WM_DESTROY:
+				if (IsWindowBlacklisted(MessageData->hwnd, MessageData->message))
+					break;
+
 				ActiveThreadDialogHandles.erase(MessageData->hwnd);
 
 				break;

@@ -163,7 +163,7 @@ namespace bgsee
 			LRESULT		SendMessageToOrgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool PreventSubclassProcessing);
 		};
 
-		static const std::vector<std::string> BlacklistedWindowClasses;
+		static const std::vector<const char*> BlacklistedWindowClasses;
 
 		typedef std::unordered_map<HWND, std::unique_ptr<SubclassedWindowData>> HandleToSubclassDataMapT;
 		typedef std::vector<std::unique_ptr<SubclassedWindowData>> SubclassDataArrayT;
