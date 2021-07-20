@@ -565,7 +565,7 @@ ref struct AppearanceSettings : public SettingsGroup
 		TabStripLocation = DevComponents::DotNetBar::eTabStripAlignment::Top;
 		TabStripVerticalWidth = 150;
 		TabSize = 4;
-		TextFont = gcnew Drawing::Font("Consolas", 9);
+		TextFont = gcnew Drawing::Font("Consolas", 9.25);
 		WordWrap = true;
 		ShowTabs = false;
 		ShowSpaces = false;

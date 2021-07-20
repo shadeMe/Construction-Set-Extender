@@ -53,17 +53,29 @@ void CustomColorEditor::PaintValue(System::Drawing::Design::PaintValueEventArgs^
 
 System::Drawing::Design::UITypeEditorEditStyle CustomFontEditor::GetEditStyle(ITypeDescriptorContext^ context)
 {
-	// ### For unidentifiable reasons, spawning a FontDialog leads to a bizzare bug
-	// where only the "Incosonalta" font is show in the avaliable fonts list.
-	// After spending far too much time figuring out why (the issue is not in the public 10.0 build)
-	// I'm disabling the picker altogether. The property can still be expanded, wherein a dropdown list
-	// will *correctly* show all available fonts, as well as other pertinent sub-properties.
-	return System::Drawing::Design::UITypeEditorEditStyle::None;
+	return System::Drawing::Design::UITypeEditorEditStyle::Modal;
 }
 
 System::Object^ CustomFontEditor::EditValue(ITypeDescriptorContext^ context, IServiceProvider^ provider, Object^ value)
 {
-	return nullptr;
+	auto FontDlg = gcnew FontDialog;
+	FontDlg->MinSize = 6;
+	FontDlg->MaxSize = 32;
+	FontDlg->ShowApply = false;
+	FontDlg->ShowColor = false;
+	FontDlg->ShowHelp = false;
+	FontDlg->FontMustExist = true;
+	FontDlg->ScriptsOnly = false;
+	FontDlg->AllowScriptChange = false;
+
+	auto Font = safe_cast<System::Drawing::Font^>(value);
+	if (Font != nullptr)
+		FontDlg->Font = Font;
+
+	if (FontDlg->ShowDialog() == DialogResult::OK)
+		return FontDlg->Font;
+
+	return value;
 }
 
 System::String^ SettingsGroup::GetCategoryName()
