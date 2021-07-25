@@ -736,6 +736,9 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->PanelDockContainerMessageList = (gcnew DevComponents::DotNetBar::PanelDockContainer());
 	this->MessagesList = (gcnew BrightIdeasSoftware::FastObjectListView());
 	this->MessagesToolbar = (gcnew DevComponents::DotNetBar::Bar());
+	this->MessagesToolbarErrors = (gcnew DevComponents::DotNetBar::ButtonItem());
+	this->MessagesToolbarWarnings = (gcnew DevComponents::DotNetBar::ButtonItem());
+	this->MessagesToolbarInfos = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->DockContainerItemMessageList = (gcnew DevComponents::DotNetBar::DockContainerItem());
 	this->DockableBarBookmarks = (gcnew DevComponents::DotNetBar::Bar());
 	this->PanelDockContainerBookmarks = (gcnew DevComponents::DotNetBar::PanelDockContainer());
@@ -819,11 +822,11 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->StatusBarLineNumber = (gcnew DevComponents::DotNetBar::LabelItem());
 	this->StatusBarColumnNumber = (gcnew DevComponents::DotNetBar::LabelItem());
 	this->StatusBarDocumentDescription = (gcnew DevComponents::DotNetBar::LabelItem());
+	this->StatusBarErrorCount = (gcnew DevComponents::DotNetBar::ButtonItem());
+	this->StatusBarWarningCount = (gcnew DevComponents::DotNetBar::ButtonItem());
+	this->StatusBarNoIssuesIndicator = (gcnew DevComponents::DotNetBar::ButtonItem());
 	this->StatusBarPreprocessorOutputFlag = (gcnew DevComponents::DotNetBar::LabelItem());
 	this->StatusBarScriptBytecodeLength = (gcnew DevComponents::DotNetBar::CircularProgressItem());
-	this->MessagesToolbarErrors = (gcnew DevComponents::DotNetBar::ButtonItem());
-	this->MessagesToolbarWarnings = (gcnew DevComponents::DotNetBar::ButtonItem());
-	this->MessagesToolbarInfos = (gcnew DevComponents::DotNetBar::ButtonItem());
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MainTabStrip))->BeginInit();
 	this->MainTabStrip->SuspendLayout();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContainerMainToolbar))->BeginInit();
@@ -1491,13 +1494,13 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->MessagesList->Location = System::Drawing::Point(0, 25);
 	this->MessagesList->MultiSelect = false;
 	this->MessagesList->Name = L"MessagesList";
+	this->MessagesList->ShowFilterMenuOnRightClick = false;
 	this->MessagesList->ShowGroups = false;
 	this->MessagesList->Size = System::Drawing::Size(343, 142);
 	this->MessagesList->TabIndex = 0;
 	this->MessagesList->TabStop = false;
-	this->MessagesList->UseFiltering = true;
-	this->MessagesList->ShowFilterMenuOnRightClick = false;
 	this->MessagesList->UseCompatibleStateImageBehavior = false;
+	this->MessagesList->UseFiltering = true;
 	this->MessagesList->View = System::Windows::Forms::View::Details;
 	this->MessagesList->VirtualMode = true;
 	//
@@ -1521,6 +1524,33 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->MessagesToolbar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->MessagesToolbar->TabIndex = 1;
 	this->MessagesToolbar->TabStop = false;
+	//
+	// MessagesToolbarErrors
+	//
+	this->MessagesToolbarErrors->BeginGroup = true;
+	this->MessagesToolbarErrors->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::ImageAndText;
+	this->MessagesToolbarErrors->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"MessagesToolbarErrors.Image")));
+	this->MessagesToolbarErrors->ImagePaddingHorizontal = 12;
+	this->MessagesToolbarErrors->Name = L"MessagesToolbarErrors";
+	this->MessagesToolbarErrors->Text = L"Errors";
+	//
+	// MessagesToolbarWarnings
+	//
+	this->MessagesToolbarWarnings->BeginGroup = true;
+	this->MessagesToolbarWarnings->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::ImageAndText;
+	this->MessagesToolbarWarnings->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"MessagesToolbarWarnings.Image")));
+	this->MessagesToolbarWarnings->ImagePaddingHorizontal = 12;
+	this->MessagesToolbarWarnings->Name = L"MessagesToolbarWarnings";
+	this->MessagesToolbarWarnings->Text = L"Warnings";
+	//
+	// MessagesToolbarInfos
+	//
+	this->MessagesToolbarInfos->BeginGroup = true;
+	this->MessagesToolbarInfos->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::ImageAndText;
+	this->MessagesToolbarInfos->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"MessagesToolbarInfos.Image")));
+	this->MessagesToolbarInfos->ImagePaddingHorizontal = 12;
+	this->MessagesToolbarInfos->Name = L"MessagesToolbarInfos";
+	this->MessagesToolbarInfos->Text = L"Messages";
 	//
 	// DockContainerItemMessageList
 	//
@@ -1947,7 +1977,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->PanelDockContainerFindReplace->DisabledBackColor = System::Drawing::Color::Empty;
 	this->PanelDockContainerFindReplace->Location = System::Drawing::Point(3, 23);
 	this->PanelDockContainerFindReplace->Name = L"PanelDockContainerFindReplace";
-	this->PanelDockContainerFindReplace->Size = System::Drawing::Size(294, 564);
+	this->PanelDockContainerFindReplace->Size = System::Drawing::Size(282, 564);
 	this->PanelDockContainerFindReplace->Style->Alignment = System::Drawing::StringAlignment::Center;
 	this->PanelDockContainerFindReplace->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::BarBackground;
 	this->PanelDockContainerFindReplace->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
@@ -1978,7 +2008,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 		this->FindWindowLCIFindDropdown,
 			this->FindWindowLCIReplaceDropdown, this->FindWindowLCILookIn, this->FindWindowLayoutGroupSettings, this->FindWindowLayouyGroupButtons
 	});
-	this->FindWindowLayoutControl->Size = System::Drawing::Size(294, 564);
+	this->FindWindowLayoutControl->Size = System::Drawing::Size(282, 564);
 	this->FindWindowLayoutControl->TabIndex = 0;
 	this->FindWindowLayoutControl->TabStop = false;
 	//
@@ -1990,7 +2020,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowDropdownFind->Location = System::Drawing::Point(50, 4);
 	this->FindWindowDropdownFind->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowDropdownFind->Name = L"FindWindowDropdownFind";
-	this->FindWindowDropdownFind->Size = System::Drawing::Size(240, 23);
+	this->FindWindowDropdownFind->Size = System::Drawing::Size(228, 23);
 	this->FindWindowDropdownFind->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->FindWindowDropdownFind->TabIndex = 0;
 	//
@@ -2002,7 +2032,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowDropdownReplace->Location = System::Drawing::Point(50, 34);
 	this->FindWindowDropdownReplace->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowDropdownReplace->Name = L"FindWindowDropdownReplace";
-	this->FindWindowDropdownReplace->Size = System::Drawing::Size(240, 23);
+	this->FindWindowDropdownReplace->Size = System::Drawing::Size(228, 23);
 	this->FindWindowDropdownReplace->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->FindWindowDropdownReplace->TabIndex = 1;
 	//
@@ -2017,7 +2047,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowComboLookIn->Location = System::Drawing::Point(50, 64);
 	this->FindWindowComboLookIn->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowComboLookIn->Name = L"FindWindowComboLookIn";
-	this->FindWindowComboLookIn->Size = System::Drawing::Size(240, 23);
+	this->FindWindowComboLookIn->Size = System::Drawing::Size(228, 23);
 	this->FindWindowComboLookIn->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->FindWindowComboLookIn->TabIndex = 2;
 	//
@@ -2032,7 +2062,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowCheckboxMatchCase->Location = System::Drawing::Point(8, 98);
 	this->FindWindowCheckboxMatchCase->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowCheckboxMatchCase->Name = L"FindWindowCheckboxMatchCase";
-	this->FindWindowCheckboxMatchCase->Size = System::Drawing::Size(278, 22);
+	this->FindWindowCheckboxMatchCase->Size = System::Drawing::Size(266, 22);
 	this->FindWindowCheckboxMatchCase->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->FindWindowCheckboxMatchCase->TabIndex = 3;
 	this->FindWindowCheckboxMatchCase->Text = L"Match case";
@@ -2048,7 +2078,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowCheckboxUseRegEx->Location = System::Drawing::Point(8, 158);
 	this->FindWindowCheckboxUseRegEx->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowCheckboxUseRegEx->Name = L"FindWindowCheckboxUseRegEx";
-	this->FindWindowCheckboxUseRegEx->Size = System::Drawing::Size(278, 22);
+	this->FindWindowCheckboxUseRegEx->Size = System::Drawing::Size(266, 22);
 	this->FindWindowCheckboxUseRegEx->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->FindWindowCheckboxUseRegEx->TabIndex = 5;
 	this->FindWindowCheckboxUseRegEx->Text = L"Use regular expressions";
@@ -2064,7 +2094,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowCheckBoxMatchWholeWord->Location = System::Drawing::Point(8, 128);
 	this->FindWindowCheckBoxMatchWholeWord->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowCheckBoxMatchWholeWord->Name = L"FindWindowCheckBoxMatchWholeWord";
-	this->FindWindowCheckBoxMatchWholeWord->Size = System::Drawing::Size(278, 22);
+	this->FindWindowCheckBoxMatchWholeWord->Size = System::Drawing::Size(266, 22);
 	this->FindWindowCheckBoxMatchWholeWord->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->FindWindowCheckBoxMatchWholeWord->TabIndex = 4;
 	this->FindWindowCheckBoxMatchWholeWord->Text = L"Match whole word";
@@ -2080,7 +2110,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowCheckBoxIgnoreComments->Location = System::Drawing::Point(8, 188);
 	this->FindWindowCheckBoxIgnoreComments->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowCheckBoxIgnoreComments->Name = L"FindWindowCheckBoxIgnoreComments";
-	this->FindWindowCheckBoxIgnoreComments->Size = System::Drawing::Size(278, 22);
+	this->FindWindowCheckBoxIgnoreComments->Size = System::Drawing::Size(266, 22);
 	this->FindWindowCheckBoxIgnoreComments->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->FindWindowCheckBoxIgnoreComments->TabIndex = 6;
 	this->FindWindowCheckBoxIgnoreComments->Text = L"Ignore comments";
@@ -2094,7 +2124,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowButtonFind->Location = System::Drawing::Point(8, 248);
 	this->FindWindowButtonFind->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowButtonFind->Name = L"FindWindowButtonFind";
-	this->FindWindowButtonFind->Size = System::Drawing::Size(135, 28);
+	this->FindWindowButtonFind->Size = System::Drawing::Size(129, 28);
 	this->FindWindowButtonFind->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->FindWindowButtonFind->TabIndex = 8;
 	this->FindWindowButtonFind->Text = L"Find";
@@ -2105,10 +2135,10 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowButtonReplace->ColorTable = DevComponents::DotNetBar::eButtonColor::OrangeWithBackground;
 	this->FindWindowButtonReplace->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"FindWindowButtonReplace.Image")));
 	this->FindWindowButtonReplace->ImageTextSpacing = 5;
-	this->FindWindowButtonReplace->Location = System::Drawing::Point(151, 248);
+	this->FindWindowButtonReplace->Location = System::Drawing::Point(145, 248);
 	this->FindWindowButtonReplace->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowButtonReplace->Name = L"FindWindowButtonReplace";
-	this->FindWindowButtonReplace->Size = System::Drawing::Size(135, 28);
+	this->FindWindowButtonReplace->Size = System::Drawing::Size(129, 28);
 	this->FindWindowButtonReplace->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->FindWindowButtonReplace->TabIndex = 9;
 	this->FindWindowButtonReplace->Text = L"Replace";
@@ -2122,7 +2152,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowButtonCountMatches->Location = System::Drawing::Point(8, 284);
 	this->FindWindowButtonCountMatches->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowButtonCountMatches->Name = L"FindWindowButtonCountMatches";
-	this->FindWindowButtonCountMatches->Size = System::Drawing::Size(278, 28);
+	this->FindWindowButtonCountMatches->Size = System::Drawing::Size(266, 28);
 	this->FindWindowButtonCountMatches->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->FindWindowButtonCountMatches->TabIndex = 10;
 	this->FindWindowButtonCountMatches->Text = L"Count Matches";
@@ -2587,11 +2617,11 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->StatusBar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
 	this->StatusBar->ForeColor = System::Drawing::Color::Black;
 	this->StatusBar->IsMaximized = false;
-	this->StatusBar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(5) {
-		this->StatusBarLineNumber,
-			this->StatusBarColumnNumber, this->StatusBarDocumentDescription, this->StatusBarPreprocessorOutputFlag, this->StatusBarScriptBytecodeLength
+	this->StatusBar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(8) {
+		this->StatusBarDocumentDescription,
+			this->StatusBarErrorCount, this->StatusBarWarningCount, this->StatusBarNoIssuesIndicator, this->StatusBarLineNumber, this->StatusBarColumnNumber,
+			this->StatusBarPreprocessorOutputFlag, this->StatusBarScriptBytecodeLength
 	});
-	this->StatusBar->ItemSpacing = 10;
 	this->StatusBar->Location = System::Drawing::Point(0, 860);
 	this->StatusBar->Name = L"StatusBar";
 	this->StatusBar->PaddingBottom = 3;
@@ -2608,19 +2638,47 @@ void ScriptEditorWorkspace::InitializeComponents()
 	//
 	this->StatusBarLineNumber->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Center;
 	this->StatusBarLineNumber->Name = L"StatusBarLineNumber";
+	this->StatusBarLineNumber->PaddingLeft = 20;
+	this->StatusBarLineNumber->PaddingRight = 5;
 	this->StatusBarLineNumber->Text = L"Line 0";
 	//
 	// StatusBarColumnNumber
 	//
 	this->StatusBarColumnNumber->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Center;
 	this->StatusBarColumnNumber->Name = L"StatusBarColumnNumber";
+	this->StatusBarColumnNumber->PaddingLeft = 5;
 	this->StatusBarColumnNumber->Text = L"Column 0";
 	//
 	// StatusBarDocumentDescription
 	//
 	this->StatusBarDocumentDescription->Name = L"StatusBarDocumentDescription";
-	this->StatusBarDocumentDescription->PaddingLeft = 15;
+	this->StatusBarDocumentDescription->PaddingRight = 20;
 	this->StatusBarDocumentDescription->Text = L"Script Name";
+	//
+	// StatusBarErrorCount
+	//
+	this->StatusBarErrorCount->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::ImageAndText;
+	this->StatusBarErrorCount->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"StatusBarErrorCount.Image")));
+	this->StatusBarErrorCount->ImagePaddingHorizontal = 10;
+	this->StatusBarErrorCount->Name = L"StatusBarErrorCount";
+	this->StatusBarErrorCount->Text = L"0";
+	//
+	// StatusBarWarningCount
+	//
+	this->StatusBarWarningCount->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::ImageAndText;
+	this->StatusBarWarningCount->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"StatusBarWarningCount.Image")));
+	this->StatusBarWarningCount->ImagePaddingHorizontal = 10;
+	this->StatusBarWarningCount->Name = L"StatusBarWarningCount";
+	this->StatusBarWarningCount->Text = L"0";
+	//
+	// StatusBarNoIssuesIndicator
+	//
+	this->StatusBarNoIssuesIndicator->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::ImageAndText;
+	this->StatusBarNoIssuesIndicator->HotTrackingStyle = DevComponents::DotNetBar::eHotTrackingStyle::None;
+	this->StatusBarNoIssuesIndicator->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"StatusBarNoIssuesIndicator.Image")));
+	this->StatusBarNoIssuesIndicator->ImagePaddingHorizontal = 10;
+	this->StatusBarNoIssuesIndicator->Name = L"StatusBarNoIssuesIndicator";
+	this->StatusBarNoIssuesIndicator->Text = L"No Issues";
 	//
 	// StatusBarPreprocessorOutputFlag
 	//
@@ -2628,6 +2686,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->StatusBarPreprocessorOutputFlag->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
 	this->StatusBarPreprocessorOutputFlag->Name = L"StatusBarPreprocessorOutputFlag";
 	this->StatusBarPreprocessorOutputFlag->PaddingLeft = 15;
+	this->StatusBarPreprocessorOutputFlag->PaddingRight = 15;
 	this->StatusBarPreprocessorOutputFlag->Text = L"Preprocessor Output <b>ON</b>";
 	this->StatusBarPreprocessorOutputFlag->Visible = false;
 	//
@@ -2643,33 +2702,6 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->StatusBarScriptBytecodeLength->TextPadding->Left = 5;
 	this->StatusBarScriptBytecodeLength->TextPadding->Right = 5;
 	this->StatusBarScriptBytecodeLength->Visible = false;
-	//
-	// MessagesToolbarErrors
-	//
-	this->MessagesToolbarErrors->BeginGroup = true;
-	this->MessagesToolbarErrors->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::ImageAndText;
-	this->MessagesToolbarErrors->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"MessagesToolbarErrors.Image")));
-	this->MessagesToolbarErrors->ImagePaddingHorizontal = 12;
-	this->MessagesToolbarErrors->Name = L"MessagesToolbarErrors";
-	this->MessagesToolbarErrors->Text = L"Errors";
-	//
-	// MessagesToolbarWarnings
-	//
-	this->MessagesToolbarWarnings->BeginGroup = true;
-	this->MessagesToolbarWarnings->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::ImageAndText;
-	this->MessagesToolbarWarnings->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"MessagesToolbarWarnings.Image")));
-	this->MessagesToolbarWarnings->ImagePaddingHorizontal = 12;
-	this->MessagesToolbarWarnings->Name = L"MessagesToolbarWarnings";
-	this->MessagesToolbarWarnings->Text = L"Warnings";
-	//
-	// MessagesToolbarMessages
-	//
-	this->MessagesToolbarInfos->BeginGroup = true;
-	this->MessagesToolbarInfos->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::ImageAndText;
-	this->MessagesToolbarInfos->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"MessagesToolbarInfos.Image")));
-	this->MessagesToolbarInfos->ImagePaddingHorizontal = 12;
-	this->MessagesToolbarInfos->Name = L"MessagesToolbarMessages";
-	this->MessagesToolbarInfos->Text = L"Messages";
 	//
 	// ScriptEditorWorkspace
 	//
@@ -2905,6 +2937,9 @@ void ScriptEditorWorkspace::InitializeViewComponents()
 	SetupViewComponentLabel(StatusBarDocumentDescription, eViewRole::StatusBar_DocumentDescription);
 	SetupViewComponentLabel(StatusBarLineNumber, eViewRole::StatusBar_LineNumber);
 	SetupViewComponentLabel(StatusBarColumnNumber, eViewRole::StatusBar_ColumnNumber);
+	SetupViewComponentButton(StatusBarErrorCount, eViewRole::StatusBar_ErrorCount);
+	SetupViewComponentButton(StatusBarWarningCount, eViewRole::StatusBar_WarningCount);
+	SetupViewComponentButton(StatusBarNoIssuesIndicator, eViewRole::StatusBar_NoIssuesIndicator);
 	SetupViewComponentLabel(StatusBarPreprocessorOutputFlag, eViewRole::StatusBar_PreprocessorOutput);
 	SetupViewComponentProgressBar(StatusBarScriptBytecodeLength, eViewRole::StatusBar_CompiledScriptSize);
 

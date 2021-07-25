@@ -527,6 +527,36 @@
         FvgAof8uxPEBnERpW+kHF7vYik0pD337b4wYh6/wAAAAAElFTkSuQmCC
 </value>
   </data>
+  <data name="StatusBarErrorCount.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        xAAADsQBlSsOGwAAANBJREFUOE+lkrENwkAMRbMBFAwQQY8yAYtRM8eVjEPBDORSkSopaIxfZIcDXRAh
+        lr7k+/7+PidXiMgiZMk5eCUWfd+XiqBoFWIghytNljdQQdXFur2fjlJvV3LbFAPI4cyoyhrgjqA57MfG
+        T1AzkzJnEJiCsDuHAd6Ynu0mIWfQ+rURE97oOTU0aJV6N+iaOE5MTQhvdqgB9LRB3K3lcb0gGoIc7qtB
+        uoI3pyvAUZtcQcnFH3HZb/SHhIApvg4gt8nTD8kDd8X8p/wvsuTvkOIJGxzNPSFEAV4AAAAASUVORK5C
+        YII=
+</value>
+  </data>
+  <data name="StatusBarWarningCount.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        xAAADsQBlSsOGwAAANpJREFUOE+lkU0KwjAQhXMDvUELXsSDeBM3rt1078YjeAQvIARXbgQRRJciQkpV
+        OuYNSUwlU6sOPCbz902aKiL6S8nkN3od3swYs7QieJcK9hFgh4blZUO0UgSP2JXYugAWj+2IAfCIXYmt
+        FWCb8/J64mEvxMi7ljAjAeb3/ZgHB1nOHjHyrkUG+O217jUAiONbtAEKvz0GQLfDFIBCBNhi3+pcr7Mw
+        FAt51NEnASbVcdYYim8AoY4+CSBu9/K3kAA6/v6U3N/QEgBvsLNCkyTU02/wq5LJ7iL1BEJDqgwaTYM8
+        AAAAAElFTkSuQmCC
+</value>
+  </data>
+  <data name="StatusBarNoIssuesIndicator.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        xAAADsQBlSsOGwAAAN9JREFUOE+lks0NgzAMhbmzRjcAiWlgDzaAI0fUHdojA7SH3jmhDsGvBI1QXb8o
+        lAIRbSHSJxzHfrZDDCLahdb5D6OhFtsm4zMpIxSw4TNVmF6AvwcmS+4JeWePnKMjcU8uwYczxGgFGFTO
+        gktAVmxpwRliVOxCwEcVXWLRFlR1lbRVJxhnIZCi7XmyqkrRLZJ7jINYZiEgMO9coOxKakRDdmzLPWIQ
+        O+RpBfI2p/pRU3gN2T1W/ybwHmFou3/2k+pgbYTJJaJ1rM/qYO0S9/3G3Q9pWGxve8pb0Tp/h4wXVh3K
+        2RdfHjkAAAAASUVORK5CYII=
+</value>
+  </data>
   <data name="StatusBarPreprocessorOutputFlag.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO

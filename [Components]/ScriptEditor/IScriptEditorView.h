@@ -564,9 +564,12 @@ public enum class eViewRole
 	MainToolbar_WindowChromeClose,
 
 	StatusBar,
-	StatusBar_DocumentDescription,
 	StatusBar_LineNumber,
 	StatusBar_ColumnNumber,
+	StatusBar_DocumentDescription,
+	StatusBar_ErrorCount,
+	StatusBar_WarningCount,
+	StatusBar_NoIssuesIndicator,
 	StatusBar_PreprocessorOutput,
 	StatusBar_CompiledScriptSize,
 

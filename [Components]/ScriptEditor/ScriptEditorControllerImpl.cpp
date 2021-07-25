@@ -349,15 +349,14 @@ void ScriptEditorController::SetBoundDocument(model::IScriptDocument^ Document)
 	BoundDocument->BackgroundAnalyzer->Resume();
 	BoundDocument->IntelliSenseModel->Bind(View->IntelliSenseView);
 	BoundDocument->TextEditor->Bind();
-
-	BoundDocument->PushStateToSubscribers();
-
-	ValidateDocumentSyncingStatus(BoundDocument);
-	DocumentNavigationHelper->SyncWithDocument(BoundDocument);
-
+;
 	SetDocumentDependentViewComponentsEnabled(true);
 	if (BoundDocument->IsPreprocessorOutputEnabled())
 		SetDocumentPreprocessorOutputDisplayDependentViewComponentsEnabled(false);
+
+	BoundDocument->PushStateToSubscribers();
+	ValidateDocumentSyncingStatus(BoundDocument);
+	DocumentNavigationHelper->SyncWithDocument(BoundDocument);
 }
 
 void ScriptEditorController::UnbindBoundDocument()
@@ -448,6 +447,9 @@ void ScriptEditorController::SetDocumentDependentViewComponentsEnabled(bool Enab
 	View->GetComponentByRole(view::eViewRole::StatusBar_DocumentDescription)->AsLabel()->Visible = Enabled;
 	View->GetComponentByRole(view::eViewRole::StatusBar_LineNumber)->AsLabel()->Visible = Enabled;
 	View->GetComponentByRole(view::eViewRole::StatusBar_ColumnNumber)->AsLabel()->Visible = Enabled;
+	View->GetComponentByRole(view::eViewRole::StatusBar_ErrorCount)->AsButton()->Visible = Enabled;
+	View->GetComponentByRole(view::eViewRole::StatusBar_WarningCount)->AsButton()->Visible = Enabled;
+	View->GetComponentByRole(view::eViewRole::StatusBar_NoIssuesIndicator)->AsButton()->Visible = Enabled;
 	View->GetComponentByRole(view::eViewRole::StatusBar_CompiledScriptSize)->AsProgressBar()->Visible = Enabled;
 	View->GetComponentByRole(view::eViewRole::StatusBar)->AsContainer()->Invalidate();
 }
@@ -1158,7 +1160,10 @@ void ScriptEditorController::ViewEventHandler_ComponentEvent(Object^ Sender, vie
 		ViewEventHandler_EmptyWorkspacePanel(E);
 		break;
 	case view::eViewRole::StatusBar:
-		// placeholder, nothing to actually handle here
+	case view::eViewRole::StatusBar_ErrorCount:
+	case view::eViewRole::StatusBar_WarningCount:
+	case view::eViewRole::StatusBar_NoIssuesIndicator:
+		ViewEventHandler_StatusBar(E);
 		break;
 	default:
 		throw gcnew ArgumentException("Unknown view component role " + E->Component->Role.ToString());
@@ -1926,6 +1931,17 @@ void ScriptEditorController::ViewEventHandler_EmptyWorkspacePanel(view::ViewComp
 	}
 }
 
+void ScriptEditorController::ViewEventHandler_StatusBar(view::ViewComponentEvent^ E)
+{
+	switch (E->Component->Role)
+	{
+	case view::eViewRole::StatusBar_ErrorCount:
+	case view::eViewRole::StatusBar_WarningCount:
+		View->GetComponentByRole(view::eViewRole::Messages_DockPanel)->AsDockablePane()->Focus();
+		break;
+	}
+}
+
 void ScriptEditorController::ModelEventHandler_DocumentStateChanged(Object^ Sender, model::IScriptDocument::StateChangeEventArgs^ E)
 {
 	auto Document = safe_cast<model::IScriptDocument^>(Sender);
@@ -2016,6 +2032,17 @@ void ScriptEditorController::ModelEventHandler_DocumentStateChanged(Object^ Send
 		View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleWarnings)->AsButton()->Text = WarningCount + " " + (WarningCount == 1 ? "Warning" : "Warnings");
 		View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleInfos)->AsButton()->Text = InfosCount + " " + (InfosCount == 1 ? "Message" : "Messages");
 
+		auto StatusBarErrorCount = View->GetComponentByRole(view::eViewRole::StatusBar_ErrorCount)->AsButton();
+		auto StatusBarWarningCount = View->GetComponentByRole(view::eViewRole::StatusBar_WarningCount)->AsButton();
+		auto StatusBarNoIssuesIndicator = View->GetComponentByRole(view::eViewRole::StatusBar_NoIssuesIndicator)->AsButton();
+
+		StatusBarErrorCount->Text = ErrorCount.ToString();
+		StatusBarErrorCount->Visible = ErrorCount > 0;
+		StatusBarWarningCount->Text = WarningCount.ToString();
+		StatusBarWarningCount->Visible = WarningCount > 0;
+		StatusBarNoIssuesIndicator->Visible = ErrorCount == 0 && WarningCount == 0;
+		View->GetComponentByRole(view::eViewRole::StatusBar)->AsContainer()->Invalidate();
+
 		break;
 	}
 	case model::IScriptDocument::StateChangeEventArgs::eEventType::Bookmarks:
@@ -2051,6 +2078,8 @@ void ScriptEditorController::ModelEventHandler_DocumentStateChanged(Object^ Send
 
 		auto StatusBarLabel = View->GetComponentByRole(view::eViewRole::StatusBar_PreprocessorOutput)->AsLabel();
 		StatusBarLabel->Visible = E->DisplayingPreprocessorOutput;
+
+		View->GetComponentByRole(view::eViewRole::StatusBar)->AsContainer()->Invalidate();
 
 		break;
 	}

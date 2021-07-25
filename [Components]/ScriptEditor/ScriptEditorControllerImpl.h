@@ -197,6 +197,7 @@ ref class ScriptEditorController : public IScriptEditorController
 	void ViewEventHandler_TextEditorContextMenu(view::ViewComponentEvent^ E);
 	void ViewEventHandler_TabStripContextMenu(view::ViewComponentEvent^ E);
 	void ViewEventHandler_EmptyWorkspacePanel(view::ViewComponentEvent^ E);
+	void ViewEventHandler_StatusBar(view::ViewComponentEvent^ E);
 
 	void ModelEventHandler_DocumentStateChanged(Object^ Sender, model::IScriptDocument::StateChangeEventArgs^ E);
 	void ModelEventHandler_KeyDown(Object^ Sender, KeyEventArgs^ E);

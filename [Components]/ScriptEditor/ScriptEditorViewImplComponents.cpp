@@ -2044,10 +2044,9 @@ void Container::Invalidate()
 		{
 			auto SourceBar = safe_cast<DotNetBar::Bar^>(BasicControl);
 			SourceBar->RecalcLayout();
-			SourceBar->RecalcSize();
 		}
-
-		BasicControl->Refresh();
+		else
+			BasicControl->Refresh();
 
 		break;
 	case eSourceType::BaseItem:

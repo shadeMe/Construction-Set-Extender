@@ -1091,10 +1091,7 @@ void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::Mouse
 	//DisplayLocation.Y += GetVisualLineFromMousePosition(E)->Height;
 	DisplayLocation = ParentEditor->PointToScreen(DisplayLocation);
 
-	String^ kRowStart = "<div width=\"350\">", ^kRowEnd = "</div>";
-	String^ kCellStart = "<span padding=\"0,0,0,5\">", ^kCellEnd = "</span>\n";
 	auto Mb = gcnew utilities::TextMarkupBuilder;
-
 	Mb->Table(1, 350);
 	{
 		if (ParentScriptDocument->GetMessageCountErrors(Line))

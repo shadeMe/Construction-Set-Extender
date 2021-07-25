@@ -190,6 +190,9 @@ private:
 	DevComponents::DotNetBar::ButtonItem^ MessagesToolbarErrors;
 	DevComponents::DotNetBar::ButtonItem^ MessagesToolbarWarnings;
 	DevComponents::DotNetBar::ButtonItem^ MessagesToolbarInfos;
+	DevComponents::DotNetBar::ButtonItem^ StatusBarErrorCount;
+	DevComponents::DotNetBar::ButtonItem^ StatusBarWarningCount;
+	DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 	System::ComponentModel::IContainer^ components;
 
 	ref struct ViewComponentData
