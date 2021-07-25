@@ -223,6 +223,8 @@ interface class ITabStrip
 	void SelectNextTab();
 	void SelectPreviousTab();
 	ITabStripItem^ LookupTabByTag(Object^ Tag);
+	void BeginUpdate();
+	void EndUpdate();
 
 	static enum class eEvent
 	{
@@ -302,6 +304,7 @@ interface class IObjectListView : public IViewComponent
 	property Object^ SelectedObject;
 	property Collections::IList^ SelectedObjects;
 	property bool HeaderVisible;
+	property bool UseFiltering;
 
 	void SetObjects(Collections::IEnumerable^ Collection, bool PreserveState);
 	void ClearObjects();
@@ -310,6 +313,7 @@ interface class IObjectListView : public IViewComponent
 	List<IObjectListViewColumn^>^ GetColumns();
 	void SetCanExpandGetter(CanExpandGetter^ Delegate);
 	void SetChildrenGetter(ChildrenGetter^ Delegate);
+	void SetModelFilter(Predicate<Object^>^ Predicate);
 	void EnsureItemVisible(Object^ Item);
 	void ExpandAll();
 	void CollapseAll();
@@ -580,6 +584,9 @@ public enum class eViewRole
 
 	Messages_DockPanel,
 	Messages_ListView,
+	Messages_Toolbar_ToggleErrors,
+	Messages_Toolbar_ToggleWarnings,
+	Messages_Toolbar_ToggleInfos,
 
 	Bookmarks_DockPanel,
 	Bookmarks_ListView,

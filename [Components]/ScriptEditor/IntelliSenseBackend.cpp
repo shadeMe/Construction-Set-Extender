@@ -530,6 +530,9 @@ void IntelliSenseBackend::InitializeScriptCommands(componentDLLInterface::Comman
 		}
 
 		ScriptCommands->Add(Name, NewCommand);
+		if (NewCommand->HasAlternateIdentifier() && ScriptCommands->Lookup(NewCommand->GetAlternateIdentifier(), false) == nullptr)
+			ScriptCommands->Add(NewCommand->GetAlternateIdentifier(), NewCommand);
+
 		++CommandCount;
 	}
 

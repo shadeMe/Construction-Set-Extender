@@ -450,6 +450,35 @@
   <metadata name="DockManager.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>143, 3</value>
   </metadata>
+  <data name="MessagesToolbarErrors.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6
+        JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAACXBIWXMAAA7DAAAOwwHHb6hkAAABEklE
+        QVQ4T62TMU7DQBBFTRMaStKSloKgtBRwMGoOYBfmJlCAyDV8AkNEpEiRl90KhnnjdWTWLhBmpC+tZv7/
+        6xnvZGk455be+0JRKVwE54JapA1DRI5DCPd++/61u7uVzfVSXhcnBs7kqMGBG2VtkNAb1vunB3lbnUl9
+        mo2CGhy4P0xwpVDPj2RzdW5IxYe8cvbPj5iUJrae9dNwh/AZvKFvkubhorGZMBz66xOJjjyWg2sz8T7H
+        oGJI6W2dYExsvJtLDCoMHJPuCqkJkYoBGrT/YjC5hWlD/NtvXMiHapqmubC3MOkhEfp1v3/KrfgFTZS3
+        EU3KwzLpkJg04Gw9aw2OcmdRNoy4zrkiXed8uM5Z9g0JL4TX50hSrgAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="MessagesToolbarWarnings.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        xAAADsQBlSsOGwAAAJtJREFUOE+Vj8ENgCAMRdnE1ZzLCwt5cQJvjkDiRfyfUIJQEJo8U2rof5hWOedW
+        4CNrHI8XLp3PsXjCPo7Hion3tXm/mwD7KQtJlwVTFmW6MGyRp+MYYD9kUaZjlBaQX4s8XVvQtSjTtQWk
+        aVGmE4yrBaqFlt6jstDSCX5VBuRj0UtvLSDJopX+R7LAx868X4gGVp5hAQcz4LIxLycs8rg+vnkMAAAA
+        AElFTkSuQmCC
+</value>
+  </data>
+  <data name="MessagesToolbarInfos.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAALxJREFUOE/d
+        UzEOwjAQyz9Y+FnzAV7Aa/hHpYiFNW+AqYKhYsl6nKu4So5DgNiw5OV8tprUCSLSsZQSlUkphpjFoGj3
+        V6i4VeZ0vsswTrI5XDpiBg072O0CqnneHa9PRsv96YaQmSEMyBDsMmHnNSTTHPFpdgkkPK0eJyIgeWd+
+        R3jgRYC7ABKeBsL7JwEvL5HwtPYSf/uNtQvZayFh512RVEfAUmWvjZZtldeAJuTjx7SYAQYQKn7xnCU8
+        ABJO2R9gGis+AAAAAElFTkSuQmCC
+</value>
+  </data>
   <data name="BookmarksToolbarAdd.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO

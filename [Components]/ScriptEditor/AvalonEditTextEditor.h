@@ -27,6 +27,16 @@ using namespace System::Threading::Tasks;
 using RTBitmap = System::Windows::Media::Imaging::RenderTargetBitmap;
 using AvalonEditTextEventHandler = System::EventHandler<AvalonEdit::Editing::TextEventArgs^>;
 
+// No memory leaks with this one!
+ref class MermaidsBrassiereElementHost : public ElementHost
+{
+protected:
+	virtual void OnVisibleChanged(EventArgs^ E) override;
+public:
+	virtual void OnPropertyChanged(String^ propertyName, Object^ value) override;
+};
+
+
 ref class AvalonEditTextEditor : public ITextEditor
 {
 	static const UInt32	kSetTextFadeAnimationDuration = 150;		// in ms

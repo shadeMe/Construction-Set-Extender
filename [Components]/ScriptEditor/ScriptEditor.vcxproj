@@ -423,6 +423,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\SyncArrow\SyncArrow_16x.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\SyncContent\SyncContent_16x.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\TabPage\TabPage_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ThreeDScene\ThreeDScene_16x.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Trash\Trash_16x.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Type\Type_16x.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\WebDestination\WebDestination_16x.png" />

@@ -186,6 +186,10 @@ private:
 	DevComponents::DotNetBar::ButtonItem^ MenuTabLayoutBottom;
 	DevComponents::DotNetBar::ButtonItem^ MenuTabLayoutLeft;
 	DevComponents::DotNetBar::ButtonItem^ MenuTabLayoutRight;
+	DevComponents::DotNetBar::Bar^ MessagesToolbar;
+	DevComponents::DotNetBar::ButtonItem^ MessagesToolbarErrors;
+	DevComponents::DotNetBar::ButtonItem^ MessagesToolbarWarnings;
+	DevComponents::DotNetBar::ButtonItem^ MessagesToolbarInfos;
 	System::ComponentModel::IContainer^ components;
 
 	ref struct ViewComponentData
@@ -198,12 +202,14 @@ private:
 	components::ViewComponentEventRaiser^ DelegateViewComponentEventRouter;
 	EventHandler^ DelegatePreferencesChanged;
 	ControlEventHandler^ DelegateControlAdded;
+	BarStateChangedEventHandler^ DelegateDockBarStateChanged;
 	intellisense::IIntelliSenseInterfaceView^ IntelliSenseInterface;
 	bool SkipViewComponentEventProcessing;
 
 	void HandleViewComponentEvent(ViewComponentEvent^ E);
 	void HandlePreferencesChanged(Object^ Sender, EventArgs^ E);
 	void HandleControlAdded(Object^ Sender, ControlEventArgs^ E);
+	void HandleDockBarStateChanged(Object^ Sender, BarStateChangedEventArgs^ E);
 
 	void InitializeComponents();
 	void FinalizeComponents();

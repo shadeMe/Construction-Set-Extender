@@ -1,5 +1,8 @@
 #pragma once
 
+#include "IScriptEditorView.h"
+
+
 namespace cse
 {
 
@@ -113,6 +116,7 @@ private:
 	System::Windows::Forms::Timer^ DeferredSelectionUpdateTimer;
 	DevComponents::DotNetBar::StyleManagerAmbient^ ColorManager;
 	System::ComponentModel::IContainer^ components;
+	view::IObjectListView^ ListViewThemeWrapper;
 
 	void ScriptList_SelectionChanged(Object^ Sender, EventArgs^ E);
 	void ScriptList_KeyDown(Object^ Sender, KeyEventArgs^ E);

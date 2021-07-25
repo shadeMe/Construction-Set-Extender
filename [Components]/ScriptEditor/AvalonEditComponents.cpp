@@ -1093,55 +1093,54 @@ void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::Mouse
 
 	String^ kRowStart = "<div width=\"350\">", ^kRowEnd = "</div>";
 	String^ kCellStart = "<span padding=\"0,0,0,5\">", ^kCellEnd = "</span>\n";
+	auto Mb = gcnew utilities::TextMarkupBuilder;
 
-	if (ParentScriptDocument->GetErrorCount(Line))
+	Mb->Table(1, 350);
 	{
-		DisplayPopup = true;
-		auto Errors = ParentScriptDocument->GetMessages(Line,
-														model::components::ScriptDiagnosticMessage::eMessageSource::All,
-														model::components::ScriptDiagnosticMessage::eMessageType::Error);
+		if (ParentScriptDocument->GetMessageCountErrors(Line))
+		{
+			DisplayPopup = true;
+			auto Errors = ParentScriptDocument->GetMessages(Line,
+															model::components::ScriptDiagnosticMessage::eMessageSource::All,
+															model::components::ScriptDiagnosticMessage::eMessageType::Error);
 
-		PopupBgColor = utilities::IRichTooltipContentProvider::eBackgroundColor::Red;
-		PopupTitle = Errors->Count + " error" + (Errors->Count == 1 ? "" : "s");
+			PopupBgColor = utilities::IRichTooltipContentProvider::eBackgroundColor::Red;
+			PopupTitle = Errors->Count + " error" + (Errors->Count == 1 ? "" : "s");
 
-		PopupText += kRowStart;
-		for each (auto Itr in Errors)
-			PopupText += kCellStart + Itr->Text + kCellEnd;
-		PopupText += kRowEnd;
+			for each (auto Itr in Errors)
+				Mb->TableNextRow()->TableNextColumn()->Text("» ")->Text(Itr->Text)->TableNextColumn();
+		}
+		else if (ParentScriptDocument->GetMessageCountWarnings(Line))
+		{
+			DisplayPopup = true;
+			auto Warnings = ParentScriptDocument->GetMessages(Line,
+															  model::components::ScriptDiagnosticMessage::eMessageSource::All,
+															  model::components::ScriptDiagnosticMessage::eMessageType::Warning);
+
+			PopupBgColor = utilities::IRichTooltipContentProvider::eBackgroundColor::Yellow;
+			PopupTitle = Warnings->Count + " warning" + (Warnings->Count == 1 ? "" : "s");
+
+			for each (auto Itr in Warnings)
+				Mb->TableNextRow()->TableNextColumn()->Text("» ")->Text(Itr->Text)->TableNextColumn();
+		}
+		else if (ParentScriptDocument->GetBookmarkCount(Line))
+		{
+			DisplayPopup = true;
+			auto Bookmarks = ParentScriptDocument->GetBookmarks(Line);
+
+			PopupBgColor = utilities::IRichTooltipContentProvider::eBackgroundColor::Blue;
+			PopupTitle = Bookmarks->Count + " bookmark" + (Bookmarks->Count == 1 ? "" : "s");
+
+			for each (auto Itr in Bookmarks)
+				Mb->TableNextRow()->TableNextColumn()->Text("» ")->Text(Itr->Text)->TableNextColumn();
+		}
 	}
-	else if (ParentScriptDocument->GetWarningCount(Line))
-	{
-		DisplayPopup = true;
-		auto Warnings = ParentScriptDocument->GetMessages(Line,
-														  model::components::ScriptDiagnosticMessage::eMessageSource::All,
-														  model::components::ScriptDiagnosticMessage::eMessageType::Warning);
-
-		PopupBgColor = utilities::IRichTooltipContentProvider::eBackgroundColor::Yellow;
-		PopupTitle = Warnings->Count + " warning" + (Warnings->Count == 1 ? "" : "s");
-
-		PopupText += kRowStart;
-		for each (auto Itr in Warnings)
-			PopupText += kCellStart + Itr->Text + kCellEnd;
-		PopupText += kRowEnd;
-	}
-	else if (ParentScriptDocument->GetBookmarkCount(Line))
-	{
-		DisplayPopup = true;
-		auto Bookmarks = ParentScriptDocument->GetBookmarks(Line);
-
-		PopupBgColor = utilities::IRichTooltipContentProvider::eBackgroundColor::Blue;
-		PopupTitle = Bookmarks->Count + " bookmark" + (Bookmarks->Count == 1 ? "" : "s");
-
-		PopupText += kRowStart;
-		for each (auto Itr in Bookmarks)
-			PopupText += kCellStart + Itr->Text + kCellEnd;
-		PopupText += kRowEnd;
-	}
+	Mb->PopTable();
 
 	if (DisplayPopup)
 	{
-		PopupTitle = "<font size=\"+2\"><b>" + PopupTitle + "</b></font>";
-		PopupText = PopupText->Replace("\n", "<br/>");
+		PopupText = Mb->ToMarkup();
+		PopupTitle =  Mb->Reset()->Font(2, true)->Bold()->Text(PopupTitle)->PopTag(2)->ToMarkup();
 
 		auto TooltipData = gcnew DotNetBar::SuperTooltipInfo;
 		TooltipData->HeaderText = PopupTitle;

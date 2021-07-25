@@ -1,5 +1,5 @@
 #include "SnippetManager.h"
-#include "IScriptEditorView.h"
+#include "ScriptEditorViewImplComponents.h"
 #include "Utilities.h"
 
 
@@ -549,6 +549,9 @@ void CodeSnippetManagerDialog::FinalizeComponents()
 
 	SnippetsList->SelectedIndexChanged += gcnew System::EventHandler(this, &CodeSnippetManagerDialog::SnippetsList_SelectedIndexChanged);
 
+	SnippetsListThemeWrapper = gcnew viewImpl::components::ObjectListView(SnippetsList, view::eViewRole::None, nullptr);
+	VariablesListThemeWrapper = gcnew viewImpl::components::ObjectListView(VariablesList, view::eViewRole::None, nullptr);
+
 	ResetFields();
 }
 
@@ -559,7 +562,6 @@ void CodeSnippetManagerDialog::ResetFields()
 	TextBoxShortcut->Enabled = false;
 	TextBoxDescription->Enabled = false;
 	TextBoxCode->Enabled = false;
-	VariablesList->Enabled = false;
 	VariablesToolbarAddVar->Enabled = false;
 	VariablesToolbarRemoveVar->Enabled = false;
 
@@ -578,7 +580,6 @@ void CodeSnippetManagerDialog::SetFields(CodeSnippet^ Snippet)
 	TextBoxShortcut->Enabled = true;
 	TextBoxDescription->Enabled = true;
 	TextBoxCode->Enabled = true;
-	VariablesList->Enabled = true;
 	VariablesToolbarAddVar->Enabled = true;
 	VariablesToolbarRemoveVar->Enabled = true;
 
@@ -610,6 +611,8 @@ CodeSnippetManagerDialog::CodeSnippetManagerDialog( CodeSnippetCollection^ Data 
 
 CodeSnippetManagerDialog::~CodeSnippetManagerDialog()
 {
+	SAFEDELETE_CLR(SnippetsListThemeWrapper);
+
 	if (components)
 	{
 		delete components;

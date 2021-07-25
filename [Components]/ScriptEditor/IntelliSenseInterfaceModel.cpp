@@ -626,20 +626,37 @@ void IntelliSenseInterfaceModel::ShowInsightTooltip(IntelliSenseInsightHoverEven
 	ShowArgs->ParentWindowHandle = ParentEditor->WindowHandle;
 
 	bool HasInsight = false;
+	auto Mb = gcnew utilities::TextMarkupBuilder;
 
 	if (E->ErrorMessagesForHoveredLine->Count > 0 &&
 		preferences::SettingsHolder::Get()->IntelliSense->ShowErrorsInInsightToolTip)
 	{
 		HasInsight = true;
+		ShowArgs->TooltipHeaderText = Mb->Font(2, true)
+										->Bold()
+										->Text(E->ErrorMessagesForHoveredLine->Count.ToString())
+										->Text(" error")
+										->Text(E->ErrorMessagesForHoveredLine->Count != 1 ? "s" : "")
+										->PopTag(2)
+										->ToMarkup();
 
-		ShowArgs->TooltipHeaderText = "<font size=\"+2\"><b>" + E->ErrorMessagesForHoveredLine->Count + " error" + (E->ErrorMessagesForHoveredLine->Count != 1 ? "s" : "") + "</b></font>";
+		Mb->Reset()->Table(1, 350);
+		{
+			for each (auto Error in E->ErrorMessagesForHoveredLine)
+			{
+				Mb->TableNextRow();
+				{
+					Mb->TableNextColumn();
+					{
+						Mb->Text("» ")->Text(Error);
+					}
+					Mb->TableNextColumn();
+				}
+			}
+		}
+		Mb->PopTable();
 
-		ShowArgs->TooltipBodyText += "<div width=\"350\">";
-		for each (auto Error in E->ErrorMessagesForHoveredLine)
-			ShowArgs->TooltipBodyText += "<span padding=\"0,0,0,5\">" + Error + "</span>\n";
-		ShowArgs->TooltipBodyText += "</div>";
-
-		ShowArgs->TooltipBodyText = ShowArgs->TooltipBodyText->Replace("\n", "<br/>");
+		ShowArgs->TooltipBodyText = Mb->ToMarkup();
 		ShowArgs->TooltipBgColor = utilities::IRichTooltipContentProvider::eBackgroundColor::Red;
 	}
 	else if (!E->HoveringOverComment)

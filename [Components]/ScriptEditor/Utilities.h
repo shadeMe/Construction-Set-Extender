@@ -250,8 +250,7 @@ public:
 
 
 // For use with DotNetBar::SuperToolTip
-// Text can include limited HTML-markup
-// c.f https://www.devcomponents.com/kb2/?p=515
+// Text can include text-markup
 interface class IRichTooltipContentProvider
 {
 	static enum class eBackgroundColor
@@ -269,26 +268,210 @@ interface class IRichTooltipContentProvider
 		Gray
 	};
 
-	property String^ TooltipHeaderText;
-	property String^ TooltipBodyText;
-	property Image^ TooltipBodyImage;
-	property String^ TooltipFooterText;
-	property Image^ TooltipFooterImage;
-	property eBackgroundColor TooltipBgColor;
+	property String^ TooltipHeaderText
+	{
+		String^ get();
+	}
+	property String^ TooltipBodyText
+	{
+		String^ get();
+	}
+	property Image^ TooltipBodyImage
+	{
+		Image^ get();
+	}
+	property String^ TooltipFooterText
+	{
+		String^ get();
+	}
+	property Image^ TooltipFooterImage
+	{
+		Image^ get();
+	}
+	property eBackgroundColor TooltipBgColor
+	{
+		eBackgroundColor get();
+	}
 };
 
 DevComponents::DotNetBar::eTooltipColor MapRichTooltipBackgroundColorToDotNetBar(IRichTooltipContentProvider::eBackgroundColor BgColor);
 
 
 // wraps a call to SuperToolTip::Show to override the text and background colors
-ref struct  SuperTooltipColorSwapper
+ref class SuperTooltipColorSwapper
 {
+	ref class ScopedSwap
+	{
+		DevComponents::DotNetBar::Rendering::Office2007Renderer^ Renderer;
+		Color OldTextColor;
+		Color OldBackColorStart;
+		Color OldBackColorEnd;
+	public:
+		ScopedSwap(SuperTooltipColorSwapper^ Parent);
+		~ScopedSwap();
+	};
+public:
 	property Color TextColor;
 	property Color BackColor;
 
 	SuperTooltipColorSwapper(Color Text, Color Background);
 
 	void ShowTooltip(DevComponents::DotNetBar::SuperTooltip^ Tooltip, Object^ Sender, Point ScreenPosition);
+	void UpdateWithSuperTooltipInfo(DevComponents::DotNetBar::SuperTooltip^ Tooltip, DevComponents::DotNetBar::SuperTooltipInfo^ Info, bool UpdateBounds);
+};
+
+
+Color ShadeColor(Color Input, float NormalizedFactor);
+Color TintColor(Color Input, float NormalizedFactor);
+
+
+// DotNetBar Text-markup - https://www.devcomponents.com/kb2/?p=515
+ref class TextMarkupBuilder
+{
+	static String^ ItalicWhitespaceReplacement = "&nbsp;&nbsp;&nbsp;&nbsp;";
+
+	ref struct FontParams
+	{
+		property String^ Name;
+		property String^ Size;
+		property String^ Color;
+
+		FontParams();
+	};
+
+	ref struct HyperlinkParams
+	{
+		property String^ Name;
+		property String^ Href;
+
+		HyperlinkParams(String^ Name, String^ Href);
+	};
+
+	ref struct TagContext
+	{
+		static enum class eTag
+		{
+			None,
+			Bold,
+			Italic,
+			Underline,
+			Font,
+			Header,
+			Hyperlink,
+			Paragraph,
+			Div,
+			Span,
+			BreakLine
+		};
+
+		property eTag Tag;
+		property int HeaderLevel;
+		property DevComponents::DotNetBar::eHorizontalItemsAlignment Halign;
+		property int Width;
+		property Windows::Forms::Padding Padding;
+		property FontParams^ ParamsFont;
+		property HyperlinkParams^ ParamsHyperlink;
+
+		TagContext(eTag Tag);
+	};
+
+	ref struct TableContext
+	{
+		property int ColumnCount;
+		property int RowWidth;
+
+		property int CurrentColumn;
+		property int CurrentRow;
+		property int CellWidth;
+
+		TableContext(int Columns, int Width);
+	};
+
+	System::Text::StringBuilder^ Buffer;
+	Stack<TableContext^>^ ActiveTables;
+	Stack<TagContext^>^ ActiveTags;
+
+	static void GenerateAlignWidthPaddingAttributes(TagContext^ Context, System::Text::StringBuilder^ Sb);
+
+	void PushTagContext(TagContext^ Tag);
+	void PopTagContext();
+	void EmitClosingTag(TagContext^ Tag);
+
+	void PrepareAndPushTag(TagContext::eTag Tag, int Width);
+	void PrepareAndPushTag(TagContext::eTag Tag, DevComponents::DotNetBar::eHorizontalItemsAlignment Align);
+	void PrepareAndPushTag(TagContext::eTag Tag, Windows::Forms::Padding Padding);
+	void PrepareAndPushTag(TagContext::eTag Tag, int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align);
+	void PrepareAndPushTag(TagContext::eTag Tag, int Width, Windows::Forms::Padding Padding);
+	void PrepareAndPushTag(TagContext::eTag Tag, int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align, Windows::Forms::Padding Padding);
+
+	bool IsTagActive(TagContext::eTag Tag);
+public:
+	TextMarkupBuilder();
+
+	property bool HasContent
+	{
+		bool get() { return Buffer->Length > 0; }
+	}
+
+	TextMarkupBuilder^ Bold();
+	TextMarkupBuilder^ Italic();
+	TextMarkupBuilder^ Underline();
+	TextMarkupBuilder^ Header(int Level);
+	TextMarkupBuilder^ Hyperlink(String^ Href);
+	TextMarkupBuilder^ Hyperlink(String^ Name, String^ Href);
+
+	TextMarkupBuilder^ Font(String^ Name);
+	TextMarkupBuilder^ Font(int Size, bool Relative);
+	TextMarkupBuilder^ Font(String^ Name, int Size, bool Relative);
+	TextMarkupBuilder^ Font(String^ Name, int Size, bool Relative, Drawing::Color Color);
+
+	TextMarkupBuilder^ Paragraph(int Width);
+	TextMarkupBuilder^ Paragraph(DevComponents::DotNetBar::eHorizontalItemsAlignment Align);
+	TextMarkupBuilder^ Paragraph(Windows::Forms::Padding Padding);
+	TextMarkupBuilder^ Paragraph(int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align);
+	TextMarkupBuilder^ Paragraph(int Width, Windows::Forms::Padding Padding);
+	TextMarkupBuilder^ Paragraph(int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align, Windows::Forms::Padding Padding);
+
+	TextMarkupBuilder^ Span(int Width);
+	TextMarkupBuilder^ Span(DevComponents::DotNetBar::eHorizontalItemsAlignment Align);
+	TextMarkupBuilder^ Span(Windows::Forms::Padding Padding);
+	TextMarkupBuilder^ Span(int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align);
+	TextMarkupBuilder^ Span(int Width, Windows::Forms::Padding Padding);
+	TextMarkupBuilder^ Span(int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align, Windows::Forms::Padding Padding);
+
+	TextMarkupBuilder^ Div(int Width);
+	TextMarkupBuilder^ Div(DevComponents::DotNetBar::eHorizontalItemsAlignment Align);
+	TextMarkupBuilder^ Div(Windows::Forms::Padding Padding);
+	TextMarkupBuilder^ Div(int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align);
+	TextMarkupBuilder^ Div(int Width, Windows::Forms::Padding Padding);
+	TextMarkupBuilder^ Div(int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align, Windows::Forms::Padding Padding);
+
+	TextMarkupBuilder^ Table(int Columns, int Width);
+	TextMarkupBuilder^ TableNextRow();
+	TextMarkupBuilder^ TableNextRow(Windows::Forms::Padding Padding);
+	TextMarkupBuilder^ TableEmptyRow();
+	TextMarkupBuilder^ TableNextColumn();
+	TextMarkupBuilder^ TableNextColumn(int Width);
+	TextMarkupBuilder^ TableNextColumn(Windows::Forms::Padding Padding);
+	TextMarkupBuilder^ TableNextColumn(int Width, Windows::Forms::Padding Padding);
+	TextMarkupBuilder^ TableNextColumn(DevComponents::DotNetBar::eHorizontalItemsAlignment Align);
+	TextMarkupBuilder^ TableNextColumn(int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align);
+	TextMarkupBuilder^ TableNextColumn(DevComponents::DotNetBar::eHorizontalItemsAlignment Align, Windows::Forms::Padding Padding);
+	TextMarkupBuilder^ TableNextColumn(int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align, Windows::Forms::Padding Padding);
+
+	TextMarkupBuilder^ PopTag();
+	TextMarkupBuilder^ PopTag(int Count);
+	TextMarkupBuilder^ PopTable();
+
+	TextMarkupBuilder^ LineBreak();
+	TextMarkupBuilder^ LineBreak(int Count);
+	TextMarkupBuilder^ NonBreakingSpace();
+	TextMarkupBuilder^ NonBreakingSpace(int Count);
+
+	TextMarkupBuilder^ Text(String^ Text);
+	TextMarkupBuilder^ Markup(String^ MarkupText);
+	String^ ToMarkup();
+	TextMarkupBuilder^ Reset();
 };
 
 

@@ -629,15 +629,16 @@ void FindReplaceHelper::InitResultsListViews()
 		auto ColumnHits = FindReplaceResultsListView->AllocateNewColumn();
 
 		ColumnLine->Text = "Line";
-		ColumnLine->MinimumWidth = 16;
+		ColumnLine->MinimumWidth = 40;
+		ColumnLine->MaximumWidth = 40;
 		ColumnLine->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&FindReplaceHelper::FindReplaceResultsListLineNumberAspectGetter));
 
 		ColumnText->Text = "Code";
-		ColumnText->MinimumWidth = 250;
+		ColumnText->MinimumWidth = 600;
 		ColumnText->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&FindReplaceHelper::FindReplaceResultsListTextAspectGetter));
 
 		ColumnHits->Text = "Hits";
-		ColumnHits->MinimumWidth = 20;
+		ColumnHits->MinimumWidth = 40;
 		ColumnHits->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&FindReplaceHelper::FindReplaceResultsListHitsAspectGetter));
 
 		FindReplaceResultsListView->AddColumn(ColumnLine);
@@ -652,15 +653,16 @@ void FindReplaceHelper::InitResultsListViews()
 
 		ColumnText->Text = "Code";
 		ColumnText->Width = 500;
-		ColumnText->MinimumWidth = 250;
+		ColumnText->MinimumWidth = 600;
+		ColumnLine->MaximumWidth = 40;
 		ColumnText->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&GlobalFindReplaceResult::TextAspectGetter));
 
 		ColumnLine->Text = "Line";
-		ColumnLine->MinimumWidth = 20;
+		ColumnLine->MinimumWidth = 40;
 		ColumnLine->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&GlobalFindReplaceResult::LineAspectGetter));
 
 		ColumnHits->Text = "Hits";
-		ColumnHits->MinimumWidth = 20;
+		ColumnHits->MinimumWidth = 40;
 		ColumnHits->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&GlobalFindReplaceResult::HitsAspectGetter));
 
 		GlobalFindReplaceResultsListView->AddColumn(ColumnLine);

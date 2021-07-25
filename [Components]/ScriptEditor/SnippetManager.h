@@ -1,6 +1,8 @@
 #pragma once
 
 #include "SemanticAnalysis.h"
+#include "IScriptEditorView.h"
+
 
 namespace cse
 {
@@ -102,6 +104,8 @@ ref class CodeSnippetManagerDialog : public DevComponents::DotNetBar::Metro::Met
 	DevComponents::DotNetBar::ButtonItem^ AddVarMenuString;
 	DevComponents::DotNetBar::ButtonItem^ AddVarMenuArray;
 	System::Windows::Forms::Panel^ LeftPanel;
+	view::IObjectListView^ SnippetsListThemeWrapper;
+	view::IObjectListView^ VariablesListThemeWrapper;
 
 	CodeSnippet^ ActiveSelectionBuffer;
 

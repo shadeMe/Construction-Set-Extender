@@ -344,6 +344,41 @@ void ScriptEditorWorkspace::HandleControlAdded(Object^ Sender, ControlEventArgs^
 		AutoHidePane->EnableFocusCollapse = false;
 }
 
+void ScriptEditorWorkspace::HandleDockBarStateChanged(Object^ Sender, BarStateChangedEventArgs^ E)
+{
+	// HACK!
+	// Primary issue: ObjectListView does not correctly paint the background of free space in the column header (if owner-drawn)
+	// We workaround this by using the ObjectListView view component wrapper to automatically flag the last column to fill that space
+	// However, any ObjectListViews inside auto-hidden dockable panes (that are hidden by default) will not correctly up the width of said
+	// final column until after they have been displayed once (primarily due to the client width not being set at init time).
+	// So, we need to force it to resize the column header when it's displayed for the first time.
+
+	switch (E->AffectedState)
+	{
+	case DevComponents::DotNetBar::eBarStateChange::AutoHideOpen:
+	case DevComponents::DotNetBar::eBarStateChange::AutoHideChanged:
+	{
+		for each (DockContainerItem^ DockItem in E->Bar->Items)
+		{
+			for each (Control^ Control in DockItem->Control->Controls)
+			{
+				auto ObjListView = dynamic_cast<BrightIdeasSoftware::ObjectListView^>(Control);
+				if (ObjListView)
+				{
+					// This triggers the column resize handler
+					ObjListView->Freeze();
+					ObjListView->Unfreeze();
+				}
+
+			}
+		}
+		break;
+	}
+	default:
+		break;
+	}
+}
+
 void ScriptEditorWorkspace::SetTabStripLocation(eTabStripAlignment Location, int VerticalTabStripWidth)
 {
 	int HorizontalTabStripMaxHeight = 32;
@@ -700,6 +735,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->DockableBarMessages = (gcnew DevComponents::DotNetBar::Bar());
 	this->PanelDockContainerMessageList = (gcnew DevComponents::DotNetBar::PanelDockContainer());
 	this->MessagesList = (gcnew BrightIdeasSoftware::FastObjectListView());
+	this->MessagesToolbar = (gcnew DevComponents::DotNetBar::Bar());
 	this->DockContainerItemMessageList = (gcnew DevComponents::DotNetBar::DockContainerItem());
 	this->DockableBarBookmarks = (gcnew DevComponents::DotNetBar::Bar());
 	this->PanelDockContainerBookmarks = (gcnew DevComponents::DotNetBar::PanelDockContainer());
@@ -785,6 +821,9 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->StatusBarDocumentDescription = (gcnew DevComponents::DotNetBar::LabelItem());
 	this->StatusBarPreprocessorOutputFlag = (gcnew DevComponents::DotNetBar::LabelItem());
 	this->StatusBarScriptBytecodeLength = (gcnew DevComponents::DotNetBar::CircularProgressItem());
+	this->MessagesToolbarErrors = (gcnew DevComponents::DotNetBar::ButtonItem());
+	this->MessagesToolbarWarnings = (gcnew DevComponents::DotNetBar::ButtonItem());
+	this->MessagesToolbarInfos = (gcnew DevComponents::DotNetBar::ButtonItem());
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MainTabStrip))->BeginInit();
 	this->MainTabStrip->SuspendLayout();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContainerMainToolbar))->BeginInit();
@@ -793,6 +832,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->DockableBarMessages->SuspendLayout();
 	this->PanelDockContainerMessageList->SuspendLayout();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MessagesList))->BeginInit();
+	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MessagesToolbar))->BeginInit();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->DockableBarBookmarks))->BeginInit();
 	this->DockableBarBookmarks->SuspendLayout();
 	this->PanelDockContainerBookmarks->SuspendLayout();
@@ -1293,13 +1333,13 @@ void ScriptEditorWorkspace::InitializeComponents()
 	//
 	this->HelpMenuWiki->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"HelpMenuWiki.Image")));
 	this->HelpMenuWiki->Name = L"HelpMenuWiki";
-	this->HelpMenuWiki->Text = L"Wiki";
+	this->HelpMenuWiki->Text = L"&Wiki";
 	//
 	// HelpMenuObseDocs
 	//
 	this->HelpMenuObseDocs->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"HelpMenuObseDocs.Image")));
 	this->HelpMenuObseDocs->Name = L"HelpMenuObseDocs";
-	this->HelpMenuObseDocs->Text = L"OBSE Manual";
+	this->HelpMenuObseDocs->Text = L"&OBSE Manual";
 	//
 	// TextEditorContextMenuAddVar
 	//
@@ -1425,6 +1465,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	//
 	this->PanelDockContainerMessageList->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->PanelDockContainerMessageList->Controls->Add(this->MessagesList);
+	this->PanelDockContainerMessageList->Controls->Add(this->MessagesToolbar);
 	this->PanelDockContainerMessageList->DisabledBackColor = System::Drawing::Color::Empty;
 	this->PanelDockContainerMessageList->Location = System::Drawing::Point(3, 23);
 	this->PanelDockContainerMessageList->Name = L"PanelDockContainerMessageList";
@@ -1447,16 +1488,39 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->MessagesList->ForeColor = System::Drawing::Color::Black;
 	this->MessagesList->FullRowSelect = true;
 	this->MessagesList->HideSelection = false;
-	this->MessagesList->Location = System::Drawing::Point(0, 0);
+	this->MessagesList->Location = System::Drawing::Point(0, 25);
 	this->MessagesList->MultiSelect = false;
 	this->MessagesList->Name = L"MessagesList";
 	this->MessagesList->ShowGroups = false;
-	this->MessagesList->Size = System::Drawing::Size(343, 167);
+	this->MessagesList->Size = System::Drawing::Size(343, 142);
 	this->MessagesList->TabIndex = 0;
 	this->MessagesList->TabStop = false;
+	this->MessagesList->UseFiltering = true;
+	this->MessagesList->ShowFilterMenuOnRightClick = false;
 	this->MessagesList->UseCompatibleStateImageBehavior = false;
 	this->MessagesList->View = System::Windows::Forms::View::Details;
 	this->MessagesList->VirtualMode = true;
+	//
+	// MessagesToolbar
+	//
+	this->MessagesToolbar->AntiAlias = true;
+	this->MessagesToolbar->CanMove = false;
+	this->MessagesToolbar->CanUndock = false;
+	this->MessagesToolbar->Dock = System::Windows::Forms::DockStyle::Top;
+	this->MessagesToolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
+	this->MessagesToolbar->IsMaximized = false;
+	this->MessagesToolbar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(3) {
+		this->MessagesToolbarErrors,
+			this->MessagesToolbarWarnings, this->MessagesToolbarInfos
+	});
+	this->MessagesToolbar->Location = System::Drawing::Point(0, 0);
+	this->MessagesToolbar->Name = L"MessagesToolbar";
+	this->MessagesToolbar->RoundCorners = false;
+	this->MessagesToolbar->Size = System::Drawing::Size(343, 25);
+	this->MessagesToolbar->Stretch = true;
+	this->MessagesToolbar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+	this->MessagesToolbar->TabIndex = 1;
+	this->MessagesToolbar->TabStop = false;
 	//
 	// DockContainerItemMessageList
 	//
@@ -1545,12 +1609,12 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->BookmarksToolbar->ItemSpacing = 5;
 	this->BookmarksToolbar->Location = System::Drawing::Point(0, 0);
 	this->BookmarksToolbar->Name = L"BookmarksToolbar";
+	this->BookmarksToolbar->RoundCorners = false;
 	this->BookmarksToolbar->Size = System::Drawing::Size(28, 167);
 	this->BookmarksToolbar->Stretch = true;
 	this->BookmarksToolbar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->BookmarksToolbar->TabIndex = 0;
 	this->BookmarksToolbar->TabStop = false;
-	this->BookmarksToolbar->Text = L"bar1";
 	//
 	// BookmarksToolbarAdd
 	//
@@ -1653,6 +1717,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	});
 	this->FindResultsToolbar->Location = System::Drawing::Point(0, 0);
 	this->FindResultsToolbar->Name = L"FindResultsToolbar";
+	this->FindResultsToolbar->RoundCorners = false;
 	this->FindResultsToolbar->Size = System::Drawing::Size(189, 19);
 	this->FindResultsToolbar->Stretch = true;
 	this->FindResultsToolbar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
@@ -1882,7 +1947,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->PanelDockContainerFindReplace->DisabledBackColor = System::Drawing::Color::Empty;
 	this->PanelDockContainerFindReplace->Location = System::Drawing::Point(3, 23);
 	this->PanelDockContainerFindReplace->Name = L"PanelDockContainerFindReplace";
-	this->PanelDockContainerFindReplace->Size = System::Drawing::Size(282, 564);
+	this->PanelDockContainerFindReplace->Size = System::Drawing::Size(294, 564);
 	this->PanelDockContainerFindReplace->Style->Alignment = System::Drawing::StringAlignment::Center;
 	this->PanelDockContainerFindReplace->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::BarBackground;
 	this->PanelDockContainerFindReplace->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
@@ -1913,7 +1978,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 		this->FindWindowLCIFindDropdown,
 			this->FindWindowLCIReplaceDropdown, this->FindWindowLCILookIn, this->FindWindowLayoutGroupSettings, this->FindWindowLayouyGroupButtons
 	});
-	this->FindWindowLayoutControl->Size = System::Drawing::Size(282, 564);
+	this->FindWindowLayoutControl->Size = System::Drawing::Size(294, 564);
 	this->FindWindowLayoutControl->TabIndex = 0;
 	this->FindWindowLayoutControl->TabStop = false;
 	//
@@ -1925,9 +1990,9 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowDropdownFind->Location = System::Drawing::Point(50, 4);
 	this->FindWindowDropdownFind->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowDropdownFind->Name = L"FindWindowDropdownFind";
-	this->FindWindowDropdownFind->Size = System::Drawing::Size(228, 23);
+	this->FindWindowDropdownFind->Size = System::Drawing::Size(240, 23);
 	this->FindWindowDropdownFind->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-	this->FindWindowDropdownFind->TabIndex = 1;
+	this->FindWindowDropdownFind->TabIndex = 0;
 	//
 	// FindWindowDropdownReplace
 	//
@@ -1937,9 +2002,9 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowDropdownReplace->Location = System::Drawing::Point(50, 34);
 	this->FindWindowDropdownReplace->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowDropdownReplace->Name = L"FindWindowDropdownReplace";
-	this->FindWindowDropdownReplace->Size = System::Drawing::Size(228, 23);
+	this->FindWindowDropdownReplace->Size = System::Drawing::Size(240, 23);
 	this->FindWindowDropdownReplace->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-	this->FindWindowDropdownReplace->TabIndex = 2;
+	this->FindWindowDropdownReplace->TabIndex = 1;
 	//
 	// FindWindowComboLookIn
 	//
@@ -1952,9 +2017,9 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowComboLookIn->Location = System::Drawing::Point(50, 64);
 	this->FindWindowComboLookIn->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowComboLookIn->Name = L"FindWindowComboLookIn";
-	this->FindWindowComboLookIn->Size = System::Drawing::Size(228, 23);
+	this->FindWindowComboLookIn->Size = System::Drawing::Size(240, 23);
 	this->FindWindowComboLookIn->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-	this->FindWindowComboLookIn->TabIndex = 3;
+	this->FindWindowComboLookIn->TabIndex = 2;
 	//
 	// FindWindowCheckboxMatchCase
 	//
@@ -1967,9 +2032,9 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowCheckboxMatchCase->Location = System::Drawing::Point(8, 98);
 	this->FindWindowCheckboxMatchCase->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowCheckboxMatchCase->Name = L"FindWindowCheckboxMatchCase";
-	this->FindWindowCheckboxMatchCase->Size = System::Drawing::Size(266, 22);
+	this->FindWindowCheckboxMatchCase->Size = System::Drawing::Size(278, 22);
 	this->FindWindowCheckboxMatchCase->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-	this->FindWindowCheckboxMatchCase->TabIndex = 4;
+	this->FindWindowCheckboxMatchCase->TabIndex = 3;
 	this->FindWindowCheckboxMatchCase->Text = L"Match case";
 	//
 	// FindWindowCheckboxUseRegEx
@@ -1983,9 +2048,9 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowCheckboxUseRegEx->Location = System::Drawing::Point(8, 158);
 	this->FindWindowCheckboxUseRegEx->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowCheckboxUseRegEx->Name = L"FindWindowCheckboxUseRegEx";
-	this->FindWindowCheckboxUseRegEx->Size = System::Drawing::Size(266, 22);
+	this->FindWindowCheckboxUseRegEx->Size = System::Drawing::Size(278, 22);
 	this->FindWindowCheckboxUseRegEx->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-	this->FindWindowCheckboxUseRegEx->TabIndex = 6;
+	this->FindWindowCheckboxUseRegEx->TabIndex = 5;
 	this->FindWindowCheckboxUseRegEx->Text = L"Use regular expressions";
 	//
 	// FindWindowCheckBoxMatchWholeWord
@@ -1999,9 +2064,9 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowCheckBoxMatchWholeWord->Location = System::Drawing::Point(8, 128);
 	this->FindWindowCheckBoxMatchWholeWord->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowCheckBoxMatchWholeWord->Name = L"FindWindowCheckBoxMatchWholeWord";
-	this->FindWindowCheckBoxMatchWholeWord->Size = System::Drawing::Size(266, 22);
+	this->FindWindowCheckBoxMatchWholeWord->Size = System::Drawing::Size(278, 22);
 	this->FindWindowCheckBoxMatchWholeWord->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-	this->FindWindowCheckBoxMatchWholeWord->TabIndex = 5;
+	this->FindWindowCheckBoxMatchWholeWord->TabIndex = 4;
 	this->FindWindowCheckBoxMatchWholeWord->Text = L"Match whole word";
 	//
 	// FindWindowCheckBoxIgnoreComments
@@ -2015,9 +2080,9 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowCheckBoxIgnoreComments->Location = System::Drawing::Point(8, 188);
 	this->FindWindowCheckBoxIgnoreComments->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowCheckBoxIgnoreComments->Name = L"FindWindowCheckBoxIgnoreComments";
-	this->FindWindowCheckBoxIgnoreComments->Size = System::Drawing::Size(266, 22);
+	this->FindWindowCheckBoxIgnoreComments->Size = System::Drawing::Size(278, 22);
 	this->FindWindowCheckBoxIgnoreComments->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
-	this->FindWindowCheckBoxIgnoreComments->TabIndex = 7;
+	this->FindWindowCheckBoxIgnoreComments->TabIndex = 6;
 	this->FindWindowCheckBoxIgnoreComments->Text = L"Ignore comments";
 	//
 	// FindWindowButtonFind
@@ -2029,7 +2094,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowButtonFind->Location = System::Drawing::Point(8, 248);
 	this->FindWindowButtonFind->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowButtonFind->Name = L"FindWindowButtonFind";
-	this->FindWindowButtonFind->Size = System::Drawing::Size(129, 28);
+	this->FindWindowButtonFind->Size = System::Drawing::Size(135, 28);
 	this->FindWindowButtonFind->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->FindWindowButtonFind->TabIndex = 8;
 	this->FindWindowButtonFind->Text = L"Find";
@@ -2040,10 +2105,10 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowButtonReplace->ColorTable = DevComponents::DotNetBar::eButtonColor::OrangeWithBackground;
 	this->FindWindowButtonReplace->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"FindWindowButtonReplace.Image")));
 	this->FindWindowButtonReplace->ImageTextSpacing = 5;
-	this->FindWindowButtonReplace->Location = System::Drawing::Point(145, 248);
+	this->FindWindowButtonReplace->Location = System::Drawing::Point(151, 248);
 	this->FindWindowButtonReplace->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowButtonReplace->Name = L"FindWindowButtonReplace";
-	this->FindWindowButtonReplace->Size = System::Drawing::Size(129, 28);
+	this->FindWindowButtonReplace->Size = System::Drawing::Size(135, 28);
 	this->FindWindowButtonReplace->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->FindWindowButtonReplace->TabIndex = 9;
 	this->FindWindowButtonReplace->Text = L"Replace";
@@ -2057,7 +2122,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->FindWindowButtonCountMatches->Location = System::Drawing::Point(8, 284);
 	this->FindWindowButtonCountMatches->Margin = System::Windows::Forms::Padding(0);
 	this->FindWindowButtonCountMatches->Name = L"FindWindowButtonCountMatches";
-	this->FindWindowButtonCountMatches->Size = System::Drawing::Size(266, 28);
+	this->FindWindowButtonCountMatches->Size = System::Drawing::Size(278, 28);
 	this->FindWindowButtonCountMatches->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 	this->FindWindowButtonCountMatches->TabIndex = 10;
 	this->FindWindowButtonCountMatches->Text = L"Count Matches";
@@ -2579,6 +2644,33 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->StatusBarScriptBytecodeLength->TextPadding->Right = 5;
 	this->StatusBarScriptBytecodeLength->Visible = false;
 	//
+	// MessagesToolbarErrors
+	//
+	this->MessagesToolbarErrors->BeginGroup = true;
+	this->MessagesToolbarErrors->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::ImageAndText;
+	this->MessagesToolbarErrors->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"MessagesToolbarErrors.Image")));
+	this->MessagesToolbarErrors->ImagePaddingHorizontal = 12;
+	this->MessagesToolbarErrors->Name = L"MessagesToolbarErrors";
+	this->MessagesToolbarErrors->Text = L"Errors";
+	//
+	// MessagesToolbarWarnings
+	//
+	this->MessagesToolbarWarnings->BeginGroup = true;
+	this->MessagesToolbarWarnings->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::ImageAndText;
+	this->MessagesToolbarWarnings->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"MessagesToolbarWarnings.Image")));
+	this->MessagesToolbarWarnings->ImagePaddingHorizontal = 12;
+	this->MessagesToolbarWarnings->Name = L"MessagesToolbarWarnings";
+	this->MessagesToolbarWarnings->Text = L"Warnings";
+	//
+	// MessagesToolbarMessages
+	//
+	this->MessagesToolbarInfos->BeginGroup = true;
+	this->MessagesToolbarInfos->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::ImageAndText;
+	this->MessagesToolbarInfos->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"MessagesToolbarInfos.Image")));
+	this->MessagesToolbarInfos->ImagePaddingHorizontal = 12;
+	this->MessagesToolbarInfos->Name = L"MessagesToolbarMessages";
+	this->MessagesToolbarInfos->Text = L"Messages";
+	//
 	// ScriptEditorWorkspace
 	//
 	this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -2598,12 +2690,11 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->Controls->Add(this->StatusBar);
 	this->Controls->Add(this->MainTabStrip);
 	this->DoubleBuffered = true;
-	this->ForeColor = System::Drawing::Color::Black;
+	this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
 	this->KeyPreview = true;
 	this->Name = L"ScriptEditorWorkspace";
 	this->RenderFormIcon = false;
 	this->RenderFormText = false;
-	this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
 	this->StartPosition = System::Windows::Forms::FormStartPosition::Manual;
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MainTabStrip))->EndInit();
 	this->MainTabStrip->ResumeLayout(false);
@@ -2613,6 +2704,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->DockableBarMessages->ResumeLayout(false);
 	this->PanelDockContainerMessageList->ResumeLayout(false);
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MessagesList))->EndInit();
+	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MessagesToolbar))->EndInit();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->DockableBarBookmarks))->EndInit();
 	this->DockableBarBookmarks->ResumeLayout(false);
 	this->PanelDockContainerBookmarks->ResumeLayout(false);
@@ -2646,14 +2738,6 @@ void ScriptEditorWorkspace::InitializeComponents()
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContextMenuProvider))->EndInit();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->StatusBar))->EndInit();
 	this->ResumeLayout(false);
-}
-
-void SetObjectListViewTextOverlay(BrightIdeasSoftware::ObjectListView^ ListView, Color ForeColor, Color BackColor)
-{
-	auto EmptyMsgOverlay = safe_cast<BrightIdeasSoftware::TextOverlay^>(ListView->EmptyListMsgOverlay);
-	EmptyMsgOverlay->TextColor = ForeColor;
-	EmptyMsgOverlay->BackColor = BackColor;
-	EmptyMsgOverlay->BorderWidth = 0.f;
 }
 
 void ScriptEditorWorkspace::FinalizeComponents()
@@ -2696,16 +2780,10 @@ void ScriptEditorWorkspace::FinalizeComponents()
 
 	SetTabStripLocation(preferences::SettingsHolder::Get()->Appearance->TabStripLocation, preferences::SettingsHolder::Get()->Appearance->TabStripVerticalWidth);
 
-	auto ListViewOverlayForeColor = Color::White;
-	auto ListViewOverlayBackColor = Color::FromArgb(75, 29, 32, 33);
-
-	SetObjectListViewTextOverlay(MessagesList, ListViewOverlayForeColor, ListViewOverlayBackColor);
-	SetObjectListViewTextOverlay(BookmarksList, ListViewOverlayForeColor, ListViewOverlayBackColor);
-	SetObjectListViewTextOverlay(FindResultsList, ListViewOverlayForeColor, ListViewOverlayBackColor);
-	SetObjectListViewTextOverlay(GlobalFindResultsList, ListViewOverlayForeColor, ListViewOverlayBackColor);
-
 	// init preferences-dependent state
 	HandlePreferencesChanged(nullptr, nullptr);
+
+	DockManager->BarStateChanged += DelegateDockBarStateChanged;
 
 	// ### TODO doesn't work correctly; panes go missing, etc
 	//try
@@ -2793,6 +2871,9 @@ void ScriptEditorWorkspace::InitializeViewComponents()
 
 	SetupViewComponentDockablePane(DockContainerItemMessageList, eViewRole::Messages_DockPanel);
 	SetupViewComponentObjectListView(MessagesList, eViewRole::Messages_ListView);
+	SetupViewComponentButton(MessagesToolbarErrors, eViewRole::Messages_Toolbar_ToggleErrors);
+	SetupViewComponentButton(MessagesToolbarWarnings, eViewRole::Messages_Toolbar_ToggleWarnings);
+	SetupViewComponentButton(MessagesToolbarInfos, eViewRole::Messages_Toolbar_ToggleInfos);
 
 	SetupViewComponentDockablePane(DockContainerItemFindResults, eViewRole::FindReplaceResults_DockPanel);
 	SetupViewComponentObjectListView(FindResultsList, eViewRole::FindReplaceResults_ListView);
@@ -2863,6 +2944,7 @@ ScriptEditorWorkspace::ScriptEditorWorkspace()
 	DelegateViewComponentEventRouter = gcnew components::ViewComponentEventRaiser(this, &ScriptEditorWorkspace::HandleViewComponentEvent);
 	DelegatePreferencesChanged = gcnew EventHandler(this, &ScriptEditorWorkspace::HandlePreferencesChanged);
 	DelegateControlAdded = gcnew ControlEventHandler(this, &ScriptEditorWorkspace::HandleControlAdded);
+	DelegateDockBarStateChanged = gcnew BarStateChangedEventHandler(this, &ScriptEditorWorkspace::HandleDockBarStateChanged);
 	IntelliSenseInterface = gcnew intellisense::IntelliSenseInterfaceView;
 
 	SkipViewComponentEventProcessing = true;
@@ -2925,6 +3007,7 @@ void ScriptEditorWorkspace::ShowNotification(String^ Message, Image^ Image, int 
 		DoOnce = true;
 		DotNetBar::ToastNotification::ToastMargin->All = 32;
 		DotNetBar::ToastNotification::ToastFont = gcnew Drawing::Font(Drawing::SystemFonts::MessageBoxFont->FontFamily, 10.25f);
+		DotNetBar::ToastNotification::DefaultToastPosition = eToastPosition::BottomCenter;
 
 		auto AccentColor = preferences::SettingsHolder::Get()->Appearance->AccentColor;
 		DotNetBar::ToastNotification::CustomGlowColor = Color::FromArgb(75, AccentColor.R, AccentColor.G, AccentColor.B);

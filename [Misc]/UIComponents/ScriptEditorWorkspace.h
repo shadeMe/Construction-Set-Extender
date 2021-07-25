@@ -280,6 +280,17 @@ private: DevComponents::DotNetBar::ButtonItem^ MenuTabLayoutBottom;
 private: DevComponents::DotNetBar::ButtonItem^ MenuTabLayoutLeft;
 private: DevComponents::DotNetBar::ButtonItem^ MenuTabLayoutRight;
 private: DevComponents::DotNetBar::ButtonItem^ TabStripContextMenuPopOut;
+private: DevComponents::DotNetBar::Bar^ MessagesToolbar;
+private: DevComponents::DotNetBar::ButtonItem^ MessagesToolbarErrors;
+private: DevComponents::DotNetBar::ButtonItem^ MessagesToolbarWarnings;
+private: DevComponents::DotNetBar::ButtonItem^ MessagesToolbarInfos;
+
+
+
+
+
+
+
 
 
 
@@ -403,6 +414,10 @@ private: DevComponents::DotNetBar::ButtonItem^ TabStripContextMenuPopOut;
             this->DockableBarMessages = (gcnew DevComponents::DotNetBar::Bar());
             this->PanelDockContainerMessageList = (gcnew DevComponents::DotNetBar::PanelDockContainer());
             this->MessagesList = (gcnew BrightIdeasSoftware::FastObjectListView());
+            this->MessagesToolbar = (gcnew DevComponents::DotNetBar::Bar());
+            this->MessagesToolbarErrors = (gcnew DevComponents::DotNetBar::ButtonItem());
+            this->MessagesToolbarWarnings = (gcnew DevComponents::DotNetBar::ButtonItem());
+            this->MessagesToolbarInfos = (gcnew DevComponents::DotNetBar::ButtonItem());
             this->DockContainerItemMessageList = (gcnew DevComponents::DotNetBar::DockContainerItem());
             this->DockableBarBookmarks = (gcnew DevComponents::DotNetBar::Bar());
             this->PanelDockContainerBookmarks = (gcnew DevComponents::DotNetBar::PanelDockContainer());
@@ -496,6 +511,7 @@ private: DevComponents::DotNetBar::ButtonItem^ TabStripContextMenuPopOut;
             this->DockableBarMessages->SuspendLayout();
             this->PanelDockContainerMessageList->SuspendLayout();
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MessagesList))->BeginInit();
+            (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MessagesToolbar))->BeginInit();
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->DockableBarBookmarks))->BeginInit();
             this->DockableBarBookmarks->SuspendLayout();
             this->PanelDockContainerBookmarks->SuspendLayout();
@@ -996,13 +1012,13 @@ private: DevComponents::DotNetBar::ButtonItem^ TabStripContextMenuPopOut;
             // 
             this->HelpMenuWiki->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"HelpMenuWiki.Image")));
             this->HelpMenuWiki->Name = L"HelpMenuWiki";
-            this->HelpMenuWiki->Text = L"Wiki";
+            this->HelpMenuWiki->Text = L"&Wiki";
             // 
             // HelpMenuObseDocs
             // 
             this->HelpMenuObseDocs->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"HelpMenuObseDocs.Image")));
             this->HelpMenuObseDocs->Name = L"HelpMenuObseDocs";
-            this->HelpMenuObseDocs->Text = L"OBSE Manual";
+            this->HelpMenuObseDocs->Text = L"&OBSE Manual";
             // 
             // TextEditorContextMenuAddVar
             // 
@@ -1128,6 +1144,7 @@ private: DevComponents::DotNetBar::ButtonItem^ TabStripContextMenuPopOut;
             // 
             this->PanelDockContainerMessageList->ColorSchemeStyle = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
             this->PanelDockContainerMessageList->Controls->Add(this->MessagesList);
+            this->PanelDockContainerMessageList->Controls->Add(this->MessagesToolbar);
             this->PanelDockContainerMessageList->DisabledBackColor = System::Drawing::Color::Empty;
             this->PanelDockContainerMessageList->Location = System::Drawing::Point(3, 23);
             this->PanelDockContainerMessageList->Name = L"PanelDockContainerMessageList";
@@ -1150,16 +1167,66 @@ private: DevComponents::DotNetBar::ButtonItem^ TabStripContextMenuPopOut;
             this->MessagesList->ForeColor = System::Drawing::Color::Black;
             this->MessagesList->FullRowSelect = true;
             this->MessagesList->HideSelection = false;
-            this->MessagesList->Location = System::Drawing::Point(0, 0);
+            this->MessagesList->Location = System::Drawing::Point(0, 25);
             this->MessagesList->MultiSelect = false;
             this->MessagesList->Name = L"MessagesList";
+            this->MessagesList->ShowFilterMenuOnRightClick = false;
             this->MessagesList->ShowGroups = false;
-            this->MessagesList->Size = System::Drawing::Size(343, 167);
+            this->MessagesList->Size = System::Drawing::Size(343, 142);
             this->MessagesList->TabIndex = 0;
             this->MessagesList->TabStop = false;
             this->MessagesList->UseCompatibleStateImageBehavior = false;
+            this->MessagesList->UseFiltering = true;
             this->MessagesList->View = System::Windows::Forms::View::Details;
             this->MessagesList->VirtualMode = true;
+            // 
+            // MessagesToolbar
+            // 
+            this->MessagesToolbar->AntiAlias = true;
+            this->MessagesToolbar->CanMove = false;
+            this->MessagesToolbar->CanUndock = false;
+            this->MessagesToolbar->Dock = System::Windows::Forms::DockStyle::Top;
+            this->MessagesToolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
+            this->MessagesToolbar->IsMaximized = false;
+            this->MessagesToolbar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(3) {
+                this->MessagesToolbarErrors,
+                    this->MessagesToolbarWarnings, this->MessagesToolbarInfos
+            });
+            this->MessagesToolbar->Location = System::Drawing::Point(0, 0);
+            this->MessagesToolbar->Name = L"MessagesToolbar";
+            this->MessagesToolbar->RoundCorners = false;
+            this->MessagesToolbar->Size = System::Drawing::Size(343, 25);
+            this->MessagesToolbar->Stretch = true;
+            this->MessagesToolbar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+            this->MessagesToolbar->TabIndex = 1;
+            this->MessagesToolbar->TabStop = false;
+            // 
+            // MessagesToolbarErrors
+            // 
+            this->MessagesToolbarErrors->BeginGroup = true;
+            this->MessagesToolbarErrors->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::ImageAndText;
+            this->MessagesToolbarErrors->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"MessagesToolbarErrors.Image")));
+            this->MessagesToolbarErrors->ImagePaddingHorizontal = 12;
+            this->MessagesToolbarErrors->Name = L"MessagesToolbarErrors";
+            this->MessagesToolbarErrors->Text = L"Errors";
+            // 
+            // MessagesToolbarWarnings
+            // 
+            this->MessagesToolbarWarnings->BeginGroup = true;
+            this->MessagesToolbarWarnings->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::ImageAndText;
+            this->MessagesToolbarWarnings->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"MessagesToolbarWarnings.Image")));
+            this->MessagesToolbarWarnings->ImagePaddingHorizontal = 12;
+            this->MessagesToolbarWarnings->Name = L"MessagesToolbarWarnings";
+            this->MessagesToolbarWarnings->Text = L"Warnings";
+            // 
+            // MessagesToolbarInfos
+            // 
+            this->MessagesToolbarInfos->BeginGroup = true;
+            this->MessagesToolbarInfos->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::ImageAndText;
+            this->MessagesToolbarInfos->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"MessagesToolbarInfos.Image")));
+            this->MessagesToolbarInfos->ImagePaddingHorizontal = 12;
+            this->MessagesToolbarInfos->Name = L"MessagesToolbarInfos";
+            this->MessagesToolbarInfos->Text = L"Messages";
             // 
             // DockContainerItemMessageList
             // 
@@ -1248,12 +1315,12 @@ private: DevComponents::DotNetBar::ButtonItem^ TabStripContextMenuPopOut;
             this->BookmarksToolbar->ItemSpacing = 5;
             this->BookmarksToolbar->Location = System::Drawing::Point(0, 0);
             this->BookmarksToolbar->Name = L"BookmarksToolbar";
+            this->BookmarksToolbar->RoundCorners = false;
             this->BookmarksToolbar->Size = System::Drawing::Size(28, 167);
             this->BookmarksToolbar->Stretch = true;
             this->BookmarksToolbar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
             this->BookmarksToolbar->TabIndex = 0;
             this->BookmarksToolbar->TabStop = false;
-            this->BookmarksToolbar->Text = L"bar1";
             // 
             // BookmarksToolbarAdd
             // 
@@ -1356,6 +1423,7 @@ private: DevComponents::DotNetBar::ButtonItem^ TabStripContextMenuPopOut;
             });
             this->FindResultsToolbar->Location = System::Drawing::Point(0, 0);
             this->FindResultsToolbar->Name = L"FindResultsToolbar";
+            this->FindResultsToolbar->RoundCorners = false;
             this->FindResultsToolbar->Size = System::Drawing::Size(189, 19);
             this->FindResultsToolbar->Stretch = true;
             this->FindResultsToolbar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
@@ -2301,6 +2369,7 @@ private: DevComponents::DotNetBar::ButtonItem^ TabStripContextMenuPopOut;
             this->Controls->Add(this->StatusBar);
             this->Controls->Add(this->MainTabStrip);
             this->DoubleBuffered = true;
+            this->ForeColor = System::Drawing::Color::Black;
             this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
             this->KeyPreview = true;
             this->Name = L"ScriptEditorWorkspace";
@@ -2316,6 +2385,7 @@ private: DevComponents::DotNetBar::ButtonItem^ TabStripContextMenuPopOut;
             this->DockableBarMessages->ResumeLayout(false);
             this->PanelDockContainerMessageList->ResumeLayout(false);
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MessagesList))->EndInit();
+            (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MessagesToolbar))->EndInit();
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->DockableBarBookmarks))->EndInit();
             this->DockableBarBookmarks->ResumeLayout(false);
             this->PanelDockContainerBookmarks->ResumeLayout(false);

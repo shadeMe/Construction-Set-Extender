@@ -686,6 +686,42 @@ model::IScriptDocument^ ScriptEditorController::CreateNewTab(NewTabCreationParam
 	return NewDocument;
 }
 
+void ScriptEditorController::BatchCreateNewTabs(NewTabCreationParams::eInitOperation Operation, ICollection<String^>^ EditorIdsOrPaths, bool ActivateFirstNewTab)
+{
+	Debug::Assert(Operation != NewTabCreationParams::eInitOperation::NewScript);
+	if (EditorIdsOrPaths->Count == 0)
+		return;
+
+	auto TabStrip = View->GetComponentByRole(view::eViewRole::MainTabStrip)->AsTabStrip();
+	auto Form = View->GetComponentByRole(view::eViewRole::MainWindow)->AsForm();
+
+	//View->ShowNotification("Please Wait...", view::CommonIcons::Get()->InfoLarge, 3000);
+	//System::Threading::Thread::CurrentThread->Sleep(32);
+
+	Form->BeginUpdate();
+	TabStrip->BeginUpdate();
+	{
+		auto Params = gcnew NewTabCreationParams;
+		Params->InitOperation = Operation;
+		bool FirstTabCreated = false;
+		for each (auto EditorIdOrPath in EditorIdsOrPaths)
+		{
+			Params->BindAfterInit = !FirstTabCreated && ActivateFirstNewTab;
+			if (!FirstTabCreated)
+				FirstTabCreated = true;
+
+			if (Operation == NewTabCreationParams::eInitOperation::LoadExistingScript)
+				Params->ExistingScriptEditorId = EditorIdOrPath;
+			else
+				Params->DiskFilePath = EditorIdOrPath;
+
+			CreateNewTab(Params);
+		}
+	}
+	TabStrip->EndUpdate();
+	Form->EndUpdate();
+}
+
 model::IScriptDocument^ ScriptEditorController::ImportDocumentFromDisk(String^ DiskFilePath, bool ImportAsExistingScript)
 {
 	Debug::Assert(System::IO::File::Exists(DiskFilePath));
@@ -730,6 +766,74 @@ model::IScriptDocument^ ScriptEditorController::ImportDocumentFromDisk(String^ D
 	NewOrExisting->Dirty = true;
 
 	return NewOrExisting;
+}
+
+void ScriptEditorController::HandleViewClosureRequest(view::components::IForm^ Form, view::components::IForm::ClosingEventArgs^ E)
+{
+	auto TabStrip = View->GetComponentByRole(view::eViewRole::MainTabStrip)->AsTabStrip();
+	auto OpenTabs = TabStrip->TabCount;
+	Debug::Assert(OpenTabs == Model->Documents->Count);
+
+	if (OpenTabs == 0)
+	{
+		DisposeSelfOnViewClosure();
+		return;
+	}
+
+	if (OpenTabs > 1)
+	{
+		auto DialogResult = View->ShowMessageBox("Are you sure you want to close all open scripts?",
+												 MessageBoxButtons::YesNo, MessageBoxIcon::Question);
+		if (DialogResult == DialogResult::No)
+		{
+			E->Cancel = true;
+			return;
+		}
+	}
+
+	auto ModelDocumentsCopy = gcnew List<model::IScriptDocument^>(Model->Documents);
+	bool CloseOperationCancelled = false;
+	bool StopClosure = false;
+	Form->BeginUpdate();
+	TabStrip->BeginUpdate();
+	{
+		for each (auto Doc in ModelDocumentsCopy)
+		{
+			// switch to dirty models to enable user interaction
+			if (Doc->Dirty)
+				ActivateDocumentInView(Doc);
+
+			// we need to disable the default tab switching behaviour since removing
+			// a tab will cause the next tab in the tabstrip to automatically get activated
+			DisableDocumentActivationOnTabSwitch = true;
+			bool CloseSuccess = false;
+			{
+				CloseSuccess = CloseAndRemoveDocument(Doc, CloseOperationCancelled);
+			}
+			DisableDocumentActivationOnTabSwitch = false;
+
+			if (!CloseSuccess || CloseOperationCancelled)
+			{
+				// cancel the close operation and let the user handle any errors, etc
+				// also, ensure that document in question is the active one
+				ActivateDocumentInView(Doc);
+				StopClosure = true;
+				break;
+			}
+		}
+	}
+	TabStrip->EndUpdate();
+	Form->EndUpdate();
+
+	if (StopClosure)
+	{
+		E->Cancel = true;
+		return;
+	}
+
+	Debug::Assert(Model->Documents->Count == 0);
+	Debug::Assert(Model->Documents->Count == TabStrip->TabCount);
+	DisposeSelfOnViewClosure();
 }
 
 void ScriptEditorController::AllowDocumentBindingAfterTabMove()
@@ -783,12 +887,19 @@ bool ScriptEditorController::SaveDocument(model::IScriptDocument^ Document, mode
 
 	if (!Document->Dirty)
 		return true;
+	else if (Document->UnsavedNewScript && SaveOperation == model::IScriptDocument::eSaveOperation::DontCompile)
+	{
+		View->ShowNotification("This operation can only be performed on scripts that have been compiled at least once.",
+							   view::components::CommonIcons::Get()->BlockedLarge,
+							   3000);
+		return false;
+	}
 
 	bool SaveResult = Document->Save(SaveOperation);
 	if (!SaveResult && BoundDocument == Document)
 	{
 		View->GetComponentByRole(view::eViewRole::Messages_DockPanel)->AsDockablePane()->Focus();
-		View->ShowNotification("Script compilation failed.",
+		View->ShowNotification("Script compilation failed.\nCheck the message log for more information.",
 							   view::components::CommonIcons::Get()->ErrorLarge,
 							   3000);
 	}
@@ -889,6 +1000,23 @@ bool ScriptEditorController::ShouldUseAutoRecoveryFile(String^ ScriptEditorId)
 	return true;
 }
 
+bool ScriptEditorController::ShouldFilterScriptDiagnosticMessage(Object^ Message)
+{
+	auto DiagnosticMessage = safe_cast<model::components::ScriptDiagnosticMessage^>(Message);
+
+	switch (DiagnosticMessage->Type)
+	{
+	case model::components::ScriptDiagnosticMessage::eMessageType::Error:
+		return View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleErrors)->AsButton()->Checked;
+	case model::components::ScriptDiagnosticMessage::eMessageType::Warning:
+		return View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleWarnings)->AsButton()->Checked;
+	case model::components::ScriptDiagnosticMessage::eMessageType::Info:
+		return View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleInfos)->AsButton()->Checked;
+	default:
+		throw gcnew NotImplementedException;
+	}
+}
+
 void ScriptEditorController::DeferredUiActionTimer_Tick(Object^ Sender, EventArgs^ E)
 {
 	Debug::Assert(DelegateDeferredUiAction != nullptr);
@@ -980,6 +1108,9 @@ void ScriptEditorController::ViewEventHandler_ComponentEvent(Object^ Sender, vie
 		break;
 	case view::eViewRole::Messages_DockPanel:
 	case view::eViewRole::Messages_ListView:
+	case view::eViewRole::Messages_Toolbar_ToggleErrors:
+	case view::eViewRole::Messages_Toolbar_ToggleWarnings:
+	case view::eViewRole::Messages_Toolbar_ToggleInfos:
 		ViewEventHandler_MessagesPanel(E);
 		break;
 	case view::eViewRole::Bookmarks_DockPanel:
@@ -1048,73 +1179,8 @@ void ScriptEditorController::ViewEventHandler_MainWindow(view::ViewComponentEven
 		InputManager->HandleInputFocusChange(E, this);
 		break;
 	case view::components::IForm::eEvent::Closing:
-	{
-		auto TabStrip = View->GetComponentByRole(view::eViewRole::MainTabStrip)->AsTabStrip();
-		auto OpenTabs = TabStrip->TabCount;
-		Debug::Assert(OpenTabs == Model->Documents->Count);
-
-		if (OpenTabs == 0)
-		{
-			DisposeSelfOnViewClosure();
-			break;
-		}
-
-		auto Args = safe_cast<view::components::IForm::ClosingEventArgs^>(E->EventArgs);
-		if (OpenTabs > 1)
-		{
-			auto DialogResult = View->ShowMessageBox("Are you sure you want to close all open scripts?",
-													 MessageBoxButtons::YesNo, MessageBoxIcon::Question);
-			if (DialogResult == DialogResult::No)
-			{
-				Args->Cancel = true;
-				break;
-			}
-		}
-
-		auto ModelDocumentsCopy = gcnew List<model::IScriptDocument^>(Model->Documents);
-		bool CloseOperationCancelled = false;
-		bool StopClosure = false;
-		Form->BeginUpdate();
-		{
-			for each (auto Doc in ModelDocumentsCopy)
-			{
-				// switch to dirty models to enable user interaction
-				if (Doc->Dirty)
-					ActivateDocumentInView(Doc);
-
-				// we need to disable the default tab switching behaviour since removing
-				// a tab will cause the next tab in the tabstrip to automatically get activated
-				DisableDocumentActivationOnTabSwitch = true;
-				bool CloseSuccess = false;
-				{
-					CloseSuccess = CloseAndRemoveDocument(Doc, CloseOperationCancelled);
-				}
-				DisableDocumentActivationOnTabSwitch = false;
-
-				if (!CloseSuccess || CloseOperationCancelled)
-				{
-					// cancel the close operation and let the user handle any errors, etc
-					// also, ensure that document in question is the active one
-					ActivateDocumentInView(Doc);
-					StopClosure = true;
-					break;
-				}
-			}
-		}
-		Form->EndUpdate();
-
-		if (StopClosure)
-		{
-			Args->Cancel = true;
-			break;
-		}
-
-		Debug::Assert(Model->Documents->Count == 0);
-		Debug::Assert(Model->Documents->Count == TabStrip->TabCount);
-		DisposeSelfOnViewClosure();
-
+		HandleViewClosureRequest(Form, safe_cast<view::components::IForm::ClosingEventArgs^>(E->EventArgs));
 		break;
-	}
 	}
 }
 
@@ -1139,29 +1205,8 @@ void ScriptEditorController::ViewEventHandler_MainTabStrip(view::ViewComponentEv
 		}
 		case view::eViewRole::MainTabStrip_NewTab_ExistingScript:
 		{
-			auto Params = gcnew NewTabCreationParams;
-			Params->InitOperation = NewTabCreationParams::eInitOperation::LoadExistingScript;
-
 			auto ExistingScriptEditorIds = View->SelectExistingScripts(BoundDocument ? BoundDocument->ScriptEditorID : "");
-			bool FirstScript = true;
-
-			View->BeginUpdate();
-			{
-				for each (auto EditorId in ExistingScriptEditorIds)
-				{
-					if (FirstScript)
-					{
-						Params->BindAfterInit = true;
-						FirstScript = false;
-					}
-					else
-						Params->BindAfterInit = false;
-
-					Params->ExistingScriptEditorId = EditorId;
-					CreateNewTab(Params);
-				}
-			}
-			View->EndUpdate();
+			BatchCreateNewTabs(NewTabCreationParams::eInitOperation::LoadExistingScript, ExistingScriptEditorIds, true);
 
 			break;
 		}
@@ -1274,27 +1319,17 @@ void ScriptEditorController::ViewEventHandler_MainToolbar(view::ViewComponentEve
 		break;
 	case view::eViewRole::MainToolbar_OpenScript:
 	{
-		auto Params = gcnew NewTabCreationParams;
-		Params->InitOperation = NewTabCreationParams::eInitOperation::LoadExistingScript;
-
 		auto ExistingScriptEditorIds = View->SelectExistingScripts(BoundDocument->ScriptEditorID);
-		bool FirstScript = true;
+		if (ExistingScriptEditorIds->Count == 0)
+			break;
 
 		View->BeginUpdate();
 		{
-			for each (auto EditorId in ExistingScriptEditorIds)
-			{
-				if (FirstScript)
-				{
-					LoadExistingScriptIntoDocument(BoundDocument, EditorId);
-					FirstScript = false;
-				}
-				else
-				{
-					Params->ExistingScriptEditorId = EditorId;
-					CreateNewTab(Params);
-				}
-			}
+			// load the first one into the current doc and the rest in new tab
+			LoadExistingScriptIntoDocument(BoundDocument, ExistingScriptEditorIds[0]);
+
+			ExistingScriptEditorIds->RemoveAt(0);
+			BatchCreateNewTabs(NewTabCreationParams::eInitOperation::LoadExistingScript, ExistingScriptEditorIds, false);
 		}
 		View->EndUpdate();
 
@@ -1515,16 +1550,8 @@ void ScriptEditorController::ViewEventHandler_MainToolbarMenuTools(view::ViewCom
 		LoadManager->Multiselect = true;
 
 		if (LoadManager->ShowDialog() == DialogResult::OK && LoadManager->FileNames->Length > 0)
-		{
-			auto NewTabParam = gcnew NewTabCreationParams;
-			NewTabParam->InitOperation = NewTabCreationParams::eInitOperation::LoadFileFromDisk;
+			BatchCreateNewTabs(NewTabCreationParams::eInitOperation::LoadFileFromDisk, gcnew List<String^>(LoadManager->FileNames), true);
 
-			for each (auto FilePath in LoadManager->FileNames)
-			{
-				NewTabParam->DiskFilePath = FilePath;
-				CreateNewTab(NewTabParam);
-			}
-		}
 		break;
 	}
 	case view::eViewRole::MainToolbar_Tools_Export_CurrentScript:
@@ -1648,6 +1675,23 @@ void ScriptEditorController::ViewEventHandler_MessagesPanel(view::ViewComponentE
 	case view::eViewRole::Messages_ListView:
 		HandleScriptLineAnnotationItemActivation(E, BoundDocument);
 		break;
+	case view::eViewRole::Messages_Toolbar_ToggleErrors:
+	case view::eViewRole::Messages_Toolbar_ToggleWarnings:
+	case view::eViewRole::Messages_Toolbar_ToggleInfos:
+	{
+		if (safe_cast<view::components::IButton::eEvent>(E->EventType) == view::components::IButton::eEvent::Click)
+		{
+			auto Button = E->Component->AsButton();
+			Button->Checked = !Button->Checked;
+
+			// refresh the filter
+			auto ListView = View->GetComponentByRole(view::eViewRole::Messages_ListView)->AsObjectListView();
+			ListView->UseFiltering = false;
+			ListView->UseFiltering = true;
+		}
+
+		break;
+	}
 	}
 }
 
@@ -1784,6 +1828,7 @@ void ScriptEditorController::ViewEventHandler_TabStripContextMenu(view::ViewComp
 		else if (OnClick)
 		{
 			Form->BeginUpdate();
+			TabStrip->BeginUpdate();
 			{
 				for each (auto Tab in TabStrip->Tabs)
 				{
@@ -1791,6 +1836,7 @@ void ScriptEditorController::ViewEventHandler_TabStripContextMenu(view::ViewComp
 						Tab->Close();
 				}
 			}
+			TabStrip->EndUpdate();
 			Form->EndUpdate();
 		}
 
@@ -1813,6 +1859,7 @@ void ScriptEditorController::ViewEventHandler_TabStripContextMenu(view::ViewComp
 		else if (OnClick)
 		{
 			Form->BeginUpdate();
+			TabStrip->BeginUpdate();
 			{
 				for each (auto Tab in TabStrip->Tabs)
 				{
@@ -1821,6 +1868,7 @@ void ScriptEditorController::ViewEventHandler_TabStripContextMenu(view::ViewComp
 						Tab->Close();
 				}
 			}
+			TabStrip->EndUpdate();
 			Form->EndUpdate();
 		}
 
@@ -1831,10 +1879,12 @@ void ScriptEditorController::ViewEventHandler_TabStripContextMenu(view::ViewComp
 		else if (OnClick)
 		{
 			Form->BeginUpdate();
+			TabStrip->BeginUpdate();
 			{
 				for each (auto Tab in TabStrip->Tabs)
 					Tab->Close();
 			}
+			TabStrip->EndUpdate();
 			Form->EndUpdate();
 		}
 
@@ -1957,6 +2007,14 @@ void ScriptEditorController::ModelEventHandler_DocumentStateChanged(Object^ Send
 
 		auto ListView = View->GetComponentByRole(view::eViewRole::Messages_ListView)->AsObjectListView();
 		ListView->SetObjects(E->Messages, true);
+
+		auto ErrorCount = Document->GetMessageCountErrors(0);
+		auto WarningCount = Document->GetMessageCountWarnings(0);
+		auto InfosCount = Document->GetMessageCountInfos(0);
+
+		View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleErrors)->AsButton()->Text = ErrorCount + " " + (ErrorCount == 1 ? "Error" : "Errors");
+		View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleWarnings)->AsButton()->Text = WarningCount + " " + (WarningCount == 1 ? "Warning" : "Warnings");
+		View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleInfos)->AsButton()->Text = InfosCount + " " + (InfosCount == 1 ? "Message" : "Messages");
 
 		break;
 	}
@@ -2118,7 +2176,7 @@ void ScriptEditorController::InitViewComponents()
 		ColumnType->SetImageGetter(gcnew view::components::IObjectListViewColumn::ImageGetter(&MessageListTypeImageGetter));
 
 		ColumnLine->Text = "Line";
-		ColumnLine->MinimumWidth = 30;
+		ColumnLine->MinimumWidth = 40;
 		ColumnLine->MaximumWidth = 40;
 		ColumnLine->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&ScriptTextAnnotationListLineNumberAspectGetter));
 
@@ -2127,7 +2185,7 @@ void ScriptEditorController::InitViewComponents()
 		ColumnText->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&ScriptTextAnnotationListTextAspectGetter));
 
 		ColumnSource->Text = "Message Source";
-		ColumnSource->MinimumWidth = 100;
+		ColumnSource->MinimumWidth = 75;
 		ColumnSource->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&MessageListSourceAspectGetter));
 		ColumnSource->SetAspectToStringGetter(gcnew view::components::IObjectListViewColumn::AspectToStringGetter(&MessageListSourceAspectToStringConverter));
 
@@ -2135,6 +2193,19 @@ void ScriptEditorController::InitViewComponents()
 		MessagesListView->AddColumn(ColumnLine);
 		MessagesListView->AddColumn(ColumnText);
 		MessagesListView->AddColumn(ColumnSource);
+
+		MessagesListView->SetModelFilter(gcnew Predicate<Object^>(this, &ScriptEditorController::ShouldFilterScriptDiagnosticMessage));
+
+		auto ToggleErrors = View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleErrors)->AsButton();
+		auto ToggleWarnings = View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleWarnings)->AsButton();
+		auto ToggleInfo = View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleInfos)->AsButton();
+
+		ToggleErrors->Checked = true;
+		ToggleErrors->Tag = model::components::ScriptDiagnosticMessage::eMessageType::Error;
+		ToggleWarnings->Checked = true;
+		ToggleWarnings->Tag = model::components::ScriptDiagnosticMessage::eMessageType::Warning;
+		ToggleInfo->Checked = true;
+		ToggleInfo->Tag = model::components::ScriptDiagnosticMessage::eMessageType::Info;
 	}
 
 	{
@@ -2144,8 +2215,7 @@ void ScriptEditorController::InitViewComponents()
 		auto ColumnText = BookmarksListView->AllocateNewColumn();
 
 		ColumnLine->Text = "Line";
-		ColumnLine->MinimumWidth = 30;
-		ColumnLine->MaximumWidth = 40;
+		ColumnLine->MinimumWidth = 40;
 		ColumnLine->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&ScriptTextAnnotationListLineNumberAspectGetter));
 
 		ColumnText->Text = "Description";

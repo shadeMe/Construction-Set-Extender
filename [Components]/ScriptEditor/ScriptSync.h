@@ -1,5 +1,8 @@
 #pragma once
 
+#include "IScriptEditorView.h"
+
+
 namespace cse
 {
 
@@ -276,6 +279,7 @@ ref class DiskSyncDialog : public DevComponents::DotNetBar::Metro::MetroForm
 	System::Windows::Forms::Timer^ DeferredSelectionUpdateTimer;
 	DevComponents::DotNetBar::StyleManagerAmbient^ ColorManager;
 	System::ComponentModel::IContainer^ components;
+	view::IObjectListView^ ListViewThemeWrapper;
 
 	SyncStartEventHandler^ DiskSyncSyncStartHandler;
 	SyncStopEventHandler^ DiskSyncSyncStopHandler;

@@ -756,6 +756,26 @@ DevComponents::DotNetBar::eTooltipColor MapRichTooltipBackgroundColorToDotNetBar
 	}
 }
 
+SuperTooltipColorSwapper::ScopedSwap::ScopedSwap(SuperTooltipColorSwapper^ Parent)
+{
+	Renderer = dynamic_cast<DevComponents::DotNetBar::Rendering::Office2007Renderer^>(DevComponents::DotNetBar::Rendering::GlobalManager::Renderer);
+
+	OldTextColor = Renderer->ColorTable->SuperTooltip->TextColor;
+	OldBackColorStart = Renderer->ColorTable->SuperTooltip->BackgroundColors->Start;
+	OldBackColorEnd = Renderer->ColorTable->SuperTooltip->BackgroundColors->End;
+
+	Renderer->ColorTable->SuperTooltip->TextColor = Parent->TextColor;
+	Renderer->ColorTable->SuperTooltip->BackgroundColors->Start = Parent->BackColor;
+	Renderer->ColorTable->SuperTooltip->BackgroundColors->End = Parent->BackColor;
+}
+
+SuperTooltipColorSwapper::ScopedSwap::~ScopedSwap()
+{
+	Renderer->ColorTable->SuperTooltip->TextColor = OldTextColor;
+	Renderer->ColorTable->SuperTooltip->BackgroundColors->Start = OldBackColorStart;
+	Renderer->ColorTable->SuperTooltip->BackgroundColors->End = OldBackColorEnd;
+}
+
 SuperTooltipColorSwapper::SuperTooltipColorSwapper(Color Text, Color Background)
 {
 	TextColor = Text;
@@ -765,26 +785,671 @@ SuperTooltipColorSwapper::SuperTooltipColorSwapper(Color Text, Color Background)
 void SuperTooltipColorSwapper::ShowTooltip(DevComponents::DotNetBar::SuperTooltip^ Tooltip, Object^ Sender, Point ScreenPosition)
 {
 	// temporarily modify the global color table before the tooltip is shown
-	auto GlobalRenderer = dynamic_cast<DevComponents::DotNetBar::Rendering::Office2007Renderer^>(DevComponents::DotNetBar::Rendering::GlobalManager::Renderer);
-	if (GlobalRenderer == nullptr)
+	ScopedSwap Swapper(this);
+	Tooltip->ShowTooltip(Sender, ScreenPosition);
+}
+
+void SuperTooltipColorSwapper::UpdateWithSuperTooltipInfo(DevComponents::DotNetBar::SuperTooltip^ Tooltip, DevComponents::DotNetBar::SuperTooltipInfo^ Info, bool UpdateBounds)
+{
+	ScopedSwap Swapper(this);
+	Tooltip->SuperTooltipControl->UpdateWithSuperTooltipInfo(Info);
+
+	if (UpdateBounds)
 	{
-		Tooltip->ShowTooltip(Sender, ScreenPosition);
+		Tooltip->SuperTooltipControl->RecalcSize();
+		Tooltip->SuperTooltipControl->UpdateShadow();
+	}
+}
+
+Color ShadeColor(Color Input, float NormalizedFactor)
+{
+	Debug::Assert(NormalizedFactor >= 0.f && NormalizedFactor <= 1.f);
+
+	NormalizedFactor = 1 - NormalizedFactor;
+	return Color::FromArgb(Input.A, Input.R * NormalizedFactor, Input.G * NormalizedFactor, Input.B * NormalizedFactor);
+}
+
+Color TintColor(Color Input, float NormalizedFactor)
+{
+	Debug::Assert(NormalizedFactor >= 0.f && NormalizedFactor <= 1.f);
+
+	return Color::FromArgb(Input.A,
+						   Input.R + (255 - Input.R) * NormalizedFactor,
+						   Input.G + (255 - Input.G) * NormalizedFactor,
+						   Input.B + (255 - Input.B) * NormalizedFactor);
+}
+
+
+TextMarkupBuilder::FontParams::FontParams()
+{
+	Name = "";
+	Size = "";
+	Color = "";
+}
+
+TextMarkupBuilder::HyperlinkParams::HyperlinkParams(String^ Name, String^ Href)
+{
+	this->Name = Name;
+	this->Href = Href;
+}
+
+TextMarkupBuilder::TagContext::TagContext(eTag Tag)
+{
+	this->Tag = Tag;
+
+	HeaderLevel = 0;
+	Halign = DevComponents::DotNetBar::eHorizontalItemsAlignment::Left;
+	Width = 0;
+	Padding = Windows::Forms::Padding(0, 0 , 0, 0);
+	ParamsFont = nullptr;
+	ParamsHyperlink = nullptr;
+}
+
+TextMarkupBuilder::TableContext::TableContext(int Columns, int Width)
+{
+	Debug::Assert(Columns > 0 && Width > 0);
+
+	ColumnCount = Columns;
+	RowWidth = Width;
+
+	CurrentColumn = 0;
+	CurrentRow = 0;
+	CellWidth = RowWidth / ColumnCount;
+}
+
+void TextMarkupBuilder::GenerateAlignWidthPaddingAttributes(TagContext^ Context, System::Text::StringBuilder^ Sb)
+{
+	if (Context->Halign != DevComponents::DotNetBar::eHorizontalItemsAlignment::Left)
+		Sb->Append(" align=\"")->Append(Context->Halign)->Append("\"");
+
+	if (Context->Width != 0)
+		Sb->Append(" width=\"")->Append(Context->Width)->Append("\"");
+
+	if (Context->Padding != Windows::Forms::Padding::Empty)
+	{
+		Sb->Append(" padding=\"")
+		  ->Append(Context->Padding.Left)->Append(",")->Append(Context->Padding.Right)->Append(",")
+		  ->Append(Context->Padding.Top)->Append(",")->Append(Context->Padding.Bottom)->Append("\"");
+	}
+}
+
+void TextMarkupBuilder::PushTagContext(TagContext^ Tag)
+{
+	switch (Tag->Tag)
+	{
+	case TextMarkupBuilder::TagContext::eTag::Bold:
+		Buffer->Append("<b>");
+		break;
+	case TextMarkupBuilder::TagContext::eTag::Italic:
+		Buffer->Append("<i>");
+		break;
+	case TextMarkupBuilder::TagContext::eTag::Underline:
+		Buffer->Append("<u>");
+		break;
+	case TextMarkupBuilder::TagContext::eTag::Font:
+		Debug::Assert(Tag->ParamsFont != nullptr);
+		Debug::Assert(Tag->ParamsFont->Name != "" || Tag->ParamsFont->Size != "" || Tag->ParamsFont->Color != "");
+
+		Buffer->Append("<font");
+
+		if (Tag->ParamsFont->Name->Length > 0)
+			Buffer->Append(" face=\"")->Append(Tag->ParamsFont->Name)->Append("\"");
+
+		if (Tag->ParamsFont->Size->Length > 0)
+			Buffer->Append(" size=\"")->Append(Tag->ParamsFont->Size)->Append("\"");
+
+		if (Tag->ParamsFont->Color->Length > 0)
+			Buffer->Append(" color=\"")->Append(Tag->ParamsFont->Color)->Append("\"");
+
+		Buffer->Append(">");
+		break;
+	case TextMarkupBuilder::TagContext::eTag::Header:
+		Debug::Assert(Tag->HeaderLevel >= 1 && Tag->HeaderLevel <= 6);
+
+		Buffer->Append("<h")->Append(Tag->HeaderLevel)->Append(">");
+		break;
+	case TextMarkupBuilder::TagContext::eTag::Hyperlink:
+		Debug::Assert(Tag->ParamsHyperlink != nullptr);
+		Debug::Assert(Tag->ParamsHyperlink->Href != "");
+
+		Buffer->Append("<a ");
+		if (Tag->ParamsHyperlink->Name->Length)
+			Buffer->Append(" name = \"")->Append(Tag->ParamsHyperlink->Name)->Append("\"");
+
+		Buffer->Append(" href = \"")->Append(Tag->ParamsHyperlink->Href)->Append("\">");
+		break;
+	case TextMarkupBuilder::TagContext::eTag::Paragraph:
+		Buffer->Append("<p");
+		GenerateAlignWidthPaddingAttributes(Tag, Buffer);
+		Buffer->Append(">");
+		break;
+	case TextMarkupBuilder::TagContext::eTag::Div:
+		Buffer->Append("<div");
+		GenerateAlignWidthPaddingAttributes(Tag, Buffer);
+		Buffer->Append(">");
+		break;
+	case TextMarkupBuilder::TagContext::eTag::Span:
+		Buffer->Append("<span");
+		GenerateAlignWidthPaddingAttributes(Tag, Buffer);
+		Buffer->Append(">");
+		break;
+	case TextMarkupBuilder::TagContext::eTag::BreakLine:
+		// we don't need to push anything onto the stack here, so return early
+		Buffer->Append("<br/>");
 		return;
+	default:
+		throw gcnew NotImplementedException;
 	}
 
-	auto OldTextColor = GlobalRenderer->ColorTable->SuperTooltip->TextColor;
-	auto OldBgColor1 = GlobalRenderer->ColorTable->SuperTooltip->BackgroundColors->Start;
-	auto OldBgColor2 = GlobalRenderer->ColorTable->SuperTooltip->BackgroundColors->End;
+	ActiveTags->Push(Tag);
+}
 
-	GlobalRenderer->ColorTable->SuperTooltip->TextColor = TextColor;
-	GlobalRenderer->ColorTable->SuperTooltip->BackgroundColors->Start = BackColor;
-	GlobalRenderer->ColorTable->SuperTooltip->BackgroundColors->End = BackColor;
+void TextMarkupBuilder::PopTagContext()
+{
+	Debug::Assert(ActiveTags->Count > 0);
+
+	auto LastTag = ActiveTags->Pop();
+	EmitClosingTag(LastTag);
+}
+
+void TextMarkupBuilder::EmitClosingTag(TagContext^ Tag)
+{
+	switch (Tag->Tag)
 	{
-		Tooltip->ShowTooltip(Sender, ScreenPosition);
+	case TextMarkupBuilder::TagContext::eTag::Bold:
+		Buffer->Append("</b>");
+		break;
+	case TextMarkupBuilder::TagContext::eTag::Italic:
+		Buffer->Append("</i>");
+		break;
+	case TextMarkupBuilder::TagContext::eTag::Underline:
+		Buffer->Append("</u>");
+		break;
+	case TextMarkupBuilder::TagContext::eTag::Font:
+		Buffer->Append("</font>");
+		break;
+	case TextMarkupBuilder::TagContext::eTag::Header:
+		Buffer->Append("</h")->Append(Tag->HeaderLevel)->Append(">");
+		break;
+	case TextMarkupBuilder::TagContext::eTag::Hyperlink:
+		Buffer->Append("</a>");
+		break;
+	case TextMarkupBuilder::TagContext::eTag::Paragraph:
+		Buffer->Append("</p>");
+		break;
+	case TextMarkupBuilder::TagContext::eTag::Div:
+		Buffer->Append("</div>");
+		break;
+	case TextMarkupBuilder::TagContext::eTag::Span:
+		Buffer->Append("</span>");
+		break;
+	default:
+		throw gcnew NotImplementedException;
 	}
-	GlobalRenderer->ColorTable->SuperTooltip->TextColor = OldTextColor;
-	GlobalRenderer->ColorTable->SuperTooltip->BackgroundColors->Start = OldBgColor1;
-	GlobalRenderer->ColorTable->SuperTooltip->BackgroundColors->End = OldBgColor2;
+}
+
+void TextMarkupBuilder::PrepareAndPushTag(TagContext::eTag Tag, int Width)
+{
+	auto Context = gcnew TagContext(Tag);
+	Context->Width = Width;
+	PushTagContext(Context);
+}
+
+void TextMarkupBuilder::PrepareAndPushTag(TagContext::eTag Tag, DevComponents::DotNetBar::eHorizontalItemsAlignment Align)
+{
+	auto Context = gcnew TagContext(Tag);
+	Context->Halign = Align;
+	PushTagContext(Context);
+}
+
+void TextMarkupBuilder::PrepareAndPushTag(TagContext::eTag Tag, Windows::Forms::Padding Padding)
+{
+	auto Context = gcnew TagContext(Tag);
+	Context->Padding = Padding;
+	PushTagContext(Context);
+}
+
+void TextMarkupBuilder::PrepareAndPushTag(TagContext::eTag Tag, int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align)
+{
+	auto Context = gcnew TagContext(Tag);
+	Context->Width = Width;
+	Context->Halign = Align;
+	PushTagContext(Context);
+}
+
+void TextMarkupBuilder::PrepareAndPushTag(TagContext::eTag Tag, int Width, Windows::Forms::Padding Padding)
+{
+	auto Context = gcnew TagContext(Tag);
+	Context->Width = Width;
+	Context->Padding = Padding;
+	PushTagContext(Context);
+}
+
+void TextMarkupBuilder::PrepareAndPushTag(TagContext::eTag Tag, int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align, Windows::Forms::Padding Padding)
+{
+	auto Context = gcnew TagContext(Tag);
+	Context->Width = Width;
+	Context->Halign = Align;
+	Context->Padding = Padding;
+	PushTagContext(Context);
+}
+
+bool TextMarkupBuilder::IsTagActive(TagContext::eTag Tag)
+{
+	for each (auto Itr in ActiveTags)
+	{
+		if (Itr->Tag == Tag)
+			return true;
+	}
+
+	return false;
+}
+
+TextMarkupBuilder::TextMarkupBuilder()
+{
+	Buffer = gcnew System::Text::StringBuilder;
+	ActiveTables = gcnew Stack<TableContext^>;
+	ActiveTags = gcnew Stack<TagContext^>;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Bold()
+{
+	PushTagContext(gcnew TagContext(TagContext::eTag::Bold));
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Italic()
+{
+	PushTagContext(gcnew TagContext(TagContext::eTag::Italic));
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Underline()
+{
+	PushTagContext(gcnew TagContext(TagContext::eTag::Underline));
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Header(int Level)
+{
+	auto Context = gcnew TagContext(TagContext::eTag::Header);
+	Context->HeaderLevel = Level;
+	PushTagContext(Context);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Hyperlink(String^ Name, String^ Href)
+{
+	auto Context = gcnew TagContext(TagContext::eTag::Hyperlink);
+	Context->ParamsHyperlink = gcnew HyperlinkParams(Name, Href);
+	PushTagContext(Context);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Hyperlink(String^ Href)
+{
+	return Hyperlink("", Href);
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Font(String^ Name)
+{
+	auto Context = gcnew TagContext(TagContext::eTag::Font);
+	Context->ParamsFont = gcnew FontParams;
+	Context->ParamsFont->Name = Name;
+	PushTagContext(Context);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Font(int Size, bool Relative)
+{
+	Debug::Assert(Size > 0 || Relative);
+
+	auto Context = gcnew TagContext(TagContext::eTag::Font);
+	Context->ParamsFont = gcnew FontParams;
+	Context->ParamsFont->Size = (Relative && Size > 0 ? "+" : "") + Size.ToString();
+	PushTagContext(Context);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Font(String^ Name, int Size, bool Relative)
+{
+	Debug::Assert(Size > 0 || Relative);
+
+	auto Context = gcnew TagContext(TagContext::eTag::Font);
+	Context->ParamsFont = gcnew FontParams;
+	Context->ParamsFont->Name = Name;
+	Context->ParamsFont->Size = (Relative && Size > 0 ? "+" : "") + Size.ToString();
+	PushTagContext(Context);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Font(String^ Name, int Size, bool Relative, Drawing::Color Color)
+{
+	Debug::Assert(Size > 0 || Relative);
+
+	auto Context = gcnew TagContext(TagContext::eTag::Font);
+	Context->ParamsFont = gcnew FontParams;
+	Context->ParamsFont->Name = Name;
+	Context->ParamsFont->Size = (Relative && Size > 0 ? "+" : "") + Size.ToString();
+	Context->ParamsFont->Color = String::Format("#{0:X2}{1:X2}{2:X2}", Color.R, Color.G, Color.B);
+	PushTagContext(Context);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Paragraph(int Width)
+{
+	PrepareAndPushTag(TagContext::eTag::Paragraph, Width);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Paragraph(DevComponents::DotNetBar::eHorizontalItemsAlignment Align)
+{
+	PrepareAndPushTag(TagContext::eTag::Paragraph, Align);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Paragraph(Windows::Forms::Padding Padding)
+{
+	PrepareAndPushTag(TagContext::eTag::Paragraph, Padding);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Paragraph(int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align)
+{
+	PrepareAndPushTag(TagContext::eTag::Paragraph, Width, Align);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Paragraph(int Width, Windows::Forms::Padding Padding)
+{
+	PrepareAndPushTag(TagContext::eTag::Paragraph, Width, Padding);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Paragraph(int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align, Windows::Forms::Padding Padding)
+{
+	PrepareAndPushTag(TagContext::eTag::Paragraph, Width, Align, Padding);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Span(int Width)
+{
+	PrepareAndPushTag(TagContext::eTag::Span, Width);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Span(DevComponents::DotNetBar::eHorizontalItemsAlignment Align)
+{
+	PrepareAndPushTag(TagContext::eTag::Span, Align);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Span(Windows::Forms::Padding Padding)
+{
+	PrepareAndPushTag(TagContext::eTag::Span, Padding);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Span(int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align)
+{
+	PrepareAndPushTag(TagContext::eTag::Span, Width, Align);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Span(int Width, Windows::Forms::Padding Padding)
+{
+	PrepareAndPushTag(TagContext::eTag::Span, Width, Padding);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Span(int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align, Windows::Forms::Padding Padding)
+{
+	PrepareAndPushTag(TagContext::eTag::Span, Width, Align, Padding);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Div(int Width)
+{
+	PrepareAndPushTag(TagContext::eTag::Div, Width);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Div(DevComponents::DotNetBar::eHorizontalItemsAlignment Align)
+{
+	PrepareAndPushTag(TagContext::eTag::Div, Align);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Div(Windows::Forms::Padding Padding)
+{
+	PrepareAndPushTag(TagContext::eTag::Div, Padding);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Div(int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align)
+{
+	PrepareAndPushTag(TagContext::eTag::Div, Width, Align);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Div(int Width, Windows::Forms::Padding Padding)
+{
+	PrepareAndPushTag(TagContext::eTag::Div, Width, Padding);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Div(int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align, Windows::Forms::Padding Padding)
+{
+	PrepareAndPushTag(TagContext::eTag::Div, Width, Align, Padding);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Table(int Columns, int Width)
+{
+	if (ActiveTables->Count)
+	{
+		// since we can't nest "tables" in the traditional way due to
+		// the inherent limitations of DotNetBar's text-markup impl.,
+		// we have to first "pop" the active table by writing out the
+		// closing tag
+		auto CurrentTable = ActiveTables->Peek();
+		Debug::Assert(CurrentTable->CurrentColumn == 0 || CurrentTable->CurrentColumn == CurrentTable->ColumnCount + 1);
+
+		Debug::Assert(ActiveTags->Count > 0);
+		auto CurrentTag = ActiveTags->Peek();
+		Debug::Assert(CurrentTag->Tag == TagContext::eTag::Div);
+
+		PopTag();
+	}
+
+	auto Context = gcnew TableContext(Columns, Width);
+	ActiveTables->Push(Context);
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::TableNextRow()
+{
+	return TableNextRow(Padding::Empty);
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::TableNextRow(Windows::Forms::Padding Padding)
+{
+	Debug::Assert(ActiveTables->Count > 0);
+
+	auto Current = ActiveTables->Peek();
+	Debug::Assert(Current->CurrentColumn == 0 || Current->CurrentColumn == Current->ColumnCount + 1);
+
+	if (Current->CurrentRow != 0)
+	{
+		Debug::Assert(ActiveTags->Count > 0 && ActiveTags->Peek()->Tag == TagContext::eTag::Div);
+		PopTag();
+	}
+
+	Div(Current->RowWidth, Padding);
+
+	Current->CurrentRow = Current->CurrentRow + 1;
+	Current->CurrentColumn = 0;
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::TableEmptyRow()
+{
+	return TableNextRow()->TableNextColumn()->NonBreakingSpace(1)->TableNextColumn()->NonBreakingSpace(1)->TableNextColumn();
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::TableNextColumn()
+{
+	return TableNextColumn(-1, DevComponents::DotNetBar::eHorizontalItemsAlignment::Left, Padding::Empty);
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::TableNextColumn(int Width)
+{
+	return TableNextColumn(Width, DevComponents::DotNetBar::eHorizontalItemsAlignment::Left, Padding::Empty);
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::TableNextColumn(Windows::Forms::Padding Padding)
+{
+	return TableNextColumn(-1, DevComponents::DotNetBar::eHorizontalItemsAlignment::Left, Padding);
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::TableNextColumn(int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align)
+{
+	return TableNextColumn(Width, Align, Padding::Empty);
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::TableNextColumn(DevComponents::DotNetBar::eHorizontalItemsAlignment Align)
+{
+	return TableNextColumn(-1, Align, Padding::Empty);
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::TableNextColumn(DevComponents::DotNetBar::eHorizontalItemsAlignment Align, Windows::Forms::Padding Padding)
+{
+	return TableNextColumn(-1, Align, Padding);
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::TableNextColumn(int Width, DevComponents::DotNetBar::eHorizontalItemsAlignment Align, Windows::Forms::Padding Padding)
+{
+	Debug::Assert(ActiveTables->Count > 0);
+
+	auto Current = ActiveTables->Peek();
+	Debug::Assert(Current->CurrentColumn < Current->ColumnCount + 1);
+
+	if (Current->CurrentColumn != 0)
+	{
+		Debug::Assert(ActiveTags->Count > 0 && ActiveTags->Peek()->Tag == TagContext::eTag::Span);
+		PopTag();
+	}
+
+	Current->CurrentColumn = Current->CurrentColumn + 1;
+	if (Current->CurrentColumn != Current->ColumnCount + 1)
+		Span(Width == -1 ? Current->CellWidth : Width, Align, Padding);
+
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::TableNextColumn(int Width, Windows::Forms::Padding Padding)
+{
+	return TableNextColumn(Width, DevComponents::DotNetBar::eHorizontalItemsAlignment::Left, Padding);
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::PopTag()
+{
+	return PopTag(1);
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::PopTag(int Count)
+{
+	for (int i = 0; i < Count; ++i)
+		PopTagContext();
+
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::PopTable()
+{
+	Debug::Assert(ActiveTables->Count > 0);
+	auto Current = ActiveTables->Pop();
+	Debug::Assert(Current->CurrentColumn == Current->ColumnCount + 1 || Current->CurrentRow == 0);
+
+	if (ActiveTags->Count > 0)
+	{
+		auto CurrentTag = ActiveTags->Peek();
+		Debug::Assert(CurrentTag->Tag == TagContext::eTag::Div);
+		PopTag();
+	}
+	else
+		Debug::Assert(Current->CurrentRow == 0);	// no rows were pushed
+
+	// push an empty Div element to compensate for the "popping" of the
+	// same when the above table was pushed onto the stack
+	if (ActiveTables->Count > 0)
+		Div(0);
+
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::LineBreak()
+{
+	return LineBreak(1);
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::LineBreak(int Count)
+{
+	for (int i = 0; i < Count; ++i)
+		PushTagContext(gcnew TagContext(TagContext::eTag::BreakLine));
+
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::NonBreakingSpace()
+{
+	return NonBreakingSpace(1);
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::NonBreakingSpace(int Count)
+{
+	for (int i = 0; i < Count; ++i)
+		Buffer->Append("&nbsp;");
+
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Text(String^ Text)
+{
+	// prevent any errant symbols from breaking the accumulated markup
+	Text = Text->Replace("<", "&lt;")->Replace(">", "&gt;")->Replace("&", "&amp;");
+	Text = Text->Replace("\n", "<br/>");
+
+	// the italics renderer does a bad job of kerning (single) whitespace characters, resulting
+	// in text that looks like it has no whitespace whatsoever. so, we need to use a force
+	// multiplier for each of those characters
+	if (IsTagActive(TagContext::eTag::Italic))
+		Text = Text->Replace(" ", ItalicWhitespaceReplacement);
+
+	Buffer->Append(Text);
+
+	return this;
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Markup(String^ MarkupText)
+{
+	Buffer->Append(MarkupText);
+	return this;
+}
+
+System::String^ TextMarkupBuilder::ToMarkup()
+{
+	Debug::Assert(ActiveTags->Count == 0 && ActiveTables->Count == 0);
+	return Buffer->ToString();
+}
+
+TextMarkupBuilder^ TextMarkupBuilder::Reset()
+{
+	ActiveTags->Clear();
+	ActiveTables->Clear();
+	Buffer->Clear();
+
+	return this;
 }
 
 

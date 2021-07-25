@@ -291,8 +291,9 @@ interface class IScriptDocument
 	bool Save(eSaveOperation SaveOperation);
 
 	List<components::ScriptDiagnosticMessage^>^ GetMessages(UInt32 Line, components::ScriptDiagnosticMessage::eMessageSource SourceFilter, components::ScriptDiagnosticMessage::eMessageType TypeFilter);
-	UInt32 GetErrorCount(UInt32 Line);
-	UInt32 GetWarningCount(UInt32 Line);
+	UInt32 GetMessageCountErrors(UInt32 Line);
+	UInt32 GetMessageCountWarnings(UInt32 Line);
+	UInt32 GetMessageCountInfos(UInt32 Line);
 
 	void AddBookmark(UInt32 Line, String^ BookmarkText);
 	void RemoveBookmark(components::ScriptBookmark^ Bookmark);

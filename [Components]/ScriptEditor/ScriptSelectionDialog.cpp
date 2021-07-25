@@ -1,8 +1,8 @@
 #include "ScriptSelectionDialog.h"
 #include "[Common]\NativeWrapper.h"
 #include "ScriptSync.h"
-#include "IScriptEditorView.h"
 #include "Preferences.h"
+#include "ScriptEditorViewImplComponents.h"
 
 namespace cse
 {
@@ -532,18 +532,7 @@ void ScriptSelectionDialog::FinalizeComponents()
 
 	ScriptList->VirtualListDataSource = gcnew FastScriptListViewDataSource(ScriptList);
 
-	auto EmptyMsgOverlay = safe_cast<BrightIdeasSoftware::TextOverlay^>(ScriptList->EmptyListMsgOverlay);
-	EmptyMsgOverlay->TextColor = Color::White;
-	EmptyMsgOverlay->BackColor = Color::FromArgb(75, 29, 32, 33);
-	EmptyMsgOverlay->BorderWidth = 0.f;
-
-	/*bool DarkMode = preferences::SettingsHolder::Get()->Appearance->DarkMode;
-	auto BackColor = DarkMode ? DevComponents::DotNetBar::StyleManager::MetroColorGeneratorParameters.VisualStudio2012Dark.CanvasColor : DevComponents::DotNetBar::StyleManager::MetroColorGeneratorParameters.VisualStudio2012Light.CanvasColor;
-	auto AccentColor = preferences::SettingsHolder::Get()->Appearance->AccentColor;
-	auto ForeColor = DarkMode ? Color::White : Color::Black;
-
-	ScriptList->ForeColor = ForeColor;
-	ScriptList->BackColor = BackColor;*/
+	ListViewThemeWrapper = gcnew viewImpl::components::ObjectListView(ScriptList, view::eViewRole::None, nullptr);
 }
 
 
@@ -745,6 +734,8 @@ ScriptSelectionDialog::ScriptSelectionDialog(Params^ Parameters)
 
 ScriptSelectionDialog::~ScriptSelectionDialog()
 {
+	SAFEDELETE_CLR(ListViewThemeWrapper);
+
 	if (LoadedScripts)
 		nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(LoadedScripts);
 

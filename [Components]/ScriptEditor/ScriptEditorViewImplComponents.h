@@ -270,6 +270,7 @@ public:
 ref class TabStrip : public ViewComponent, ITabStrip
 {
 	SuperTabControl^ Source;
+	int UpdateCounter;
 
 	EventHandler<DotNetBar::SuperTabStripTabItemCloseEventArgs^>^ DelegateTabItemClose;
 	EventHandler<DotNetBar::SuperTabStripSelectedTabChangedEventArgs^>^ DelegateSelectedTabChanged;
@@ -327,6 +328,8 @@ public:
 	virtual void SelectNextTab();
 	virtual void SelectPreviousTab();
 	virtual ITabStripItem^ LookupTabByTag(Object^ Tag);
+	virtual void BeginUpdate();
+	virtual void EndUpdate();
 };
 
 
@@ -385,6 +388,8 @@ ref class ObjectListView : public ViewComponent, IObjectListView
 	void Handler_PreferencesChanged(Object^ Sender, EventArgs^ E);
 	bool Wrapper_CanExpandGetter(Object^ Model);
 	Collections::IEnumerable^ Wrapper_ChildrenGetter(Object^ Model);
+
+	void SetLastColumnToFillFreeSpace();
 public:
 	ObjectListView(BrightIdeasSoftware::ObjectListView^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter);
 	virtual ~ObjectListView();
@@ -396,6 +401,7 @@ public:
 		virtual bool get();
 		virtual void set(bool v);
 	}
+	ImplPropertySimple(bool, UseFiltering, Source->UseFiltering);
 
 	virtual void SetObjects(System::Collections::IEnumerable^ Collection, bool PreserveState);
 	virtual void ClearObjects();
@@ -404,6 +410,7 @@ public:
 	virtual List<IObjectListViewColumn^>^ GetColumns();
 	virtual void SetCanExpandGetter(IObjectListView::CanExpandGetter^ Delegate);
 	virtual void SetChildrenGetter(IObjectListView::ChildrenGetter^ Delegate);
+	virtual void SetModelFilter(Predicate<Object^>^ Predicate);
 	virtual void EnsureItemVisible(Object^ Item);
 	virtual void ExpandAll();
 	virtual void CollapseAll();

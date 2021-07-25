@@ -83,6 +83,7 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView()
 	ListViewPopup->HoverDelayMultiplier = 0;
 	ListViewPopup->DefaultFont = gcnew Font(SystemFonts::DialogFont->FontFamily, 9.25);
 	ListViewPopup->MinimumTooltipSize = Size(180, 25);
+	ListViewPopup->MaximumWidth = Screen::PrimaryScreen->WorkingArea.Width - 150;
 	ListViewPopup->MarkupLinkClick += gcnew DotNetBar::MarkupLinkClickEventHandler(&IntelliSenseInterfaceView::SuperTooltip_MarkupLinkClick);
 
 	InsightPopup = gcnew DotNetBar::SuperTooltip;
@@ -91,6 +92,7 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView()
 	InsightPopup->CheckTooltipPosition = false;
 	InsightPopup->DefaultFont = gcnew Font(SystemFonts::DialogFont->FontFamily, 9.25);
 	InsightPopup->MinimumTooltipSize = Size(180, 25);
+	InsightPopup->MaximumWidth = Screen::PrimaryScreen->WorkingArea.Width - 150;
 	InsightPopup->MarkupLinkClick += gcnew DotNetBar::MarkupLinkClickEventHandler(&IntelliSenseInterfaceView::SuperTooltip_MarkupLinkClick);
 
 	TooltipColorSwapper = gcnew utilities::SuperTooltipColorSwapper(preferences::SettingsHolder::Get()->Appearance->ForeColor,
@@ -245,15 +247,10 @@ Object^ IntelliSenseInterfaceView::ListViewAspectGetter(Object^ RowObject)
 
 Object^ IntelliSenseInterfaceView::ListViewImageGetter(Object^ RowObject)
 {
-	if (RowObject)
-	{
-		IntelliSenseItem^ Item = (IntelliSenseItem^)RowObject;
-		Debug::Assert(Item != nullptr);
-
-		return IntelliSenseItem::GetItemTypeIcon(Item->GetItemType());
-	}
-	else
+	if (RowObject == nullptr)
 		return nullptr;
+
+	return safe_cast<IntelliSenseItem^>(RowObject)->TooltipFooterImage;
 }
 
 void IntelliSenseInterfaceView::SuperTooltip_MarkupLinkClick(Object^ Sender, DotNetBar::MarkupLinkClickEventArgs^ E)
@@ -274,9 +271,7 @@ void IntelliSenseInterfaceView::ShowListViewToolTip(IntelliSenseItem^ Item)
 
 	if (ListViewPopup->IsTooltipVisible)
 	{
-		ListViewPopup->SuperTooltipControl->UpdateWithSuperTooltipInfo(TooltipData);
-		ListViewPopup->SuperTooltipControl->RecalcSize();
-		ListViewPopup->SuperTooltipControl->UpdateShadow();
+		TooltipColorSwapper->UpdateWithSuperTooltipInfo(ListViewPopup, TooltipData, true);
 
 		auto Height = ListViewPopup->SuperTooltipControl->Bounds.Height;
 		int CoordY = DesktopLocation.Y;

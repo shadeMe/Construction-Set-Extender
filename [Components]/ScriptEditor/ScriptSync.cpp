@@ -5,9 +5,9 @@
 #include "IntelliSenseBackend.h"
 #include "ScriptSelectionDialog.h"
 #include "Preferences.h"
-#include "IScriptEditorView.h"
 #include "IScriptEditorModel.h"
 #include "ScriptPreprocessor.h"
+#include "ScriptEditorViewImplComponents.h"
 
 namespace cse
 {
@@ -1175,18 +1175,7 @@ void DiskSyncDialog::FinalizeComponents()
 	this->ListViewSyncedScripts->SmallImageList->Images->Add(view::components::CommonIcons::Get()->Success);
 	this->ListViewSyncedScripts->SmallImageList->Images->Add(view::components::CommonIcons::Get()->Error);
 
-	auto EmptyMsgOverlay = safe_cast<BrightIdeasSoftware::TextOverlay^>(ListViewSyncedScripts->EmptyListMsgOverlay);
-	EmptyMsgOverlay->TextColor = Color::White;
-	EmptyMsgOverlay->BackColor = Color::FromArgb(75, 29, 32, 33);
-	EmptyMsgOverlay->BorderWidth = 0.f;
-
-	//bool DarkMode = preferences::SettingsHolder::Get()->Appearance->DarkMode;
-	//auto BackColor = DarkMode ? DevComponents::DotNetBar::StyleManager::MetroColorGeneratorParameters.VisualStudio2012Dark.CanvasColor : DevComponents::DotNetBar::StyleManager::MetroColorGeneratorParameters.VisualStudio2012Light.CanvasColor;
-	//auto AccentColor = preferences::SettingsHolder::Get()->Appearance->AccentColor;
-	//auto ForeColor = DarkMode ? Color::White : Color::Black;
-
-	//ListViewSyncedScripts->ForeColor = ForeColor;
-	//ListViewSyncedScripts->BackColor = BackColor;
+	ListViewThemeWrapper = gcnew viewImpl::components::ObjectListView(ListViewSyncedScripts, view::eViewRole::None, nullptr);
 
 	UpdateToolbarEnabledState();
 }
@@ -1583,6 +1572,8 @@ DiskSyncDialog::~DiskSyncDialog()
 	preferences::SettingsHolder::Get()->ScriptSync->AutoSyncChanges = CheckboxAutoSync->Checked;
 	preferences::SettingsHolder::Get()->ScriptSync->AutoDeleteLogs = CheckboxAutoDeleteLogs->Checked;
 	preferences::SettingsHolder::Get()->ScriptSync->AutoSyncInterval = Decimal::ToUInt32(NumericAutoSyncSeconds->Value);
+
+	SAFEDELETE_CLR(ListViewThemeWrapper);
 
 	if (components)
 	{

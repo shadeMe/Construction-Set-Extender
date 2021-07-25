@@ -95,6 +95,7 @@ ref class ScriptDocument : public IScriptDocument
 
 	void AddMessage(UInt32 Line, String^ Text, ScriptDiagnosticMessage::eMessageType Type, ScriptDiagnosticMessage::eMessageSource Source);
 	void ClearMessages(ScriptDiagnosticMessage::eMessageSource SourceFilter, ScriptDiagnosticMessage::eMessageType TypeFilter);
+	UInt32 GetMessageCount(UInt32 Line, ScriptDiagnosticMessage::eMessageType TypeFilter);
 
 	void AddBookmark(UInt32 Line, String^ BookmarkText, bool MarkAsModified);
 	void RemoveBookmark(UInt32 Line, String^ BookmarkText, bool MarkAsModified);
@@ -149,8 +150,9 @@ public:
 	virtual bool Save(IScriptDocument::eSaveOperation SaveOperation);
 
 	virtual List<ScriptDiagnosticMessage^>^ GetMessages(UInt32 Line, ScriptDiagnosticMessage::eMessageSource SourceFilter, ScriptDiagnosticMessage::eMessageType TypeFilter);
-	virtual UInt32 GetErrorCount(UInt32 Line);
-	virtual UInt32 GetWarningCount(UInt32 Line);
+	virtual UInt32 GetMessageCountErrors(UInt32 Line);
+	virtual UInt32 GetMessageCountWarnings(UInt32 Line);
+	virtual UInt32 GetMessageCountInfos(UInt32 Line);
 
 	virtual void AddBookmark(UInt32 Line, String^ BookmarkText);
 	virtual void RemoveBookmark(ScriptBookmark^ Bookmark);

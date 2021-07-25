@@ -4,7 +4,7 @@ To-Do
 IMMEDIATE  >>
 
 NOTE	---->
-
+	> Go through Vorian's PM
 
 CSE		---->
 
@@ -59,11 +59,9 @@ SE		---->
 	IMMEDIATE		=
 
 	BUGFIX			=
-		> The font selector in the preferences dialog is bugged (works in 10.0)
 
 	ENHANCEMENT		=
-		> Add label/filters for diffent message types a la VS error list
-		> Prevent the creation of duplicate script editor IDs
+		> Filter for IntelliSense items a la VS (icon strip)
 		> Language server impl for external editors
 
 

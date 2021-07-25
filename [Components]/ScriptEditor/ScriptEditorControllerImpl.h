@@ -163,7 +163,9 @@ ref class ScriptEditorController : public IScriptEditorController
 
 	void DisposeSelfOnViewClosure();
 	model::IScriptDocument^ CreateNewTab(NewTabCreationParams^ Params);
+	void BatchCreateNewTabs(NewTabCreationParams::eInitOperation Operation, ICollection<String^>^ EditorIdsOrPaths, bool ActivateFirstNewTab);
 	model::IScriptDocument^ ImportDocumentFromDisk(String^ DiskFilePath, bool ImportAsExistingScript);
+	void HandleViewClosureRequest(view::components::IForm^ Form, view::components::IForm::ClosingEventArgs^ E);
 
 	void AllowDocumentBindingAfterTabMove();
 
@@ -178,6 +180,7 @@ ref class ScriptEditorController : public IScriptEditorController
 
 	void ValidateDocumentSyncingStatus(model::IScriptDocument^ Document);
 	bool ShouldUseAutoRecoveryFile(String^ ScriptEditorId);
+	bool ShouldFilterScriptDiagnosticMessage(Object^ Message);
 
 	void DeferredUiActionTimer_Tick(Object^ Sender, EventArgs^ E);
 	void ViewEventHandler_ComponentEvent(Object^ Sender, view::ViewComponentEvent^ E);

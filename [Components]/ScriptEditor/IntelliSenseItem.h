@@ -34,7 +34,7 @@ ref class IntelliSenseItem : public utilities::IRichTooltipContentProvider
 		"Game Setting",
 		"Global Variable",
 		"Form",
-		"Code Snippet"
+		"Code Snippet",
 	};
 public:
 	static enum class eItemType
@@ -62,7 +62,7 @@ protected:
 
 	String^ GenerateHelpTextHeader(String^ Identifier);
 	String^ GenerateHelpTextFooter();
-	String^ WrapHelpTextInActiveFont(String^ HelpText);
+	String^ WrapMarkupInDefaultFontSize(String^ Markup);
 public:
 	IntelliSenseItem();
 	IntelliSenseItem(eItemType Type);
@@ -79,34 +79,28 @@ public:
 
 	virtual property String^ TooltipHeaderText
 	{
-		String^ get() { return WrapHelpTextInActiveFont(HelpTextHeader); }
-		void set(String^ set) {}
+		String^ get() { return HelpTextHeader; }
 	}
 	virtual property String^ TooltipBodyText
 	{
-		String^ get() { return WrapHelpTextInActiveFont(HelpTextBody); }
-		void set(String^ set) {}
+		String^ get() { return WrapMarkupInDefaultFontSize(HelpTextBody); }
 	}
 	virtual property Image^	TooltipBodyImage
 	{
 		Image^ get() { return nullptr; }
-		void set(Image^ set) {}
 	}
 	virtual property String^ TooltipFooterText
 	{
-		String^ get() { return WrapHelpTextInActiveFont(HelpTextFooter); }
-		void set(String^ set) {}
+		String^ get() { return WrapMarkupInDefaultFontSize(HelpTextFooter); }
 	}
 	virtual property Image^	TooltipFooterImage
 	{
 		Image^ get() { return GetItemTypeIcon(ItemType); }
-		void set(Image^ set) {}
 	}
 	virtual property IRichTooltipContentProvider::eBackgroundColor TooltipBgColor
 	{
 		IRichTooltipContentProvider::eBackgroundColor get()
 		{ return IRichTooltipContentProvider::eBackgroundColor::Default; }
-		void set(IRichTooltipContentProvider::eBackgroundColor set) {}
 	}
 };
 
@@ -194,6 +188,81 @@ public:
 
 ref class IntelliSenseItemForm : public IntelliSenseItem
 {
+	static enum class eFormType
+	{
+		None          = 0x00,
+		TES4,
+		Group,
+		GMST,
+		Global,
+		Class,
+		Faction,
+		Hair,
+		Eyes          = 0x08,
+		Race,
+		Sound,
+		Skill,
+		EffectSetting,
+		Script,
+		LandTexture,
+		Enchantment,
+		Spell         = 0x10,
+		BirthSign,
+		Activator     = 0x12,
+		Apparatus     = 0x13,
+		Armor         = 0x14,
+		Book          = 0x15,
+		Clothing      = 0x16,
+		Container     = 0x17,
+		Door          = 0x18,
+		Ingredient    = 0x19,
+		Light         = 0x1A,
+		Misc          = 0x1B,
+		Static        = 0x1C,
+		Grass         = 0x1D,
+		Tree          = 0x1E,
+		Flora         = 0x1F,
+		Furniture     = 0x20,
+		Weapon        = 0x21,
+		Ammo          = 0x22,
+		NPC           = 0x23,
+		Creature      = 0x24,
+		LeveledCreature,
+		SoulGem       = 0x26,
+		Key           = 0x27,
+		AlchemyItem   = 0x28,
+		SubSpace,
+		SigilStone,
+		LeveledItem,
+		SNDG,
+		Weather,
+		Climate,
+		Region,
+		Cell          = 0x30,
+		REFR,
+		ACHR,
+		ACRE,
+		PathGrid,
+		WorldSpace,
+		Land,
+		TLOD,
+		Road          = 0x38,
+		Topic,
+		TopicInfo,
+		Quest,
+		Idle,
+		Package,
+		CombatStyle,
+		LoadScreen,
+		LeveledSpell  = 0x40,
+		AnimObject,
+		WaterForm,
+		EffectShader,
+		TOFT          = 0x44,
+	};
+
+	static Image^ GetFormTypeIcon(eFormType Type);
+	static Dictionary<eFormType, Image^>^ FormTypeIcons = gcnew Dictionary<eFormType, Image^>;
 protected:
 	static enum class eFormFlags
 	{
@@ -209,7 +278,7 @@ protected:
 	};
 
 	String^ EditorID;
-	UInt32 TypeID;
+	eFormType TypeID;
 	UInt32 FormID;
 	UInt32 Flags;
 	bool BaseForm;
@@ -226,6 +295,11 @@ public:
 	bool IsObjectReference();
 	bool HasAttachedScript();
 	String^ GetAttachedScriptEditorID();
+
+	property Image^	TooltipFooterImage
+	{
+		virtual Image^ get() override;
+	}
 };
 
 ref class IntelliSenseItemGlobalVariable : public IntelliSenseItemForm

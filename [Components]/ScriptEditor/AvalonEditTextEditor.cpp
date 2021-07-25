@@ -26,6 +26,29 @@ using namespace ICSharpCode::AvalonEdit::Editing;
 using namespace System::Text::RegularExpressions;
 
 
+void MermaidsBrassiereElementHost::OnVisibleChanged(EventArgs^ E)
+{
+	// The original code in ElementHost calls its internal UpdateBackground() method
+	// which is the leading cause in memory-related illnesses.
+	// c.f https://github.com/dotnet/wpf/blob/db147541663ba6d460450f0e169737bd76b862d5/src/Microsoft.DotNet.Wpf/src/WindowsFormsIntegration/System/Windows/Integration/ElementHost.cs#L330
+	//	   https://stackoverflow.com/questions/24823103/how-to-clear-memoryleak-from-elementhost-control
+	Control::OnVisibleChanged(E);
+}
+
+void MermaidsBrassiereElementHost::OnPropertyChanged(String^ propertyName, Object^ value)
+{
+	// As with the above method, we need to prevent any changes to the "BackgroundImage" property from being
+	// propagated, which is what ultimately causes the memory leak by not releasing to the underlying Bitmap instance.
+
+	// These changes do not fully solve the issue, as the ElementHost creates at least two Bitmaps - one at the time of
+	// construction and another when a child control is bound to it. This unfortunately cannot be avoided given the
+	// implementation details of the related classes, but we can stop the biggest offenders, i.e., when layout/visibility changes.
+	if (propertyName->Equals("BackgroundImage") || propertyName->Equals("BackgroundImageLayout"))
+		return;
+
+	ElementHost::OnPropertyChanged(propertyName, value);
+}
+
 int AvalonEditTextEditor::PerformFindReplaceOperationOnSegment(System::Text::RegularExpressions::Regex^ ExpressionParser,
 																eFindReplaceOperation Operation,
 																AvalonEdit::Document::DocumentLine^ Line,
@@ -1293,7 +1316,9 @@ void AvalonEditTextEditor::MouseHoverEndTimer_Tick(Object^ Sender, EventArgs^ E)
 {
 	MouseHoverEndTimer->Stop();
 
-	if (IsMouseHovering)
+	if (!ActivatedInView)
+		return;
+	else if (IsMouseHovering)
 		return;
 
 	RaiseIntelliSenseInsightHover(intellisense::IntelliSenseInsightHoverEventArgs::eEvent::HoverStop, -1, Windows::Point(0, 0));
@@ -1443,12 +1468,15 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	this->ParentScriptDocument = ParentScriptDocument;
 
 	WinFormsContainer = gcnew Panel();
-	WPFHost = gcnew ElementHost();
+	WPFHost = gcnew MermaidsBrassiereElementHost();
 	TextFieldPanel = gcnew System::Windows::Controls::DockPanel();
 	TextField = gcnew AvalonEdit::TextEditor();
 	AnimationPrimitive = gcnew System::Windows::Shapes::Rectangle();
 	CodeFoldingManager = AvalonEdit::Folding::FoldingManager::Install(TextField->TextArea);
 	CodeFoldingStrategy = nullptr;
+
+	WinFormsContainer->SuspendLayout();
+	WPFHost->SuspendLayout();
 
 	if (preferences::SettingsHolder::Get()->Appearance->ShowCodeFolding)
 		CodeFoldingStrategy = gcnew ObScriptCodeFoldingStrategy(this);
@@ -1525,7 +1553,6 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 
 	TextFieldPanel->RegisterName(AnimationPrimitive->Name, AnimationPrimitive);
 	TextFieldPanel->RegisterName(TextField->Name, TextField);
-	TextFieldPanel->Background = CustomBrushes::Get()->BackColor;
 	TextFieldPanel->Children->Add(TextField);
 
 	InitializingFlag = false;
@@ -1585,6 +1612,12 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	if (preferences::SettingsHolder::Get()->Appearance->ShowBlockVisualizer)
 		TextField->TextArea->TextView->ElementGenerators->Add(StructureVisualizer);
 
+	WPFHost->Dock = DockStyle::Fill;
+	WPFHost->Child = TextFieldPanel;
+	WPFHost->ForeColor = ForegroundColor;
+	WPFHost->BackColor = BackgroundColor;
+	WPFHost->TabStop = false;
+
 	WinFormsContainer->ForeColor = ForegroundColor;
 	WinFormsContainer->BackColor = BackgroundColor;
 	WinFormsContainer->TabStop = false;
@@ -1594,13 +1627,10 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	WinFormsContainer->Controls->Add(ExternalVerticalScrollBar);
 	WinFormsContainer->Controls->Add(ExternalHorizontalScrollBar);
 
-	WPFHost->Dock = DockStyle::Fill;
-	WPFHost->Child = TextFieldPanel;
-	WPFHost->ForeColor = ForegroundColor;
-	WPFHost->BackColor = BackgroundColor;
-	WPFHost->TabStop = false;
-
 	Disposing = false;
+
+	WinFormsContainer->ResumeLayout(false);
+	WPFHost->ResumeLayout(false);
 
 	SetFont(preferences::SettingsHolder::Get()->Appearance->TextFont);
 	SetTabCharacterSize(preferences::SettingsHolder::Get()->Appearance->TabSize);
@@ -1644,7 +1674,6 @@ AvalonEditTextEditor::~AvalonEditTextEditor()
 	ParentScriptDocument->BackgroundAnalyzer->SemanticAnalysisComplete -= BackgroundAnalyzerAnalysisCompleteHandler;
 	ParentScriptDocument = nullptr;
 
-	TextField->Clear();
 	MiddleMouseScrollTimer->Stop();
 	ScrollBarSyncTimer->Stop();
 	CodeFoldingManager->Clear();
@@ -1713,9 +1742,13 @@ AvalonEditTextEditor::~AvalonEditTextEditor()
 	SAFEDELETE_CLR(BackgroundAnalyzerAnalysisCompleteHandler);
 
 	TextFieldPanel->Children->Clear();
-	WPFHost->Child = nullptr;
 	WinFormsContainer->Controls->Clear();
 	WinFormsContainer->ContextMenu = nullptr;
+
+
+	WPFHost->Child = nullptr;
+	WPFHost->Parent = nullptr;
+	SAFEDELETE_CLR(WPFHost);
 
 	SAFEDELETE_CLR(BytecodeOffsetMargin);
 	SAFEDELETE_CLR(IconBarMargin);
@@ -1726,7 +1759,6 @@ AvalonEditTextEditor::~AvalonEditTextEditor()
 	SAFEDELETE_CLR(TextField->TextArea->IndentationStrategy);
 
 	SAFEDELETE_CLR(WinFormsContainer);
-	SAFEDELETE_CLR(WPFHost);
 	SAFEDELETE_CLR(TextFieldPanel);
 	SAFEDELETE_CLR(AnimationPrimitive);
 	SAFEDELETE_CLR(MiddleMouseScrollTimer);
@@ -1742,6 +1774,7 @@ AvalonEditTextEditor::~AvalonEditTextEditor()
 void AvalonEditTextEditor::Bind()
 {
 	ActivatedInView = true;
+
 	ScrollBarSyncTimer->Start();
 	TextField->Focusable = true;
 	FocusTextArea();
@@ -1754,6 +1787,7 @@ void AvalonEditTextEditor::Bind()
 void AvalonEditTextEditor::Unbind()
 {
 	ActivatedInView = false;
+
 	ScrollBarSyncTimer->Stop();
 	TextField->Focusable = false;
 	Windows::Input::Keyboard::ClearFocus();

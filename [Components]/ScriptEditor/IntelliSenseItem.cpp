@@ -40,17 +40,34 @@ Image^ IntelliSenseItem::GetItemTypeIcon(eItemType Type)
 
 System::String^ IntelliSenseItem::GenerateHelpTextHeader(String^ Identifier)
 {
-	return "<font size=\"+2\"><b>" + Identifier + "</b></font>";
+	auto Builder = gcnew utilities::TextMarkupBuilder;
+
+	return Builder
+		->Font(preferences::SettingsHolder::Get()->Appearance->TextFont->FontFamily->Name)
+			->Header(4)->Bold()
+				->Text(Identifier)
+			->PopTag(2)
+		->PopTag()
+		->ToMarkup();
 }
 
 System::String^ IntelliSenseItem::GenerateHelpTextFooter()
 {
-	return "<span align=\"left\">" + GetItemTypeName() + "</span>";
+	auto Builder = gcnew utilities::TextMarkupBuilder;
+
+	return Builder
+		->Span(DevComponents::DotNetBar::eHorizontalItemsAlignment::Left)
+			->Text(GetItemTypeName())
+			->NonBreakingSpace(3)
+		->PopTag()
+		->ToMarkup();
 }
 
-System::String^ IntelliSenseItem::WrapHelpTextInActiveFont(String^ HelpText)
+System::String^ IntelliSenseItem::WrapMarkupInDefaultFontSize(String^ Markup)
 {
-	return "<font face=\"" + "Segoe UI" + "\">" + HelpText + "</font>";
+	auto Builder = gcnew utilities::TextMarkupBuilder;
+
+	return Builder->Font(1, true)->Markup(Markup)->PopTag()->ToMarkup();
 }
 
 IntelliSenseItem::IntelliSenseItem()
@@ -160,7 +177,11 @@ IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(componentDLLInterfa
 
 	String^ CommandShorthand = "";
 	if (CommandInfo->shortName && CommandInfo->shortName[0] != '\0')
+	{
 		CommandShorthand = gcnew String(CommandInfo->shortName);
+		if (!String::Compare(CommandShorthand, CommandName, true))
+			CommandShorthand = "";
+	}
 
 	eReturnValueType CommandReturnType = safe_cast<eReturnValueType>(CommandTableData->GetCommandReturnType(CommandInfo));
 
@@ -191,55 +212,149 @@ IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(componentDLLInterfa
 
 	HelpTextHeader = GenerateHelpTextHeader(Name + (Shorthand->Length ? " (" + Shorthand + ")" : ""));
 
-	HelpTextBody += SourceName + (SourceVersion ? " v" + SourceVersion : "") + " command<br/>";
-	if (Description->Length)
-		HelpTextBody += "<p width=\"300\" padding=\"0,0,5,5\">Description: " + Description + "</p>";
+	auto Sb = gcnew utilities::TextMarkupBuilder;
 
-	if (Parameters->Count)
+	const int kTableWidth = 400, kFirstColumnWidth = 120, kSecondColumnWidth = 280;
+	Sb->Table(2, kTableWidth);
 	{
-		String^ kParamRowStart = "<div width=\"250\">", ^kParamRowEnd = "</div>";
-		String^ kParamCellStart = "<span width=\"125\">", ^kParamCellEnd = "</span>";
-
-		HelpTextBody += Parameters->Count + " parameter(s):<br/>";
-		HelpTextBody += "<div padding=\"15,0,2,10\">";
-		HelpTextBody += "<div width=\"250\" padding=\"0,0,0,4\">" +
-						kParamCellStart + "<u>Name</u>" + kParamCellEnd +
-						kParamCellStart + "<u>Type (O = Optional)</u>" + kParamCellEnd +
-						kParamRowEnd;
-
-		for each (auto Param in Parameters)
+		Sb->TableNextRow();
 		{
-			HelpTextBody += kParamRowStart;
-			HelpTextBody += kParamCellStart + Param->Description + kParamCellEnd;
-			HelpTextBody += kParamCellStart + Param->TypeName + (Param->Optional ? " (O)" : "") + kParamCellEnd;
-			HelpTextBody += kParamRowEnd;
+			Sb->TableNextColumn(kTableWidth);
+			{
+				Sb->Text(SourceName);
+				if (SourceVersion)
+				{
+					Sb->Text(" v");
+					if (SourceVersion > 0xFF)
+					{
+						// it's likely that the version number is packed,
+						// so let's display it in base 16
+						Sb->Text(SourceVersion.ToString("X8"));
+					}
+					else
+						Sb->Text(SourceVersion.ToString());
+				}
+				Sb->Text(" Command");
+			}
+			Sb->TableNextColumn(0)->TableNextColumn();
 		}
-		HelpTextBody += "</div>";
-	}
-	else
-		HelpTextBody += "No parameters<br/>";
 
-	HelpTextBody += "Return type: " + ReturnValueTypeID[safe_cast<int>(ResultType)];
+		Sb->TableEmptyRow();
+
+		if (Description->Length)
+		{
+			Sb->TableNextRow();
+			{
+				Sb->TableNextColumn(kFirstColumnWidth);
+				{
+					Sb->Text("Description :");
+				}
+				Sb->TableNextColumn(kSecondColumnWidth);
+				{
+					Sb->Text(Description);
+					//Sb->NonBreakingSpace(1)->Text(":")->NonBreakingSpace(1)->Text(Description);
+				}
+				Sb->TableNextColumn();
+			}
+		}
+
+		Sb->TableNextRow();
+		{
+			Sb->TableNextColumn(kFirstColumnWidth);
+			{
+				Sb->Text("Parameter Count :");
+			}
+			Sb->TableNextColumn(kSecondColumnWidth);
+			{
+				Sb->Text(Parameters->Count.ToString());
+				//Sb->NonBreakingSpace(1)->Text(":")->NonBreakingSpace(1)->Text(Parameters->Count.ToString());
+			}
+			Sb->TableNextColumn();
+		}
+
+		if (Parameters->Count)
+		{
+			auto kRowPadding = Padding(10, 5, 0, 3);
+			const int kParamTableWidth = 310, kFirstColumnWidth = 150, kSecondColumnWidth = 150;
+
+			Sb->Table(2, kParamTableWidth);
+			{
+				Sb->TableNextRow(kRowPadding);
+				{
+					Sb->TableNextColumn(kFirstColumnWidth);
+					{
+						Sb->Underline()->Text("Name")->PopTag();
+					}
+					Sb->TableNextColumn(kSecondColumnWidth);
+					{
+						Sb->Underline()->Text("Type (O = Optional)")->PopTag();
+					}
+					Sb->TableNextColumn();
+				}
+
+				for each (auto Param in Parameters)
+				{
+					Sb->TableNextRow(Padding(kRowPadding.Left, 0, 0, 0));
+					{
+						Sb->TableNextColumn(kFirstColumnWidth);
+						{
+							Sb->Text(Param->Description);
+						}
+						Sb->TableNextColumn(kSecondColumnWidth);
+						{
+							Sb->Text(Param->TypeName + (Param->Optional ? " (O)" : ""));
+						}
+						Sb->TableNextColumn();
+					}
+				}
+			}
+			Sb->PopTable();
+		}
+
+		Sb->TableEmptyRow();
+		Sb->TableNextRow();
+		{
+			Sb->TableNextColumn(kFirstColumnWidth);
+			{
+				Sb->Text("Return Type :");
+			}
+			Sb->TableNextColumn(kSecondColumnWidth);
+			{
+				Sb->Text(ReturnValueTypeID[safe_cast<int>(ResultType)]);
+				//Sb->NonBreakingSpace(1)->Text(":")->NonBreakingSpace(1)->Text(ReturnValueTypeID[safe_cast<int>(ResultType)]);
+			}
+			Sb->TableNextColumn();
+		}
+	}
+	Sb->PopTable();
 
 	if (RequireCallingRef)
-		HelpTextBody += "<br/>Requires a calling reference";
+		Sb->LineBreak()->Text("Requires a calling reference");
+
+	HelpTextBody = Sb->ToMarkup();
+
+	Sb->Reset();
 
 	String^ WikiUrl = "https://cs.elderscrolls.com/index.php?title=" + Name;
-	HelpTextFooter = GenerateHelpTextFooter();
-	HelpTextFooter += "<span align=\"right\">Links:&nbsp;&nbsp;<a href=\"" + WikiUrl + "\">Wiki</a>";
+	Sb->Markup(GenerateHelpTextFooter())
+		->Span(DevComponents::DotNetBar::eHorizontalItemsAlignment::Right)
+			->Text("Links:")->NonBreakingSpace(2)
+				->Hyperlink(WikiUrl)->Text("Wiki")->PopTag();
 
 	if (Source == eSourceType::OBSE)
 	{
 		String^ ObseCommandDocUrl = "https://htmlpreview.github.io/?https://github.com/llde/xOBSE/blob/master/obse_command_doc.html#" + Name;
-		HelpTextFooter += " | <a href=\"" + ObseCommandDocUrl + "\">OBSE</a>";
+		Sb->Text(" | ")->Hyperlink(ObseCommandDocUrl)->Text("OBSE")->PopTag();
 	}
 
 	if (DocumentationUrl->Length &&
 		!WikiUrl->Equals(DocumentationUrl, StringComparison::CurrentCultureIgnoreCase))
 	{
-		HelpTextFooter += " | <a href=\"" + DocumentationUrl + "\">Docs</a>";
+		Sb->Text(" | ")->Hyperlink(DocumentationUrl)->Text("Docs")->PopTag();
 	}
-	HelpTextFooter += "</span>";
+	Sb->PopTag();
+
+	HelpTextFooter = Sb->ToMarkup();
 }
 
 String^ IntelliSenseItemScriptCommand::GetIdentifier()
@@ -269,7 +384,7 @@ System::String^ IntelliSenseItemScriptCommand::GetDocumentationUrl()
 
 bool IntelliSenseItemScriptCommand::HasAlternateIdentifier()
 {
-	return true;
+	return Shorthand->Length > 0;
 }
 
 IntelliSenseItemScriptVariable::IntelliSenseItemScriptVariable(String^ Name, String^ Comment,
@@ -282,12 +397,59 @@ IntelliSenseItemScriptVariable::IntelliSenseItemScriptVariable(String^ Name, Str
 {
 	HelpTextHeader = GenerateHelpTextHeader(Name);
 
-	HelpTextBody = "Type: " + obScriptParsing::Variable::GetVariableDataTypeDescription(DataType) + "<br/>";
-	if (Comment->Length)
-		HelpTextBody += "<p width=\"200\" padding=\"0,0,5,0\">Comment: " + Comment + "</p>";
+	auto Sb = gcnew utilities::TextMarkupBuilder;
 
-	if (ParentEditorID->Length)
-		HelpTextBody += "Parent script: " + ParentEditorID;
+	const int kTableWidth = 300, kFirstColumnWidth = 120, kSecondColumnWidth = 180;
+	Sb->Table(2, kTableWidth);
+	{
+		Sb->TableNextRow();
+		{
+			Sb->TableNextColumn(kFirstColumnWidth);
+			{
+				Sb->Text("Type :");
+			}
+			Sb->TableNextColumn(kSecondColumnWidth);
+			{
+				Sb->Text(obScriptParsing::Variable::GetVariableDataTypeDescription(DataType));
+			}
+			Sb->TableNextColumn();
+		}
+
+		if (Comment->Length)
+		{
+			Sb->TableNextRow();
+			{
+				Sb->TableNextColumn(kFirstColumnWidth);
+				{
+					Sb->Text("Comment :");
+				}
+				Sb->TableNextColumn(kSecondColumnWidth);
+				{
+					Sb->Italic()->Text(Comment)->PopTag();
+				}
+				Sb->TableNextColumn();
+			}
+		}
+
+		if (ParentEditorID->Length)
+		{
+			Sb->TableNextRow();
+			{
+				Sb->TableNextColumn(kFirstColumnWidth);
+				{
+					Sb->Text("Parent Script :");
+				}
+				Sb->TableNextColumn(kSecondColumnWidth);
+				{
+					Sb->Text(ParentEditorID);
+				}
+				Sb->TableNextColumn();
+			}
+		}
+	}
+	Sb->PopTable();
+
+	HelpTextBody = Sb->ToMarkup();
 
 	HelpTextFooter = GenerateHelpTextFooter();
 }
@@ -321,15 +483,30 @@ obScriptParsing::Variable::eDataType IntelliSenseItemScriptVariable::GetDataType
 	return DataType;
 }
 
+Image^ IntelliSenseItemForm::GetFormTypeIcon(eFormType Type)
+{
+	if (FormTypeIcons->Count == 0)
+	{
+		auto ImageResources = view::components::CommonIcons::Get()->ResourceManager;
+		FormTypeIcons->Add(eFormType::REFR, ImageResources->CreateImage("ObjectReference"));
+		FormTypeIcons->Add(eFormType::ACHR, ImageResources->CreateImage("ObjectReference"));
+		FormTypeIcons->Add(eFormType::ACRE, ImageResources->CreateImage("ObjectReference"));
+	}
+
+	Image^ Out = nullptr;
+	FormTypeIcons->TryGetValue(Type, Out);
+	return Out;
+}
+
 String^ IntelliSenseItemForm::GetFormTypeIdentifier()
 {
-	return gcnew String(nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(TypeID));
+	return gcnew String(nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(safe_cast<UInt32>(TypeID)));
 }
 
 IntelliSenseItemForm::IntelliSenseItemForm(nativeWrapper::MarshalledFormData^ Data) :
 	IntelliSenseItem(eItemType::Form)
 {
-	TypeID = Data->FormType;
+	TypeID = safe_cast<eFormType>(Data->FormType);
 	FormID = Data->FormId;
 	EditorID = Data->EditorId;
 	Flags = Data->FormFlags;
@@ -338,50 +515,160 @@ IntelliSenseItemForm::IntelliSenseItemForm(nativeWrapper::MarshalledFormData^ Da
 
 	HelpTextHeader = GenerateHelpTextHeader(EditorID);
 
-	String^ kRowStart = "<div width=\"150\">", ^kRowEnd = "</div>";
-	String^ kCellStart = "<span width=\"75\">", ^kCellEnd = "</span>";
+	auto Sb = gcnew utilities::TextMarkupBuilder;
 
-	HelpTextBody = "<span>FormID: " + FormID.ToString("X8") + "</span><br/>";
-	if (Data->SourcePluginName->Length > 0)
-		HelpTextBody = "<span>Source file: " + Data->SourcePluginName + "</span><br/>";
-	if (Data->NameComponent->Length > 0)
-		HelpTextBody += "<span>Name: " + Data->NameComponent + "</span><br/>";
-
-	String^ FlagsDesc = "";
-	auto CheckedFlags = gcnew Dictionary<eFormFlags, String^>;
-	CheckedFlags->Add(eFormFlags::FromMaster, "From master file");
-	CheckedFlags->Add(eFormFlags::FromActiveFile, "From active file");
-	CheckedFlags->Add(eFormFlags::Deleted, "Deleted");
-	CheckedFlags->Add(eFormFlags::TurnOffFire, "Turn off fire");
-	CheckedFlags->Add(eFormFlags::QuestItem, "Quest item");
-	CheckedFlags->Add(eFormFlags::VisibleWhenDistant, "Visible when distant");
-
-	for each (auto% CheckedFlag in CheckedFlags)
+	const int kTableWidth = 370, kFirstColumnWidth = 120, kSecondColumnWidth = 250;
+	Sb->Table(2, kTableWidth);
 	{
-		if (Flags & safe_cast<UInt32>(CheckedFlag.Key))
+		Sb->TableNextRow();
 		{
-			auto FlagString = CheckedFlag.Value;
-			if (TypeID == 0x31 && CheckedFlag.Key == eFormFlags::QuestItem)
-				FlagString = "Persistent";
+			Sb->TableNextColumn(kFirstColumnWidth);
+			{
+				Sb->Text("FormID :");
+			}
+			Sb->TableNextColumn(kSecondColumnWidth);
+			{
+				Sb->Text(FormID.ToString("X8"));
+			}
+			Sb->TableNextColumn();
+		}
 
-			FlagsDesc += "<div width=\"100\"><span width=\"100\">" + FlagString + "</span></div>";
+		if (Data->SourcePluginName->Length > 0)
+		{
+			Sb->TableNextRow();
+			{
+				Sb->TableNextColumn(kFirstColumnWidth);
+				{
+					Sb->Text("Source File :");
+				}
+				Sb->TableNextColumn(kSecondColumnWidth);
+				{
+					Sb->Text(Data->SourcePluginName);
+				}
+				Sb->TableNextColumn();
+			}
+		}
+
+		if (Data->NameComponent->Length > 0)
+		{
+			Sb->TableNextRow();
+			{
+				Sb->TableNextColumn(kFirstColumnWidth);
+				{
+					Sb->Text("Name :");
+				}
+				Sb->TableNextColumn(kSecondColumnWidth);
+				{
+					Sb->Text(Data->NameComponent);
+				}
+				Sb->TableNextColumn();
+			}
+		}
+
+		auto CheckedFlags = gcnew Dictionary<eFormFlags, String^>;
+		CheckedFlags->Add(eFormFlags::FromMaster, "From Master File");
+		CheckedFlags->Add(eFormFlags::FromActiveFile, "From Active File");
+		CheckedFlags->Add(eFormFlags::Deleted, "Deleted");
+		CheckedFlags->Add(eFormFlags::TurnOffFire, "Turn Off Fire");
+		CheckedFlags->Add(eFormFlags::QuestItem, "Quest Item");
+		CheckedFlags->Add(eFormFlags::VisibleWhenDistant, "Visible When Distant");
+		auto FlagStrings = gcnew List<String^>;
+
+		for each (auto% CheckedFlag in CheckedFlags)
+		{
+			if (Flags & safe_cast<UInt32>(CheckedFlag.Key))
+			{
+				auto FlagString = CheckedFlag.Value;
+				if (TypeID == eFormType::REFR && CheckedFlag.Key == eFormFlags::QuestItem)
+					FlagString = "Persistent";
+
+				FlagStrings->Add(FlagString);
+			}
+		}
+
+		if (FlagStrings->Count > 0)
+		{
+			Sb->TableNextRow();
+			{
+				Sb->TableNextColumn(kFirstColumnWidth);
+				{
+					Sb->Text("Flags :");
+				}
+				Sb->TableNextColumn(kSecondColumnWidth);
+				{
+					Sb->Text(FlagStrings[0]);
+				}
+				Sb->TableNextColumn();
+			}
+
+			for (int i = 1; i < FlagStrings->Count; ++i)
+			{
+				Sb->TableNextRow();
+				{
+					Sb->TableNextColumn(kFirstColumnWidth);
+					{
+						Sb->NonBreakingSpace(1);
+					}
+					Sb->TableNextColumn(kSecondColumnWidth);
+					{
+						Sb->Text(FlagStrings[i]);
+					}
+					Sb->TableNextColumn();
+				}
+			}
+		}
+
+		if (Data->DescriptionComponent->Length > 0)
+		{
+			Sb->TableNextRow();
+			{
+				Sb->TableNextColumn(kFirstColumnWidth);
+				{
+					Sb->Text("Description :");
+				}
+				Sb->TableNextColumn(kSecondColumnWidth);
+				{
+					Sb->Text(Data->DescriptionComponent);
+				}
+				Sb->TableNextColumn();
+			}
+		}
+
+		if (Data->IsObjectRef && Data->BaseFormEditorId->Length != 0)
+		{
+			Sb->TableNextRow();
+			{
+				Sb->TableNextColumn(kFirstColumnWidth);
+				{
+					Sb->Text("Base Form :");
+				}
+				Sb->TableNextColumn(kSecondColumnWidth);
+				{
+					Sb->Text(Data->BaseFormEditorId);
+				}
+				Sb->TableNextColumn();
+			}
+		}
+
+		if (AttachedScriptEditorID->Length)
+		{
+			Sb->TableNextRow();
+			{
+				Sb->TableNextColumn(kFirstColumnWidth);
+				{
+					Sb->Text("Attached Script :");
+				}
+				Sb->TableNextColumn(kSecondColumnWidth);
+				{
+					Sb->Text(AttachedScriptEditorID);
+				}
+				Sb->TableNextColumn();
+			}
 		}
 	}
+	Sb->PopTable();
 
-	if (FlagsDesc->Length)
-	{
-		HelpTextBody += "Flags:<br/>";
-		HelpTextBody += "<div padding=\"15,0,2,10\" width=\"150\">" + FlagsDesc + "</div>";
-	}
-
-	if (Data->DescriptionComponent->Length > 0)
-		HelpTextBody += "<p width=\"250\">Description: " + Data->DescriptionComponent + "</p>";
-
-	if (Data->IsObjectRef && Data->BaseFormEditorId->Length != 0)
-		HelpTextBody += "<br/><span>Base form: " + Data->BaseFormEditorId + "</span>";
-
-	if (AttachedScriptEditorID->Length)
-		HelpTextBody += "<br/><span>Attached script: " + AttachedScriptEditorID + "</span>";
+	HelpTextBody = Sb->ToMarkup();
 
 	HelpTextFooter = GenerateHelpTextFooter();
 }
@@ -389,7 +676,7 @@ IntelliSenseItemForm::IntelliSenseItemForm(nativeWrapper::MarshalledFormData^ Da
 IntelliSenseItemForm::IntelliSenseItemForm() :
 	IntelliSenseItem(eItemType::Form)
 {
-	TypeID = 0;
+	TypeID = eFormType::None;
 	FormID = 0;
 	EditorID = "<InvalidIntelliSenseItemForm>";
 	Flags = 0;
@@ -423,6 +710,11 @@ System::String^ IntelliSenseItemForm::GetAttachedScriptEditorID()
 	return AttachedScriptEditorID;
 }
 
+Image^ IntelliSenseItemForm::TooltipFooterImage::get()
+{
+	auto FormIcon = GetFormTypeIcon(TypeID);
+	return FormIcon ? FormIcon : GetItemTypeIcon(ItemType);
+}
 
 IntelliSenseItemGlobalVariable::IntelliSenseItemGlobalVariable(nativeWrapper::MarshalledVariableData^ Data) :
 	IntelliSenseItemForm(Data)
@@ -464,17 +756,50 @@ System::String^ IntelliSenseItemGlobalVariable::GetItemTypeName()
 
 System::String^ IntelliSenseItemGlobalVariable::TooltipBodyText::get()
 {
-	const UInt32 kMaxValueStringLength = 100;
+	const UInt32 kMaxValueStringLength = 200;
 
 	String^ TruncatedValue = gcnew String(Value);
 	if (TruncatedValue->Length > kMaxValueStringLength)
 		TruncatedValue = TruncatedValue->Substring(0, kMaxValueStringLength) + "...";
 
-	HelpTextBody = "Type: " + obScriptParsing::Variable::GetVariableDataTypeDescription(DataType) + "<br/>";
-	if (TruncatedValue->Length)
-		HelpTextBody += "<p width=\"150\" padding=\"0,0,5,0\">Value: " + Value + "</p>";
+	auto Sb = gcnew utilities::TextMarkupBuilder;
+	const int kTableWidth = 300, kFirstColumnWidth = 120, kSecondColumnWidth = 180;
+	Sb->Table(2, kTableWidth);
+	{
+		Sb->TableNextRow();
+		{
+			Sb->TableNextColumn(kFirstColumnWidth);
+			{
+				Sb->Text("Type :");
+			}
+			Sb->TableNextColumn(kSecondColumnWidth);
+			{
+				Sb->Text(obScriptParsing::Variable::GetVariableDataTypeDescription(DataType));
+			}
+			Sb->TableNextColumn();
+		}
 
-	return WrapHelpTextInActiveFont(HelpTextBody);
+		if (TruncatedValue->Length)
+		{
+			Sb->TableNextRow();
+			{
+				Sb->TableNextColumn(kFirstColumnWidth);
+				{
+					Sb->Text("Value :");
+				}
+				Sb->TableNextColumn(kSecondColumnWidth);
+				{
+					Sb->Text(TruncatedValue);
+				}
+				Sb->TableNextColumn();
+			}
+		}
+	}
+	Sb->PopTable();
+
+	HelpTextBody = Sb->ToMarkup();
+
+	return WrapMarkupInDefaultFontSize(HelpTextBody);
 }
 
 IntelliSenseItemGameSetting::IntelliSenseItemGameSetting(nativeWrapper::MarshalledVariableData^ Data) :
@@ -534,9 +859,43 @@ IntelliSenseItemScript::IntelliSenseItemScript(nativeWrapper::MarshalledScriptDa
 
 	CommentDescription = InitialAnalysisData->Description;
 
-	if (CommentDescription->Length)
-		HelpTextBody += "<p width=\"250\" padding=\"0,0,5,10\">Comment: " + CommentDescription->Replace("\n", "<br/>") + "</p>";
-	HelpTextBody += "Variables: " + Variables->Count;
+	auto Sb = gcnew utilities::TextMarkupBuilder;
+
+	const int kTableWidth = 370, kFirstColumnWidth = 120, kSecondColumnWidth = 250;
+	Sb->Table(2, kTableWidth);
+	{
+		if (CommentDescription->Length)
+		{
+			Sb->TableNextRow();
+			{
+				Sb->TableNextColumn(kFirstColumnWidth);
+				{
+					Sb->Text("Comment :");
+				}
+				Sb->TableNextColumn(kSecondColumnWidth);
+				{
+					Sb->Italic()->Text(CommentDescription)->PopTag();
+				}
+				Sb->TableNextColumn();
+			}
+		}
+
+		Sb->TableNextRow();
+		{
+			Sb->TableNextColumn(kFirstColumnWidth);
+			{
+				Sb->Text("Variable Count :");
+			}
+			Sb->TableNextColumn(kSecondColumnWidth);
+			{
+				Sb->Text(Variables->Count.ToString());
+			}
+			Sb->TableNextColumn();
+		}
+	}
+	Sb->PopTable();
+
+	HelpTextBody += Sb->ToMarkup();
 
 	// regenerate after changing type
 	HelpTextFooter = GenerateHelpTextFooter();
@@ -602,41 +961,90 @@ IntelliSenseItemUserFunction::IntelliSenseItemUserFunction(nativeWrapper::Marsha
 		++VarIdx;
 	}
 
-	if (NumParams)
+	auto Sb = gcnew utilities::TextMarkupBuilder;
+
+	const int kTableWidth = 370, kFirstColumnWidth = 120, kSecondColumnWidth = 250;
+	Sb->Table(2, kTableWidth);
 	{
-		String^ kParamRowStart = "<div width=\"250\">", ^kParamRowEnd = "</div>";
-		String^ kParamCellStart = "<span width=\"125\">", ^kParamCellEnd = "</span>";
-
-		HelpTextBody += "<br/>" + NumParams + " UDF parameter(s):<br/>";
-		HelpTextBody += "<div padding=\"15,0,2,10\">";
-		HelpTextBody += "<div width=\"250\" padding=\"0,0,0,4\">" +
-						kParamCellStart + "<u>Name</u>" + kParamCellEnd +
-						kParamCellStart + "<u>Type</u>" + kParamCellEnd +
-						kParamRowEnd;
-
-		for each (auto UdfParamIndex in ParameterIndices)
+		Sb->TableNextRow();
 		{
-			if (UdfParamIndex == -1)
-				break;
-
-			auto ScriptVar = safe_cast<IntelliSenseItemScriptVariable^>(Variables[UdfParamIndex]);
-
-			HelpTextBody += kParamRowStart;
-			HelpTextBody += kParamCellStart + ScriptVar->GetIdentifier() + kParamCellEnd;
-			HelpTextBody += kParamCellStart + ScriptVar->GetDataTypeID() + kParamCellEnd;
-			HelpTextBody += kParamRowEnd;
+			Sb->TableNextColumn(kFirstColumnWidth);
+			{
+				Sb->Text("Parameter Count :");
+			}
+			Sb->TableNextColumn(kSecondColumnWidth);
+			{
+				Sb->Text(NumParams.ToString());
+			}
+			Sb->TableNextColumn();
 		}
-		HelpTextBody += "</div>";
-	}
-	else
-		HelpTextBody += "<br/>No UDF parameters<br/>";
 
-	if (ReturnVarIndex == kReturnVarIdxNone)
-		HelpTextBody += "Does not return a value";
-	else if (ReturnVarIndex == kReturnVarIdxAmbiguous)
-		HelpTextBody += "Return type: Ambiguous";
-	else
-		HelpTextBody += "Return type: " + safe_cast<IntelliSenseItemScriptVariable^>(Variables[ReturnVarIndex])->GetDataTypeID();
+		if (NumParams)
+		{
+			auto kRowPadding = Padding(10, 5, 0, 3);
+			const int kParamTableWidth = 310, kFirstColumnWidth = 150, kSecondColumnWidth = 150;
+
+			Sb->Table(2, kParamTableWidth);
+			{
+				Sb->TableNextRow(kRowPadding);
+				{
+					Sb->TableNextColumn(kFirstColumnWidth);
+					{
+						Sb->Underline()->Text("Name")->PopTag();
+					}
+					Sb->TableNextColumn(kSecondColumnWidth);
+					{
+						Sb->Underline()->Text("Type")->PopTag();
+					}
+					Sb->TableNextColumn();
+				}
+
+				for each (auto UdfParamIndex in ParameterIndices)
+				{
+					if (UdfParamIndex == -1)
+						break;
+
+					auto ScriptVar = safe_cast<IntelliSenseItemScriptVariable^>(Variables[UdfParamIndex]);
+					Sb->TableNextRow(Padding(kRowPadding.Left, 0, 0, 0));
+					{
+						Sb->TableNextColumn(kFirstColumnWidth);
+						{
+							Sb->Text(ScriptVar->GetIdentifier());
+						}
+						Sb->TableNextColumn(kSecondColumnWidth);
+						{
+							Sb->Text(ScriptVar->GetDataTypeID());
+						}
+						Sb->TableNextColumn();
+					}
+				}
+			}
+			Sb->PopTable();
+		}
+
+		Sb->TableEmptyRow();
+
+		Sb->TableNextRow();
+		{
+			Sb->TableNextColumn(kFirstColumnWidth);
+			{
+				Sb->Text("Return Value :");
+			}
+			Sb->TableNextColumn(kSecondColumnWidth);
+			{
+				if (ReturnVarIndex == kReturnVarIdxNone)
+					Sb->Text("None");
+				else if (ReturnVarIndex == kReturnVarIdxAmbiguous)
+					Sb->Text("Ambiguous");
+				else
+					Sb->Text(safe_cast<IntelliSenseItemScriptVariable^>(Variables[ReturnVarIndex])->GetDataTypeID());
+			}
+			Sb->TableNextColumn();
+		}
+	}
+	Sb->PopTable();
+
+	HelpTextBody += Sb->ToMarkup();
 
 	// regenerate after changing type
 	HelpTextFooter = GenerateHelpTextFooter();
@@ -653,12 +1061,45 @@ IntelliSenseItemCodeSnippet::IntelliSenseItemCodeSnippet(CodeSnippet^ Source) :
 
 	HelpTextHeader = GenerateHelpTextHeader(Parent->Name + " (" + Parent->Shorthand + ")");
 
-	if (Parent->Description->Length)
-		HelpTextBody += "<p width=\"250\" padding=\"0,0,0,10\">Description: " + Parent->Description + "</p>";
+	auto Sb = gcnew utilities::TextMarkupBuilder;
+	const int kTableWidth = 300, kFirstColumnWidth = 120, kSecondColumnWidth = 180;
+	Sb->Table(2, kTableWidth);
+	{
+		if (Parent->Description->Length)
+		{
+			Sb->TableNextRow();
+			{
+				Sb->TableNextColumn(kFirstColumnWidth);
+				{
+					Sb->Text("Description :");
+				}
+				Sb->TableNextColumn(kSecondColumnWidth);
+				{
+					Sb->Text(Parent->Description);
+				}
+				Sb->TableNextColumn();
+			}
+		}
 
-	if (Parent->Variables->Count)
-		HelpTextBody += "New variables: " + Parent->Variables->Count;
+		if (Parent->Variables->Count)
+		{
+			Sb->TableNextRow();
+			{
+				Sb->TableNextColumn(kFirstColumnWidth);
+				{
+					Sb->Text("New variables :");
+				}
+				Sb->TableNextColumn(kSecondColumnWidth);
+				{
+					Sb->Text(Parent->Variables->Count.ToString());
+				}
+				Sb->TableNextColumn();
+			}
+		}
+	}
+	Sb->PopTable();
 
+	HelpTextBody = Sb->ToMarkup();
 	HelpTextFooter = GenerateHelpTextFooter();
 }
 

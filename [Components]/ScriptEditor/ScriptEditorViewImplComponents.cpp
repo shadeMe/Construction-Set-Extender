@@ -19,6 +19,9 @@ namespace components
 
 void ViewComponent::RaiseEvent(Object^ EventType, Object^ EventArgs)
 {
+	if (EventRouter == nullptr)
+		return;
+
 	auto NewEvent = gcnew ViewComponentEvent;
 	NewEvent->Component = this;
 	NewEvent->EventType = EventType;
@@ -1186,6 +1189,7 @@ TabStrip::TabStrip(DotNetBar::SuperTabControl^ Source, eViewRole ViewRole, ViewC
 	: ViewComponent(eComponentType::TabStrip, ViewRole, EventRouter)
 {
 	this->Source = Source;
+	UpdateCounter = 0;
 
 	DelegateTabItemClose = gcnew EventHandler<DotNetBar::SuperTabStripTabItemCloseEventArgs^>(this, &TabStrip::Handler_TabItemClose);
 	DelegateSelectedTabChanged = gcnew EventHandler<DotNetBar::SuperTabStripSelectedTabChangedEventArgs^>(this, &TabStrip::Handler_SelectedTabChanged);
@@ -1336,6 +1340,33 @@ ITabStripItem^ TabStrip::LookupTabByTag(Object^ Tag)
 	return nullptr;
 }
 
+void TabStrip::BeginUpdate()
+{
+	if (!Source->Visible)
+		return;
+
+	Debug::Assert(UpdateCounter >= 0);
+	if (UpdateCounter++ == 0)
+	{
+		Source->SuspendLayout();
+		nativeWrapper::SetControlRedraw(Source, false);
+	}
+}
+
+void TabStrip::EndUpdate()
+{
+	if (!Source->Visible)
+		return;
+
+	--UpdateCounter;
+	Debug::Assert(UpdateCounter >= 0);
+	if (UpdateCounter == 0)
+	{
+		nativeWrapper::SetControlRedraw(Source, true);
+		Source->ResumeLayout(true);
+	}
+}
+
 void TabStrip::SelectNextTab()
 {
 	if (Source->Tabs->Count < 2)
@@ -1461,6 +1492,23 @@ void ObjectListView::Handler_PreferencesChanged(Object^ Sender, EventArgs^ E)
 	Source->ForeColor = ForeColor;
 	Source->BackColor = BackColor;
 
+	auto ColorTable = safe_cast<DotNetBar::Rendering::Office2007Renderer^>(DotNetBar::Rendering::GlobalManager::Renderer)->ColorTable;
+	Source->HeaderUsesThemes = false;
+	if (Source->HeaderFormatStyle == nullptr)
+	{
+		Source->HeaderFormatStyle = gcnew BrightIdeasSoftware::HeaderFormatStyle;
+		Source->HeaderFormatStyle->Normal = gcnew BrightIdeasSoftware::HeaderStateStyle;
+	}
+
+	Source->HeaderFormatStyle->Normal->ForeColor = ForeColor;
+	Source->HeaderFormatStyle->Normal->BackColor = utilities::ShadeColor(BackColor, DarkMode ? 0.25 : 0.05);
+	Source->HeaderFormatStyle->Normal->FrameColor = utilities::ShadeColor(DarkMode ? ForeColor : BackColor, 0.5);
+	Source->HeaderFormatStyle->Normal->FrameWidth = 0.5f;
+	Source->HeaderFormatStyle->Pressed = Source->HeaderFormatStyle->Normal;
+	Source->HeaderFormatStyle->Hot = Source->HeaderFormatStyle->Normal;
+
+	SetLastColumnToFillFreeSpace();
+
 	if (Source->GetType() == BrightIdeasSoftware::TreeListView::typeid)
 		safe_cast<BrightIdeasSoftware::TreeListView^>(Source)->TreeColumnRenderer->LinePen = gcnew Pen(ForeColor, 1);
 }
@@ -1473,6 +1521,16 @@ bool ObjectListView::Wrapper_CanExpandGetter(Object^ Model)
 System::Collections::IEnumerable^ ObjectListView::Wrapper_ChildrenGetter(Object^ Model)
 {
 	return DelegateChildrenGetter(Model);
+}
+
+void ObjectListView::SetLastColumnToFillFreeSpace()
+{
+	for (int i = 0, j = Source->AllColumns->Count; i < j; ++i)
+	{
+		auto Column = Source->AllColumns[i];
+		auto FillsFreeSpace = i == j - 1;
+		Column->FillsFreeSpace = FillsFreeSpace;
+	}
 }
 
 ObjectListView::ObjectListView(BrightIdeasSoftware::ObjectListView^ Source, eViewRole ViewRole, ViewComponentEventRaiser^ EventRouter)
@@ -1494,6 +1552,13 @@ ObjectListView::ObjectListView(BrightIdeasSoftware::ObjectListView^ Source, eVie
 
 	preferences::SettingsHolder::Get()->PreferencesChanged += DelegatePreferenceChanged;
 	ColorManager->SetEnableAmbientSettings(Source, eAmbientSettings::ChildControls);
+
+	auto EmptyMsgOverlay = safe_cast<BrightIdeasSoftware::TextOverlay^>(Source->EmptyListMsgOverlay);
+	EmptyMsgOverlay->TextColor = Color::White;
+	EmptyMsgOverlay->BackColor = Color::FromArgb(75, 29, 32, 33);
+	EmptyMsgOverlay->BorderWidth = 0.f;
+	Source->EmptyListMsg = "Doesn't look like anything to me...";
+	Source->EmptyListMsgFont = gcnew System::Drawing::Font(L"Segoe UI caps", 9.75F);
 
 	Handler_PreferencesChanged(nullptr, nullptr);
 }
@@ -1522,11 +1587,18 @@ ObjectListView::~ObjectListView()
 
 	for each (auto Column in Source->AllColumns)
 	{
+		// Since some classes consume the component just for the sake of the themeing support,
+		// they might not be using its API to add new columns. This means we cannot always assume
+		// the columns have a corresponding wrapper.
+		if (Column->GetType() != ObjectListViewColumn::typeid)
+			continue;
+
 		auto ColumnItem = ObjectListViewColumn::FromOLVColumn(Column);
 		delete ColumnItem;
 	}
 
 	Source->ClearObjects();
+	Source->ModelFilter = nullptr;
 	Source = nullptr;
 
 	SAFEDELETE_CLR(ColorManager);
@@ -1564,6 +1636,8 @@ void ObjectListView::AddColumn(IObjectListViewColumn^ Column)
 
 	Source->AllColumns->Add(ColData->Source);
 	Source->Columns->Add(ColData->Source);
+
+	SetLastColumnToFillFreeSpace();
 }
 
 List<IObjectListViewColumn^>^ ObjectListView::GetColumns()
@@ -1592,6 +1666,21 @@ void ObjectListView::SetChildrenGetter(IObjectListView::ChildrenGetter^ Delegate
 	safe_cast<BrightIdeasSoftware::TreeListView^>(Source)->ChildrenGetter = DelegateWrapperChildrenGetter;
 }
 
+
+void ObjectListView::SetModelFilter(Predicate<Object^>^ Predicate)
+{
+	if (Predicate)
+	{
+		Source->UseFiltering = true;
+		Source->ShowFilterMenuOnRightClick = false;
+		Source->ModelFilter = gcnew BrightIdeasSoftware::ModelFilter(Predicate);
+	}
+	else
+	{
+		Source->UseFiltering = false;
+		Source->ModelFilter = nullptr;
+	}
+}
 
 void ObjectListView::EnsureItemVisible(Object^ Item)
 {

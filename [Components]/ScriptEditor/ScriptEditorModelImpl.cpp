@@ -237,6 +237,7 @@ ScriptCompilationData^ ScriptDocument::BeginScriptCompilation()
 
 	auto SemanticAnalysisData = BgAnalyzer->DoSynchronousAnalysis(false);
 	ClearMessages(ScriptDiagnosticMessage::eMessageSource::Validator, ScriptDiagnosticMessage::eMessageType::All);
+	ClearMessages(ScriptDiagnosticMessage::eMessageSource::Compiler, ScriptDiagnosticMessage::eMessageType::All);
 
 	for each (auto Itr in SemanticAnalysisData->AnalysisMessages)
 	{
@@ -245,19 +246,34 @@ ScriptCompilationData^ ScriptDocument::BeginScriptCompilation()
 				   ScriptDiagnosticMessage::eMessageSource::Validator);
 	}
 
-	if (!SemanticAnalysisData->HasCriticalMessages && !SemanticAnalysisData->MalformedStructure)
+	Result->CanCompile = !SemanticAnalysisData->HasCriticalMessages && !SemanticAnalysisData->MalformedStructure;
+
+	nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::FormData> ExistingFormWithScriptName(
+		nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupFormByEditorID(CString(SemanticAnalysisData->Name).c_str()));
+	if (ExistingFormWithScriptName)
 	{
-		Result->PreprocessedScriptText = PreprocessScriptText(Result->UnpreprocessedScriptText, false, Result->CanCompile, Result->HasPreprocessorDirectives);
-		if (Result->CanCompile)
+		bool SameAsCurrentScript = !String::Compare(EditorID, SemanticAnalysisData->Name, true);
+		if (!SameAsCurrentScript)
 		{
-			auto Metadata = PrepareMetadataForSerialization(Result->HasPreprocessorDirectives);
-			Result->SerializedMetadata = ScriptTextMetadataHelper::SerializeMetadata(Metadata);
-			ClearMessages(ScriptDiagnosticMessage::eMessageSource::Compiler, ScriptDiagnosticMessage::eMessageType::All);
+			Result->CanCompile = false;
+			AddMessage(1, "Script name must be unique - '" + SemanticAnalysisData->Name + "' is assigned to an existing form",
+					   ScriptDiagnosticMessage::eMessageType::Error, ScriptDiagnosticMessage::eMessageSource::Compiler);
 		}
 	}
 
+	if (!Result->CanCompile)
+		return Result;
+
+	Result->PreprocessedScriptText = PreprocessScriptText(Result->UnpreprocessedScriptText, false, Result->CanCompile, Result->HasPreprocessorDirectives);
+	if (!Result->CanCompile)
+	{
+		auto Metadata = PrepareMetadataForSerialization(Result->HasPreprocessorDirectives);
+		Result->SerializedMetadata = ScriptTextMetadataHelper::SerializeMetadata(Metadata);
+		ClearMessages(ScriptDiagnosticMessage::eMessageSource::Compiler, ScriptDiagnosticMessage::eMessageType::All);
+	}
+
 	// doesn't include compiler warnings for obvious reasons but it's okay since all compiler messages are errors
-	Result->HasWarnings = GetWarningCount(0);
+	Result->HasWarnings = GetMessageCountWarnings(0);
 	return Result;
 }
 
@@ -391,6 +407,21 @@ void ScriptDocument::ClearMessages(ScriptDiagnosticMessage::eMessageSource Sourc
 
 		OnStateChangedBookmarks();
 	}
+}
+
+UInt32 ScriptDocument::GetMessageCount(UInt32 Line, ScriptDiagnosticMessage::eMessageType TypeFilter)
+{
+	UInt32 Count = 0;
+	for each (auto Itr in Messages)
+	{
+		if (!Itr->Valid)
+			continue;
+
+		if ((Line == 0 || Itr->Line == Line) && Itr->Type == TypeFilter)
+			++Count;
+	}
+
+	return Count;
 }
 
 void ScriptDocument::ClearBookmarks(bool MarkAsModified)
@@ -730,34 +761,19 @@ List<ScriptDiagnosticMessage^>^ ScriptDocument::GetMessages(UInt32 Line, ScriptD
 	return OutMessages;
 }
 
-UInt32 ScriptDocument::GetErrorCount(UInt32 Line)
+UInt32 ScriptDocument::GetMessageCountErrors(UInt32 Line)
 {
-	UInt32 Count = 0;
-	for each (auto Itr in Messages)
-	{
-		if (!Itr->Valid)
-			continue;
-
-		if ((Line == 0 || Itr->Line == Line) && Itr->Type == ScriptDiagnosticMessage::eMessageType::Error)
-			++Count;
-	}
-
-	return Count;
+	return GetMessageCount(Line, ScriptDiagnosticMessage::eMessageType::Error);
 }
 
-UInt32 ScriptDocument::GetWarningCount(UInt32 Line)
+UInt32 ScriptDocument::GetMessageCountWarnings(UInt32 Line)
 {
-	UInt32 Count = 0;
-	for each (auto Itr in Messages)
-	{
-		if (!Itr->Valid)
-			continue;
+	return GetMessageCount(Line, ScriptDiagnosticMessage::eMessageType::Warning);
+}
 
-		if ((Line == 0 || Itr->Line == Line) && Itr->Type == ScriptDiagnosticMessage::eMessageType::Warning)
-			++Count;
-	}
-
-	return Count;
+UInt32 ScriptDocument::GetMessageCountInfos(UInt32 Line)
+{
+	return GetMessageCount(Line, ScriptDiagnosticMessage::eMessageType::Info);
 }
 
 void ScriptDocument::AddBookmark(UInt32 Line, String^ BookmarkText)
