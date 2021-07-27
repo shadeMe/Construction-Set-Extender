@@ -1417,7 +1417,7 @@ TextMarkupBuilder^ TextMarkupBuilder::NonBreakingSpace(int Count)
 TextMarkupBuilder^ TextMarkupBuilder::Text(String^ Text)
 {
 	// prevent any errant symbols from breaking the accumulated markup
-	Text = Text->Replace("<", "&lt;")->Replace(">", "&gt;")->Replace("&", "&amp;");
+	Text = Text->Replace("<", "(")->Replace(">", ")")->Replace("&", "-");
 	Text = Text->Replace("\n", "<br/>");
 
 	// the italics renderer does a bad job of kerning (single) whitespace characters, resulting

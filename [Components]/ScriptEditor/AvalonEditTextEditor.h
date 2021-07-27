@@ -39,8 +39,6 @@ public:
 
 ref class AvalonEditTextEditor : public ITextEditor
 {
-	static const UInt32	kSetTextFadeAnimationDuration = 150;		// in ms
-
 	static void OnTextEditorSettingDataHandler(Object^ Sender, System::Windows::DataObjectSettingDataEventArgs^ E);
 protected:
 	static enum class eIntelliSenseTextChangeEventHandling
@@ -65,9 +63,7 @@ protected:
 
 	Panel^												WinFormsContainer;
 	ElementHost^										WPFHost;
-	System::Windows::Controls::DockPanel^				TextFieldPanel;
 	AvalonEdit::TextEditor^								TextField;
-	System::Windows::Shapes::Rectangle^					AnimationPrimitive;
 
 	AvalonEdit::Folding::FoldingManager^				CodeFoldingManager;
 	ObScriptCodeFoldingStrategy^						CodeFoldingStrategy;
@@ -98,11 +94,9 @@ protected:
 	bool												SynchronizingInternalScrollBars;
 	System::Windows::Vector								PreviousScrollOffsetBuffer;
 
-	bool												SetTextAnimating;
-	System::Windows::Media::Animation::DoubleAnimation^	SetTextPrologAnimationCache;
-
 	bool												TextFieldInUpdateFlag;
 	bool												TextFieldDisplayingStaticText;
+	bool												InitStateInProgress;
 
 	model::IScriptDocument^								ParentScriptDocument;
 	LineTrackingManager^								LineTracker;
@@ -132,7 +126,6 @@ protected:
 	EventHandler^										ScrollBarSyncTimerTickHandler;
 	EventHandler^										SemanticAnalysisTimerTickHandler;
 	EventHandler^										ExternalScrollBarValueChangedHandler;
-	EventHandler^										SetTextAnimationCompletedHandler;
 	EventHandler^										ScriptEditorPreferencesSavedHandler;
 	AvalonEditTextEventHandler^							TextFieldTextCopiedHandler;
 	EventHandler<AvalonEdit::Search::SearchOptionsChangedEventArgs^>^ SearchPanelSearchOptionsChangedHandler;
@@ -183,7 +176,6 @@ protected:
 	void	ScrollBarSyncTimer_Tick(Object^ Sender, EventArgs^ E);
 
 	void	ExternalScrollBar_ValueChanged(Object^ Sender, EventArgs^ E);
-	void	SetTextAnimation_Completed(Object^ Sender, EventArgs^ E);
 	void	ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
 	void	BackgroundAnalysis_AnalysisComplete(Object^ Sender, model::components::IBackgroundSemanticAnalyzer::AnalysisCompleteEventArgs^ E);
 	void	LineTrackingManager_LineAnchorInvalidated(Object^ Sender, EventArgs^ E);
@@ -236,7 +228,6 @@ protected:
 	void				PerformCommentOperationOnSelection(eCommentOperation Operation);
 	void				ToggleSearchPanel(bool State);
 	String^				GetCurrentLineText(bool ClipAtCaretPos);
-	void				FadeOutCurrentTextView();
 public:
 	AvalonEditTextEditor(model::IScriptDocument^ ParentScriptDocument);
 	~AvalonEditTextEditor();

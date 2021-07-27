@@ -38,6 +38,7 @@ ref class ScriptDocument : public IScriptDocument
 	UInt16 BytecodeLength;
 	void* NativeObject;
 	bool CompilationInProgress;
+	bool InitStateInProgress;
 
 	List<ScriptDiagnosticMessage^>^ Messages;
 	List<ScriptBookmark^>^ Bookmarks;

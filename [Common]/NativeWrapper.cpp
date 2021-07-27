@@ -57,6 +57,10 @@ System::Windows::Forms::Control^ GetControlWithFocus()
 	if (FocusedHandle != IntPtr::Zero)
 		FocusedControl = Control::FromHandle(FocusedHandle);
 
+#if 0
+	DebugPrint("Control with focus : " + (FocusedControl ? (FocusedControl->ToString() + " | " + FocusedControl->GetType()->ToString()): "NONE"));
+#endif
+
 	return FocusedControl;
 }
 

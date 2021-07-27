@@ -544,6 +544,7 @@ ScriptDocument::ScriptDocument()
 	BytecodeLength = 0;
 	NativeObject = nullptr;
 	CompilationInProgress = false;
+	InitStateInProgress = false;
 
 	Messages = gcnew List<ScriptDiagnosticMessage^>;
 	Bookmarks = gcnew List<ScriptBookmark^>;
@@ -635,64 +636,70 @@ void ScriptDocument::ScriptType::set(IScriptDocument::eScriptType v)
 
 	Type = v;
 	OnStateChangedType(v);
-	Dirty = true;
+
+	if (!InitStateInProgress)
+		Dirty = true;
 }
 
 void ScriptDocument::Initialize(componentDLLInterface::ScriptData* ScriptData, bool UseAutoRecoveryFile)
 {
 	Debug::Assert(ScriptData != nullptr);
 	Debug::Assert(!TextEditor->DisplayingStaticText);
+	Debug::Assert(!InitStateInProgress);
 
-	// release the currently bound native object if it points to an unsaved new script instance
-	ReleaseNativeObjectIfNewScript();
-
-	EditorID = gcnew String(ScriptData->EditorID);
-	FormID = ScriptData->FormID;
-	Bytecode = reinterpret_cast<UInt8*>(ScriptData->ByteCode);
-	BytecodeLength = ScriptData->Length;
-	NativeObject = ScriptData->ParentForm;
-	ScriptType = safe_cast<IScriptDocument::eScriptType>(ScriptData->Type);
-
-	ClearMessages(ScriptDiagnosticMessage::eMessageSource::All, ScriptDiagnosticMessage::eMessageType::All);
-	ClearBookmarks(false);
-	ClearFindResults();
-
-	auto RawScriptText = gcnew String(ScriptData->Text);
-	if (UseAutoRecoveryFile)
+	InitStateInProgress = true;
 	{
-		Debug::Assert(!UnsavedNewScript);
+		// release the currently bound native object if it points to an unsaved new script instance
+		ReleaseNativeObjectIfNewScript();
 
-		auto AutoRecoveryFile = gcnew ScriptTextAutoRecoveryCache(EditorID);
-		RawScriptText = AutoRecoveryFile->Read();
-		AutoRecoveryFile->Delete(false);
+		EditorID = gcnew String(ScriptData->EditorID);
+		FormID = ScriptData->FormID;
+		Bytecode = reinterpret_cast<UInt8*>(ScriptData->ByteCode);
+		BytecodeLength = ScriptData->Length;
+		NativeObject = ScriptData->ParentForm;
+		ScriptType = safe_cast<IScriptDocument::eScriptType>(ScriptData->Type);
 
-	}
+		ClearMessages(ScriptDiagnosticMessage::eMessageSource::All, ScriptDiagnosticMessage::eMessageType::All);
+		ClearBookmarks(false);
+		ClearFindResults();
 
-	String^ ExtractedScriptText = "";
-	auto ExtractedMetadata = gcnew ScriptTextMetadata();
-	ScriptTextMetadataHelper::DeserializeRawScriptText(RawScriptText, ExtractedScriptText, ExtractedMetadata);
-
-	if (ExtractedMetadata->CaretPos > ExtractedScriptText->Length)
-		ExtractedMetadata->CaretPos = ExtractedScriptText->Length;
-	else if (ExtractedMetadata->CaretPos < 0)
-		ExtractedMetadata->CaretPos = 0;
-
-	TextEditor->InitializeState(ExtractedScriptText, ExtractedMetadata->CaretPos);
-
-	OnStateChangedEditorIdAndFormId(EditorID, FormID);
-	OnStateChangedBytecode(Bytecode, BytecodeLength, PreprocessedScriptText);
-
-	BeginBatchUpdate(eBatchUpdateSource::Bookmarks);
-	{
-		for each (auto Itr in ExtractedMetadata->Bookmarks)
+		auto RawScriptText = gcnew String(ScriptData->Text);
+		if (UseAutoRecoveryFile)
 		{
-			if (Itr->Line > 0 && Itr->Line <= TextEditor->LineCount)
-				AddBookmark(Itr->Line, Itr->Text);
+			Debug::Assert(!UnsavedNewScript);
+
+			auto AutoRecoveryFile = gcnew ScriptTextAutoRecoveryCache(EditorID);
+			RawScriptText = AutoRecoveryFile->Read();
+			AutoRecoveryFile->Delete(false);
 		}
+
+		String^ ExtractedScriptText = "";
+		auto ExtractedMetadata = gcnew ScriptTextMetadata();
+		ScriptTextMetadataHelper::DeserializeRawScriptText(RawScriptText, ExtractedScriptText, ExtractedMetadata);
+
+		if (ExtractedMetadata->CaretPos > ExtractedScriptText->Length)
+			ExtractedMetadata->CaretPos = ExtractedScriptText->Length;
+		else if (ExtractedMetadata->CaretPos < 0)
+			ExtractedMetadata->CaretPos = 0;
+
+		TextEditor->InitializeState(ExtractedScriptText, ExtractedMetadata->CaretPos);
+
+		OnStateChangedEditorIdAndFormId(EditorID, FormID);
+		OnStateChangedBytecode(Bytecode, BytecodeLength, PreprocessedScriptText);
+
+		BeginBatchUpdate(eBatchUpdateSource::Bookmarks);
+		{
+			for each (auto Itr in ExtractedMetadata->Bookmarks)
+			{
+				if (Itr->Line > 0 && Itr->Line <= TextEditor->LineCount)
+					AddBookmark(Itr->Line, Itr->Text);
+			}
+		}
+		EndBatchUpdate(eBatchUpdateSource::Bookmarks);
+		intellisense::IntelliSenseBackend::Get()->Refresh(false);
+		Dirty = UnsavedNewScript || UseAutoRecoveryFile ? true : false;
 	}
-	EndBatchUpdate(eBatchUpdateSource::Bookmarks);
-	intellisense::IntelliSenseBackend::Get()->Refresh(false);
-	Dirty = UnsavedNewScript || UseAutoRecoveryFile ? true : false;
+	InitStateInProgress = false;
 }
 
 bool ScriptDocument::Save(IScriptDocument::eSaveOperation SaveOperation)

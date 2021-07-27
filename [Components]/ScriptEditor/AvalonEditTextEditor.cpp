@@ -252,7 +252,7 @@ void AvalonEditTextEditor::RefreshTextView()
 
 void AvalonEditTextEditor::HandleTextChangeEvent()
 {
-	if (TextField->IsReadOnly || TextFieldDisplayingStaticText)
+	if (TextField->IsReadOnly || TextFieldDisplayingStaticText || InitStateInProgress)
 		return;
 
 	Modified = true;
@@ -372,6 +372,9 @@ void AvalonEditTextEditor::ResetExternalScrollBars()
 	ExternalHorizontalScrollBar->Maximum = 1;
 	ExternalHorizontalScrollBar->Minimum = 0;
 	ExternalHorizontalScrollBar->Value = 0;
+
+	if (TextField->WordWrap && ExternalHorizontalScrollBar->Visible)
+		ExternalHorizontalScrollBar->Visible = false;
 }
 
 RTBitmap^ AvalonEditTextEditor::RenderFrameworkElement(System::Windows::FrameworkElement^ Element)
@@ -1349,31 +1352,6 @@ void AvalonEditTextEditor::ExternalScrollBar_ValueChanged( Object^ Sender, Event
 	}
 }
 
-void AvalonEditTextEditor::SetTextAnimation_Completed( Object^ Sender, EventArgs^ E )
-{
-	if (Disposing)
-		return;
-
-	SetTextPrologAnimationCache->Completed -= SetTextAnimationCompletedHandler;
-	SetTextPrologAnimationCache = nullptr;
-
-	SAFEDELETE_CLR(AnimationPrimitive->Fill);
-	TextFieldPanel->Children->Remove(AnimationPrimitive);
-	TextFieldPanel->Children->Add(TextField);
-
-	System::Windows::Media::Animation::DoubleAnimation^ FadeInAnimation = gcnew System::Windows::Media::Animation::DoubleAnimation(0.0,
-		1.0,
-		System::Windows::Duration(System::TimeSpan::FromMilliseconds(kSetTextFadeAnimationDuration)),
-		System::Windows::Media::Animation::FillBehavior::Stop);
-	System::Windows::Media::Animation::Storyboard^ FadeInStoryBoard = gcnew System::Windows::Media::Animation::Storyboard();
-	FadeInStoryBoard->Children->Add(FadeInAnimation);
-	FadeInStoryBoard->SetTargetName(FadeInAnimation, TextField->Name);
-	FadeInStoryBoard->SetTargetProperty(FadeInAnimation, gcnew System::Windows::PropertyPath(TextField->OpacityProperty));
-	FadeInStoryBoard->Begin(TextFieldPanel);
-
-	SetTextAnimating = false;
-}
-
 void AvalonEditTextEditor::ScriptEditorPreferences_Saved( Object^ Sender, EventArgs^ E )
 {
 	if (CodeFoldingStrategy != nullptr)
@@ -1415,7 +1393,6 @@ void AvalonEditTextEditor::ScriptEditorPreferences_Saved( Object^ Sender, EventA
 	TextField->Foreground = CustomBrushes::Get()->ForeColor;
 	TextField->Background = CustomBrushes::Get()->BackColor;
 	TextField->LineNumbersForeground = CustomBrushes::Get()->ForeColor;
-	TextFieldPanel->Background = CustomBrushes::Get()->BackColor;
 
 	if (preferences::SettingsHolder::Get()->Appearance->ShowIconMargin)
 	{
@@ -1469,9 +1446,7 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 
 	WinFormsContainer = gcnew Panel();
 	WPFHost = gcnew MermaidsBrassiereElementHost();
-	TextFieldPanel = gcnew System::Windows::Controls::DockPanel();
 	TextField = gcnew AvalonEdit::TextEditor();
-	AnimationPrimitive = gcnew System::Windows::Shapes::Rectangle();
 	CodeFoldingManager = AvalonEdit::Folding::FoldingManager::Install(TextField->TextArea);
 	CodeFoldingStrategy = nullptr;
 
@@ -1508,14 +1483,9 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	MouseHoverEndTimerTickHandler = gcnew EventHandler(this, &AvalonEditTextEditor::MouseHoverEndTimer_Tick);
 	ScrollBarSyncTimerTickHandler = gcnew EventHandler(this, &AvalonEditTextEditor::ScrollBarSyncTimer_Tick);
 	ExternalScrollBarValueChangedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::ExternalScrollBar_ValueChanged);
-	SetTextAnimationCompletedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::SetTextAnimation_Completed);
 	ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::ScriptEditorPreferences_Saved);
 	SearchPanelSearchOptionsChangedHandler = gcnew EventHandler<AvalonEdit::Search::SearchOptionsChangedEventArgs^>(this, &AvalonEditTextEditor::SearchPanel_SearchOptionsChanged);
 
-	System::Windows::NameScope::SetNameScope(TextFieldPanel, gcnew System::Windows::NameScope());
-	TextFieldPanel->VerticalAlignment = System::Windows::VerticalAlignment::Stretch;
-
-	TextField->Name = "AvalonEditTextEditorInstance";
 	TextField->Options->AllowScrollBelowDocument = false;
 	TextField->Options->EnableEmailHyperlinks = false;
 	TextField->Options->EnableHyperlinks = false;
@@ -1549,12 +1519,6 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	InlineSearchPanel->MarkerBrush = CustomBrushes::Get()->FindResults->Background;
 	InlineSearchPanel->SearchOptionsChanged += SearchPanelSearchOptionsChangedHandler;
 
-	AnimationPrimitive->Name = "AnimationPrimitive";
-
-	TextFieldPanel->RegisterName(AnimationPrimitive->Name, AnimationPrimitive);
-	TextFieldPanel->RegisterName(TextField->Name, TextField);
-	TextFieldPanel->Children->Add(TextField);
-
 	InitializingFlag = false;
 	ModifiedFlag = false;
 	IntelliSenseTextChangeEventHandlingMode = eIntelliSenseTextChangeEventHandling::Propagate;
@@ -1568,6 +1532,7 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 
 	ActivatedInView = false;
 	IsMouseHovering = false;
+	InitStateInProgress = false;
 
 	LastKnownMouseClickOffset = 0;
 	OffsetAtCurrentMousePos = -1;
@@ -1585,9 +1550,6 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	SynchronizingInternalScrollBars = false;
 	SynchronizingExternalScrollBars = false;
 	PreviousScrollOffsetBuffer = System::Windows::Vector(0.0, 0.0);
-
-	SetTextAnimating = false;
-	SetTextPrologAnimationCache = nullptr;
 
 	TextFieldInUpdateFlag = false;
 	TextFieldDisplayingStaticText = false;
@@ -1613,7 +1575,7 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 		TextField->TextArea->TextView->ElementGenerators->Add(StructureVisualizer);
 
 	WPFHost->Dock = DockStyle::Fill;
-	WPFHost->Child = TextFieldPanel;
+	WPFHost->Child = TextField;
 	WPFHost->ForeColor = ForegroundColor;
 	WPFHost->BackColor = BackgroundColor;
 	WPFHost->TabStop = false;
@@ -1736,15 +1698,12 @@ AvalonEditTextEditor::~AvalonEditTextEditor()
 	SAFEDELETE_CLR(ExternalScrollBarValueChangedHandler);
 	SAFEDELETE_CLR(SemanticAnalysisTimerTickHandler);
 	SAFEDELETE_CLR(ScriptEditorPreferencesSavedHandler);
-	SAFEDELETE_CLR(SetTextAnimationCompletedHandler);
 	SAFEDELETE_CLR(SearchPanelSearchOptionsChangedHandler);
 	SAFEDELETE_CLR(LineTrackingManagerLineAnchorInvalidatedHandler);
 	SAFEDELETE_CLR(BackgroundAnalyzerAnalysisCompleteHandler);
 
-	TextFieldPanel->Children->Clear();
 	WinFormsContainer->Controls->Clear();
 	WinFormsContainer->ContextMenu = nullptr;
-
 
 	WPFHost->Child = nullptr;
 	WPFHost->Parent = nullptr;
@@ -1759,8 +1718,6 @@ AvalonEditTextEditor::~AvalonEditTextEditor()
 	SAFEDELETE_CLR(TextField->TextArea->IndentationStrategy);
 
 	SAFEDELETE_CLR(WinFormsContainer);
-	SAFEDELETE_CLR(TextFieldPanel);
-	SAFEDELETE_CLR(AnimationPrimitive);
 	SAFEDELETE_CLR(MiddleMouseScrollTimer);
 	SAFEDELETE_CLR(CodeFoldingManager);
 	SAFEDELETE_CLR(CodeFoldingStrategy);
@@ -1815,7 +1772,6 @@ void AvalonEditTextEditor::SetText(String^ Text, bool ResetUndoStack)
 
 	SetIntelliSenseTextChangeEventHandlingMode(eIntelliSenseTextChangeEventHandling::SuppressOnce);
 	RaiseIntelliSenseContextChange(intellisense::IntelliSenseContextChangeEventArgs::eEvent::Reset);
-	FadeOutCurrentTextView();
 
 	if (ResetUndoStack)
 		TextField->Text = Text;
@@ -1825,6 +1781,9 @@ void AvalonEditTextEditor::SetText(String^ Text, bool ResetUndoStack)
 		SetSelectionLength(GetTextLength());
 		SetSelectedText(Text);
 		SetSelectionLength(0);
+
+		if (TextField->Document->TextLength > 0)
+			Caret = 0;
 	}
 
 	if (ActivatedInView)
@@ -1888,41 +1847,6 @@ Point AvalonEditTextEditor::ScreenToClient(Point ScreenPosition)
 	return Point(ClientCoords.X, ClientCoords.Y);
 }
 
-void AvalonEditTextEditor::FadeOutCurrentTextView()
-{
-	if (Disposing)
-		return;
-	else if (SetTextAnimating)
-		return;
-	else if (!ActivatedInView)
-		return;
-
-	SetTextAnimating = true;
-
-	TextFieldPanel->Children->Add(AnimationPrimitive);
-
-	AnimationPrimitive->Fill = gcnew System::Windows::Media::VisualBrush(TextField);
-	if (AnimationPrimitive->Fill->CanFreeze)
-		AnimationPrimitive->Fill->Freeze();
-
-	AnimationPrimitive->Height = TextField->ActualHeight;
-	AnimationPrimitive->Width = TextField->ActualWidth;
-
-	TextFieldPanel->Children->Remove(TextField);
-
-	System::Windows::Media::Animation::DoubleAnimation^ FadeOutAnimation = gcnew System::Windows::Media::Animation::DoubleAnimation(1.0, 0.0,
-		System::Windows::Duration(System::TimeSpan::FromMilliseconds(kSetTextFadeAnimationDuration)),
-		System::Windows::Media::Animation::FillBehavior::Stop);
-	SetTextPrologAnimationCache = FadeOutAnimation;
-
-	FadeOutAnimation->Completed += SetTextAnimationCompletedHandler;
-	System::Windows::Media::Animation::Storyboard^ FadeOutStoryBoard = gcnew System::Windows::Media::Animation::Storyboard();
-	FadeOutStoryBoard->Children->Add(FadeOutAnimation);
-	FadeOutStoryBoard->SetTargetName(FadeOutAnimation, AnimationPrimitive->Name);
-	FadeOutStoryBoard->SetTargetProperty(FadeOutAnimation, gcnew System::Windows::PropertyPath(AnimationPrimitive->OpacityProperty));
-	FadeOutStoryBoard->Begin(TextFieldPanel);
-}
-
 String^ AvalonEditTextEditor::GetTokenAtCharIndex(int Offset)
 {
 	return GetTokenAtLocation(Offset, false)->Replace("\r\n", "")->Replace("\n", "");
@@ -1955,10 +1879,11 @@ void AvalonEditTextEditor::FocusTextArea()
 
 	WinFormsContainer->Focus();
 	WPFHost->Focus();
-	TextFieldPanel->Focus();
 	TextField->Focus();
+	TextField->TextArea->Focus();
 
 	WPFFocusHelper::Focus(TextField);
+	WPFFocusHelper::Focus(TextField->TextArea);
 }
 
 FindReplaceResult^ AvalonEditTextEditor::FindReplace(eFindReplaceOperation Operation, String^ Query, String^ Replacement, eFindReplaceOptions Options)
@@ -2174,12 +2099,18 @@ void AvalonEditTextEditor::UncommentSelection()
 
 void AvalonEditTextEditor::InitializeState(String^ ScriptText, int CaretPosition)
 {
-	ResetExternalScrollBars();
-	SetText(ScriptText, true);
-	Caret = CaretPosition;
-	ScrollToCaret();
+	Debug::Assert(!InitStateInProgress);
+
+	InitStateInProgress = true;
+	{
+		ResetExternalScrollBars();
+		SetText(ScriptText, true);
+		Caret = CaretPosition;
+		ScrollToCaret();
+		FocusTextArea();
+	}
+	InitStateInProgress = false;
 	Modified = false;
-	FocusTextArea();
 }
 
 void AvalonEditTextEditor::BeginDisplayingStaticText(String^ TextToDisplay)
@@ -2200,7 +2131,6 @@ void AvalonEditTextEditor::EndDisplayingStaticText()
 {
 	Debug::Assert(TextFieldDisplayingStaticText);
 
-	FadeOutCurrentTextView();
 	TextField->IsReadOnly = false;
 	TextField->Document->UndoStack->EndUndoGroup();
 	TextField->Document->UndoStack->Undo();

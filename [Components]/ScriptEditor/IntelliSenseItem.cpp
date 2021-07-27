@@ -44,9 +44,9 @@ System::String^ IntelliSenseItem::GenerateHelpTextHeader(String^ Identifier)
 
 	return Builder
 		->Font(preferences::SettingsHolder::Get()->Appearance->TextFont->FontFamily->Name)
-			->Header(4)->Bold()
+			->Header(4)
 				->Text(Identifier)
-			->PopTag(2)
+			->PopTag()
 		->PopTag()
 		->ToMarkup();
 }
@@ -214,7 +214,7 @@ IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(componentDLLInterfa
 
 	auto Sb = gcnew utilities::TextMarkupBuilder;
 
-	const int kTableWidth = 400, kFirstColumnWidth = 120, kSecondColumnWidth = 280;
+	const int kTableWidth = 400, kFirstColumnWidth = 100, kSecondColumnWidth = 300;
 	Sb->Table(2, kTableWidth);
 	{
 		Sb->TableNextRow();
@@ -247,7 +247,7 @@ IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(componentDLLInterfa
 			{
 				Sb->TableNextColumn(kFirstColumnWidth);
 				{
-					Sb->Text("Description :");
+					Sb->Bold()->Text("Description :")->PopTag();
 				}
 				Sb->TableNextColumn(kSecondColumnWidth);
 				{
@@ -262,7 +262,7 @@ IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(componentDLLInterfa
 		{
 			Sb->TableNextColumn(kFirstColumnWidth);
 			{
-				Sb->Text("Parameter Count :");
+				Sb->Bold()->Text("Parameters :")->PopTag();
 			}
 			Sb->TableNextColumn(kSecondColumnWidth);
 			{
@@ -316,7 +316,7 @@ IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(componentDLLInterfa
 		{
 			Sb->TableNextColumn(kFirstColumnWidth);
 			{
-				Sb->Text("Return Type :");
+				Sb->Bold()->Text("Return Type :")->PopTag();
 			}
 			Sb->TableNextColumn(kSecondColumnWidth);
 			{
@@ -406,7 +406,7 @@ IntelliSenseItemScriptVariable::IntelliSenseItemScriptVariable(String^ Name, Str
 		{
 			Sb->TableNextColumn(kFirstColumnWidth);
 			{
-				Sb->Text("Type :");
+				Sb->Bold()->Text("Type :")->PopTag();
 			}
 			Sb->TableNextColumn(kSecondColumnWidth);
 			{
@@ -421,7 +421,7 @@ IntelliSenseItemScriptVariable::IntelliSenseItemScriptVariable(String^ Name, Str
 			{
 				Sb->TableNextColumn(kFirstColumnWidth);
 				{
-					Sb->Text("Comment :");
+					Sb->Bold()->Text("Comment :")->PopTag();
 				}
 				Sb->TableNextColumn(kSecondColumnWidth);
 				{
@@ -437,7 +437,7 @@ IntelliSenseItemScriptVariable::IntelliSenseItemScriptVariable(String^ Name, Str
 			{
 				Sb->TableNextColumn(kFirstColumnWidth);
 				{
-					Sb->Text("Parent Script :");
+					Sb->Bold()->Text("Parent Script :")->PopTag();
 				}
 				Sb->TableNextColumn(kSecondColumnWidth);
 				{
@@ -524,7 +524,7 @@ IntelliSenseItemForm::IntelliSenseItemForm(nativeWrapper::MarshalledFormData^ Da
 		{
 			Sb->TableNextColumn(kFirstColumnWidth);
 			{
-				Sb->Text("FormID :");
+				Sb->Bold()->Text("FormID :")->PopTag();
 			}
 			Sb->TableNextColumn(kSecondColumnWidth);
 			{
@@ -539,7 +539,7 @@ IntelliSenseItemForm::IntelliSenseItemForm(nativeWrapper::MarshalledFormData^ Da
 			{
 				Sb->TableNextColumn(kFirstColumnWidth);
 				{
-					Sb->Text("Source File :");
+					Sb->Bold()->Text("Source File :")->PopTag();
 				}
 				Sb->TableNextColumn(kSecondColumnWidth);
 				{
@@ -555,7 +555,7 @@ IntelliSenseItemForm::IntelliSenseItemForm(nativeWrapper::MarshalledFormData^ Da
 			{
 				Sb->TableNextColumn(kFirstColumnWidth);
 				{
-					Sb->Text("Name :");
+					Sb->Bold()->Text("Name :")->PopTag();
 				}
 				Sb->TableNextColumn(kSecondColumnWidth);
 				{
@@ -592,7 +592,7 @@ IntelliSenseItemForm::IntelliSenseItemForm(nativeWrapper::MarshalledFormData^ Da
 			{
 				Sb->TableNextColumn(kFirstColumnWidth);
 				{
-					Sb->Text("Flags :");
+					Sb->Bold()->Text("Flags :")->PopTag();
 				}
 				Sb->TableNextColumn(kSecondColumnWidth);
 				{
@@ -624,11 +624,11 @@ IntelliSenseItemForm::IntelliSenseItemForm(nativeWrapper::MarshalledFormData^ Da
 			{
 				Sb->TableNextColumn(kFirstColumnWidth);
 				{
-					Sb->Text("Description :");
+					Sb->Bold()->Text("Description :")->PopTag();
 				}
 				Sb->TableNextColumn(kSecondColumnWidth);
 				{
-					Sb->Text(Data->DescriptionComponent);
+					Sb->Bold()->Text(Data->DescriptionComponent)->PopTag();
 				}
 				Sb->TableNextColumn();
 			}
@@ -640,7 +640,7 @@ IntelliSenseItemForm::IntelliSenseItemForm(nativeWrapper::MarshalledFormData^ Da
 			{
 				Sb->TableNextColumn(kFirstColumnWidth);
 				{
-					Sb->Text("Base Form :");
+					Sb->Bold()->Text("Base Form :")->PopTag();
 				}
 				Sb->TableNextColumn(kSecondColumnWidth);
 				{
@@ -656,7 +656,7 @@ IntelliSenseItemForm::IntelliSenseItemForm(nativeWrapper::MarshalledFormData^ Da
 			{
 				Sb->TableNextColumn(kFirstColumnWidth);
 				{
-					Sb->Text("Attached Script :");
+					Sb->Bold()->Text("Attached Script :")->PopTag();
 				}
 				Sb->TableNextColumn(kSecondColumnWidth);
 				{
@@ -770,7 +770,7 @@ System::String^ IntelliSenseItemGlobalVariable::TooltipBodyText::get()
 		{
 			Sb->TableNextColumn(kFirstColumnWidth);
 			{
-				Sb->Text("Type :");
+				Sb->Bold()->Text("Type :")->PopTag();
 			}
 			Sb->TableNextColumn(kSecondColumnWidth);
 			{
@@ -785,7 +785,7 @@ System::String^ IntelliSenseItemGlobalVariable::TooltipBodyText::get()
 			{
 				Sb->TableNextColumn(kFirstColumnWidth);
 				{
-					Sb->Text("Value :");
+					Sb->Bold()->Text("Value :")->PopTag();
 				}
 				Sb->TableNextColumn(kSecondColumnWidth);
 				{
@@ -870,7 +870,7 @@ IntelliSenseItemScript::IntelliSenseItemScript(nativeWrapper::MarshalledScriptDa
 			{
 				Sb->TableNextColumn(kFirstColumnWidth);
 				{
-					Sb->Text("Comment :");
+					Sb->Bold()->Text("Comment :")->PopTag();
 				}
 				Sb->TableNextColumn(kSecondColumnWidth);
 				{
@@ -884,7 +884,7 @@ IntelliSenseItemScript::IntelliSenseItemScript(nativeWrapper::MarshalledScriptDa
 		{
 			Sb->TableNextColumn(kFirstColumnWidth);
 			{
-				Sb->Text("Variable Count :");
+				Sb->Bold()->Text("Variables :")->PopTag();
 			}
 			Sb->TableNextColumn(kSecondColumnWidth);
 			{
@@ -970,7 +970,7 @@ IntelliSenseItemUserFunction::IntelliSenseItemUserFunction(nativeWrapper::Marsha
 		{
 			Sb->TableNextColumn(kFirstColumnWidth);
 			{
-				Sb->Text("Parameter Count :");
+				Sb->Bold()->Text("Parameters :")->PopTag();
 			}
 			Sb->TableNextColumn(kSecondColumnWidth);
 			{
@@ -1028,7 +1028,7 @@ IntelliSenseItemUserFunction::IntelliSenseItemUserFunction(nativeWrapper::Marsha
 		{
 			Sb->TableNextColumn(kFirstColumnWidth);
 			{
-				Sb->Text("Return Value :");
+				Sb->Bold()->Text("Return Value :")->PopTag();
 			}
 			Sb->TableNextColumn(kSecondColumnWidth);
 			{
@@ -1071,7 +1071,7 @@ IntelliSenseItemCodeSnippet::IntelliSenseItemCodeSnippet(CodeSnippet^ Source) :
 			{
 				Sb->TableNextColumn(kFirstColumnWidth);
 				{
-					Sb->Text("Description :");
+					Sb->Bold()->Text("Description :")->PopTag();
 				}
 				Sb->TableNextColumn(kSecondColumnWidth);
 				{
@@ -1087,7 +1087,7 @@ IntelliSenseItemCodeSnippet::IntelliSenseItemCodeSnippet(CodeSnippet^ Source) :
 			{
 				Sb->TableNextColumn(kFirstColumnWidth);
 				{
-					Sb->Text("New variables :");
+					Sb->Bold()->Text("New Variables :")->PopTag();
 				}
 				Sb->TableNextColumn(kSecondColumnWidth);
 				{
