@@ -895,6 +895,7 @@ namespace bgsee
 		ClearMessageLog();
 		SetTitle(ActiveContext->GetName());
 
+		EnableWindow(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE), ActiveContext == PrimaryContext);
 		PostMessage(DialogHandle, IDM_BGSEE_CONSOLE_CONTEXTTABS_RELOAD, 0, 0);
 	}
 
