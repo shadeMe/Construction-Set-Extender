@@ -172,7 +172,7 @@ namespace cse
 
 		va_list Args;
 		va_start(Args, FormatString);
-		vsprintf_s(Buffer, sizeof(Buffer), FormatString, Args);
+		vsnprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, FormatString, Args);
 		va_end(Args);
 
 		BGSEECONSOLE->LogMsg(Prefix, Buffer);

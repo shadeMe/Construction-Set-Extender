@@ -13,7 +13,7 @@ namespace cse
 			char Buffer[0x1000] = { 0 };
 			va_list Args;
 			va_start(Args, Fmt);
-			vsprintf_s(Buffer, sizeof(Buffer), Fmt, Args);
+			vsnprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, Fmt, Args);
 			va_end(Args);
 
 			if (strlen(Buffer))

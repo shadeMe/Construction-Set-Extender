@@ -337,47 +337,53 @@ void ScriptEditorController::SetBoundDocument(model::IScriptDocument^ Document)
 
 	BoundDocument = Document;
 
-	View->GetComponentByRole(view::eViewRole::TextEditor_ViewPortContainer)->AsContainer()->AddControl(BoundDocument->TextEditor->Container);
-	BoundDocument->TextEditor->Container->Visible = true;
-	BoundDocument->TextEditor->Container->BringToFront();
-	BoundDocument->TextEditor->Container->Focus();
+	View->BeginUpdate();
+	{
+		View->GetComponentByRole(view::eViewRole::TextEditor_ViewPortContainer)->AsContainer()->AddControl(BoundDocument->TextEditor->Container);
+		BoundDocument->TextEditor->Container->BringToFront();
+		BoundDocument->TextEditor->Container->Focus();
 
-	BoundDocument->TextEditor->KeyDown += DelegateModelKeyDown;
-	BoundDocument->TextEditor->MouseClick += DelegateModelMouseClick;
-	BoundDocument->NavigationHelper->NavigationChanged += DelegateModelNavigationChanged;
+		BoundDocument->TextEditor->KeyDown += DelegateModelKeyDown;
+		BoundDocument->TextEditor->MouseClick += DelegateModelMouseClick;
+		BoundDocument->NavigationHelper->NavigationChanged += DelegateModelNavigationChanged;
 
-	BoundDocument->BackgroundAnalyzer->Resume();
-	BoundDocument->IntelliSenseModel->Bind(View->IntelliSenseView);
-	BoundDocument->TextEditor->Bind();
-;
-	SetDocumentDependentViewComponentsEnabled(true);
-	if (BoundDocument->IsPreprocessorOutputEnabled())
-		SetDocumentPreprocessorOutputDisplayDependentViewComponentsEnabled(false);
+		BoundDocument->BackgroundAnalyzer->Resume();
+		BoundDocument->IntelliSenseModel->Bind(View->IntelliSenseView);
+		BoundDocument->TextEditor->Bind();
+	;
+		SetDocumentDependentViewComponentsEnabled(true);
+		if (BoundDocument->IsPreprocessorOutputEnabled())
+			SetDocumentPreprocessorOutputDisplayDependentViewComponentsEnabled(false);
 
-	BoundDocument->PushStateToSubscribers();
-	ValidateDocumentSyncingStatus(BoundDocument);
-	DocumentNavigationHelper->SyncWithDocument(BoundDocument);
+		BoundDocument->PushStateToSubscribers();
+		ValidateDocumentSyncingStatus(BoundDocument);
+		DocumentNavigationHelper->SyncWithDocument(BoundDocument);
+	}
+	View->EndUpdate();
 }
 
 void ScriptEditorController::UnbindBoundDocument()
 {
 	Debug::Assert(BoundDocument != nullptr);
 
-	BoundDocument->BackgroundAnalyzer->Pause();
-	BoundDocument->TextEditor->Unbind();
-	BoundDocument->IntelliSenseModel->Unbind();
+	View->BeginUpdate();
+	{
+		BoundDocument->BackgroundAnalyzer->Pause();
+		BoundDocument->TextEditor->Unbind();
+		BoundDocument->IntelliSenseModel->Unbind();
 
-	BoundDocument->TextEditor->KeyDown -= DelegateModelKeyDown;
-	BoundDocument->TextEditor->MouseClick -= DelegateModelMouseClick;
-	BoundDocument->NavigationHelper->NavigationChanged -= DelegateModelNavigationChanged;
+		BoundDocument->TextEditor->KeyDown -= DelegateModelKeyDown;
+		BoundDocument->TextEditor->MouseClick -= DelegateModelMouseClick;
+		BoundDocument->NavigationHelper->NavigationChanged -= DelegateModelNavigationChanged;
 
-	BoundDocument->TextEditor->Container->SendToBack();
-	BoundDocument->TextEditor->Container->Visible = false;
-	View->GetComponentByRole(view::eViewRole::TextEditor_ViewPortContainer)->AsContainer()->RemoveControl(BoundDocument->TextEditor->Container);
+		BoundDocument->TextEditor->Container->SendToBack();
+		View->GetComponentByRole(view::eViewRole::TextEditor_ViewPortContainer)->AsContainer()->RemoveControl(BoundDocument->TextEditor->Container);
 
-	ResetViewComponentsToUnboundState();
+		ResetViewComponentsToUnboundState();
 
-	BoundDocument = nullptr;
+		BoundDocument = nullptr;
+	}
+	View->EndUpdate();
 }
 
 void ScriptEditorController::SetDocumentDependentViewComponentsEnabled(bool Enabled)
@@ -430,28 +436,30 @@ void ScriptEditorController::SetDocumentDependentViewComponentsEnabled(bool Enab
 		view::eViewRole::TextEditor_ContextMenu_JumpToAttachedScript,
 	};
 
-	for each (auto Role in AffectedComponents)
+	View->BeginUpdate();
 	{
-		auto Component = View->GetComponentByRole(Role);
+		for each (auto Role in AffectedComponents)
+		{
+			auto Component = View->GetComponentByRole(Role);
 
-		if (Component->Type == view::eComponentType::Button)
-			Component->AsButton()->Enabled = Enabled;
-		else if (Component->Type == view::eComponentType::ComboBox)
-			Component->AsComboBox()->Enabled = Enabled;
-		else
-			throw gcnew NotImplementedException;
+			if (Component->Type == view::eComponentType::Button)
+				Component->AsButton()->Enabled = Enabled;
+			else if (Component->Type == view::eComponentType::ComboBox)
+				Component->AsComboBox()->Enabled = Enabled;
+			else
+				throw gcnew NotImplementedException;
+		}
+
+		View->GetComponentByRole(view::eViewRole::StatusBar_DocumentDescription)->AsLabel()->Visible = Enabled;
+		View->GetComponentByRole(view::eViewRole::StatusBar_LineNumber)->AsLabel()->Visible = Enabled;
+		View->GetComponentByRole(view::eViewRole::StatusBar_ColumnNumber)->AsLabel()->Visible = Enabled;
+		View->GetComponentByRole(view::eViewRole::StatusBar_ErrorCount)->AsButton()->Visible = Enabled;
+		View->GetComponentByRole(view::eViewRole::StatusBar_WarningCount)->AsButton()->Visible = Enabled;
+		View->GetComponentByRole(view::eViewRole::StatusBar_NoIssuesIndicator)->AsButton()->Visible = Enabled;
+		View->GetComponentByRole(view::eViewRole::StatusBar_CompiledScriptSize)->AsProgressBar()->Visible = Enabled;
+		View->GetComponentByRole(view::eViewRole::StatusBar)->AsContainer()->Invalidate();
 	}
-
-	// ### TODO This causes a huge spike in CPU activity; investigate!
-	//View->GetComponentByRole(view::eViewRole::NavigationBar)->AsCrumbBar()->Visible = Enabled ? preferences::SettingsHolder::Get()->Appearance->ShowScopeBar : false;
-	View->GetComponentByRole(view::eViewRole::StatusBar_DocumentDescription)->AsLabel()->Visible = Enabled;
-	View->GetComponentByRole(view::eViewRole::StatusBar_LineNumber)->AsLabel()->Visible = Enabled;
-	View->GetComponentByRole(view::eViewRole::StatusBar_ColumnNumber)->AsLabel()->Visible = Enabled;
-	View->GetComponentByRole(view::eViewRole::StatusBar_ErrorCount)->AsButton()->Visible = Enabled;
-	View->GetComponentByRole(view::eViewRole::StatusBar_WarningCount)->AsButton()->Visible = Enabled;
-	View->GetComponentByRole(view::eViewRole::StatusBar_NoIssuesIndicator)->AsButton()->Visible = Enabled;
-	View->GetComponentByRole(view::eViewRole::StatusBar_CompiledScriptSize)->AsProgressBar()->Visible = Enabled;
-	View->GetComponentByRole(view::eViewRole::StatusBar)->AsContainer()->Invalidate();
+	View->EndUpdate();
 }
 
 void ScriptEditorController::SetDocumentPreprocessorOutputDisplayDependentViewComponentsEnabled(bool Enabled)
@@ -490,34 +498,42 @@ void ScriptEditorController::SetDocumentPreprocessorOutputDisplayDependentViewCo
 		view::eViewRole::TextEditor_ContextMenu_AddVar_Array,
 	};
 
-	for each (auto Role in AffectedComponents)
+	View->BeginUpdate();
 	{
-		auto Component = View->GetComponentByRole(Role);
+		for each (auto Role in AffectedComponents)
+		{
+			auto Component = View->GetComponentByRole(Role);
 
-		if (Component->Type == view::eComponentType::Button)
-			Component->AsButton()->Enabled = Enabled;
-		else if (Component->Type == view::eComponentType::ComboBox)
-			Component->AsComboBox()->Enabled = Enabled;
-		else
-			throw gcnew NotImplementedException;
+			if (Component->Type == view::eComponentType::Button)
+				Component->AsButton()->Enabled = Enabled;
+			else if (Component->Type == view::eComponentType::ComboBox)
+				Component->AsComboBox()->Enabled = Enabled;
+			else
+				throw gcnew NotImplementedException;
+		}
+
+		View->GetComponentByRole(view::eViewRole::StatusBar)->AsContainer()->Invalidate();
 	}
-
-	View->GetComponentByRole(view::eViewRole::StatusBar)->AsContainer()->Invalidate();
+	View->EndUpdate();
 }
 
 void ScriptEditorController::ResetViewComponentsToUnboundState()
 {
-	SetDocumentDependentViewComponentsEnabled(false);
-	DocumentNavigationHelper->SyncWithDocument(nullptr);
+	View->BeginUpdate();
+	{
+		SetDocumentDependentViewComponentsEnabled(false);
+		DocumentNavigationHelper->SyncWithDocument(nullptr);
 
-	View->GetComponentByRole(view::eViewRole::MainWindow)->AsForm()->Text = view::IScriptEditorView::MainWindowDefaultTitle;
-	View->GetComponentByRole(view::eViewRole::Messages_ListView)->AsObjectListView()->ClearObjects();
-	View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleErrors)->AsButton()->Text = "Errors";
-	View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleWarnings)->AsButton()->Text = "Warnings";
-	View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleInfos)->AsButton()->Text = "Messages";
-	View->GetComponentByRole(view::eViewRole::Bookmarks_ListView)->AsObjectListView()->ClearObjects();
-	View->GetComponentByRole(view::eViewRole::FindReplaceResults_ListView)->AsObjectListView()->ClearObjects();
-	View->GetComponentByRole(view::eViewRole::FindReplaceResults_Query)->AsLabel()->Text = "-";
+		View->GetComponentByRole(view::eViewRole::MainWindow)->AsForm()->Text = view::IScriptEditorView::MainWindowDefaultTitle;
+		View->GetComponentByRole(view::eViewRole::Messages_ListView)->AsObjectListView()->ClearObjects();
+		View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleErrors)->AsButton()->Text = "Errors";
+		View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleWarnings)->AsButton()->Text = "Warnings";
+		View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleInfos)->AsButton()->Text = "Messages";
+		View->GetComponentByRole(view::eViewRole::Bookmarks_ListView)->AsObjectListView()->ClearObjects();
+		View->GetComponentByRole(view::eViewRole::FindReplaceResults_ListView)->AsObjectListView()->ClearObjects();
+		View->GetComponentByRole(view::eViewRole::FindReplaceResults_Query)->AsLabel()->Text = "-";
+	}
+	View->EndUpdate();
 }
 
 view::ITabStripItem^ ScriptEditorController::LookupTabStripItem(model::IScriptDocument^ Document)
@@ -614,6 +630,11 @@ void ScriptEditorController::AttachDocumentToView(model::IScriptDocument^ Docume
 	// we need to start subscribe to certain changes in state even when the document isn't active
 	Document->StateChanged += DelegateModelDocumentStateChanged;
 	View->GetComponentByRole(view::eViewRole::EmptyWorkspacePanel)->AsContainer()->Visible = false;
+
+	// repeatedly changing the visibility of the navigation crumb bar causes a significant performance hit
+	// which can happen when switching between documents rapidly, causing the UI to become less responsive
+	// so, we'll have to do it here
+	View->GetComponentByRole(view::eViewRole::NavigationBar)->AsCrumbBar()->Visible = preferences::SettingsHolder::Get()->Appearance->ShowScopeBar;
 }
 
 void ScriptEditorController::DetachDocumentFromView(model::IScriptDocument^ Document)
@@ -632,6 +653,7 @@ void ScriptEditorController::DetachDocumentFromView(model::IScriptDocument^ Docu
 
 	Document->StateChanged -= DelegateModelDocumentStateChanged;
 	View->GetComponentByRole(view::eViewRole::EmptyWorkspacePanel)->AsContainer()->Visible = TabStrip->TabCount == 0;
+	View->GetComponentByRole(view::eViewRole::NavigationBar)->AsCrumbBar()->Visible = TabStrip->TabCount == 0 ? false : preferences::SettingsHolder::Get()->Appearance->ShowScopeBar;
 }
 
 void ScriptEditorController::ActivateDocumentInView(model::IScriptDocument^ Document)
@@ -1245,9 +1267,13 @@ void ScriptEditorController::ViewEventHandler_MainTabStrip(view::ViewComponentEv
 		{
 			auto Document = safe_cast<model::IScriptDocument^>(Args->MouseOverTab->Tag);
 
-			if (Document->Dirty)
-				ActivateDocumentInView(Document);
-			CloseAndRemoveDocument(Document);
+			View->BeginUpdate();
+			{
+				if (Document->Dirty)
+					ActivateDocumentInView(Document);
+				CloseAndRemoveDocument(Document);
+			}
+			View->EndUpdate();
 		}
 
 		break;
@@ -1294,9 +1320,13 @@ void ScriptEditorController::ViewEventHandler_MainTabStrip(view::ViewComponentEv
 		// cancel the default handler as we take care of the tab item ourselves
 		Args->Cancel = true;
 
-		if (Document->Dirty)
-			ActivateDocumentInView(Document);
-		CloseAndRemoveDocument(Document);
+		View->BeginUpdate();
+		{
+			if (Document->Dirty)
+				ActivateDocumentInView(Document);
+			CloseAndRemoveDocument(Document);
+		}
+		View->EndUpdate();
 
 		break;
 	}
@@ -2337,6 +2367,9 @@ void ScriptEditorController::InitViewComponents()
 
 	InputManager->RefreshViewComponentShortcutTexts();
 	ResetViewComponentsToUnboundState();
+
+	// needs to be handled separately due to the performance hit associated with it (see AttachDocumentToView())
+	View->GetComponentByRole(view::eViewRole::NavigationBar)->AsCrumbBar()->Visible = false;
 }
 
 void ScriptEditorController::ProcessInstantiationParameters(IScriptEditorController::InstantiationParams^ Params)

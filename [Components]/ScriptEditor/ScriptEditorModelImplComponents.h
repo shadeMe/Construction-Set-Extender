@@ -68,7 +68,7 @@ public:
 	virtual void Pause();
 	virtual void Resume();
 	virtual obScriptParsing::AnalysisData^ DoSynchronousAnalysis(bool RaiseCompletionEvent);
-	virtual void QueueImmediaterBgAnalysis();
+	virtual void QueueImmediateBgAnalysis();
 };
 
 

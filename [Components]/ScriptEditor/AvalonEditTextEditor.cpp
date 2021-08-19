@@ -1082,15 +1082,6 @@ void AvalonEditTextEditor::TextField_ScrollOffsetChanged(Object^ Sender, EventAr
 
 void AvalonEditTextEditor::TextField_TextCopied( Object^ Sender, AvalonEdit::Editing::TextEventArgs^ E )
 {
-	try
-	{
-		Clipboard::Clear();						// to remove HTML formatting
-		Clipboard::SetText(E->Text);
-	}
-	catch (Exception^ X)
-	{
-		DebugPrint("Exception raised while accessing the clipboard.\n\tException: " + X->Message, true);
-	}
 }
 
 void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::Input::KeyEventArgs^ E)
@@ -1738,7 +1729,7 @@ void AvalonEditTextEditor::Bind()
 	ScrollToCaret();
 
 	if (!SemanticAnalysisData->Valid)
-		ParentScriptDocument->BackgroundAnalyzer->QueueImmediaterBgAnalysis();
+		ParentScriptDocument->BackgroundAnalyzer->QueueImmediateBgAnalysis();
 }
 
 void AvalonEditTextEditor::Unbind()
@@ -1787,7 +1778,7 @@ void AvalonEditTextEditor::SetText(String^ Text, bool ResetUndoStack)
 	}
 
 	if (ActivatedInView)
-		ParentScriptDocument->BackgroundAnalyzer->QueueImmediaterBgAnalysis();
+		ParentScriptDocument->BackgroundAnalyzer->QueueImmediateBgAnalysis();
 
 	OnTextUpdated();
 }

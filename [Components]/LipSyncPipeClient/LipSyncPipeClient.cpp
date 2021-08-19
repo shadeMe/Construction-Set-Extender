@@ -69,7 +69,7 @@ void ConnectToInteropPipe(void)
 	DebugPrint("Pipe GUID = %s", PipeGUID);
 
 	char PipeName[0x200] = {0};
-	sprintf_s(PipeName, 0x200, "\\\\.\\pipe\\{%s}", PipeGUID);
+	_snprintf_s(PipeName, 0x200, _TRUNCATE, "\\\\.\\pipe\\{%s}", PipeGUID);
 
 	while (1)
 	{
@@ -219,7 +219,7 @@ void __stdcall HandleDebugText(const char* Message)
 	OldCSInteropData InteropDataOut(OldCSInteropData::kMessageType_DebugPrint);
 	DWORD BytesReadWriteBuffer = 0;
 
-	sprintf_s(InteropDataOut.StringBufferA, sizeof (InteropDataOut.StringBufferA), "%s", Message);
+	_snprintf_s(InteropDataOut.StringBufferA, sizeof (InteropDataOut.StringBufferA), _TRUNCATE, "%s", Message);
 	PerformPipeOperation(g_InteropPipeHandle, kPipeOperation_Write, &InteropDataOut, &BytesReadWriteBuffer);
 }
 
@@ -232,7 +232,7 @@ void DebugPrint(const char* fmt, ...)
 
 	va_list args;
 	va_start(args, fmt);
-	vsprintf_s(Buffer, sizeof(Buffer), fmt, args);
+	vsnprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, fmt, args);
 	va_end(args);
 
 	fputs(Buffer, g_DebugLog);

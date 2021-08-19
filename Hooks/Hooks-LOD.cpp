@@ -256,7 +256,7 @@ namespace cse
 			if (s_NotificationDialog)
 			{
 				char Buffer[0x200] = {0};
-				sprintf_s(Buffer, sizeof(Buffer), "Please Wait\nAssembling Partials");
+				_snprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, "Please Wait\nAssembling Partials");
 				Static_SetText(GetDlgItem(s_NotificationDialog, -1), Buffer);
 			}
 
@@ -488,7 +488,7 @@ namespace cse
 					char Buffer[MAX_PATH + 1] = {0};
 					SHFILEOPSTRUCT DeleteFolderData = {0};
 
-					sprintf_s(Buffer, sizeof(Buffer), "%s\\Data\\Textures\\LandscapeLOD\\Generated\\Partial\\*.dds\0", BGSEEWORKSPACE->GetCurrentWorkspace());
+					_snprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, "%s\\Data\\Textures\\LandscapeLOD\\Generated\\Partial\\*.dds\0", BGSEEWORKSPACE->GetCurrentWorkspace());
 					Buffer[strlen(Buffer) + 1] = 0;
 					DeleteFolderData.wFunc = FO_DELETE;
 					DeleteFolderData.pFrom = Buffer;
@@ -581,7 +581,7 @@ namespace cse
 			if (s_NotificationDialog)
 			{
 				char Buffer[0x200] = {0};
-				sprintf_s(Buffer, sizeof(Buffer), "Please Wait\nDiffuse Map %d/256", ++s_NotificationMapCounter);
+				_snprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, "Please Wait\nDiffuse Map %d/256", ++s_NotificationMapCounter);
 				Static_SetText(GetDlgItem(s_NotificationDialog, -1), Buffer);
 			}
 		}

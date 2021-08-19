@@ -267,7 +267,7 @@ obScriptParsing::AnalysisData^ BackgroundSemanticAnalyzer::DoSynchronousAnalysis
 	return AnalysisResult;
 }
 
-void BackgroundSemanticAnalyzer::QueueImmediaterBgAnalysis()
+void BackgroundSemanticAnalyzer::QueueImmediateBgAnalysis()
 {
 	if (ActiveAnalysisTask)
 		return;

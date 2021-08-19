@@ -341,7 +341,7 @@ namespace cse
 								PrefabObject* Current = (PrefabObject*)DispInfo->item.lParam;
 								SME_ASSERT(Current);
 
-								sprintf_s(DispInfo->item.pszText, DispInfo->item.cchTextMax, "%s", Current->FileName.c_str());
+								_snprintf_s(DispInfo->item.pszText, DispInfo->item.cchTextMax, _TRUNCATE, "%s", Current->FileName.c_str());
 								Result = TRUE;
 							}
 						}

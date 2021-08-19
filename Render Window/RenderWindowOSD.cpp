@@ -1824,7 +1824,7 @@ namespace cse
 			char Buffer[0x1000] = { 0 };
 			va_list Args;
 			va_start(Args, Format);
-			vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
+			vsnprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, Format, Args);
 			va_end(Args);
 
 			if (strlen(Buffer))

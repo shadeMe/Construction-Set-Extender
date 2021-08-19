@@ -406,17 +406,17 @@ namespace cse
 								switch (DisplayData->item.iSubItem)
 								{
 								case CellViewExtraData::kExtraRefListColumn_Persistent:
-									sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, "%s",
+									_snprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, _TRUNCATE, "%s",
 										((Current->formFlags & TESForm::kFormFlags_QuestItem) ? "Y" : ""));
 
 									break;
 								case CellViewExtraData::kExtraRefListColumn_Disabled:
-									sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, "%s",
+									_snprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, _TRUNCATE, "%s",
 										((Current->formFlags & TESForm::kFormFlags_Disabled) ? "Y" : ""));
 
 									break;
 								case CellViewExtraData::kExtraRefListColumn_VWD:
-									sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, "%s",
+									_snprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, _TRUNCATE, "%s",
 										((Current->formFlags & TESForm::kFormFlags_VisibleWhenDistant) ? "Y" : ""));
 
 									break;
@@ -430,21 +430,21 @@ namespace cse
 
 											if (xParent->parent->editorID.c_str() == nullptr)
 											{
-												sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax,
+												_snprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, _TRUNCATE,
 														  "%08X %s",
 														  xParent->parent->formID,
 														  (xParent->oppositeState ? " *" : ""));
 											}
 											else
 											{
-												sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax,
+												_snprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, _TRUNCATE,
 														  "%s %s",
 														  xParent->parent->editorID.c_str(),
 														  (xParent->oppositeState ? " *" : ""));
 											}
 										}
 										else
-											sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, "");
+											_snprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, _TRUNCATE, "");
 									}
 
 									break;
@@ -454,10 +454,10 @@ namespace cse
 										if (xData)
 										{
 											ExtraCount* xCount = CS_CAST(xData, BSExtraData, ExtraCount);
-											sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, "%d", xCount->count);
+											_snprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, _TRUNCATE, "%d", xCount->count);
 										}
 										else
-											sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, "");
+											_snprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, _TRUNCATE, "");
 									}
 
 									break;

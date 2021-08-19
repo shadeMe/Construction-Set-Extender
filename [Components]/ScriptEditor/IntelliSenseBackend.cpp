@@ -83,7 +83,9 @@ IntelliSenseItemCollection::IntelliSenseItemCollection()
 
 void IntelliSenseItemCollection::Add(String^ Identifier, IntelliSenseItem^ Item)
 {
-	Dict->Add(Identifier, Item);
+	if (!Dict->ContainsKey(Identifier))
+		Dict->Add(Identifier, Item);
+
 	Trie->Add(Identifier, Item);
 }
 

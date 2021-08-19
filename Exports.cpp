@@ -63,7 +63,7 @@ void ComponentDLLDebugPrint(UInt8 Source, const char* Message)
 		break;
 	}
 
-	BGSEECONSOLE->LogMsg(Prefix, Message);
+	BGSEECONSOLE->LogMsg(Prefix, "%s", Message);
 }
 
 const char* GetAppPath(void)

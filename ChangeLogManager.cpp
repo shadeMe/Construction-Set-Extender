@@ -137,15 +137,15 @@ namespace cse
 				std::string Name(SaveFile->fileName), Extension(Name.substr(Name.rfind(".") + 1, 3));
 				Name = Name.substr(0, Name.rfind("."));
 
-				sprintf_s(NewPath, sizeof(NewPath), "Data\\Backup\\%s", Name.c_str());
+				_snprintf_s(NewPath, sizeof(NewPath), _TRUNCATE, "Data\\Backup\\%s", Name.c_str());
 				if (CreateDirectory(NewPath, nullptr) == FALSE && GetLastError() != ERROR_ALREADY_EXISTS)
 				{
 					BGSEECONSOLE_ERROR("Couldn't create backup directory '%s'", NewPath);
 				}
 				else
 				{
-					sprintf_s(NewPath, sizeof(NewPath), "Data\\Backup\\%s\\%s - [%s].%s", Name.c_str(), Name.c_str(), TimeString, Extension.c_str());
-					sprintf_s(ExistingPath, sizeof(ExistingPath), "%s%s", SaveFile->filePath, SaveFile->fileName);
+					_snprintf_s(NewPath, sizeof(NewPath), _TRUNCATE, "Data\\Backup\\%s\\%s - [%s].%s", Name.c_str(), Name.c_str(), TimeString, Extension.c_str());
+					_snprintf_s(ExistingPath, sizeof(ExistingPath), _TRUNCATE, "%s%s", SaveFile->filePath, SaveFile->fileName);
 
 					if (CopyFile(ExistingPath, NewPath, FALSE))
 						BGSEECONSOLE_MESSAGE("Saved active file backup to '%s'", NewPath);

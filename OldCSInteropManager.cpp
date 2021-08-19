@@ -42,7 +42,7 @@ namespace cse
 		if ((GUIDReturn == RPC_S_OK || GUIDReturn == RPC_S_UUID_LOCAL_ONLY) && GUIDStrReturn == RPC_S_OK)
 		{
 			char PipeName[0x200] = {0};
-			sprintf_s(PipeName, 0x200, "\\\\.\\pipe\\{%s}", *GUIDOut);
+			_snprintf_s(PipeName, 0x200, _TRUNCATE, "\\\\.\\pipe\\{%s}", *GUIDOut);
 
 			InteropPipeHandle = CreateNamedPipe(PipeName,
 				PIPE_ACCESS_DUPLEX|FILE_FLAG_FIRST_PIPE_INSTANCE|FILE_FLAG_WRITE_THROUGH|WRITE_OWNER,
@@ -277,8 +277,8 @@ namespace cse
 		MP3Path += ".mp3", WAVPath += ".wav";
 
 		OldCSInteropData InteropDataOut(OldCSInteropData::kMessageType_GenerateLIP), InteropDataIn(OldCSInteropData::kMessageType_Wait);
-		sprintf_s(InteropDataOut.StringBufferA, sizeof(InteropDataOut.StringBufferA), "%s", WAVPath.c_str());
-		sprintf_s(InteropDataOut.StringBufferB, sizeof(InteropDataOut.StringBufferB), "%s", ResponseText);
+		_snprintf_s(InteropDataOut.StringBufferA, sizeof(InteropDataOut.StringBufferA), _TRUNCATE, "%s", WAVPath.c_str());
+		_snprintf_s(InteropDataOut.StringBufferB, sizeof(InteropDataOut.StringBufferB), _TRUNCATE, "%s", ResponseText);
 
 		bool HasWAVFile = false;
 		IFileStream	TempFile;

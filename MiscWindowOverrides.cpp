@@ -479,13 +479,13 @@ namespace cse
 								auto Info = (NMLVDISPINFO*)lParam;
 								auto Plugin = (TESFile*)Info->item.lParam;
 								if (Plugin)
-									sprintf_s(Info->item.pszText, Info->item.cchTextMax, "%s", Plugin->fileName);
+									_snprintf_s(Info->item.pszText, Info->item.cchTextMax, _TRUNCATE, "%s", Plugin->fileName);
 								else
 								{
 									// the masters are added in the same order as in the header
 									// use the index of the list view item to get the corresponding missing master's name
 									auto MissingMasterName = (*DataDialog::CurrentSelection)->masterNames.GetNthItem(Info->item.iItem);
-									sprintf_s(Info->item.pszText, Info->item.cchTextMax, "%s", MissingMasterName);
+									_snprintf_s(Info->item.pszText, Info->item.cchTextMax, _TRUNCATE, "%s", MissingMasterName);
 								}
 							}
 						}
@@ -1982,7 +1982,7 @@ namespace cse
 					}
 
 					SetTimer(hWnd, ID_COMMONDLGEXTRAFITTINGS_QUICKVIEWTIMERID, 100, nullptr);
-					SetTimer(hWnd, ID_COMMONDLGEXTRAFITTINGS_ASSETTOOLTIPTIMERID, 650, nullptr);
+					SetTimer(hWnd, ID_COMMONDLGEXTRAFITTINGS_ASSETTOOLTIPTIMERID, 1000, nullptr);
 
 
 					EnumChildWindows(hWnd, DoubleBufferListViewControls, NULL);

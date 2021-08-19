@@ -220,7 +220,7 @@ interface class IBackgroundSemanticAnalyzer
 	void Pause();
 	void Resume();
 	obScriptParsing::AnalysisData^ DoSynchronousAnalysis(bool RaiseCompletionEvent);
-	void QueueImmediaterBgAnalysis();
+	void QueueImmediateBgAnalysis();
 };
 
 

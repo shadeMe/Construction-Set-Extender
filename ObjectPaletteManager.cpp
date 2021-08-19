@@ -419,9 +419,9 @@ namespace cse
 								SME_ASSERT(Current && Current->BaseObject);
 
 								if (Current->Name.length())
-									sprintf_s(DispInfo->item.pszText, DispInfo->item.cchTextMax, "%s", Current->Name.c_str());
+									_snprintf_s(DispInfo->item.pszText, DispInfo->item.cchTextMax, _TRUNCATE, "%s", Current->Name.c_str());
 								else
-									sprintf_s(DispInfo->item.pszText, DispInfo->item.cchTextMax, "%s", Current->BaseObject->GetEditorID());
+									_snprintf_s(DispInfo->item.pszText, DispInfo->item.cchTextMax, _TRUNCATE, "%s", Current->BaseObject->GetEditorID());
 							}
 						}
 
