@@ -570,18 +570,18 @@ namespace bgsee { namespace script { namespace mup {
 	  switch(Store->GetType())
 	  {
 	  case ICodaScriptDataStore::kDataType_Numeric:
-		  sprintf_s(Buffer, sizeof(Buffer), "%0.6f", Store->GetNumber());
+		  _snprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, "%0.6f", Store->GetNumber());
 		  *ret = string_type(Buffer);
 		  break;
 	  case ICodaScriptDataStore::kDataType_Reference:
-		  sprintf_s(Buffer, sizeof(Buffer), "%08X", Store->GetFormID());
+		  _snprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, "%08X", Store->GetFormID());
 		  *ret = string_type(Buffer);
 		  break;
 	  case ICodaScriptDataStore::kDataType_String:
 		  *ret = string_type(Store->GetString());
 		  break;
 	  case ICodaScriptDataStore::kDataType_Array:
-		  sprintf_s(Buffer, sizeof(Buffer), "array[%d]", Store->GetArray()->Size());
+		  _snprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, "array[%d]", Store->GetArray()->Size());
 		  *ret = string_type(Buffer);
 		  break;
 	  default:

@@ -9,7 +9,7 @@ namespace bgsee
 	ChangeLog::ChangeLog(const char* Path, const char* FileName)
 	{
 		char Buffer[0x100] = {0};
-		sprintf_s(Buffer, sizeof(Buffer), "%s-%08X", FileName, SME::MersenneTwister::genrand_int32());
+		_snprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, "%s-%08X", FileName, SME::MersenneTwister::genrand_int32());
 		// add a random suffix to make sure files aren't overwritten due to lousy timer resolution
 
 		FilePath = std::string(Path) + "\\" + std::string(Buffer) + ".log";
@@ -123,7 +123,7 @@ namespace bgsee
 		if ((GUIDReturn == RPC_S_OK || GUIDReturn == RPC_S_UUID_LOCAL_ONLY) && GUIDStrReturn == RPC_S_OK)
 		{
 			//		BGSEECONSOLE_MESSAGE("LogManager GUID = %s", TempGUIDString);
-			sprintf_s(GUIDString, sizeof(GUIDString), "%s", TempGUIDString);
+			_snprintf_s(GUIDString, sizeof(GUIDString), _TRUNCATE, "%s", TempGUIDString);
 			RpcStringFree((RPC_CSTR*)&TempGUIDString);
 		}
 		else
@@ -203,7 +203,7 @@ namespace bgsee
 
 	const char* ChangeLogManager::GetTempDirectory( char* OutBuffer, UInt32 BufferSize )
 	{
-		sprintf_s(OutBuffer, BufferSize, "%s\\%s\\", TempPath, GUIDString);
+		_snprintf_s(OutBuffer, BufferSize, _TRUNCATE, "%s\\%s\\", TempPath, GUIDString);
 		return OutBuffer;
 	}
 
@@ -247,7 +247,7 @@ namespace bgsee
 
 		va_list Args;
 		va_start(Args, Format);
-		vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
+		vsnprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, Format, Args);
 		va_end(Args);
 
 		WriteToLogs(Buffer, true);

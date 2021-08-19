@@ -1065,7 +1065,7 @@ namespace bgsee
 
 		va_list Args;
 		va_start(Args, Format);
-		vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
+		vsnprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, Format, Args);
 		va_end(Args);
 
 		PrimaryContext->Print(Prefix.c_str(), Buffer);
@@ -1077,7 +1077,7 @@ namespace bgsee
 
 		va_list Args;
 		va_start(Args, Format);
-		vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
+		vsnprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, Format, Args);
 		va_end(Args);
 
 		PrimaryContext->Print(Prefix, Buffer);
@@ -1089,7 +1089,7 @@ namespace bgsee
 
 		va_list Args;
 		va_start(Args, Format);
-		vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
+		vsnprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, Format, Args);
 		va_end(Args);
 
 		PrimaryContext->Print(Prefix.c_str(), Buffer);
@@ -1121,7 +1121,7 @@ namespace bgsee
 
 		va_list Args;
 		va_start(Args, Format);
-		vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
+		vsnprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, Format, Args);
 		va_end(Args);
 
 		PrimaryContext->Print(Prefix.c_str(), Buffer);
@@ -1136,7 +1136,7 @@ namespace bgsee
 
 		va_list Args;
 		va_start(Args, Format);
-		vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
+		vsnprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, Format, Args);
 		va_end(Args);
 
 		PrimaryContext->Print(Prefix.c_str(), Buffer);
@@ -1198,7 +1198,7 @@ namespace bgsee
 
 		va_list Args;
 		va_start(Args, Format);
-		vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
+		vsnprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, Format, Args);
 		va_end(Args);
 
 		std::string Addend(Buffer);
@@ -1364,10 +1364,10 @@ namespace bgsee
 							switch (DisplayData->item.iSubItem)
 							{
 							case 0:
-								sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, "%s", (Current->GetEnabled() ? "Y" : " "));
+								_snprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, _TRUNCATE, "%s", (Current->GetEnabled() ? "Y" : " "));
 								break;
 							case 1:
-								sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, "%s", Current->Description.c_str());
+								_snprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, _TRUNCATE, "%s", Current->Description.c_str());
 								break;
 							}
 						}

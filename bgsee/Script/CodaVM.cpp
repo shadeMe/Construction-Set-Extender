@@ -22,7 +22,7 @@ namespace bgsee
 			char Buffer[0x1000] = {0};
 
 			va_start(Args, Fmt);
-			vsprintf_s(Buffer, sizeof(Buffer), Fmt, Args);
+			vsnprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, Fmt, Args);
 			va_end(Args);
 
 			Out << Buffer;
@@ -742,7 +742,7 @@ namespace bgsee
 					char Buffer[0x100] = {0};
 					for (auto Itr : Instance->Cache)
 					{
-						sprintf_s(Buffer, sizeof(Buffer), "[%c]\t\t%s",
+						_snprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, "[%c]\t\t%s",
 								  Itr->GetStoreOwner()->GetDataStore()->GetType(),
 								  Itr->GetName());
 
@@ -787,7 +787,7 @@ namespace bgsee
 
 						if (ExistingVar == false)
 						{
-							sprintf_s(NameBuffer, sizeof(NameBuffer), "[%c]\t\t%s",
+							_snprintf_s(NameBuffer, sizeof(NameBuffer), _TRUNCATE, "[%c]\t\t%s",
 								GlobalVar->GetStoreOwner()->GetDataStore()->GetType(),
 								GlobalVar->GetName());
 

@@ -1073,7 +1073,7 @@ namespace bgsee
 	std::string WindowMessageToString(UINT uMsg, bool AppendHexValue)
 	{
 		char HexStringBuffer[10];
-		sprintf_s(HexStringBuffer, sizeof(HexStringBuffer), "0x%04X", uMsg);
+		_snprintf_s(HexStringBuffer, sizeof(HexStringBuffer), _TRUNCATE, "0x%04X", uMsg);
 
 		std::string Out;
 		const auto Match = kWindowMessageStringTable.find(uMsg);

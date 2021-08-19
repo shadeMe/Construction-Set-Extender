@@ -113,7 +113,7 @@ namespace bgsee
 			}
 		}
 		else
-			sprintf_s(WorkspacePath, MAX_PATH, "%s", DefaultWorkspacePath);
+			_snprintf_s(WorkspacePath, MAX_PATH, _TRUNCATE, "%s", DefaultWorkspacePath);
 
 		strcat_s(WorkspacePath, MAX_PATH, "\\");
 

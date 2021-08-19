@@ -121,9 +121,9 @@ namespace bgsee
 					char OutBuffer[0x50] = {0};
 
 					if (InterpretAsUInt32)
-						sprintf_s(OutBuffer, sizeof(OutBuffer), FormatString, (UInt32)Number);
+						_snprintf_s(OutBuffer, sizeof(OutBuffer), _TRUNCATE, FormatString, (UInt32)Number);
 					else
-						sprintf_s(OutBuffer, sizeof(OutBuffer), FormatString, Number);
+						_snprintf_s(OutBuffer, sizeof(OutBuffer), _TRUNCATE, FormatString, Number);
 
 					*Result = OutBuffer;
 					return true;

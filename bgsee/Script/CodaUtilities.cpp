@@ -217,7 +217,7 @@ namespace bgsee
 		{
 			va_list Args;
 			va_start(Args, Message);
-			vsprintf_s(ErrorMessage, sizeof(ErrorMessage), Message, Args);
+			vsnprintf_s(ErrorMessage, sizeof(ErrorMessage), _TRUNCATE, Message, Args);
 			va_end(Args);
 		}
 
@@ -226,7 +226,7 @@ namespace bgsee
 		{
 			va_list Args;
 			va_start(Args, Message);
-			vsprintf_s(ErrorMessage, sizeof(ErrorMessage), Message, Args);
+			vsnprintf_s(ErrorMessage, sizeof(ErrorMessage), _TRUNCATE, Message, Args);
 			va_end(Args);
 		}
 
@@ -317,7 +317,7 @@ namespace bgsee
 			va_list Args;
 
 			va_start(Args, Format);
-			vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
+			vsnprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, Format, Args);
 			va_end(Args);
 
 			BGSEECONSOLE->PrintToMessageLogContext(ConsoleContext, false, Buffer);
