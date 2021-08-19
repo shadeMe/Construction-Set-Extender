@@ -404,6 +404,7 @@ void AnimatedForm::EndTransition(StartTransitionParams^ StartParams)
 	case eTransitionFinalState::Hide:
 		MetroForm::Hide();
 		this->Opacity = 1;
+		this->Owner = nullptr;
 		break;
 	case eTransitionFinalState::Show:
 		if (StartParams == nullptr)
@@ -764,9 +765,14 @@ SuperTooltipColorSwapper::ScopedSwap::ScopedSwap(SuperTooltipColorSwapper^ Paren
 	OldBackColorStart = Renderer->ColorTable->SuperTooltip->BackgroundColors->Start;
 	OldBackColorEnd = Renderer->ColorTable->SuperTooltip->BackgroundColors->End;
 
-	Renderer->ColorTable->SuperTooltip->TextColor = Parent->TextColor;
-	Renderer->ColorTable->SuperTooltip->BackgroundColors->Start = Parent->BackColor;
-	Renderer->ColorTable->SuperTooltip->BackgroundColors->End = Parent->BackColor;
+	if (!Parent->TextColor.IsEmpty)
+		Renderer->ColorTable->SuperTooltip->TextColor = Parent->TextColor;
+	
+	if (!Parent->BackColor.IsEmpty)
+	{
+		Renderer->ColorTable->SuperTooltip->BackgroundColors->Start = Parent->BackColor;
+		Renderer->ColorTable->SuperTooltip->BackgroundColors->End = Parent->BackColor;
+	}
 }
 
 SuperTooltipColorSwapper::ScopedSwap::~ScopedSwap()
@@ -780,6 +786,12 @@ SuperTooltipColorSwapper::SuperTooltipColorSwapper(Color Text, Color Background)
 {
 	TextColor = Text;
 	BackColor = Background;
+}
+
+SuperTooltipColorSwapper::SuperTooltipColorSwapper()
+{
+	TextColor = Color::Empty;
+	BackColor = Color::Empty;
 }
 
 void SuperTooltipColorSwapper::ShowTooltip(DevComponents::DotNetBar::SuperTooltip^ Tooltip, Object^ Sender, Point ScreenPosition)

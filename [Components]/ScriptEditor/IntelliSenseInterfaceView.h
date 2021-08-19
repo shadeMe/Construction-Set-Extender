@@ -20,6 +20,7 @@ using namespace DevComponents;
 ref class IntelliSenseInterfaceView : public IIntelliSenseInterfaceView
 {
 	IIntelliSenseInterfaceModel^ BoundModel;
+	IntPtr ParentViewHandle;
 
 	utilities::AnimatedForm^ Form;
 	BrightIdeasSoftware::ObjectListView^ ListView;
@@ -62,7 +63,7 @@ ref class IntelliSenseInterfaceView : public IIntelliSenseInterfaceView
 
 	static const float kDimmedOpacity = 0.1f;
 public:
-	IntelliSenseInterfaceView();
+	IntelliSenseInterfaceView(IntPtr ParentViewHandle);
 	~IntelliSenseInterfaceView();
 
 	virtual event EventHandler^ ItemSelected;
@@ -98,7 +99,7 @@ public:
 	virtual void HideInsightToolTip();
 
 	virtual void Update();
-	virtual void Show(Drawing::Point Location, IntPtr Parent);
+	virtual void Show(Drawing::Point Location);
 	virtual void Hide();
 };
 

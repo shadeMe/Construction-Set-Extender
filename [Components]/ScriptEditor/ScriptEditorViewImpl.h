@@ -193,6 +193,10 @@ private:
 	DevComponents::DotNetBar::ButtonItem^ StatusBarErrorCount;
 	DevComponents::DotNetBar::ButtonItem^ StatusBarWarningCount;
 	DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
+	DevComponents::DotNetBar::ButtonItem^ MessagesToolbarMenuSuppressedWarnings;
+	DevComponents::DotNetBar::ControlContainerItem^ MenuSuppressedWarningsListViewWrapper;
+	BrightIdeasSoftware::FastObjectListView^ SuppressibleWarningsList;
+	DevComponents::DotNetBar::ItemContainer^ MenuSuppressedWarningsListViewContainer;
 	System::ComponentModel::IContainer^ components;
 
 	ref struct ViewComponentData
@@ -239,6 +243,8 @@ private:
 	void SetupViewComponentContainer(Control^ Source, eViewRole Role);
 	void SetupViewComponentContainer(DotNetBar::BaseItem^ Source, eViewRole Role);
 	void SetupViewComponentContextMenu(ContextMenuBar^ Provider, ButtonItem^ ContextMenuRoot, eViewRole Role);
+
+	void ClosePopupOwnerActivePopups(Object^ Control);
 public:
 	ScriptEditorWorkspace();
 	virtual ~ScriptEditorWorkspace();
@@ -257,6 +263,7 @@ public:
 	virtual void Reveal(Rectangle InitialBounds);
 	virtual void BeginUpdate();
 	virtual void EndUpdate();
+	virtual void ForceCloseAllPopupMenus();
 };
 
 

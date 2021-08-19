@@ -300,11 +300,14 @@ interface class IObjectListView : public IViewComponent
 {
 	delegate bool CanExpandGetter(Object^ Model);
 	delegate Collections::IEnumerable^ ChildrenGetter(Object^ Model);
+	delegate bool CheckStateGetter(Object^ Model);
+	delegate bool CheckStateSetter(Object^ Model, bool NewValue);
 
 	property Object^ SelectedObject;
 	property Collections::IList^ SelectedObjects;
 	property bool HeaderVisible;
 	property bool UseFiltering;
+	property bool UseCheckBoxes;
 
 	void SetObjects(Collections::IEnumerable^ Collection, bool PreserveState);
 	void ClearObjects();
@@ -314,6 +317,8 @@ interface class IObjectListView : public IViewComponent
 	void SetCanExpandGetter(CanExpandGetter^ Delegate);
 	void SetChildrenGetter(ChildrenGetter^ Delegate);
 	void SetModelFilter(Predicate<Object^>^ Predicate);
+	void SetCheckStateGetter(CheckStateGetter^ Delegate);
+	void SetCheckStateSetter(CheckStateSetter^ Delegate);
 	void EnsureItemVisible(Object^ Item);
 	void ExpandAll();
 	void CollapseAll();
@@ -590,6 +595,8 @@ public enum class eViewRole
 	Messages_Toolbar_ToggleErrors,
 	Messages_Toolbar_ToggleWarnings,
 	Messages_Toolbar_ToggleInfos,
+	Messages_Toolbar_SuppressedWarnings,
+	Messages_Toolbar_SuppressedWarnings_ListView,
 
 	Bookmarks_DockPanel,
 	Bookmarks_ListView,
@@ -653,6 +660,11 @@ interface class IScriptEditorView
 	void Reveal(Rectangle InitialBounds);
 	void BeginUpdate();
 	void EndUpdate();
+
+	// a hacky workaround to close any popup menus that stick around after their owner loses focus
+	// this tends to happen whenever input focus switches from a WinForms control/element to an WPF control (the text editor, in our case)
+	// the switch does not correctly propagate the LostFocus event to the WinForms that previously had focus
+	void ForceCloseAllPopupMenus();
 };
 
 

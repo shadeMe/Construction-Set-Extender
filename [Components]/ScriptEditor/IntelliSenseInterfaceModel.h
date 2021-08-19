@@ -183,7 +183,7 @@ ref class IntelliSenseInterfaceModel : public IIntelliSenseInterfaceModel
 	void UpdateLocalVariables(obScriptParsing::AnalysisData^ Data);
 	void EnumerateVariables(IntelliSenseItemCollection^ ScriptVariables, String^ MatchIdentifier, eFilterMode MatchType, UInt32 FuzzyMatchingMaxCost);
 public:
-	IntelliSenseInterfaceModel(textEditor::ITextEditor^ Parent);
+	IntelliSenseInterfaceModel(textEditor::ITextEditor^ ParentEditor);
 	~IntelliSenseInterfaceModel();
 
 	ImplPropertyGetOnly(List<IntelliSenseItem^>^, DataStore, EnumeratedItems);

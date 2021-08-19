@@ -378,16 +378,22 @@ ref class ObjectListView : public ViewComponent, IObjectListView
 
 	IObjectListView::CanExpandGetter^ DelegateCanExpandGetter;
 	IObjectListView::ChildrenGetter^ DelegateChildrenGetter;
+	IObjectListView::CheckStateGetter^ DelegateCheckStateGetter;
+	IObjectListView::CheckStateSetter^ DelegateCheckStateSetter;
 
 	EventHandler^ DelegateItemActivate;
 	EventHandler^ DelegatePreferenceChanged;
 	BrightIdeasSoftware::TreeListView::CanExpandGetterDelegate^ DelegateWrapperCanExpandGetter;
 	BrightIdeasSoftware::TreeListView::ChildrenGetterDelegate^ DelegateWrapperChildrenGetter;
+	BrightIdeasSoftware::BooleanCheckStateGetterDelegate^ DelegateWrapperCheckStateGetter;
+	BrightIdeasSoftware::BooleanCheckStatePutterDelegate^ DelegateWrapperCheckStateSetter;
 
 	void Handler_ItemActivate(Object^ Sender, EventArgs^ E);
 	void Handler_PreferencesChanged(Object^ Sender, EventArgs^ E);
 	bool Wrapper_CanExpandGetter(Object^ Model);
 	Collections::IEnumerable^ Wrapper_ChildrenGetter(Object^ Model);
+	bool Wrapper_CheckStateGetter(Object^ Model);
+	bool Wrapper_CheckStateSetter(Object^ Model, bool NewValue);
 
 	void SetLastColumnToFillFreeSpace();
 public:
@@ -402,6 +408,7 @@ public:
 		virtual void set(bool v);
 	}
 	ImplPropertySimple(bool, UseFiltering, Source->UseFiltering);
+	ImplPropertySimple(bool, UseCheckBoxes, Source->CheckBoxes);
 
 	virtual void SetObjects(System::Collections::IEnumerable^ Collection, bool PreserveState);
 	virtual void ClearObjects();
@@ -411,6 +418,8 @@ public:
 	virtual void SetCanExpandGetter(IObjectListView::CanExpandGetter^ Delegate);
 	virtual void SetChildrenGetter(IObjectListView::ChildrenGetter^ Delegate);
 	virtual void SetModelFilter(Predicate<Object^>^ Predicate);
+	virtual void SetCheckStateGetter(IObjectListView::CheckStateGetter^ Delegate);
+	virtual void SetCheckStateSetter(IObjectListView::CheckStateSetter^ Delegate);
 	virtual void EnsureItemVisible(Object^ Item);
 	virtual void ExpandAll();
 	virtual void CollapseAll();

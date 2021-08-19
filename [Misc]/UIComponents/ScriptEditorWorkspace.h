@@ -287,6 +287,14 @@ private: DevComponents::DotNetBar::ButtonItem^ MessagesToolbarInfos;
 private: DevComponents::DotNetBar::ButtonItem^ StatusBarErrorCount;
 private: DevComponents::DotNetBar::ButtonItem^ StatusBarWarningCount;
 private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
+private: DevComponents::DotNetBar::ButtonItem^ MessagesToolbarMenuSuppressedWarnings;
+private: DevComponents::DotNetBar::ControlContainerItem^ MenuSuppressedWarningsListViewWrapper;
+
+private: BrightIdeasSoftware::FastObjectListView^ SuppressibleWarningsList;
+private: DevComponents::DotNetBar::ItemContainer^ MenuSuppressedWarningsListViewContainer;
+
+
+
 
 
 
@@ -422,6 +430,7 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->MessagesToolbarErrors = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->MessagesToolbarWarnings = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->MessagesToolbarInfos = (gcnew DevComponents::DotNetBar::ButtonItem());
+			this->MessagesToolbarMenuSuppressedWarnings = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->DockContainerItemMessageList = (gcnew DevComponents::DotNetBar::DockContainerItem());
 			this->DockableBarBookmarks = (gcnew DevComponents::DotNetBar::Bar());
 			this->PanelDockContainerBookmarks = (gcnew DevComponents::DotNetBar::PanelDockContainer());
@@ -502,14 +511,17 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->TextEditorContextMenuJumpToScript = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->NavigationBar = (gcnew DevComponents::DotNetBar::CrumbBar());
 			this->StatusBar = (gcnew DevComponents::DotNetBar::Bar());
-			this->StatusBarLineNumber = (gcnew DevComponents::DotNetBar::LabelItem());
-			this->StatusBarColumnNumber = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->StatusBarDocumentDescription = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->StatusBarErrorCount = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->StatusBarWarningCount = (gcnew DevComponents::DotNetBar::ButtonItem());
 			this->StatusBarNoIssuesIndicator = (gcnew DevComponents::DotNetBar::ButtonItem());
+			this->StatusBarLineNumber = (gcnew DevComponents::DotNetBar::LabelItem());
+			this->StatusBarColumnNumber = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->StatusBarPreprocessorOutputFlag = (gcnew DevComponents::DotNetBar::LabelItem());
 			this->StatusBarScriptBytecodeLength = (gcnew DevComponents::DotNetBar::CircularProgressItem());
+			this->SuppressibleWarningsList = (gcnew BrightIdeasSoftware::FastObjectListView());
+			this->MenuSuppressedWarningsListViewWrapper = (gcnew DevComponents::DotNetBar::ControlContainerItem());
+			this->MenuSuppressedWarningsListViewContainer = (gcnew DevComponents::DotNetBar::ItemContainer());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MainTabStrip))->BeginInit();
 			this->MainTabStrip->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContainerMainToolbar))->BeginInit();
@@ -550,6 +562,7 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->EmptyWorkspacePanel->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContextMenuProvider))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->StatusBar))->BeginInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->SuppressibleWarningsList))->BeginInit();
 			this->SuspendLayout();
 			// 
 			// MainTabStrip
@@ -597,6 +610,7 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->MainTabStrip->Tabs->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(2) { this->DummyTabItem, this->AnotherDummyTabItem });
 			this->MainTabStrip->TabStop = false;
 			this->MainTabStrip->TabStyle = DevComponents::DotNetBar::eSuperTabStyle::Office2010BackstageBlue;
+			this->MainTabStrip->Text = L"Suppressed Warnings";
 			this->MainTabStrip->TextAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
 			// 
 			// DummySuperTabControlPanel1
@@ -1108,10 +1122,10 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->DockSiteBottom->Dock = System::Windows::Forms::DockStyle::Bottom;
 			this->DockSiteBottom->DocumentDockContainer = (gcnew DevComponents::DotNetBar::DocumentDockContainer(gcnew cli::array< DevComponents::DotNetBar::DocumentBaseContainer^  >(4) {
 				(cli::safe_cast<DevComponents::DotNetBar::DocumentBaseContainer^>((gcnew DevComponents::DotNetBar::DocumentBarContainer(this->DockableBarMessages,
-					349, 193)))), (cli::safe_cast<DevComponents::DotNetBar::DocumentBaseContainer^>((gcnew DevComponents::DotNetBar::DocumentBarContainer(this->DockableBarBookmarks,
-						226, 193)))), (cli::safe_cast<DevComponents::DotNetBar::DocumentBaseContainer^>((gcnew DevComponents::DotNetBar::DocumentBarContainer(this->DockableBarFindReplaceResults,
-							195, 193)))), (cli::safe_cast<DevComponents::DotNetBar::DocumentBaseContainer^>((gcnew DevComponents::DotNetBar::DocumentBarContainer(this->DockableBarFindInTabsResults,
-								239, 193))))
+					396, 193)))), (cli::safe_cast<DevComponents::DotNetBar::DocumentBaseContainer^>((gcnew DevComponents::DotNetBar::DocumentBarContainer(this->DockableBarBookmarks,
+						214, 193)))), (cli::safe_cast<DevComponents::DotNetBar::DocumentBaseContainer^>((gcnew DevComponents::DotNetBar::DocumentBarContainer(this->DockableBarFindReplaceResults,
+							204, 193)))), (cli::safe_cast<DevComponents::DotNetBar::DocumentBaseContainer^>((gcnew DevComponents::DotNetBar::DocumentBarContainer(this->DockableBarFindInTabsResults,
+								195, 193))))
 			}, DevComponents::DotNetBar::eOrientation::Horizontal));
 			this->DockSiteBottom->ForeColor = System::Drawing::Color::Black;
 			this->DockSiteBottom->Location = System::Drawing::Point(0, 660);
@@ -1140,7 +1154,7 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->DockableBarMessages->LayoutType = DevComponents::DotNetBar::eLayoutType::DockContainer;
 			this->DockableBarMessages->Location = System::Drawing::Point(0, 7);
 			this->DockableBarMessages->Name = L"DockableBarMessages";
-			this->DockableBarMessages->Size = System::Drawing::Size(349, 193);
+			this->DockableBarMessages->Size = System::Drawing::Size(396, 193);
 			this->DockableBarMessages->Stretch = true;
 			this->DockableBarMessages->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->DockableBarMessages->TabIndex = 1;
@@ -1155,7 +1169,7 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->PanelDockContainerMessageList->DisabledBackColor = System::Drawing::Color::Empty;
 			this->PanelDockContainerMessageList->Location = System::Drawing::Point(3, 23);
 			this->PanelDockContainerMessageList->Name = L"PanelDockContainerMessageList";
-			this->PanelDockContainerMessageList->Size = System::Drawing::Size(343, 167);
+			this->PanelDockContainerMessageList->Size = System::Drawing::Size(390, 167);
 			this->PanelDockContainerMessageList->Style->Alignment = System::Drawing::StringAlignment::Center;
 			this->PanelDockContainerMessageList->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::BarBackground;
 			this->PanelDockContainerMessageList->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
@@ -1179,7 +1193,7 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->MessagesList->Name = L"MessagesList";
 			this->MessagesList->ShowFilterMenuOnRightClick = false;
 			this->MessagesList->ShowGroups = false;
-			this->MessagesList->Size = System::Drawing::Size(343, 142);
+			this->MessagesList->Size = System::Drawing::Size(390, 142);
 			this->MessagesList->TabIndex = 0;
 			this->MessagesList->TabStop = false;
 			this->MessagesList->UseCompatibleStateImageBehavior = false;
@@ -1189,20 +1203,23 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			// 
 			// MessagesToolbar
 			// 
+			this->MessagesToolbar->AccessibleDescription = L"DotNetBar Bar (MessagesToolbar)";
+			this->MessagesToolbar->AccessibleName = L"DotNetBar Bar";
+			this->MessagesToolbar->AccessibleRole = System::Windows::Forms::AccessibleRole::ToolBar;
 			this->MessagesToolbar->AntiAlias = true;
 			this->MessagesToolbar->CanMove = false;
 			this->MessagesToolbar->CanUndock = false;
 			this->MessagesToolbar->Dock = System::Windows::Forms::DockStyle::Top;
 			this->MessagesToolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
 			this->MessagesToolbar->IsMaximized = false;
-			this->MessagesToolbar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(3) {
+			this->MessagesToolbar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(4) {
 				this->MessagesToolbarErrors,
-					this->MessagesToolbarWarnings, this->MessagesToolbarInfos
+					this->MessagesToolbarWarnings, this->MessagesToolbarInfos, this->MessagesToolbarMenuSuppressedWarnings
 			});
 			this->MessagesToolbar->Location = System::Drawing::Point(0, 0);
 			this->MessagesToolbar->Name = L"MessagesToolbar";
 			this->MessagesToolbar->RoundCorners = false;
-			this->MessagesToolbar->Size = System::Drawing::Size(343, 25);
+			this->MessagesToolbar->Size = System::Drawing::Size(390, 25);
 			this->MessagesToolbar->Stretch = true;
 			this->MessagesToolbar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->MessagesToolbar->TabIndex = 1;
@@ -1235,6 +1252,16 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->MessagesToolbarInfos->Name = L"MessagesToolbarInfos";
 			this->MessagesToolbarInfos->Text = L"Messages";
 			// 
+			// MessagesToolbarMenuSuppressedWarnings
+			// 
+			this->MessagesToolbarMenuSuppressedWarnings->AutoExpandOnClick = true;
+			this->MessagesToolbarMenuSuppressedWarnings->ButtonStyle = DevComponents::DotNetBar::eButtonStyle::ImageAndText;
+			this->MessagesToolbarMenuSuppressedWarnings->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"MessagesToolbarMenuSuppressedWarnings.Image")));
+			this->MessagesToolbarMenuSuppressedWarnings->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Far;
+			this->MessagesToolbarMenuSuppressedWarnings->Name = L"MessagesToolbarMenuSuppressedWarnings";
+			this->MessagesToolbarMenuSuppressedWarnings->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(1) { this->MenuSuppressedWarningsListViewContainer });
+			this->MessagesToolbarMenuSuppressedWarnings->Text = L"Suppressed Warnings";
+			// 
 			// DockContainerItemMessageList
 			// 
 			this->DockContainerItemMessageList->Control = this->PanelDockContainerMessageList;
@@ -1259,9 +1286,9 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->DockableBarBookmarks->IsMaximized = false;
 			this->DockableBarBookmarks->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(1) { this->DockContainerItemBookmarks });
 			this->DockableBarBookmarks->LayoutType = DevComponents::DotNetBar::eLayoutType::DockContainer;
-			this->DockableBarBookmarks->Location = System::Drawing::Point(356, 7);
+			this->DockableBarBookmarks->Location = System::Drawing::Point(403, 7);
 			this->DockableBarBookmarks->Name = L"DockableBarBookmarks";
-			this->DockableBarBookmarks->Size = System::Drawing::Size(226, 193);
+			this->DockableBarBookmarks->Size = System::Drawing::Size(214, 193);
 			this->DockableBarBookmarks->Stretch = true;
 			this->DockableBarBookmarks->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->DockableBarBookmarks->TabIndex = 2;
@@ -1276,7 +1303,7 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->PanelDockContainerBookmarks->DisabledBackColor = System::Drawing::Color::Empty;
 			this->PanelDockContainerBookmarks->Location = System::Drawing::Point(3, 23);
 			this->PanelDockContainerBookmarks->Name = L"PanelDockContainerBookmarks";
-			this->PanelDockContainerBookmarks->Size = System::Drawing::Size(220, 167);
+			this->PanelDockContainerBookmarks->Size = System::Drawing::Size(208, 167);
 			this->PanelDockContainerBookmarks->Style->Alignment = System::Drawing::StringAlignment::Center;
 			this->PanelDockContainerBookmarks->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::BarBackground;
 			this->PanelDockContainerBookmarks->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
@@ -1299,7 +1326,7 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->BookmarksList->MultiSelect = false;
 			this->BookmarksList->Name = L"BookmarksList";
 			this->BookmarksList->ShowGroups = false;
-			this->BookmarksList->Size = System::Drawing::Size(192, 167);
+			this->BookmarksList->Size = System::Drawing::Size(180, 167);
 			this->BookmarksList->TabIndex = 0;
 			this->BookmarksList->TabStop = false;
 			this->BookmarksList->UseCompatibleStateImageBehavior = false;
@@ -1371,9 +1398,9 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->DockableBarFindReplaceResults->IsMaximized = false;
 			this->DockableBarFindReplaceResults->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(1) { this->DockContainerItemFindResults });
 			this->DockableBarFindReplaceResults->LayoutType = DevComponents::DotNetBar::eLayoutType::DockContainer;
-			this->DockableBarFindReplaceResults->Location = System::Drawing::Point(589, 7);
+			this->DockableBarFindReplaceResults->Location = System::Drawing::Point(624, 7);
 			this->DockableBarFindReplaceResults->Name = L"DockableBarFindReplaceResults";
-			this->DockableBarFindReplaceResults->Size = System::Drawing::Size(195, 193);
+			this->DockableBarFindReplaceResults->Size = System::Drawing::Size(204, 193);
 			this->DockableBarFindReplaceResults->Stretch = true;
 			this->DockableBarFindReplaceResults->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->DockableBarFindReplaceResults->TabIndex = 3;
@@ -1388,7 +1415,7 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->PanelDockContainerFindResults->DisabledBackColor = System::Drawing::Color::Empty;
 			this->PanelDockContainerFindResults->Location = System::Drawing::Point(3, 23);
 			this->PanelDockContainerFindResults->Name = L"PanelDockContainerFindResults";
-			this->PanelDockContainerFindResults->Size = System::Drawing::Size(189, 167);
+			this->PanelDockContainerFindResults->Size = System::Drawing::Size(198, 167);
 			this->PanelDockContainerFindResults->Style->Alignment = System::Drawing::StringAlignment::Center;
 			this->PanelDockContainerFindResults->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::BarBackground;
 			this->PanelDockContainerFindResults->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
@@ -1411,7 +1438,7 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->FindResultsList->MultiSelect = false;
 			this->FindResultsList->Name = L"FindResultsList";
 			this->FindResultsList->ShowGroups = false;
-			this->FindResultsList->Size = System::Drawing::Size(189, 148);
+			this->FindResultsList->Size = System::Drawing::Size(198, 148);
 			this->FindResultsList->TabIndex = 0;
 			this->FindResultsList->TabStop = false;
 			this->FindResultsList->UseCompatibleStateImageBehavior = false;
@@ -1431,7 +1458,7 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->FindResultsToolbar->Location = System::Drawing::Point(0, 0);
 			this->FindResultsToolbar->Name = L"FindResultsToolbar";
 			this->FindResultsToolbar->RoundCorners = false;
-			this->FindResultsToolbar->Size = System::Drawing::Size(189, 19);
+			this->FindResultsToolbar->Size = System::Drawing::Size(198, 19);
 			this->FindResultsToolbar->Stretch = true;
 			this->FindResultsToolbar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->FindResultsToolbar->TabIndex = 0;
@@ -1473,9 +1500,9 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->DockableBarFindInTabsResults->IsMaximized = false;
 			this->DockableBarFindInTabsResults->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(1) { this->DockContainerItemGlobalFindResults });
 			this->DockableBarFindInTabsResults->LayoutType = DevComponents::DotNetBar::eLayoutType::DockContainer;
-			this->DockableBarFindInTabsResults->Location = System::Drawing::Point(791, 7);
+			this->DockableBarFindInTabsResults->Location = System::Drawing::Point(835, 7);
 			this->DockableBarFindInTabsResults->Name = L"DockableBarFindInTabsResults";
-			this->DockableBarFindInTabsResults->Size = System::Drawing::Size(239, 193);
+			this->DockableBarFindInTabsResults->Size = System::Drawing::Size(195, 193);
 			this->DockableBarFindInTabsResults->Stretch = true;
 			this->DockableBarFindInTabsResults->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
 			this->DockableBarFindInTabsResults->TabIndex = 0;
@@ -1489,7 +1516,7 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->PanelDockContainerGlobalFindResults->DisabledBackColor = System::Drawing::Color::Empty;
 			this->PanelDockContainerGlobalFindResults->Location = System::Drawing::Point(3, 23);
 			this->PanelDockContainerGlobalFindResults->Name = L"PanelDockContainerGlobalFindResults";
-			this->PanelDockContainerGlobalFindResults->Size = System::Drawing::Size(233, 167);
+			this->PanelDockContainerGlobalFindResults->Size = System::Drawing::Size(189, 167);
 			this->PanelDockContainerGlobalFindResults->Style->Alignment = System::Drawing::StringAlignment::Center;
 			this->PanelDockContainerGlobalFindResults->Style->BackColor1->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::BarBackground;
 			this->PanelDockContainerGlobalFindResults->Style->ForeColor->ColorSchemePart = DevComponents::DotNetBar::eColorSchemePart::ItemText;
@@ -1512,7 +1539,7 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->GlobalFindResultsList->MultiSelect = false;
 			this->GlobalFindResultsList->Name = L"GlobalFindResultsList";
 			this->GlobalFindResultsList->ShowGroups = false;
-			this->GlobalFindResultsList->Size = System::Drawing::Size(233, 167);
+			this->GlobalFindResultsList->Size = System::Drawing::Size(189, 167);
 			this->GlobalFindResultsList->TabIndex = 0;
 			this->GlobalFindResultsList->TabStop = false;
 			this->GlobalFindResultsList->UseCompatibleStateImageBehavior = false;
@@ -2317,21 +2344,6 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->StatusBar->TabIndex = 13;
 			this->StatusBar->TabStop = false;
 			// 
-			// StatusBarLineNumber
-			// 
-			this->StatusBarLineNumber->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Center;
-			this->StatusBarLineNumber->Name = L"StatusBarLineNumber";
-			this->StatusBarLineNumber->PaddingLeft = 20;
-			this->StatusBarLineNumber->PaddingRight = 5;
-			this->StatusBarLineNumber->Text = L"Line 0";
-			// 
-			// StatusBarColumnNumber
-			// 
-			this->StatusBarColumnNumber->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Center;
-			this->StatusBarColumnNumber->Name = L"StatusBarColumnNumber";
-			this->StatusBarColumnNumber->PaddingLeft = 5;
-			this->StatusBarColumnNumber->Text = L"Column 0";
-			// 
 			// StatusBarDocumentDescription
 			// 
 			this->StatusBarDocumentDescription->Name = L"StatusBarDocumentDescription";
@@ -2363,6 +2375,21 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->StatusBarNoIssuesIndicator->Name = L"StatusBarNoIssuesIndicator";
 			this->StatusBarNoIssuesIndicator->Text = L"No Issues";
 			// 
+			// StatusBarLineNumber
+			// 
+			this->StatusBarLineNumber->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Center;
+			this->StatusBarLineNumber->Name = L"StatusBarLineNumber";
+			this->StatusBarLineNumber->PaddingLeft = 20;
+			this->StatusBarLineNumber->PaddingRight = 5;
+			this->StatusBarLineNumber->Text = L"Line 0";
+			// 
+			// StatusBarColumnNumber
+			// 
+			this->StatusBarColumnNumber->ItemAlignment = DevComponents::DotNetBar::eItemAlignment::Center;
+			this->StatusBarColumnNumber->Name = L"StatusBarColumnNumber";
+			this->StatusBarColumnNumber->PaddingLeft = 5;
+			this->StatusBarColumnNumber->Text = L"Column 0";
+			// 
 			// StatusBarPreprocessorOutputFlag
 			// 
 			this->StatusBarPreprocessorOutputFlag->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"StatusBarPreprocessorOutputFlag.Image")));
@@ -2385,6 +2412,56 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->StatusBarScriptBytecodeLength->TextPadding->Left = 5;
 			this->StatusBarScriptBytecodeLength->TextPadding->Right = 5;
 			this->StatusBarScriptBytecodeLength->Visible = false;
+			// 
+			// SuppressibleWarningsList
+			// 
+			this->SuppressibleWarningsList->BackColor = System::Drawing::Color::White;
+			this->SuppressibleWarningsList->CellEditUseWholeCell = false;
+			this->SuppressibleWarningsList->CheckBoxes = true;
+			this->SuppressibleWarningsList->Cursor = System::Windows::Forms::Cursors::Default;
+			this->SuppressibleWarningsList->EmptyListMsg = L"Doesn\'t look like anything to me...";
+			this->SuppressibleWarningsList->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75F, System::Drawing::FontStyle::Regular,
+				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+			this->SuppressibleWarningsList->ForeColor = System::Drawing::Color::Black;
+			this->SuppressibleWarningsList->FullRowSelect = true;
+			this->SuppressibleWarningsList->HideSelection = false;
+			this->SuppressibleWarningsList->Location = System::Drawing::Point(3, 3);
+			this->SuppressibleWarningsList->MultiSelect = false;
+			this->SuppressibleWarningsList->Name = L"SuppressibleWarningsList";
+			this->SuppressibleWarningsList->ShowFilterMenuOnRightClick = false;
+			this->SuppressibleWarningsList->ShowGroups = false;
+			this->SuppressibleWarningsList->Size = System::Drawing::Size(350, 150);
+			this->SuppressibleWarningsList->TabIndex = 2;
+			this->SuppressibleWarningsList->TabStop = false;
+			this->SuppressibleWarningsList->UseCompatibleStateImageBehavior = false;
+			this->SuppressibleWarningsList->UseFiltering = true;
+			this->SuppressibleWarningsList->View = System::Windows::Forms::View::Details;
+			this->SuppressibleWarningsList->VirtualMode = true;
+			// 
+			// MenuSuppressedWarningsListViewWrapper
+			// 
+			this->MenuSuppressedWarningsListViewWrapper->AllowItemResize = true;
+			this->MenuSuppressedWarningsListViewWrapper->Control = this->SuppressibleWarningsList;
+			this->MenuSuppressedWarningsListViewWrapper->MenuVisibility = DevComponents::DotNetBar::eMenuVisibility::VisibleAlways;
+			this->MenuSuppressedWarningsListViewWrapper->Name = L"MenuSuppressedWarningsListViewWrapper";
+			this->MenuSuppressedWarningsListViewWrapper->Text = L"Container";
+			// 
+			// MenuSuppressedWarningsListViewContainer
+			// 
+			// 
+			// 
+			// 
+			this->MenuSuppressedWarningsListViewContainer->BackgroundStyle->CornerType = DevComponents::DotNetBar::eCornerType::Square;
+			this->MenuSuppressedWarningsListViewContainer->Name = L"MenuSuppressedWarningsListViewContainer";
+			this->MenuSuppressedWarningsListViewContainer->SubItems->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(1) { this->MenuSuppressedWarningsListViewWrapper });
+			// 
+			// 
+			// 
+			this->MenuSuppressedWarningsListViewContainer->TitleMouseOverStyle->CornerType = DevComponents::DotNetBar::eCornerType::Square;
+			// 
+			// 
+			// 
+			this->MenuSuppressedWarningsListViewContainer->TitleStyle->CornerType = DevComponents::DotNetBar::eCornerType::Square;
 			// 
 			// ScriptEditorWorkspace
 			// 
@@ -2453,6 +2530,7 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 			this->EmptyWorkspacePanel->ResumeLayout(false);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ContextMenuProvider))->EndInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->StatusBar))->EndInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->SuppressibleWarningsList))->EndInit();
 			this->ResumeLayout(false);
 
 		}
@@ -2535,6 +2613,5 @@ private: DevComponents::DotNetBar::ButtonItem^ StatusBarNoIssuesIndicator;
 
 		MetroForm::WndProc(m);
 	}
-
 };
 }

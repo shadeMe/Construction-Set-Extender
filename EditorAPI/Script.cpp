@@ -6,7 +6,7 @@ using namespace cse;
 TESScriptCompiler::_ShowMessage			TESScriptCompiler::ShowMessage = (TESScriptCompiler::_ShowMessage)0x004FFF40;
 bool									TESScriptCompiler::PreventErrorDetours = false;
 bool									TESScriptCompiler::PrintErrorsToConsole = true;
-TESScriptCompiler::CompilerErrorArrayT	TESScriptCompiler::AuxiliaryErrorDepot;
+TESScriptCompiler::CompilerMessageArrayT	TESScriptCompiler::LastCompilationMessages;
 
 Script::VariableInfo* Script::LookupVariableInfoByName(const char* Name)
 {
@@ -147,4 +147,30 @@ void Script::RemoveCompiledData(void)
 
 	thisCall<void>(0x004FF830, this);		// cleanup ref var list
 	thisCall<void>(0x004FF7D0, this);		// cleanup var list
+}
+
+TESScriptCompiler::CompilerMessage::CompilerMessage(UInt32 Line, const char* Message)
+{
+	this->Line = Line;
+	this->Message = Message;
+	this->Type = MessageType::Error;
+	this->MessageCode = 0;
+
+	// by default, the vanilla compiler only returns error messages
+	// OBSE, on the other hand, supports warning messages that don't result in an compilation failure
+	// warning messages are prefixed with a tag to specify message type and an additional warning code
+
+	static std::regex WarningRegEx("^\\[WARNING (\\d+)\\] (.*)$");
+
+	std::smatch WarningMatches;
+	if (std::regex_search(this->Message, WarningMatches, WarningRegEx))
+	{
+		SME_ASSERT(WarningMatches.size() == 3);
+
+		try {
+			this->MessageCode = std::stoul(WarningMatches[1]);
+		} catch (...) {}
+		this->Message = WarningMatches[2];
+		this->Type = MessageType::Warning;
+	}
 }

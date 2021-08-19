@@ -146,6 +146,13 @@ delegate void SyncPostCompileEventHandler(Object^ Sender, SyncPostCompileEventAr
 
 ref class DiskSync
 {
+	static enum class eLogMessageType
+	{
+		Error,
+		Warning,
+		Info
+	};
+
 	bool SyncInProgress;
 	bool ExecutingSyncLoop;
 	String^ WorkingDir;
@@ -168,8 +175,7 @@ ref class DiskSync
 					   bool% OutSuccess,
 					   List<String^>^% OutMessages);
 	void WriteToConsoleContext(String^ Message);
-	String^ FormatLogMessage(int Line, String^ Message, bool Critical);
-
+	String^ FormatLogMessage(int Line, String^ Message, eLogMessageType Type);
 
 	void SyncTimer_Tick(Object^ Sender, EventArgs^ E);
 

@@ -15,9 +15,10 @@ namespace intellisense
 {
 
 
-IntelliSenseInterfaceView::IntelliSenseInterfaceView()
+IntelliSenseInterfaceView::IntelliSenseInterfaceView(IntPtr ParentViewHandle)
 {
-	BoundModel = nullptr;
+	this->BoundModel = nullptr;
+	this->ParentViewHandle = ParentViewHandle;
 
 	Form = gcnew utilities::AnimatedForm(true);
 	ColorManager = gcnew DotNetBar::StyleManagerAmbient;
@@ -95,8 +96,9 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView()
 	InsightPopup->MaximumWidth = Screen::PrimaryScreen->WorkingArea.Width - 150;
 	InsightPopup->MarkupLinkClick += gcnew DotNetBar::MarkupLinkClickEventHandler(&IntelliSenseInterfaceView::SuperTooltip_MarkupLinkClick);
 
-	TooltipColorSwapper = gcnew utilities::SuperTooltipColorSwapper(preferences::SettingsHolder::Get()->Appearance->ForeColor,
-																	preferences::SettingsHolder::Get()->Appearance->BackColor);
+	TooltipColorSwapper = gcnew utilities::SuperTooltipColorSwapper;
+	//TooltipColorSwapper = gcnew utilities::SuperTooltipColorSwapper(preferences::SettingsHolder::Get()->Appearance->ForeColor,
+																	//preferences::SettingsHolder::Get()->Appearance->BackColor);
 
 	MaximumVisibleItemCount = preferences::SettingsHolder::Get()->IntelliSense->MaxVisiblePopupItems;
 	InsightPopupDisplayDuration = preferences::SettingsHolder::Get()->IntelliSense->InsightToolTipDisplayDuration;
@@ -145,8 +147,8 @@ void IntelliSenseInterfaceView::ScriptEditorPreferences_Saved(Object^ Sender, Ev
 	ListView->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
 	ListView->Font = preferences::SettingsHolder::Get()->Appearance->TextFont;
 
-	TooltipColorSwapper->TextColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
-	TooltipColorSwapper->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
+	//TooltipColorSwapper->TextColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
+	//TooltipColorSwapper->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
 }
 
 void IntelliSenseInterfaceView::ListView_SelectionChanged(Object^ Sender, EventArgs^ E)
@@ -428,45 +430,23 @@ void IntelliSenseInterfaceView::Update()
 		auto ExtraHeight = (MaximumVisibleItemCount - ItemCount) * ItemHeight;
 		Size DisplaySize = Size(WindowWidth, MaxHeight - ExtraHeight);
 
-		// ### HACK!
-		// The SetSize call crashes consistently under certain conditions (which are yet to be decoded) due to an invalid window handle
-		// Might have something to do with how the call is invoked (multiple levels of interop b'ween WinForms and WPF)
-		try {
-
-			Form->SetSize(DisplaySize);
-
-			// the column width needs to be (re)set after the form (and its docked listview) have been resized
-			ListViewDefaultColumn->Width = ListView->Width - 4 - (BoundModel->DataStore->Count > MaximumVisibleItemCount ? SystemInformation::HorizontalScrollBarHeight : 0);
-		}
-		catch (Exception^ E) {
-			DebugPrint("IntelliSenseInterfaceView::Update Exception! Message - " + E->Message);
-#ifndef NDEBUG
-			Debugger::Break();
-#endif // !NDEBUG
-		}
+		Form->SetSize(DisplaySize);
+		// the column width needs to be (re)set after the form (and its docked listview) have been resized
+		ListViewDefaultColumn->Width = ListView->Width - 4 - (BoundModel->DataStore->Count > MaximumVisibleItemCount ? SystemInformation::HorizontalScrollBarHeight : 0);
 	}
 }
 
-void IntelliSenseInterfaceView::Show(Drawing::Point Location, IntPtr Parent)
+void IntelliSenseInterfaceView::Show(Drawing::Point Location)
 {
-	try
-	{
-		auto PopupHidden = !Form->Visible;
+	auto PopupHidden = !Form->Visible;
 
-		if (PopupHidden)
-			Form->SetNextActiveTransitionCompleteHandler(SelectFirstItemOnShowHandler);
+	if (PopupHidden)
+		Form->SetNextActiveTransitionCompleteHandler(SelectFirstItemOnShowHandler);
 
-		Form->Show(Location, Parent, PopupHidden);
+	Form->Show(Location, ParentViewHandle, PopupHidden);
 
-		if (!PopupHidden)
-			SelectFirstItemOnShow(Form);
-	}
-	catch (Exception^ E) {
-		DebugPrint("IntelliSenseInterfaceView::Show Exception! Message - " + E->Message);
-#ifndef NDEBUG
-		Debugger::Break();
-#endif // !NDEBUG
-	}
+	if (!PopupHidden)
+		SelectFirstItemOnShow(Form);
 }
 
 void IntelliSenseInterfaceView::Hide()
@@ -476,15 +456,7 @@ void IntelliSenseInterfaceView::Hide()
 	if (!Form->Visible)
 		return;
 
-	try {
-		Form->Hide();
-	}
-	catch (Exception^ E) {
-		DebugPrint("IntelliSenseInterfaceView::Hide Exception! Message - " + E->Message);
-#ifndef NDEBUG
-		Debugger::Break();
-#endif // !NDEBUG
-	}
+	Form->Hide(true);
 }
 
 

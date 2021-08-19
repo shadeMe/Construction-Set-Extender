@@ -303,24 +303,29 @@ bool CompileScript(ScriptCompileData* Data)
 			Data->Script.FillScriptData(ScriptForm);
 		}
 		else
-		{
-			Data->CompileErrorData.Count = TESScriptCompiler::AuxiliaryErrorDepot.size();
-			if (TESScriptCompiler::AuxiliaryErrorDepot.size())
-			{
-				Data->CompileErrorData.ErrorListHead = new ScriptErrorListData::ErrorData[Data->CompileErrorData.Count];
-
-				for (int i = 0; i < Data->CompileErrorData.Count; i++)
-				{
-					TESScriptCompiler::CompilerErrorData* Error = &TESScriptCompiler::AuxiliaryErrorDepot[i];
-					Data->CompileErrorData.ErrorListHead[i].Line = Error->Line;
-					Data->CompileErrorData.ErrorListHead[i].Message = Error->Message.c_str();
-				}
-			}
-			else
-				Data->CompileErrorData.ErrorListHead = nullptr;
-
 			ScriptForm->SetText(OldText->c_str());
+
+		Data->CompilerMessages.Count = TESScriptCompiler::LastCompilationMessages.size();
+		if (TESScriptCompiler::LastCompilationMessages.size())
+		{
+			Data->CompilerMessages.MessageListHead = new ScriptCompilerMessages::MessageData[Data->CompilerMessages.Count];
+
+			for (int i = 0; i < Data->CompilerMessages.Count; i++)
+			{
+				auto CompilerMessage = &TESScriptCompiler::LastCompilationMessages[i];
+				auto& NewMessage = Data->CompilerMessages.MessageListHead[i];
+				NewMessage.Line = CompilerMessage->Line;
+				NewMessage.Message = CompilerMessage->Message.c_str();
+				NewMessage.MessageCode = CompilerMessage->MessageCode;
+
+				if (CompilerMessage->IsWarning())
+					NewMessage.Type = ScriptCompilerMessages::MessageData::kType_Warning;
+				else if (CompilerMessage->IsError())
+					NewMessage.Type = ScriptCompilerMessages::MessageData::kType_Error;
+			}
 		}
+		else
+			Data->CompilerMessages.MessageListHead = nullptr;
 
 		OldText->DeleteInstance();
 	}
@@ -425,7 +430,7 @@ enum
 	kDirection_Backward,
 };
 
-Script* GetScriptNeighbour(Script* Current, UInt8 Direction)
+Script* GetScriptNeighbour(Script* Current, UInt8 Direction, bool OnlyFromActivePlugin)
 {
 	SME_ASSERT(_DATAHANDLER->scripts.Count());
 
@@ -451,12 +456,14 @@ Script* GetScriptNeighbour(Script* Current, UInt8 Direction)
 	}
 
 	if (Result->GetEditorID() == nullptr)
-		Result = GetScriptNeighbour(Result, Direction);
+		Result = GetScriptNeighbour(Result, Direction, OnlyFromActivePlugin);
+	else if (OnlyFromActivePlugin && _DATAHANDLER->activeFile != nullptr && !Result->IsActive())
+		Result = GetScriptNeighbour(Result, Direction, OnlyFromActivePlugin);
 
 	return Result;
 }
 
-ScriptData* GetPreviousScriptInList(void* CurrentScript)
+ScriptData* GetPreviousScriptInList(void* CurrentScript, bool OnlyFromActivePlugin)
 {
 	Script* ScriptForm = CS_CAST(CurrentScript, TESForm, Script);
 	ScriptData* Result = nullptr;
@@ -468,10 +475,10 @@ ScriptData* GetPreviousScriptInList(void* CurrentScript)
 		{
 			Switch = _DATAHANDLER->scripts.GetLastItem();
 			if (Switch->GetEditorID() == nullptr)
-				Switch = GetScriptNeighbour(ScriptForm, kDirection_Backward);
+				Switch = GetScriptNeighbour(ScriptForm, kDirection_Backward, OnlyFromActivePlugin);
 		}
 		else
-			Switch = GetScriptNeighbour(ScriptForm, kDirection_Backward);
+			Switch = GetScriptNeighbour(ScriptForm, kDirection_Backward, OnlyFromActivePlugin);
 	}
 
 	if (Switch && Switch->GetEditorID())
@@ -483,7 +490,7 @@ ScriptData* GetPreviousScriptInList(void* CurrentScript)
 	return Result;
 }
 
-ScriptData* GetNextScriptInList(void* CurrentScript)
+ScriptData* GetNextScriptInList(void* CurrentScript, bool OnlyFromActivePlugin)
 {
 	Script* ScriptForm = CS_CAST(CurrentScript, TESForm, Script);
 	ScriptData* Result = nullptr;
@@ -495,10 +502,10 @@ ScriptData* GetNextScriptInList(void* CurrentScript)
 		{
 			Switch = _DATAHANDLER->scripts.GetNthItem(0);
 			if (Switch->GetEditorID() == nullptr)
-				Switch = GetScriptNeighbour(ScriptForm, kDirection_Forward);
+				Switch = GetScriptNeighbour(ScriptForm, kDirection_Forward, OnlyFromActivePlugin);
 		}
 		else
-			Switch = GetScriptNeighbour(ScriptForm, kDirection_Forward);
+			Switch = GetScriptNeighbour(ScriptForm, kDirection_Forward, OnlyFromActivePlugin);
 	}
 
 	if (Switch && Switch->GetEditorID())

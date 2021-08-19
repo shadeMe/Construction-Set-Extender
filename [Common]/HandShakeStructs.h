@@ -146,9 +146,9 @@ namespace componentDLLInterface
 	{
 		struct ScriptVarInfo
 		{
-			const char* Name;
-			UInt8 Type;	// 2 = ref var
-			UInt32 Index;
+			const char* Name = nullptr;
+			UInt8 Type = 0;	// 2 = ref var
+			UInt32 Index = 0;
 		};
 
 		ScriptVarInfo* ScriptVarListHead;
@@ -158,19 +158,37 @@ namespace componentDLLInterface
 		virtual ~ScriptVarListData();
 	};
 
-	struct ScriptErrorListData : public IDisposableData
+	struct ScriptCompilerMessages : public IDisposableData
 	{
-		struct ErrorData
+		struct MessageData
 		{
-			UInt32 Line;
-			const char* Message;
+			enum
+			{
+				kType_Error,
+				kType_Warning,
+				kType_Info,
+			};
+
+			enum
+			{
+				kDefaultMessageCode = 0
+			};
+
+			UInt32 Line = 0;
+			const char* Message = nullptr;
+			UInt8 Type = kType_Error;
+			UInt32 MessageCode = kDefaultMessageCode;
+
+			bool IsError() const { return Type == kType_Error; }
+			bool IsWarning() const { return Type == kType_Warning; }
+			bool IsInfo() const { return Type == kType_Info; }
 		};
 
-		ErrorData* ErrorListHead;
+		MessageData* MessageListHead;
 		UInt32 Count;
 
-		ScriptErrorListData();
-		virtual ~ScriptErrorListData();
+		ScriptCompilerMessages();
+		virtual ~ScriptCompilerMessages();
 	};
 
 	struct ScriptCompileData : public IDisposableData
@@ -179,7 +197,7 @@ namespace componentDLLInterface
 		bool PrintErrorsToConsole;
 
 		bool CompilationSuccessful;
-		ScriptErrorListData CompileErrorData;
+		ScriptCompilerMessages CompilerMessages;
 
 		ScriptCompileData();
 		virtual ~ScriptCompileData();

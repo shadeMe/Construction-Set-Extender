@@ -314,6 +314,7 @@ public:
 	property Color TextColor;
 	property Color BackColor;
 
+	SuperTooltipColorSwapper();
 	SuperTooltipColorSwapper(Color Text, Color Background);
 
 	void ShowTooltip(DevComponents::DotNetBar::SuperTooltip^ Tooltip, Object^ Sender, Point ScreenPosition);

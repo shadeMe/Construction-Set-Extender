@@ -73,10 +73,10 @@ ref struct NewTabCreationParams
 		LoadFileFromDisk,
 	};
 
-	eInitOperation InitOperation;
-	String^ ExistingScriptEditorId;
-	String^ DiskFilePath;
-	bool BindAfterInit;
+	property eInitOperation InitOperation;
+	property String^ ExistingScriptEditorId;
+	property String^ DiskFilePath;
+	property bool BindAfterInit;
 
 	NewTabCreationParams();
 };

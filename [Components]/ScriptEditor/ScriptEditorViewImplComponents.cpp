@@ -1523,6 +1523,16 @@ System::Collections::IEnumerable^ ObjectListView::Wrapper_ChildrenGetter(Object^
 	return DelegateChildrenGetter(Model);
 }
 
+bool ObjectListView::Wrapper_CheckStateGetter(Object^ Model)
+{
+	return DelegateCheckStateGetter(Model);
+}
+
+bool ObjectListView::Wrapper_CheckStateSetter(Object^ Model, bool NewValue)
+{
+	return DelegateCheckStateSetter(Model, NewValue);
+}
+
 void ObjectListView::SetLastColumnToFillFreeSpace()
 {
 	for (int i = 0, j = Source->AllColumns->Count; i < j; ++i)
@@ -1541,11 +1551,14 @@ ObjectListView::ObjectListView(BrightIdeasSoftware::ObjectListView^ Source, eVie
 
 	DelegateCanExpandGetter = nullptr;
 	DelegateChildrenGetter = nullptr;
+	DelegateCheckStateGetter = nullptr;
+	DelegateCheckStateSetter = nullptr;
 
 	DelegateItemActivate = gcnew EventHandler(this, &ObjectListView::Handler_ItemActivate);
 	DelegatePreferenceChanged = gcnew EventHandler(this, &ObjectListView::Handler_PreferencesChanged);
 	DelegateWrapperCanExpandGetter = gcnew BrightIdeasSoftware::TreeListView::CanExpandGetterDelegate(this, &ObjectListView::Wrapper_CanExpandGetter);
-	DelegateWrapperChildrenGetter = gcnew BrightIdeasSoftware::TreeListView::ChildrenGetterDelegate(this, &ObjectListView::Wrapper_ChildrenGetter);
+	DelegateWrapperCheckStateGetter = gcnew BrightIdeasSoftware::BooleanCheckStateGetterDelegate(this, &ObjectListView::Wrapper_CheckStateGetter);
+	DelegateWrapperCheckStateSetter = gcnew BrightIdeasSoftware::BooleanCheckStatePutterDelegate(this, &ObjectListView::Wrapper_CheckStateSetter);
 
 	Source->ItemActivate += DelegateItemActivate;
 	Source->HideSelection = false;
@@ -1580,17 +1593,31 @@ ObjectListView::~ObjectListView()
 		DelegateChildrenGetter = nullptr;
 	}
 
+	if (DelegateCheckStateGetter != nullptr)
+	{
+		Source->BooleanCheckStateGetter = nullptr;
+		DelegateCheckStateGetter = nullptr;
+	}
+
+	if (DelegateCheckStateSetter != nullptr)
+	{
+		Source->BooleanCheckStatePutter = nullptr;
+		DelegateCheckStateSetter = nullptr;
+	}
+
 	SAFEDELETE_CLR(DelegateItemActivate);
 	SAFEDELETE_CLR(DelegatePreferenceChanged);
 	SAFEDELETE_CLR(DelegateWrapperCanExpandGetter);
 	SAFEDELETE_CLR(DelegateWrapperChildrenGetter);
+	SAFEDELETE_CLR(DelegateWrapperCheckStateGetter);
+	SAFEDELETE_CLR(DelegateWrapperCheckStateSetter);
 
 	for each (auto Column in Source->AllColumns)
 	{
-		// Since some classes consume the component just for the sake of the themeing support,
+		// Since some classes consume the component just for the sake of the theming support,
 		// they might not be using its API to add new columns. This means we cannot always assume
 		// the columns have a corresponding wrapper.
-		if (Column->GetType() != ObjectListViewColumn::typeid)
+		if (Column->Tag == nullptr || Column->Tag->GetType() != ObjectListViewColumn::typeid)
 			continue;
 
 		auto ColumnItem = ObjectListViewColumn::FromOLVColumn(Column);
@@ -1680,6 +1707,18 @@ void ObjectListView::SetModelFilter(Predicate<Object^>^ Predicate)
 		Source->UseFiltering = false;
 		Source->ModelFilter = nullptr;
 	}
+}
+
+void ObjectListView::SetCheckStateGetter(IObjectListView::CheckStateGetter^ Delegate)
+{
+	DelegateCheckStateGetter = Delegate;
+	Source->BooleanCheckStateGetter = DelegateWrapperCheckStateGetter;
+}
+
+void ObjectListView::SetCheckStateSetter(IObjectListView::CheckStateSetter^ Delegate)
+{
+	DelegateCheckStateSetter = Delegate;
+	Source->BooleanCheckStatePutter = DelegateWrapperCheckStateSetter;
 }
 
 void ObjectListView::EnsureItemVisible(Object^ Item)

@@ -248,8 +248,8 @@ bool DiskSync::SyncFromDisk(SyncedScriptData^ SyncedScript)
 	if (CompileSuccess)
 	{
 		List<String^>^ LogMessages = gcnew List<String^>;
-		LogMessages->Add(FormatLogMessage(1, "Compiled successfully at " + DateTime::Now.ToString(), false));
-		LogMessages->Add(FormatLogMessage(1, "Elapsed Time: " + CompileTimer->Elapsed.Milliseconds + " milliseconds", false));
+		LogMessages->Add(FormatLogMessage(1, "Compiled successfully at " + DateTime::Now.ToString(), eLogMessageType::Info));
+		LogMessages->Add(FormatLogMessage(1, "Elapsed Time: " + CompileTimer->Elapsed.Milliseconds + " milliseconds", eLogMessageType::Info));
 		LogMessages->AddRange(CompileMessages);
 
 		CompileMessages = LogMessages;
@@ -303,7 +303,7 @@ bool DiskSync::DoPreprocessingAndAnalysis(componentDLLInterface::ScriptData* Scr
 	if (PreprocessingSuccessful == false)
 	{
 		for each (Tuple<int, String^>^ Itr in PreprocessorErrors->Errors)
-			OutMessages->Add(FormatLogMessage(Itr->Item1, Itr->Item2, true));
+			OutMessages->Add(FormatLogMessage(Itr->Item1, Itr->Item2, eLogMessageType::Error));
 
 		return false;
 	}
@@ -341,18 +341,21 @@ bool DiskSync::DoPreprocessingAndAnalysis(componentDLLInterface::ScriptData* Scr
 	obScriptParsing::AnalysisData^ AnalysisResults = gcnew obScriptParsing::AnalysisData();
 	AnalysisResults->PerformAnalysis(AnalysisParams);
 
-	for each (obScriptParsing::AnalysisData::UserMessage^ Msg in AnalysisResults->AnalysisMessages)
-		OutMessages->Add(FormatLogMessage(Msg->Line, Msg->Message, Msg->Critical));
+	for each (auto Msg in AnalysisResults->AnalysisErrors)
+		OutMessages->Add(FormatLogMessage(Msg->Line, Msg->Message, eLogMessageType::Error));
 
-	if (AnalysisResults->HasCriticalMessages || AnalysisResults->MalformedStructure)
+	for each (auto Msg in AnalysisResults->AnalysisWarnings)
+		OutMessages->Add(FormatLogMessage(Msg->Line, Msg->Message, eLogMessageType::Warning));
+
+	if (AnalysisResults->HasErrors || AnalysisResults->MalformedStructure)
 		return false;
 
 	String^ ScriptOrgEID = gcnew String(Script->EditorID);
 	if (ScriptOrgEID->Equals(AnalysisResults->Name, StringComparison::CurrentCultureIgnoreCase) == false)
 	{
 		OutMessages->Add(FormatLogMessage(1,
-										"Script names can only be changed inside the script editor. Original name: " + ScriptOrgEID,
-										true));
+										  "Script names can only be changed inside the script editor. Original name: " + ScriptOrgEID,
+										  eLogMessageType::Error));
 		return false;
 	}
 
@@ -401,17 +404,22 @@ void DiskSync::CompileScript(SyncedScriptData^ SyncedScript, String^ ImportedScr
 		CString OrgScriptText(OriginalText);
 		nativeWrapper::g_CSEInterfaceTable->ScriptEditor.SetScriptText(NativeScript->ParentForm, OrgScriptText.c_str());
 	}
-	else
-	{
-		for (int i = 0; i < CompilationResult->CompileErrorData.Count; i++)
-		{
-			String^ Message = gcnew String(CompilationResult->CompileErrorData.ErrorListHead[i].Message);
-			int Line = CompilationResult->CompileErrorData.ErrorListHead[i].Line;
-			if (Line < 1)
-				Line = 1;
 
-			OutMessages->Add(FormatLogMessage(Line, Message, true));
-		}
+	for (int i = 0; i < CompilationResult->CompilerMessages.Count; i++)
+	{
+		auto& MessageData = CompilationResult->CompilerMessages.MessageListHead[i];
+		String^ MessageStr = gcnew String(MessageData.Message);
+		int Line = MessageData.Line;
+		if (Line < 1)
+			Line = 1;
+
+		auto MessageType = eLogMessageType::Error;
+		if (MessageData.IsWarning())
+			MessageType = eLogMessageType::Warning;
+		else if (MessageData.IsInfo())
+			MessageType = eLogMessageType::Info;
+
+		OutMessages->Add(FormatLogMessage(Line, MessageStr, MessageType));
 	}
 }
 
@@ -422,13 +430,29 @@ void DiskSync::WriteToConsoleContext(String^ Message)
 	nativeWrapper::g_CSEInterfaceTable->EditorAPI.PrintToConsoleContext(ConsoleMessageLogContext, Msg.c_str(), true);
 }
 
-System::String^ DiskSync::FormatLogMessage(int Line, String^ Message, bool Critical)
+System::String^ DiskSync::FormatLogMessage(int Line, String^ Message, eLogMessageType Type)
 {
 	if (Line < 1)
 		Line = 1;
 
-	return String::Format("[{0}]\tLine {1}\t{2}",
-						(Critical ? "E" : "I"), Line, Message);
+	String^ MessageTag;
+	switch (Type)
+	{
+	case eLogMessageType::Error:
+		MessageTag = "E";
+		break;
+	case eLogMessageType::Warning:
+		MessageTag = "W";
+		break;
+	case eLogMessageType::Info:
+		MessageTag = "I";
+		break;
+	default:
+		MessageTag = "<unknown>";
+		break;
+	}
+
+	return String::Format("[{0}]\tLine {1}\t{2}", MessageTag, Line, Message);
 }
 
 void DiskSync::SyncTimer_Tick(Object^ Sender, EventArgs^ E)

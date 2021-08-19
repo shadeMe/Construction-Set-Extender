@@ -34,6 +34,96 @@ public:
 };
 
 
+using DiagnosticMessageCode = UInt32;
+
+
+ref struct DiagnosticMessage
+{
+	static enum class eType
+	{
+		Error, Warning, Info
+	};
+
+	property UInt32 Line;
+	property String^ Message;
+	property eType Type;
+	property DiagnosticMessageCode MessageCode;
+
+	DiagnosticMessage();
+
+	property bool IsError
+	{
+		bool get() { return Type == eType::Error; }
+	}
+	property bool IsWarning
+	{
+		bool get() { return Type == eType::Warning; }
+	}
+	property bool IsInfo
+	{
+		bool get() { return Type == eType::Info; }
+	}
+};
+
+
+ref struct DiagnosticMessageCodes
+{
+	static property DiagnosticMessageCode Invalid
+	{
+		DiagnosticMessageCode get() { return 0; }
+	}
+
+	// used as a placeholder for messages that do not require a unique message code
+	// for the purposes of identification (for filtering, etc)
+	static property DiagnosticMessageCode Default
+	{
+		DiagnosticMessageCode get() { return DiagnosticMessageCode::MaxValue; }
+	}
+
+	// same as the ones found in the xOBSE source
+	static enum class eObseWarning : DiagnosticMessageCode
+	{
+		UnquotedStringArgument = 19,
+		FunctionPointer = 20,
+		DeprecatedCommand = 21,
+	};
+
+	static enum class eValidatorError : DiagnosticMessageCode
+	{
+		None,
+
+		ScriptNameRedeclaration,
+		InvalidScriptName,
+		VariableDeclarationInsideScriptBlock,
+		VariableRedeclaration,
+		VariableNameCollisionWithForm,
+		VariableNameCollisionWithCommand,
+		VariableNameAllNumeric,
+		NestedBeginBlock,
+		RedundantExpressionPastBlockEnd,
+		MismatchingBlock,
+		MissingBlockEnd,
+		ControlBlockOutsideScriptBlock,
+		InvalidScriptBlockForScriptType,
+		MissingIfCondition,
+		InvalidOperatorNotEquals,
+	};
+
+	static enum class eValidatorWarning : DiagnosticMessageCode
+	{
+		None,
+
+		UnusedLocalVariable,
+	};
+
+	static String^ GetObseWarningDescription(eObseWarning Code);
+	static String^ GetValidatorWarningDescription(eValidatorWarning Code);
+private:
+	static Dictionary<eObseWarning, String^>^ ObseWarningDescriptions = gcnew Dictionary<eObseWarning, String^>;
+	static Dictionary<eValidatorWarning, String^>^ ValidatorWarningDescriptions = gcnew Dictionary<eValidatorWarning, String^>;
+};
+
+
 static enum	class eScriptType
 {
 	None = 0,
@@ -228,15 +318,15 @@ ref struct ScriptBlock : public ControlBlock
 
 ref struct AnalysisData
 {
-	ref struct UserMessage
-	{
-		UInt32 Line;
-		String^ Message;
-		bool Critical;
+private:
+	static Dictionary<DiagnosticMessageCodes::eValidatorError, String^>^ ErrorCodeToFormatString = gcnew Dictionary<DiagnosticMessageCodes::eValidatorError, String^>;
+	static Dictionary<DiagnosticMessageCodes::eValidatorWarning, String^>^ WarningCodeToFormatString = gcnew Dictionary<DiagnosticMessageCodes::eValidatorWarning, String^>;
 
-		UserMessage(UInt32 Line, String^ Message, bool Critical);
-	};
-
+	void InitializeFormatStrings();
+	void LogError(DiagnosticMessageCodes::eValidatorError Code, UInt32 Line, ...array<String^>^ Args);
+	void LogWarning(DiagnosticMessageCodes::eValidatorWarning Code, UInt32 Line, ...array<String^>^ Args);
+	bool ParseConditionExpression(UInt32 Line, String^ Expression);
+public:
 	String^ Name;
 	String^ Description;
 	List<Variable^>^ Variables;
@@ -247,11 +337,12 @@ ref struct AnalysisData
 	bool IsUDF;
 	Variable^ UDFResult;
 	bool UDFAmbiguousResult;
-	List<UserMessage^>^ AnalysisMessages;
+	List<DiagnosticMessage^>^ AnalysisErrors;
+	List<DiagnosticMessage^>^ AnalysisWarnings;
 
-	property bool HasCriticalMessages
+	property bool HasErrors
 	{
-		bool get() { return GetHasCriticalMessages(); }
+		bool get() { return AnalysisErrors->Count > 0; }
 	}
 	property bool Valid
 	{
@@ -295,11 +386,6 @@ ref struct AnalysisData
 	UInt32 GetLineIndentLevel(UInt32 Line);
 	Variable^ LookupVariable(String^ VarName);
 	AnalysisData^ Clone();
-private:
-	void LogAnalysisMessage(UInt32 Line, String^ Message);
-	void LogCriticalAnalysisMessage(UInt32 Line, String^ Message);
-	bool GetHasCriticalMessages();
-	bool ParseConditionExpression(UInt32 Line, String^ Expression);
 };
 
 ref class Sanitizer

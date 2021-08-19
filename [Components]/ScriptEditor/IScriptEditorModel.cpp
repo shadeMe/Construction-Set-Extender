@@ -36,11 +36,129 @@ ScriptLineAnnotation::ScriptLineAnnotation(textEditor::ILineAnchor^ Anchor, Stri
 	Text_ = Text;
 }
 
-ScriptDiagnosticMessage::ScriptDiagnosticMessage(textEditor::ILineAnchor^ Anchor, String^ Message, eMessageType Type, eMessageSource Source)
+ScriptDiagnosticMessage::ScriptDiagnosticMessage(textEditor::ILineAnchor^ Anchor, String^ Message, eMessageType Type, eMessageSource Source, obScriptParsing::DiagnosticMessageCode MessageCode)
 	: ScriptLineAnnotation(Anchor, Message)
 {
 	Type_ = Type;
 	Source_ = Source;
+	MessageCode_ = MessageCode;
+}
+
+void SuppressibleScriptDiagnosticMessages::InitSuppressibleMessages()
+{
+	using namespace obScriptParsing;
+
+	auto CompilerWarnings = gcnew SuppressionStateTableT;
+	CompilerWarnings->Add(static_cast<DiagnosticMessageCode>(DiagnosticMessageCodes::eObseWarning::UnquotedStringArgument),
+						  gcnew MessageState(DiagnosticMessageCodes::GetObseWarningDescription(DiagnosticMessageCodes::eObseWarning::UnquotedStringArgument)));
+	CompilerWarnings->Add(static_cast<DiagnosticMessageCode>(DiagnosticMessageCodes::eObseWarning::FunctionPointer),
+						  gcnew MessageState(DiagnosticMessageCodes::GetObseWarningDescription(DiagnosticMessageCodes::eObseWarning::FunctionPointer)));
+	CompilerWarnings->Add(static_cast<DiagnosticMessageCode>(DiagnosticMessageCodes::eObseWarning::DeprecatedCommand),
+						  gcnew MessageState(DiagnosticMessageCodes::GetObseWarningDescription(DiagnosticMessageCodes::eObseWarning::DeprecatedCommand)));
+	SuppressibleMessages->Add(gcnew FilterPairT(ScriptDiagnosticMessage::eMessageSource::Compiler, ScriptDiagnosticMessage::eMessageType::Warning), CompilerWarnings);
+
+	auto ValidatorWarnings = gcnew SuppressionStateTableT;
+	ValidatorWarnings->Add(static_cast<DiagnosticMessageCode>(DiagnosticMessageCodes::eValidatorWarning::UnusedLocalVariable),
+						   gcnew MessageState(DiagnosticMessageCodes::GetValidatorWarningDescription(DiagnosticMessageCodes::eValidatorWarning::UnusedLocalVariable)));
+	SuppressibleMessages->Add(gcnew FilterPairT(ScriptDiagnosticMessage::eMessageSource::Validator, ScriptDiagnosticMessage::eMessageType::Warning), ValidatorWarnings);
+}
+
+SuppressibleScriptDiagnosticMessages::SuppressibleScriptDiagnosticMessages()
+{
+	SuppressibleMessages = gcnew Dictionary<FilterPairT^, SuppressionStateTableT^>;
+
+	InitSuppressibleMessages();
+}
+
+SuppressibleScriptDiagnosticMessages::MessageState::MessageState(String^ Description)
+{
+	MessageDescription = Description;
+	Suppressed = false;
+}
+
+SuppressibleScriptDiagnosticMessages::SuppressibleMessageInfo::SuppressibleMessageInfo()
+{
+	Source = ScriptDiagnosticMessage::eMessageSource::All;
+	Type = ScriptDiagnosticMessage::eMessageType::All;
+	Code = obScriptParsing::DiagnosticMessageCodes::Invalid;
+	Description = String::Empty;
+}
+
+bool SuppressibleScriptDiagnosticMessages::IsMessageSuppressed(ScriptDiagnosticMessage::eMessageSource Source, ScriptDiagnosticMessage::eMessageType Type, obScriptParsing::DiagnosticMessageCode Code)
+{
+	Debug::Assert(Source != ScriptDiagnosticMessage::eMessageSource::All);
+	Debug::Assert(Type != ScriptDiagnosticMessage::eMessageType::All);
+
+	if (Code == obScriptParsing::DiagnosticMessageCodes::Default)
+		return false;
+
+	SuppressionStateTableT^ SuppressedCodes;
+	if (!SuppressibleMessages->TryGetValue(gcnew FilterPairT(Source, Type), SuppressedCodes))
+		return false;
+
+	MessageState^ State;
+	if (!SuppressedCodes->TryGetValue(Code, State))
+		return false;
+
+	return State->Suppressed;
+}
+
+bool SuppressibleScriptDiagnosticMessages::IsMessageSuppressed(SuppressibleMessageInfo^ MessageInfo)
+{
+	return IsMessageSuppressed(MessageInfo->Source, MessageInfo->Type, MessageInfo->Code);
+}
+
+void SuppressibleScriptDiagnosticMessages::SuppressMessage(ScriptDiagnosticMessage::eMessageSource Source, ScriptDiagnosticMessage::eMessageType Type, obScriptParsing::DiagnosticMessageCode Code, bool Suppressed)
+{
+	Debug::Assert(Source != ScriptDiagnosticMessage::eMessageSource::All);
+	Debug::Assert(Type != ScriptDiagnosticMessage::eMessageType::All);
+	Debug::Assert(Code != obScriptParsing::DiagnosticMessageCodes::Default);
+
+	SuppressionStateTableT^ SuppressedCodes;
+	if (!SuppressibleMessages->TryGetValue(gcnew FilterPairT(Source, Type), SuppressedCodes))
+		throw gcnew ArgumentException("Unknown source-type filter pair (" + Source.ToString() + ", " + Type.ToString() + ")");
+
+	MessageState^ State;
+	if (!SuppressedCodes->TryGetValue(Code, State))
+		throw gcnew ArgumentException("Unknown diagnostic message code " + Code);
+
+	State->Suppressed = Suppressed;
+}
+
+void SuppressibleScriptDiagnosticMessages::SuppressMessage(SuppressibleMessageInfo^ MessageInfo, bool Suppressed)
+{
+	SuppressMessage(MessageInfo->Source, MessageInfo->Type, MessageInfo->Code, Suppressed);
+}
+
+ICollection<SuppressibleScriptDiagnosticMessages::SuppressibleMessageInfo^>^ SuppressibleScriptDiagnosticMessages::GetSuppressibleMessageInfos(ScriptDiagnosticMessage::eMessageSource Source, ScriptDiagnosticMessage::eMessageType Type)
+{
+	auto Out = gcnew List<SuppressibleMessageInfo^>;
+
+	for each (auto % FilterItr in SuppressibleMessages)
+	{
+		if (Source != ScriptDiagnosticMessage::eMessageSource::All && FilterItr.Key->Item1 != Source)
+			continue;
+		else if (Type != ScriptDiagnosticMessage::eMessageType::All && FilterItr.Key->Item2 != Type)
+			continue;
+
+		for each (auto % CodeItr in FilterItr.Value)
+		{
+			auto NewInfo = gcnew SuppressibleMessageInfo;
+			NewInfo->Code = CodeItr.Key;
+			NewInfo->Source = FilterItr.Key->Item1;
+			NewInfo->Type = FilterItr.Key->Item2;
+			NewInfo->Description = CodeItr.Value->MessageDescription;
+
+			Out->Add(NewInfo);
+		}
+	}
+
+	return Out;
+}
+
+SuppressibleScriptDiagnosticMessages^ SuppressibleScriptDiagnosticMessages::Get()
+{
+	return Singleton;
 }
 
 ScriptBookmark::ScriptBookmark(textEditor::ILineAnchor^ Anchor, String^ Description)

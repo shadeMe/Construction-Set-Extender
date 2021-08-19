@@ -54,12 +54,12 @@ void IntelliSenseModelContextUpdateDiff::Reset()
 	CallingObjectScriptChanged = false;
 }
 
-IntelliSenseInterfaceModel::IntelliSenseInterfaceModel(textEditor::ITextEditor^ Parent)
+IntelliSenseInterfaceModel::IntelliSenseInterfaceModel(textEditor::ITextEditor^ ParentEditor)
 {
-	Debug::Assert(Parent != nullptr);
+	Debug::Assert(ParentEditor != nullptr);
 
-	ParentEditor = Parent;
-	BoundView = nullptr;
+	this->ParentEditor = ParentEditor;
+	this->BoundView = nullptr;
 
 	Context = gcnew IntelliSenseModelContext;
 	LastContextUpdateDiff = gcnew IntelliSenseModelContextUpdateDiff;
@@ -318,7 +318,7 @@ void IntelliSenseInterfaceModel::OnScrollOffsetChanged(IntelliSenseContextChange
 	if (!Visible)
 		return;
 
-	// ### This currently only handles vertical scroll offset changes
+	// ### TODO This currently only handles vertical scroll offset changes
 	if (Context->LineVisible)
 		RelocatePopup();
 	else
@@ -418,68 +418,72 @@ void IntelliSenseInterfaceModel::UpdateContext(IntelliSenseContextChangeEventArg
 		PossibleOperationInvocation = true;
 	}
 
-	bool UsingPreviousToken = PreviousToken != "";
-	bool ResolvedOp = false;
-
 	Context->FilterString = CurrentToken;
 	Context->Operation = IntelliSenseModelContext::eOperationType::Default;
 
+	bool ResolvedOp = false;
+	bool UsingPreviousToken = PreviousToken != "";
+	auto TokenToLookAt = UsingPreviousToken ? PreviousToken : CurrentToken;
+	auto DelimiterToLookAt = UsingPreviousToken ? PreviousTokenDelimiter : CurrentTokenDelimiter;
 
 	if (!ResolvedOp)
 	{
-		switch (obScriptParsing::LineTokenizer::GetScriptTokenType(UsingPreviousToken ? PreviousToken : CurrentToken))
+		switch (obScriptParsing::LineTokenizer::GetScriptTokenType(TokenToLookAt))
 		{
 		case obScriptParsing::eScriptTokenType::Call:
-			if ((UsingPreviousToken ? PreviousTokenDelimiter : CurrentTokenDelimiter) == ' ')
+			if (DelimiterToLookAt == ' ')
 			{
 				Context->Operation = IntelliSenseModelContext::eOperationType::Call;
-
 				ResolvedOp = PossibleOperationInvocation;
 			}
 			break;
 		case obScriptParsing::eScriptTokenType::Set:
 		case obScriptParsing::eScriptTokenType::Let:
-			if ((UsingPreviousToken ? PreviousTokenDelimiter : CurrentTokenDelimiter) == ' ')
+			if (DelimiterToLookAt == ' ')
 			{
 				Context->Operation = IntelliSenseModelContext::eOperationType::Assign;
-
 				ResolvedOp = PossibleOperationInvocation;
 			}
 			break;
 		}
 	}
 
-	if ((UsingPreviousToken ? PreviousTokenDelimiter : CurrentTokenDelimiter) == '.')
+	if (DelimiterToLookAt == '.')
 	{
-		Context->Operation = IntelliSenseModelContext::eOperationType::Dot;
-
-		IntelliSenseItemScriptVariable^ RefVar = LookupLocalVariable(UsingPreviousToken ? PreviousToken : CurrentToken);
-		if (RefVar && RefVar->GetDataType() == obScriptParsing::Variable::eDataType::Reference)
+		int Throwaway;
+		bool IsTokenANumber = Int32::TryParse(TokenToLookAt, Throwaway);
+		if (!IsTokenANumber)
 		{
-			Context->CallingObject = RefVar;
-			Context->CallingObjectIsObjectReference = true;
-		}
-		else
-		{
-			ContextualIntelliSenseLookupArgs^ LookupArgs = gcnew ContextualIntelliSenseLookupArgs;
-			LookupArgs->CurrentToken = UsingPreviousToken ? PreviousToken : CurrentToken;
-			auto LookupResult = IntelliSenseBackend::Get()->ContextualIntelliSenseLookup(LookupArgs);
+			Context->Operation = IntelliSenseModelContext::eOperationType::Dot;
 
-			if (LookupResult->CurrentToken == nullptr)
-				Context->Operation = IntelliSenseModelContext::eOperationType::Default;
+			IntelliSenseItemScriptVariable^ RefVar = LookupLocalVariable(TokenToLookAt);
+			if (RefVar && RefVar->GetDataType() == obScriptParsing::Variable::eDataType::Reference)
+			{
+				Context->CallingObject = RefVar;
+				Context->CallingObjectIsObjectReference = true;
+			}
 			else
 			{
-				Context->CallingObject = LookupResult->CurrentToken;
-				Context->CallingObjectIsObjectReference = LookupResult->CurrentTokenIsObjectReference;
+				ContextualIntelliSenseLookupArgs^ LookupArgs = gcnew ContextualIntelliSenseLookupArgs;
+				LookupArgs->CurrentToken = TokenToLookAt;
+				auto LookupResult = IntelliSenseBackend::Get()->ContextualIntelliSenseLookup(LookupArgs);
 
-				if (LookupResult->CurrentTokenIsCallableObject == false)
-					Context->CallingObjectScript = IntelliSenseItemScript::Default;
+				if (LookupResult->CurrentToken == nullptr)
+					Context->Operation = IntelliSenseModelContext::eOperationType::Default;
 				else
-					Context->CallingObjectScript = IntelliSenseBackend::Get()->GetAttachedScript(LookupResult->CurrentToken);
-			}
-		}
+				{
+					Context->CallingObject = LookupResult->CurrentToken;
+					Context->CallingObjectIsObjectReference = LookupResult->CurrentTokenIsObjectReference;
 
-		ResolvedOp = PossibleOperationInvocation;
+					if (LookupResult->CurrentTokenIsCallableObject == false)
+						Context->CallingObjectScript = IntelliSenseItemScript::Default;
+					else
+						Context->CallingObjectScript = IntelliSenseBackend::Get()->GetAttachedScript(LookupResult->CurrentToken);
+				}
+			}
+
+			ResolvedOp = PossibleOperationInvocation;
+		}
 	}
 
 	if (!ResolvedOp)
@@ -725,7 +729,7 @@ bool IntelliSenseInterfaceModel::UpdatePopup()
 	}
 
 	BoundView->Update();
-	BoundView->Show(Context->DisplayScreenCoords, ParentEditor->WindowHandle);
+	BoundView->Show(Context->DisplayScreenCoords);
 	ParentEditor->FocusTextArea();
 
 	return true;
@@ -747,7 +751,7 @@ void IntelliSenseInterfaceModel::RelocatePopup()
 
 	if (Context->LineVisible)
 	{
-		BoundView->Show(Context->DisplayScreenCoords, ParentEditor->WindowHandle);
+		BoundView->Show(Context->DisplayScreenCoords);
 		ParentEditor->FocusTextArea();
 	}
 	else
@@ -883,7 +887,6 @@ void IntelliSenseInterfaceModel::Unbind()
 
 		BoundView->ItemSelected -= BoundViewItemSelectedHandler;
 		BoundView->Dismissed -= BoundViewDismissedHandler;
-		BoundView->Hide();
 
 		BoundView->Unbind();
 		BoundView = nullptr;

@@ -75,11 +75,54 @@ ref struct ScriptDiagnosticMessage : public ScriptLineAnnotation
 protected:
 	eMessageType Type_;
 	eMessageSource Source_;
+	obScriptParsing::DiagnosticMessageCode MessageCode_;
 public:
-	ScriptDiagnosticMessage(textEditor::ILineAnchor^ Anchor, String^ Message, eMessageType Type, eMessageSource Source);
+	ScriptDiagnosticMessage(textEditor::ILineAnchor^ Anchor, String^ Message, eMessageType Type, eMessageSource Source, obScriptParsing::DiagnosticMessageCode MessageCode);
 
 	ImplPropertyGetOnly(eMessageType, Type, Type_);
 	ImplPropertyGetOnly(eMessageSource, Source, Source_);
+	ImplPropertyGetOnly(obScriptParsing::DiagnosticMessageCode, MessageCode, MessageCode_);
+};
+
+
+ref class SuppressibleScriptDiagnosticMessages
+{
+	static SuppressibleScriptDiagnosticMessages^ Singleton = gcnew SuppressibleScriptDiagnosticMessages;
+
+	ref struct MessageState
+	{
+		property String^ MessageDescription;
+		property bool Suppressed;
+
+		MessageState(String^ Description);
+	};
+
+	using FilterPairT = Tuple<ScriptDiagnosticMessage::eMessageSource, ScriptDiagnosticMessage::eMessageType>;
+	using SuppressionStateTableT = Dictionary<obScriptParsing::DiagnosticMessageCode, MessageState^>;
+
+	Dictionary<FilterPairT^, SuppressionStateTableT^>^ SuppressibleMessages;
+
+	void InitSuppressibleMessages();
+
+	SuppressibleScriptDiagnosticMessages();
+public:
+	ref struct SuppressibleMessageInfo
+	{
+		property ScriptDiagnosticMessage::eMessageSource Source;
+		property ScriptDiagnosticMessage::eMessageType Type;
+		property obScriptParsing::DiagnosticMessageCode Code;
+		property String^ Description;
+
+		SuppressibleMessageInfo();
+	};
+
+	bool IsMessageSuppressed(SuppressibleMessageInfo^ MessageInfo);
+	bool IsMessageSuppressed(ScriptDiagnosticMessage::eMessageSource Source, ScriptDiagnosticMessage::eMessageType Type, obScriptParsing::DiagnosticMessageCode Code);
+	void SuppressMessage(SuppressibleMessageInfo^ MessageInfo, bool Suppressed);
+	void SuppressMessage(ScriptDiagnosticMessage::eMessageSource Source, ScriptDiagnosticMessage::eMessageType Type, obScriptParsing::DiagnosticMessageCode Code, bool Suppressed);
+	ICollection<SuppressibleMessageInfo^>^ GetSuppressibleMessageInfos(ScriptDiagnosticMessage::eMessageSource Source, ScriptDiagnosticMessage::eMessageType Type);
+
+	static SuppressibleScriptDiagnosticMessages^ Get();
 };
 
 

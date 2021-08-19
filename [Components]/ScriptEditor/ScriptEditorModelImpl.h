@@ -94,7 +94,7 @@ ref class ScriptDocument : public IScriptDocument
 	void BeginBatchUpdate(eBatchUpdateSource Source);
 	void EndBatchUpdate(eBatchUpdateSource Source);
 
-	void AddMessage(UInt32 Line, String^ Text, ScriptDiagnosticMessage::eMessageType Type, ScriptDiagnosticMessage::eMessageSource Source);
+	void AddMessage(UInt32 Line, String^ Text, ScriptDiagnosticMessage::eMessageType Type, ScriptDiagnosticMessage::eMessageSource Source, obScriptParsing::DiagnosticMessageCode MessageCode);
 	void ClearMessages(ScriptDiagnosticMessage::eMessageSource SourceFilter, ScriptDiagnosticMessage::eMessageType TypeFilter);
 	UInt32 GetMessageCount(UInt32 Line, ScriptDiagnosticMessage::eMessageType TypeFilter);
 

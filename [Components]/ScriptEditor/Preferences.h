@@ -70,6 +70,9 @@ ref struct GeneralSettings : public SettingsGroup
 	[Description("Save/restore caret position on save/load")]
 	property bool SaveRestoreCaret;
 
+	[Category("Tools")]
+	[Description("'Previous/Next Script' will skip scripts that are not from the active plugin file")]
+	property bool OnlySwitchToScriptsFromActivePlugin;
 
 	[Category("Tools")]
 	[Description("'Load Script(s)' updates existing scripts if editorIDs match")]
@@ -96,6 +99,7 @@ ref struct GeneralSettings : public SettingsGroup
 		AutoIndent = true;
 		HideInTaskbar = false;
 		SaveRestoreCaret = false;
+		OnlySwitchToScriptsFromActivePlugin = false;
 		LoadScriptUpdatesExistingScripts = true;
 		CutCopyEntireLine = true;
 		RecompileDependsOnVarIdxMod = true;

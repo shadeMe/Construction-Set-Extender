@@ -228,7 +228,7 @@ public:
 	void HideInsightToolTip();
 
 	void Update();			// refreshes the item list
-	void Show(Drawing::Point Location, IntPtr Parent);
+	void Show(Drawing::Point Location);
 	void Hide();
 };
 

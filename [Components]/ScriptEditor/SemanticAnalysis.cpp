@@ -93,6 +93,44 @@ UInt16 ByteCodeParser::GetOffsetForLine(String^ Line, UInt8* Data, UInt16% Curre
 	return CurrentLineOffset;
 }
 
+DiagnosticMessage::DiagnosticMessage()
+{
+	Line = 0;
+	Message = String::Empty;
+	Type = eType::Info;
+	MessageCode = DiagnosticMessageCodes::Default;
+}
+
+System::String^ DiagnosticMessageCodes::GetObseWarningDescription(eObseWarning Code)
+{
+	if (ObseWarningDescriptions->Count == 0)
+	{
+		ObseWarningDescriptions->Add(eObseWarning::UnquotedStringArgument, "Unquoted argument treated as string");
+		ObseWarningDescriptions->Add(eObseWarning::FunctionPointer, "Usage of reference variables as pointers to UDFs");
+		ObseWarningDescriptions->Add(eObseWarning::DeprecatedCommand, "Script command deprecated");
+	}
+
+	String^ Out;
+	if (ObseWarningDescriptions->TryGetValue(Code, Out))
+		return Out;
+	else
+		return String::Empty;
+}
+
+System::String^ DiagnosticMessageCodes::GetValidatorWarningDescription(eValidatorWarning Code)
+{
+	if (ValidatorWarningDescriptions->Count == 0)
+	{
+		ValidatorWarningDescriptions->Add(eValidatorWarning::UnusedLocalVariable, "Variable unused in current script");
+	}
+
+	String^ Out;
+	if (ValidatorWarningDescriptions->TryGetValue(Code, Out))
+		return Out;
+	else
+		return String::Empty;
+}
+
 LineTokenizer::LineTokenizer()
 {
 	Tokens = gcnew List<String^>();
@@ -639,11 +677,6 @@ String^ ScriptBlock::GetScriptBlockTypeToken(eScriptBlockType Type)
 	}
 }
 
-AnalysisData::UserMessage::UserMessage(UInt32 Line, String^ Message, bool Critical) :
-	Line(Line), Message(Message), Critical(Critical)
-{
-}
-
 AnalysisData::Params::Params()
 {
 	ScriptText = "";
@@ -653,19 +686,71 @@ AnalysisData::Params::Params()
 	FormIdentifiers = gcnew System::Collections::Generic::HashSet<String^>;
 }
 
+void AnalysisData::InitializeFormatStrings()
+{
+	if (ErrorCodeToFormatString->Count == 0)
+	{
+		ErrorCodeToFormatString->Add(DiagnosticMessageCodes::eValidatorError::ScriptNameRedeclaration, "Redeclaration of script name.");
+		ErrorCodeToFormatString->Add(DiagnosticMessageCodes::eValidatorError::InvalidScriptName, "Script name contains invalid characters.");
+		ErrorCodeToFormatString->Add(DiagnosticMessageCodes::eValidatorError::VariableDeclarationInsideScriptBlock, "Variable declared inside a script block.");
+		ErrorCodeToFormatString->Add(DiagnosticMessageCodes::eValidatorError::VariableRedeclaration, "Variable redeclaration. Previous declaration was at line {0}.");
+		ErrorCodeToFormatString->Add(DiagnosticMessageCodes::eValidatorError::VariableNameCollisionWithForm, "The variable identifier '{0}' has already been assigned to a form.");
+		ErrorCodeToFormatString->Add(DiagnosticMessageCodes::eValidatorError::VariableNameCollisionWithCommand, "The variable identifier '{0}' is reserved for a script command.");
+		ErrorCodeToFormatString->Add(DiagnosticMessageCodes::eValidatorError::VariableNameAllNumeric, "The variable identifier '{0}' is a number.");
+		ErrorCodeToFormatString->Add(DiagnosticMessageCodes::eValidatorError::NestedBeginBlock, "Nested Begin block.");
+		ErrorCodeToFormatString->Add(DiagnosticMessageCodes::eValidatorError::RedundantExpressionPastBlockEnd, "Redundant expression after '{0}'.");
+		ErrorCodeToFormatString->Add(DiagnosticMessageCodes::eValidatorError::MismatchingBlock, "Mismatching block.");
+		ErrorCodeToFormatString->Add(DiagnosticMessageCodes::eValidatorError::MissingBlockEnd, "Missing block end keyword.");
+		ErrorCodeToFormatString->Add(DiagnosticMessageCodes::eValidatorError::ControlBlockOutsideScriptBlock, "Control block declared outside a script block.");
+		ErrorCodeToFormatString->Add(DiagnosticMessageCodes::eValidatorError::InvalidScriptBlockForScriptType, "Unsupported script block for the current script type.");
+		ErrorCodeToFormatString->Add(DiagnosticMessageCodes::eValidatorError::MissingIfCondition, "Missing condition.");
+		ErrorCodeToFormatString->Add(DiagnosticMessageCodes::eValidatorError::InvalidOperatorNotEquals, "Invalid operator '<>'.");
+	}
+
+	if (WarningCodeToFormatString->Count == 0)
+	{
+		WarningCodeToFormatString->Add(DiagnosticMessageCodes::eValidatorWarning::UnusedLocalVariable, "Variable '{0}' is unused in the current script.");
+	}
+}
+
+void AnalysisData::LogError(DiagnosticMessageCodes::eValidatorError Code, UInt32 Line, ...array<String^>^ Args)
+{
+	auto NewMessage = gcnew DiagnosticMessage;
+	NewMessage->Line = Line;
+	NewMessage->Message = String::Format(ErrorCodeToFormatString[Code], Args);
+	NewMessage->MessageCode = static_cast<UInt32>(Code);
+	NewMessage->Type = DiagnosticMessage::eType::Error;
+
+	AnalysisErrors->Add(NewMessage);
+}
+
+void AnalysisData::LogWarning(DiagnosticMessageCodes::eValidatorWarning Code, UInt32 Line, ...array<String^>^ Args)
+{
+	auto NewMessage = gcnew DiagnosticMessage;
+	NewMessage->Line = Line;
+	NewMessage->Message = String::Format(WarningCodeToFormatString[Code], Args);
+	NewMessage->MessageCode = static_cast<UInt32>(Code);
+	NewMessage->Type = DiagnosticMessage::eType::Warning;
+
+	AnalysisWarnings->Add(NewMessage);
+}
+
 AnalysisData::AnalysisData()
 {
 	Name = "";
 	Description = "";
-	Variables = gcnew List<Variable^>();
+	Variables = gcnew List<Variable^>;
 	NextVariableLine = 0;
-	ControlBlocks = gcnew List<ControlBlock^>();
+	ControlBlocks = gcnew List<ControlBlock^>;
 	MalformedStructure = false;
 	FirstStructuralErrorLine = 0;
 	IsUDF = false;
 	UDFResult = nullptr;
 	UDFAmbiguousResult = false;
-	AnalysisMessages = gcnew List<UserMessage^>();
+	AnalysisErrors = gcnew List<DiagnosticMessage^>;
+	AnalysisWarnings = gcnew List<DiagnosticMessage^>;
+
+	InitializeFormatStrings();
 }
 
 AnalysisData::AnalysisData(Params^ Parameters)
@@ -679,7 +764,8 @@ AnalysisData::~AnalysisData()
 	Variables->Clear();
 	ControlBlocks->Clear();
 	UDFResult = nullptr;
-	AnalysisMessages->Clear();
+	AnalysisErrors->Clear();
+	AnalysisWarnings->Clear();
 }
 
 AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
@@ -724,7 +810,8 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 
 	if (Operations.HasFlag(eOperation::PerformBasicValidation))
 	{
-		AnalysisMessages->Clear();
+		AnalysisErrors->Clear();
+		AnalysisWarnings->Clear();
 	}
 
 	StructureStack->Push(ControlBlock::eControlBlockType::None);
@@ -758,9 +845,15 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 				if (Operations.HasFlag(eOperation::PerformBasicValidation))
 				{
 					if (Name != "")
-						LogCriticalAnalysisMessage(CurrentLine, "Redeclaration of script name."), EncounteredProblem = true;
+					{
+						LogError(DiagnosticMessageCodes::eValidatorError::ScriptNameRedeclaration, CurrentLine);
+						EncounteredProblem = true;
+					}
 					else if (Parser->HasIllegalChar(SecondToken, "_", ""))
-						LogCriticalAnalysisMessage(CurrentLine, "Script name contains invalid characters."), EncounteredProblem = true;
+					{
+						LogError(DiagnosticMessageCodes::eValidatorError::InvalidScriptName, CurrentLine);
+						EncounteredProblem = true;
+					}
 				}
 
 				if (EncounteredProblem == false)
@@ -787,18 +880,29 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 					if (Operations.HasFlag(eOperation::PerformBasicValidation))
 					{
 						if (StructureStack->Peek() != ControlBlock::eControlBlockType::None)
-							LogCriticalAnalysisMessage(CurrentLine, "Variable declared inside a script block."), EncounteredProblem = true;
+						{
+							LogError(DiagnosticMessageCodes::eValidatorError::VariableDeclarationInsideScriptBlock, CurrentLine);
+							EncounteredProblem = true;
+						}
 
 						Variable^ Existing = LookupVariable(SecondToken);
 						if (Existing != nullptr)
-							LogCriticalAnalysisMessage(CurrentLine, "Variable redeclaration. Previous declaration was at line " + Existing->Line), EncounteredProblem = true;
+						{
+							LogError(DiagnosticMessageCodes::eValidatorError::VariableRedeclaration, CurrentLine, Existing->Line.ToString());
+							EncounteredProblem = true;
+						}
 
 						if (Operations.HasFlag(eOperation::CheckVariableNameFormCollisions) && FormIdentifiers->Contains(SecondToken))
-							LogCriticalAnalysisMessage(CurrentLine, "The identifier " + SecondToken + " has already been assigned to a record."), EncounteredProblem = true;
+						{
+							LogError(DiagnosticMessageCodes::eValidatorError::VariableNameCollisionWithForm, CurrentLine, SecondToken);
+							EncounteredProblem = true;
+						}
 
 						if (Operations.HasFlag(eOperation::CheckVariableNameCommandCollisions) && ScriptCommandIdentifiers->Contains(SecondToken))
-							LogCriticalAnalysisMessage(CurrentLine, "The identifier " + SecondToken + " is reserved for a script command."), EncounteredProblem = true;
-					}
+						{
+							LogError(DiagnosticMessageCodes::eValidatorError::VariableNameCollisionWithCommand, CurrentLine, SecondToken);
+							EncounteredProblem = true;
+						}					}
 
 					if (EncounteredProblem == false)
 						Variables->Add(gcnew Variable(SecondToken, Variable::GetVariableDataType(FirstToken), Comment, CurrentLine));
@@ -821,13 +925,16 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 						FirstStructuralErrorLine = CurrentLine;
 
 						if (Operations.HasFlag(eOperation::PerformBasicValidation))
-							LogCriticalAnalysisMessage(CurrentLine, "Nested Begin block.");
+						{
+							LogError(DiagnosticMessageCodes::eValidatorError::NestedBeginBlock, CurrentLine);
+							EncounteredProblem = true;
+						}
 					}
 					else
 					{
 						ScriptBlock^ NewBlock = gcnew ScriptBlock(CurrentLine, 1,
-																	ScriptBlock::GetScriptBlockType(SecondToken),
-																	ScriptBlock::HasCompilerOverride(SecondToken));
+																  ScriptBlock::GetScriptBlockType(SecondToken),
+																  ScriptBlock::HasCompilerOverride(SecondToken));
 						StructureStack->Push(ControlBlock::eControlBlockType::ScriptBlock);
 						BlockStack->Push(NewBlock);
 						ControlBlocks->Add(NewBlock);
@@ -860,7 +967,10 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 				if (Operations.HasFlag(eOperation::FillControlBlocks))
 				{
 					if (Operations.HasFlag(eOperation::PerformBasicValidation) && Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';')
-						LogAnalysisMessage(CurrentLine, "Redundant expression beyond block end specifier.");
+					{
+						LogError(DiagnosticMessageCodes::eValidatorError::RedundantExpressionPastBlockEnd, CurrentLine, FirstToken);
+						EncounteredProblem = true;
+					}
 
 					if (StructureStack->Peek() != ControlBlock::eControlBlockType::ScriptBlock)
 					{
@@ -869,7 +979,7 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 						FirstStructuralErrorLine = CurrentLine;
 
 						if (Operations.HasFlag(eOperation::PerformBasicValidation))
-							LogCriticalAnalysisMessage(CurrentLine, "Mismatching block.");
+							LogError(DiagnosticMessageCodes::eValidatorError::MismatchingBlock, CurrentLine);
 					}
 					else
 					{
@@ -890,7 +1000,7 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 						FirstStructuralErrorLine = CurrentLine;
 
 						if (Operations.HasFlag(eOperation::PerformBasicValidation))
-							LogCriticalAnalysisMessage(CurrentLine, "Control block declared outside script block.");
+							LogError(DiagnosticMessageCodes::eValidatorError::ControlBlockOutsideScriptBlock, CurrentLine);
 					}
 					else
 					{
@@ -913,7 +1023,10 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 				if (Operations.HasFlag(eOperation::FillControlBlocks))
 				{
 					if (Operations.HasFlag(eOperation::PerformBasicValidation) && Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';')
-						LogAnalysisMessage(CurrentLine, "Redundant expression beyond block end specifier.");
+					{
+						LogError(DiagnosticMessageCodes::eValidatorError::RedundantExpressionPastBlockEnd, CurrentLine, FirstToken);
+						EncounteredProblem = true;
+					}
 
 					if (StructureStack->Peek() != ControlBlock::eControlBlockType::While &&
 						StructureStack->Peek() != ControlBlock::eControlBlockType::ForEach)
@@ -923,7 +1036,7 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 						FirstStructuralErrorLine = CurrentLine;
 
 						if (Operations.HasFlag(eOperation::PerformBasicValidation))
-							LogCriticalAnalysisMessage(CurrentLine, "Mismatching block.");
+							LogError(DiagnosticMessageCodes::eValidatorError::MismatchingBlock, CurrentLine);
 					}
 					else
 					{
@@ -943,12 +1056,15 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 						FirstStructuralErrorLine = CurrentLine;
 
 						if (Operations.HasFlag(eOperation::PerformBasicValidation))
-							LogCriticalAnalysisMessage(CurrentLine, "Control block declared outside script block.");
+							LogError(DiagnosticMessageCodes::eValidatorError::ControlBlockOutsideScriptBlock, CurrentLine);
 					}
 					else
 					{
 						if (Operations.HasFlag(eOperation::PerformBasicValidation) && (Parser->TokenCount < 2 || Parser->Tokens[1][0] == ';'))
-							LogCriticalAnalysisMessage(CurrentLine, "Invalid condition."), EncounteredProblem = true;
+						{
+							LogError(DiagnosticMessageCodes::eValidatorError::MissingIfCondition, CurrentLine);
+							EncounteredProblem = true;
+						}
 
 						ControlBlock^ Parent = BlockStack->Peek();
 						ControlBlock^ NewBlock = gcnew ControlBlock(ControlBlock::eControlBlockType::If, CurrentLine,
@@ -976,13 +1092,14 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 					if (Operations.HasFlag(eOperation::PerformBasicValidation) && FirstTokenType == eScriptTokenType::ElseIf &&
 						(Parser->TokenCount < 2 || Parser->Tokens[1][0] == ';'))
 					{
-						LogCriticalAnalysisMessage(CurrentLine, "Invalid condition.");
+						LogError(DiagnosticMessageCodes::eValidatorError::MissingIfCondition, CurrentLine);
 						EncounteredProblem = true;
 					}
 					if (Operations.HasFlag(eOperation::PerformBasicValidation) && FirstTokenType == eScriptTokenType::Else &&
 						(Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';'))
 					{
-						LogAnalysisMessage(CurrentLine, "Redundant expression beyond Else specifier.");
+						LogError(DiagnosticMessageCodes::eValidatorError::RedundantExpressionPastBlockEnd, CurrentLine, FirstToken);
+						EncounteredProblem = true;
 					}
 
 					if (StructureStack->Peek() != ControlBlock::eControlBlockType::If && StructureStack->Peek() != ControlBlock::eControlBlockType::ElseIf)
@@ -992,7 +1109,7 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 						FirstStructuralErrorLine = CurrentLine;
 
 						if (Operations.HasFlag(eOperation::PerformBasicValidation))
-							LogCriticalAnalysisMessage(CurrentLine, "Mismatching block.");
+							LogError(DiagnosticMessageCodes::eValidatorError::MismatchingBlock, CurrentLine);
 					}
 					else
 					{
@@ -1026,7 +1143,10 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 				if (Operations.HasFlag(eOperation::FillControlBlocks))
 				{
 					if (Operations.HasFlag(eOperation::PerformBasicValidation) && Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';')
-						LogAnalysisMessage(CurrentLine, "Redundant expression beyond block end specifier.");
+					{
+						LogError(DiagnosticMessageCodes::eValidatorError::RedundantExpressionPastBlockEnd, CurrentLine, FirstToken);
+						EncounteredProblem = true;
+					}
 
 					if (StructureStack->Peek() != ControlBlock::eControlBlockType::If &&
 						StructureStack->Peek() != ControlBlock::eControlBlockType::ElseIf &&
@@ -1037,7 +1157,7 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 						FirstStructuralErrorLine = CurrentLine;
 
 						if (Operations.HasFlag(eOperation::PerformBasicValidation))
-							LogCriticalAnalysisMessage(CurrentLine, "Mismatching block.");
+							LogError(DiagnosticMessageCodes::eValidatorError::MismatchingBlock, CurrentLine);
 					}
 					else
 					{
@@ -1056,8 +1176,10 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 				break;
 			case eScriptTokenType::Return:
 				if (Operations.HasFlag(eOperation::PerformBasicValidation) && Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';')
-					LogAnalysisMessage(CurrentLine, "Redundant expression beyond block end specifier.");
-
+				{
+					LogError(DiagnosticMessageCodes::eValidatorError::RedundantExpressionPastBlockEnd, CurrentLine, FirstToken);
+					EncounteredProblem = true;
+				}
 				break;
 			case eScriptTokenType::SetFunctionValue:
 				if (Operations.HasFlag(eOperation::FillUDFData))
@@ -1110,7 +1232,7 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 		{
 			MalformedStructure = true;
 			if (Operations.HasFlag(eOperation::PerformBasicValidation))
-				LogCriticalAnalysisMessage(Itr->StartLine, "Missing block end specifier.");
+				LogError(DiagnosticMessageCodes::eValidatorError::MissingBlockEnd, Itr->StartLine);
 		}
 	}
 
@@ -1121,14 +1243,14 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 			if (Operations.HasFlag(eOperation::CountVariableReferences))
 			{
 				if (Itr->RefCount == 0 && (Type != eScriptType::Quest || Operations.HasFlag(eOperation::SuppressQuestVariableRefCount) == false))
-					LogAnalysisMessage(Itr->Line, "Variable " + Itr->Name + " unreferenced in local context.");
+					LogWarning(DiagnosticMessageCodes::eValidatorWarning::UnusedLocalVariable, Itr->Line, Itr->Name);
 			}
 
 			int Throwaway = 0;
 			bool InvalidVarName = int::TryParse(Itr->Name, Throwaway);
 
 			if (InvalidVarName)
-				LogCriticalAnalysisMessage(Itr->Line, "Variable '" + Itr->Name + "' has an all-numeric identifier.");
+				LogError(DiagnosticMessageCodes::eValidatorError::VariableNameAllNumeric, Itr->Line, Itr->Name);
 		}
 	}
 
@@ -1138,9 +1260,7 @@ AnalysisData^ AnalysisData::PerformAnalysis(Params^ Parameters)
 		{
 			ScriptBlock^ Block = dynamic_cast<ScriptBlock^>(Itr);
 			if (Block && Block->IsMalformed() == false && Block->IsBlockValid(Type) == false)
-			{
-				LogCriticalAnalysisMessage(Block->StartLine, "Script block not supported by current script type.");
-			}
+				LogError(DiagnosticMessageCodes::eValidatorError::InvalidScriptBlockForScriptType, Block->StartLine);
 		}
 	}
 
@@ -1178,19 +1298,10 @@ AnalysisData^ AnalysisData::Clone()
 	Copy->IsUDF = this->IsUDF;
 	Copy->UDFResult = this->UDFResult;
 	Copy->UDFAmbiguousResult = this->UDFAmbiguousResult;
-	Copy->AnalysisMessages = gcnew List<UserMessage ^>(this->AnalysisMessages);
+	Copy->AnalysisErrors = gcnew List<DiagnosticMessage^>(this->AnalysisErrors);
+	Copy->AnalysisWarnings = gcnew List<DiagnosticMessage^>(this->AnalysisWarnings);
 
 	return Copy;
-}
-
-void AnalysisData::LogAnalysisMessage(UInt32 Line, String^ Message)
-{
-	AnalysisMessages->Add(gcnew UserMessage(Line, Message, false));
-}
-
-void AnalysisData::LogCriticalAnalysisMessage(UInt32 Line, String^ Message)
-{
-	AnalysisMessages->Add(gcnew UserMessage(Line, Message, true));
 }
 
 UInt32 AnalysisData::GetLineIndentLevel(UInt32 Line)
@@ -1238,17 +1349,6 @@ ControlBlock^ AnalysisData::GetBlockEndingAt(UInt32 Line)
 	return nullptr;
 }
 
-bool AnalysisData::GetHasCriticalMessages()
-{
-	for each (auto Itr in AnalysisMessages)
-	{
-		if (Itr->Critical)
-			return true;
-	}
-
-	return false;
-}
-
 bool AnalysisData::ParseConditionExpression(UInt32 Line, String^ Expression)
 {
 	bool Result = true;
@@ -1264,7 +1364,7 @@ bool AnalysisData::ParseConditionExpression(UInt32 Line, String^ Expression)
 			Parser->GetIndexInsideString(Expression, InvalidOperator) == false)
 		{
 			Result = false;
-			LogCriticalAnalysisMessage(Line, "Invalid operator '<>'");
+			LogError(DiagnosticMessageCodes::eValidatorError::InvalidOperatorNotEquals, Line);
 		}
 	}
 

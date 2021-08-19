@@ -245,15 +245,15 @@ namespace componentDLLInterface
 		delete[] ScriptVarListHead;
 	}
 
-	ScriptErrorListData::ScriptErrorListData()
+	ScriptCompilerMessages::ScriptCompilerMessages()
 	{
-		ErrorListHead = 0;
+		MessageListHead = 0;
 		Count = 0;
 	}
 
-	ScriptErrorListData::~ScriptErrorListData()
+	ScriptCompilerMessages::~ScriptCompilerMessages()
 	{
-		delete[] ErrorListHead;
+		delete[] MessageListHead;
 	}
 
 	ScriptVarRenameData::ScriptVarRenameData()
@@ -320,7 +320,7 @@ namespace componentDLLInterface
 		delete[] UseInfoListCellItemListHead;
 	}
 
-	ScriptCompileData::ScriptCompileData() : Script(), CompilationSuccessful(false), CompileErrorData()
+	ScriptCompileData::ScriptCompileData() : Script(), CompilationSuccessful(false), CompilerMessages()
 	{
 		PrintErrorsToConsole = true;
 		kHandShakeStructCounters[kCounter_ScriptCompileData]++;

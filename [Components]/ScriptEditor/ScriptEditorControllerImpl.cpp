@@ -512,8 +512,12 @@ void ScriptEditorController::ResetViewComponentsToUnboundState()
 
 	View->GetComponentByRole(view::eViewRole::MainWindow)->AsForm()->Text = view::IScriptEditorView::MainWindowDefaultTitle;
 	View->GetComponentByRole(view::eViewRole::Messages_ListView)->AsObjectListView()->ClearObjects();
+	View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleErrors)->AsButton()->Text = "Errors";
+	View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleWarnings)->AsButton()->Text = "Warnings";
+	View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleInfos)->AsButton()->Text = "Messages";
 	View->GetComponentByRole(view::eViewRole::Bookmarks_ListView)->AsObjectListView()->ClearObjects();
 	View->GetComponentByRole(view::eViewRole::FindReplaceResults_ListView)->AsObjectListView()->ClearObjects();
+	View->GetComponentByRole(view::eViewRole::FindReplaceResults_Query)->AsLabel()->Text = "-";
 }
 
 view::ITabStripItem^ ScriptEditorController::LookupTabStripItem(model::IScriptDocument^ Document)
@@ -888,7 +892,12 @@ bool ScriptEditorController::SaveDocument(model::IScriptDocument^ Document, mode
 	Debug::Assert(Document != nullptr);
 
 	if (!Document->Dirty)
+	{
+		if (SaveOperation == model::IScriptDocument::eSaveOperation::AlsoSaveActiveFile)
+			nativeWrapper::g_CSEInterfaceTable->EditorAPI.SaveActivePlugin();
+
 		return true;
+	}
 	else if (Document->UnsavedNewScript && SaveOperation == model::IScriptDocument::eSaveOperation::DontCompile)
 	{
 		View->ShowNotification("This operation can only be performed on scripts that have been compiled at least once.",
@@ -917,7 +926,7 @@ void ScriptEditorController::LoadNextScriptIntoDocument(model::IScriptDocument^ 
 	if (!HandleVolatileDocumentStateBeforeDestructiveOperation(Document))
 		return;
 
-	nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptData> Data(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetNextScriptInList(Document->ScriptNativeObject));
+	nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptData> Data(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetNextScriptInList(Document->ScriptNativeObject, preferences::SettingsHolder::Get()->General->OnlySwitchToScriptsFromActivePlugin));
 	if (Data)
 	{
 		Document->Initialize(Data.get(), ShouldUseAutoRecoveryFile(gcnew String(Data->EditorID)));
@@ -932,7 +941,7 @@ void ScriptEditorController::LoadPreviousScriptIntoDocument(model::IScriptDocume
 	if (!HandleVolatileDocumentStateBeforeDestructiveOperation(Document))
 		return;
 
-	nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptData> Data(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreviousScriptInList(Document->ScriptNativeObject));
+	nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptData> Data(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreviousScriptInList(Document->ScriptNativeObject, preferences::SettingsHolder::Get()->General->OnlySwitchToScriptsFromActivePlugin));
 	if (Data)
 	{
 		Document->Initialize(Data.get(), ShouldUseAutoRecoveryFile(gcnew String(Data->EditorID)));
@@ -1113,6 +1122,8 @@ void ScriptEditorController::ViewEventHandler_ComponentEvent(Object^ Sender, vie
 	case view::eViewRole::Messages_Toolbar_ToggleErrors:
 	case view::eViewRole::Messages_Toolbar_ToggleWarnings:
 	case view::eViewRole::Messages_Toolbar_ToggleInfos:
+	case view::eViewRole::Messages_Toolbar_SuppressedWarnings:
+	case view::eViewRole::Messages_Toolbar_SuppressedWarnings_ListView:
 		ViewEventHandler_MessagesPanel(E);
 		break;
 	case view::eViewRole::Bookmarks_DockPanel:
@@ -2187,44 +2198,87 @@ System::String^ MessageListSourceAspectToStringConverter(Object^ E)
 	return Key.ToString();
 }
 
+System::Object^ SuppressibleWarningsListViewSourceAspectGetter(Object^ E)
+{
+	auto Model = safe_cast<model::components::SuppressibleScriptDiagnosticMessages::SuppressibleMessageInfo^>(E);
+	if (Model == nullptr)
+		return nullptr;
+
+	return Model->Source;
+}
+
+System::String^ SuppressibleWarningsListViewAspectToStringConverter(Object^ E)
+{
+	auto Key = safe_cast<model::components::ScriptDiagnosticMessage::eMessageSource>(E);
+	return Key.ToString();
+}
+
+System::Object^ SuppressibleWarningsListViewTextAspectGetter(Object^ E)
+{
+	auto Model = safe_cast<model::components::SuppressibleScriptDiagnosticMessages::SuppressibleMessageInfo^>(E);
+	if (Model == nullptr)
+		return nullptr;
+
+	return Model->Description;
+}
+
+bool SuppressibleWarningsListViewCheckStateGetter(Object^ E)
+{
+	auto Model = safe_cast<model::components::SuppressibleScriptDiagnosticMessages::SuppressibleMessageInfo^>(E);
+	if (Model == nullptr)
+		return false;
+
+	return model::components::SuppressibleScriptDiagnosticMessages::Get()->IsMessageSuppressed(Model);
+}
+
+bool SuppressibleWarningsListViewCheckStateSetter(Object^ E, bool NewValue)
+{
+	auto Model = safe_cast<model::components::SuppressibleScriptDiagnosticMessages::SuppressibleMessageInfo^>(E);
+	if (Model == nullptr)
+		return false;
+
+	model::components::SuppressibleScriptDiagnosticMessages::Get()->SuppressMessage(Model, NewValue);
+	return NewValue;
+}
+
 void ScriptEditorController::InitViewComponents()
 {
 	{
 		auto MessagesListView = View->GetComponentByRole(view::eViewRole::Messages_ListView)->AsObjectListView();
+		{
+			auto ColumnType = MessagesListView->AllocateNewColumn();
+			auto ColumnLine = MessagesListView->AllocateNewColumn();
+			auto ColumnText = MessagesListView->AllocateNewColumn();
+			auto ColumnSource = MessagesListView->AllocateNewColumn();
 
-		auto ColumnType = MessagesListView->AllocateNewColumn();
-		auto ColumnLine = MessagesListView->AllocateNewColumn();
-		auto ColumnText = MessagesListView->AllocateNewColumn();
-		auto ColumnSource = MessagesListView->AllocateNewColumn();
+			ColumnType->Text = "Type";
+			ColumnType->MinimumWidth = 40;
+			ColumnType->MaximumWidth = 40;
+			ColumnType->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&MessageListTypeAspectGetter));
+			ColumnType->SetAspectToStringGetter(gcnew view::components::IObjectListViewColumn::AspectToStringGetter(&MessageListTypeAspectToStringConverter));
+			ColumnType->SetImageGetter(gcnew view::components::IObjectListViewColumn::ImageGetter(&MessageListTypeImageGetter));
 
-		ColumnType->Text = "Type";
-		ColumnType->MinimumWidth = 40;
-		ColumnType->MaximumWidth = 40;
-		ColumnType->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&MessageListTypeAspectGetter));
-		ColumnType->SetAspectToStringGetter(gcnew view::components::IObjectListViewColumn::AspectToStringGetter(&MessageListTypeAspectToStringConverter));
-		ColumnType->SetImageGetter(gcnew view::components::IObjectListViewColumn::ImageGetter(&MessageListTypeImageGetter));
+			ColumnLine->Text = "Line";
+			ColumnLine->MinimumWidth = 40;
+			ColumnLine->MaximumWidth = 40;
+			ColumnLine->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&ScriptTextAnnotationListLineNumberAspectGetter));
 
-		ColumnLine->Text = "Line";
-		ColumnLine->MinimumWidth = 40;
-		ColumnLine->MaximumWidth = 40;
-		ColumnLine->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&ScriptTextAnnotationListLineNumberAspectGetter));
+			ColumnText->Text = "Message";
+			ColumnText->MinimumWidth = 600;
+			ColumnText->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&ScriptTextAnnotationListTextAspectGetter));
 
-		ColumnText->Text = "Message";
-		ColumnText->MinimumWidth = 600;
-		ColumnText->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&ScriptTextAnnotationListTextAspectGetter));
+			ColumnSource->Text = "Message Source";
+			ColumnSource->MinimumWidth = 75;
+			ColumnSource->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&MessageListSourceAspectGetter));
+			ColumnSource->SetAspectToStringGetter(gcnew view::components::IObjectListViewColumn::AspectToStringGetter(&MessageListSourceAspectToStringConverter));
 
-		ColumnSource->Text = "Message Source";
-		ColumnSource->MinimumWidth = 75;
-		ColumnSource->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&MessageListSourceAspectGetter));
-		ColumnSource->SetAspectToStringGetter(gcnew view::components::IObjectListViewColumn::AspectToStringGetter(&MessageListSourceAspectToStringConverter));
+			MessagesListView->AddColumn(ColumnType);
+			MessagesListView->AddColumn(ColumnLine);
+			MessagesListView->AddColumn(ColumnText);
+			MessagesListView->AddColumn(ColumnSource);
 
-		MessagesListView->AddColumn(ColumnType);
-		MessagesListView->AddColumn(ColumnLine);
-		MessagesListView->AddColumn(ColumnText);
-		MessagesListView->AddColumn(ColumnSource);
-
-		MessagesListView->SetModelFilter(gcnew Predicate<Object^>(this, &ScriptEditorController::ShouldFilterScriptDiagnosticMessage));
-
+			MessagesListView->SetModelFilter(gcnew Predicate<Object^>(this, &ScriptEditorController::ShouldFilterScriptDiagnosticMessage));
+		}
 		auto ToggleErrors = View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleErrors)->AsButton();
 		auto ToggleWarnings = View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleWarnings)->AsButton();
 		auto ToggleInfo = View->GetComponentByRole(view::eViewRole::Messages_Toolbar_ToggleInfos)->AsButton();
@@ -2235,6 +2289,32 @@ void ScriptEditorController::InitViewComponents()
 		ToggleWarnings->Tag = model::components::ScriptDiagnosticMessage::eMessageType::Warning;
 		ToggleInfo->Checked = true;
 		ToggleInfo->Tag = model::components::ScriptDiagnosticMessage::eMessageType::Info;
+
+		auto SuppressibleWarningsListView = View->GetComponentByRole(view::eViewRole::Messages_Toolbar_SuppressedWarnings_ListView)->AsObjectListView();
+		{
+			SuppressibleWarningsListView->UseCheckBoxes = true;
+			SuppressibleWarningsListView->SetCheckStateGetter(gcnew view::components::IObjectListView::CheckStateGetter(&SuppressibleWarningsListViewCheckStateGetter));
+			SuppressibleWarningsListView->SetCheckStateSetter(gcnew view::components::IObjectListView::CheckStateSetter(&SuppressibleWarningsListViewCheckStateSetter));
+
+			auto ColumnSource = SuppressibleWarningsListView->AllocateNewColumn();
+			auto ColumnText = SuppressibleWarningsListView->AllocateNewColumn();
+
+			ColumnText->Text = "Warning";
+			ColumnText->MinimumWidth = 200;
+			ColumnText->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&SuppressibleWarningsListViewTextAspectGetter));
+
+			ColumnSource->Text = "Source";
+			ColumnSource->MinimumWidth = 75;
+			ColumnSource->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&SuppressibleWarningsListViewSourceAspectGetter));
+			ColumnSource->SetAspectToStringGetter(gcnew view::components::IObjectListViewColumn::AspectToStringGetter(&SuppressibleWarningsListViewAspectToStringConverter));
+
+			SuppressibleWarningsListView->AddColumn(ColumnText);
+			SuppressibleWarningsListView->AddColumn(ColumnSource);
+
+			auto WarningInfos = model::components::SuppressibleScriptDiagnosticMessages::Get()->GetSuppressibleMessageInfos(model::components::ScriptDiagnosticMessage::eMessageSource::All,
+																															model::components::ScriptDiagnosticMessage::eMessageType::Warning);
+			SuppressibleWarningsListView->SetObjects(WarningInfos, false);
+		}
 	}
 
 	{

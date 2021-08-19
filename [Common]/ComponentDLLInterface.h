@@ -60,8 +60,8 @@ namespace componentDLLInterface
 			void									(* RecompileAllScriptsInActiveFile)(void);
 			void									(* ToggleScriptCompilation)(bool State);
 			bool									(* DeleteScript)(const char* EditorID);
-			ScriptData*								(* GetPreviousScriptInList)(void* CurrentScript);
-			ScriptData*								(* GetNextScriptInList)(void* CurrentScript);
+			ScriptData*								(* GetPreviousScriptInList)(void* CurrentScript, bool OnlyFromActivePlugin);
+			ScriptData*								(* GetNextScriptInList)(void* CurrentScript, bool OnlyFromActivePlugin);
 			void									(* RemoveScriptBytecode)(void* Script);
 
 			void									(* SaveEditorBoundsToINI)(UInt32 Left, UInt32 Top, UInt32 Width, UInt32 Height);

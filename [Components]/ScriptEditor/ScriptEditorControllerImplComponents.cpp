@@ -1056,7 +1056,10 @@ bool InputManager::IsBound(utilities::KeyCombo^ Combo)
 void InputManager::FocusActiveDocumentTextEditor(IScriptEditorController^ Controller)
 {
 	if (Controller->ActiveDocument && !Controller->ActiveDocument->TextEditor->Focused)
+	{
 		Controller->ActiveDocument->TextEditor->FocusTextArea();
+		Controller->View->ForceCloseAllPopupMenus();
+	}
 }
 
 InputManager::InputManager(view::IScriptEditorView^ ParentView)

@@ -64,12 +64,10 @@ void ScriptDocument::BgAnalyzer_AnalysisComplete(Object^ Sender, IBackgroundSema
 	BeginBatchUpdate(eBatchUpdateSource::Messages);
 	{
 		ClearMessages(ScriptDiagnosticMessage::eMessageSource::Validator, ScriptDiagnosticMessage::eMessageType::All);
-		for each (auto Itr in E->Result->AnalysisMessages)
-		{
-			AddMessage(Itr->Line, Itr->Message,
-					   Itr->Critical ? ScriptDiagnosticMessage::eMessageType::Error : ScriptDiagnosticMessage::eMessageType::Warning,
-					   ScriptDiagnosticMessage::eMessageSource::Validator);
-		}
+		for each (auto Itr in E->Result->AnalysisErrors)
+			AddMessage(Itr->Line, Itr->Message, ScriptDiagnosticMessage::eMessageType::Error, ScriptDiagnosticMessage::eMessageSource::Validator, Itr->MessageCode);
+		for each (auto Itr in E->Result->AnalysisWarnings)
+			AddMessage(Itr->Line, Itr->Message, ScriptDiagnosticMessage::eMessageType::Warning, ScriptDiagnosticMessage::eMessageSource::Validator, Itr->MessageCode);
 	}
 	EndBatchUpdate(eBatchUpdateSource::Messages);
 }
@@ -222,7 +220,7 @@ System::String^ ScriptDocument::PreprocessScriptText(String^ ScriptText, bool Su
 
 void ScriptDocument::TrackPreprocessorMessage(int Line, String^ Message)
 {
-	AddMessage(Line, Message, ScriptDiagnosticMessage::eMessageType::Error, ScriptDiagnosticMessage::eMessageSource::Preprocessor);
+	AddMessage(Line, Message, ScriptDiagnosticMessage::eMessageType::Error, ScriptDiagnosticMessage::eMessageSource::Preprocessor, obScriptParsing::DiagnosticMessageCodes::Default);
 }
 
 ScriptCompilationData^ ScriptDocument::BeginScriptCompilation()
@@ -239,14 +237,12 @@ ScriptCompilationData^ ScriptDocument::BeginScriptCompilation()
 	ClearMessages(ScriptDiagnosticMessage::eMessageSource::Validator, ScriptDiagnosticMessage::eMessageType::All);
 	ClearMessages(ScriptDiagnosticMessage::eMessageSource::Compiler, ScriptDiagnosticMessage::eMessageType::All);
 
-	for each (auto Itr in SemanticAnalysisData->AnalysisMessages)
-	{
-		AddMessage(Itr->Line, Itr->Message,
-				   Itr->Critical ? ScriptDiagnosticMessage::eMessageType::Error : ScriptDiagnosticMessage::eMessageType::Warning,
-				   ScriptDiagnosticMessage::eMessageSource::Validator);
-	}
+	for each (auto Itr in SemanticAnalysisData->AnalysisErrors)
+		AddMessage(Itr->Line, Itr->Message, ScriptDiagnosticMessage::eMessageType::Error, ScriptDiagnosticMessage::eMessageSource::Validator, Itr->MessageCode);
+	for each (auto Itr in SemanticAnalysisData->AnalysisWarnings)
+		AddMessage(Itr->Line, Itr->Message, ScriptDiagnosticMessage::eMessageType::Warning, ScriptDiagnosticMessage::eMessageSource::Validator, Itr->MessageCode);
 
-	Result->CanCompile = !SemanticAnalysisData->HasCriticalMessages && !SemanticAnalysisData->MalformedStructure;
+	Result->CanCompile = !SemanticAnalysisData->HasErrors && !SemanticAnalysisData->MalformedStructure;
 
 	nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::FormData> ExistingFormWithScriptName(
 		nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupFormByEditorID(CString(SemanticAnalysisData->Name).c_str()));
@@ -257,7 +253,7 @@ ScriptCompilationData^ ScriptDocument::BeginScriptCompilation()
 		{
 			Result->CanCompile = false;
 			AddMessage(1, "Script name must be unique - '" + SemanticAnalysisData->Name + "' is assigned to an existing form",
-					   ScriptDiagnosticMessage::eMessageType::Error, ScriptDiagnosticMessage::eMessageSource::Compiler);
+					   ScriptDiagnosticMessage::eMessageType::Error, ScriptDiagnosticMessage::eMessageSource::Compiler, obScriptParsing::DiagnosticMessageCodes::Default);
 		}
 	}
 
@@ -303,19 +299,27 @@ void ScriptDocument::EndScriptCompilation(ScriptCompilationData^ Data)
 			OnStateChangedBytecode(Bytecode, BytecodeLength, PreprocessedScriptText);
 			Dirty = false;
 		}
-		else
+
+		for (int i = 0; i < Data->CompileResult->CompilerMessages.Count; i++)
 		{
-			for (int i = 0; i < Data->CompileResult->CompileErrorData.Count; i++)
-			{
-				String^ Message = gcnew String(Data->CompileResult->CompileErrorData.ErrorListHead[i].Message);
-				Message = Message->Replace(kRepeatedString, String::Empty);
+			auto& CompilerMessage = Data->CompileResult->CompilerMessages.MessageListHead[i];
 
-				int Line = Data->CompileResult->CompileErrorData.ErrorListHead[i].Line;
-				if (Line < 1)
-					Line = 1;
+			String^ MessageStr = gcnew String(CompilerMessage.Message);
+			MessageStr = MessageStr->Replace(kRepeatedString, String::Empty)->Trim();
 
-				AddMessage(Line, Message, ScriptDiagnosticMessage::eMessageType::Error, ScriptDiagnosticMessage::eMessageSource::Compiler);
-			}
+			int Line = Data->CompileResult->CompilerMessages.MessageListHead[i].Line;
+			if (Line < 1)
+				Line = 1;
+
+			auto MessageType = ScriptDiagnosticMessage::eMessageType::Error;
+			if (CompilerMessage.IsWarning())
+				MessageType = ScriptDiagnosticMessage::eMessageType::Warning;
+
+			auto MessageCode = obScriptParsing::DiagnosticMessageCodes::Default;
+			if (CompilerMessage.MessageCode != obScriptParsing::DiagnosticMessageCodes::Invalid)
+				MessageCode = CompilerMessage.MessageCode;
+
+			AddMessage(Line, MessageStr, MessageType, ScriptDiagnosticMessage::eMessageSource::Compiler, MessageCode);
 		}
 	}
 
@@ -374,15 +378,19 @@ void ScriptDocument::EndBatchUpdate(eBatchUpdateSource Source)
 	}
 }
 
-void ScriptDocument::AddMessage(UInt32 Line, String^ Text, ScriptDiagnosticMessage::eMessageType Type, ScriptDiagnosticMessage::eMessageSource Source)
+void ScriptDocument::AddMessage(UInt32 Line, String^ Text, ScriptDiagnosticMessage::eMessageType Type, ScriptDiagnosticMessage::eMessageSource Source, obScriptParsing::DiagnosticMessageCode MessageCode)
 {
+	if (SuppressibleScriptDiagnosticMessages::Get()->IsMessageSuppressed(Source, Type, MessageCode))
+		return;
+
 	if (Line > TextEditor->LineCount)
 		Line = TextEditor->LineCount;
 
 	auto LineAnchor = TextEditor->CreateLineAnchor(Line);
 	auto NewMessage = gcnew ScriptDiagnosticMessage(LineAnchor,
 													Text->Replace("\t", "")->Replace("\r", "")->Replace("\n", ""),
-													Type, Source);
+													Type, Source, MessageCode);
+
 	Messages->Add(NewMessage);
 	OnStateChangedMessages();
 }

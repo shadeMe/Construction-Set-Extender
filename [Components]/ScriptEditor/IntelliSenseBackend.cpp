@@ -112,9 +112,13 @@ IEnumerable<IntelliSenseItemCollection::FuzzyMatchT^>^ IntelliSenseItemCollectio
 	*/
 
 	auto PrefixMatches = PrefixMatch(Query, Predicate);
-	auto PrefixMatcheToEditDistConverter = gcnew PrefixToEditDistanceMatcher(Query, MaxEditDistanceCost);
-	auto PrefixMatchesWithEditDistance = System::Linq::Enumerable::Select(PrefixMatches, gcnew Func<IntelliSenseItem^, FuzzyMatchT^>(PrefixMatcheToEditDistConverter, &PrefixToEditDistanceMatcher::CreateFuzzyMatch));
+
+	auto PrefixMatchesToEditDistConverter = gcnew PrefixToEditDistanceMatcher(Query, MaxEditDistanceCost);
+	auto PrefixMatchesWithEditDistance = System::Linq::Enumerable::Select(PrefixMatches, gcnew Func<IntelliSenseItem^, FuzzyMatchT^>(PrefixMatchesToEditDistConverter, &PrefixToEditDistanceMatcher::CreateFuzzyMatch));
 	//PrefixMatchesWithEditDistance = System::Linq::Enumerable::Where(PrefixMatchesWithEditDistance, gcnew Func<FuzzyMatchT^, bool>(PrefixMatcheToEditDistConverter, &PrefixToEditDistanceMatcher::FuzzyMatchHasMinimumEditDistance));
+
+	if (Query->Length == 0)
+		return PrefixMatchesWithEditDistance;
 
 	auto LevenshteinMatches = LevenshteinMatch(Query, MaxEditDistanceCost, Predicate);
 	auto CombinedResults = System::Linq::Enumerable::Concat(PrefixMatchesWithEditDistance, LevenshteinMatches);
@@ -788,8 +792,6 @@ IEnumerable<IntelliSenseItem^>^ IntelliSenseBackend::FetchIntelliSenseItems(Fetc
 		auto Results = System::Linq::Enumerable::Empty<IntelliSenseItemCollection::FuzzyMatchT^>();
 		auto Cost = Args->FuzzyMatchMaxCost;
 		Debug::Assert(Cost > 0);
-
-		//
 
 		if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::Command))
 			Results = DoFetchFuzzyMatch(ScriptCommands, Args, PredicateScriptCommandNeedsCallingRef, Results);
