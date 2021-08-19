@@ -75,11 +75,11 @@ public:
 	enum FileErrorStates
 	{
 		kFileState_None         = 0x0,
-		kFileState_Unk2         = 0x2, // set in OpenBSFile
-		kFileState_Unk9         = 0x9, // set in OpenBSFile
+		kFileState_MissingFile  = 0x2, // set in OpenBSFile
+		kFileState_FileOpen     = 0x9, // set in OpenBSFile
 		kFileState_WriteError   = 0xA,
 		kFileState_NoHeader		= 0xB,
-		kFileState_UnkC         = 0xC, // set in OpenBSFile
+		kFileState_FileInUse    = 0xC, // set in OpenBSFile
 	};
 
 	struct FileHeaderInfo

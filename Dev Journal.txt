@@ -3,6 +3,7 @@ To-Do
 
 IMMEDIATE  >>
 
+
 NOTE	---->
 	> Go through Vorian's PM
 
@@ -12,6 +13,7 @@ CSE		---->
 		> Cell use list is broken
 			> Forms instantiated with our custom serializers don't correctly update the cell count leading to negative values
 			> Deleting a ref from the render window doesn't update its baseform's cell use counts (vanilla bug)
+
 		> Dirty edits?
 			>> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=25301452
 			>> How do you stop the construction set from making automatic edits to an esp after saving it? Like for the unofficial oblivion patch, if I were to open in up in the CSE, do nothing, and save it, it will make loads of changes to region point list data under the region tab in TES4EDIT. For another file it automatically changes the "vertext height map" data under worldspaces for a bunch of landscapes.
@@ -26,6 +28,7 @@ CSE		---->
 
 
 	ENHANCEMENT		=
+		> An option to hide markers for thing such as Character placements on furniture as well as markers for effect like fire flies
 		> OSD enhancements
 			> Render window gizmos
 				> Imguizmo has issues with the CS' renderer (view matrix related) (ask Nukem)
@@ -33,16 +36,10 @@ CSE		---->
 		> Add support for TOD/sunlight lighting in exteriors
 			> Currently only works with interiors that behave like exteriors
 				>> Seems likely that the issue is dependent on modifying the fragment shaders used for lighting in exteriors
+
 		> Double click on formIds/editorIds in the console
 		> Wildcard find/replace
 		> Add an option to restore a saved backup for some esp/esm, instead of manually recover it from Data/Backup folder and moving it back to Data folder.
-
-		> Show Target NPCs context menu tool
-			>> Would it be possible to have the option to view the list of NPCs, a sort of Use Info option just for NPCs who meet the conditions for speaking a response?
-		> Copy From Template tool
-			>> Batch editor for base forms
-		> Add a random "roughness" factor to the landscape sculpting brush
-		> Overhaul of the Region Editor, with a larger (adjustable?) window, a larger rendering area and greater control of node placement and repositioning.
 
 	CODA			=
 		> Get/SetCellRegions
