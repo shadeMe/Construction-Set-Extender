@@ -1,5 +1,5 @@
 #include "TagBrowser.h"
-#include "[Common]\ListViewUtilities.h"
+#include "[Common]\MiscUtilities.h"
 #include "[Common]\NativeWrapper.h"
 
 #using "Microsoft.VisualBasic.dll"
@@ -157,7 +157,7 @@ namespace cse
 		{
 			int MarkerIndex = SerializedData->IndexOf(SerializedDataMidWayMarker);
 			if (MarkerIndex == -1)
-				throw gcnew CSEGeneralException("Serialization marker not found.");
+				throw gcnew InvalidOperationException("Serialization marker not found.");
 
 			Clear();
 
@@ -191,7 +191,7 @@ namespace cse
 							BadItems = true;
 							DebugPrint("Couldn't find form '" + Token + "'");
 						}
-						nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+						nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data);
 					}
 				}
 			}
@@ -480,7 +480,7 @@ namespace cse
 					}
 
 					nativeWrapper::g_CSEInterfaceTable->TagBrowser.InstantiateObjects(InteropData);
-					nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(InteropData, false);
+					nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(InteropData);
 				}
 			}
 			else
@@ -613,7 +613,7 @@ namespace cse
 				TextParser->Close();
 
 				if (!Database->DeserializeDatabase(FileContents))
-					throw gcnew CSEGeneralException("Database suffers inconsistencies.");
+					throw gcnew InvalidOperationException("Database suffers inconsistencies.");
 			}
 			catch (Exception^ E)
 			{
@@ -621,6 +621,25 @@ namespace cse
 				DebugPrint("Couldn't read from tag database " + LoadManager->FileName + "!\n\tException: " + E->Message);
 			}
 		}
+	}
+
+	ListViewItem^ FindItemWithText(ListView^ Source, String^ Substring, bool SearchInSubItems, bool CaseInsensitive)
+	{
+		for each (ListViewItem^ Item in Source->Items)
+		{
+			if (Item->Text->IndexOf(Substring, 0, (CaseInsensitive ? StringComparison::CurrentCultureIgnoreCase : StringComparison::CurrentCulture)) != -1)
+				return Item;
+			else if (SearchInSubItems)
+			{
+				for each (ListViewItem::ListViewSubItem^ SubItem in Item->SubItems)
+				{
+					if (SubItem->Text->IndexOf(Substring, 0, (CaseInsensitive ? StringComparison::CurrentCultureIgnoreCase : StringComparison::CurrentCulture)) != -1)
+						return Item;
+				}
+			}
+		}
+
+		return nullptr;
 	}
 
 	void TagBrowser::SearchBox_TextChanged(Object^ Sender, EventArgs^ E)
@@ -719,7 +738,7 @@ namespace cse
 					BadItems = true;
 					DebugPrint("Couldn't find form '" + Itr + "'");
 				}
-				nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+				nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data);
 			}
 
 			FormList->EndUpdate();

@@ -68,7 +68,7 @@ namespace cse
 			BinaryReader^ Stream = gcnew BinaryReader(FI->OpenRead());
 
 			if (ReadString(Stream) != "BSA" || Stream->ReadUInt32() != 0x67)
-				throw gcnew CSEGeneralException("File isn't a vaild TES4 BSA archive");
+				throw gcnew InvalidOperationException("File isn't a vaild TES4 BSA archive");
 
 			Stream->ReadUInt32();
 			UInt32 Flags = Stream->ReadUInt32();
@@ -125,7 +125,7 @@ namespace cse
 			Stream->Close();
 			return true;
 		}
-		catch (CSEGeneralException^ E)
+		catch (InvalidOperationException^ E)
 		{
 			String^ Message = "Exception raised while processing BSA archive '" + Path + "'!\n\tException: " + E->Message;
 			DebugPrint(Message);

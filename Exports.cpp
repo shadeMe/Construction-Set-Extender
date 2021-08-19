@@ -24,20 +24,9 @@ extern "C"
 	}
 }
 
-void DeleteInterOpData(IDisposableData* Pointer, bool IsArray)
+void DeleteInterOpData(IDisposableData* Pointer)
 {
-	if (IsArray)
-		delete[] Pointer;
-	else
-		delete Pointer;
-}
-
-void DeleteData(void* Pointer, bool IsArray)
-{
-	if (IsArray)
-		delete[] Pointer;
-	else
-		delete Pointer;
+	delete Pointer;
 }
 
 /**** BEGIN EDITORAPI SUBINTERFACE ****/
@@ -132,7 +121,6 @@ ScriptData* LookupScriptableByEditorID(const char* EditorID)
 		{
 			Result = new ScriptData();
 			Result->FillScriptData(CS_CAST(Form, TESForm, Script));
-			Result->ParentID = nullptr;
 		}
 		else
 		{
@@ -144,7 +132,6 @@ ScriptData* LookupScriptableByEditorID(const char* EditorID)
 				{
 					Result = new ScriptData();
 					Result->FillScriptData(FormScript);
-					Result->ParentID = Form->editorID.c_str();				// EditorID of the script's parent form
 				}
 			}
 		}
@@ -316,24 +303,29 @@ bool CompileScript(ScriptCompileData* Data)
 			Data->Script.FillScriptData(ScriptForm);
 		}
 		else
-		{
-			Data->CompileErrorData.Count = TESScriptCompiler::AuxiliaryErrorDepot.size();
-			if (TESScriptCompiler::AuxiliaryErrorDepot.size())
-			{
-				Data->CompileErrorData.ErrorListHead = new ScriptErrorListData::ErrorData[Data->CompileErrorData.Count];
-
-				for (int i = 0; i < Data->CompileErrorData.Count; i++)
-				{
-					TESScriptCompiler::CompilerErrorData* Error = &TESScriptCompiler::AuxiliaryErrorDepot[i];
-					Data->CompileErrorData.ErrorListHead[i].Line = Error->Line;
-					Data->CompileErrorData.ErrorListHead[i].Message = Error->Message.c_str();
-				}
-			}
-			else
-				Data->CompileErrorData.ErrorListHead = nullptr;
-
 			ScriptForm->SetText(OldText->c_str());
+
+		Data->CompilerMessages.Count = TESScriptCompiler::LastCompilationMessages.size();
+		if (TESScriptCompiler::LastCompilationMessages.size())
+		{
+			Data->CompilerMessages.MessageListHead = new ScriptCompilerMessages::MessageData[Data->CompilerMessages.Count];
+
+			for (int i = 0; i < Data->CompilerMessages.Count; i++)
+			{
+				auto CompilerMessage = &TESScriptCompiler::LastCompilationMessages[i];
+				auto& NewMessage = Data->CompilerMessages.MessageListHead[i];
+				NewMessage.Line = CompilerMessage->Line;
+				NewMessage.Message = CompilerMessage->Message.c_str();
+				NewMessage.MessageCode = CompilerMessage->MessageCode;
+
+				if (CompilerMessage->IsWarning())
+					NewMessage.Type = ScriptCompilerMessages::MessageData::kType_Warning;
+				else if (CompilerMessage->IsError())
+					NewMessage.Type = ScriptCompilerMessages::MessageData::kType_Error;
+			}
 		}
+		else
+			Data->CompilerMessages.MessageListHead = nullptr;
 
 		OldText->DeleteInstance();
 	}
@@ -414,7 +406,7 @@ void ToggleScriptCompilation(bool State)
 	TESScriptCompiler::ToggleScriptCompilation(State);
 }
 
-void DeleteScript(const char* EditorID)
+bool DeleteScript(const char* EditorID)
 {
 	TESForm* Form = TESForm::LookupByEditorID(EditorID);
 	if (Form)
@@ -424,8 +416,12 @@ void DeleteScript(const char* EditorID)
 		{
 			ScriptForm->SetDeleted(true);
 			ScriptForm->UpdateUsageInfo();
+
+			return ScriptForm->IsDeleted();
 		}
 	}
+
+	return false;
 }
 
 enum
@@ -434,7 +430,7 @@ enum
 	kDirection_Backward,
 };
 
-Script* GetScriptNeighbour(Script* Current, UInt8 Direction)
+Script* GetScriptNeighbour(Script* Current, UInt8 Direction, bool OnlyFromActivePlugin)
 {
 	SME_ASSERT(_DATAHANDLER->scripts.Count());
 
@@ -460,12 +456,14 @@ Script* GetScriptNeighbour(Script* Current, UInt8 Direction)
 	}
 
 	if (Result->GetEditorID() == nullptr)
-		Result = GetScriptNeighbour(Result, Direction);
+		Result = GetScriptNeighbour(Result, Direction, OnlyFromActivePlugin);
+	else if (OnlyFromActivePlugin && _DATAHANDLER->activeFile != nullptr && !Result->IsActive())
+		Result = GetScriptNeighbour(Result, Direction, OnlyFromActivePlugin);
 
 	return Result;
 }
 
-ScriptData* GetPreviousScriptInList(void* CurrentScript)
+ScriptData* GetPreviousScriptInList(void* CurrentScript, bool OnlyFromActivePlugin)
 {
 	Script* ScriptForm = CS_CAST(CurrentScript, TESForm, Script);
 	ScriptData* Result = nullptr;
@@ -477,10 +475,10 @@ ScriptData* GetPreviousScriptInList(void* CurrentScript)
 		{
 			Switch = _DATAHANDLER->scripts.GetLastItem();
 			if (Switch->GetEditorID() == nullptr)
-				Switch = GetScriptNeighbour(ScriptForm, kDirection_Backward);
+				Switch = GetScriptNeighbour(ScriptForm, kDirection_Backward, OnlyFromActivePlugin);
 		}
 		else
-			Switch = GetScriptNeighbour(ScriptForm, kDirection_Backward);
+			Switch = GetScriptNeighbour(ScriptForm, kDirection_Backward, OnlyFromActivePlugin);
 	}
 
 	if (Switch && Switch->GetEditorID())
@@ -492,7 +490,7 @@ ScriptData* GetPreviousScriptInList(void* CurrentScript)
 	return Result;
 }
 
-ScriptData* GetNextScriptInList(void* CurrentScript)
+ScriptData* GetNextScriptInList(void* CurrentScript, bool OnlyFromActivePlugin)
 {
 	Script* ScriptForm = CS_CAST(CurrentScript, TESForm, Script);
 	ScriptData* Result = nullptr;
@@ -504,10 +502,10 @@ ScriptData* GetNextScriptInList(void* CurrentScript)
 		{
 			Switch = _DATAHANDLER->scripts.GetNthItem(0);
 			if (Switch->GetEditorID() == nullptr)
-				Switch = GetScriptNeighbour(ScriptForm, kDirection_Forward);
+				Switch = GetScriptNeighbour(ScriptForm, kDirection_Forward, OnlyFromActivePlugin);
 		}
 		else
-			Switch = GetScriptNeighbour(ScriptForm, kDirection_Forward);
+			Switch = GetScriptNeighbour(ScriptForm, kDirection_Forward, OnlyFromActivePlugin);
 	}
 
 	if (Switch && Switch->GetEditorID())
@@ -530,6 +528,13 @@ void DestroyScriptInstance(void* CurrentScript)
 	Script* ScriptForm = CS_CAST(CurrentScript, TESForm, Script);
 	thisCall<void>(0x00452AE0, &_DATAHANDLER->scripts, ScriptForm);
 	ScriptForm->DeleteInstance();
+}
+
+bool IsUnsavedNewScript(void* CurrentScript)
+{
+	auto ScriptForm = CS_CAST(CurrentScript, TESForm, Script);
+
+	return ScriptForm->GetEditorID() == nullptr && ScriptForm->data == nullptr;
 }
 
 void SaveEditorBoundsToINI(UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
@@ -557,6 +562,9 @@ ScriptListData* GetScriptList(void)
 		for (tList<Script>::Iterator Itr = _DATAHANDLER->scripts.Begin(); !Itr.End() && Itr.Get(); ++Itr)
 		{
 			Script* ScriptForm = Itr.Get();
+			if (ScriptForm->GetEditorID() == nullptr)
+				continue;
+
 			Result->ScriptListHead[i].FillScriptData(ScriptForm);
 			i++;
 		}
@@ -1308,7 +1316,6 @@ TagBrowserInstantiationData* AllocateInstantionData(UInt32 FormCount)
 componentDLLInterface::CSEInterfaceTable g_InteropInterface =
 {
 	DeleteInterOpData,
-	DeleteData,
 	{
 		ComponentDLLDebugPrint,
 		WriteToStatusBar,
@@ -1336,6 +1343,7 @@ componentDLLInterface::CSEInterfaceTable g_InteropInterface =
 	{
 		CreateNewScript,
 		DestroyScriptInstance,
+		IsUnsavedNewScript,
 		CompileScript,
 		RecompileScripts,
 		ToggleScriptCompilation,

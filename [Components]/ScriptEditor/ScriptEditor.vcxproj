@@ -5,6 +5,10 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release - Skip Dev Channel|Win32">
+      <Configuration>Release - Skip Dev Channel</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
@@ -15,9 +19,17 @@
     <RootNamespace>ScriptEditor</RootNamespace>
     <Keyword>ManagedCProj</Keyword>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <CLRSupport>true</CLRSupport>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release - Skip Dev Channel|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>true</CLRSupport>
@@ -37,6 +49,10 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\EnvVars.props" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release - Skip Dev Channel|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\EnvVars.props" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\EnvVars.props" />
@@ -48,17 +64,25 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release - Skip Dev Channel|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release - Skip Dev Channel|Win32'">$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release - Skip Dev Channel|Win32'">false</LinkIncremental>
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release - Skip Dev Channel|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release - Skip Dev Channel|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release - Skip Dev Channel|Win32'" />
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\;$(SMESundriesIncludePath);$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release - Skip Dev Channel|Win32'">..\;$(SMESundriesIncludePath);$(IncludePath)</IncludePath>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\;$(SMESundriesIncludePath);$(IncludePath)</IncludePath>
     <ExecutablePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ExecutablePath)</ExecutablePath>
+    <ExecutablePath Condition="'$(Configuration)|$(Platform)'=='Release - Skip Dev Channel|Win32'">$(ExecutablePath)</ExecutablePath>
     <ExecutablePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -141,12 +165,55 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
       <Message>Setting build number...</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release - Skip Dev Channel|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;CSE_SE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ForcedIncludeFiles>$(ProjectDir)Prefix.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ShowIncludes>false</ShowIncludes>
+      <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <OmitFramePointers>false</OmitFramePointers>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
+      <ShowProgress>NotSet</ShowProgress>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AssemblyDebug>false</AssemblyDebug>
+      <TargetMachine>MachineX86</TargetMachine>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+    <PostBuildEvent>
+      <Message>Installing DLL ...</Message>
+      <Command>copy "$(TargetPath)" "$(OblivionPath)\data\obse\plugins\CSE\$(TargetFileName)"</Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>cscript.exe "$(SolutionDir)\BuildIncrement.jse"</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>Setting build number...</Message>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
   <ItemGroup>
+    <Reference Include="DevComponents.DotNetBar.Layout">
+      <HintPath>..\..\[Depends]\DevComponents.DotNetBar.Layout.dll</HintPath>
+    </Reference>
     <Reference Include="DevComponents.DotNetBar2">
       <HintPath>..\..\[Depends]\DevComponents.DotNetBar2.dll</HintPath>
-      <Private>false</Private>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </Reference>
     <Reference Include="ICSharpCode.AvalonEdit">
       <HintPath>..\..\[Depends]\ICSharpCode.AvalonEdit.dll</HintPath>
@@ -160,6 +227,9 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xaml" />
+    <Reference Include="TrieNet">
+      <HintPath>..\..\[Depends]\TrieNet.dll</HintPath>
+    </Reference>
     <Reference Include="WindowsFormsIntegration">
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
@@ -196,210 +266,175 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\[Common]\AuxiliaryWindowsForm.cpp" />
     <ClCompile Include="..\..\[Common]\NativeWrapper.cpp" />
-    <ClCompile Include="..\..\[Common]\ListViewUtilities.cpp" />
     <ClCompile Include="..\..\[Common]\MiscUtilities.cpp" />
-    <ClCompile Include="AuxiliaryTextEditor.cpp" />
     <ClCompile Include="AvalonEditComponents.cpp" />
     <ClCompile Include="AvalonEditTextEditor.cpp" />
-    <ClCompile Include="AvalonEditXSHD.cpp" />
-    <ClCompile Include="BackgroundAnalysis.cpp" />
-    <ClCompile Include="FindReplaceDialog.cpp" />
-    <ClCompile Include="IntelliSenseDatabase.cpp" />
+    <ClCompile Include="AvalonEditSyntaxHighlighting.cpp" />
+    <ClCompile Include="IntelliSenseBackend.cpp" />
     <ClCompile Include="IntelliSenseInterfaceModel.cpp" />
     <ClCompile Include="IntelliSenseInterfaceView.cpp" />
     <ClCompile Include="IntelliSenseItem.cpp" />
-    <ClCompile Include="NumberedRichTextBox.cpp" />
+    <ClCompile Include="IScriptEditorController.cpp" />
+    <ClCompile Include="IScriptEditorModel.cpp" />
+    <ClCompile Include="ITextEditor.cpp" />
+    <ClCompile Include="ScriptEditorInstanceManager.cpp" />
     <ClCompile Include="Preferences.cpp" />
-    <ClCompile Include="RefactorTools.cpp" />
-    <ClCompile Include="SelectScriptDialog.cpp" />
+    <ClCompile Include="ScriptEditorControllerImpl.cpp" />
+    <ClCompile Include="ScriptEditorControllerImplComponents.cpp" />
+    <ClCompile Include="ScriptEditorModelImpl.cpp" />
+    <ClCompile Include="ScriptEditorModelImplComponents.cpp" />
+    <ClCompile Include="ScriptEditorViewImpl.cpp" />
+    <ClCompile Include="ScriptEditorViewImplComponents.cpp" />
+    <ClCompile Include="ScriptPreprocessor.cpp" />
+    <ClCompile Include="ScriptSelectionDialog.cpp" />
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="ScriptSync.cpp" />
-    <ClCompile Include="ScriptTextEditorInterface.cpp" />
     <ClCompile Include="SemanticAnalysis.cpp" />
     <ClCompile Include="SnippetManager.cpp" />
-    <ClCompile Include="TextEditorAdornments.cpp" />
-    <ClCompile Include="WorkspaceModel.cpp" />
-    <ClCompile Include="WorkspaceModelComponents.cpp" />
-    <ClCompile Include="WorkspaceView.cpp" />
+    <ClCompile Include="IScriptEditorView.cpp" />
+    <ClCompile Include="Utilities.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\[Common]\AuxiliaryWindowsForm.h" />
     <ClInclude Include="..\..\[Common]\ComponentDLLInterface.h" />
-    <ClInclude Include="..\..\[Common]\CustomInputBox.h" />
     <ClInclude Include="..\..\[Common]\NativeWrapper.h" />
+    <ClInclude Include="ScriptEditorInstanceManager.h" />
+    <ClInclude Include="ScriptPreprocessor.h" />
+    <ClInclude Include="Utilities.h" />
     <ClInclude Include="AvalonEditComponents.h" />
-    <ClInclude Include="BackgroundAnalysis.h" />
-    <ClInclude Include="FindReplaceDialog.h" />
     <ClInclude Include="IIntelliSenseInterface.h" />
-    <ClInclude Include="IntelliSenseDatabase.h" />
+    <ClInclude Include="IntelliSenseBackend.h" />
     <ClInclude Include="IntelliSenseInterfaceModel.h" />
     <ClInclude Include="IntelliSenseInterfaceView.h" />
     <ClInclude Include="IntelliSenseItem.h" />
-    <ClInclude Include="RefactorTools.h" />
+    <ClInclude Include="IScriptEditorController.h" />
+    <ClInclude Include="ScriptEditorControllerImpl.h" />
+    <ClInclude Include="Macros.h" />
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h" />
     <ClInclude Include="..\..\[Common]\IncludesCLR.h" />
-    <ClInclude Include="..\..\[Common]\ListViewUtilities.h" />
     <ClInclude Include="..\..\[Common]\MiscUtilities.h" />
-    <ClInclude Include="AuxiliaryTextEditor.h" />
     <ClInclude Include="AvalonEditTextEditor.h" />
-    <ClInclude Include="AvalonEditXSHD.h" />
-    <ClInclude Include="NumberedRichTextBox.h" />
+    <ClInclude Include="AvalonEditSyntaxHighlighting.h" />
     <ClInclude Include="Preferences.h" />
-    <ClInclude Include="SelectScriptDialog.h" />
+    <ClInclude Include="IScriptEditorModel.h" />
+    <ClInclude Include="IScriptEditorView.h" />
+    <ClInclude Include="ScriptEditorControllerImplComponents.h" />
+    <ClInclude Include="ScriptEditorModelImpl.h" />
+    <ClInclude Include="ScriptEditorModelImplComponents.h" />
+    <ClInclude Include="ScriptEditorViewImpl.h" />
+    <ClInclude Include="ScriptEditorViewImplComponents.h" />
+    <ClInclude Include="ScriptSelectionDialog.h" />
     <ClInclude Include="ScriptSync.h" />
-    <ClInclude Include="ScriptTextEditorInterface.h" />
+    <ClInclude Include="ITextEditor.h" />
     <ClInclude Include="Exports.h" />
-    <ClInclude Include="Globals.h" />
     <ClInclude Include="Prefix.h" />
     <ClInclude Include="SemanticAnalysis.h" />
     <ClInclude Include="SnippetManager.h" />
-    <ClInclude Include="TextEditorAdornments.h" />
-    <ClInclude Include="WorkspaceModel.h" />
-    <ClInclude Include="WorkspaceModelComponents.h" />
-    <ClInclude Include="WorkspaceModelInterface.h" />
-    <ClInclude Include="WorkspaceView.h" />
-    <ClInclude Include="WorkspaceViewInterface.h" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="ImagesModern.resx">
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\CodeSnippetsDialog.resx" />
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptEditorWorkspace.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="Preprocessor\ScriptEditor.Preprocessor.vcxproj">
-      <Project>{67dd2ff6-aff7-4c49-80ae-72b47982563d}</Project>
-      <Private>false</Private>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
-      <LinkLibraryDependencies>true</LinkLibraryDependencies>
-      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
-    </ProjectReference>
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptSelectionDialog.resx" />
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ScriptSyncDialog.resx" />
+    <EmbeddedResource Include="Icons.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VersionInfo.rc">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CSE_SE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CSE_SE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release - Skip Dev Channel|Win32'">CSE_SE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\ico\Clearallrequests_8816.ico" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\AddEvent_5539.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Bookmark_5776.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\BrushTool_207.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\ChangeQueryType_updatequery_273.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Clearallrequests_8816.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Clearwindowcontent_6304.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Comment_11698.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Compile_191.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Copy_6524.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\CubePreview.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\DisassemblyWindow_6536.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\FindinFiles_6299.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\FindResults1_6264.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Find_5650.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\GenerateChangeScript_5620.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\GoToDeclaration_5576.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\GotoNextRow_289_color.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\NavigateBackwards_6270.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\NavigateForward_6271.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\NewBuildDefinition_8952.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\NewFile_6276.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Nextrequest_10302.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Open_6529.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Ordered(Numbered)ListOL_5795.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Paste_6520.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\ReformatSelection_8260.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\RemoveUsingNamespace_10480.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Rename_6779.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Saveall_6518.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Select.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\SyncContents_5706.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Union_534.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\UpdatedJscriptIntelliSense_10740.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Annotations\png\Error_red_16x16.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Annotations\png\Information_blue_6227_16x16.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Annotations\png\Messages_7234.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Annotations\png\PendingDelete_13298.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\BindingSource_6844.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Class_489.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\ConditionalRule_13134.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Constant_495.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Delegate_540.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Delegate_8339.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Dependancy_12861.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\DocumentOutline_5667.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\EnumItem_588.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Event-Protected_597.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Event_594.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Event_Friend_596.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Field-Friend_543.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\FieldIcon.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Interface-Friend_614.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Interface_612.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\LinkedServer_12789_16x.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Method-Friend_638.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Method_636.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Module-Friend_650.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Module_648.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Namespace.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\PropertyIcon.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\SequenceDiagramFile_sequencediagram_13452_16x.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\TabControl_707.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\ValueType_547.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\action_add_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\action_add_16xMD.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\arrow_Next_16xLG_color.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\arrow_Previous_16xLG_color.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\arrow_Sync_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\bookmark_001_16xSM.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\bookmark_002_16xMD.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\bookmark_003_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\brackets_Angled_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\brackets_Curly_16xMD.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\brackets_Square_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\class_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\comment_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\Diagram_16XLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\field_16xMD.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\gear_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\gear_32xMD.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\globe_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\list_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\Loop_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\Loop_16xMD.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\Member_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\method_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\module_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\paperclip_5159_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\pencil_005_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\save_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\script_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\server_remote_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\snippet_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\snippet_16xMD.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Complete_and_ok_16xLG_color.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Critical_16xLG_color.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Critical_16xMD_color.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Warning_16xLG_color.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Warning_16xMD.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Warning_16xMD_color.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Warning_16xSM_color.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\Symbols_Required_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\tracepoint_Off_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\type_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\wizard_16xLG.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\AppearanceEditor\AppearanceEditor_16x.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ApplicationBehaviorSettings\ApplicationBehaviorSettings_16x.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\CleanData\CleanData_16x.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\FindInFile\FindInFile_16x.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\IntelliSenseDatabase\IntelliSenseDatabase_16x.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ListTime\ListTime_16x.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ParseDynamicValue\ParseDynamicValue_16x.png" />
-    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ValidateDocument\ValidateDocument_16x.png" />
-    <Image Include="Images\transparent_161.png" />
-    <Image Include="StatusAnnotations_Complete_and_ok_16xLG_color1.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\AddComment\AddComment_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Asterisk\Asterisk_blue_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Attach\Attach_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Backwards\Backwards_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\BookmarkMainMenuItem\BookmarkMainMenuItem_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Bookmark\Bookmark_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\BuildErrorList\BuildErrorList_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Class\Class_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\CodeReviewDashboard\CodeReviewDashboard_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\CommentCode\CommentCode_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Compile\Compile_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ConditionalLoop\ConditionalLoop_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ConditionalRuleIfThen\ConditionalRuleIfThen_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ConditionalRule\ConditionalRule_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ConfigureDatabaseWizard\ConfigureDatabaseWizard_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Copy\Copy_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\DecisionNode\DecisionNode_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Edit\Edit_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\EncapsulateField\EncapsulateField_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\EventAdded\EventAdded_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Event\Event_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\FieldAdded\FieldAdded_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Field\Field_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Forwards\Forwards_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\GoToDefinition\GoToDefinition_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\GoToNextUncovered\GoToNextUncovered_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\GoToSourceCode\GoToSourceCode_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\GraphBottomToTop\GraphBottomToTop_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\HistoryTable\HistoryTable_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ItemUpdatedAssociation\ItemUpdatedAssociation_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\LocalRegisters\LocalRegisters_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\LocalVariable\LocalVariable_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Loop\Loop_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\MessageQueue\MessageQueue_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Method\Method_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\NestedTreeView\NestedTreeView_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\NewFile\NewFile_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Next\Next_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ObjectFile\ObjectFile_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Object\Object_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\OpenfileDialog\OpenfileDialog_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\OpenFolder\OpenFolder_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\OrderedList\OrderedList_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\PartiallyComplete\PartiallyComplete_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Paste\Paste_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Previous\Previous_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ProcedureSettings\ProcedureSettings_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Property\Property_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Refactoring\Refactoring_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\RegistrationScript\RegistrationScript_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\RenameField\RenameField_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\SaveAll\SaveAll_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\SaveAs\SaveAs_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\SaveFileDialogControl\SaveFileDialogControl_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Save\SaveStatusBar2_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Save\Save_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Script\Script_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\SearchAndApps\SearchAndApps_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Search\Search_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Select\Select_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\SequenceDiagram\SequenceDiagram_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Settings\Settings_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Snippet\Snippet_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\StateIndicator\StateIndicator_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\StatusCriticalError\StatusCriticalError_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\StatusInformation\StatusInformation_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\StatusInvalid\StatusInvalid_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\StatusOK\StatusOK_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\StatusWarning\StatusWarning_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\StatusWarning\StatusWarning_exp_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\SyncArrow\SyncArrow_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\SyncContent\SyncContent_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\TabPage\TabPage_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ThreeDScene\ThreeDScene_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Trash\Trash_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Type\Type_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\WebDestination\WebDestination_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\WebURL\WebURL_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Wizard\Wizard_16x.png" />
+    <Image Include="Images\blocked-yellow-large.png" />
+    <Image Include="Images\error-large.png" />
+    <Image Include="Images\info-large.png" />
+    <Image Include="Images\success-large.png" />
+    <Image Include="Images\transparent_16.png" />
+    <Image Include="Images\warning-large.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

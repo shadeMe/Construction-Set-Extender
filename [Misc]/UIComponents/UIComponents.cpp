@@ -1,12 +1,8 @@
 // UIComponents.cpp : main project file.
 
 #include "stdafx.h"
-#include "SESnippetManager.h"
-#include "SEScriptList.h"
-#include "SEVariableIndex.h"
 #include "UseInfoList.h"
-#include "SESyncUI.h"
-#include "SEOptions.h"
+#include "ScriptEditorWorkspace.h"
 
 using namespace UIComponents;
 
@@ -18,6 +14,7 @@ int main(array<System::String ^> ^args)
 	Application::SetCompatibleTextRenderingDefault(false);
 
 	// Create the main window and run it
-	Application::Run(gcnew OptionsDialog());
+	auto Form = gcnew ScriptEditorWorkspace();
+	Application::Run(Form);
 	return 0;
 }

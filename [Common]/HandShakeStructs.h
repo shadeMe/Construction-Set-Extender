@@ -24,32 +24,33 @@ namespace componentDLLInterface
 
 	struct FormData : public IDisposableData
 	{
-		const char*										EditorID;
-		UInt32											FormID;
-		UInt8											TypeID;
-		UInt32											Flags;
-		TESForm*										ParentForm;
-		const char*										ParentPluginName;
-		const char*										NameComponent;
-		const char*										DescriptionComponent;
-		bool											ObjectReference;
-		const char*										BaseFormEditorID;
+		const char* EditorID;
+		UInt32 FormID;
+		UInt8 TypeID;
+		UInt32 Flags;
+		TESForm* ParentForm;
+		const char* ParentPluginName;
+		const char* NameComponent;
+		const char* DescriptionComponent;
+		bool ObjectReference;
+		const char* BaseFormEditorID;
+		const char* AttachedScriptEditorID;
 
-		virtual bool									IsValid() { return (EditorID) ? true : false; }
-		void											FillFormData(TESForm* Form);
+		virtual bool IsValid() { return (EditorID) ? true : false; }
+		void FillFormData(TESForm* Form);
 
 		FormData();
 		FormData(TESForm* Parent);
 		virtual ~FormData();
 
-		bool		IsActive() { return ((Flags >> 1) & 1); }
-		bool		IsDeleted() { return ((Flags >> 5) & 1); }
+		bool IsActive() { return ((Flags >> 1) & 1); }
+		bool IsDeleted() { return ((Flags >> 5) & 1); }
 	};
 
 	struct FormListData : public IDisposableData
 	{
-		FormData*										FormListHead;
-		UInt32											FormCount;
+		FormData* FormListHead;
+		UInt32 FormCount;
 
 		FormListData();
 		virtual ~FormListData();
@@ -64,16 +65,14 @@ namespace componentDLLInterface
 			kScriptType_Magic		= 0x100
 		};
 
-		const char*										Text;
-		UInt16											Type;
-		bool											ModifiedFlag;
-		void*											ByteCode;
-		UInt32											Length;
-		const char*										ParentID;
-		bool											UDF;
-		bool											Compiled;
+		const char *Text;
+		UInt16 Type;
+		void* ByteCode;
+		UInt16 Length;
+		bool UDF;
+		bool Compiled;
 
-		void											FillScriptData(Script* Form);
+		void FillScriptData(Script* Form);
 
 		ScriptData();
 		ScriptData(Script* Parent);
@@ -82,8 +81,8 @@ namespace componentDLLInterface
 
 	struct ScriptListData : public IDisposableData
 	{
-		ScriptData*										ScriptListHead;
-		UInt32											ScriptCount;
+		ScriptData*ScriptListHead;
+		UInt32 ScriptCount;
 
 		ScriptListData();
 		virtual ~ScriptListData();
@@ -104,16 +103,16 @@ namespace componentDLLInterface
 			kType_String
 		};
 
-		UInt8											Type;
+		UInt8 Type;
 		union
 		{
-			int			i;
-			float		f;
-			const char*	s;
-		}												Value;
+			int i;
+			float f;
+			const char* s;
+		} Value;
 
-		void											FillVariableData(GameSetting* GMST);
-		void											FillVariableData(TESGlobal* Global);
+		void FillVariableData(GameSetting* GMST);
+		void FillVariableData(TESGlobal* Global);
 
 		VariableData();
 		virtual ~VariableData();
@@ -124,20 +123,20 @@ namespace componentDLLInterface
 
 	struct IntelliSenseUpdateData : public IDisposableData
 	{
-		ScriptData*										ScriptListHead;
-		UInt32											ScriptCount;
+		ScriptData* ScriptListHead;
+		UInt32 ScriptCount;
 
-		QuestData*										QuestListHead;
-		UInt32											QuestCount;
+		QuestData* QuestListHead;
+		UInt32 QuestCount;
 
-		GlobalData*										GlobalListHead;
-		UInt32											GlobalCount;
+		GlobalData* GlobalListHead;
+		UInt32 GlobalCount;
 
-		GMSTData*										GMSTListHead;
-		UInt32											GMSTCount;
+		GMSTData* GMSTListHead;
+		UInt32 GMSTCount;
 
-		FormData*										MiscFormListHead;
-		UInt32											MiscFormListCount;
+		FormData* MiscFormListHead;
+		UInt32 MiscFormListCount;
 
 		IntelliSenseUpdateData();
 		virtual ~IntelliSenseUpdateData();
@@ -147,40 +146,58 @@ namespace componentDLLInterface
 	{
 		struct ScriptVarInfo
 		{
-			const char*									Name;
-			UInt8										Type;	// 2 = ref var
-			UInt32										Index;
+			const char* Name = nullptr;
+			UInt8 Type = 0;	// 2 = ref var
+			UInt32 Index = 0;
 		};
 
-		ScriptVarInfo*									ScriptVarListHead;
-		UInt32											ScriptVarListCount;
+		ScriptVarInfo* ScriptVarListHead;
+		UInt32 ScriptVarListCount;
 
 		ScriptVarListData();
 		virtual ~ScriptVarListData();
 	};
 
-	struct ScriptErrorListData : public IDisposableData
+	struct ScriptCompilerMessages : public IDisposableData
 	{
-		struct ErrorData
+		struct MessageData
 		{
-			UInt32										Line;
-			const char*									Message;
+			enum
+			{
+				kType_Error,
+				kType_Warning,
+				kType_Info,
+			};
+
+			enum
+			{
+				kDefaultMessageCode = 0
+			};
+
+			UInt32 Line = 0;
+			const char* Message = nullptr;
+			UInt8 Type = kType_Error;
+			UInt32 MessageCode = kDefaultMessageCode;
+
+			bool IsError() const { return Type == kType_Error; }
+			bool IsWarning() const { return Type == kType_Warning; }
+			bool IsInfo() const { return Type == kType_Info; }
 		};
 
-		ErrorData*										ErrorListHead;
-		UInt32											Count;
+		MessageData* MessageListHead;
+		UInt32 Count;
 
-		ScriptErrorListData();
-		virtual ~ScriptErrorListData();
+		ScriptCompilerMessages();
+		virtual ~ScriptCompilerMessages();
 	};
 
 	struct ScriptCompileData : public IDisposableData
 	{
-		ScriptData				Script;			// callee updates the member after a successful compile op
-		bool					PrintErrorsToConsole;
+		ScriptData Script;			// callee updates the member after a successful compile op
+		bool PrintErrorsToConsole;
 
-		bool					CompilationSuccessful;
-		ScriptErrorListData		CompileErrorData;
+		bool CompilationSuccessful;
+		ScriptCompilerMessages CompilerMessages;
 
 		ScriptCompileData();
 		virtual ~ScriptCompileData();
@@ -190,13 +207,13 @@ namespace componentDLLInterface
 	{
 		struct ScriptVarInfo
 		{
-			const char*									OldName;
-			const char*									NewName;
+			const char* OldName;
+			const char* NewName;
 		};
 
-		const char*										ParentScriptID;
-		ScriptVarInfo*									ScriptVarListHead;
-		UInt32											ScriptVarListCount;
+		const char* ParentScriptID;
+		ScriptVarInfo* ScriptVarListHead;
+		UInt32 ScriptVarListCount;
 
 		ScriptVarRenameData();
 		virtual ~ScriptVarRenameData();
@@ -206,9 +223,9 @@ namespace componentDLLInterface
 	{
 		struct ParamInfo
 		{
-			const char*		typeStr;
-			UInt32			typeID;
-			UInt32			isOptional;
+			const char* typeStr;
+			UInt32 typeID;
+			UInt32 isOptional;
 
 			enum
 			{
@@ -392,35 +409,35 @@ namespace componentDLLInterface
 			}
 		};
 
-		const char*										longName;
-		const char*										shortName;
-		UInt32											opcode;
-		const char* 									helpText;
-		UInt16											needsParent;
-		UInt16											numParams;
-		ParamInfo*										params;
+		const char* longName;
+		const char* shortName;
+		UInt16 opcode;
+		const char* helpText;
+		UInt16 needsParent;
+		UInt16 numParams;
+		ParamInfo* params;
 
-		void*											HandlerA;
-		void*											HandlerB;
-		void*											HandlerC;
+		void* HandlerA;
+		void* HandlerB;
+		void* HandlerC;
 
-		UInt32											flags;
+		UInt32 flags;
 	};
 
 	struct CommandTableData : public IDisposableData
 	{
 #ifdef CSE
-		const CommandInfo*								CommandTableStart;
-		const CommandInfo*								CommandTableEnd;
-		UInt32											(* GetCommandReturnType)(const CommandInfo* cmd);
-		const PluginInfo*								(* GetParentPlugin)(const CommandInfo* cmd);
-		UInt32											(* GetRequiredOBSEVersion)(const CommandInfo* cmd);
+		const CommandInfo* CommandTableStart;
+		const CommandInfo* CommandTableEnd;
+		UInt32 (* GetCommandReturnType)(const CommandInfo* cmd);
+		const PluginInfo* (* GetParentPlugin)(const CommandInfo* cmd);
+		UInt32 (* GetRequiredOBSEVersion)(const CommandInfo* cmd);
 #else
 		struct PluginInfo
 		{
-			UInt32			infoVersion;
-			const char *	name;
-			UInt32			version;
+			UInt32 infoVersion;
+			const char* name;
+			UInt32 version;
 		};
 
 		enum
@@ -435,11 +452,11 @@ namespace componentDLLInterface
 			kRetnType__Max
 		};
 
-		const ObScriptCommandInfo*						CommandTableStart;
-		const ObScriptCommandInfo*						CommandTableEnd;
-		UInt32											(* GetCommandReturnType)(const ObScriptCommandInfo* cmd);
-		const PluginInfo*								(* GetParentPlugin)(const ObScriptCommandInfo* cmd);
-		UInt32											(* GetRequiredOBSEVersion)(const ObScriptCommandInfo* cmd);
+		const ObScriptCommandInfo* CommandTableStart;
+		const ObScriptCommandInfo* CommandTableEnd;
+		UInt32 (* GetCommandReturnType)(const ObScriptCommandInfo* cmd);
+		const PluginInfo* (* GetParentPlugin)(const ObScriptCommandInfo* cmd);
+		UInt32 (* GetRequiredOBSEVersion)(const ObScriptCommandInfo* cmd);
 #endif
 		struct DeveloperURLData
 		{
@@ -447,8 +464,8 @@ namespace componentDLLInterface
 			const char*	URL;
 		};
 
-		DeveloperURLData*	DeveloperURLDataListHead;
-		UInt32				DeveloperURLDataListCount;
+		DeveloperURLData* DeveloperURLDataListHead;
+		UInt32 DeveloperURLDataListCount;
 
 		CommandTableData();
 		virtual ~CommandTableData();
@@ -460,13 +477,13 @@ namespace componentDLLInterface
 
 	struct UseInfoListCellItemData : public FormData
 	{
-		const char*										WorldEditorID;
-		const char*										RefEditorID;			// first ref in cell
-		UInt32											RefFormID;
-		bool											ParentCellInterior;
-		int												XCoord;
-		int												YCoord;
-		UInt32											UseCount;
+		const char* WorldEditorID;
+		const char* RefEditorID;			// first ref in cell
+		UInt32 RefFormID;
+		bool ParentCellInterior;
+		int XCoord;
+		int YCoord;
+		UInt32 UseCount;
 
 		UseInfoListCellItemData();
 		virtual ~UseInfoListCellItemData();
@@ -474,8 +491,8 @@ namespace componentDLLInterface
 
 	struct UseInfoListCellItemListData : public IDisposableData
 	{
-		UseInfoListCellItemData*						UseInfoListCellItemListHead;
-		UInt32											UseInfoListCellItemListCount;
+		UseInfoListCellItemData* UseInfoListCellItemListHead;
+		UInt32 UseInfoListCellItemListCount;
 
 		UseInfoListCellItemListData();
 		virtual ~UseInfoListCellItemListData();
@@ -484,13 +501,13 @@ namespace componentDLLInterface
 	struct TagBrowserInstantiationData : public IDisposableData
 	{
 #ifdef CSE
-		POINT											InsertionPoint;
+		POINT InsertionPoint;
 #else
-		Point											InsertionPoint;
+		Point InsertionPoint;
 #endif
 
-		FormData*										FormListHead;
-		UInt32											FormCount;
+		FormData* FormListHead;
+		UInt32 FormCount;
 
 		TagBrowserInstantiationData();
 		virtual ~TagBrowserInstantiationData();

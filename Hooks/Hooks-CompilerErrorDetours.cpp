@@ -8,7 +8,7 @@ namespace cse
 {
 	namespace hooks
 	{
-		UInt32								ScriptCompileResultBuffer = 0;	// saves the result of a compile operation so as to allow it to go on unhindered
+		UInt32 ScriptCompileResultBuffer = 0;	// saves the result of a compile operation so as to allow it to go on unhindered
 
 		_DefineNopHdlr(RidScriptErrorMessageBox, 0x004FFFEC, 20);
 		_DefineNopHdlr(RidUnknownFunctionCodeMessage, 0x0050310C, 5);
@@ -91,8 +91,15 @@ namespace cse
 
 		void __stdcall DoRerouteScriptErrorsHook(UInt32 Line, const char* Message)
 		{
-			if (TESScriptCompiler::PreventErrorDetours == false)	// don't handle when compiling result scripts or recompiling
-				TESScriptCompiler::AuxiliaryErrorDepot.push_back(TESScriptCompiler::CompilerErrorData(Line, Message));
+			TESScriptCompiler::CompilerMessage CurrentMessage(Line, Message);
+
+			// flag the entire operation as a failure iff the message is a vanilla/OBSE compiler error
+			if (CurrentMessage.IsError())
+				ScriptCompileResultBuffer = 0;
+
+			// don't handle when compiling result scripts or recompiling
+			if (!TESScriptCompiler::PreventErrorDetours)
+				TESScriptCompiler::LastCompilationMessages.emplace_back(std::move(CurrentMessage));
 		}
 
 		#define _hhName		RerouteScriptErrors
@@ -104,7 +111,6 @@ namespace cse
 				mov     [esp + 0x18], ebx
 				mov     [esp + 0x1C], bx
 
-				mov		ScriptCompileResultBuffer, 0
 				lea     edx, [esp + 0x20]
 				pushad
 				push	edx
@@ -141,7 +147,7 @@ namespace cse
 				mov		MaxScriptSizeExceeded, 0
 				pushad
 			}
-			TESScriptCompiler::AuxiliaryErrorDepot.clear();
+			TESScriptCompiler::LastCompilationMessages.clear();
 			__asm
 			{
 				popad
@@ -197,8 +203,8 @@ namespace cse
 		void __stdcall DoResultScriptErrorNotificationHook(void)
 		{
 			BGSEEUI->MsgBoxE(nullptr,
-							MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_OK,
-							"Result script compilation failed. Check the console for error messages.");
+							 MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_OK,
+							 "Result script compilation failed. Check the console for error messages.");
 		}
 
 		#define _hhName		ResultScriptErrorNotification

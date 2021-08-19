@@ -5,7 +5,7 @@ IMMEDIATE  >>
 
 
 NOTE	---->
-
+	> Go through Vorian's PM
 
 CSE		---->
 
@@ -55,21 +55,10 @@ SE		---->
 
 	IMMEDIATE		=
 
-
 	BUGFIX			=
-		> The font selector in the preferences dialog is bugged (works in 10.0)
-		> Editor doesn't acquire focus after switching scripts/on opening and general focus related wonkiness
-			>> Even with the FocusHelper, the Tab key needs to be pressed to relinquish focus to the text editor. Not sure what else to do
-
 
 	ENHANCEMENT		=
-		> Title labels for the listviews
-		> Option to move tabs to all directions (fuck around with the other colors, etc)
-		> Change hte bytecode size bar to a circular bar
-		> Move the script type to the top toolbar (and make the UI more intuitive)
-		> Integrate the preprocessor/offset viewers into the main text editor control
-		> Prevent the creation of duplicate script editor IDs
-		> Fuzzy search for IntelliSense
+		> Filter for IntelliSense items a la VS (icon strip)
 		> Language server impl for external editors
 
 

@@ -1,5 +1,4 @@
 #include "UseInfoList.h"
-#include "[Common]\ListViewUtilities.h"
 #include "[Common]\HandshakeStructs.h"
 #include "[Common]\NativeWrapper.h"
 
@@ -103,7 +102,7 @@ namespace cse
 	{
 		if (LoadedForms)
 		{
-			nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(LoadedForms, false);
+			nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(LoadedForms);
 			LoadedForms = nullptr;
 		}
 	}
@@ -412,7 +411,7 @@ namespace cse
 
 		CString BaseFormEID(BaseForm->EditorID);
 		List<NativeFormWrapper^>^ CrossRefModel = gcnew List<NativeFormWrapper^>;
-		DisposibleDataAutoPtr<componentDLLInterface::UseInfoListCrossRefData> CrossRefs
+		nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::UseInfoListCrossRefData> CrossRefs
 			(nativeWrapper::g_CSEInterfaceTable->UseInfoList.GetCrossRefDataForForm(BaseFormEID.c_str()));
 
 		if (CrossRefs)
@@ -425,7 +424,7 @@ namespace cse
 		}
 
 		List<NativeCellUsageWrapper^>^ CellUsageModel = gcnew List<NativeCellUsageWrapper^>;
-		DisposibleDataAutoPtr<componentDLLInterface::UseInfoListCellItemListData> CellUsage
+		nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::UseInfoListCellItemListData> CellUsage
 			(nativeWrapper::g_CSEInterfaceTable->UseInfoList.GetCellRefDataForForm(BaseFormEID.c_str()));
 
 		if (CellUsage)
@@ -570,7 +569,7 @@ namespace cse
 	{
 		if (LoadedForms)
 		{
-			nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(LoadedForms, false);
+			nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(LoadedForms);
 			LoadedForms = nullptr;
 		}
 

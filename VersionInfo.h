@@ -30,8 +30,6 @@
 	#define VER_PRODUCTNAME_STR         "Construction Set Extender"
 #elif defined(CSE_SE)
 	#define VER_PRODUCTNAME_STR         "Construction Set Extender Script Editor"
-#elif defined(CSE_SEPREPROC)
-	#define VER_PRODUCTNAME_STR         "Construction Set Extender Script Editor Preprocessor"
 #elif defined(CSE_BSAVIEWER)
 	#define VER_PRODUCTNAME_STR         "Construction Set Extender BSA Viewer"
 #elif defined(CSE_LIPSYNC)
@@ -51,8 +49,6 @@
 	#define VER_ORIGINAL_FILENAME		"Construction Set Extender"
 #elif defined(CSE_SE)
 	#define VER_ORIGINAL_FILENAME       "ScriptEditor"
-#elif defined(CSE_SEPREPROC)
-	#define VER_ORIGINAL_FILENAME       "ScriptEditor.Preprocessor"
 #elif defined(CSE_BSAVIEWER)
 	#define VER_ORIGINAL_FILENAME       "BSAViewer"
 #elif defined(CSE_LIPSYNC)

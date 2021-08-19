@@ -5,6 +5,10 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release - Skip Dev Channel|Win32">
+      <Configuration>Release - Skip Dev Channel</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
@@ -15,6 +19,7 @@
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <Keyword>ManagedCProj</Keyword>
     <RootNamespace>UIComponents</RootNamespace>
+    <ProjectName>ManagedUiComponents</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -31,6 +36,13 @@
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release - Skip Dev Channel|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CLRSupport>Pure</CLRSupport>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -40,11 +52,17 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release - Skip Dev Channel|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release - Skip Dev Channel|Win32'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -60,6 +78,8 @@
       </AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <EntryPointSymbol>main</EntryPointSymbol>
+      <EmbedManagedResourceFile>
+      </EmbedManagedResourceFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -76,7 +96,24 @@
       <EntryPointSymbol>main</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release - Skip Dev Channel|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
+      <SubSystem>Windows</SubSystem>
+      <EntryPointSymbol>main</EntryPointSymbol>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemGroup>
+    <Reference Include="DevComponents.DotNetBar.Layout">
+      <HintPath>..\..\..\..\..\..\..\..\..\Program Files (x86)\DotNetBar for Windows Forms\DevComponents.DotNetBar.Layout.dll</HintPath>
+    </Reference>
     <Reference Include="DevComponents.DotNetBar2">
       <HintPath>..\..\[Depends]\DevComponents.DotNetBar2.dll</HintPath>
     </Reference>
@@ -95,47 +132,40 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
-    <ClCompile Include="SEFindReplace.cpp" />
-    <ClCompile Include="SEOptions.cpp" />
-    <ClCompile Include="SERefactorDocumentScript.cpp" />
-    <ClCompile Include="SERefactorUDF.cpp" />
-    <ClCompile Include="SEScriptList.cpp" />
-    <ClCompile Include="SESnippetManager.cpp" />
-    <ClCompile Include="SESyncUI.cpp" />
-    <ClCompile Include="SEVariableIndex.cpp" />
+    <ClCompile Include="CodeSnippetsDialog.cpp" />
+    <ClCompile Include="InputPromptDialog.cpp" />
+    <ClCompile Include="PreferencesDialog.cpp" />
+    <ClCompile Include="ScriptSyncDialog.cpp" />
+    <ClCompile Include="ScriptEditorWorkspace.cpp" />
+    <ClCompile Include="ScriptSelectionDialog.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release - Skip Dev Channel|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="TagBrowser.cpp" />
     <ClCompile Include="UIComponents.cpp" />
     <ClCompile Include="UseInfoList.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="InputPromptDialog.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
     <ClInclude Include="resource.h" />
-    <ClInclude Include="SEFindReplace.h">
+    <ClInclude Include="CodeSnippetsDialog.h">
       <FileType>CppForm</FileType>
     </ClInclude>
-    <ClInclude Include="SEOptions.h">
+    <ClInclude Include="PreferencesDialog.h">
       <FileType>CppForm</FileType>
     </ClInclude>
-    <ClInclude Include="SERefactorDocumentScript.h">
+    <ClInclude Include="ScriptSyncDialog.h">
       <FileType>CppForm</FileType>
     </ClInclude>
-    <ClInclude Include="SERefactorUDF.h">
+    <ClInclude Include="ScriptEditorWorkspace.h">
       <FileType>CppForm</FileType>
     </ClInclude>
-    <ClInclude Include="SEScriptList.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
-    <ClInclude Include="SESnippetManager.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
-    <ClInclude Include="SESyncUI.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
-    <ClInclude Include="SEVariableIndex.h">
-      <FileType>CppForm</FileType>
+    <ClInclude Include="ScriptSelectionDialog.h">
+      <FileType>CppControl</FileType>
     </ClInclude>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="TagBrowser.h">
@@ -149,29 +179,23 @@
     <ResourceCompile Include="app.rc" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="SEFindReplace.resx">
-      <DependentUpon>SEFindReplace.h</DependentUpon>
+    <EmbeddedResource Include="CodeSnippetsDialog.resx">
+      <DependentUpon>CodeSnippetsDialog.h</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SEOptions.resx">
-      <DependentUpon>SEOptions.h</DependentUpon>
+    <EmbeddedResource Include="InputPromptDialog.resx">
+      <DependentUpon>InputPromptDialog.h</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SERefactorDocumentScript.resx">
-      <DependentUpon>SERefactorDocumentScript.h</DependentUpon>
+    <EmbeddedResource Include="PreferencesDialog.resx">
+      <DependentUpon>PreferencesDialog.h</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SERefactorUDF.resx">
-      <DependentUpon>SERefactorUDF.h</DependentUpon>
+    <EmbeddedResource Include="ScriptSyncDialog.resx">
+      <DependentUpon>ScriptSyncDialog.h</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SEScriptList.resx">
-      <DependentUpon>SEScriptList.h</DependentUpon>
+    <EmbeddedResource Include="ScriptEditorWorkspace.resx">
+      <DependentUpon>ScriptEditorWorkspace.h</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SESnippetManager.resx">
-      <DependentUpon>SESnippetManager.h</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SESyncUI.resx">
-      <DependentUpon>SESyncUI.h</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SEVariableIndex.resx">
-      <DependentUpon>SEVariableIndex.h</DependentUpon>
+    <EmbeddedResource Include="ScriptSelectionDialog.resx">
+      <DependentUpon>ScriptSelectionDialog.h</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="TagBrowser.resx">
       <DependentUpon>TagBrowser.h</DependentUpon>

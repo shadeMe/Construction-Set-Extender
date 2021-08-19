@@ -55,12 +55,13 @@ namespace componentDLLInterface
 		public:
 			ScriptData*								(* CreateNewScript)(void);
 			void									(* DestroyScriptInstance)(void* CurrentScript);
+			bool									(* IsUnsavedNewScript)(void* CurrentScript);
 			bool									(* CompileScript)(ScriptCompileData* Data);
-			void									(* RecompileScripts)(void);
+			void									(* RecompileAllScriptsInActiveFile)(void);
 			void									(* ToggleScriptCompilation)(bool State);
-			void									(* DeleteScript)(const char* EditorID);
-			ScriptData*								(* GetPreviousScriptInList)(void* CurrentScript);
-			ScriptData*								(* GetNextScriptInList)(void* CurrentScript);
+			bool									(* DeleteScript)(const char* EditorID);
+			ScriptData*								(* GetPreviousScriptInList)(void* CurrentScript, bool OnlyFromActivePlugin);
+			ScriptData*								(* GetNextScriptInList)(void* CurrentScript, bool OnlyFromActivePlugin);
 			void									(* RemoveScriptBytecode)(void* Script);
 
 			void									(* SaveEditorBoundsToINI)(UInt32 Left, UInt32 Top, UInt32 Width, UInt32 Height);
@@ -101,8 +102,7 @@ namespace componentDLLInterface
 			TagBrowserInstantiationData*			(* AllocateInstantionData)(UInt32 FormCount);
 		};
 
-		void										(* DeleteInterOpData)(IDisposableData* Pointer, bool IsArray);
-		void										(* DeleteData)(void* Pointer, bool IsArray);
+		void										(* DeleteInterOpData)(IDisposableData* Pointer);
 
 		IEditorAPI									EditorAPI;
 		IScriptEditor								ScriptEditor;
@@ -119,9 +119,9 @@ namespace componentDLLInterface
 																		  UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height);
 		void										(* InstantiateEditorAndHighlight)(ScriptData* InitializerScript, const char* SearchQuery,
 																		  UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height);
-		void										(* InstantiateEditors)(ScriptData** InitializerScripts, UInt32 ScriptCount,
+		void										(* InstantiateEditors)(ScriptListData* InitializerScripts,
 																		   UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height);
-		void										(* InstantiateEditorsAndHighlight)(ScriptData** InitializerScripts, UInt32 ScriptCount, const char* SearchQuery,
+		void										(* InstantiateEditorsAndHighlight)(ScriptListData* InitializerScripts, const char* SearchQuery,
 																					   UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height);
 
 		bool										(* IsDiskSyncInProgress)(void);

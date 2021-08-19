@@ -145,23 +145,25 @@ namespace cse
 								switch (TrackPopupMenu(Popup, TPM_RETURNCMD, CursorPos.x, CursorPos.y, NULL, hWnd, nullptr))
 								{
 								case IDC_FINDTEXT_OPENSCRIPTS:
-									{
-										componentDLLInterface::ScriptData** Data = new componentDLLInterface::ScriptData*[Selection.size()];
-										for (int i = 0; i < Selection.size(); i++)
-											Data[i] = new componentDLLInterface::ScriptData((Script*)Selection[i]);
+								{
 
-										RECT ScriptEditorLoc;
-										TESDialog::ReadBoundsFromINI("Script Edit", &ScriptEditorLoc);
-										char Buffer[0x100] = { 0 };
-										GetDlgItemText(hWnd, kFindTextTextBox_Query, Buffer, sizeof(Buffer));
-										cse::cliWrapper::interfaces::SE->InstantiateEditorsAndHighlight(Data,
-																										Selection.size(),
-																										Buffer,
-																										ScriptEditorLoc.left, ScriptEditorLoc.top,
-																										ScriptEditorLoc.right, ScriptEditorLoc.bottom);
-									}
+									auto Data = new componentDLLInterface::ScriptListData();
+									Data->ScriptCount = Selection.size();
+									Data->ScriptListHead = new componentDLLInterface::ScriptData[Data->ScriptCount];
 
+									for (int i = 0; i < Selection.size(); i++)
+										Data->ScriptListHead[i].FillScriptData((Script*)Selection[i]);
+
+									RECT ScriptEditorLoc;
+									TESDialog::ReadBoundsFromINI("Script Edit", &ScriptEditorLoc);
+									char Buffer[0x100] = { 0 };
+									GetDlgItemText(hWnd, kFindTextTextBox_Query, Buffer, sizeof(Buffer));
+									cse::cliWrapper::interfaces::SE->InstantiateEditorsAndHighlight(Data,
+																									Buffer,
+																									ScriptEditorLoc.left, ScriptEditorLoc.top,
+																									ScriptEditorLoc.right, ScriptEditorLoc.bottom);
 									break;
+								}
 								}
 
 								DestroyMenu(Popup);
