@@ -13,13 +13,13 @@ namespace cse
 			switch (uMsg)
 			{
 			case WM_GETMINMAXINFO:
-				{
-					MINMAXINFO* SizeInfo = (MINMAXINFO*)lParam;
-					SizeInfo->ptMaxTrackSize.x = SizeInfo->ptMinTrackSize.x = 189;
-					SizeInfo->ptMaxTrackSize.y = SizeInfo->ptMinTrackSize.y = 255;
+			{
+				MINMAXINFO* SizeInfo = (MINMAXINFO*)lParam;
+				SizeInfo->ptMaxTrackSize.x = SizeInfo->ptMinTrackSize.x = 189;
+				SizeInfo->ptMaxTrackSize.y = SizeInfo->ptMinTrackSize.y = 240;
 
-					break;
-				}
+				break;
+			}
 			case WM_COMMAND:
 				switch (LOWORD(wParam))
 				{
@@ -35,11 +35,6 @@ namespace cse
 				case IDC_ASSETSELECTOR_PATHEDITOR:
 					achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_AssetSelection);
 					EndDialog(hWnd, hooks::e_EditPath);
-
-					return TRUE;
-				case IDC_ASSETSELECTOR_PATHCOPIER:
-					achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_AssetSelection);
-					EndDialog(hWnd, hooks::e_CopyPath);
 
 					return TRUE;
 				case IDC_ASSETSELECTOR_CLEARPATH:
@@ -150,97 +145,6 @@ namespace cse
 			case WM_INITDIALOG:
 				TESComboBox::PopulateWithForms(ComboBox, lParam, true, false);
 				TESComboBox::SetSelectedItemByIndex(ComboBox, 0);
-
-				break;
-			}
-
-			return FALSE;
-		}
-
-		BOOL CALLBACK CopyPathDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-		{
-			static bool kDraggingMouse = false;
-
-			switch (uMsg)
-			{
-			case WM_LBUTTONDOWN:
-				if (!kDraggingMouse)
-				{
-					kDraggingMouse = true;
-					Edit_SetText(GetDlgItem(hWnd, IDC_COPYPATH_ASSETPATH), "Dragging...");
-					SetCapture(hWnd);
-				}
-
-				break;
-			case WM_LBUTTONUP:
-				if (kDraggingMouse)
-				{
-					POINT Location = { 0 };
-					Location.x = GET_X_LPARAM(lParam);
-					Location.y = GET_Y_LPARAM(lParam);
-					ClientToScreen(hWnd, &Location);
-
-					HWND Window = WindowFromPoint(Location);
-					if (Window)
-					{
-						char Buffer[0x200] = { 0 };
-						GetWindowText(Window, Buffer, sizeof(Buffer));
-						Edit_SetText(GetDlgItem(hWnd, IDC_COPYPATH_ASSETPATH), Buffer);
-					}
-					else
-						Edit_SetText(GetDlgItem(hWnd, IDC_COPYPATH_ASSETPATH), nullptr);
-
-					ReleaseCapture();
-					kDraggingMouse = false;
-				}
-
-				break;
-			case WM_COMMAND:
-				switch (LOWORD(wParam))
-				{
-				case IDC_CSE_OK:
-					{
-						char Buffer[0x200] = { 0 };
-						GetDlgItemText(hWnd, IDC_COPYPATH_ASSETPATH, Buffer, sizeof(Buffer));
-						InitDialogMessageParamT<UInt32>* InitParam = (InitDialogMessageParamT<UInt32>*)GetWindowLongPtr(hWnd, GWL_USERDATA);
-
-						switch (InitParam->ExtraData)
-						{
-						case hooks::e_SPT:
-							FORMAT_STR(InitParam->Buffer, "\\%s", Buffer);
-
-							break;
-						case hooks::e_KF:
-							{
-								std::string STLBuffer(Buffer);
-								int Offset = STLBuffer.find("IdleAnims\\");
-
-								if (Offset != -1)
-									STLBuffer = STLBuffer.substr(Offset + 9);
-
-								FORMAT_STR(InitParam->Buffer, "%s", STLBuffer.c_str());
-							}
-
-							break;
-						default:
-							FORMAT_STR(InitParam->Buffer, "%s", Buffer);
-
-							break;
-						}
-
-						EndDialog(hWnd, 1);
-
-						return TRUE;
-					}
-				case IDC_CSE_CANCEL:
-					EndDialog(hWnd, 0);
-
-					return TRUE;
-				}
-
-				break;
-			case WM_INITDIALOG:
-				SetWindowLongPtr(hWnd, GWL_USERDATA, (LONG_PTR)lParam);
 
 				break;
 			}

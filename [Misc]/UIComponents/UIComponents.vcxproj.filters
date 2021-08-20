@@ -42,6 +42,9 @@
     <ClCompile Include="InputPromptDialog.cpp">
       <Filter>Header Files\ScriptEditor</Filter>
     </ClCompile>
+    <ClCompile Include="ArchiveBrowser.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TagBrowser.h">
@@ -73,6 +76,9 @@
     </ClInclude>
     <ClInclude Include="InputPromptDialog.h">
       <Filter>Header Files\ScriptEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="ArchiveBrowser.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

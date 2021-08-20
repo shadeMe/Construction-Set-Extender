@@ -154,100 +154,92 @@ namespace cse
 			return Result;
 		}
 
-		UInt32 __stdcall InitBSAViewer(UInt32 Filter)
+		const char* GetRelativeAssetPath(const char* AssetPath, const char* RelativeTo)
+		{
+			auto RelativePath = BSFile::GetRelativePath(AssetPath, RelativeTo);
+			if (RelativePath)
+				RelativePath += strlen(RelativeTo);
+			return RelativePath;
+		}
+
+		UInt32 InitBSAViewer(UInt32 Filter, HWND Parent, const char* SaveDir)
 		{
 			char Buffer[0x200] = {0};
+
+			std::string CurrentWorkspace(BGSEEWORKSPACE->Get()->GetCurrentWorkspace());
+			CurrentWorkspace += "\\Data\\";
 
 			switch (Filter)
 			{
 			case e_NIF:
-				cliWrapper::interfaces::BSA->ShowBSAViewerDialog(BGSEEMAIN->GetAPPPath(), "nif", Buffer, sizeof(Buffer));
+				cliWrapper::interfaces::BSA->ShowBSAViewerDialog(CurrentWorkspace.c_str(), "nif", Buffer, sizeof(Buffer));
 				break;
 			case e_KF:
-				cliWrapper::interfaces::BSA->ShowBSAViewerDialog(BGSEEMAIN->GetAPPPath(), "kf", Buffer, sizeof(Buffer));
+			{
+				cliWrapper::interfaces::BSA->ShowBSAViewerDialog(CurrentWorkspace.c_str(), "kf", Buffer, sizeof(Buffer));
 				break;
+			}
 			case e_WAV:
-				cliWrapper::interfaces::BSA->ShowBSAViewerDialog(BGSEEMAIN->GetAPPPath(), "wav", Buffer, sizeof(Buffer));
+				cliWrapper::interfaces::BSA->ShowBSAViewerDialog(CurrentWorkspace.c_str(), "wav", Buffer, sizeof(Buffer));
 				break;
 			case e_DDS:
-				cliWrapper::interfaces::BSA->ShowBSAViewerDialog(BGSEEMAIN->GetAPPPath(), "dds", Buffer, sizeof(Buffer));
+			{
+				cliWrapper::interfaces::BSA->ShowBSAViewerDialog(CurrentWorkspace.c_str(), "dds", Buffer, sizeof(Buffer));
 				break;
+			}
 			case e_SPT:
-				cliWrapper::interfaces::BSA->ShowBSAViewerDialog(BGSEEMAIN->GetAPPPath(), "spt", Buffer, sizeof(Buffer));
+			{
+				cliWrapper::interfaces::BSA->ShowBSAViewerDialog(CurrentWorkspace.c_str(), "spt", Buffer, sizeof(Buffer));
 				break;
+			}
 			}
 
-			if (!strlen(Buffer))
+			if (strlen(Buffer) == 0)
 				return 0;
-			else
+
+			auto RelativePath = GetRelativeAssetPath(Buffer, SaveDir);
+			if (RelativePath == nullptr)
 			{
-				FORMAT_STR(s_AssetSelectorReturnPath, "%s", Buffer);
-				return e_FetchPath;
+				BGSEEUI->MsgBoxE(Parent, MB_ICONERROR, "Invalid directory for asset.");
+				return 0;
 			}
+
+			FORMAT_STR(s_AssetSelectorReturnPath, "%s", RelativePath);
+			return e_FetchPath;
 		}
 
-		UInt32 __stdcall InitPathEditor(UInt32 Filter, int ID, const char* ExistingPath, HWND Dialog)
+		UInt32 InitPathEditor(UInt32 Filter, int ID, const char* ExistingPath, HWND Parent, const char* SaveDir)
 		{
 			uiManager::InitDialogMessageParamT<UInt32> PathEditorParam = { {0}, 0 };
 
 			if (!ExistingPath)
-				GetDlgItemText(Dialog, ID, PathEditorParam.Buffer, sizeof(PathEditorParam.Buffer));
+			{
+				char Buffer[0x200];
+				GetDlgItemText(Parent, ID, Buffer, sizeof(Buffer));
+				FORMAT_STR(PathEditorParam.Buffer, "%s%s", SaveDir, Buffer);
+			}
 			else
 				FORMAT_STR(PathEditorParam.Buffer, "%s", ExistingPath);
 
 			if (DialogBoxParam(BGSEEMAIN->GetExtenderHandle(),
 								MAKEINTRESOURCE(IDD_TEXTEDIT),
-								Dialog,
+								Parent,
 								(DLGPROC)uiManager::TextEditDlgProc,
 								(LPARAM)&PathEditorParam) == 0 ||
 				strlen(PathEditorParam.Buffer) < 2)
 			{
 				return 0;
 			}
-			else
+
+			auto RelativePath = GetRelativeAssetPath(PathEditorParam.Buffer, SaveDir);
+			if (RelativePath == nullptr)
 			{
-				switch (Filter)
-				{
-				case e_SPT:
-					FORMAT_STR(s_AssetSelectorReturnPath, "\\%s", PathEditorParam.Buffer);
-					break;
-				case e_KF:
-					{
-						std::string STLBuffer(PathEditorParam.Buffer);
-						SME::StringHelpers::MakeLower(STLBuffer);
-						int Offset = STLBuffer.find("idleanims\\");
-						if (Offset != -1)
-							STLBuffer = STLBuffer.substr(Offset + 9);
-
-						FORMAT_STR(s_AssetSelectorReturnPath, "%s", STLBuffer.c_str());
-					}
-					break;
-				default:
-					FORMAT_STR(s_AssetSelectorReturnPath, "%s", PathEditorParam.Buffer);
-				}
-
-				return e_FetchPath;
-			}
-		}
-
-		UInt32 __stdcall InitPathCopier(UInt32 Filter, HWND Dialog)
-		{
-			uiManager::InitDialogMessageParamT<UInt32> PathCopierParam = { {0}, Filter };
-
-			if (DialogBoxParam(BGSEEMAIN->GetExtenderHandle(),
-								MAKEINTRESOURCE(IDD_COPYPATH),
-								Dialog,
-								(DLGPROC)uiManager::CopyPathDlgProc,
-								(LPARAM)&PathCopierParam) == 0 ||
-				strlen(PathCopierParam.Buffer) == 0)
-			{
+				BGSEEUI->MsgBoxE(Parent, MB_ICONERROR, "Invalid directory for asset.");
 				return 0;
 			}
-			else
-			{
-				FORMAT_STR(s_AssetSelectorReturnPath, "%s", PathCopierParam.Buffer);
-				return e_FetchPath;
-			}
+
+			FORMAT_STR(s_AssetSelectorReturnPath, "%s", RelativePath);
+			return e_FetchPath;
 		}
 
 		UInt32 __stdcall InitAssetSelectorDlg(HWND Dialog)

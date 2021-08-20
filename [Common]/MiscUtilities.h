@@ -96,7 +96,5 @@ public:
 	}
 };
 
-void CopyStringToCharBuffer(String^% Source, char* Buffer, UInt32 Size);
-
 
 } // namespace cse

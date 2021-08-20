@@ -28,6 +28,11 @@ BSFile* BSFile::CreateInstance(const char* fileName, UInt32 mode, UInt32 bufferS
 	return NewInstance;
 }
 
+const char* BSFile::GetRelativePath(const char* FilePath, const char* RelativeTo)
+{
+	return cdeclCall<const char*>(0x004308B0, FilePath, RelativeTo);
+}
+
 void BSFile::DeleteInstance(bool ReleaseMemory)
 {
 	thisVirtualCall<UInt32>(0x0, this, ReleaseMemory);

@@ -202,6 +202,12 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Reference Include="DevComponents.DotNetBar2">
+      <HintPath>..\..\[Depends]\DevComponents.DotNetBar2.dll</HintPath>
+    </Reference>
+    <Reference Include="ObjectListView">
+      <HintPath>..\..\[Depends]\ObjectListView.dll</HintPath>
+    </Reference>
     <Reference Include="System">
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
@@ -225,7 +231,6 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="..\..\[Common]\IncludesCLR.h" />
     <ClInclude Include="..\..\[Common]\MiscUtilities.h" />
     <ClInclude Include="..\..\[Common]\NativeWrapper.h" />
-    <ClInclude Include="BSAReader.h" />
     <ClInclude Include="BSAViewer.h" />
     <ClInclude Include="Exports.h" />
     <ClInclude Include="Prefix.h" />
@@ -233,28 +238,14 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
   <ItemGroup>
     <ClCompile Include="..\..\[Common]\MiscUtilities.cpp" />
     <ClCompile Include="..\..\[Common]\NativeWrapper.cpp" />
-    <ClCompile Include="BSAReader.cpp" />
     <ClCompile Include="BSAViewer.cpp" />
     <ClCompile Include="Exports.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="..\..\[Misc]\UIComponents\ArchiveBrowser.resx" />
     <EmbeddedResource Include="Images.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Actions\png_format\Office and VS\Filter2HS.png" />
-    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Objects\png_format\WinVista\1474_Tape_48x48.png" />
-    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Objects\png_format\WinVista\1475_Text Balloon_48x48.png" />
-    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Objects\png_format\WinVista\1496_wall_48x48.png" />
-    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Objects\png_format\WinVista\Connection_Manager.png" />
-    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Objects\png_format\WinVista\Folder_48x48.png" />
-    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Objects\png_format\WinVista\Generic_Document.png" />
-    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Objects\png_format\WinVista\generic_picture.png" />
-    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Objects\png_format\WinVista\Music_Note_Double_48.png" />
-    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\openfolderHS.png" />
-    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\PageUpHS.png" />
-    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\ViewThumbnailsHS.png" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VersionInfo.rc">
@@ -262,6 +253,10 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CSE_BSAVIEWER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release - Skip Dev Channel|Win32'">CSE_BSAVIEWER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\Document\Document_16x.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\FolderClosed\FolderClosed_16x.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

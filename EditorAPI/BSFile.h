@@ -35,6 +35,9 @@ public:
 
 	static BSFile*			CreateInstance(const char* fileName, UInt32 mode, UInt32 bufferSize = 0x8000, bool isTextFile = false);
 
+	// probably belongs elswhere
+	static const char*		GetRelativePath(const char* FilePath, const char* RelativeTo);
+
 	void					DeleteInstance(bool ReleaseMemory = true);
 };
 STATIC_ASSERT(sizeof(BSFile) == 0x154);

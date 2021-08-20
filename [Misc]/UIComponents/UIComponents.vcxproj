@@ -131,6 +131,7 @@
     <None Include="app.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ArchiveBrowser.cpp" />
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="CodeSnippetsDialog.cpp" />
     <ClCompile Include="InputPromptDialog.cpp" />
@@ -148,6 +149,9 @@
     <ClCompile Include="UseInfoList.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ArchiveBrowser.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
     <ClInclude Include="InputPromptDialog.h">
       <FileType>CppForm</FileType>
     </ClInclude>
@@ -179,6 +183,9 @@
     <ResourceCompile Include="app.rc" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="ArchiveBrowser.resx">
+      <DependentUpon>ArchiveBrowser.h</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CodeSnippetsDialog.resx">
       <DependentUpon>CodeSnippetsDialog.h</DependentUpon>
     </EmbeddedResource>

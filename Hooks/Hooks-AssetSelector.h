@@ -110,7 +110,6 @@ namespace cse
 			e_BSABrowser,
 			e_EditPath,
 			e_ClearPath,
-			e_CopyPath,
 			e_ExtractPath,
 			e_OpenPath,
 			e_FetchPath			= 0x32
@@ -132,8 +131,6 @@ namespace cse
 		__asm jz		BSAB \
 		__asm cmp		eax, e_EditPath \
 		__asm jz		EDITP \
-		__asm cmp		eax, e_CopyPath \
-		__asm jz		COPYP \
 		__asm cmp		eax, e_ExtractPath \
 		__asm jz		EXTRACTP \
 		__asm cmp		eax, e_OpenPath \
@@ -154,21 +151,16 @@ namespace cse
 		__asm popad  \
 		__asm push		k##name##SelectorCommonDialogFilterType	\
 		__asm call		InitBSAViewer \
+		__asm add		esp, 0x4 \
 		__asm jmp		[k##name##SelectorCommonDialogRetnAddr]      \
 		__asm EDITP: \
 		__asm popad \
-		__asm push		eax \
 		__asm push		0 \
 		__asm mov		eax, [k##name##PathButtonID] \
 		__asm push		eax \
 		__asm push		k##name##SelectorCommonDialogFilterType	\
 		__asm call		InitPathEditor \
-		__asm jmp		[k##name##SelectorCommonDialogRetnAddr]      \
-		__asm COPYP: \
-		__asm popad \
-		__asm push		eax \
-		__asm push		k##name##SelectorCommonDialogFilterType	\
-		__asm call		InitPathCopier \
+		__asm add		esp, 0xC \
 		__asm jmp		[k##name##SelectorCommonDialogRetnAddr]      \
 		__asm EXTRACTP: \
 		__asm popad \

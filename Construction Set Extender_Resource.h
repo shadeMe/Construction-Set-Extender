@@ -8,7 +8,6 @@
 #define IDC_TESFILESAVE_SAVEESP         1004
 #define IDC_TESFILESAVE_SAVEESM         1005
 #define IDC_BINDSCRIPT_NEWFORMEDITORID  1008
-#define IDC_COPYPATH_ASSETPATH          1008
 #define IDC_GLOBALSCRIPT_QUESTID        1008
 #define IDC_BINDSCRIPT_NEWREFEDITORID   1009
 #define IDC_GLOBALSCRIPT_DELAY          1009
@@ -71,7 +70,6 @@
 #define IDD_GLOBALSCRIPT                5111
 #define IDD_TESCOMBOBOX                 5112
 #define IDD_BINDSCRIPT                  5114
-#define IDD_COPYPATH                    5116
 #define IDD_EDITRESULTSCRIPT            5128
 #define IDD_AUXVIEWPORT                 6000
 #define IDB_ACHIEVEMENT_ANTICHRIST      6003
@@ -196,7 +194,7 @@
 #define ID_Menu                         50169
 
 // Next default values for new objects
-//
+// 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        6037

@@ -1982,7 +1982,7 @@ namespace cse
 					}
 
 					SetTimer(hWnd, ID_COMMONDLGEXTRAFITTINGS_QUICKVIEWTIMERID, 100, nullptr);
-					SetTimer(hWnd, ID_COMMONDLGEXTRAFITTINGS_ASSETTOOLTIPTIMERID, 1000, nullptr);
+					SetTimer(hWnd, ID_COMMONDLGEXTRAFITTINGS_ASSETTOOLTIPTIMERID, 650, nullptr);
 
 
 					EnumChildWindows(hWnd, DoubleBufferListViewControls, NULL);

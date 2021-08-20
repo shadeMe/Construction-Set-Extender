@@ -3,6 +3,8 @@
 
 namespace cse
 {
+
+
 ListViewItem^ GetListViewSelectedItem(ListView^ Source)
 {
 	ListViewItem^ Result = nullptr;
@@ -62,18 +64,6 @@ Image^ ImageResourceManager::CreateImage(String^ ResourceIdentifier)
 	} catch (...) {
 		return nullptr;
 	}
-}
-
-void CopyStringToCharBuffer( String^% Source, char* Buffer, UInt32 Size )
-{
-	int i = 0;
-	for (i=0; i < Source->Length && i < Size; i++)
-		*(Buffer + i) = Source[i];
-
-	if (i < Size)
-		*(Buffer + i) = '\0';
-	else
-		Buffer[Size - 1] = '\0';
 }
 
 

@@ -2,125 +2,180 @@
 
 namespace cse
 {
-	ref class FolderObject;
 
-	public ref class FileSystemObject
+
+namespace bsaViewer
+{
+
+
+ref struct ArchiveFile
+{
+	static enum class eFileType
 	{
-	public:
-		static enum class							_ObjectType
-		{
-			e_Folder = 0,
-			e_File
-		};
-		String^										Name;
-		_ObjectType									ObjectType;
-		FolderObject^								Parent;
-
-		FileSystemObject(String^% Name, FolderObject^% Parent, _ObjectType ObjectType) : Name(Name), Parent(Parent), ObjectType(ObjectType) {}
-
-		String^										GetPath(bool WithRoot);
-		String^										GetPathWithName(bool WithRoot)
-		{
-			String^ Path;
-			Path = GetPath(WithRoot);
-			if (Path == "")							return Name;
-			else									return Path + "\\" + Name;
-		}
+		Unknown,
+		Dds,
+		Nif,
+		Mp3,
+		Wav,
+		Lip,
+		Kf,
+		Spt,
 	};
 
-	public ref class FolderObject : public FileSystemObject
+	static Dictionary<String^, eFileType>^ FileTypeExtensions = gcnew Dictionary<String^, eFileType>(StringComparer::CurrentCultureIgnoreCase);
+
+	property String^ Filename;
+	property String^ ParentDirectory;
+	property UInt32 SizeInBytes;
+	property bool Compressed;
+	property eFileType FileType;
+
+	ArchiveFile(String^ ParentDirectory, UInt32 SizeInBytes, bool Compressed);
+
+	property String^ FullPath
 	{
-	public:
-		List<FileSystemObject^>^					SubItems;
+		String^ get() { return ParentDirectory + "\\" + Filename; }
+	}
 
-		FolderObject(String^% Name, FolderObject^% Parent) : FileSystemObject(Name, Parent, FileSystemObject::_ObjectType::e_Folder), SubItems(gcnew List<FileSystemObject^>()) {}
-
-		static FolderObject^						NullObj = gcnew FolderObject(gcnew String("__NULL"), NullObj);
-
-		static bool operator ==(FolderObject^% LHS, FolderObject^% RHS)
-		{
-			return !String::Compare(LHS->Name, RHS->Name, true);
-		}
-		static bool operator !=(FolderObject^% LHS, FolderObject^% RHS)
-		{
-			return !(LHS == RHS);
-		}
-	};
-#define FSONULL									FolderObject::NullObj
-
-	public ref class FileObject : public FileSystemObject
+	property String^ Extension
 	{
-	public:
-		static enum class							_FileType
-		{
-			e_Unknown = 0,
-			e_DDS,
-			e_NIF,
-			e_MP3,
-			e_WAV,
-			e_LIP,
-			e_KF,
-			e_SPT
-		};
-		_FileType									FileType;
+		String^ get();
+	}
 
-		FileObject(String^% Name, FolderObject^% Parent) : FileSystemObject(Name, Parent, FileSystemObject::_ObjectType::e_File)
-		{
-			String^ Extension = Name->Substring(Name->IndexOf(".") + 1);
+	static eFileType GetFileTypeFromExtension(String^ Extension);
+};
 
-			if		(!String::Compare(Extension, "dds"))		FileType = (_FileType)1;
-			else if (!String::Compare(Extension, "nif"))		FileType = (_FileType)2;
-			else if (!String::Compare(Extension, "mp3"))		FileType = (_FileType)3;
-			else if (!String::Compare(Extension, "wav"))		FileType = (_FileType)4;
-			else if (!String::Compare(Extension, "lip"))		FileType = (_FileType)5;
-			else if (!String::Compare(Extension, "kf"))			FileType = (_FileType)6;
-			else if (!String::Compare(Extension, "spt"))		FileType = (_FileType)7;
-			else												FileType = (_FileType)0;
-		}
+
+ref struct DirectoryTreeNode;
+
+
+ref struct Archive
+{
+	[Flags]
+	static enum class eArchiveFlags : UInt32
+	{
+		None = 0,
+		HasFolderStringTable = 1 << 1,
+		HasFileStringTable = 1 << 2,
+		Compressed = 1 << 3,
 	};
 
-	public ref class BSAViewer
+	[Flags]
+	static enum class eContentFlags : UInt32
 	{
-		static BSAViewer^							Singleton = nullptr;
-		BSAViewer();
-
-		void										BSABox_Cancel(Object^ Sender, CancelEventArgs^ E);
-		void 										ContentList_ItemActivate(Object^ Sender, EventArgs^ E);
-		void 										ToolBarOpenArchive_Click(Object^ Sender, EventArgs^ E);
-		void 										ToolBarUp_Click(Object^ Sender, EventArgs^ E);
-		void 										ToolBarView_Click(Object^ Sender, EventArgs^ E);
-
-		Form^										BSABox;
-		ListView^									ContentList;
-		TextBox^									LocationBox;
-		OpenFileDialog^								OpenDialog;
-		ToolStrip^									ToolBar;
-		ToolStripSeparator^							SeparatorA;
-		ToolStripButton^							ToolBarOpenArchive;
-		ToolStripButton^							ToolBarUp;
-		ToolStripButton^							ToolBarView;
-		ToolStripLabel^								ToolBarArchiveName;
-		StatusStrip^								StatusBar;
-		ToolStripLabel^								CurrentLocation;
-
-		ImageList^									LargeIcons;
-		ImageList^									SmallIcons;
-		String^										Filter;
-		String^										ReturnPath;
-		FolderObject^								WorkingDirectory;
-
-		FolderObject^ 								GetFolderInDirectory(FolderObject^% WorkingDirectory, String^% FolderName);
-		void 										OpenArchive(String^% Path);
-		void 										ParseBSAFilePath(String^% Path);
-		void 										PopulateContentList(FolderObject^% WorkingDirectory);
-		void 										SanitizeReturnPath();
-		void										Close();
-		void										Cleanup();
-	public:
-		static BSAViewer^%							GetSingleton();
-		static FolderObject^						Root = nullptr;
-
-		String^ 									InitializeViewer(String^% DefaultDirectory, String^% Filter);
+		None = 0,
+		Meshes = 1 << 1,
+		Textures = 1 << 2,
+		Menus = 1 << 3,
+		Sounds = 1 << 4,
+		Voices = 1 << 5,
+		Shader = 1 << 6,
+		Trees = 1 << 7,
+		Fonts = 1 << 8,
+		Misc = 1 << 9,
 	};
-#define BSAV									BSAViewer::GetSingleton()
-}
+
+	property String^ FilePath;
+	property bool Valid;
+	property eArchiveFlags ArchiveFlags;
+	property eContentFlags ContentFlags;
+	property List<ArchiveFile^>^ Files;
+
+	Archive(String^ FilePath);
+
+	System::Collections::Generic::ICollection<DirectoryTreeNode^>^ GenerateDirectoryTree(String^ PathFilter, ArchiveFile::eFileType FileTypeFilter);	// returns the top-level nodes of the tree
+};
+
+
+ref struct DirectoryTreeNode
+{
+
+	property String^ Name;
+	property String^ ParentPath;
+	property String^ FullPath;
+	property Dictionary<String^, DirectoryTreeNode^>^ Children;		// key is the name of node
+	property ArchiveFile^ SourceFile;
+
+	DirectoryTreeNode();
+	DirectoryTreeNode(String^ FullPath);
+
+	property bool IsFile
+	{
+		bool get() { return SourceFile != nullptr; }
+	}
+};
+
+class ArchiveReader
+{
+	static String^ ReadNullTerminatedString(BinaryReader^ Stream);
+	static String^ ReadString(BinaryReader^ Stream, UInt32 Length);
+public:
+	static Archive^ ParseArchive(String^ ArchiveFilePath);
+};
+
+
+ref class ArchiveBrowser : public DevComponents::DotNetBar::Metro::MetroForm
+{
+	static Image^ IconFolder = nullptr;
+	static Image^ IconFile = nullptr;
+
+	DevComponents::DotNetBar::Bar^ TopToolbar;
+	DevComponents::DotNetBar::ButtonItem^ TopToolbarOpenArchive;
+	DevComponents::DotNetBar::LabelItem^ TopToolbarCurrentArchiveName;
+	BrightIdeasSoftware::TreeListView^ DirectoryTreeListView;
+	DevComponents::DotNetBar::ButtonX^ BottomToolbarOk;
+	DevComponents::DotNetBar::Bar^ BottomToolbar;
+	DevComponents::DotNetBar::TextBoxItem^ BottomToolbarTextboxFilter;
+	DevComponents::DotNetBar::ButtonX^ BottomToolbarCancel;
+	System::Windows::Forms::Panel^ BottomToolbarContainer;
+	BrightIdeasSoftware::OLVColumn^ DirectoryTreeListViewColName;
+	BrightIdeasSoftware::OLVColumn^ DirectoryTreeListViewColSize;
+	BrightIdeasSoftware::OLVColumn^ DirectoryTreeListViewColType;
+	System::ComponentModel::IContainer^ components;
+
+	void DirectoryTreeListView_KeyDown(Object^ Sender, KeyEventArgs^ E);
+	void DirectoryTreeListView_KeyPress(Object^ Sender, KeyPressEventArgs^ E);
+	void DirectoryTreeListView_ItemActivate(Object^ Sender, EventArgs^ E);
+
+	void TopToolbarOpenArchive_Click(Object^ Sender, EventArgs^ E);
+	void BottomToolbarOk_Click(Object^ Sender, EventArgs^ E);
+	void BottomToolbarCancel_Click(Object^ Sender, EventArgs^ E);
+	void BottomToolbarTextboxFilter_TextChanged(Object^ Sender, EventArgs^ E);
+	void BottomToolbarTextboxFilter_KeyDown(Object^ Sender, KeyEventArgs^ E);
+
+	void Dialog_Load(Object^ Sender, EventArgs^ E);
+
+	void InitializeComponent();
+	void FinalizeComponents();
+	void CompleteSelection();
+	bool LoadArchive(String^ ArchiveFilePath);
+	void PopulateDirectoryTree(String^ Filter);
+	void UpdateFilter(String^ Filter);
+
+	static Object^ DirectoryTreeAspectNameGetter(Object^ RowObject);
+	static Object^ DirectoryTreeImageNamesGetter(Object^ RowObject);
+	static Object^ DirectoryTreeAspectSizeGetter(Object^ RowObject);
+	static String^ DirectoryTreeAspectToStringConverterSize(Object^ Aspect);
+	static Object^ DirectoryTreeAspectTypeGetter(Object^ RowObject);
+	static String^ DirectoryTreeAspectToStringConverterType(Object^ Aspect);
+	static bool DirectoryTreeCanExpandGetter(Object^ RowObject);
+	static System::Collections::IEnumerable^ DirectoryTreeChildrenGetter(Object^ RowObject);
+	bool DirectoryTreeFilterPredicate(Object^ Model);
+
+	String^ DefaultDirectory;
+	ArchiveFile::eFileType FileTypeFilter;
+	Archive^ ActiveArchive;
+	ICollection<DirectoryTreeNode^>^ DirectoryTreeData;
+	BrightIdeasSoftware::ModelFilter^ FilterPredicate;
+public:
+	property String^ SelectedFilePath;
+
+	ArchiveBrowser(String^ DefaultDirectory, ArchiveFile::eFileType FileTypeFilter);
+	~ArchiveBrowser();
+};
+
+
+} // namespace bsaViewer
+
+
+} // namespace cse

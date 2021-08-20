@@ -7,6 +7,7 @@ IMMEDIATE  >>
 NOTE	---->
 	> Go through Vorian's PM
 
+
 CSE		---->
 
 	BUGFIX			=
@@ -41,6 +42,7 @@ CSE		---->
 		> Wildcard find/replace
 		> Add an option to restore a saved backup for some esp/esm, instead of manually recover it from Data/Backup folder and moving it back to Data folder.
 
+
 	CODA			=
 		> Get/SetCellRegions
 		> CreateRegion
@@ -50,12 +52,13 @@ CSE		---->
 
 
 
-
 SE		---->
 
 	IMMEDIATE		=
 
+
 	BUGFIX			=
+
 
 	ENHANCEMENT		=
 		> Filter for IntelliSense items a la VS (icon strip)
@@ -72,9 +75,7 @@ BSA		---->
 
 
 	ENHANCEMENT		=
-		> Use a TreeView
-		> Add support for file/folder extraction
-		> Add support for viewing arbitrary BSAs
+
 
 
 TAG		---->

@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include "UseInfoList.h"
 #include "ScriptEditorWorkspace.h"
+#include "ArchiveBrowser.h"
 
 using namespace UIComponents;
 
@@ -14,7 +15,8 @@ int main(array<System::String ^> ^args)
 	Application::SetCompatibleTextRenderingDefault(false);
 
 	// Create the main window and run it
-	auto Form = gcnew ScriptEditorWorkspace();
+	//auto Form = gcnew ScriptEditorWorkspace();
+	auto Form = gcnew ArchiveBrowser();
 	Application::Run(Form);
 	return 0;
 }

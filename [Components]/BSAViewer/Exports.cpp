@@ -1,5 +1,6 @@
 #include "Exports.h"
 #include "BSAViewer.h"
+#include <stdio.h>
 
 extern componentDLLInterface::BSAViewerInterface g_InteropInterface;
 
@@ -15,12 +16,19 @@ extern "C"
 
 void InitializeComponents(void)
 {
-	return;
+	nativeWrapper::Initialize();
 }
 
 void ShowBSAViewerDialog(const char* WorkingDir, const char* ExtensionFilter, char* ReturnPathOut, UInt32 BufferSize)
 {
-	CopyStringToCharBuffer(BSAV->InitializeViewer(gcnew String(WorkingDir), gcnew String(ExtensionFilter)), ReturnPathOut, BufferSize);
+	auto WorkingDirectory = gcnew String(WorkingDir);
+	auto ExtensionString = gcnew String(ExtensionFilter);
+
+	bsaViewer::ArchiveBrowser Browser(WorkingDirectory, bsaViewer::ArchiveFile::GetFileTypeFromExtension(ExtensionString));
+
+	auto CString = (const char*)(void*)Marshal::StringToHGlobalAnsi(Browser.SelectedFilePath);
+	_snprintf_s(ReturnPathOut, BufferSize, _TRUNCATE, "%s", CString);
+	Marshal::FreeHGlobal((IntPtr)(void*)CString);
 }
 
 componentDLLInterface::BSAViewerInterface g_InteropInterface =
