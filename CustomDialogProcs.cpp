@@ -149,6 +149,7 @@ namespace cse
 				break;
 			case WM_INITDIALOG:
 				TESComboBox::PopulateWithForms(ComboBox, lParam, true, false);
+				TESComboBox::SetSelectedItemByIndex(ComboBox, 0);
 
 				break;
 			}
@@ -501,6 +502,10 @@ namespace cse
 				}
 				break;
 			case WM_INITDIALOG:
+				// show icon in taskbar
+				auto WindowStyle = GetWindowLongPtr(hWnd, GWL_EXSTYLE);
+				SetWindowLongPtr(hWnd, GWL_EXSTYLE, WindowStyle | WS_EX_APPWINDOW);
+
 				Edit_SetText(EditorIDBox, "Base Form EditorID");
 				Edit_SetText(RefIDBox, "Ref EditorID");
 
@@ -524,6 +529,8 @@ namespace cse
 				TESComboBox::PopulateWithForms(ExistFormList, TESForm::kFormType_AlchemyItem, false, false);
 				TESComboBox::PopulateWithForms(ExistFormList, TESForm::kFormType_SigilStone, false, false);
 				TESComboBox::PopulateWithForms(ExistFormList, TESForm::kFormType_Quest, false, false);
+
+				TESComboBox::SetSelectedItemByIndex(ExistFormList, 0);
 
 				CheckDlgButton(hWnd, IDC_BINDSCRIPT_BINDEXISTFORM, BST_CHECKED);
 				CheckDlgButton(hWnd, IDC_BINDSCRIPT_QUESTFORM, BST_CHECKED);

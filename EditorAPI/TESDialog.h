@@ -585,6 +585,7 @@ public:
 	static void								AddItem(HWND hWnd, const char* Text, void* Data, bool ResizeDroppedWidth = true);
 	static void*							GetSelectedItemData(HWND hWnd);
 	static void								SetSelectedItemByData(HWND hWnd, void* Data);
+	static void								SetSelectedItemByIndex(HWND hWnd, UInt32 Index);
 
 	static void								PopulateWithForms(HWND hWnd, UInt8 FormType, bool ClearItems, bool AddDefaultItem);
 	static void								ClearItems(HWND hWnd);

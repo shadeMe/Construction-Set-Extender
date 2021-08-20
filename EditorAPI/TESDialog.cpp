@@ -377,6 +377,11 @@ void TESComboBox::SetSelectedItemByData(HWND hWnd, void* Data)
 	cdeclCall<void>(0x004036E0, hWnd, Data);
 }
 
+void TESComboBox::SetSelectedItemByIndex(HWND hWnd, UInt32 Index)
+{
+	ComboBox_SetCurSel(hWnd, Index);
+}
+
 void TESComboBox::ClearItems(HWND hWnd)
 {
 	ComboBox_ResetContent(hWnd);

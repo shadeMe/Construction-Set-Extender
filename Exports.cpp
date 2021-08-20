@@ -936,13 +936,16 @@ void BindScript(const char* EditorID, HWND Parent)
 	if (ScriptForm->IsUserDefinedFunctionScript())
 	{
 		BGSEEUI->MsgBoxI(nullptr,
-						MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_OK,
-						"Script %s {%08X} is a user-defined function script and therefore cannot be bound to a form.",
-						ScriptForm->editorID.c_str(), ScriptForm->formID);
+						 MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_OK,
+						 "Script %s {%08X} is a user-defined function script and therefore cannot be bound to a form.",
+						 ScriptForm->editorID.c_str(), ScriptForm->formID);
 		return;
 	}
 
-	Form = (TESForm*)DialogBox(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_BINDSCRIPT), Parent, (DLGPROC)uiManager::BindScriptDlgProc);
+	Form = reinterpret_cast<TESForm*>(BGSEEUI->ModalDialog(BGSEEMAIN->GetExtenderHandle(),
+														   MAKEINTRESOURCE(IDD_BINDSCRIPT),
+														   BGSEEUI->GetMainWindow(),
+														   reinterpret_cast<DLGPROC>(uiManager::BindScriptDlgProc)));
 
 	if (Form)
 	{

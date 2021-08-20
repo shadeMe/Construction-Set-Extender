@@ -747,7 +747,8 @@ namespace cse
 				char ClassName[100];
 				GetClassName(hWnd, ClassName, ARRAYSIZE(ClassName));
 
-				return strcmp(ClassName, "ComboBox") == 0;
+				bool IsComboBox = strcmp(ClassName, "ComboBox") == 0;
+				return IsComboBox;
 			};
 
 			BGSEEUI->GetSubclasser()->RegisterGlobalSubclass(ThunkComboBoxSubclassProc(),
