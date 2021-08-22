@@ -487,6 +487,8 @@ void LineTrackingManager::ParentModel_StateChanged(Object^ Sender, model::IScrip
 		ProcessedLines->Add(Itr->Line);
 		LineBgRenderer->ErrorSquiggles->Add(NewSegment);
 	}
+
+	LineBgRenderer->Redraw();
 }
 
 void LineTrackingManager::TextAnchor_Deleted(Object^ Sender, EventArgs^ E)
@@ -1084,7 +1086,8 @@ void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::Mouse
 	bool DisplayPopup = false;
 	String^ PopupTitle = "";
 	String^ PopupText = "";
-	auto PopupBgColor = utilities::IRichTooltipContentProvider::eBackgroundColor::Default;
+	auto PopupBgColor = Color::Empty, PopupTextColor = Color::Empty;
+	Image^ BodyImage = nullptr;
 
 	Windows::Point DisplayLocation = TransformToPixels(E->GetPosition(ParentEditor));
 	DisplayLocation.X += System::Windows::SystemParameters::CursorWidth;
@@ -1101,11 +1104,14 @@ void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::Mouse
 															model::components::ScriptDiagnosticMessage::eMessageSource::All,
 															model::components::ScriptDiagnosticMessage::eMessageType::Error);
 
-			PopupBgColor = utilities::IRichTooltipContentProvider::eBackgroundColor::Red;
-			PopupTitle = Errors->Count + " error" + (Errors->Count == 1 ? "" : "s");
+			PopupBgColor = preferences::SettingsHolder::Get()->Appearance->TooltipBackColorError;
+			PopupTextColor = preferences::SettingsHolder::Get()->Appearance->TooltipForeColorError;
+			BodyImage = view::components::CommonIcons::Get()->ErrorLarge;
+
+			PopupTitle = Errors->Count + " Error" + (Errors->Count == 1 ? "" : "s");
 
 			for each (auto Itr in Errors)
-				Mb->TableNextRow()->TableNextColumn()->Text("» ")->Text(Itr->Text)->TableNextColumn();
+				Mb->TableNextRow()->TableNextColumn()->Font(1, true)->Text("» ")->Text(Itr->Text)->PopTag()->TableNextColumn();
 		}
 		else if (ParentScriptDocument->GetMessageCountWarnings(Line))
 		{
@@ -1114,22 +1120,28 @@ void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::Mouse
 															  model::components::ScriptDiagnosticMessage::eMessageSource::All,
 															  model::components::ScriptDiagnosticMessage::eMessageType::Warning);
 
-			PopupBgColor = utilities::IRichTooltipContentProvider::eBackgroundColor::Yellow;
-			PopupTitle = Warnings->Count + " warning" + (Warnings->Count == 1 ? "" : "s");
+			PopupBgColor = preferences::SettingsHolder::Get()->Appearance->TooltipBackColorWarning;
+			PopupTextColor = preferences::SettingsHolder::Get()->Appearance->TooltipForeColorWarning;
+			BodyImage = view::components::CommonIcons::Get()->WarningLarge;
+
+			PopupTitle = Warnings->Count + " Warning" + (Warnings->Count == 1 ? "" : "s");
 
 			for each (auto Itr in Warnings)
-				Mb->TableNextRow()->TableNextColumn()->Text("» ")->Text(Itr->Text)->TableNextColumn();
+				Mb->TableNextRow()->TableNextColumn()->Font(1, true)->Text("» ")->Text(Itr->Text)->PopTag()->TableNextColumn();
 		}
 		else if (ParentScriptDocument->GetBookmarkCount(Line))
 		{
 			DisplayPopup = true;
 			auto Bookmarks = ParentScriptDocument->GetBookmarks(Line);
 
-			PopupBgColor = utilities::IRichTooltipContentProvider::eBackgroundColor::Blue;
-			PopupTitle = Bookmarks->Count + " bookmark" + (Bookmarks->Count == 1 ? "" : "s");
+			PopupBgColor = preferences::SettingsHolder::Get()->Appearance->TooltipBackColorBookmark;
+			PopupTextColor = preferences::SettingsHolder::Get()->Appearance->TooltipForeColorBookmark;
+			BodyImage = nullptr;
+
+			PopupTitle = Bookmarks->Count + " Bookmark" + (Bookmarks->Count == 1 ? "" : "s");
 
 			for each (auto Itr in Bookmarks)
-				Mb->TableNextRow()->TableNextColumn()->Text("» ")->Text(Itr->Text)->TableNextColumn();
+				Mb->TableNextRow()->TableNextColumn()->Font(1, true)->Text("» ")->Text(Itr->Text)->PopTag()->TableNextColumn();
 		}
 	}
 	Mb->PopTable();
@@ -1137,16 +1149,18 @@ void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::Mouse
 	if (DisplayPopup)
 	{
 		PopupText = Mb->ToMarkup();
-		PopupTitle =  Mb->Reset()->Font(2, true)->Bold()->Text(PopupTitle)->PopTag(2)->ToMarkup();
+		PopupTitle =  Mb->Reset()->Font(3, true)->Bold()->Text(PopupTitle)->PopTag(2)->ToMarkup();
 
 		auto TooltipData = gcnew DotNetBar::SuperTooltipInfo;
 		TooltipData->HeaderText = PopupTitle;
 		TooltipData->BodyText = PopupText;
-		TooltipData->Color = MapRichTooltipBackgroundColorToDotNetBar(PopupBgColor);
+		TooltipData->BodyImage = BodyImage;
+		TooltipData->Color = DevComponents::DotNetBar::eTooltipColor::System;
 
+		auto TooltipColorSwapper = gcnew utilities::SuperTooltipColorSwapper(PopupTextColor, PopupBgColor);
 		auto Control = Control::FromHandle(PopupParent);
 		Popup->SetSuperTooltip(Control, TooltipData);
-		Popup->ShowTooltip(Control, Point(DisplayLocation.X, DisplayLocation.Y));
+		TooltipColorSwapper->ShowTooltip(Popup, Control, Point(DisplayLocation.X, DisplayLocation.Y));
 	}
 }
 

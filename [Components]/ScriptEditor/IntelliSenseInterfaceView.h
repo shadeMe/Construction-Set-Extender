@@ -28,7 +28,6 @@ ref class IntelliSenseInterfaceView : public IIntelliSenseInterfaceView
 	DotNetBar::SuperTooltip^ ListViewPopup;
 	DotNetBar::SuperTooltip^ InsightPopup;
 	DotNetBar::StyleManagerAmbient^ ColorManager;
-	utilities::SuperTooltipColorSwapper^ TooltipColorSwapper;
 
 	property UInt32 MaximumVisibleItemCount;
 	property UInt32 InsightPopupDisplayDuration;

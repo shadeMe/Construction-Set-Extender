@@ -673,6 +673,7 @@ void ScriptEditorController::DisposeSelfOnViewClosure()
 	Debug::Assert(ChildView != nullptr);
 	Debug::Assert(BoundDocument == nullptr);
 
+	ChildView->BeginUpdate();
 	ChildView->ComponentEvent -= DelegateViewComponentEvent;
 	components::ViewTabTearingHelper::Get()->DeregisterTabStrip(ChildView->GetComponentByRole(view::eViewRole::MainTabStrip)->AsTabStrip());
 	ChildView = nullptr;
@@ -850,11 +851,12 @@ void ScriptEditorController::HandleViewClosureRequest(view::components::IForm^ F
 			}
 		}
 	}
-	TabStrip->EndUpdate();
-	Form->EndUpdate();
 
 	if (StopClosure)
 	{
+		TabStrip->EndUpdate();
+		Form->EndUpdate();
+
 		E->Cancel = true;
 		return;
 	}
@@ -2498,6 +2500,10 @@ ScriptEditorController::ScriptEditorController(model::IFactory^ ModelFactory, vi
 
 ScriptEditorController::~ScriptEditorController()
 {
+	// prevent any redraws when shutting down
+	if (ChildView)
+		ChildView->BeginUpdate();
+
 	if (BoundDocument)
 	{
 		Debug::Assert(View != nullptr);

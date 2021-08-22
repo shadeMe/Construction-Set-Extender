@@ -315,7 +315,7 @@ void ScriptEditorWorkspace::HandlePreferencesChanged(Object^ Sender, EventArgs^ 
 {
 	auto Style = preferences::SettingsHolder::Get()->Appearance->DarkMode ? eStyle::VisualStudio2012Dark : eStyle::VisualStudio2012Light;
 	auto AccentColor = preferences::SettingsHolder::Get()->Appearance->AccentColor;
-	if (StyleManager->Style != Style)
+	if (StyleManager->Style != Style || !this->Visible)
 		StyleManager->ChangeStyle(Style, AccentColor);
 
 	if (!StyleManager->MetroColorParameters.BaseColor.Equals(AccentColor))

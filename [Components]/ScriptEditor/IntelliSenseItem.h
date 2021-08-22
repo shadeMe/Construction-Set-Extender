@@ -97,10 +97,14 @@ public:
 	{
 		Image^ get() { return GetItemTypeIcon(ItemType); }
 	}
-	virtual property IRichTooltipContentProvider::eBackgroundColor TooltipBgColor
+	virtual property Color TooltipBgColor
 	{
-		IRichTooltipContentProvider::eBackgroundColor get()
-		{ return IRichTooltipContentProvider::eBackgroundColor::Default; }
+		Color get() { return Color::Empty; }
+	}
+	virtual property Color TooltipTextColor
+	{
+		Color get() { return Color::Empty; }
+
 	}
 };
 

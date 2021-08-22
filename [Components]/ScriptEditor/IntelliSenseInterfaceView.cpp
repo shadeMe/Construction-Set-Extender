@@ -96,10 +96,6 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView(IntPtr ParentViewHandle)
 	InsightPopup->MaximumWidth = Screen::PrimaryScreen->WorkingArea.Width - 150;
 	InsightPopup->MarkupLinkClick += gcnew DotNetBar::MarkupLinkClickEventHandler(&IntelliSenseInterfaceView::SuperTooltip_MarkupLinkClick);
 
-	TooltipColorSwapper = gcnew utilities::SuperTooltipColorSwapper;
-	//TooltipColorSwapper = gcnew utilities::SuperTooltipColorSwapper(preferences::SettingsHolder::Get()->Appearance->ForeColor,
-																	//preferences::SettingsHolder::Get()->Appearance->BackColor);
-
 	MaximumVisibleItemCount = preferences::SettingsHolder::Get()->IntelliSense->MaxVisiblePopupItems;
 	InsightPopupDisplayDuration = preferences::SettingsHolder::Get()->IntelliSense->InsightToolTipDisplayDuration;
 	WindowWidth = preferences::SettingsHolder::Get()->IntelliSense->WindowWidth;
@@ -146,9 +142,6 @@ void IntelliSenseInterfaceView::ScriptEditorPreferences_Saved(Object^ Sender, Ev
 	ListView->ForeColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
 	ListView->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
 	ListView->Font = preferences::SettingsHolder::Get()->Appearance->TextFont;
-
-	//TooltipColorSwapper->TextColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
-	//TooltipColorSwapper->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
 }
 
 void IntelliSenseInterfaceView::ListView_SelectionChanged(Object^ Sender, EventArgs^ E)
@@ -267,9 +260,10 @@ void IntelliSenseInterfaceView::ShowListViewToolTip(IntelliSenseItem^ Item)
 	TooltipData->BodyText = Item->TooltipBodyText;
 	TooltipData->FooterText = Item->TooltipFooterText;
 	TooltipData->FooterImage = Item->TooltipFooterImage;
-	TooltipData->Color = MapRichTooltipBackgroundColorToDotNetBar(Item->TooltipBgColor);
+	TooltipData->Color = DevComponents::DotNetBar::eTooltipColor::System;
 
 	auto DesktopLocation = Point(Form->DesktopBounds.Left + Form->DesktopBounds.Width + 2, Form->DesktopBounds.Top);
+	auto TooltipColorSwapper = gcnew utilities::SuperTooltipColorSwapper(Item->TooltipTextColor, Item->TooltipBgColor);
 
 	if (ListViewPopup->IsTooltipVisible)
 	{
@@ -393,12 +387,13 @@ void IntelliSenseInterfaceView::ShowInsightToolTip(IntelliSenseShowInsightToolTi
 	TooltipData->BodyImage = Args->TooltipBodyImage;
 	TooltipData->FooterText = Args->TooltipFooterText;
 	TooltipData->FooterImage = Args->TooltipFooterImage;
-	TooltipData->Color = MapRichTooltipBackgroundColorToDotNetBar(Args->TooltipBgColor);
+	TooltipData->Color = DevComponents::DotNetBar::eTooltipColor::System;
 
 	auto Control = Control::FromHandle(Args->ParentWindowHandle);
 	InsightPopup->SetSuperTooltip(Control, TooltipData);
 	InsightPopup->TooltipDuration = InsightPopupDisplayDuration * 1000;
 
+	auto TooltipColorSwapper = gcnew utilities::SuperTooltipColorSwapper(Args->TooltipTextColor, Args->TooltipBgColor);
 	TooltipColorSwapper->ShowTooltip(InsightPopup, Control, Args->DisplayScreenCoords);
 }
 

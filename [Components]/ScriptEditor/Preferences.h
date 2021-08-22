@@ -275,6 +275,43 @@ ref struct AppearanceSettings : public SettingsGroup
 	[Description("Show icon margin")]
 	property bool ShowIconMargin;
 
+	[Category("Tooltips")]
+	[Description("Tooltip background color for error messages")]
+	[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+	[TypeConverter(CustomColorConverter::typeid)]
+	property Color TooltipBackColorError;
+
+	[Category("Tooltips")]
+	[Description("Tooltip foreground color for error messages")]
+	[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+	[TypeConverter(CustomColorConverter::typeid)]
+	property Color TooltipForeColorError;
+
+	[Category("Tooltips")]
+	[Description("Tooltip background color for warning messages")]
+	[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+	[TypeConverter(CustomColorConverter::typeid)]
+	property Color TooltipBackColorWarning;
+
+	[Category("Tooltips")]
+	[Description("Tooltip foreground color for warning messages")]
+	[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+	[TypeConverter(CustomColorConverter::typeid)]
+	property Color TooltipForeColorWarning;
+
+	[Category("Tooltips")]
+	[Description("Tooltip background color for bookmarks")]
+	[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+	[TypeConverter(CustomColorConverter::typeid)]
+	property Color TooltipBackColorBookmark;
+
+	[Category("Tooltips")]
+	[Description("Tooltip foreground color for bookmarks")]
+	[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+	[TypeConverter(CustomColorConverter::typeid)]
+	property Color TooltipForeColorBookmark;
+
+
 	[Category("Highlighting (Light Mode)")]
 	[Description("Text foreground color")]
 	[Editor(CustomColorEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
@@ -581,6 +618,13 @@ ref struct AppearanceSettings : public SettingsGroup
 		ShowCodeFolding = true;
 		ShowBlockVisualizer = true;
 		ShowIconMargin = true;
+
+		TooltipBackColorError = Color::FromArgb(164, 13, 20);
+		TooltipForeColorError = Color::White;
+		TooltipBackColorWarning = Color::FromArgb(227, 194, 4);
+		TooltipForeColorWarning = Color::Black;
+		TooltipBackColorBookmark = Color::FromArgb(80, 80, 160);
+		TooltipForeColorBookmark = Color::White;
 
 		ForeColor_LM = Color::FromArgb(253, 244, 193);
 		BackColor_LM = Color::FromArgb(29, 32, 33);

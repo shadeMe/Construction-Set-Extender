@@ -726,37 +726,6 @@ System::Collections::Generic::IEnumerable<CaselessFuzzyTrie<TValue>::FuzzyMatchR
 	return Matcher->Match(this);
 }
 
-DevComponents::DotNetBar::eTooltipColor MapRichTooltipBackgroundColorToDotNetBar(IRichTooltipContentProvider::eBackgroundColor BgColor)
-{
-	switch (BgColor)
-	{
-	case IRichTooltipContentProvider::eBackgroundColor::Default:
-		return DevComponents::DotNetBar::eTooltipColor::System;
-	case IRichTooltipContentProvider::eBackgroundColor::Blue:
-		return DevComponents::DotNetBar::eTooltipColor::Blue;
-	case IRichTooltipContentProvider::eBackgroundColor::Yellow:
-		return DevComponents::DotNetBar::eTooltipColor::Yellow;
-	case IRichTooltipContentProvider::eBackgroundColor::Green:
-		return DevComponents::DotNetBar::eTooltipColor::Green;
-	case IRichTooltipContentProvider::eBackgroundColor::Red:
-		return DevComponents::DotNetBar::eTooltipColor::Red;
-	case IRichTooltipContentProvider::eBackgroundColor::Magenta:
-		return DevComponents::DotNetBar::eTooltipColor::Magenta;
-	case IRichTooltipContentProvider::eBackgroundColor::BlueMist:
-		return DevComponents::DotNetBar::eTooltipColor::BlueMist;
-	case IRichTooltipContentProvider::eBackgroundColor::Lemon:
-		return DevComponents::DotNetBar::eTooltipColor::Lemon;
-	case IRichTooltipContentProvider::eBackgroundColor::Apple:
-		return DevComponents::DotNetBar::eTooltipColor::Apple;
-	case IRichTooltipContentProvider::eBackgroundColor::Silver:
-		return DevComponents::DotNetBar::eTooltipColor::Silver;
-	case IRichTooltipContentProvider::eBackgroundColor::Gray:
-		return DevComponents::DotNetBar::eTooltipColor::Gray;
-	default:
-		return DevComponents::DotNetBar::eTooltipColor::Default;
-	}
-}
-
 SuperTooltipColorSwapper::ScopedSwap::ScopedSwap(SuperTooltipColorSwapper^ Parent)
 {
 	Renderer = dynamic_cast<DevComponents::DotNetBar::Rendering::Office2007Renderer^>(DevComponents::DotNetBar::Rendering::GlobalManager::Renderer);
@@ -767,7 +736,7 @@ SuperTooltipColorSwapper::ScopedSwap::ScopedSwap(SuperTooltipColorSwapper^ Paren
 
 	if (!Parent->TextColor.IsEmpty)
 		Renderer->ColorTable->SuperTooltip->TextColor = Parent->TextColor;
-	
+
 	if (!Parent->BackColor.IsEmpty)
 	{
 		Renderer->ColorTable->SuperTooltip->BackgroundColors->Start = Parent->BackColor;

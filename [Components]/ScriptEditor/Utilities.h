@@ -253,21 +253,6 @@ public:
 // Text can include text-markup
 interface class IRichTooltipContentProvider
 {
-	static enum class eBackgroundColor
-	{
-		Default,
-		Blue,
-		Yellow,
-		Green,
-		Red,
-		Magenta,
-		BlueMist,
-		Lemon,
-		Apple,
-		Silver,
-		Gray
-	};
-
 	property String^ TooltipHeaderText
 	{
 		String^ get();
@@ -288,13 +273,15 @@ interface class IRichTooltipContentProvider
 	{
 		Image^ get();
 	}
-	property eBackgroundColor TooltipBgColor
+	property Color TooltipBgColor
 	{
-		eBackgroundColor get();
+		Color get();
+	}
+	property Color TooltipTextColor
+	{
+		Color get();
 	}
 };
-
-DevComponents::DotNetBar::eTooltipColor MapRichTooltipBackgroundColorToDotNetBar(IRichTooltipContentProvider::eBackgroundColor BgColor);
 
 
 // wraps a call to SuperToolTip::Show to override the text and background colors

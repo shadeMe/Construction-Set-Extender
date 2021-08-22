@@ -6,6 +6,12 @@ IMMEDIATE  >>
 
 NOTE	---->
 	> Go through Vorian's PM
+		>> ArkvedSpit1 spoke of the Reference Editor rotation fields, wanting these to only show positive numbers (something I've been meaning to request for years now). You replied saying you've fixed this, however I am still seeing negative numbers, and if I rotate in the render window itself and then open the Reference Editor window, the object can end up with negative rotation values even if they were positive before I touched the object. I have no idea what he/she is talking about when comparing to the vanilla Reference Editor window, it always showed negative numbers, and I cannot tell what buttons were requested to be restored.
+		>> I agree that it would be nice to have restored the cut/copy/paste context menu options in the filter boxes without needing to use the keyboard.
+		>> I'm sure someone must have requested this previously, but is there any way you can make the Render window display ALL 9 land textures in a single quad? The CS(E) only ever displays the first 8 textures, and then uses the land record's default texture in place of the 9th texture, though in-game all 9 are visible.
+		>> Also, is that land texture quad window another fixed-size window, or can it be made a little bigger so none of the quad boxes require any scrolling?
+		>> The lines in the land texture quad window don't correctly update themselves - if you add a new texture in the render window when the quad window is open, you then have to click on the line in the quad window which that texture would appear in to change it from a blank line to being populated with the new texture data.
+		>> The Landscape Editing window lacks a visual marker to show when Vertex Shading is active. What would be really sensible (partly because I sometimes forget that the keyboard shortcut is Q so waste time pressing various keys and attempting to vertex paint before finding which key worked) would be a clickable toggle button to enable/disable Vertex Shading, which shows differently depending on whether active or not.
 
 
 CSE		---->

@@ -636,10 +636,10 @@ void IntelliSenseInterfaceModel::ShowInsightTooltip(IntelliSenseInsightHoverEven
 		preferences::SettingsHolder::Get()->IntelliSense->ShowErrorsInInsightToolTip)
 	{
 		HasInsight = true;
-		ShowArgs->TooltipHeaderText = Mb->Font(2, true)
+		ShowArgs->TooltipHeaderText = Mb->Font(3, true)
 										->Bold()
 										->Text(E->ErrorMessagesForHoveredLine->Count.ToString())
-										->Text(" error")
+										->Text(" Error")
 										->Text(E->ErrorMessagesForHoveredLine->Count != 1 ? "s" : "")
 										->PopTag(2)
 										->ToMarkup();
@@ -652,7 +652,7 @@ void IntelliSenseInterfaceModel::ShowInsightTooltip(IntelliSenseInsightHoverEven
 				{
 					Mb->TableNextColumn();
 					{
-						Mb->Text("» ")->Text(Error);
+						Mb->Font(1, true)->Text("» ")->Text(Error)->PopTag();
 					}
 					Mb->TableNextColumn();
 				}
@@ -661,7 +661,9 @@ void IntelliSenseInterfaceModel::ShowInsightTooltip(IntelliSenseInsightHoverEven
 		Mb->PopTable();
 
 		ShowArgs->TooltipBodyText = Mb->ToMarkup();
-		ShowArgs->TooltipBgColor = utilities::IRichTooltipContentProvider::eBackgroundColor::Red;
+		ShowArgs->TooltipBgColor = preferences::SettingsHolder::Get()->Appearance->TooltipBackColorError;
+		ShowArgs->TooltipTextColor = preferences::SettingsHolder::Get()->Appearance->TooltipForeColorError;
+		ShowArgs->TooltipBodyImage = view::components::CommonIcons::Get()->ErrorLarge;
 	}
 	else if (!E->HoveringOverComment)
 	{
@@ -690,6 +692,7 @@ void IntelliSenseInterfaceModel::ShowInsightTooltip(IntelliSenseInsightHoverEven
 			ShowArgs->TooltipFooterText= ResolvedItem->TooltipFooterText;
 			ShowArgs->TooltipFooterImage = ResolvedItem->TooltipFooterImage;
 			ShowArgs->TooltipBgColor = ResolvedItem->TooltipBgColor;
+			ShowArgs->TooltipTextColor = ResolvedItem->TooltipTextColor;
 		}
 	}
 
