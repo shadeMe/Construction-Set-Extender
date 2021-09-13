@@ -279,7 +279,11 @@ namespace cse
 
 			bool Result = true;
 			char Buffer[0x100] = { 0 };
-			TESFile* Parent = In->GetOverrideFile(-1);
+
+			// we cannot use the last override file here as the formID will still point to the plugin that originally introduced the form
+			// this is important during deserialization as we need to fix-up the formIDs during load to account for changes in load order
+			TESFile* Parent = In->GetOverrideFile(0);
+
 			FORMAT_STR(Buffer, "%s{%08X|%d|%s|%s}", kSigil, In->formID, (UInt32)In->formType,
 					   (In->GetEditorID() == nullptr ? kNullEditorID : In->GetEditorID()),
 					   (Parent == nullptr ? "Oblivion.esm" : Parent->fileName));
