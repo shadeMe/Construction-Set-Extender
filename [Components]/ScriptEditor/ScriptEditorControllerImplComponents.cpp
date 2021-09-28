@@ -641,8 +641,8 @@ void FindReplaceHelper::InitResultsListViews()
 		ColumnHits->MinimumWidth = 40;
 		ColumnHits->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&FindReplaceHelper::FindReplaceResultsListHitsAspectGetter));
 
-		FindReplaceResultsListView->AddColumn(ColumnLine);
 		FindReplaceResultsListView->AddColumn(ColumnText);
+		FindReplaceResultsListView->AddColumn(ColumnLine);
 		FindReplaceResultsListView->AddColumn(ColumnHits);
 	}
 
@@ -654,7 +654,6 @@ void FindReplaceHelper::InitResultsListViews()
 		ColumnText->Text = "Code";
 		ColumnText->Width = 500;
 		ColumnText->MinimumWidth = 600;
-		ColumnLine->MaximumWidth = 40;
 		ColumnText->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&GlobalFindReplaceResult::TextAspectGetter));
 
 		ColumnLine->Text = "Line";
@@ -665,8 +664,8 @@ void FindReplaceHelper::InitResultsListViews()
 		ColumnHits->MinimumWidth = 40;
 		ColumnHits->SetAspectGetter(gcnew view::components::IObjectListViewColumn::AspectGetter(&GlobalFindReplaceResult::HitsAspectGetter));
 
-		GlobalFindReplaceResultsListView->AddColumn(ColumnLine);
 		GlobalFindReplaceResultsListView->AddColumn(ColumnText);
+		GlobalFindReplaceResultsListView->AddColumn(ColumnLine);
 		GlobalFindReplaceResultsListView->AddColumn(ColumnHits);
 
 		GlobalFindReplaceResultsListView->SetCanExpandGetter(gcnew view::components::IObjectListView::CanExpandGetter(&GlobalFindReplaceResult::GenericCanExpandGetter));
@@ -841,6 +840,8 @@ void FindReplaceHelper::HandleResultsViewEvent(view::ViewComponentEvent^ E, IScr
 					Controller->ActiveDocument->TextEditor->ScrollToLine(Item->Line);
 				}
 			}
+			else
+				E->Component->AsObjectListView()->ToggleExpand(Args->ItemModel);
 		}
 		else
 			gcnew NotImplementedException();

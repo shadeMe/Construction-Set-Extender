@@ -1557,6 +1557,7 @@ ObjectListView::ObjectListView(BrightIdeasSoftware::ObjectListView^ Source, eVie
 	DelegateItemActivate = gcnew EventHandler(this, &ObjectListView::Handler_ItemActivate);
 	DelegatePreferenceChanged = gcnew EventHandler(this, &ObjectListView::Handler_PreferencesChanged);
 	DelegateWrapperCanExpandGetter = gcnew BrightIdeasSoftware::TreeListView::CanExpandGetterDelegate(this, &ObjectListView::Wrapper_CanExpandGetter);
+	DelegateWrapperChildrenGetter = gcnew BrightIdeasSoftware::TreeListView::ChildrenGetterDelegate(this, &ObjectListView::Wrapper_ChildrenGetter);
 	DelegateWrapperCheckStateGetter = gcnew BrightIdeasSoftware::BooleanCheckStateGetterDelegate(this, &ObjectListView::Wrapper_CheckStateGetter);
 	DelegateWrapperCheckStateSetter = gcnew BrightIdeasSoftware::BooleanCheckStatePutterDelegate(this, &ObjectListView::Wrapper_CheckStateSetter);
 
@@ -1724,6 +1725,34 @@ void ObjectListView::SetCheckStateSetter(IObjectListView::CheckStateSetter^ Dele
 void ObjectListView::EnsureItemVisible(Object^ Item)
 {
 	Source->EnsureModelVisible(Item);
+}
+
+void ObjectListView::ExpandItem(Object^ Item)
+{
+	if (Source->GetType() != BrightIdeasSoftware::TreeListView::typeid)
+		throw gcnew InvalidOperationException("Can only be called on a tree listview");
+
+	safe_cast<BrightIdeasSoftware::TreeListView^>(Source)->Expand(Item);
+}
+
+void ObjectListView::CollapseItem(Object^ Item)
+{
+	if (Source->GetType() != BrightIdeasSoftware::TreeListView::typeid)
+		throw gcnew InvalidOperationException("Can only be called on a tree listview");
+
+	safe_cast<BrightIdeasSoftware::TreeListView^>(Source)->Collapse(Item);
+}
+
+void ObjectListView::ToggleExpand(Object^ Item)
+{
+	if (Source->GetType() != BrightIdeasSoftware::TreeListView::typeid)
+		throw gcnew InvalidOperationException("Can only be called on a tree listview");
+
+	auto TreeView = safe_cast<BrightIdeasSoftware::TreeListView^>(Source);
+	if (TreeView->IsExpanded(Item))
+		TreeView->Collapse(Item);
+	else
+		TreeView->Expand(Item);
 }
 
 void ObjectListView::ExpandAll()

@@ -421,6 +421,9 @@ public:
 	virtual void SetCheckStateGetter(IObjectListView::CheckStateGetter^ Delegate);
 	virtual void SetCheckStateSetter(IObjectListView::CheckStateSetter^ Delegate);
 	virtual void EnsureItemVisible(Object^ Item);
+	virtual void ExpandItem(Object^ Item);
+	virtual void CollapseItem(Object^ Item);
+	virtual void ToggleExpand(Object^ Item);
 	virtual void ExpandAll();
 	virtual void CollapseAll();
 };

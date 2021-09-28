@@ -320,6 +320,9 @@ interface class IObjectListView : public IViewComponent
 	void SetCheckStateGetter(CheckStateGetter^ Delegate);
 	void SetCheckStateSetter(CheckStateSetter^ Delegate);
 	void EnsureItemVisible(Object^ Item);
+	void ExpandItem(Object^ Item);
+	void CollapseItem(Object^ Item);
+	void ToggleExpand(Object^ Item);
 	void ExpandAll();
 	void CollapseAll();
 
