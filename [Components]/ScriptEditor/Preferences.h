@@ -606,7 +606,7 @@ ref struct AppearanceSettings : public SettingsGroup
 		TabStripLocation = DevComponents::DotNetBar::eTabStripAlignment::Top;
 		TabStripVerticalWidth = 150;
 		TabSize = 4;
-		TextFont = gcnew Drawing::Font("Consolas", 9.25);
+		TextFont = gcnew Drawing::Font("Consolas", 9.75);
 		WordWrap = true;
 		ShowTabs = false;
 		ShowSpaces = false;
@@ -626,20 +626,20 @@ ref struct AppearanceSettings : public SettingsGroup
 		TooltipBackColorBookmark = Color::FromArgb(80, 80, 160);
 		TooltipForeColorBookmark = Color::White;
 
-		ForeColor_LM = Color::FromArgb(253, 244, 193);
-		BackColor_LM = Color::FromArgb(29, 32, 33);
-		ForeColorKeywords_LM = Color::FromArgb(252, 128, 114);
-		ForeColorDigits_LM = Color::FromArgb(255, 165, 0);
+		ForeColor_LM = Color::FromArgb(0, 0, 0);
+		BackColor_LM = Color::FromArgb(239, 241, 241);
+		ForeColorKeywords_LM = Color::FromArgb(4, 124, 244);
+		ForeColorDigits_LM = Color::FromArgb(185, 120, 0);
 		ForeColorPreprocessor_LM = Color::FromArgb(165, 42, 42);
 		ForeColorScriptBlocks_LM = Color::FromArgb(250, 30, 5);
-		ForeColorStringLiterals_LM = Color::FromArgb(149, 192, 133);
-		ForeColorComments_LM = Color::FromArgb(168, 153, 132);
-		ForeColorLocalVariables_LM = Color::FromArgb(20, 153, 182);
+		ForeColorStringLiterals_LM = Color::FromArgb(36, 166, 30);
+		ForeColorComments_LM = Color::FromArgb(147, 129, 104);
+		ForeColorLocalVariables_LM = Color::FromArgb(67, 135, 135);
 		BackColorSelection_LM = Color::FromArgb(143, 70, 115);
-		BackColorCurrentLine_LM = Color::FromArgb(102, 92, 84);
+		BackColorCurrentLine_LM = Color::FromArgb(210, 206, 202);
 		UnderlineColorError_LM = Color::FromArgb(255, 0, 0);
-		BackColorFindResults_LM = Color::FromArgb(255, 255, 224);
-		BackColorTaskComment_LM = Color::FromArgb(150, 255, 255, 224);
+		BackColorFindResults_LM = Color::FromArgb(164, 164, 0);
+		BackColorTaskComment_LM = Color::FromArgb(150, 0, 0, 0, 0);
 		BoldFaceHighlightedText_LM = false;
 		KeywordsAndBlocksInItalic_LM = true;
 

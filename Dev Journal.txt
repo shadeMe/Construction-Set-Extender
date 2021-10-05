@@ -17,6 +17,8 @@ NOTE	---->
 CSE		---->
 
 	BUGFIX			=
+		> Selection mask does not work under certain lighting circumstances
+			> Enhanced Econonmy.esp, EECell
 		> Cell use list is broken
 			> Forms instantiated with our custom serializers don't correctly update the cell count leading to negative values
 			> Deleting a ref from the render window doesn't update its baseform's cell use counts (vanilla bug)
@@ -67,6 +69,7 @@ SE		---->
 
 
 	ENHANCEMENT		=
+		> Tab filter
 		> Filter for IntelliSense items a la VS (icon strip)
 		> Language server impl for external editors
 
