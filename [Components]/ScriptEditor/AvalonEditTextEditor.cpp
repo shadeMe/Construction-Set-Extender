@@ -1114,17 +1114,13 @@ void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::In
 	{
 	case System::Windows::Input::Key::F:
 	{
-		bool Default = preferences::SettingsHolder::Get()->FindReplace->ShowInlineSearchPanel;
-		if (Default && E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control ||
-			(Default == false && E->KeyboardDevice->Modifiers.HasFlag(System::Windows::Input::ModifierKeys::Control) &&
-				E->KeyboardDevice->Modifiers.HasFlag(System::Windows::Input::ModifierKeys::Shift)))
+		if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 		{
+			ToggleSearchPanel(true);
+
 			HandleKeyEventForKey(E->Key);
 			E->Handled = true;
 		}
-
-		if (E->Handled)
-			ToggleSearchPanel(true);
 	}
 
 	break;

@@ -639,7 +639,7 @@ ref struct AppearanceSettings : public SettingsGroup
 		BackColorCurrentLine_LM = Color::FromArgb(210, 206, 202);
 		UnderlineColorError_LM = Color::FromArgb(255, 0, 0);
 		BackColorFindResults_LM = Color::FromArgb(164, 164, 0);
-		BackColorTaskComment_LM = Color::FromArgb(150, 0, 0, 0, 0);
+		BackColorTaskComment_LM = Color::FromArgb(150, 0, 0, 0);
 		BoldFaceHighlightedText_LM = false;
 		KeywordsAndBlocksInItalic_LM = true;
 
@@ -773,17 +773,12 @@ ref struct FindReplaceSettings : public SettingsGroup
 	[Description("Ignore hits inside comments")]
 	property bool IgnoreComments;
 
-	[Category("General")]
-	[Description("'Ctrl+F' displays inline search panel")]
-	property bool ShowInlineSearchPanel;
-
 	FindReplaceSettings()
 	{
 		CaseInsensitive = false;
 		MatchWholeWord = false;
 		UseRegEx = true;
 		IgnoreComments = true;
-		ShowInlineSearchPanel = true;
 	}
 
 	virtual bool Validate(SettingsGroup^ OldValue, String^% OutMessage) override { return true; }

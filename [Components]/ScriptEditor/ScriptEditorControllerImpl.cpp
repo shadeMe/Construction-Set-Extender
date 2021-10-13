@@ -356,7 +356,7 @@ void ScriptEditorController::SetBoundDocument(model::IScriptDocument^ Document)
 			SetDocumentPreprocessorOutputDisplayDependentViewComponentsEnabled(false);
 
 		BoundDocument->PushStateToSubscribers();
-		ValidateDocumentSyncingStatus(BoundDocument);
+		ValidateDocumentStatus(BoundDocument);
 		DocumentNavigationHelper->SyncWithDocument(BoundDocument);
 	}
 	View->EndUpdate();
@@ -908,14 +908,14 @@ void ScriptEditorController::LoadExistingScriptIntoDocument(model::IScriptDocume
 		return;
 
 	Document->Initialize(ExistingScriptData.get(), ShouldUseAutoRecoveryFile(gcnew String(ExistingScriptData->EditorID)));
-	ValidateDocumentSyncingStatus(Document);
+	ValidateDocumentStatus(Document);
 }
 
 bool ScriptEditorController::SaveDocument(model::IScriptDocument^ Document, model::IScriptDocument::eSaveOperation SaveOperation)
 {
 	Debug::Assert(Document != nullptr);
 
-	if (!Document->Dirty)
+	if (!Document->Dirty && Document->ScriptBytecodeLength > 0)
 	{
 		if (SaveOperation == model::IScriptDocument::eSaveOperation::AlsoSaveActiveFile)
 			nativeWrapper::g_CSEInterfaceTable->EditorAPI.SaveActivePlugin();
@@ -939,7 +939,7 @@ bool ScriptEditorController::SaveDocument(model::IScriptDocument^ Document, mode
 							   3000);
 	}
 
-	ValidateDocumentSyncingStatus(Document);
+	ValidateDocumentStatus(Document);
 	return SaveResult;
 }
 
@@ -951,10 +951,10 @@ void ScriptEditorController::LoadNextScriptIntoDocument(model::IScriptDocument^ 
 		return;
 
 	nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptData> Data(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetNextScriptInList(Document->ScriptNativeObject, preferences::SettingsHolder::Get()->General->OnlySwitchToScriptsFromActivePlugin));
-	if (Data)
+	if (Data && Document->ScriptNativeObject != Data->ParentForm)
 	{
 		Document->Initialize(Data.get(), ShouldUseAutoRecoveryFile(gcnew String(Data->EditorID)));
-		ValidateDocumentSyncingStatus(Document);
+		ValidateDocumentStatus(Document);
 	}
 }
 
@@ -966,10 +966,10 @@ void ScriptEditorController::LoadPreviousScriptIntoDocument(model::IScriptDocume
 		return;
 
 	nativeWrapper::DisposibleDataAutoPtr<componentDLLInterface::ScriptData> Data(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreviousScriptInList(Document->ScriptNativeObject, preferences::SettingsHolder::Get()->General->OnlySwitchToScriptsFromActivePlugin));
-	if (Data)
+	if (Data && Document->ScriptNativeObject != Data->ParentForm)
 	{
 		Document->Initialize(Data.get(), ShouldUseAutoRecoveryFile(gcnew String(Data->EditorID)));
-		ValidateDocumentSyncingStatus(Document);
+		ValidateDocumentStatus(Document);
 	}
 }
 
@@ -997,18 +997,25 @@ bool ScriptEditorController::CloseAndRemoveDocument(model::IScriptDocument^ Docu
 	return CloseAndRemoveDocument(Document, Throwaway);
 }
 
-void ScriptEditorController::ValidateDocumentSyncingStatus(model::IScriptDocument^ Document)
+void ScriptEditorController::ValidateDocumentStatus(model::IScriptDocument^ Document)
 {
 	Debug::Assert(Document != nullptr);
 
-	if (!scriptSync::DiskSync::Get()->IsScriptBeingSynced(Document->ScriptEditorID))
-		return;
-	else if (BoundDocument != Document)
-		return;
+	// check if the document is currently being synced
+	if (scriptSync::DiskSync::Get()->IsScriptBeingSynced(Document->ScriptEditorID) && BoundDocument != Document)
+	{
+		View->ShowNotification("The current script is actively being synced from/to disk.\nModifying it inside the script editor will result in inconsistent and unexpected behaviour.",
+							   view::components::CommonIcons::Get()->WarningLarge,
+							   5000);
+	}
 
-	View->ShowNotification("The current script is actively being synced from/to disk.\nModifying it inside the script editor will result in inconsistent and unexpected behaviour.",
-						   view::components::CommonIcons::Get()->WarningLarge,
-						   5000);
+	// check if the document is uncompiled
+	if (!Document->UnsavedNewScript && Document->ScriptBytecodeLength == 0)
+	{
+		View->ShowNotification("The current script is has not been compiled.\nIt will not be executed in-game.",
+							   view::components::CommonIcons::Get()->WarningLarge,
+							   5000);
+	}
 }
 
 bool ScriptEditorController::ShouldUseAutoRecoveryFile(String^ ScriptEditorId)

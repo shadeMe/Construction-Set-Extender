@@ -768,10 +768,6 @@ namespace cse
 				_RENDERWIN_MGR.GetOSD()->ToggleRendering();
 			});
 
-			void __declspec(naked) StubRet4(void) {
-				__asm retn 4
-			}
-
 			BasicRWA CreateMeasureRuler("Create Ruler Measure", "Create a temporary ruler measure reference at the location of the cursor.",
 				ExecutionContext::kMode_ReferenceEdit, []() {
 				if (TESRenderWindow::IsAnyCellLoaded() == false)
@@ -782,6 +778,8 @@ namespace cse
 				NewRef->MarkAsTemporary();
 
 				TESRenderWindow::PlaceRefAtMousePos(NewRef, TESRenderWindow::LastMouseCoords->x, TESRenderWindow::LastMouseCoords->y);
+				builtIn::TopCamera();
+
 				NotificationOSDLayer::Instance.ShowNotification("Create new ruler measure");
 			});
 
@@ -795,6 +793,8 @@ namespace cse
 				NewRef->MarkAsTemporary();
 
 				TESRenderWindow::PlaceRefAtMousePos(NewRef, TESRenderWindow::LastMouseCoords->x, TESRenderWindow::LastMouseCoords->y);
+				builtIn::TopCamera();
+
 				NotificationOSDLayer::Instance.ShowNotification("Create new circle measure");
 			});
 

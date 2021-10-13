@@ -178,7 +178,7 @@ ref class ScriptEditorController : public IScriptEditorController
 	bool CloseAndRemoveDocument(model::IScriptDocument^ Document);
 	bool CloseAndRemoveDocument(model::IScriptDocument^ Document, bool% OutOperationCancelled);
 
-	void ValidateDocumentSyncingStatus(model::IScriptDocument^ Document);
+	void ValidateDocumentStatus(model::IScriptDocument^ Document);
 	bool ShouldUseAutoRecoveryFile(String^ ScriptEditorId);
 	bool ShouldFilterScriptDiagnosticMessage(Object^ Message);
 

@@ -200,7 +200,7 @@ Archive^ ArchiveReader::ParseArchive(String^ ArchiveFilePath)
 				if (FileSize & CompressionInvertedFlag)
 				{
 					FileCompressed = !FileCompressed;
-					FileSize ^= ~CompressionInvertedFlag;
+					FileSize &= ~CompressionInvertedFlag;
 				}
 
 				// file offset
@@ -271,11 +271,16 @@ void ArchiveBrowser::DirectoryTreeListView_ItemActivate(Object^ Sender, EventArg
 	auto Selection = dynamic_cast<DirectoryTreeNode^>(DirectoryTreeListView->SelectedObject);
 	if (Selection == nullptr)
 		return;
-
-	if (!Selection->IsFile)
-		DirectoryTreeListView->Expand(Selection);
-	else
+	else if (Selection->IsFile)
+	{
 		CompleteSelection();
+		return;
+	}
+
+	if (DirectoryTreeListView->IsExpanded(Selection))
+		DirectoryTreeListView->Collapse(Selection);
+	else
+		DirectoryTreeListView->Expand(Selection);
 }
 
 void ArchiveBrowser::TopToolbarOpenArchive_Click(Object^ Sender, EventArgs^ E)
