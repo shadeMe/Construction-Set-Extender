@@ -265,7 +265,7 @@ namespace bgsee
 
 	void WindowInvalidationManager::Redraw(HWND Window)
 	{
-		RedrawWindow(Window, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+		RedrawWindow(Window, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
 	}
 
 	UIManager*						UIManager::Singleton = nullptr;
