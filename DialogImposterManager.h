@@ -17,7 +17,7 @@ namespace cse
 	// hence we pick up the slack whenever necessary
 	class ObjectWindowImposterManager
 	{
-		static INT_PTR CALLBACK						ImposterDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		INT_PTR ImposterDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 		struct ImposterData
 		{
@@ -45,9 +45,10 @@ namespace cse
 			~CacheOperator();
 		};
 
-		typedef std::map<HWND, ImposterData*>		ImposterTableT;
+		typedef std::map<HWND, ImposterData*> ImposterTableT;
 
-		ImposterTableT								ImposterRegistry;
+		ImposterTableT ImposterRegistry;
+		bgsee::util::ThunkStdCall<ObjectWindowImposterManager, INT_PTR, HWND, UINT, WPARAM, LPARAM> ThunkImposterDlgProc;
 
 		void										DisposeImposter(HWND Imposter);
 		ImposterData*								GetImposterData(HWND Imposter) const;
@@ -71,7 +72,7 @@ namespace cse
 	// same as above but for the preview window
 	class PreviewWindowImposterManager
 	{
-		static INT_PTR CALLBACK						ImposterDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		INT_PTR ImposterDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 		struct ImposterData
 		{
@@ -102,10 +103,11 @@ namespace cse
 			~CacheOperator();
 		};
 
-		typedef std::map<HWND, ImposterData*>		ImposterTableT;
+		typedef std::map<HWND, ImposterData*> ImposterTableT;
 
-		ImposterTableT								ImposterRegistry;
-		bool										Enabled;
+		ImposterTableT ImposterRegistry;
+		bgsee::util::ThunkStdCall<PreviewWindowImposterManager, INT_PTR, HWND, UINT, WPARAM, LPARAM> ThunkImposterDlgProc;
+		bool Enabled;
 
 		void										DisposeImposter(HWND Imposter);
 		ImposterData*								GetImposterData(HWND Imposter) const;

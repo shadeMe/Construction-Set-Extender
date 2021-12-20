@@ -42,6 +42,7 @@ CSE		---->
 		> An option to hide markers for thing such as Character placements on furniture as well as markers for effect like fire flies
 		> OSD enhancements
 			> Render window gizmos
+				> Try this: https://github.com/BrutPitt/imGuIZMO.quat
 				> Imguizmo has issues with the CS' renderer (view matrix related) (ask Nukem)
 
 		> Add support for TOD/sunlight lighting in exteriors

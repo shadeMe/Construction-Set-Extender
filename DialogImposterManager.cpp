@@ -9,7 +9,7 @@ namespace cse
 
 #define ID_OBJECTWIDOWIMPOSTER_COLUMNRESIZETIMERID			0x656
 
-	INT_PTR CALLBACK ObjectWindowImposterManager::ImposterDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	INT_PTR ObjectWindowImposterManager::ImposterDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
 		HWND FormList = GetDlgItem(hWnd, TESObjectWindow::kFormListCtrlID);
@@ -81,13 +81,13 @@ namespace cse
 				break;
 			}
 		case WM_ACTIVATE:
-			ObjectWindowImposterManager::Instance.HandleObjectWindowActivating(hWnd, uMsg, wParam, lParam);
+			HandleObjectWindowActivating(hWnd, uMsg, wParam, lParam);
 
 			DlgProcResult = TRUE;
 			break;
 		case WM_CLOSE:
 			// destroy window
-			ObjectWindowImposterManager::Instance.DisposeImposter(hWnd);
+			DisposeImposter(hWnd);
 
 			DlgProcResult = TRUE;
 			break;
@@ -109,6 +109,8 @@ namespace cse
 				RECT Bounds = { 0 };
 				GetWindowRect(TESObjectWindow::PrimaryObjectWindowHandle, &Bounds);
 				SetWindowPos(hWnd, HWND_NOTOPMOST, Bounds.left, Bounds.top + 25, Bounds.right - Bounds.left, Bounds.bottom - Bounds.top, SWP_SHOWWINDOW);
+
+				ImposterRegistry[hWnd] = nullptr;
 
 				DlgProcResult = TRUE;
 				break;
@@ -143,7 +145,7 @@ namespace cse
 				break;
 			}
 		case WM_SIZE:
-			ObjectWindowImposterManager::Instance.HandleObjectWindowSizing(hWnd, uMsg, wParam, lParam);
+			HandleObjectWindowSizing(hWnd, uMsg, wParam, lParam);
 
 			DlgProcResult = TRUE;
 			break;
@@ -236,7 +238,8 @@ namespace cse
 	}
 
 	ObjectWindowImposterManager::ObjectWindowImposterManager() :
-		ImposterRegistry()
+		ImposterRegistry(),
+		ThunkImposterDlgProc(this, &ObjectWindowImposterManager::ImposterDlgProc)
 	{
 		;//
 	}
@@ -258,7 +261,7 @@ namespace cse
 		HWND Imposter = BGSEEUI->ModelessDialog(ReplacementTemplate,
 												(LPSTR)TESDialog::kDialogTemplate_ObjectWindow,
 												*TESCSMain::WindowHandle,
-												ImposterDlgProc,
+												ThunkImposterDlgProc(),
 												(LPARAM)Data);
 		SME_ASSERT(Imposter);
 
@@ -271,6 +274,7 @@ namespace cse
 			BGSEEUI->GetWindowStyler()->StyleWindow(Imposter, RegularAppWindow);
 		}
 
+		SME_ASSERT(ImposterRegistry.find(Imposter) != ImposterRegistry.cend());
 		ImposterRegistry[Imposter] = Data;
 
 		// init needs to be deferred until after the WM_INITDIALOG message has been handled
@@ -352,7 +356,7 @@ namespace cse
 
 	PreviewWindowImposterManager		PreviewWindowImposterManager::Instance;
 
-	INT_PTR CALLBACK PreviewWindowImposterManager::ImposterDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	INT_PTR PreviewWindowImposterManager::ImposterDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		HWND AnimList = GetDlgItem(hWnd, TESPreviewWindow::kAnimListCtrlID);
 
@@ -362,7 +366,7 @@ namespace cse
 		{
 		case WM_SIZE:
 			{
-				ImposterData* Data = PreviewWindowImposterManager::Instance.GetImposterData(hWnd);
+				ImposterData* Data = GetImposterData(hWnd);
 				SME_ASSERT(Data);
 
 				RECT NewBounds = { 0 };
@@ -386,7 +390,7 @@ namespace cse
 			};
 		case WM_CLOSE:
 			// destroy window
-			PreviewWindowImposterManager::Instance.DisposeImposter(hWnd);
+			DisposeImposter(hWnd);
 
 			DlgProcResult = TRUE;
 			break;
@@ -550,6 +554,7 @@ namespace cse
 
 	PreviewWindowImposterManager::PreviewWindowImposterManager() :
 		ImposterRegistry(),
+		ThunkImposterDlgProc(this, &PreviewWindowImposterManager::ImposterDlgProc),
 		Enabled(false)
 	{
 		;//
@@ -572,7 +577,7 @@ namespace cse
 			HWND Imposter = BGSEEUI->ModelessDialog(ReplacementTemplate,
 													(LPSTR)TESDialog::kDialogTemplate_PreviewWindow,
 													*TESCSMain::WindowHandle,
-													ImposterDlgProc,
+													ThunkImposterDlgProc(),
 													(LPARAM)Data);
 			SME_ASSERT(Imposter);
 
