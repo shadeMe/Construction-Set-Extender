@@ -288,7 +288,9 @@ public:
 	/*3C*/ ConditionListT		conditions;
 
 	// methods
-	static void					InitializeListViewColumns(HWND ListView);
+	void ListViewGetDispInfoCallback(NMLVDISPINFO* Data);
 
-	static HWND*				WindowHandle;
+	static void InitializeListViewColumns(HWND ListView);
+
+	static HWND* WindowHandle;
 };

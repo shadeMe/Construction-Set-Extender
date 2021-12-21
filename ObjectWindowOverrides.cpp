@@ -7,6 +7,30 @@ namespace cse
 {
 	namespace uiManager
 	{
+
+		std::string ObjectWindowFormListGetColumnText(HWND FormList, TESForm* Form, UInt32 ColumnIndex)
+		{
+			char Buffer[0x500];
+
+			NMLVDISPINFO CallbackInfo;
+			CallbackInfo.hdr.hwndFrom = FormList;
+			CallbackInfo.hdr.idFrom = GetDlgCtrlID(FormList);
+			CallbackInfo.hdr.code = LVN_GETDISPINFO;
+
+			CallbackInfo.item.mask = LVIF_TEXT;
+			CallbackInfo.item.lParam = reinterpret_cast<LPARAM>(Form);
+			CallbackInfo.item.pszText = Buffer;
+			CallbackInfo.item.cchTextMax = sizeof(Buffer);
+			CallbackInfo.item.iSubItem = ColumnIndex;
+
+			TESObjectWindow::TreeEntryInfo Dummy;
+			Dummy.formType = Form->formType;
+
+			Dummy.ListViewGetDispInfoCallback(&CallbackInfo);
+
+			return Buffer;
+		}
+
 		LRESULT CALLBACK ObjectWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 												  bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
@@ -80,7 +104,14 @@ namespace cse
 			case WM_INITDIALOG:
 				{
 					SME_ASSERT(FilterEditBox);
-					FilterableFormListManager::Instance.Register(FilterEditBox, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL), FormList, hWnd);
+
+					uiManager::FilterableFormListManager::InitParams Params;
+					Params.ParentWindow = hWnd;
+					Params.FormListView = FormList;
+					Params.FilterEditBox = FilterEditBox;
+					Params.FilterLabel = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL);
+					Params.ColumnTextCallback = ObjectWindowFormListGetColumnText;
+					uiManager::FilterableFormListManager::Instance.Register(Params);
 
 					std::string WndTitle = "Object Window";
 					if (settings::general::kShowHallOfFameMembersInTitleBar().i != hallOfFame::kDisplayESMember_None)

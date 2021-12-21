@@ -154,7 +154,116 @@ namespace cse
 				return true;
 		}
 
+		void CellViewExtraData::ExtraRefListColumnGetDispInfoCallback(NMLVDISPINFO* Data)
+		{
+			TESObjectREFR* Current = (TESObjectREFR*)Data->item.lParam;
+
+			switch (Data->item.iSubItem)
+			{
+			case CellViewExtraData::kExtraRefListColumn_Persistent:
+				_snprintf_s(Data->item.pszText, Data->item.cchTextMax, _TRUNCATE, "%s",
+					((Current->formFlags & TESForm::kFormFlags_QuestItem) ? "Y" : ""));
+
+				break;
+			case CellViewExtraData::kExtraRefListColumn_Disabled:
+				_snprintf_s(Data->item.pszText, Data->item.cchTextMax, _TRUNCATE, "%s",
+					((Current->formFlags & TESForm::kFormFlags_Disabled) ? "Y" : ""));
+
+				break;
+			case CellViewExtraData::kExtraRefListColumn_VWD:
+				_snprintf_s(Data->item.pszText, Data->item.cchTextMax, _TRUNCATE, "%s",
+					((Current->formFlags & TESForm::kFormFlags_VisibleWhenDistant) ? "Y" : ""));
+
+				break;
+			case CellViewExtraData::kExtraRefListColumn_EnableParent:
+			{
+				BSExtraData* xData = Current->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
+				if (xData)
+				{
+					ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
+					SME_ASSERT(xParent->parent);
+
+					if (xParent->parent->editorID.c_str() == nullptr)
+					{
+						_snprintf_s(Data->item.pszText, Data->item.cchTextMax, _TRUNCATE,
+							"%08X %s",
+							xParent->parent->formID,
+							(xParent->oppositeState ? " *" : ""));
+					}
+					else
+					{
+						_snprintf_s(Data->item.pszText, Data->item.cchTextMax, _TRUNCATE,
+							"%s %s",
+							xParent->parent->editorID.c_str(),
+							(xParent->oppositeState ? " *" : ""));
+					}
+				}
+				else
+					_snprintf_s(Data->item.pszText, Data->item.cchTextMax, _TRUNCATE, "");
+			}
+
+			break;
+			case CellViewExtraData::kExtraRefListColumn_Count:
+			{
+				BSExtraData* xData = Current->extraData.GetExtraDataByType(BSExtraData::kExtra_Count);
+				if (xData)
+				{
+					ExtraCount* xCount = CS_CAST(xData, BSExtraData, ExtraCount);
+					_snprintf_s(Data->item.pszText, Data->item.cchTextMax, _TRUNCATE, "%d", xCount->count);
+				}
+				else
+					_snprintf_s(Data->item.pszText, Data->item.cchTextMax, _TRUNCATE, "");
+			}
+
+			break;
+			}
+		}
+
 #define ID_CELLVIEW_HOUSEKEEPINGTIMERID							(WM_USER + 6500)
+
+
+		std::string CellViewFormListGetColumnText(HWND FormList, TESForm* Form, UInt32 ColumnIndex)
+		{
+			char Buffer[0x500];
+
+			NMLVDISPINFO CallbackInfo;
+			CallbackInfo.hdr.hwndFrom = FormList;
+			CallbackInfo.hdr.idFrom = GetDlgCtrlID(FormList);
+			CallbackInfo.hdr.code = LVN_GETDISPINFO;
+
+			CallbackInfo.item.mask = LVIF_TEXT;
+			CallbackInfo.item.lParam = reinterpret_cast<LPARAM>(Form);
+			CallbackInfo.item.pszText = Buffer;
+			CallbackInfo.item.cchTextMax = sizeof(Buffer);
+			CallbackInfo.item.iSubItem = ColumnIndex;
+
+			TESCellViewWindow::CellListGetDispInfoCallback(&CallbackInfo);
+
+			return Buffer;
+		}
+
+		std::string CellViewRefListGetColumnText(HWND FormList, TESForm* Form, UInt32 ColumnIndex)
+		{
+			char Buffer[0x500];
+
+			NMLVDISPINFO CallbackInfo;
+			CallbackInfo.hdr.hwndFrom = FormList;
+			CallbackInfo.hdr.idFrom = GetDlgCtrlID(FormList);
+			CallbackInfo.hdr.code = LVN_GETDISPINFO;
+
+			CallbackInfo.item.mask = LVIF_TEXT;
+			CallbackInfo.item.lParam = reinterpret_cast<LPARAM>(Form);
+			CallbackInfo.item.pszText = Buffer;
+			CallbackInfo.item.cchTextMax = sizeof(Buffer);
+			CallbackInfo.item.iSubItem = ColumnIndex;
+
+			if (ColumnIndex >= CellViewExtraData::kExtraRefListColumn_Persistent)
+				CellViewExtraData::ExtraRefListColumnGetDispInfoCallback(&CallbackInfo);
+			else
+				TESCellViewWindow::RefListGetDispInfoCallback(&CallbackInfo);
+
+			return Buffer;
+		}
 
 
 		LRESULT CALLBACK CellViewWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
@@ -260,8 +369,20 @@ namespace cse
 						SetWindowPos(hWnd, NULL, Bounds.left, Bounds.top, Bounds.right, Bounds.bottom, SWP_NOZORDER);
 					}
 
-					FilterableFormListManager::Instance.Register(RefFilterEditBox, RefFilterLabel, RefList, hWnd, CellViewExtraData::RefListFilter);
-					FilterableFormListManager::Instance.Register(CellFilterEditBox, CellFilterLabel, CellList, hWnd);
+					FilterableFormListManager::InitParams Params;
+					Params.ParentWindow = hWnd;
+					Params.FormListView = CellList;
+					Params.FilterEditBox = CellFilterEditBox;
+					Params.FilterLabel = CellFilterLabel;
+					Params.ColumnTextCallback = CellViewFormListGetColumnText;
+					FilterableFormListManager::Instance.Register(Params);
+
+					Params.FormListView = RefList;
+					Params.FilterEditBox = RefFilterEditBox;
+					Params.FilterLabel = RefFilterLabel;
+					Params.CustomFilterPredicate = CellViewExtraData::RefListFilter;
+					Params.ColumnTextCallback = CellViewRefListGetColumnText;
+					FilterableFormListManager::Instance.Register(Params);
 
 					LVCOLUMN ColumnData = { 0 };
 					ColumnData.mask = LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM | LVCF_FMT;
@@ -399,70 +520,11 @@ namespace cse
 							if ((DisplayData->item.mask & LVIF_TEXT) && DisplayData->item.lParam)
 							{
 								DlgProcResult = TRUE;
-								SubclassParams->Out.MarkMessageAsHandled = true;
 
-								TESObjectREFR* Current = (TESObjectREFR*)DisplayData->item.lParam;
-
-								switch (DisplayData->item.iSubItem)
+								if (DisplayData->item.iSubItem >= CellViewExtraData::kExtraRefListColumn_Persistent)
 								{
-								case CellViewExtraData::kExtraRefListColumn_Persistent:
-									_snprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, _TRUNCATE, "%s",
-										((Current->formFlags & TESForm::kFormFlags_QuestItem) ? "Y" : ""));
-
-									break;
-								case CellViewExtraData::kExtraRefListColumn_Disabled:
-									_snprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, _TRUNCATE, "%s",
-										((Current->formFlags & TESForm::kFormFlags_Disabled) ? "Y" : ""));
-
-									break;
-								case CellViewExtraData::kExtraRefListColumn_VWD:
-									_snprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, _TRUNCATE, "%s",
-										((Current->formFlags & TESForm::kFormFlags_VisibleWhenDistant) ? "Y" : ""));
-
-									break;
-								case CellViewExtraData::kExtraRefListColumn_EnableParent:
-									{
-										BSExtraData* xData = Current->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
-										if (xData)
-										{
-											ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
-											SME_ASSERT(xParent->parent);
-
-											if (xParent->parent->editorID.c_str() == nullptr)
-											{
-												_snprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, _TRUNCATE,
-														  "%08X %s",
-														  xParent->parent->formID,
-														  (xParent->oppositeState ? " *" : ""));
-											}
-											else
-											{
-												_snprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, _TRUNCATE,
-														  "%s %s",
-														  xParent->parent->editorID.c_str(),
-														  (xParent->oppositeState ? " *" : ""));
-											}
-										}
-										else
-											_snprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, _TRUNCATE, "");
-									}
-
-									break;
-								case CellViewExtraData::kExtraRefListColumn_Count:
-									{
-										BSExtraData* xData = Current->extraData.GetExtraDataByType(BSExtraData::kExtra_Count);
-										if (xData)
-										{
-											ExtraCount* xCount = CS_CAST(xData, BSExtraData, ExtraCount);
-											_snprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, _TRUNCATE, "%d", xCount->count);
-										}
-										else
-											_snprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, _TRUNCATE, "");
-									}
-
-									break;
-								default:
-									SubclassParams->Out.MarkMessageAsHandled = false;
+									SubclassParams->Out.MarkMessageAsHandled = true;
+									CellViewExtraData::ExtraRefListColumnGetDispInfoCallback(DisplayData);
 								}
 							}
 						}

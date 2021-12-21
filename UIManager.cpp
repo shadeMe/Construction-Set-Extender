@@ -15,38 +15,38 @@ namespace cse
 	{
 		FilterableFormListManager FilterableFormListManager::Instance;
 
-		FilterableFormListManager::FilterableWindowData::FilterableWindowData( HWND Parent, HWND EditBox, HWND FormList, HWND Label, int InputTimeoutThreshold, SecondaryFilterT UserFilter ) :
+		FilterableFormListManager::FilterableWindowData::FilterableWindowData( InitParams Params ) :
 			ThunkFormListSubclassProc(this, &FilterableWindowData::FormListSubclassProc),
 			ThunkFilterEditBoxSubclassProc(this, &FilterableWindowData::FilterEditBoxSubclassProc),
-			ParentWindow(Parent),
-			FilterEditBox(EditBox),
-			FormListView(FormList),
-			FilterLabel(Label),
+			Params(Params),
 			FilterString(""),
 			FilterRegEx(""),
-			InputTimeoutThreshold(InputTimeoutThreshold),
 			TimeCounter(-1),
-			SecondFilter(UserFilter),
 			Enabled(true)
 		{
-			SME_ASSERT(ParentWindow && FilterEditBox && FormListView);
+			SME_ASSERT(Params.ParentWindow);
+			SME_ASSERT(Params.FilterEditBox);
+			SME_ASSERT(Params.FilterLabel);
+			SME_ASSERT(Params.FormListView);
 
-			auto TimerResult = SetTimer(ParentWindow, reinterpret_cast<UINT_PTR>(this), 500, nullptr);
+			auto TimerResult = SetTimer(Params.ParentWindow, reinterpret_cast<UINT_PTR>(this), 500, nullptr);
 			SME_ASSERT(TimerResult != 0);
 
-			BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(FormListView, ThunkFormListSubclassProc());
-			BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(FilterEditBox, ThunkFilterEditBoxSubclassProc());
+			BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(Params.FormListView, ThunkFormListSubclassProc());
+			BGSEEUI->GetSubclasser()->RegisterSubclassForWindow(Params.FilterEditBox, ThunkFilterEditBoxSubclassProc());
 
 			Flags = kFlags_SearchEditorID | kFlags_SearchDescription | kFlags_SearchName;
+
+			EnumerateSearchableColumns();
 		}
 
 		FilterableFormListManager::FilterableWindowData::~FilterableWindowData()
 		{
-			SetWindowText(FilterEditBox, "");
+			SetWindowText(Params.FilterEditBox, "");
 
-			BGSEEUI->GetSubclasser()->DeregisterSubclassForWindow(FormListView, ThunkFormListSubclassProc());
-			BGSEEUI->GetSubclasser()->DeregisterSubclassForWindow(FilterEditBox, ThunkFilterEditBoxSubclassProc());
-			KillTimer(ParentWindow, reinterpret_cast<UINT_PTR>(this));
+			BGSEEUI->GetSubclasser()->DeregisterSubclassForWindow(Params.FormListView, ThunkFormListSubclassProc());
+			BGSEEUI->GetSubclasser()->DeregisterSubclassForWindow(Params.FilterEditBox, ThunkFilterEditBoxSubclassProc());
+			KillTimer(Params.ParentWindow, reinterpret_cast<UINT_PTR>(this));
 		}
 
 		LRESULT FilterableFormListManager::FilterableWindowData::FormListSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
@@ -56,6 +56,16 @@ namespace cse
 
 			switch (uMsg)
 			{
+			case LVM_INSERTCOLUMN:
+			case LVM_DELETECOLUMN:
+				// Tunnel the message and reenumerate searchable columns. The currently implementation is rather wasteful,
+				// but we don't expect column modification to happen often enough to matter.
+				SubclassParams->Out.MarkMessageAsHandled = true;
+
+				CallbackResult = SubclassParams->In.Subclasser->TunnelMessageToOrgWndProc(hWnd, uMsg, wParam, lParam, true);
+				EnumerateSearchableColumns();
+
+				break;
 			case LVM_INSERTITEM:
 				LVITEM* Item = (LVITEM*)lParam;
 
@@ -64,7 +74,7 @@ namespace cse
 					TESForm* Form = (TESForm*)Item->lParam;
 					if (Form)
 					{
-						if (!FilterForm(Form) || (SecondFilter && !SecondFilter(Form)))
+						if (!FilterForm(Form) || (Params.CustomFilterPredicate && !Params.CustomFilterPredicate(Form)))
 						{
 							SubclassParams->Out.MarkMessageAsHandled = true;
 							CallbackResult = -1;
@@ -90,14 +100,14 @@ namespace cse
 				TimeCounter = GetTickCount64();
 				break;
 			case WM_RBUTTONUP:
-				if (GetAsyncKeyState(VK_CONTROL))
+				if (!GetAsyncKeyState(VK_CONTROL))
 					break;
 
 				SubclassParams->Out.MarkMessageAsHandled = true;
 
 				POINT CursorLoc { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 				ClientToScreen(hWnd, &CursorLoc);
-				HandlePopupMenu(ParentWindow, CursorLoc.x, CursorLoc.y);
+				HandlePopupMenu(Params.ParentWindow, CursorLoc.x, CursorLoc.y);
 
 				break;
 			}
@@ -115,8 +125,8 @@ namespace cse
 					GetCursorPos(&CursorLoc);
 
 					HWND WindowFromPoint = SME::UIHelpers::WinSpy::WindowFromPointEx(CursorLoc, FALSE);
-					if (WindowFromPoint == FilterLabel)
-						HandlePopupMenu(ParentWindow, CursorLoc.x, CursorLoc.y);
+					if (WindowFromPoint == Params.FilterLabel)
+						HandlePopupMenu(Params.ParentWindow, CursorLoc.x, CursorLoc.y);
 				}
 
 				break;
@@ -127,13 +137,13 @@ namespace cse
 					break;
 
 				auto Elapsed = GetTickCount64() - TimeCounter;
-				if (Elapsed < InputTimeoutThreshold)
+				if (Elapsed < Params.InputTimeoutThreshold)
 					break;
 
 				TimeCounter = -1;
 
 				char Buffer[0x200] = {0};
-				GetWindowText(FilterEditBox, Buffer, sizeof(Buffer));
+				GetWindowText(Params.FilterEditBox, Buffer, sizeof(Buffer));
 
 				if (HasRegEx() && strcmp(Buffer, FilterString.c_str()) == 0)
 					break;
@@ -160,16 +170,75 @@ namespace cse
 			return false;
 		}
 
+		void FilterableFormListManager::FilterableWindowData::EnumerateSearchableColumns()
+		{
+			static const std::unordered_set<std::string> IgnoredColumnsNames {
+				"Editor ID", "Form ID",
+				"EditorID", "FormID",
+				"Name", "Description"
+			};
+
+			if (Params.ColumnTextCallback == nullptr)
+				return;
+
+			SearchableColumns.clear();
+
+			char Buffer[0x100];
+			auto ColumnCount = TESListView::GetColumnCount(Params.FormListView);
+			for (int i = 0; i < ColumnCount; ++i)
+			{
+				LVCOLUMN ColData;
+				ColData.mask = LVCF_TEXT;
+				ColData.pszText = Buffer;
+				ColData.cchTextMax = sizeof(Buffer);
+
+				ListView_GetColumn(Params.FormListView, i, &ColData);
+
+				if (IgnoredColumnsNames.find(ColData.pszText) != IgnoredColumnsNames.cend())
+					continue;
+
+				SearchableColumns.emplace_back(i, SearchEnabledColumns.find(ColData.pszText) != SearchEnabledColumns.cend(), ColData.pszText);
+			}
+		}
+
 		bool FilterableFormListManager::FilterableWindowData::FilterForm(TESForm* Form)
 		{
 			SME_ASSERT(Form);
 
 			if (FilterString.empty())
 				return true;
-			else if (!HasEditorID() && !HasName() && !HasDescription() && !HasFormID())
-				return true;
 
-			std::string EditorID, FullName, Description, FormIDStr;
+			auto MatchesFilter = [&](std::string& String) -> bool {
+				if (FilterString.empty())
+					return true;
+				else if (String.empty())
+					return false;
+
+				if (HasRegEx())
+				{
+					try
+					{
+						std::smatch Results;
+						if (std::regex_search(String, Results, FilterRegEx))
+							return true;
+					} catch (...) {
+						// Fail fast if bad regex.
+						FilterString.clear();
+						FilterRegEx = "";
+
+						return true;
+					}
+				}
+				else
+				{
+					SME::StringHelpers::MakeLower(String);
+					if (String.find(FilterString) != std::string::npos)
+						return true;
+				}
+
+				return false;
+			};
+
 			TESFullName* FullNameCmpt = nullptr;
 			TESDescription* DescriptionCmpt = nullptr;
 
@@ -189,59 +258,54 @@ namespace cse
 			if (Form->IsReference() == false && DescriptionCmpt == nullptr)
 				DescriptionCmpt = CS_CAST(Form, TESForm, TESDescription);
 
-			if (FullNameCmpt && FullNameCmpt->name.c_str())
-				FullName = FullNameCmpt->name.c_str();
 
-			if (DescriptionCmpt && DescriptionCmpt->description.c_str())
-				Description = DescriptionCmpt->description.c_str();
-
-			if (Form->editorID.c_str())
-				EditorID = Form->GetEditorID();
-			else if (Form->IsReference())
+			if (HasEditorID())
 			{
-				TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
-				if (Reference->baseForm && Reference->baseForm->GetEditorID())
-					EditorID = Reference->baseForm->GetEditorID();
-			}
+				std::string EditorId;
 
-			char Buffer[50] = { 0 };
-			FORMAT_STR(Buffer, "%08x", Form->formID);
-			FormIDStr = Buffer;
-
-			if (HasRegEx())
-			{
-				try
+				if (Form->editorID.c_str())
+					EditorId = Form->GetEditorID();
+				else if (Form->IsReference())
 				{
-					std::smatch Results;
-					if (HasEditorID() && std::regex_search(EditorID, Results, FilterRegEx))
-						return true;
-					else if (HasName() && std::regex_search(FullName, Results, FilterRegEx))
-						return true;
-					else if (HasDescription() && std::regex_search(Description, Results, FilterRegEx))
-						return true;
-					else if (HasFormID() && std::regex_search(FormIDStr, Results, FilterRegEx))
-						return true;
-				} catch (...) {
-					FilterString.clear();
-					FilterRegEx = "";
+					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
+					if (Reference->baseForm && Reference->baseForm->GetEditorID())
+						EditorId = Reference->baseForm->GetEditorID();
 				}
 
-				return false;
+				if (MatchesFilter(EditorId))
+					return true;
 			}
 
-			SME::StringHelpers::MakeLower(EditorID);
-			SME::StringHelpers::MakeLower(FullName);
-			SME::StringHelpers::MakeLower(Description);
-			SME::StringHelpers::MakeLower(FormIDStr);
+			if (HasName() && FullNameCmpt && FullNameCmpt->name.c_str())
+			{
+				if (MatchesFilter(std::string(FullNameCmpt->name.c_str())))
+					return true;
+			}
 
-			if (HasEditorID() && EditorID.find(FilterString) != std::string::npos)
-				return true;
-			else if (HasName() && FullName.find(FilterString) != std::string::npos)
-				return true;
-			else if (HasDescription() && Description.find(FilterString) != std::string::npos)
-				return true;
-			else if (HasFormID() && FormIDStr.find(FilterString) != std::string::npos)
-				return true;
+			if (HasDescription() && DescriptionCmpt && DescriptionCmpt->description.c_str())
+			{
+				if (MatchesFilter(std::string(DescriptionCmpt->description.c_str())))
+					return true;
+			}
+
+			if (HasFormID())
+			{
+				char Buffer[50] = { 0 };
+				FORMAT_STR(Buffer, "%08x", Form->formID);
+
+				if (MatchesFilter(std::string(Buffer)))
+					return true;
+			}
+
+			for (const auto& Itr : SearchableColumns)
+			{
+				if (!Itr.Search)
+					continue;
+
+				auto ColumnText = Params.ColumnTextCallback(Params.FormListView, Form, Itr.Index);
+				if (MatchesFilter(ColumnText))
+					return true;
+			}
 
 			return false;
 		}
@@ -251,6 +315,8 @@ namespace cse
 #define IDC_CSEFILTERABLEFORMLIST_NAME				9011
 #define IDC_CSEFILTERABLEFORMLIST_DESCRIPTION		9012
 #define IDC_CSEFILTERABLEFORMLIST_FORMID			9013
+#define IDC_CSEFILTERABLEFORMLIST_COLUMN_OFFSET		9500
+
 
 		void FilterableFormListManager::FilterableWindowData::HandlePopupMenu(HWND Parent, int X, int Y)
 		{
@@ -302,6 +368,28 @@ namespace cse
 			Item.wID = IDC_CSEFILTERABLEFORMLIST_FORMID;
 			InsertMenuItem(Popup, -1, TRUE, &Item);
 
+			if (Params.ColumnTextCallback)
+			{
+				InsertMenu(Popup, -1, MF_BYPOSITION | MF_SEPARATOR, NULL, nullptr);
+
+				int ColumnItemId = IDC_CSEFILTERABLEFORMLIST_COLUMN_OFFSET;
+				for (const auto& Column : SearchableColumns)
+				{
+					char Buffer[0x100];
+					_snprintf_s(Buffer, sizeof(Buffer), _TRUNCATE, "Search %s", Column.Name.c_str());
+
+					Item.fState = MFS_ENABLED;
+					Item.dwTypeData = Buffer;
+					Item.cch = strlen((const char*)Item.dwTypeData);
+					if (Column.Search)
+						Item.fState |= MFS_CHECKED;
+					Item.wID = ColumnItemId;
+					InsertMenuItem(Popup, -1, TRUE, &Item);
+
+					++ColumnItemId;
+				}
+			}
+
 			auto MenuSelection = TrackPopupMenu(Popup, TPM_RETURNCMD, X, Y, NULL, Parent, nullptr);
 			switch (MenuSelection)
 			{
@@ -320,6 +408,18 @@ namespace cse
 			case IDC_CSEFILTERABLEFORMLIST_FORMID:
 				SME::MiscGunk::ToggleFlag(&Flags, kFlags_SearchFormID, HasFormID() == false);
 				break;
+			default:
+				if (MenuSelection < IDC_CSEFILTERABLEFORMLIST_COLUMN_OFFSET || MenuSelection >= IDC_CSEFILTERABLEFORMLIST_COLUMN_OFFSET + SearchableColumns.size())
+					break;
+
+				auto ColumnIdx = MenuSelection - IDC_CSEFILTERABLEFORMLIST_COLUMN_OFFSET;
+				auto& ColumnData = SearchableColumns[ColumnIdx];
+
+				ColumnData.Search = ColumnData.Search == false;
+				if (ColumnData.Search)
+					SearchEnabledColumns.emplace(ColumnData.Name);
+				else
+					SearchEnabledColumns.erase(ColumnData.Name);
 			}
 
 			if (MenuSelection != 0)
@@ -362,14 +462,11 @@ namespace cse
 			ActiveFilters.clear();
 		}
 
-		bool FilterableFormListManager::Register(HWND FilterEdit, HWND FilterLabel, HWND FormList, HWND ParentWindow, const SecondaryFilterT& UserFilter, int InputTimeoutThreshold)
+		bool FilterableFormListManager::Register(InitParams Params)
 		{
-			SME_ASSERT(ParentWindow && FormList);
-			SME_ASSERT(FilterEdit && FilterLabel);
-
-			if (LookupByFilterEdit(FilterEdit) == nullptr)
+			if (LookupByFilterEdit(Params.FilterEditBox) == nullptr)
 			{
-				ActiveFilters.push_back(new FilterableWindowData(ParentWindow, FilterEdit, FormList, FilterLabel, InputTimeoutThreshold, UserFilter));
+				ActiveFilters.emplace_back(new FilterableWindowData(Params));
 				return true;
 			}
 
@@ -382,7 +479,7 @@ namespace cse
 
 			for (auto Itr = ActiveFilters.begin(); Itr != ActiveFilters.end(); Itr++)
 			{
-				if ((*Itr)->FilterEditBox == FilterEdit)
+				if ((*Itr)->Params.FilterEditBox == FilterEdit)
 				{
 					delete *Itr;
 					ActiveFilters.erase(Itr);
@@ -437,7 +534,7 @@ namespace cse
 		{
 			for (auto Itr : ActiveFilters)
 			{
-				if (Itr->FilterEditBox == FilterEdit)
+				if (Itr->Params.FilterEditBox == FilterEdit)
 					return Itr;
 			}
 
@@ -448,7 +545,7 @@ namespace cse
 		{
 			for (auto Itr : ActiveFilters)
 			{
-				if (Itr->FormListView == FormList)
+				if (Itr->Params.FormListView == FormList)
 					return Itr;
 			}
 

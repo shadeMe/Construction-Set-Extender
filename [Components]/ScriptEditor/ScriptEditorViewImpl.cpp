@@ -3118,6 +3118,7 @@ ScriptEditorWorkspace::~ScriptEditorWorkspace()
 	DeinitializeViewComponents();
 	SAFEDELETE_CLR(IntelliSenseInterface);
 
+	this->Refresh();
 	if (components)
 	{
 		delete components;

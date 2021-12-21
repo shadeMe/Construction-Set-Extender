@@ -11,33 +11,47 @@ namespace cse
 			T		ExtraData;
 		};
 
+
 		class FilterableFormListManager
 		{
 		public:
-			typedef std::function<bool(TESForm*)>
-												SecondaryFilterT;			// returns true if the form is to be added
+			struct InitParams
+			{
+				HWND ParentWindow = NULL;
+				HWND FormListView = NULL;
+				HWND FilterEditBox = NULL;
+				HWND FilterLabel = NULL;
+				UInt32 InputTimeoutThreshold = 500;
+
+				std::function<bool(TESForm* Form)> CustomFilterPredicate = nullptr;	// returns true if the form is to be added
+				std::function<std::string(HWND FormListView, TESForm* Form, UInt32 ColumnIndex)> ColumnTextCallback = nullptr;
+			};
 		private:
+			struct ColumnData
+			{
+				UInt32 Index;
+				bool Search;
+				std::string Name;
+
+				ColumnData(UInt32 Index, bool Search, const char *Name)
+					: Index(Index), Search(Search), Name(Name) {}
+			};
+
 			class FilterableWindowData
 			{
 				friend class FilterableFormListManager;
 
-				bgsee::SubclassProcThunk<FilterableWindowData>
-										ThunkFormListSubclassProc;
-				bgsee::SubclassProcThunk<FilterableWindowData>
-										ThunkFilterEditBoxSubclassProc;
+				bgsee::SubclassProcThunk<FilterableWindowData> ThunkFormListSubclassProc;
+				bgsee::SubclassProcThunk<FilterableWindowData> ThunkFilterEditBoxSubclassProc;
 
-				HWND					ParentWindow;
-				HWND					FilterEditBox;
-				HWND					FormListView;
-				HWND					FilterLabel;
-
-				std::string				FilterString;
-				std::regex				FilterRegEx;
-				UInt32					InputTimeoutThreshold;
-				ULONGLONG				TimeCounter;
-				UInt8					Flags;
-				SecondaryFilterT		SecondFilter;
-				bool					Enabled;
+				InitParams Params;
+				std::string FilterString;
+				std::regex FilterRegEx;
+				ULONGLONG TimeCounter;
+				UInt8 Flags;
+				std::vector<ColumnData> SearchableColumns;
+				std::unordered_set<std::string> SearchEnabledColumns;
+				bool Enabled;
 
 				enum
 				{
@@ -50,25 +64,26 @@ namespace cse
 
 				LRESULT FormListSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 											bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
-				LRESULT	FilterEditBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+				LRESULT FilterEditBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 											bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
 
-				bool	HasRegEx(void) const { return Flags & kFlags_RegEx; }
-				bool	HasEditorID(void) const { return Flags & kFlags_SearchEditorID; }
-				bool	HasName(void) const { return Flags & kFlags_SearchName; }
-				bool	HasDescription(void) const { return Flags & kFlags_SearchDescription; }
-				bool	HasFormID(void) const { return Flags & kFlags_SearchFormID; }
+				bool HasRegEx(void) const { return Flags & kFlags_RegEx; }
+				bool HasEditorID(void) const { return Flags & kFlags_SearchEditorID; }
+				bool HasName(void) const { return Flags & kFlags_SearchName; }
+				bool HasDescription(void) const { return Flags & kFlags_SearchDescription; }
+				bool HasFormID(void) const { return Flags & kFlags_SearchFormID; }
 
-				bool	FilterForm(TESForm* Form);		// returns true if the form matches the active filter
-				void	HandlePopupMenu(HWND Parent, int X, int Y);
+				void EnumerateSearchableColumns();
+				bool FilterForm(TESForm* Form);		// returns true if the form matches the active filter
+				void HandlePopupMenu(HWND Parent, int X, int Y);
 			public:
-				FilterableWindowData(HWND Parent, HWND EditBox, HWND FormList, HWND Label, int InputTimeoutThreshold, SecondaryFilterT UserFilter);
+				FilterableWindowData(InitParams Params);
 				~FilterableWindowData();
 
-				bool	HandleMessages(UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true on timeout
-				void	SetEnabled(bool State);
-				bool	HasFilter() const;
-				void	ResetFilter();
+				bool HandleMessages(UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true on timeout
+				void SetEnabled(bool State);
+				bool HasFilter() const;
+				void ResetFilter();
 			};
 
 			typedef std::vector<FilterableWindowData*>	FilterDataArrayT;
@@ -81,7 +96,7 @@ namespace cse
 			FilterableFormListManager();
 			~FilterableFormListManager();
 
-			bool	Register(HWND FilterEdit, HWND FilterLabel, HWND FormList, HWND ParentWindow, const SecondaryFilterT& UserFilter = nullptr, int InputTimeoutThreshold = 500);
+			bool	Register(InitParams Params);
 			void	Unregister(HWND FilterEdit);
 
 			bool	HandleMessages(HWND FilterEdit, UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true to request a refresh of the form list

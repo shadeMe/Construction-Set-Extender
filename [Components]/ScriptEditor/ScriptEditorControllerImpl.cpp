@@ -851,11 +851,11 @@ void ScriptEditorController::HandleViewClosureRequest(view::components::IForm^ F
 			}
 		}
 	}
+	Form->EndUpdate();
 
 	if (StopClosure)
 	{
 		TabStrip->EndUpdate();
-		Form->EndUpdate();
 
 		E->Cancel = true;
 		return;

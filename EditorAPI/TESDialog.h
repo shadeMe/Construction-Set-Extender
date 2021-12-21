@@ -606,6 +606,7 @@ public:
 	static void								AddColumnHeader(HWND hWnd, int Index, const char* Name, int Width, UInt32 Format = LVCFMT_LEFT);
 	static void								ClearColumnHeaders(HWND hWnd);
 	static void								ClearItems(HWND hWnd);
+	static int								GetColumnCount(HWND hWnd);
 };
 
 class TESTreeView
@@ -727,6 +728,9 @@ public:
 		/*04*/ UInt32        columnCount;        // number of columns in listview
 		/*08*/ UInt32        selectedIndex;      // index of currently selected item in listview (??)
 		/*0C*/ FormListT     formList;
+
+
+		void ListViewGetDispInfoCallback(NMLVDISPINFO* Data);
 
 		static const UInt32		kTreeEntryCount = 0x24; // size of static tree entry arrays
 	};
@@ -932,6 +936,9 @@ public:
 
 	static void						OnSelectCellListItem(TESObjectCELL* ItemCell, bool ClearRenderWindowSelection);
 
+	static void						CellListGetDispInfoCallback(NMLVDISPINFO* Data);
+	static void						RefListGetDispInfoCallback(NMLVDISPINFO* Data);
+
 	static HWND*					WindowHandle;
 	static HWND*					ObjectListHandle;
 	static HWND*					CellListHandle;
@@ -948,6 +955,29 @@ public:
 		kCellLabel = 1163,
 		kCellListView = 1155,
 		kObjectRefListView = 1156,
+	};
+
+	enum
+	{
+		kCellListColumn_EditorID = 0,
+		kCellListColumn_FormID,
+		kCellListColumn_Name,
+		kCellListColumn_Location,
+		kCellListColumn_Path,
+		kCellListColumn_Owner,
+
+		kCellListColumn__MAX
+	};
+
+	enum
+	{
+		kRefListColumn_EditorID = 0,
+		kRefListColumn_FormID,
+		kRefListColumn_Type,
+		kRefListColumn_Ownership,
+		kRefListColumn_LockLevel,
+
+		kRefListColumn__MAX
 	};
 
 	enum

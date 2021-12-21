@@ -774,8 +774,6 @@ void AvalonEditTextEditor::ToggleSearchPanel(bool State)
 		Query->Replace("\r\n", "")->Replace("\n", "");
 		InlineSearchPanel->SearchPattern = Query;
 		InlineSearchPanel->Reactivate();
-
-		WPFFocusHelper::Focus(InlineSearchPanel);
 	}
 	else
 	{
@@ -1191,6 +1189,10 @@ void AvalonEditTextEditor::TextField_KeyUp(Object^ Sender, System::Windows::Inpu
 
 void AvalonEditTextEditor::TextField_MouseDown(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E)
 {
+	// Don't allow the event to propagate up if it happened over the inline search panel.
+	if (!InlineSearchPanel->IsClosed && InlineSearchPanel->IsMouseOver)
+		return;
+
 	Nullable<AvalonEdit::TextViewPosition> Location = TextField->GetPositionFromPoint(E->GetPosition(TextField));
 	if (Location.HasValue)
 		LastKnownMouseClickOffset = TextField->Document->GetOffset(Location.Value.Line, Location.Value.Column);
@@ -1203,6 +1205,9 @@ void AvalonEditTextEditor::TextField_MouseDown(Object^ Sender, System::Windows::
 
 void AvalonEditTextEditor::TextField_MouseUp(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E)
 {
+	if (!InlineSearchPanel->IsClosed && InlineSearchPanel->IsMouseOver)
+		return;
+
 	Nullable<AvalonEdit::TextViewPosition> Location = TextField->GetPositionFromPoint(E->GetPosition(TextField));
 	if (Location.HasValue)
 	{

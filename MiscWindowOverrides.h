@@ -52,6 +52,7 @@ namespace cse
 			void	UpdatePluginFlagsFromCache();
 		};
 
+		std::string AiPackagesWindowFormListGetColumnText(HWND FormList, TESForm* Form, UInt32 ColumnIndex);
 
 		LRESULT CALLBACK FindTextDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
 		LRESULT CALLBACK DataDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);

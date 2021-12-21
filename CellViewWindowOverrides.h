@@ -27,7 +27,7 @@ namespace cse
 
 			enum
 			{
-				kExtraRefListColumn_Persistent = 5,
+				kExtraRefListColumn_Persistent = TESCellViewWindow::kRefListColumn__MAX,
 				kExtraRefListColumn_Disabled,
 				kExtraRefListColumn_VWD,
 				kExtraRefListColumn_EnableParent,
@@ -36,7 +36,12 @@ namespace cse
 
 			static int CALLBACK CustomFormListComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 			static bool RefListFilter(TESForm* Form);
+			static void	ExtraRefListColumnGetDispInfoCallback(NMLVDISPINFO* Data);
+
 		};
+
+		std::string CellViewCellListGetColumnText(HWND FormList, TESForm* Form, UInt32 ColumnIndex);
+		std::string CellViewRefListGetColumnText(HWND FormList, TESForm* Form, UInt32 ColumnIndex);
 
 		LRESULT CALLBACK CellViewWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 													bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);

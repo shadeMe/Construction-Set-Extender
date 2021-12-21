@@ -284,7 +284,7 @@ bool LineTokenizer::IsIndexInsideString(int Index)
 
 		if (Token[0] == '\"'
 			&& Index > StartIndex
-			&& Index < StartIndex + Token->Length - (Token[Token->Length - 1] == '\"' ? 1 : 0))
+			&& Index <= StartIndex + Token->Length - (Token[Token->Length - 1] == '\"' ? 1 : 0))
 			return true;
 	}
 

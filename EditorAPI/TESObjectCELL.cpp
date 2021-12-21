@@ -41,6 +41,16 @@ void TESObjectCELL::ModExtraCellWaterType( TESWaterForm* Water )
 	thisCall<void>(0x00534420, this, Water);
 }
 
+TESForm* TESObjectCELL::GetOwner()
+{
+	return thisCall<TESForm*>(0x00532BB0, this);
+}
+
+void TESObjectCELL::ListViewGetDispInfoCallback(NMLVDISPINFO* Data)
+{
+	cdeclCall<void>(0x00537530, Data);
+}
+
 void TESObjectCELL::RemoveObjectReference( TESObjectREFR* Ref )
 {
 	thisCall<void>(0x00534910, this, Ref);

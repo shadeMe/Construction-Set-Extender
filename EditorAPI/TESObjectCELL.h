@@ -114,6 +114,9 @@ public:
 
 	void						ModExtraCellWaterHeight(float Height);
 	void						ModExtraCellWaterType(TESWaterForm* Water);
+	TESForm*					GetOwner();
+
+	static void					ListViewGetDispInfoCallback(NMLVDISPINFO* Data);
 };
 
 // 04

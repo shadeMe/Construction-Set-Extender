@@ -48,6 +48,29 @@ namespace cse
 			}
 		}
 
+		std::string AiPackagesWindowFormListGetColumnText(HWND FormList, TESForm* Form, UInt32 ColumnIndex)
+		{
+			char Buffer[0x500];
+
+			NMLVDISPINFO CallbackInfo;
+			CallbackInfo.hdr.hwndFrom = FormList;
+			CallbackInfo.hdr.idFrom = GetDlgCtrlID(FormList);
+			CallbackInfo.hdr.code = LVN_GETDISPINFO;
+
+			CallbackInfo.item.mask = LVIF_TEXT;
+			CallbackInfo.item.lParam = reinterpret_cast<LPARAM>(Form);
+			CallbackInfo.item.pszText = Buffer;
+			CallbackInfo.item.cchTextMax = sizeof(Buffer);
+			CallbackInfo.item.iSubItem = ColumnIndex;
+
+			auto Package = CS_CAST(Form, TESForm, TESPackage);
+			SME_ASSERT(Package);
+			Package->ListViewGetDispInfoCallback(&CallbackInfo);
+
+			return Buffer;
+		}
+
+
 #define IDC_FINDTEXT_OPENSCRIPTS				9014
 
 		LRESULT CALLBACK FindTextDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
@@ -1229,7 +1252,13 @@ namespace cse
 					ColumnData.cx = 175;
 					ListView_SetColumn(PackageListView, 0, &ColumnData);
 
-					FilterableFormListManager::Instance.Register(FilterEditBox, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL), FormList, hWnd);
+					uiManager::FilterableFormListManager::InitParams Params;
+					Params.ParentWindow = hWnd;
+					Params.FormListView = FormList;
+					Params.FilterEditBox = FilterEditBox;
+					Params.FilterLabel = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL);
+					Params.ColumnTextCallback = AiPackagesWindowFormListGetColumnText;
+					uiManager::FilterableFormListManager::Instance.Register(Params);
 				}
 
 				break;
@@ -1775,7 +1804,13 @@ namespace cse
 			case WM_INITDIALOG:
 				{
 					SME_ASSERT(FilterEditBox);
-					FilterableFormListManager::Instance.Register(FilterEditBox, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL), FormList, hWnd);
+
+					uiManager::FilterableFormListManager::InitParams Params;
+					Params.ParentWindow = hWnd;
+					Params.FormListView = FormList;
+					Params.FilterEditBox = FilterEditBox;
+					Params.FilterLabel = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL);
+					uiManager::FilterableFormListManager::Instance.Register(Params);
 				}
 
 				break;
@@ -1837,8 +1872,13 @@ namespace cse
 					SetWindowLongPtr(FormList, GWL_USERDATA, NULL);
 
 					SME_ASSERT(FilterEditBox);
-					FilterableFormListManager::Instance.Register(FilterEditBox, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL),
-																 FormList, hWnd);
+
+					uiManager::FilterableFormListManager::InitParams Params;
+					Params.ParentWindow = hWnd;
+					Params.FormListView = FormList;
+					Params.FilterEditBox = FilterEditBox;
+					Params.FilterLabel = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL);
+					uiManager::FilterableFormListManager::Instance.Register(Params);
 				}
 
 				break;
@@ -2509,8 +2549,13 @@ namespace cse
 					// PS: Dammit!
 
 					SME_ASSERT(FilterEditBox);
-					FilterableFormListManager::Instance.Register(FilterEditBox, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL),
-																	GetDlgItem(hWnd, kFormList_TESFormIDListView), hWnd);
+
+					uiManager::FilterableFormListManager::InitParams Params;
+					Params.ParentWindow = hWnd;
+					Params.FormListView = GetDlgItem(hWnd, kFormList_TESFormIDListView);
+					Params.FilterEditBox = FilterEditBox;
+					Params.FilterLabel = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL);
+					uiManager::FilterableFormListManager::Instance.Register(Params);
 
 					TESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(TESFormIDListViewData, SubclassParams->In.ExtraData);
 					if (xData == nullptr)

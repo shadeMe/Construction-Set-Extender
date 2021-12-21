@@ -1,4 +1,5 @@
 #include "DialogImposterManager.h"
+#include "ObjectWindowOverrides.h"
 #include "MiscWindowOverrides.h"
 #include "UIManager.h"
 #include "HallOfFame.h"
@@ -118,7 +119,14 @@ namespace cse
 		case WM_OBJECTWINDOWIMPOSTER_INITIALIZE:
 			{
 				SME_ASSERT(FilterEditBox);
-				uiManager::FilterableFormListManager::Instance.Register(FilterEditBox, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL), FormList, hWnd);
+
+				uiManager::FilterableFormListManager::InitParams Params;
+				Params.ParentWindow = hWnd;
+				Params.FormListView = FormList;
+				Params.FilterEditBox = FilterEditBox;
+				Params.FilterLabel = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL);
+				Params.ColumnTextCallback = uiManager::ObjectWindowFormListGetColumnText;
+				uiManager::FilterableFormListManager::Instance.Register(Params);
 
 				// reproduce the relevant bits of the org wnd proc's code
 				CacheOperator CacheBackup(hWnd);

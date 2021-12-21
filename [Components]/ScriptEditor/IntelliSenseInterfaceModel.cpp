@@ -345,7 +345,7 @@ void IntelliSenseInterfaceModel::OnTextChanged(IntelliSenseContextChangeEventArg
 	}
 	else
 	{
-		if (!Context->Valid)
+		if (!Context->Valid || (!LastContextUpdateDiff->OperationInvoked && Context->FilterString->Length == 0))
 		{
 			HidePopup(ePopupHideReason::ContextChanged);
 			return;
@@ -395,8 +395,8 @@ void IntelliSenseInterfaceModel::UpdateContext(IntelliSenseContextChangeEventArg
 	if (Parser->Tokenize(CurrentLine, false) == false)
 		return;
 
-	if (Parser->GetCommentTokenIndex(-1) != -1
-		|| Parser->IsIndexInsideString(Args->CaretPos - Args->CurrentLineStartPos))
+	Context->InsideCommentOrStringLiteral = Parser->GetCommentTokenIndex(-1) != -1 || Parser->IsIndexInsideString(Args->CaretPos - Args->CurrentLineStartPos);
+	if (Context->InsideCommentOrStringLiteral)
 		return;
 
 	String^ CurrentToken = Parser->Tokens[Parser->TokenCount - 1];

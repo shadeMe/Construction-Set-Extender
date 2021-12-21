@@ -37,7 +37,6 @@ CSE		---->
 
 
 	ENHANCEMENT		=
-		> Add support for filtering strings in all form list subitems
 		> Reimplement the hide active/deleted forms tool
 		> An option to hide markers for thing such as Character placements on furniture as well as markers for effect like fire flies
 		> OSD enhancements

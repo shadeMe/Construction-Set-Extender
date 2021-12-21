@@ -434,6 +434,12 @@ void TESListView::ClearItems(HWND hWnd)
 	ListView_DeleteAllItems(hWnd);
 }
 
+int TESListView::GetColumnCount(HWND hWnd)
+{
+	HWND hWndHdr = reinterpret_cast<HWND>(SendMessage(hWnd, LVM_GETHEADER, 0, 0));
+	return static_cast<int>(SendMessage(hWndHdr, HDM_GETITEMCOUNT, 0, 0));
+}
+
 UInt32 TESListView::GetSelectedItemCount(HWND hWnd)
 {
 	int Selection = -1, Count = 0;
@@ -670,6 +676,48 @@ void TESCellViewWindow::OnSelectCellListItem(TESObjectCELL* ItemCell, bool Clear
 			*TESCellViewWindow::ObjectListSortColumn,
 			(LPARAM)cse::uiManager::CellViewExtraData::CustomFormListComparator);
 	}
+}
+
+void TESCellViewWindow::CellListGetDispInfoCallback(NMLVDISPINFO* Data)
+{
+	if (Data->item.iSubItem <= kCellListColumn_Location)
+	{
+		// Columns handled by the default TESObjectCELL handler
+		TESObjectCELL::ListViewGetDispInfoCallback(Data);
+	}
+	else
+	{
+		if (Data->item.lParam == NULL || (Data->item.mask & LVIF_TEXT) == 0)
+			return;
+
+		auto Cell = CS_CAST(Data->item.lParam, TESForm, TESObjectCELL);
+		SME_ASSERT(Cell);
+
+		switch (Data->item.iSubItem)
+		{
+		case kCellListColumn_Path:
+			_snprintf_s(Data->item.pszText, Data->item.cchTextMax, _TRUNCATE, "%s",
+				(Cell->pathGrid ? "Y" : "N"));
+
+			break;
+		case kCellListColumn_Owner:
+			auto Owner = Cell->GetOwner();
+			_snprintf_s(Data->item.pszText, Data->item.cchTextMax, _TRUNCATE, "%s",
+				(Owner && Owner->GetEditorID() ? Owner->GetEditorID() : ""));
+
+			break;
+		}
+	}
+}
+
+void TESCellViewWindow::RefListGetDispInfoCallback(NMLVDISPINFO* Data)
+{
+	cdeclCall<void>(0x00408B30, Data);
+}
+
+void TESObjectWindow::TreeEntryInfo::ListViewGetDispInfoCallback(NMLVDISPINFO* Data)
+{
+	thisCall<void>(0x00414E60, this, Data);
 }
 
 void TESObjectWindow::RefreshFormList(void)
