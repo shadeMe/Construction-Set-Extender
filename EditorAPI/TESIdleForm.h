@@ -9,6 +9,8 @@
 	...
 */
 
+struct NiFormArray;
+
 // 68
 class TESIdleForm : public TESForm, public TESModelAnim
 {
@@ -39,7 +41,7 @@ public:
 	/*50*/ ConditionListT		conditions;
 	/*58*/ UInt8				flags;
 	/*59*/ UInt8				pad59[3];
-	/*5C*/ UInt32				unk5C;
+	/*5C*/ NiFormArray*			children;
 	/*60*/ TESIdleForm*			previousLink;
 	/*64*/ TESIdleForm*			nextLink;
 
