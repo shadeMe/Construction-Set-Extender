@@ -39,6 +39,7 @@ namespace cse
 		_DefineHookHdlr(DataHandlerAutoSaveA, 0x00481F81);
 		_DefineHookHdlr(DataHandlerAutoSaveB, 0x00481FC1);
 		_DefineHookHdlr(DataDlgCancelled, 0x0041A289);
+		_DefineHookHdlr(SavePluginSortActiveForms, 0x0047EE77);
 
 		void PatchTESFileHooks(void)
 		{
@@ -69,6 +70,7 @@ namespace cse
 			_MemHdlr(DataDlgCancelled).WriteJump();
 			_MemHdlr(DataDialogUpdateCurrentTESFileHeaderA).WriteJump();
 			_MemHdlr(DataDialogUpdateCurrentTESFileHeaderB).WriteJump();
+			_MemHdlr(SavePluginSortActiveForms).WriteJump();
 		}
 
 		bool __stdcall InitTESFileSaveDlg()
@@ -644,6 +646,44 @@ namespace cse
 				jmp		_hhGetVar(Jump)
 			}
 		}
+
+		UInt32 __stdcall DoSavePluginSortActiveFormsHook(NiTLargeArray<TESForm*>* ActiveForms)
+		{
+			//auto Start = GetTickCount64();
+
+			std::vector<TESForm*> UnsortedForms;
+			UnsortedForms.reserve(ActiveForms->numObjs);
+
+			for (int i = 0; i < ActiveForms->numObjs; ++i)
+				UnsortedForms.emplace_back(ActiveForms->data[i]);
+
+			std::sort(UnsortedForms.begin(), UnsortedForms.end(), [](const TESForm* a, const TESForm* b) -> bool {
+				return thisVirtualCall<bool>(0x58, a, b);
+			});
+
+			for (int i = 0; i < UnsortedForms.size(); ++i)
+				ActiveForms->data[i] = UnsortedForms[i];
+
+			//BGSEECONSOLE_MESSAGE("Active form sorting took %d ms", GetTickCount64() - Start);
+			return ActiveForms->numObjs;
+		}
+
+
+		#define _hhName		SavePluginSortActiveForms
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0047EF71);
+			_asm
+			{
+				push	ecx
+				call	DoSavePluginSortActiveFormsHook
+				mov		ebx, eax
+				mov     [esp + 0x18], ebx
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+
 	}
 }
 

@@ -490,7 +490,7 @@ namespace cse
 
 		bool FilterableFormListManager::HandleMessages(HWND FilterEdit, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
-			SME_ASSERT(FilterEdit);
+			 DEBUG_ASSERT(FilterEdit);
 
 			FilterableWindowData* Data = LookupByFilterEdit(FilterEdit);
 			if (Data)
@@ -501,7 +501,7 @@ namespace cse
 
 		void FilterableFormListManager::SetEnabled(HWND FilterEdit, bool State)
 		{
-			SME_ASSERT(FilterEdit);
+			DEBUG_ASSERT(FilterEdit);
 
 			FilterableWindowData* Data = LookupByFilterEdit(FilterEdit);
 			if (Data)
@@ -510,7 +510,7 @@ namespace cse
 
 		bool FilterableFormListManager::HasActiveFilter(HWND FilterEdit) const
 		{
-			SME_ASSERT(FilterEdit);
+			DEBUG_ASSERT(FilterEdit);
 
 			auto FilterData = LookupByFilterEdit(FilterEdit);
 			if (FilterData == nullptr)
@@ -521,7 +521,7 @@ namespace cse
 
 		void FilterableFormListManager::ResetFilter(HWND FilterEdit)
 		{
-			SME_ASSERT(FilterEdit);
+			DEBUG_ASSERT(FilterEdit);
 
 			auto FilterData = LookupByFilterEdit(FilterEdit);
 			if (FilterData == nullptr)

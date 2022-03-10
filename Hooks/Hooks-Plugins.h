@@ -37,5 +37,6 @@ namespace cse
 		_DeclareMemHdlr(DataHandlerAutoSaveA, "prevents the active file from being added as a master to the autosave backup");
 		_DeclareMemHdlr(DataHandlerAutoSaveB, "");
 		_DeclareMemHdlr(DataDlgCancelled, "fixes a bug that causes the editor to reset the 'dirty' flag on closing the data dialog");
+		_DeclareMemHdlr(SavePluginSortActiveForms, "replaces the naive selection sort used to sort active forms with an algorithm that's got better worst/avg-case guarantees");
 	}
 }

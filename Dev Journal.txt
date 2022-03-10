@@ -37,6 +37,8 @@ CSE		---->
 
 
 	ENHANCEMENT		=
+		> Render window shortcut to toggle rotation/scaling in world/modelspace.
+			> Add an indicator to the OSD's info overlay
 		> Reimplement the hide active/deleted forms tool
 		> An option to hide markers for thing such as Character placements on furniture as well as markers for effect like fire flies
 		> OSD enhancements
