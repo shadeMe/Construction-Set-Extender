@@ -81,8 +81,6 @@ namespace cse
 		_DefineHookHdlr(TESRenderControlWndProcConditionalFocus, 0x0044D718);
 		_DefineHookHdlr(BSTexturePaletteReleaseTexturesStrncpy, 0x004BD6B9);
 
-		char* __cdecl strncpy_hook(char* Dest, const char* Source, size_t Count);
-
 		void PatchRendererHooks(void)
 		{
 			_MemHdlr(DoorMarkerProperties).WriteJump();
@@ -185,13 +183,6 @@ namespace cse
 				SME::MemoryHandler::SafeWrite32(0x00933DC0, reinterpret_cast<UInt32>(&TESPreviewControlResetCameraDetour));
 				SME::MemoryHandler::WriteRelCall(0x0044C77E, reinterpret_cast<UInt32>(&TESPreviewControlRotateCameraDetour));
 			}
-
-			SME::MemoryHandler::WriteRelCall(0x004BD6CD, reinterpret_cast<UInt32>(&strncpy_hook));
-		}
-
-		char* __cdecl strncpy_hook(char* Dest, const char* Source, size_t Count) {
-			BGSEECONSOLE_MESSAGE("strncpy:\n\tSource: %s\n\tDest: %s\n\tCount: %08X", Source, Dest, Count);
-			return ::strncpy(Dest, Source, Count);
 		}
 
 		void __stdcall RenderWindowReferenceSelectionDetour( TESObjectREFR* Ref, bool ShowSelectionBox )
