@@ -74,6 +74,7 @@ namespace cse
 		_DeclareMemHdlr(ShadowSceneNodeUseFullBrightLight, "adds support for reference color masks in the render window");
 		_DeclareMemHdlr(UpdateUsageInfoForTempRefs, "allows modifications of temporary refs that aren't door markers using the ref edit dialog");
 		_DeclareMemHdlr(TESRenderControlWndProcConditionalFocus, "prevents dialogs with preview controls from stealing focus on mouse-move");
+		_DeclareMemHdlr(BSTexturePaletteReleaseTexturesStrncpy, "fix a buffer overflow when releasing textures");
 
 		void __stdcall RenderWindowReferenceSelectionDetour(TESObjectREFR* Ref, bool ShowSelectionBox);
 		void __cdecl ShadowLightShaderSetAmbientColorShaderConstantDetour(UInt16 ConstantIndex, float R, float G, float B, float A);

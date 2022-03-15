@@ -54,6 +54,7 @@ namespace cse
 		RegisterRelease(8, 1, "Logical Half Nelson");
 		RegisterRelease(10, 0, "Y-Y-Zed");
 		RegisterRelease(11, 0, "Asthmatic Ant");
+		RegisterRelease(11, 1, "Pointless Peasant");
 	}
 
 	ReleaseNameTable::~ReleaseNameTable()

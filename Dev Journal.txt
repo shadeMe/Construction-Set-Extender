@@ -17,6 +17,8 @@ NOTE	---->
 CSE		---->
 
 	BUGFIX			=
+		> CrashRpt doesn't handle any bounds-checked CRT funtion failures
+			> https://en.cppreference.com/w/c/error/set_constraint_handler_s
 		> Selection mask does not work under certain lighting circumstances
 			> Enhanced Econonmy.esp, EECell
 		> Cell use list is broken

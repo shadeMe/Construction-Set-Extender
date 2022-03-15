@@ -79,7 +79,9 @@ namespace cse
 		_DefineHookHdlr(ShadowSceneNodeUseFullBrightLight, 0x00772091);
 		_DefineHookHdlr(UpdateUsageInfoForTempRefs, 0x00540010);
 		_DefineHookHdlr(TESRenderControlWndProcConditionalFocus, 0x0044D718);
+		_DefineHookHdlr(BSTexturePaletteReleaseTexturesStrncpy, 0x004BD6B9);
 
+		char* __cdecl strncpy_hook(char* Dest, const char* Source, size_t Count);
 
 		void PatchRendererHooks(void)
 		{
@@ -145,6 +147,7 @@ namespace cse
 			_MemHdlr(ShadowSceneNodeUseFullBrightLight).WriteJump();
 			_MemHdlr(UpdateUsageInfoForTempRefs).WriteJump();
 			_MemHdlr(TESRenderControlWndProcConditionalFocus).WriteJump();
+			_MemHdlr(BSTexturePaletteReleaseTexturesStrncpy).WriteJump();
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -182,6 +185,13 @@ namespace cse
 				SME::MemoryHandler::SafeWrite32(0x00933DC0, reinterpret_cast<UInt32>(&TESPreviewControlResetCameraDetour));
 				SME::MemoryHandler::WriteRelCall(0x0044C77E, reinterpret_cast<UInt32>(&TESPreviewControlRotateCameraDetour));
 			}
+
+			SME::MemoryHandler::WriteRelCall(0x004BD6CD, reinterpret_cast<UInt32>(&strncpy_hook));
+		}
+
+		char* __cdecl strncpy_hook(char* Dest, const char* Source, size_t Count) {
+			BGSEECONSOLE_MESSAGE("strncpy:\n\tSource: %s\n\tDest: %s\n\tCount: %08X", Source, Dest, Count);
+			return ::strncpy(Dest, Source, Count);
 		}
 
 		void __stdcall RenderWindowReferenceSelectionDetour( TESObjectREFR* Ref, bool ShowSelectionBox )
@@ -1761,6 +1771,28 @@ namespace cse
 				push	esi
 				call	DoTESRenderControlWndProcConditionalFocusHook
 				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		#define _hhName		BSTexturePaletteReleaseTexturesStrncpy
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x004BD6BE);
+			_hhSetVar(Jump, 0x004BD761);
+			__asm
+			{
+				// Beth-Big-Brain moment of using an unsafe memcpy function,
+				// using pointer arithmetic and interpreting the result as an integer
+
+				add		esp, 0x8
+				test	esi, esi
+				jz		SKIP
+
+				sub		esi, ebx
+				jmp		_hhGetVar(Retn)
+
+			SKIP:
+				jmp		_hhGetVar(Jump)
 			}
 		}
 	}
