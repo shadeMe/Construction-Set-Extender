@@ -1299,6 +1299,8 @@ namespace cse
 				return;
 			else if (RenderWindowFlyCamera::Instance.IsActive())
 				return;
+			else if (!TESRenderWindow::IsAnyCellLoaded())
+				return;
 			else if (PauseRendering)
 				return;
 
@@ -1311,6 +1313,8 @@ namespace cse
 			if (!Initialized)
 				return;
 			else if (RenderWindowFlyCamera::Instance.IsActive())
+				return;
+			else if (!TESRenderWindow::IsAnyCellLoaded())
 				return;
 			else if (PauseRendering)
 				return;

@@ -655,10 +655,36 @@ namespace cse
 
 							if (GetMenuItemInfo(Popup, i, TRUE, &CurrentItem) == TRUE)
 							{
-								bool UpdateItem = true;
 								bool CheckItem = false;
 								bool DisableItem = false;
 								char NewItemText[0x200] = { 0 };
+
+								switch (CurrentItem.wID)
+								{
+								case IDC_RENDERWINDOWCONTEXT_GROUP:
+								case IDC_RENDERWINDOWCONTEXT_UNGROUP:
+								case IDC_RENDERWINDOWCONTEXT_FREEZE:
+								case IDC_RENDERWINDOWCONTEXT_THAW:
+								case IDC_RENDERWINDOWCONTEXT_THAWALLINCELL :
+								case IDC_RENDERWINDOWCONTEXT_TOGGLEVISIBILITY:
+								case IDC_RENDERWINDOWCONTEXT_TOGGLECHILDRENVISIBILITY:
+								case IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL:
+								case IDC_RENDERWINDOWCONTEXT_INVERTSELECTION:
+								case IDC_RENDERWINDOWCONTEXT_FREEZEINACTIVE:
+								case IDC_RENDERWINDOWCONTEXT_UNLOADCURRENTCELLS:
+								case IDC_RENDERWINDOWCONTEXT_COPYTOGLOBALCLIPBOARD:
+								case IDC_RENDERWINDOWCONTEXT_PASTEFROMGLOBALCLIPBOARD:
+								case IDC_RENDERWINDOWCONTEXT_OSD_REFERENCEEDITOR:
+								case IDC_RENDERWINDOWCONTEXT_RENDERWINDOWHOTKEYS:
+								case IDC_RENDERWINDOWCONTEXT_OSD_EDITCOLORTHEME:
+								case IDC_RENDERWINDOWCONTEXT_SPAWNRULERMEASURE:
+								case IDC_RENDERWINDOWCONTEXT_SPAWNCIRCLEMEASURE:
+									DisableItem = TESRenderWindow::IsAnyCellLoaded() == false;
+									break;
+								case IDC_RENDERWINDOWCONTEXT_SAVEEXTERIORSNAPSHOT:
+									DisableItem = *TESRenderWindow::ActiveCell == nullptr || _TES->currentInteriorCell;
+									break;
+								}
 
 								switch (CurrentItem.wID)
 								{
@@ -685,9 +711,7 @@ namespace cse
 								case IDC_RENDERWINDOWCONTEXT_SAVEEXTERIORSNAPSHOT:
 									FORMAT_STR(NewItemText, "Save Current Exterior Cell Snapshot");
 
-									if (*TESRenderWindow::ActiveCell == nullptr || _TES->currentInteriorCell)
-										DisableItem = true;
-									else
+									if (*TESRenderWindow::ActiveCell && _TES->currentInteriorCell == nullptr)
 									{
 										FORMAT_STR(NewItemText, "Save Exterior Cell %i,%i Snapshot",
 											(*TESRenderWindow::ActiveCell)->cellData.coords->x, (*TESRenderWindow::ActiveCell)->cellData.coords->y);
@@ -719,47 +743,41 @@ namespace cse
 										CheckItem = true;
 
 									break;
-								default:
-									UpdateItem = false;
-									break;
 								}
 
-								if (UpdateItem)
+								if (CheckItem)
 								{
-									if (CheckItem)
-									{
-										CurrentItem.fState &= ~MFS_UNCHECKED;
-										CurrentItem.fState |= MFS_CHECKED;
-									}
-									else
-									{
-										CurrentItem.fState &= ~MFS_CHECKED;
-										CurrentItem.fState |= MFS_UNCHECKED;
-									}
-
-									if (DisableItem)
-									{
-										CurrentItem.fState &= ~MFS_ENABLED;
-										CurrentItem.fState |= MFS_DISABLED;
-									}
-									else
-									{
-										CurrentItem.fState &= ~MFS_DISABLED;
-										CurrentItem.fState |= MFS_ENABLED;
-									}
-
-									CurrentItem.fMask = MIIM_STATE;
-
-									if (NewItemText[0] != 0)
-									{
-										CurrentItem.fMask |= MIIM_STRING;
-										CurrentItem.fType |= MFT_STRING;
-										CurrentItem.dwTypeData = NewItemText;
-										CurrentItem.cch = strlen(NewItemText);
-									}
-
-									SetMenuItemInfo(Popup, i, TRUE, &CurrentItem);
+									CurrentItem.fState &= ~MFS_UNCHECKED;
+									CurrentItem.fState |= MFS_CHECKED;
 								}
+								else
+								{
+									CurrentItem.fState &= ~MFS_CHECKED;
+									CurrentItem.fState |= MFS_UNCHECKED;
+								}
+
+								if (DisableItem)
+								{
+									CurrentItem.fState &= ~MFS_ENABLED;
+									CurrentItem.fState |= MFS_DISABLED;
+								}
+								else
+								{
+									CurrentItem.fState &= ~MFS_DISABLED;
+									CurrentItem.fState |= MFS_ENABLED;
+								}
+
+								CurrentItem.fMask = MIIM_STATE;
+
+								if (NewItemText[0] != 0)
+								{
+									CurrentItem.fMask |= MIIM_STRING;
+									CurrentItem.fType |= MFT_STRING;
+									CurrentItem.dwTypeData = NewItemText;
+									CurrentItem.cch = strlen(NewItemText);
+								}
+
+								SetMenuItemInfo(Popup, i, TRUE, &CurrentItem);
 							}
 						}
 					}
@@ -933,9 +951,7 @@ namespace cse
 					break;
 				case IDC_RENDERWINDOWCONTEXT_RENDERWINDOWHOTKEYS:
 					SubclassParams->Out.MarkMessageAsHandled = true;
-
-					if (*TESRenderWindow::ActiveCell)
-						Instance.KeyboardInputManager->ShowHotKeyEditor();
+					Instance.KeyboardInputManager->ShowHotKeyEditor();
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_UNRESTRICTEDMOUSEMOVEMENT:

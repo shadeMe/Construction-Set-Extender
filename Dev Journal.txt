@@ -39,6 +39,8 @@ CSE		---->
 
 
 	ENHANCEMENT		=
+		> Paste-in-place for Global paste
+			> No, it just pastes them a certain distance in front of the camera, as a standard copy/paste would do. You actually wouldn't want it to do a global paste in place most of the time, it's something which needs to happen only when specified, as with the local paste in place.
 		> Render window shortcut to toggle rotation/scaling in world/modelspace.
 			> Add an indicator to the OSD's info overlay
 		> Reimplement the hide active/deleted forms tool
