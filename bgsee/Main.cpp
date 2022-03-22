@@ -154,6 +154,60 @@ namespace bgsee
 		return Crashing;
 	}
 
+	void Daemon::GenerateCrashReportAndTerminate(CrashType Type, _EXCEPTION_POINTERS* ExceptionPointer)
+	{
+		if (Crashing)
+			return;
+
+		switch (Type)
+		{
+		case CrashType::SEH_EXCEPTION:
+		case CrashType::CPP_TERMINATE_CALL:
+		case CrashType::CPP_UNEXPECTED_CALL:
+		case CrashType::CPP_PURE_CALL:
+		case CrashType::CPP_NEW_OPERATOR_ERROR:
+		case CrashType::CPP_SECURITY_ERROR:
+		case CrashType::CPP_INVALID_PARAMETER:
+		case CrashType::CPP_SIGABRT:
+		case CrashType::CPP_SIGFPE:
+		case CrashType::CPP_SIGILL:
+		case CrashType::CPP_SIGINT:
+		case CrashType::CPP_SIGSEGV:
+		case CrashType::CPP_SIGTERM:
+			break;
+		default:
+			SME_ASSERT(!"Unexpected external crash type");
+			return;
+		}
+
+
+		CR_EXCEPTION_INFO ExceptionInfo;
+		memset(&ExceptionInfo, 0, sizeof(CR_EXCEPTION_INFO));
+		ExceptionInfo.cb = sizeof(CR_EXCEPTION_INFO);
+		ExceptionInfo.exctype = static_cast<int>(Type);
+		ExceptionInfo.pexcptrs = ExceptionPointer;
+		ExceptionInfo.bManual = true;
+
+		if (crGenerateErrorReport(&ExceptionInfo) != 0)
+		{
+			TCHAR szErrorMsg[256];
+			crGetLastErrorMsg(szErrorMsg, 256);
+
+			BGSEECONSOLE_MESSAGE("Failed to generate crash report for external crash! Error: %s", szErrorMsg);
+			return;
+		}
+
+		if (ExceptionInfo.hSenderProcess != INVALID_HANDLE_VALUE)
+		{
+			WaitForSingleObject(ExceptionInfo.hSenderProcess, 10 * 1000);
+		}
+
+		BGSEECONSOLE_MESSAGE("Generated crash report for external crash and terminated process for crash type %d", Type);
+
+		// Manually terminate program
+		ExitProcess(0);
+	}
+
 	const char*		Main::INIManager::kSectionPrefix = "BGSEE::";
 
 	INIManagerSetterFunctor::INIManagerSetterFunctor( SME::INI::INIManager* Parent ) :
@@ -605,6 +659,12 @@ namespace bgsee
 		ExitProcess(0);
 	}
 
+	LONG Main::LastChanceVectoredExceptionHandler(_EXCEPTION_POINTERS* ExceptionInfo)
+	{
+		BGSEEDAEMON->GenerateCrashReportAndTerminate(Daemon::CrashType::SEH_EXCEPTION, ExceptionInfo);
+		return EXCEPTION_CONTINUE_SEARCH;
+	}
+
 	Main::Main(InitializationParams& Params)
 	{
 		SME_ASSERT(Singleton == nullptr);
@@ -697,7 +757,7 @@ namespace bgsee
 														 MiniDumpWithFullMemoryInfo);
 			CrashRptData.pszErrorReportSaveDir = CrashReportDirPath.c_str();
 
-			if (crInstall(&CrashRptData) || crSetCrashCallback(Main::CrashCallback, this))
+			if (crInstall(&CrashRptData) || crSetCrashCallback(Main::CrashRptCrashCallback, this))
 			{
 				TCHAR Buffer[0x200] = { 0 };
 				crGetLastErrorMsg(Buffer, sizeof(Buffer));
@@ -725,6 +785,12 @@ namespace bgsee
 						   nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
 				crAddScreenshot2(CR_AS_PROCESS_WINDOWS, 0);
+			}
+
+			if (AddVectoredExceptionHandler(NULL, reinterpret_cast<PVECTORED_EXCEPTION_HANDLER>(&Main::LastChanceVectoredExceptionHandler)) == NULL)
+			{
+				BGSEECONSOLE_ERROR("Failed to register vectored exception handler");
+				Initialized = false;
 			}
 		}
 	}
@@ -837,7 +903,7 @@ namespace bgsee
 		return ParentEditorSupportedVersion;
 	}
 
-	int CALLBACK Main::CrashCallback(CR_CRASH_CALLBACK_INFO* pInfo)
+	int CALLBACK Main::CrashRptCrashCallback(CR_CRASH_CALLBACK_INFO* pInfo)
 	{
 		// panic and toss grenades around
 		Main* Instance = (Main*)pInfo->pUserParam;

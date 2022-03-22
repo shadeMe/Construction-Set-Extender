@@ -33,6 +33,23 @@ namespace bgsee
 
 			kInitCallback__MAX
 		};
+
+		enum class CrashType
+		{
+			SEH_EXCEPTION = CR_SEH_EXCEPTION,
+			CPP_TERMINATE_CALL = CR_CPP_TERMINATE_CALL,
+			CPP_UNEXPECTED_CALL = CR_CPP_UNEXPECTED_CALL,
+			CPP_PURE_CALL = CR_CPP_PURE_CALL,
+			CPP_NEW_OPERATOR_ERROR = CR_CPP_NEW_OPERATOR_ERROR,
+			CPP_SECURITY_ERROR = CR_CPP_SECURITY_ERROR,
+			CPP_INVALID_PARAMETER = CR_CPP_INVALID_PARAMETER,
+			CPP_SIGABRT = CR_CPP_SIGABRT,
+			CPP_SIGFPE = CR_CPP_SIGFPE,
+			CPP_SIGILL = CR_CPP_SIGILL,
+			CPP_SIGINT = CR_CPP_SIGINT,
+			CPP_SIGSEGV = CR_CPP_SIGSEGV,
+			CPP_SIGTERM = CR_CPP_SIGTERM,
+		};
 	private:
 		static Daemon*				Singleton;
 
@@ -56,7 +73,6 @@ namespace bgsee
 
 		friend class				Main;
 	public:
-
 		void						RegisterInitCallback(UInt8 CallbackType, DaemonCallback* Callback);		// takes ownership of pointer, no parameter
 		void						RegisterDeinitCallback(DaemonCallback* Callback);						// takes ownership of pointer, no parameter
 		void						RegisterCrashCallback(DaemonCallback* Callback);						// takes ownership of pointer, parameter = CR_CRASH_CALLBACK_INFO*
@@ -65,6 +81,7 @@ namespace bgsee
 		bool						GetFullInitComplete(void) const;
 		bool						IsDeinitializing(void) const;
 		bool						IsCrashing(void) const;
+		void						GenerateCrashReportAndTerminate(CrashType Type, _EXCEPTION_POINTERS* ExceptionPointer);
 
 		static void					WaitForDebugger(void);
 
@@ -185,7 +202,8 @@ namespace bgsee
 			virtual bool			Handle(void* Parameter = nullptr);
 		};
 
-		static int CALLBACK			CrashCallback(CR_CRASH_CALLBACK_INFO* pInfo);
+		static int CALLBACK			CrashRptCrashCallback(CR_CRASH_CALLBACK_INFO* pInfo);
+		static LONG					LastChanceVectoredExceptionHandler(_EXCEPTION_POINTERS* ExceptionInfo);
 
 		class DefaultDeinitCallback : public DaemonCallback
 		{
