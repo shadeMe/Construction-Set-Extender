@@ -754,6 +754,8 @@ namespace cse
 			return DlgProcResult;
 		}
 
+#define IDT_RESPONSE_EDITOR_FOCUS			0x6FF
+
 
 		LRESULT CALLBACK ResponseDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 												 bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
@@ -765,6 +767,23 @@ namespace cse
 
 			switch (uMsg)
 			{
+			case WM_TIMER:
+				{
+					switch (wParam)
+					{
+					case IDT_RESPONSE_EDITOR_FOCUS:
+					{
+						SubclassParams->Out.MarkMessageAsHandled = true;
+
+						SetForegroundWindow(hWnd);
+						KillTimer(hWnd, IDT_RESPONSE_EDITOR_FOCUS);
+					}
+
+					break;
+					}
+				}
+
+				break;
 			case WM_DESTROY:
 				settings::general::kFaceGenPreviewVoiceDelay.SetInt(TESDialog::GetDlgItemFloat(hWnd, IDC_CSE_RESPONSEWINDOW_VOICEDELAY));
 
@@ -780,7 +799,8 @@ namespace cse
 					TESDialog::ClampDlgEditField(GetDlgItem(hWnd, IDC_CSE_RESPONSEWINDOW_VOICEDELAY), 0.0, 5000.0, true);
 					TESDialog::SetDlgItemFloat(hWnd, IDC_CSE_RESPONSEWINDOW_VOICEDELAY, settings::general::kFaceGenPreviewVoiceDelay.GetData().i, 0);
 
-					SetForegroundWindow(hWnd);
+					// ### hacky method to prevent the dialog from getting hidden behind other windows after init
+					SetTimer(hWnd, IDT_RESPONSE_EDITOR_FOCUS, 500, NULL);
 				}
 
 				break;

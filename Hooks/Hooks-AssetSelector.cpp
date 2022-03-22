@@ -208,6 +208,29 @@ namespace cse
 			return e_FetchPath;
 		}
 
+		void GetRelativeAssetPathFromDialog(UInt32 Filter, int ID, HWND Dialog, char* OutBuffer, UInt32 BufferSize)
+		{
+			GetDlgItemText(Dialog, ID, OutBuffer, BufferSize);
+
+			switch (Filter)
+			{
+			case e_KF:
+				// Idle anims need some preprocessing as the path displayed in the dialog
+				// contains a substring of the parent directory, which needs to be stripped
+				std::string STLBuffer(OutBuffer);
+				SME::StringHelpers::MakeLower(STLBuffer);
+				int Offset = STLBuffer.find("idleanims\\");
+				if (Offset != -1)
+				{
+					STLBuffer = STLBuffer.substr(Offset + 9);
+					_snprintf_s(OutBuffer, BufferSize, _TRUNCATE, "%s", STLBuffer.c_str());
+				}
+
+				break;
+			}
+		}
+
+
 		UInt32 InitPathEditor(UInt32 Filter, int ID, const char* ExistingPath, HWND Parent, const char* SaveDir)
 		{
 			uiManager::InitDialogMessageParamT<UInt32> PathEditorParam = { {0}, 0 };
@@ -215,7 +238,7 @@ namespace cse
 			if (!ExistingPath)
 			{
 				char Buffer[0x200];
-				GetDlgItemText(Parent, ID, Buffer, sizeof(Buffer));
+				GetRelativeAssetPathFromDialog(Filter, ID, Parent, Buffer, sizeof(Buffer));
 				FORMAT_STR(PathEditorParam.Buffer, "%s%s", SaveDir, Buffer);
 			}
 			else
@@ -251,21 +274,7 @@ namespace cse
 		{
 			char FullPathBuffer[MAX_PATH] = {0}, RelativePathBuffer[MAX_PATH] = {0};
 
-			GetDlgItemText(Dialog, PathID, RelativePathBuffer, sizeof(RelativePathBuffer));
-			switch (Filter)
-			{
-			case e_KF:
-				std::string STLBuffer(RelativePathBuffer);
-				SME::StringHelpers::MakeLower(STLBuffer);
-				int Offset = STLBuffer.find("idleanims\\");
-				if (Offset != -1)
-				{
-					STLBuffer = STLBuffer.substr(Offset + 9);
-					FORMAT_STR(RelativePathBuffer, "%s", STLBuffer.c_str());
-				}
-
-				break;
-			}
+			GetRelativeAssetPathFromDialog(Filter, PathID, Dialog, RelativePathBuffer, sizeof(RelativePathBuffer));
 			FORMAT_STR(FullPathBuffer, "%s%s", DefaultLookupDir, RelativePathBuffer);
 
 			if (GetFileAttributes(FullPathBuffer) != INVALID_FILE_ATTRIBUTES)
@@ -313,21 +322,7 @@ namespace cse
 		{
 			char FullPathBuffer[MAX_PATH] = {0}, RelativePathBuffer[MAX_PATH] = {0};
 
-			GetDlgItemText(Dialog, PathID, RelativePathBuffer, sizeof(RelativePathBuffer));
-			switch (Filter)
-			{
-			case e_KF:
-				std::string STLBuffer(RelativePathBuffer);
-				SME::StringHelpers::MakeLower(STLBuffer);
-				int Offset = STLBuffer.find("idleanims\\");
-				if (Offset != -1)
-				{
-					STLBuffer = STLBuffer.substr(Offset + 9);
-					FORMAT_STR(RelativePathBuffer, "%s", STLBuffer.c_str());
-				}
-
-				break;
-			}
+			GetRelativeAssetPathFromDialog(Filter, PathID, Dialog, RelativePathBuffer, sizeof(RelativePathBuffer));
 			FORMAT_STR(FullPathBuffer, "%s%s", DefaultLookupDir, RelativePathBuffer);
 
 			bool FileFound = false;

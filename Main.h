@@ -39,6 +39,11 @@ namespace cse
 
 	class InitCallbackPostMainWindowInit : public bgsee::DaemonCallback
 	{
+		static int __CRTDECL CrtNewHandler(size_t);
+		static void __CRTDECL CrtPureCallHandler(void);
+		static void __CRTDECL  CrtInvalidParameterHandler(const wchar_t* expression, const wchar_t* function, const wchar_t* file, unsigned int line, uintptr_t pReserved);
+
+		void RegisterCrtExceptionHandlers();
 	public:
 		virtual ~InitCallbackPostMainWindowInit();
 
@@ -64,12 +69,6 @@ namespace cse
 	class CrashCallback : public bgsee::DaemonCallback
 	{
 		bool				HandlerCalled;		// to prevent the handler from being called multiple times (which might happen in case of catastrophic failures)
-		enum
-		{
-			kCrashHandlerMode_Terminate = 0,
-			kCrashHandlerMode_Resume,
-			kCrashHandlerMode_Ask,
-		};
 	public:
 		CrashCallback();
 		virtual ~CrashCallback();

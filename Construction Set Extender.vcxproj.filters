@@ -402,6 +402,9 @@
     <ClCompile Include="IMGUI\imgui_tables.cpp">
       <Filter>Components\IMGUI</Filter>
     </ClCompile>
+    <ClCompile Include="EditorAPI\Crt.cpp">
+      <Filter>EditorAPI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -940,6 +943,9 @@
     </ClInclude>
     <ClInclude Include="Render Window\ReferenceEditorOSDLayer.h">
       <Filter>Components\Render Window\OSD Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\Crt.h">
+      <Filter>EditorAPI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

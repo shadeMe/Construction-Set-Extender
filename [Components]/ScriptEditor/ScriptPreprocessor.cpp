@@ -1113,7 +1113,7 @@ bool Preprocessor::PreprocessScript(String^ Source, String^% Result, StandardOut
 	bool OperationResult = false;
 
 	if (Busy)
-		ErrorOutput(0, "Preprocessing failed - A previous operation is in progress");
+		ErrorOutput(1, "Preprocessing failed - A previous operation is in progress");
 	else
 	{
 		DataBuffer = Data;
@@ -1129,7 +1129,7 @@ bool Preprocessor::PreprocessScript(String^ Source, String^% Result, StandardOut
 			OperationResult = Preprocess(SourceBuffer, ResultBuffer, ErrorOutput);
 			if (!OperationResult)
 			{
-				ErrorOutput(0, "Preprocessing failed in pass " + i.ToString());
+				ErrorOutput(1, "Preprocessing failed in pass " + i.ToString());
 				break;
 			}
 
@@ -1170,13 +1170,13 @@ void Preprocessor::ProcessStandardDirectives(String^ Path, StandardOutputError^ 
 				}
 				catch (Exception^ E)
 				{
-					ErrorOutput(0, "Couldn't read from standard preprocessor directives file '" + Itr->Name + "'!\n\tException: " + E->Message);
+					ErrorOutput(1, "Couldn't read from standard preprocessor directives file '" + Itr->Name + "'!\n\tException: " + E->Message);
 				}
 			}
 		}
 	}
 	else
-		ErrorOutput(0, "Standard preprocessor directives folder not found!");
+		ErrorOutput(1, "Standard preprocessor directives folder not found!");
 }
 
 bool Preprocessor::GetImportFilePath( String^ Source, String^% Result, PreprocessorParams^ Data )

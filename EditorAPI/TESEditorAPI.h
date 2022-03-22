@@ -90,3 +90,6 @@
 // NiAPI
 #include "obse\NiGeometry.h"
 #include "obse\NiRenderer.h"
+
+// Misc
+#include "Crt.h"

@@ -470,6 +470,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="Achievements.cpp" />
     <ClCompile Include="Console.cpp" />
     <ClCompile Include="CustomDialogProcs.cpp" />
+    <ClCompile Include="EditorAPI\Crt.cpp" />
     <ClCompile Include="EditorAPI\TESLandTexture.cpp" />
     <ClCompile Include="EventSinks.cpp" />
     <ClCompile Include="EventSources.cpp" />
@@ -600,6 +601,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="Achievements.h" />
     <ClInclude Include="Console.h" />
     <ClInclude Include="CustomDialogProcs.h" />
+    <ClInclude Include="EditorAPI\Crt.h" />
     <ClInclude Include="EditorAPI\TESLevSpell.h" />
     <ClInclude Include="EventSinks.h" />
     <ClInclude Include="EventSources.h" />

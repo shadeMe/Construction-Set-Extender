@@ -503,7 +503,8 @@ namespace cse
 		if (PreviewGround)
 			PreviewGround->DeleteInstance();
 
-		DialogExtraList->Dtor();
+		if (DialogExtraList)
+			DialogExtraList->Dtor();
 	}
 
 	PreviewWindowImposterManager::CacheOperator::CacheOperator(HWND Imposter) :

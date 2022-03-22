@@ -154,6 +154,30 @@ namespace cse
 		return true;
 	}
 
+	int InitCallbackPostMainWindowInit::CrtNewHandler(size_t)
+	{
+		BGSEEDAEMON->GenerateCrashReportAndTerminate(bgsee::Daemon::CrashType::CPP_NEW_OPERATOR_ERROR, nullptr);
+		return 0;
+	}
+
+	void InitCallbackPostMainWindowInit::CrtPureCallHandler(void)
+	{
+		BGSEEDAEMON->GenerateCrashReportAndTerminate(bgsee::Daemon::CrashType::CPP_PURE_CALL, nullptr);
+	}
+
+	void InitCallbackPostMainWindowInit::CrtInvalidParameterHandler(const wchar_t* expression, const wchar_t* function, const wchar_t* file, unsigned int line, uintptr_t pReserved)
+	{
+		BGSEECONSOLE_MESSAGE("EditorCrt Invalid Parameter Error!");
+		BGSEEDAEMON->GenerateCrashReportAndTerminate(bgsee::Daemon::CrashType::CPP_INVALID_PARAMETER, nullptr);
+	}
+
+	void InitCallbackPostMainWindowInit::RegisterCrtExceptionHandlers()
+	{
+		Crt::SetNewHandler(reinterpret_cast<_PNH>(&InitCallbackPostMainWindowInit::CrtNewHandler));
+		Crt::SetPureCallHandler(reinterpret_cast<_purecall_handler>(&InitCallbackPostMainWindowInit::CrtPureCallHandler));
+		Crt::SetInvalidParameterHandler(reinterpret_cast<_invalid_parameter_handler>(&InitCallbackPostMainWindowInit::CrtInvalidParameterHandler));
+	}
+
 	InitCallbackPostMainWindowInit::~InitCallbackPostMainWindowInit()
 	{
 		;//
@@ -181,6 +205,10 @@ namespace cse
 			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_FindText, RegularAppWindow);
 			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_SearchReplace, RegularAppWindow);
 		}
+
+
+		BGSEECONSOLE_MESSAGE("Registering Editor CRT Exception Handlers");
+		RegisterCrtExceptionHandlers();
 
 		return true;
 	}
@@ -478,28 +506,14 @@ namespace cse
 		if (PanicSaved)
 			CrashMessage += "Unsaved changes were saved to the panic save file in the Data\\Backup folder.\n\n";
 
-		int CrashHandlerMode = settings::general::kCrashHandlerMode.GetData().i;
-		if (CrashHandlerMode == kCrashHandlerMode_Terminate)
-			ResumeExecution = false;
-		else if (CrashHandlerMode == kCrashHandlerMode_Resume)
-			ResumeExecution = true;
-		else if (CrashHandlerMode == kCrashHandlerMode_Ask)
+		bool FunnyGuyUnlocked = BGSEEDAEMON->GetFullInitComplete() &&
+			(achievements::kFunnyGuy->GetUnlocked() || achievements::kFunnyGuy->GetTriggered());
+
+		if (!FunnyGuyUnlocked)
 		{
-			bool FunnyGuyUnlocked = BGSEEDAEMON->GetFullInitComplete() &&
-				(achievements::kFunnyGuy->GetUnlocked() || achievements::kFunnyGuy->GetTriggered());
-
 			MBFlags &= ~MB_OK;
-
-			if (FunnyGuyUnlocked == false)
-			{
-				MBFlags |= MB_YESNOCANCEL;
-				CrashMessage += "Do you wish to resume execution once you've:\n   1. Prayed to your various deities\n   2. Sent the shadeMe a pile of cash, and\n   3. Pleaded to the editor in a soft, sultry voice in hopes of preventing it from crashing outright upon selecting 'Yes' in this dialog?";
-			}
-			else
-			{
-				MBFlags |= MB_YESNO;
-				CrashMessage += "Do you wish to resume execution? The editor will probably terminate anyway.";
-			}
+			MBFlags |= MB_YESNOCANCEL;
+			CrashMessage += "Do you wish to resume execution once you've:\n   1. Prayed to your various deities\n   2. Sent the shadeMe a pile of cash, and\n   3. Pleaded to the editor in a soft, sultry voice in hopes of preventing it from crashing outright upon selecting 'Yes' in this dialog?";
 		}
 
 		switch (MessageBox(nullptr, CrashMessage.c_str(), BGSEEMAIN->ExtenderGetDisplayName(), MBFlags))
