@@ -659,12 +659,6 @@ namespace bgsee
 		ExitProcess(0);
 	}
 
-	LONG Main::LastChanceVectoredExceptionHandler(_EXCEPTION_POINTERS* ExceptionInfo)
-	{
-		BGSEEDAEMON->GenerateCrashReportAndTerminate(Daemon::CrashType::SEH_EXCEPTION, ExceptionInfo);
-		return EXCEPTION_CONTINUE_SEARCH;
-	}
-
 	Main::Main(InitializationParams& Params)
 	{
 		SME_ASSERT(Singleton == nullptr);
@@ -785,12 +779,6 @@ namespace bgsee
 						   nullptr, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
 
 				crAddScreenshot2(CR_AS_PROCESS_WINDOWS, 0);
-			}
-
-			if (AddVectoredExceptionHandler(NULL, reinterpret_cast<PVECTORED_EXCEPTION_HANDLER>(&Main::LastChanceVectoredExceptionHandler)) == NULL)
-			{
-				BGSEECONSOLE_ERROR("Failed to register vectored exception handler");
-				Initialized = false;
 			}
 		}
 	}

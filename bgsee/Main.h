@@ -203,7 +203,6 @@ namespace bgsee
 		};
 
 		static int CALLBACK			CrashRptCrashCallback(CR_CRASH_CALLBACK_INFO* pInfo);
-		static LONG					LastChanceVectoredExceptionHandler(_EXCEPTION_POINTERS* ExceptionInfo);
 
 		class DefaultDeinitCallback : public DaemonCallback
 		{
