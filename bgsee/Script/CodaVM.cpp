@@ -457,17 +457,16 @@ namespace bgsee
 				throw CodaScriptException("No active scripts");
 
 			VM->GetMessageHandler()->Log("Stacktrace:");
-			for (int i(ExecutingContexts.size() - 1); i >= 0; ++i)
+			for (auto Itr(ExecutingContexts.rbegin()); Itr != ExecutingContexts.rend(); ++Itr)
 			{
-				auto& Itr(ExecutingContexts.at(i));
-				ICodaScriptProgram* Program = Itr.ProgramContext->GetProgram();
-				ICodaScriptExecutableCode* Code = Itr.ExecutionAgent.GetCurrentCode();
+				ICodaScriptProgram* Program = Itr->ProgramContext->GetProgram();
+				ICodaScriptExecutableCode* Code = Itr->ExecutionAgent.GetCurrentCode();
 				SME_ASSERT(Code);
 
 				char Buffer[0x100] = {0};
 				FORMAT_STR(Buffer, "\tat Script %s#%d Line %d [%s]: %s",
 						   Program->GetName().c_str(),
-						   Itr.InstanceCounter,
+						   Itr->InstanceCounter,
 						   Code->GetLine(),
 						   Code->GetTypeString(),
 						   Code->GetSourceCode().c_str());
