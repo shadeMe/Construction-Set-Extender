@@ -91,7 +91,7 @@ public:
 	/*2C8*/ TESTexture					upperTeethTexture;
 	/*2E0*/ TESTexture					toungeTexture;
 	/*2F8*/ TESTexture					texture2F8;				// path is null, dlgIDs initialized to 1044 and 1058 resp. (neither is found in the class's subwindows)
-	/*310*/ TESTexture					texture310;				// same as above, vestigial texture cmpts for eyes (TESEye was probably introduced later) 
+	/*310*/ TESTexture					texture310;				// same as above, vestigial texture cmpts for eyes (TESEye was probably introduced later)
 	/*328*/ TESTexture					maleUpperBodyTexture;
 	/*340*/ TESTexture					maleLowerBodyTexture;
 	/*358*/ TESTexture					maleHandTexture;

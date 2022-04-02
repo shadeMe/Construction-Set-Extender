@@ -1098,15 +1098,33 @@ namespace cse
 				}
 
 				break;
-			case WM_SIZING:
+			case WM_WINDOWPOSCHANGING:
 				{
-					if (TESPreviewControl::ActivePreviewControls->Count())
+					if (TESPreviewControl::ActivePreviewControls->Count() > 0)
 					{
-						BGSEEUI->MsgBoxW(hWnd, 0, "Please close any dialogs with preview controls before attempting to resize the render window.");
-						SubclassParams->Out.MarkMessageAsHandled = true;
-					}
-				}
+						// Prevent the user from resizing the render window when an preview control is active.
+						// Otherwise, this inevitably leads to memory corruption in the render (use-after-frees galore w.r.t off-screen buffers when recreating the renderer context).
+						auto WindowPosData = reinterpret_cast<WINDOWPOS*>(lParam);
+						if (WindowPosData->cx != 0 && WindowPosData->cy != 0)
+						{
+							RECT CurrentWindowRect;
+							GetWindowRect(hWnd, &CurrentWindowRect);
 
+							auto CurrentWidth = CurrentWindowRect.right - CurrentWindowRect.left;
+							auto CurrentHeight = CurrentWindowRect.bottom - CurrentWindowRect.top;
+
+							if (WindowPosData->cx != CurrentWidth || WindowPosData->cy != CurrentHeight)
+							{
+								WindowPosData->flags |= SWP_NOSIZE;
+								DlgProcResult = FALSE;
+
+								BGSEEUI->MsgBoxW(hWnd, 0, "Please close any dialogs with preview controls before attempting to resize the render window.");
+								SubclassParams->Out.MarkMessageAsHandled = true;
+							}
+						}
+					}
+
+				}
 				break;
 			}
 
