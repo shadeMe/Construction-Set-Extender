@@ -738,16 +738,17 @@ namespace cse
 						return false;
 				});
 
-				if (_TES->currentInteriorCell)
-				{
-					NotificationOSDLayer::Instance.ShowNotification("This tool can only be used in an exterior worldspace");
-				}
-				else
+				if (TESRenderWindow::IsAnyCellLoaded() && !(*TESRenderWindow::ActiveCell)->IsInterior())
 				{
 					ModalWindowProviderOSDLayer::Instance.ShowModal("Jump to Exterior Cell",
 																	RenderModalJumpToCell,
 																	nullptr,
 																	ImGuiWindowFlags_AlwaysAutoResize);
+				}
+				else
+				{
+					NotificationOSDLayer::Instance.ShowNotification("This tool can only be used in an exterior worldspace");
+
 				}
 			});
 

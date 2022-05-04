@@ -2568,7 +2568,7 @@ namespace cse
 					// so we tuck in our tail and create replacement templates for all TESFormIDListView forms
 					// PS: Dammit!
 
-					SME_ASSERT(FilterEditBox);
+					DEBUG_ASSERT(FilterEditBox);
 
 					uiManager::FilterableFormListManager::InitParams Params;
 					Params.ParentWindow = hWnd;

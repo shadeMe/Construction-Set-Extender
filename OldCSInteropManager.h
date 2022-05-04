@@ -29,7 +29,6 @@ namespace cse
 		~OldCSInteropManager();
 
 		bool	GenerateLIPSyncFile(const char* InputPath, const char* ResponseText);
-		bool	IsAvailable() const;
 
 		static	OldCSInteropManager		Instance;
 	};

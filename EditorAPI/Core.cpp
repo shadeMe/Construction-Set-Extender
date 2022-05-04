@@ -457,7 +457,7 @@ void TESLODTextureGenerator::SaveExteriorSnapshot( TESObjectCELL* Exterior, UInt
 	SInt32 YCoord = Exterior->cellData.coords->y;
 
 	// load the cell into the render window first
-	Vector3 Coords((XCoord << 12) + 2048.0, (YCoord << 12) + 2048.0, 0);
+	Vector3 Coords(XCoord * 4096 + 2048.0, YCoord * 4096 + 2048.0, 0);
 	_TES->LoadCellIntoViewPort(&Coords, nullptr);
 
 	if (Resolution > 6144)

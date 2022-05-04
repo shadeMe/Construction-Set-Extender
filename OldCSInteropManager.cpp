@@ -342,12 +342,5 @@ namespace cse
 
 		return Result;
 	}
-
-	bool OldCSInteropManager::IsAvailable() const
-	{
-		return State == LoadState::Loaded;
-	}
-
-
 }
 

@@ -685,11 +685,11 @@ namespace cse
 					break;
 				case IDC_CSE_CELLVIEW_GOBTN:
 					{
-						char XCoord[4] = { 0 }, YCoord[4] = { 0 };
+						char XCoord[10] = { 0 }, YCoord[10] = { 0 };
 						GetWindowText(XEdit, (LPSTR)XCoord, sizeof(XCoord));
 						GetWindowText(YEdit, (LPSTR)YCoord, sizeof(YCoord));
 
-						if (strlen(XCoord) && strlen(YCoord) && _TES->currentInteriorCell == nullptr)
+						if (strlen(XCoord) && strlen(YCoord) && TESRenderWindow::IsAnyCellLoaded() && !(*TESRenderWindow::ActiveCell)->IsInterior())
 						{
 							auto X = atoi(XCoord), Y = atoi(YCoord);
 							if (X > 32767 || Y > 32767 || X < -32768 || Y < -32768)
@@ -697,8 +697,7 @@ namespace cse
 								BGSEEUI->MsgBoxE(hWnd, MB_OK, "Cell coordinates are out-of-bounds!");
 								break;
 							}
-
-							Vector3 Coords((X << 12) + 2048.0, (Y << 12) + 2048.0, 0);
+							Vector3 Coords(X * 4096 + 2048.0, Y * 4096 + 2048.0, 0);
 							_TES->LoadCellIntoViewPort(&Coords, nullptr);
 						}
 					}

@@ -413,12 +413,7 @@ namespace cse
 					break;
 				case IDC_MAINMENU_BATCHLIPGENERATOR:
 					{
-						if (CSIOM.IsAvailable() == false)
-						{
-							BGSEEUI->MsgBoxE("The CSInteropManager is not initialized!");
-							break;
-						}
-						else if (*TESQuest::WindowHandle != NULL || *TESQuest::FilteredDialogWindowHandle != NULL)
+						if (*TESQuest::WindowHandle != NULL || *TESQuest::FilteredDialogWindowHandle != NULL)
 						{
 							// will cause a CTD if the tool is executed when either of the above windows are open
 							BGSEEUI->MsgBoxW("Please close any open Quest or Filtered Dialog windows before using this tool.");

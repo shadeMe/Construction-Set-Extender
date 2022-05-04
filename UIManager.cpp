@@ -464,6 +464,9 @@ namespace cse
 
 		bool FilterableFormListManager::Register(InitParams Params)
 		{
+			if (Params.FilterEditBox == NULL)
+				return false;
+
 			if (LookupByFilterEdit(Params.FilterEditBox) == nullptr)
 			{
 				ActiveFilters.emplace_back(new FilterableWindowData(Params));
@@ -475,7 +478,7 @@ namespace cse
 
 		void FilterableFormListManager::Unregister(HWND FilterEdit)
 		{
-			SME_ASSERT(FilterEdit);
+			DEBUG_ASSERT(FilterEdit);
 
 			for (auto Itr = ActiveFilters.begin(); Itr != ActiveFilters.end(); Itr++)
 			{
@@ -490,7 +493,7 @@ namespace cse
 
 		bool FilterableFormListManager::HandleMessages(HWND FilterEdit, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
-			 DEBUG_ASSERT(FilterEdit);
+			//DEBUG_ASSERT(FilterEdit);
 
 			FilterableWindowData* Data = LookupByFilterEdit(FilterEdit);
 			if (Data)

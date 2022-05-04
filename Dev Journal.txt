@@ -17,8 +17,11 @@ NOTE	---->
 CSE		---->
 
 	BUGFIX			=
+		> CSE INI preferences UI bug - exit confirmation message box is not showing up correctly/gets hidden under another window
 		> CrashRpt doesn't handle any bounds-checked CRT funtion failures
 			> https://en.cppreference.com/w/c/error/set_constraint_handler_s
+		> Warn the user when attempting to load plugins with missing masters
+			> Can cause UB/crashes
 		> Selection mask does not work under certain lighting circumstances
 			> Enhanced Econonmy.esp, EECell
 		> Cell use list is broken
