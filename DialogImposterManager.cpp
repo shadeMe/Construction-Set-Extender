@@ -397,9 +397,7 @@ namespace cse
 				break;
 			};
 		case WM_CLOSE:
-			// destroy window
-			DisposeImposter(hWnd);
-
+			DestroyWindow(hWnd);
 			DlgProcResult = TRUE;
 			break;
 		case WM_INITDIALOG:
@@ -469,6 +467,10 @@ namespace cse
 				INISettingCollection::Instance->LookupByName("iPreviewH:General")->value.i = Bounds.bottom - Bounds.top;
 
 				KillTimer(hWnd, 1);
+				SetWindowLongPtr(AnimList, GWL_USERDATA, NULL);
+				*TESPreviewWindow::PreviewControl = nullptr;
+
+				DisposeImposterData(hWnd);
 
 				DlgProcResult = TRUE;
 				break;
@@ -498,10 +500,16 @@ namespace cse
 	PreviewWindowImposterManager::ImposterData::~ImposterData()
 	{
 		if (PreviewRef)
+		{
 			PreviewRef->DeleteInstance();
+			PreviewRef = nullptr;
+		}
 
 		if (PreviewGround)
+		{
 			PreviewGround->DeleteInstance();
+			PreviewGround = nullptr;
+		}
 
 		if (DialogExtraList)
 			DialogExtraList->Dtor();
@@ -539,16 +547,16 @@ namespace cse
 		*TESPreviewWindow::PreviewControl = Renderer;
 	}
 
-	void PreviewWindowImposterManager::DisposeImposter(HWND Imposter)
+	void PreviewWindowImposterManager::DisposeImposterData(HWND Imposter)
 	{
-		if (ImposterRegistry.count(Imposter))
-		{
-			ImposterData* Data = ImposterRegistry[Imposter];
+		auto Match = ImposterRegistry.find(Imposter);
+		SME_ASSERT(Match != ImposterRegistry.end());
 
-			DestroyWindow(Imposter);
-			delete Data;
-			ImposterRegistry.erase(Imposter);
-		}
+		delete Match->second;
+		// Remove the (already freed) extra data list from the dialog
+		SetWindowLongPtr(Match->first, GWL_USERDATA, NULL);
+
+		ImposterRegistry.erase(Match);
 	}
 
 	PreviewWindowImposterManager::ImposterData* PreviewWindowImposterManager::GetImposterData(HWND Imposter) const
@@ -606,13 +614,12 @@ namespace cse
 
 	void PreviewWindowImposterManager::DestroyImposters(void)
 	{
-		for (auto& Itr : ImposterRegistry)
-		{
-			DestroyWindow(Itr.first);
-			delete Itr.second;
-		}
+		auto Buffer(ImposterRegistry);
 
-		ImposterRegistry.clear();
+		for (auto& Itr : Buffer)
+			DestroyWindow(Itr.first);
+
+		SME_ASSERT(ImposterRegistry.empty());
 	}
 
 	bool PreviewWindowImposterManager::IsImposter(HWND hWnd) const
@@ -627,6 +634,12 @@ namespace cse
 
 	void PreviewWindowImposterManager::SetEnabled(bool State)
 	{
+		if (!ImposterRegistry.empty() || *TESPreviewWindow::WindowHandle != NULL)
+		{
+			BGSEEUI->MsgBoxW("Please close all open Preview windows first.");
+			return;
+		}
+
 		Enabled = State;
 	}
 }

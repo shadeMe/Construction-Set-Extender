@@ -82,6 +82,9 @@ SE		---->
 	ENHANCEMENT		=
 		> Tab filter
 		> Filter for IntelliSense items a la VS (icon strip)
+		> Sanitizer improvements
+			> Takes vanilla keywords into account
+			> Casing options (PascalCase, camelCase, ALLCAPS, etc)
 		> Language server impl for external editors
 
 

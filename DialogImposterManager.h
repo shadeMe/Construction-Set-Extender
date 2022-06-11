@@ -109,7 +109,7 @@ namespace cse
 		bgsee::util::ThunkStdCall<PreviewWindowImposterManager, INT_PTR, HWND, UINT, WPARAM, LPARAM> ThunkImposterDlgProc;
 		bool Enabled;
 
-		void										DisposeImposter(HWND Imposter);
+		void										DisposeImposterData(HWND Imposter);
 		ImposterData*								GetImposterData(HWND Imposter) const;
 	public:
 		PreviewWindowImposterManager();
