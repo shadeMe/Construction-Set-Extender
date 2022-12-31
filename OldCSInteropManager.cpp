@@ -241,7 +241,7 @@ namespace cse
 									nullptr,		// default process security
 									nullptr,		// default thread security
 									FALSE,		// don't inherit handles
-									NULL,
+									CREATE_NO_WINDOW,
 									nullptr,		// no new environment
 									nullptr,		// no new cwd
 									&StartupInfo, &ProcInfo) != 0;
