@@ -164,6 +164,7 @@ namespace bgsee
 		};
 
 		static const std::vector<const char*> BlacklistedWindowClasses;
+		static const std::vector<const char*> BlacklistedDialogWindowClasses;
 
 		typedef std::unordered_map<HWND, std::unique_ptr<SubclassedWindowData>> HandleToSubclassDataMapT;
 		typedef std::vector<std::unique_ptr<SubclassedWindowData>> SubclassDataArrayT;

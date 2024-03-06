@@ -285,8 +285,30 @@ namespace bgsee
 
 	const std::vector<const char*> WindowSubclasser::BlacklistedWindowClasses
 	{
+		// Windows Forms-based windows.
 		"WindowsForms",
+		// WPF-based windows.
 		"HwndWrapper"
+	};
+
+	const std::vector<const char*> WindowSubclasser::BlacklistedDialogWindowClasses
+	{
+		// System class for dialog boxes.
+		"#32770",
+		// BGS editor window classes used for certain dialog boxes.
+		"ActivatorClass",
+		"AlchemyClass",
+		"ArmorClass",
+		"CreatureClass",
+		"LockPickClass",
+		"NPCClass",
+		"WeaponClass",
+		"FaceClass",
+		"PlaneClass",
+		"MonitorClass",
+		"ViewerClass",
+		"SpeakerClass",
+		"LandClass",
 	};
 
 	bool IsWindowInAncestorChainBlacklisted(HWND hWnd, const std::vector<const char*>& BlacklistedWindowClassNames)
@@ -330,8 +352,14 @@ namespace bgsee
 
 		// custom dialog boxes are sent the WM_CREATE message before the WM_INITDIALOG message
 		// those messages should not be handled
-		if (strcmp(WindowClassName, "#32770") == 0 && uMsg == WM_CREATE)
-			return true;
+		if (uMsg == WM_CREATE)
+		{
+			for (const auto& DialogWindowClassName : BlacklistedDialogWindowClasses)
+			{
+				if (strcmp(WindowClassName, DialogWindowClassName) == 0)
+					return true;
+			}
+		}
 
 		// skip all non-native windows/dialogs and their children, amongst others that we don't want to hook
 		return IsWindowInAncestorChainBlacklisted(hWnd, BlacklistedWindowClasses);
