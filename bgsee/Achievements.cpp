@@ -91,10 +91,10 @@ namespace bgsee
 			this->AchievementDepot = Achievements;
 
 			HKEY BaseAchievementKey = nullptr, ExtraDataAchievementKey = nullptr;
-			if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+			if (RegCreateKeyEx(HKEY_CURRENT_USER,
 							   RegistryKeyRoot.c_str(),
 							   NULL, nullptr, NULL,
-							   KEY_ALL_ACCESS,
+							   KEY_READ | KEY_WRITE,
 							   nullptr,
 							   &BaseAchievementKey,
 							   nullptr) != ERROR_SUCCESS)
@@ -102,10 +102,10 @@ namespace bgsee
 				BGSEECONSOLE_ERROR("Couldn't create root registry key!");
 			}
 
-			if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+			if (RegCreateKeyEx(HKEY_CURRENT_USER,
 							   RegistryKeyExtraData.c_str(),
 							   NULL, nullptr, NULL,
-							   KEY_ALL_ACCESS,
+							   KEY_READ | KEY_WRITE,
 							   nullptr,
 							   &ExtraDataAchievementKey,
 							   nullptr) != ERROR_SUCCESS)
@@ -185,7 +185,7 @@ namespace bgsee
 		{
 			HKEY AchievementKey = nullptr;
 
-			if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, Key, NULL, KEY_ALL_ACCESS, &AchievementKey) == ERROR_SUCCESS)
+			if (RegOpenKeyEx(HKEY_CURRENT_USER, Key, NULL, KEY_READ, &AchievementKey) == ERROR_SUCCESS)
 			{
 				UInt32 Type = REG_DWORD, Size = sizeof(T);
 				if (Size > Type)
@@ -203,7 +203,7 @@ namespace bgsee
 		{
 			HKEY AchievementKey = nullptr;
 
-			if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, Key, NULL, KEY_ALL_ACCESS, &AchievementKey) == ERROR_SUCCESS)
+			if (RegOpenKeyEx(HKEY_CURRENT_USER, Key, NULL, KEY_WRITE, &AchievementKey) == ERROR_SUCCESS)
 			{
 				UInt32 Size = REG_DWORD;
 				if (sizeof(T) > Size)
