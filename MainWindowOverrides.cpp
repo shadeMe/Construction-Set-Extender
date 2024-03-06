@@ -442,6 +442,16 @@ namespace cse
 						int BatchGenCounter = 0, FailedCounter = 0;
 						bool HasError = false;
 
+						struct LipGenInput
+						{
+							std::string Path;
+							std::string ResponseText;
+
+							LipGenInput(const char* Path, const char* Text)
+								: Path(Path), ResponseText(Text) {}
+						};
+						std::vector<LipGenInput> CandidateInputs;
+
 						for (tList<TESTopic>::Iterator ItrTopic = _DATAHANDLER->topics.Begin(); ItrTopic.End() == false && ItrTopic.Get(); ++ItrTopic)
 						{
 							TESTopic* Topic = ItrTopic.Get();
@@ -501,26 +511,8 @@ namespace cse
 																   (Info->formID & 0xFFFFFF),
 																   ResponseCounter);
 
-														std::string MP3Path(VoiceFilePath); MP3Path += ".mp3";
-														std::string WAVPath(VoiceFilePath); WAVPath += ".wav";
-														std::string LIPPath(VoiceFilePath); LIPPath += ".lip";
-
-														if (ExistingFile.Open(MP3Path.c_str()) ||
-															ExistingFile.Open(WAVPath.c_str()))
-														{
-															if (OverwriteExisting || ExistingFile.Open(LIPPath.c_str()) == false)
-															{
-																if (CSIOM.GenerateLIPSyncFile(VoiceFilePath, Response->responseText.c_str()))
-																	BatchGenCounter++;
-																else
-																{
-																	HasError = true;
-																	FailedCounter++;
-																}
-															}
-														}
+														CandidateInputs.emplace_back(VoiceFilePath, Response->responseText.c_str());														
 													}
-
 													ResponseCounter++;
 												}
 											}
@@ -528,6 +520,35 @@ namespace cse
 									}
 								}
 							}
+						}
+
+
+						char Buffer[0x100];
+						int Processed = 0;
+						for (const auto& Input : CandidateInputs)
+						{
+							FORMAT_STR(Buffer, "Please Wait\nProcessing response %d/%d", Processed, CandidateInputs.size());
+							Static_SetText(GetDlgItem(IdleWindow, -1), Buffer);
+
+							std::string MP3Path(Input.Path); MP3Path += ".mp3";
+							std::string WAVPath(Input.Path); WAVPath += ".wav";
+							std::string LIPPath(Input.Path); LIPPath += ".lip";
+
+							if (ExistingFile.Open(MP3Path.c_str()) ||
+								ExistingFile.Open(WAVPath.c_str()))
+							{
+								if (OverwriteExisting || ExistingFile.Open(LIPPath.c_str()) == false)
+								{
+									if (CSIOM.GenerateLIPSyncFile(Input.Path.c_str(), Input.ResponseText.c_str()))
+										BatchGenCounter++;
+									else
+									{
+										HasError = true;
+										FailedCounter++;
+									}
+								}
+							}
+							++Processed;
 						}
 
 						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_GenerateLIP);

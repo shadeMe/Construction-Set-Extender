@@ -696,28 +696,30 @@ namespace cse
 						BGSEEUI->MsgBoxE(hWnd, 0, "Script syncing is currently in progress. The syncing process must be stopped before (re)loading plugins.");
 						SubclassParams->Out.MarkMessageAsHandled = true;
 					}
-					else if (ActiveTESFile != nullptr && !_stricmp(ActiveTESFile->fileName, "oblivion.esm"))
+					else if (ActiveTESFile != nullptr)
 					{
-						if (BGSEEUI->MsgBoxW(hWnd,
-											 MB_YESNO,
-											 "You have set Oblvion.esm as an active file. Are you absolutely sure this is the end of the world?") == IDNO)
+						if (!_stricmp(ActiveTESFile->fileName, "oblivion.esm"))
 						{
-							SubclassParams->Out.MarkMessageAsHandled = true;
+							if (BGSEEUI->MsgBoxW(hWnd,
+								MB_YESNO,
+								"You have set Oblvion.esm as an active file. Are you absolutely sure this is the end of the world?") == IDNO)
+							{
+								SubclassParams->Out.MarkMessageAsHandled = true;
+							}
+							else if (BGSEEUI->MsgBoxW(hWnd,
+								MB_YESNO,
+								"What you're about to do is tantamount to using the Osterhagen Key.\n\nThis is the Point Of No Return. Proceed?") == IDNO)
+							{
+								SubclassParams->Out.MarkMessageAsHandled = true;
+								BGSEEACHIEVEMENTS->Unlock(achievements::kChicken);
+							}
+							else
+								BGSEEACHIEVEMENTS->Unlock(achievements::kFearless);
 						}
-						else if (BGSEEUI->MsgBoxW(hWnd,
-												  MB_YESNO,
-												  "What you're about to do is tantamount to using the Osterhagen Key.\n\nThis is the Point Of No Return. Proceed?") == IDNO)
-						{
-							SubclassParams->Out.MarkMessageAsHandled = true;
-							BGSEEACHIEVEMENTS->Unlock(achievements::kChicken);
-						}
-						else
-							BGSEEACHIEVEMENTS->Unlock(achievements::kFearless);
 					}
 
 					if (SubclassParams->Out.MarkMessageAsHandled == false)
 					{
-						FormEnumerationManager::Instance.ResetVisibility();
 
 						if (ActiveTESFile)
 							MarkTESFileForLoadingRecursive(ActiveTESFile);
@@ -735,6 +737,27 @@ namespace cse
 									MarkTESFileForLoadingRecursive(CurrentFile);
 							}
 						}
+
+						// Warn when loading plugins with missing masters.
+						bool MissingMasters = false;
+						for (auto Itr = _DATAHANDLER->fileList.Begin(); Itr.End() == false && Itr.Get(); ++Itr)
+						{
+							auto File(Itr.Get());
+							if (File->IsLoaded() && !File->ValidateMasters())
+							{
+								MissingMasters = true;
+								break;
+							}
+						}
+
+						if (MissingMasters)
+						{
+							if (BGSEEUI->MsgBoxW(hWnd, MB_YESNO, "One or more of the file being loaded have missing master - "
+								"This can lead to unstability and even crashes.\n\nAre you sure you'd like to proceed?") == IDNO)
+								SubclassParams->Out.MarkMessageAsHandled = true;
+						}
+						else
+							FormEnumerationManager::Instance.ResetVisibility();
 					}
 
 					break;

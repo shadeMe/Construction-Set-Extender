@@ -181,6 +181,7 @@ public:
 	void						CloseGroupRecord();
 
 	void						SetFileIndex(UInt8 Index);
+	bool						ValidateMasters();
 
 	static TESFile*				CreateInstance(const char* WorkingDirectory, const char* FileName, UInt8 OpenMode = NiFile::kFileMode_ReadOnly);
 	void						DeleteInstance(bool ReleaseMemory = true);

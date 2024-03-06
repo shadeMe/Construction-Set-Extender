@@ -99,6 +99,11 @@ void TESFile::SetFileIndex( UInt8 Index )
 	thisCall<void>(0x00485CA0, this, Index);
 }
 
+bool TESFile::ValidateMasters()
+{
+	return thisCall<bool>(0x004860D0, this, &_DATAHANDLER->fileList, false);
+}
+
 UInt32 TESFile::JumpToBeginningOfRecord()
 {
 	return thisCall<UInt32>(0x004880E0, this);
