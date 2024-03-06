@@ -1072,7 +1072,7 @@ namespace cse
 				RegisterHoldableOverride("76C93A6E-2777-42DB-B80B-82C0A0578E79", BuiltIn::kHoldable_X, true);
 				RegisterHoldableOverride("1CAF7AAF-4E5E-44DE-9877-0428040829E2", BuiltIn::kHoldable_Y, true);
 				RegisterHoldableOverride("8A16BDBA-709B-4464-8B01-5748C0392635", BuiltIn::kHoldable_Z, true);
-				RegisterHoldableOverride("123363FB-D801-400F-B8B5-3CA8F68A2797", BuiltIn::kHoldable_S, true);
+				Shared.ScaleSelection = RegisterHoldableOverride("123363FB-D801-400F-B8B5-3CA8F68A2797", BuiltIn::kHoldable_S, true);
 				Shared.ZoomCamera = RegisterHoldableOverride("5B69B450-F18B-467A-8AF7-5615F835F265", BuiltIn::kHoldable_V, true);
 
 				RegisterComboKeyOverride("141C71A5-CF32-4C83-9F30-F87B082AB078", actions::builtIn::ReloadAllPathGrids);
@@ -1774,7 +1774,9 @@ namespace cse
 																_RENDERWIN_XSTATE.CurrentMousePathGridPoint &&
 																GetCapture() == hWnd &&
 																uMsg == WM_LBUTTONDOWN;
-					TransformingSelection = *TESRenderWindow::DraggingSelection || *TESRenderWindow::RotatingSelection || _RENDERWIN_XSTATE.DraggingPathGridPoints;
+					TransformingSelection = *TESRenderWindow::DraggingSelection || *TESRenderWindow::RotatingSelection 
+											|| _RENDERWIN_XSTATE.DraggingPathGridPoints 
+											|| Manager->GetKeyboardInputManager()->GetSharedBindings().ScaleSelection->IsHeldDown();
 
 					// begin free movement handling
 					if (uMsg == WM_MBUTTONDOWN)
@@ -1790,6 +1792,10 @@ namespace cse
 						{
 							ToggleFreeMouseMovement(hWnd, true);
 							ToggleCellViewUpdate(false);
+
+							// remove potentially invalid refs from the current selection that don't have a valid NiNode
+							// c.f Nexus bug report "Crashes in Render Window when selection spans several exterior cells"
+							ReferenceSelectionManager::RemoveInvalidEntries();
 						}
 					}
 					else if (*TESRenderWindow::LandscapeEditFlag)

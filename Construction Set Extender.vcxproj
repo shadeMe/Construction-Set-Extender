@@ -570,8 +570,8 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="Exports.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\bgsee\BGSEditorExtenderBase_Resource.h" />
-    <ClInclude Include="..\..\[Libraries]\SME Sundries\INIEditGUI_Res.h" />
+    <ClInclude Include="..\..\Libraries\BGSEditorExtenderBase\bgsee\BGSEditorExtenderBase_Resource.h" />
+    <ClInclude Include="..\..\Libraries\SME Sundries\INIEditGUI_Res.h" />
     <ClInclude Include="..\OBSE\obse\HavokBase.h" />
     <ClInclude Include="..\OBSE\obse\HavokCharacters.h" />
     <ClInclude Include="..\OBSE\obse\HavokCollision.h" />
@@ -787,13 +787,8 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <None Include="Images\wtf.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\..\[Libraries]\BGSEditorExtenderBase\bgsee\BGSEditorExtenderBase.rc" />
-    <ResourceCompile Include="..\..\[Libraries]\SME Sundries\INIEditGUI_Res.rc">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug - Attach Debugger|Win32'">
-      </ExcludedFromBuild>
-    </ResourceCompile>
+    <ResourceCompile Include="..\..\Libraries\BGSEditorExtenderBase\bgsee\BGSEditorExtenderBase.rc" />
+    <ResourceCompile Include="..\..\Libraries\SME Sundries\INIEditGUI_Res.rc" />
     <ResourceCompile Include="Construction Set Extender.rc" />
     <ResourceCompile Include="VersionInfo.rc">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

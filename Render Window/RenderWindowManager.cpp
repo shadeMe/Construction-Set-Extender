@@ -388,6 +388,22 @@ namespace cse
 			return IsSelectable(Ref, PaintingSelection, Throwaway, OutReasonFlags);
 		}
 
+		void ReferenceSelectionManager::RemoveInvalidEntries()
+		{
+			std::vector<TESObjectREFR*> InvalidRefs;
+			for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+			{
+				TESObjectREFR* Selection = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
+				SME_ASSERT(Selection);
+
+				if (Selection->GetNiNode() == nullptr)
+					InvalidRefs.emplace_back(Selection);
+			}
+
+			for (const auto Ref : InvalidRefs)
+				_RENDERSEL->RemoveFromSelection(Ref, true); 
+		}
+
 		ReferenceColorMaskManager::ReferenceColorMaskManager()
 		{
 			Masks[kMask_Selection].ToggleSetting = &settings::renderer::kShowSelectionMask;

@@ -452,7 +452,11 @@ namespace cse
 								 ++ItrTopicData)
 							{
 								TESQuest* Quest = ItrTopicData->parentQuest;
-								SME_ASSERT(Quest);
+								if (Quest == nullptr)
+								{
+									BGSEECONSOLE_MESSAGE("Topic %08X has an orphaned topic data; skipping", Topic->formID);
+									continue;
+								}
 
 								for (int i = 0; i < ItrTopicData->questInfos.numObjs; i++)
 								{

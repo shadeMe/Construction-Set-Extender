@@ -281,6 +281,7 @@ namespace cse
 				HoldableKeyOverride*	RotateCamera;
 				HoldableKeyOverride*	PanCamera;
 				HoldableKeyOverride*	ZoomCamera;
+				HoldableKeyOverride*	ScaleSelection;
 				ActionableKeyHandler*	ToggleFlyCamera;
 			};
 

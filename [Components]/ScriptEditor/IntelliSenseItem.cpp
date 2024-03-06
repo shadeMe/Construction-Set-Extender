@@ -335,7 +335,7 @@ IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(componentDLLInterfa
 
 	Sb->Reset();
 
-	String^ WikiUrl = "https://cs.elderscrolls.com/index.php?title=" + Name;
+	String^ WikiUrl = "https://cs.uesp.net/wiki/" + Name;
 	Sb->Markup(GenerateHelpTextFooter())
 		->Span(DevComponents::DotNetBar::eHorizontalItemsAlignment::Right)
 			->Text("Links:")->NonBreakingSpace(2)

@@ -63,6 +63,8 @@ CSE		---->
 			> No, it just pastes them a certain distance in front of the camera, as a standard copy/paste would do. You actually wouldn't want it to do a global paste in place most of the time, it's something which needs to happen only when specified, as with the local paste in place.
 		> Render window shortcut to toggle rotation/scaling in world/modelspace.
 			> Add an indicator to the OSD's info overlay
+		> Gizmos
+			> https://github.com/CedricGuillemet/ImGuizmo/issues/154
 		> Grass overlay enhacements
 			> Firstly when selecting Grass Overlay for the first time, keep the alert message on the screen long enough for a person to notice it and read it without needing to select Grass Overlay a second time.
 Secondly, add the alert into the Console window.

@@ -76,7 +76,7 @@ namespace cse
 			ScriptCommands.push_back(commands::baseFormComponent::GetRegistrar());
 
 			bool ComponentInitialized = bgsee::script::CodaScriptVM::Initialize(bgsee::ResourceLocation(CSE_CODADEPOT),
-														"http://cs.elderscrolls.com/index.php/",
+														"https://cs.uesp.net/wiki/",
 														BGSEEMAIN->INIGetter(),
 														BGSEEMAIN->INISetter(),
 														ScriptCommands);

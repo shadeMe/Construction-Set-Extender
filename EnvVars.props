@@ -6,11 +6,11 @@
     <CrashRptLibPath>C:\Users\shadeMe\Documents\VC++ LIB\CrashRpt\lib</CrashRptLibPath>
     <DirectXIncludePath>C:\Users\shadeMe\Documents\VC++ LIB\DirectX\Include</DirectXIncludePath>
     <DirectXLibPath>C:\Users\shadeMe\Documents\VC++ LIB\DirectX\Lib\x86</DirectXLibPath>
-    <SMESundriesIncludePath>C:\Users\shadeMe\Documents\[TES]\[Code]\[Libraries]\SME Sundries</SMESundriesIncludePath>
-    <XSECommonIncludePath>C:\Users\shadeMe\Documents\[TES]\[Code]\[Libraries]\xSE Common</XSECommonIncludePath>
-    <BGSEEBaseIncludePath>C:\Users\shadeMe\Documents\[TES]\[Code]\[Libraries]\BGSEditorExtenderBase</BGSEEBaseIncludePath>
-    <BGSEEBaseLibPath_DEBUG>C:\Users\shadeMe\Documents\[TES]\[Code]\[Libraries]\BGSEditorExtenderBase\bgsee\Debug</BGSEEBaseLibPath_DEBUG>
-    <BGSEEBaseLibPath_RELEASE>C:\Users\shadeMe\Documents\[TES]\[Code]\[Libraries]\BGSEditorExtenderBase\bgsee\Release</BGSEEBaseLibPath_RELEASE>
+    <SMESundriesIncludePath>C:\Users\shadeMe\Documents\BGS Dev\Code\Libraries\SME Sundries</SMESundriesIncludePath>
+    <XSECommonIncludePath>C:\Users\shadeMe\Documents\BGS Dev\Code\Libraries\xSE Common</XSECommonIncludePath>
+    <BGSEEBaseIncludePath>C:\Users\shadeMe\Documents\BGS Dev\Code\Libraries\BGSEditorExtenderBase</BGSEEBaseIncludePath>
+    <BGSEEBaseLibPath_DEBUG>C:\Users\shadeMe\Documents\BGS Dev\Code\Libraries\BGSEditorExtenderBase\bgsee\Debug</BGSEEBaseLibPath_DEBUG>
+    <BGSEEBaseLibPath_RELEASE>C:\Users\shadeMe\Documents\BGS Dev\Code\Libraries\BGSEditorExtenderBase\bgsee\Release</BGSEEBaseLibPath_RELEASE>
   </PropertyGroup>
   <PropertyGroup />
   <ItemDefinitionGroup />

@@ -122,6 +122,7 @@ namespace cse
 			static void							RemoveFromSelection(TESObjectREFR* Ref, bool RemoveSelectionBox);
 			static bool							IsSelectable(TESObjectREFR* Ref, bool PaintingSelection = false);
 			static bool							IsSelectable(TESObjectREFR* Ref, UInt32& OutReasonFlags, bool PaintingSelection = false);
+			static void							RemoveInvalidEntries();
 		};
 
 		class ReferenceColorMaskManager
