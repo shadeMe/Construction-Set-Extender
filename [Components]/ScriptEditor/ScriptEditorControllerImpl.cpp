@@ -1701,7 +1701,7 @@ void ScriptEditorController::ViewEventHandler_MainToolbarMenuHelp(view::ViewComp
 	switch (E->Component->Role)
 	{
 	case view::eViewRole::MainToolbar_Help_Wiki:
-		Process::Start("https://cs.elderscrolls.com/index.php?title=Main_Page");
+		Process::Start("https://cs.uesp.net/wiki/Main_Page");
 		break;
 	case view::eViewRole::MainToolbar_Help_OBSE:
 		Process::Start("https://htmlpreview.github.io/?https://github.com/llde/xOBSE/blob/master/obse_command_doc.html");
