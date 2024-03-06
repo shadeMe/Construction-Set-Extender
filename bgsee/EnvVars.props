@@ -6,8 +6,8 @@
     <CrashRptLibPath>C:\Users\shadeMe\Documents\VC++ LIB\CrashRpt\lib</CrashRptLibPath>
     <DirectXIncludePath>C:\Users\shadeMe\Documents\VC++ LIB\DirectX\Include</DirectXIncludePath>
     <DirectXLibPath>C:\Users\shadeMe\Documents\VC++ LIB\DirectX\Lib\x86</DirectXLibPath>
-    <SMESundriesIncludePath>C:\Users\shadeMe\Documents\[TES]\[Code]\[Libraries]\SME Sundries</SMESundriesIncludePath>
-    <XSECommonIncludePath>C:\Users\shadeMe\Documents\[TES]\[Code]\[Libraries]\xSE Common</XSECommonIncludePath>
+    <SMESundriesIncludePath>C:\Users\shadeMe\Documents\BGS Dev\Code\Libraries\SME Sundries</SMESundriesIncludePath>
+    <XSECommonIncludePath>C:\Users\shadeMe\Documents\BGS Dev\Code\Libraries\xSE Common</XSECommonIncludePath>
   </PropertyGroup>
   <PropertyGroup />
   <ItemDefinitionGroup />
