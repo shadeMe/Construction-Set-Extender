@@ -777,10 +777,10 @@ namespace cse
 			return DlgProcResult;
 		}
 
-#define IDT_RESPONSE_EDITOR_FOCUS			0x6FF
+#define IDT_RESPONSE_EDITOR_DEFERRED_EXEC			0x6FF
 
 
-		LRESULT CALLBACK ResponseDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+		LRESULT CALLBACK ResponseEditorDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 												 bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 		{
 			LRESULT DlgProcResult = FALSE;
@@ -794,15 +794,41 @@ namespace cse
 				{
 					switch (wParam)
 					{
-					case IDT_RESPONSE_EDITOR_FOCUS:
+					case IDT_RESPONSE_EDITOR_DEFERRED_EXEC:
 					{
+						KillTimer(hWnd, IDT_RESPONSE_EDITOR_DEFERRED_EXEC);
 						SubclassParams->Out.MarkMessageAsHandled = true;
 
-						SetForegroundWindow(hWnd);
-						KillTimer(hWnd, IDT_RESPONSE_EDITOR_FOCUS);
-					}
+						// Check if parent topic info's script can be compiled. If it can't be, then the changes 
+						// made to the response are discarded unconditionally after the dialog is closed. We can't 
+						// change this behaviour due to the shitty editor code, but we can at least warn the user.
+						SME_ASSERT(*ResponseEditorData::EditorCache);
+						auto ParentTopicInfoCopy = (*ResponseEditorData::EditorCache)->infoLocalCopy;
+						SME_ASSERT(ParentTopicInfoCopy);
 
-					break;
+						if (ParentTopicInfoCopy->resultScript.text)
+						{
+							std::string OldScriptText(ParentTopicInfoCopy->resultScript.text);
+							char CurrentScriptText[0x1000] = { 0 };
+
+							HWND ResultScriptEditBox = GetDlgItem(GetParent(hWnd), kDialogEditor_ResultScriptTextBox);
+							SME_ASSERT(ResultScriptEditBox);
+							GetWindowText(ResultScriptEditBox, CurrentScriptText, sizeof(CurrentScriptText));
+							ParentTopicInfoCopy->resultScript.SetText(CurrentScriptText);
+							auto CompileResult = ParentTopicInfoCopy->resultScript.Compile(true);
+							ParentTopicInfoCopy->resultScript.SetText(OldScriptText.c_str());
+
+							if (!CompileResult)
+							{
+								BGSEEUI->MsgBoxW("The parent topic info's result script has errors. Any changes made to "
+									"this response will be discarded until they are fixed.");
+							}
+						}
+
+						// ### hacky method to prevent the dialog from getting hidden behind other windows after init
+						SetForegroundWindow(hWnd);
+						break;
+					}
 					}
 				}
 
@@ -822,8 +848,7 @@ namespace cse
 					TESDialog::ClampDlgEditField(GetDlgItem(hWnd, IDC_CSE_RESPONSEWINDOW_VOICEDELAY), 0.0, 5000.0, true);
 					TESDialog::SetDlgItemFloat(hWnd, IDC_CSE_RESPONSEWINDOW_VOICEDELAY, settings::general::kFaceGenPreviewVoiceDelay.GetData().i, 0);
 
-					// ### hacky method to prevent the dialog from getting hidden behind other windows after init
-					SetTimer(hWnd, IDT_RESPONSE_EDITOR_FOCUS, 500, NULL);
+					SetTimer(hWnd, IDT_RESPONSE_EDITOR_DEFERRED_EXEC, 500, NULL);
 				}
 
 				break;
@@ -948,7 +973,7 @@ namespace cse
 									BGSEEUI->MsgBoxE(hWnd, 0, "Couldn't copy external file '%s' to '%s'!\n\nCheck the console for more information.",
 													 FilePath, Destination.c_str());
 
-									BGSEECONSOLE_ERROR("UIManager::ResponseDlgSubclassProc - Couldn't copy external file!");
+									BGSEECONSOLE_ERROR("UIManager::ResponseEditorDlgSubclassProc - Couldn't copy external file!");
 								}
 								else
 									BGSEECONSOLE_MESSAGE("Copied external audio file '%s' to '%s'", FilePath, Destination.c_str());
@@ -3238,7 +3263,7 @@ namespace cse
 
 			BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_FindText, FindTextDlgSubclassProc);
 			BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Data, DataDlgSubclassProc);
-			BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_ResponseEditor, ResponseDlgSubclassProc);
+			BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_ResponseEditor, ResponseEditorDlgSubclassProc);
 			BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_TextureUse, LandscapeTextureUseDlgSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_Quest, FilteredDialogQuestDlgSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterSubclassForDialogResourceTemplate(TESDialog::kDialogTemplate_FilteredDialog, FilteredDialogQuestDlgSubClassProc);

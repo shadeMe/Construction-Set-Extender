@@ -56,7 +56,7 @@ namespace cse
 
 		LRESULT CALLBACK FindTextDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
 		LRESULT CALLBACK DataDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
-		LRESULT CALLBACK ResponseDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
+		LRESULT CALLBACK ResponseEditorDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
 		LRESULT CALLBACK LandscapeTextureUseDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
 		LRESULT CALLBACK FilteredDialogQuestDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
 		LRESULT CALLBACK AboutDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams);
