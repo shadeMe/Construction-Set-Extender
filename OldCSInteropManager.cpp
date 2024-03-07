@@ -12,6 +12,7 @@ namespace cse
 		State = LoadState::Unloaded;
 		DLLPath = "";
 		InteropPipeHandle = INVALID_HANDLE_VALUE;
+		MessageLogContext = nullptr;
 
 		ZeroMemory(&CS10ProcInfo, sizeof(PROCESS_INFORMATION));
 		ZeroMemory(&PipeGUID, sizeof(GUID));
@@ -213,6 +214,8 @@ namespace cse
 		// clean up
 		CloseHandle(CS10ProcInfo.hProcess);
 		CloseHandle(CS10ProcInfo.hThread);
+
+		MessageLogContext = BGSEECONSOLE->RegisterMessageLogContext("Lip Sync Generator");
 	}
 
 	bool OldCSInteropManager::CreateTempWAVFile(const char* MP3Path, const char* WAVPath)
@@ -285,9 +288,8 @@ namespace cse
 		if (TempFile.Open(WAVPath.c_str()))
 			HasWAVFile = true;
 
-		BGSEECONSOLE_MESSAGE("Generating LIP file for '%s'...", InputPath);
-		BGSEECONSOLE->Indent();
-
+		BGSEECONSOLE->PrintToMessageLogContext(MessageLogContext, true, "Generating LIP file for '%s'...", InputPath);
+		BGSEECONSOLE->PrintToMessageLogContext(MessageLogContext, true, "\tText: %s", ResponseText);
 		if (HasWAVFile || CreateTempWAVFile(MP3Path.c_str(), WAVPath.c_str()))
 		{
 			if (PerformPipeOperation(InteropPipeHandle, kPipeOperation_Write, &InteropDataOut, &ByteCounter))
@@ -301,7 +303,7 @@ namespace cse
 						switch (InteropDataIn.MessageType)
 						{
 						case OldCSInteropData::kMessageType_DebugPrint:
-							BGSEECONSOLE_MESSAGE(InteropDataIn.StringBufferA);
+							BGSEECONSOLE->PrintToMessageLogContext(MessageLogContext, true, "%s", InteropDataIn.StringBufferA);
 							break;
 						case OldCSInteropData::kMessageType_OperationResult:
 							Result = InteropDataIn.OperationResult;
@@ -320,6 +322,7 @@ namespace cse
 				}
 
 				PerformPipeOperation(InteropPipeHandle, kPipeOperation_Write, &InteropDataOut, &ByteCounter);
+				BGSEECONSOLE->PrintToMessageLogContext(MessageLogContext, true, "\n\n");
 			}
 			else
 			{
@@ -328,7 +331,7 @@ namespace cse
 		}
 		else
 		{
-			BGSEECONSOLE_MESSAGE("Couldn't create temporary WAV file for LIP generation!");
+			BGSEECONSOLE->PrintToMessageLogContext(MessageLogContext, true, "Couldn't create temporary WAV file for LIP generation!");
 		}
 
 		if (HasWAVFile == false &&
@@ -337,8 +340,6 @@ namespace cse
 		{
 			BGSEECONSOLE_ERROR("Couldn't delete temporary WAV file '%s'!", WAVPath.c_str());
 		}
-
-		BGSEECONSOLE->Outdent();
 
 		return Result;
 	}

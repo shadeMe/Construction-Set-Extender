@@ -19,6 +19,8 @@ namespace cse
 		HANDLE					InteropPipeHandle;
 		LoadState				State;
 		GUID					PipeGUID;
+		void*					MessageLogContext;
+
 
 		bool	DoInjectDLL();
 		bool	InjectDLL(PROCESS_INFORMATION * info);

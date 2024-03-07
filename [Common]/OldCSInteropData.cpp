@@ -28,5 +28,9 @@ bool PerformPipeOperation(HANDLE PipeHandle, int Operation, OldCSInteropData* Bu
 		}
 	}
 
+	// We need to handle this beauty...
+	if (GetLastError() == ERROR_SUCCESS)
+		PipeOperation = true;
+
 	return PipeOperation;
 }

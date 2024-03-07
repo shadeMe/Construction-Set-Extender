@@ -71,7 +71,7 @@ void ConnectToInteropPipe(void)
 	char PipeName[0x200] = {0};
 	_snprintf_s(PipeName, 0x200, _TRUNCATE, "\\\\.\\pipe\\{%s}", PipeGUID);
 
-	while (1)
+	while (true)
 	{
 		g_InteropPipeHandle = CreateFile(PipeName,
 			GENERIC_READ|GENERIC_WRITE,
@@ -119,7 +119,7 @@ void __stdcall ProcessServerMessage(void)
 		PerformPipeOperation(g_InteropPipeHandle, kPipeOperation_Write, &InteropDataIn, &BytesReadWriteBuffer);
 	}
 
-	while (1)
+	while (true)
 	{
 		if (PerformPipeOperation(g_InteropPipeHandle, kPipeOperation_Read, &InteropDataIn, &BytesReadWriteBuffer))
 		{

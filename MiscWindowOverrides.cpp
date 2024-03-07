@@ -1000,7 +1000,6 @@ namespace cse
 							BGSEEUI->MsgBoxE(hWnd, 0, "Couldn't generate LIP file for the selected voice.\n\nCheck the console for more information.");
 						else
 						{
-							BGSEECONSOLE_MESSAGE("Successfully generated LIP file for the selected voice");
 							BGSEEACHIEVEMENTS->Unlock(achievements::kSoprano);
 							achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_GenerateLIP);
 						}

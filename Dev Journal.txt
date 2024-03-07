@@ -17,7 +17,6 @@ NOTE	---->
 CSE		---->
 
 	BUGFIX			=
-		> CS1.0 interop manager fails on first launch but works thereafter (1st LIP file generation fails)
 		> Check if the Launch Game button works correctly with the Steam version of the game
 			> We probably need to use the loader
 		> Object window does not restore scroll position when swithcing between sections
