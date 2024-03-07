@@ -546,14 +546,17 @@ namespace cse
 		{
 			SME_ASSERT(Initialized == false);
 
-			char Buffer[0x100] = { 0 };
-			FORMAT_STR(Buffer, "Textures\\Landscape\\%s", settings::renderer::kGrassOverlayTexturePath().s);
-			if (_FILEFINDER->FindFile(Buffer) != FileFinder::kFileStatus_NotFound)
+			if (strlen(settings::renderer::kGrassOverlayTexturePath().s))
 			{
-				GrassOverlayTexture = TESRender::CreateSourceTexture(Buffer);
-				GrassOverlayTexture->m_uiRefCount = 1;
+				char Buffer[0x100] = { 0 };
+				FORMAT_STR(Buffer, "Textures\\Landscape\\%s", settings::renderer::kGrassOverlayTexturePath().s);
+				if (_FILEFINDER->FindFile(Buffer) != FileFinder::kFileStatus_NotFound)
+				{
+					GrassOverlayTexture = TESRender::CreateSourceTexture(Buffer);
+					GrassOverlayTexture->m_uiRefCount = 1;
+				}
 			}
-
+			
 			Initialized = true;
 		}
 

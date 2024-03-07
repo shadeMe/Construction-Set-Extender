@@ -48,6 +48,154 @@ namespace cse
 			;//
 		}
 
+		void BatchGenerateLipSyncFiles(HWND hWnd)
+		{
+			if (*TESQuest::WindowHandle != NULL || *TESQuest::FilteredDialogWindowHandle != NULL)
+			{
+				// will cause a CTD if the tool is executed when either of the above windows are open
+				BGSEEUI->MsgBoxW("Please close any open Quest or Filtered Dialog windows before using this tool.");
+				return;
+			}
+
+			bool SkipInactiveTopicInfos = false;
+			bool OverwriteExisting = false;
+
+			if (BGSEEUI->MsgBoxI(hWnd,
+				MB_YESNO,
+				"Only process active topic infos?") == IDYES)
+			{
+				SkipInactiveTopicInfos = true;
+			}
+
+			if (BGSEEUI->MsgBoxI(hWnd,
+				MB_YESNO,
+				"Overwrite existing LIP files?") == IDYES)
+			{
+				OverwriteExisting = true;
+			}
+
+			HWND IdleWindow = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), hWnd, nullptr, NULL);
+			IFileStream ExistingFile;
+			int BatchGenCounter = 0, FailedCounter = 0;
+			bool HasError = false;
+
+			struct LipGenInput
+			{
+				std::string Path;
+				std::string ResponseText;
+
+				LipGenInput(const char* Path, const char* Text)
+					: Path(Path), ResponseText(Text) {}
+			};
+			std::vector<LipGenInput> CandidateInputs;
+
+			for (tList<TESTopic>::Iterator ItrTopic = _DATAHANDLER->topics.Begin(); ItrTopic.End() == false && ItrTopic.Get(); ++ItrTopic)
+			{
+				TESTopic* Topic = ItrTopic.Get();
+				SME_ASSERT(Topic);
+
+				for (TESTopic::TopicDataListT::Iterator ItrTopicData = Topic->topicData.Begin();
+					ItrTopicData.End() == false && ItrTopicData.Get();
+					++ItrTopicData)
+				{
+					TESQuest* Quest = ItrTopicData->parentQuest;
+					if (Quest == nullptr)
+					{
+						BGSEECONSOLE_MESSAGE("Topic %08X has an orphaned topic data; skipping", Topic->formID);
+						continue;
+					}
+
+					for (int i = 0; i < ItrTopicData->questInfos.numObjs; i++)
+					{
+						TESTopicInfo* Info = ItrTopicData->questInfos.data[i];
+						SME_ASSERT(Info);
+
+						TESFile* OverrideFile = Info->GetOverrideFile(-1);
+
+						if (OverrideFile)
+						{
+							if (SkipInactiveTopicInfos == false || (Info->formFlags & TESForm::kFormFlags_FromActiveFile))
+							{
+								for (tList<TESRace>::Iterator ItrRace = _DATAHANDLER->races.Begin();
+									ItrRace.End() == false && ItrRace.Get();
+									++ItrRace)
+								{
+									TESRace* Race = ItrRace.Get();
+									SME_ASSERT(Race);
+
+									for (TESTopicInfo::ResponseListT::Iterator ItrResponse = Info->responseList.Begin();
+										ItrResponse.End() == false && ItrResponse.Get();
+										++ItrResponse)
+									{
+										TESTopicInfo::ResponseData* Response = ItrResponse.Get();
+										SME_ASSERT(Response);
+
+										char VoiceFilePath[MAX_PATH] = { 0 };
+
+										for (int j = 0; j < 2; j++)
+										{
+											const char* Sex = "M";
+											if (j)
+												Sex = "F";
+
+											FORMAT_STR(VoiceFilePath, "Data\\Sound\\Voice\\%s\\%s\\%s\\%s_%s_%08X_%u",
+												OverrideFile->fileName,
+												Race->name.c_str(),
+												Sex,
+												Quest->editorID.c_str(),
+												Topic->editorID.c_str(),
+												(Info->formID & 0xFFFFFF),
+												Response->responseNumber);
+
+											CandidateInputs.emplace_back(VoiceFilePath, Response->responseText.c_str());														
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+
+			char Buffer[0x100];
+			int Processed = 0;
+			for (const auto& Input : CandidateInputs)
+			{
+				FORMAT_STR(Buffer, "Please Wait\nProcessing response %d/%d", Processed, CandidateInputs.size());
+				Static_SetText(GetDlgItem(IdleWindow, -1), Buffer);
+
+				std::string MP3Path(Input.Path); MP3Path += ".mp3";
+				std::string WAVPath(Input.Path); WAVPath += ".wav";
+				std::string LIPPath(Input.Path); LIPPath += ".lip";
+
+				if (ExistingFile.Open(MP3Path.c_str()) ||
+					ExistingFile.Open(WAVPath.c_str()))
+				{
+					if (OverwriteExisting || ExistingFile.Open(LIPPath.c_str()) == false)
+					{
+						if (CSIOM.GenerateLIPSyncFile(Input.Path.c_str(), Input.ResponseText.c_str()))
+							BatchGenCounter++;
+						else
+						{
+							HasError = true;
+							FailedCounter++;
+						}
+					}
+				}
+				++Processed;
+			}
+
+			achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_GenerateLIP);
+			DestroyWindow(IdleWindow);
+
+			if (HasError)
+				BGSEEUI->MsgBoxW("Batch generation completed with some errors!\n\nGenerated: %d files\nFailed: %d Files",
+					BatchGenCounter, FailedCounter);
+			else
+				BGSEEUI->MsgBoxI("Batch generation completed successfully!\n\nGenerated: %d files.", BatchGenCounter);
+		}
+
 
 		LRESULT CALLBACK MainWindowMenuInitSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 														bgsee::WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
@@ -287,6 +435,8 @@ namespace cse
 							ShellExecute(nullptr, "open", "http://www.youtube.com/watch?v=oHg5SJYRHA0", nullptr, nullptr, SW_SHOWNORMAL);
 							BGSEEACHIEVEMENTS->Unlock(achievements::kOldestTrickInTheBook);
 						}
+						else if (LOWORD(wParam) == TESCSMain::kMainMenu_Help_Contents)
+							ShellExecute(nullptr, "open", "https://cs.uesp.net/wiki/Main_Page", nullptr, nullptr, SW_SHOWNORMAL);
 						else
 							SubclassParams->Out.MarkMessageAsHandled = false;
 					}
@@ -412,153 +562,8 @@ namespace cse
 
 					break;
 				case IDC_MAINMENU_BATCHLIPGENERATOR:
-					{
-						if (*TESQuest::WindowHandle != NULL || *TESQuest::FilteredDialogWindowHandle != NULL)
-						{
-							// will cause a CTD if the tool is executed when either of the above windows are open
-							BGSEEUI->MsgBoxW("Please close any open Quest or Filtered Dialog windows before using this tool.");
-							break;
-						}
-
-						bool SkipInactiveTopicInfos = false;
-						bool OverwriteExisting = false;
-
-						if (BGSEEUI->MsgBoxI(hWnd,
-											 MB_YESNO,
-											 "Only process active topic infos?") == IDYES)
-						{
-							SkipInactiveTopicInfos = true;
-						}
-
-						if (BGSEEUI->MsgBoxI(hWnd,
-											 MB_YESNO,
-											 "Overwrite existing LIP files?") == IDYES)
-						{
-							OverwriteExisting = true;
-						}
-
-						HWND IdleWindow = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), hWnd, nullptr, NULL);
-						IFileStream ExistingFile;
-						int BatchGenCounter = 0, FailedCounter = 0;
-						bool HasError = false;
-
-						struct LipGenInput
-						{
-							std::string Path;
-							std::string ResponseText;
-
-							LipGenInput(const char* Path, const char* Text)
-								: Path(Path), ResponseText(Text) {}
-						};
-						std::vector<LipGenInput> CandidateInputs;
-
-						for (tList<TESTopic>::Iterator ItrTopic = _DATAHANDLER->topics.Begin(); ItrTopic.End() == false && ItrTopic.Get(); ++ItrTopic)
-						{
-							TESTopic* Topic = ItrTopic.Get();
-							SME_ASSERT(Topic);
-
-							for (TESTopic::TopicDataListT::Iterator ItrTopicData = Topic->topicData.Begin();
-								 ItrTopicData.End() == false && ItrTopicData.Get();
-								 ++ItrTopicData)
-							{
-								TESQuest* Quest = ItrTopicData->parentQuest;
-								if (Quest == nullptr)
-								{
-									BGSEECONSOLE_MESSAGE("Topic %08X has an orphaned topic data; skipping", Topic->formID);
-									continue;
-								}
-
-								for (int i = 0; i < ItrTopicData->questInfos.numObjs; i++)
-								{
-									TESTopicInfo* Info = ItrTopicData->questInfos.data[i];
-									SME_ASSERT(Info);
-
-									TESFile* OverrideFile = Info->GetOverrideFile(-1);
-
-									if (OverrideFile)
-									{
-										if (SkipInactiveTopicInfos == false || (Info->formFlags & TESForm::kFormFlags_FromActiveFile))
-										{
-											for (tList<TESRace>::Iterator ItrRace = _DATAHANDLER->races.Begin();
-												 ItrRace.End() == false && ItrRace.Get();
-												 ++ItrRace)
-											{
-												TESRace* Race = ItrRace.Get();
-												SME_ASSERT(Race);
-
-												for (TESTopicInfo::ResponseListT::Iterator ItrResponse = Info->responseList.Begin();
-													 ItrResponse.End() == false && ItrResponse.Get();
-													 ++ItrResponse)
-												{
-													TESTopicInfo::ResponseData* Response = ItrResponse.Get();
-													SME_ASSERT(Response);
-
-													char VoiceFilePath[MAX_PATH] = { 0 };
-
-													for (int j = 0; j < 2; j++)
-													{
-														const char* Sex = "M";
-														if (j)
-															Sex = "F";
-
-														FORMAT_STR(VoiceFilePath, "Data\\Sound\\Voice\\%s\\%s\\%s\\%s_%s_%08X_%u",
-																   OverrideFile->fileName,
-																   Race->name.c_str(),
-																   Sex,
-																   Quest->editorID.c_str(),
-																   Topic->editorID.c_str(),
-																   (Info->formID & 0xFFFFFF),
-																   Response->responseNumber);
-
-														CandidateInputs.emplace_back(VoiceFilePath, Response->responseText.c_str());														
-													}
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-
-
-						char Buffer[0x100];
-						int Processed = 0;
-						for (const auto& Input : CandidateInputs)
-						{
-							FORMAT_STR(Buffer, "Please Wait\nProcessing response %d/%d", Processed, CandidateInputs.size());
-							Static_SetText(GetDlgItem(IdleWindow, -1), Buffer);
-
-							std::string MP3Path(Input.Path); MP3Path += ".mp3";
-							std::string WAVPath(Input.Path); WAVPath += ".wav";
-							std::string LIPPath(Input.Path); LIPPath += ".lip";
-
-							if (ExistingFile.Open(MP3Path.c_str()) ||
-								ExistingFile.Open(WAVPath.c_str()))
-							{
-								if (OverwriteExisting || ExistingFile.Open(LIPPath.c_str()) == false)
-								{
-									if (CSIOM.GenerateLIPSyncFile(Input.Path.c_str(), Input.ResponseText.c_str()))
-										BatchGenCounter++;
-									else
-									{
-										HasError = true;
-										FailedCounter++;
-									}
-								}
-							}
-							++Processed;
-						}
-
-						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_GenerateLIP);
-						DestroyWindow(IdleWindow);
-
-						if (HasError)
-							BGSEEUI->MsgBoxW("Batch generation completed with some errors!\n\nGenerated: %d files\nFailed: %d Files",
-											 BatchGenCounter, FailedCounter);
-						else
-							BGSEEUI->MsgBoxI("Batch generation completed successfully!\n\nGenerated: %d files.", BatchGenCounter);
-					}
-
+					BatchGenerateLipSyncFiles(hWnd);
+					
 					break;
 				case IDC_MAINMENU_SAVEOPTIONS_CREATEBACKUPBEFORESAVING:
 					settings::versionControl::kBackupOnSave.ToggleData();
@@ -720,6 +725,27 @@ namespace cse
 					break;
 				case IDC_MAINMENU_ONEDITORSTARTUP_OPENSTARTUPSCRIPT:
 					settings::startup::kOpenScriptWindow.ToggleData();
+					break;
+				case IDC_MAINMENU_CSEMANUAL:
+				case IDC_MAINMENU_CODAMANUAL:
+					{
+						std::string ManualPath = BGSEEMAIN->GetAPPPath();
+						ManualPath += "\\Data\\Docs\\Construction Set Extender\\";
+						if (LOWORD(wParam) == IDC_MAINMENU_CODAMANUAL)
+							ManualPath += "Coda Manual.pdf";
+						else
+							ManualPath += "Construction Set Extender Manual.pdf";
+
+						IFileStream File;
+						if (File.Open(ManualPath.c_str()) == false)
+						{
+							BGSEEUI->MsgBoxI(hWnd, NULL, "Could not find the manual file. Did you extract the bundled "
+											 "documentation into the following directory?\n\n"
+											 "Data\\Docs\\Construction Set Extender\\");
+						}
+						else
+							ShellExecute(nullptr, "open", ManualPath.c_str(), nullptr, nullptr, SW_SHOW);
+					}
 					break;
 				default:
 					SubclassParams->Out.MarkMessageAsHandled = false;

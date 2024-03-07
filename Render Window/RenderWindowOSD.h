@@ -233,7 +233,7 @@ namespace cse
 		{
 			struct Notification
 			{
-				static const int		kNotificationDisplayTime = 1.75 * 1000;
+				static const int		kNotificationDisplayTime = 4 * 1000;
 
 				std::string		Message;
 				ULONGLONG		StartTickCount;

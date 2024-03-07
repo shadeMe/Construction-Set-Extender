@@ -407,7 +407,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "On Editor Startup..."
         BEGIN
-            MENUITEM "Startup parameters can be set in 'CSE Preferences'", ID_Menu, INACTIVE
+            MENUITEM "Startup parameters can be set in 'CSE Preferences'", IDC_MAINMENU_STARTUP_PARAMS, INACTIVE
             MENUITEM SEPARATOR
             MENUITEM "Set Startup Workspace",       IDC_MAINMENU_ONEDITORSTARTUP_SETSTARTUPWORKSPACE
             MENUITEM "Load Startup Plugin",         IDC_MAINMENU_ONEDITORSTARTUP_LOADSTARTUPPLUGIN
@@ -602,7 +602,10 @@ BEGIN
     MENUITEM "Tools",                       IDC_MAINMENU_TOOLS
     POPUP "&Help"
     BEGIN
-        MENUITEM "&Contents",                   40157
+        MENUITEM "&CS Wiki",                    40157
+        MENUITEM SEPARATOR
+        MENUITEM "C&SE Manual ",                IDC_MAINMENU_CSEMANUAL
+        MENUITEM "C&oda Manual",                IDC_MAINMENU_CODAMANUAL
         MENUITEM SEPARATOR
         MENUITEM "&About",                      40016
     END

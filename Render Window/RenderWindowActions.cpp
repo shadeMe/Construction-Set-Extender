@@ -222,7 +222,7 @@ namespace cse
 				case kType_GrassOverlay:
 					if (_RENDERWIN_XSTATE.GrassOverlayTexture == nullptr)
 					{
-						NotificationOSDLayer::Instance.ShowNotification("A valid grass overlay texture needs to be set in CSE's preferences.");
+						NotificationOSDLayer::Instance.ShowNotification("Set a valid grass overlay texture in CSE's preferences and restart the editor.");
 						break;
 					}
 

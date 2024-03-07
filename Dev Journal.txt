@@ -19,8 +19,6 @@ CSE		---->
 	BUGFIX			=
 		> Check if the Launch Game button works correctly with the Steam version of the game
 			> We probably need to use the loader
-		> Object window does not restore scroll position when swithcing between sections
-			> Works in the vanilla CS; account for the form list filter
 		> CSE INI preferences UI bug - exit confirmation message box is not showing up correctly/gets hidden under another window
 		> CrashRpt doesn't handle any bounds-checked CRT funtion failures
 			> https://en.cppreference.com/w/c/error/set_constraint_handler_s
@@ -46,24 +44,15 @@ CSE		---->
 	ENHANCEMENT		=
 		> Speed up the Export Dialogue tool
 			> Also add progress counter
-		> Could the load-time be reduced at all when double-clicking a dialogue response text, to open the Edit Response window? 
 		> Could you modify the X and Y coordinate boxes in the Cell View so that hitting the tab key will move the cursor to the Y box? Type in an X coordinate, hit tab, then enter a Y coordinate. 
 		> Option to disable loading all BSA archives (or just loading the ones used by the current loaded plugins)
-		> Add links to the CSE/Coda manuals to the help main menu.
 		> In the creature creation window, when you tick the box to make the creature leveled (PC level offset), the numbers in the creature stats tab don't change. Which means that your creature is suddenly becoming incredibly overpowered as the numbers are now interpreted as multipliers. Would it be possible to make it so that ticking that box would also recalculate the numbers, please?
-		> A commandline mode to launch the editor without the UI, perform a task and close it
-			> load a mod, recompile every script in that mod, then close the mod, automatically
 		> Paste-in-place for Global paste
 			> No, it just pastes them a certain distance in front of the camera, as a standard copy/paste would do. You actually wouldn't want it to do a global paste in place most of the time, it's something which needs to happen only when specified, as with the local paste in place.
 		> Render window shortcut to toggle rotation/scaling in world/modelspace.
 			> Add an indicator to the OSD's info overlay
 		> Gizmos
 			> https://github.com/CedricGuillemet/ImGuizmo/issues/154
-		> Grass overlay enhacements
-			> Firstly when selecting Grass Overlay for the first time, keep the alert message on the screen long enough for a person to notice it and read it without needing to select Grass Overlay a second time.
-Secondly, add the alert into the Console window.
-Thirdly, have the alert specify BGSSEE::Renderer > GrassOverlayTexturePath as it's quite hard to locate a specific setting when you don't know what to look for.
-Fourthly, have the Description for this setting state that once a valid path has been set, you need to close the CSE and launch again for the path to be detected (or make it work immediately).
 		> A visibility toggle to display region borders in the Render window, so that you know exactly what is within and what is without a particular region.
 		> Reimplement the hide active/deleted forms tool
 		> An option to hide markers for thing such as Character placements on furniture as well as markers for effect like fire flies
