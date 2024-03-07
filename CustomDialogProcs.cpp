@@ -477,16 +477,6 @@ namespace cse
 
 				break;
 			case WM_INITDIALOG:
-				PARAFORMAT FormattingData = { 0 };
-
-				FormattingData.cbSize = sizeof(PARAFORMAT);
-				FormattingData.dwMask = PFM_TABSTOPS;
-				FormattingData.cTabCount = 32;
-
-				for (int i = 0, j = 300; i < sizeof(FormattingData.rgxTabs); i++, j += 300)
-					FormattingData.rgxTabs[i] = j;
-
-				SendDlgItemMessage(hWnd, IDC_EDITRESULTSCRIPT_SCRIPTTEXT, EM_SETPARAFORMAT, NULL, (LPARAM)&FormattingData);
 				SetWindowLongPtr(hWnd, GWL_USERDATA, (LONG_PTR)lParam);
 
 				HWND ResultScriptEditBox = GetDlgItem((HWND)lParam, kDialogEditor_ResultScriptTextBox);
