@@ -486,7 +486,6 @@ namespace cse
 												TESRace* Race = ItrRace.Get();
 												SME_ASSERT(Race);
 
-												int ResponseCounter = 1;
 												for (TESTopicInfo::ResponseListT::Iterator ItrResponse = Info->responseList.Begin();
 													 ItrResponse.End() == false && ItrResponse.Get();
 													 ++ItrResponse)
@@ -509,11 +508,10 @@ namespace cse
 																   Quest->editorID.c_str(),
 																   Topic->editorID.c_str(),
 																   (Info->formID & 0xFFFFFF),
-																   ResponseCounter);
+																   Response->responseNumber);
 
 														CandidateInputs.emplace_back(VoiceFilePath, Response->responseText.c_str());														
 													}
-													ResponseCounter++;
 												}
 											}
 										}

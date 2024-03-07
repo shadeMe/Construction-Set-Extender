@@ -43,11 +43,14 @@ public:
 		/*00*/ UInt32			emotionType;
 		/*04*/ UInt32			emotionValue;
 		/*08*/ UInt32			unk08;
-		/*0C*/ UInt32			unk0C;
+		/*0C*/ UInt8			responseNumber;
+		/*0D*/ UInt8			pad0D[3];
 		/*10*/ BSString			responseText;
 		/*18*/ BSString			actorNotes;
 		/*20*/ UInt32			unk20;
 	};
+	static_assert(sizeof(ResponseData) == 0x24);
+
 	typedef tList<ResponseData> ResponseListT;
 
 	enum
