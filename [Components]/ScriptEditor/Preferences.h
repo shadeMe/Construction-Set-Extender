@@ -82,10 +82,6 @@ ref struct GeneralSettings : public SettingsGroup
 	[Description("Recompile dependencies after variable index modification")]
 	property bool RecompileDependsOnVarIdxMod;
 
-	[Category("Window")]
-	[Description("Hide script editor window in Windows taskbar/task-switcher")]
-	property bool HideInTaskbar;
-
 	[Category("Script Picker")]
 	[Description("Sort scripts according to their flags (modified, deleted, etc) by default")]
 	property bool SortScriptsByFlags;
@@ -97,7 +93,6 @@ ref struct GeneralSettings : public SettingsGroup
 	GeneralSettings()
 	{
 		AutoIndent = true;
-		HideInTaskbar = false;
 		SaveRestoreCaret = false;
 		OnlySwitchToScriptsFromActivePlugin = false;
 		LoadScriptUpdatesExistingScripts = true;

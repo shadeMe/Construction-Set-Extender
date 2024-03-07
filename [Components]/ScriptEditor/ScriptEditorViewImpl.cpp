@@ -3190,16 +3190,7 @@ void ScriptEditorWorkspace::Reveal(Rectangle InitialBounds)
 {
 	this->Location = Drawing::Point(InitialBounds.Left, InitialBounds.Top);
 	this->Size = Drawing::Size(InitialBounds.Width, InitialBounds.Height);
-
-	if (preferences::SettingsHolder::Get()->General->HideInTaskbar)
-	{
-		auto ParentWindowHandle = safe_cast<IntPtr>(nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetMainWindowHandle());
-		this->ShowInTaskbar = false;
-		this->MinimizeBox = false;
-		this->Show(gcnew WindowHandleWrapper(ParentWindowHandle));
-	}
-	else
-		this->Show();
+	this->Show();
 
 	this->Focus();
 	this->BringToFront();
