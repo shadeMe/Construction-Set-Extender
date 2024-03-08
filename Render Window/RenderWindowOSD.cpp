@@ -1,7 +1,6 @@
 ﻿#include "RenderWindowOSD.h"
 #include "RenderWindowManager.h"
 #include "IMGUI\imgui_internal.h"
-#include "IMGUI\ImGuizmo.h"
 #include "IconFontCppHeaders\IconsMaterialDesign.h"
 
 #include "InfoOverlayOSDLayer.h"
@@ -25,6 +24,11 @@ namespace cse
 		};
 #define D3DFVF_CUSTOMVERTEX (D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1)
 
+#ifdef IMGUI_USE_BGRA_PACKED_COLOR
+#define IMGUI_COL_TO_DX9_ARGB(_COL)     (_COL)
+#else
+#define IMGUI_COL_TO_DX9_ARGB(_COL)     (((_COL) & 0xFF00FF00) | (((_COL) & 0xFF0000) >> 16) | (((_COL) & 0xFF) << 16))
+#endif
 		void ImGuiDX9::RenderDrawLists(ImDrawData* draw_data)
 		{
 			ImGuiIO& io = ImGui::GetIO();
@@ -55,31 +59,54 @@ namespace cse
 			IDirect3DStateBlock9* d3d9_state_block = nullptr;
 			if (Impl->D3DDevice->CreateStateBlock(D3DSBT_ALL, &d3d9_state_block) < 0)
 				return;
+			if (d3d9_state_block->Capture() < 0)
+			{
+				d3d9_state_block->Release();
+				return;
+			}
 
-			// Copy and convert all vertices into a single contiguous buffer
+			// Backup the DX9 transform (DX9 documentation suggests that it is included in the StateBlock but it doesn't appear to)
+			D3DMATRIX last_world, last_view, last_projection;
+			Impl->D3DDevice->GetTransform(D3DTS_WORLD, &last_world);
+			Impl->D3DDevice->GetTransform(D3DTS_VIEW, &last_view);
+			Impl->D3DDevice->GetTransform(D3DTS_PROJECTION, &last_projection);
+
+			// Allocate buffers
 			CUSTOMVERTEX* vtx_dst;
 			ImDrawIdx* idx_dst;
 			if (Impl->VertexBuffer->Lock(0, (UINT)(draw_data->TotalVtxCount * sizeof(CUSTOMVERTEX)), (void**)&vtx_dst, D3DLOCK_DISCARD) < 0)
+			{
+				d3d9_state_block->Release();
 				return;
+			}
 			if (Impl->IndexBuffer->Lock(0, (UINT)(draw_data->TotalIdxCount * sizeof(ImDrawIdx)), (void**)&idx_dst, D3DLOCK_DISCARD) < 0)
+			{
+				Impl->VertexBuffer->Unlock();
+				d3d9_state_block->Release();
 				return;
+			}
+
+			// Copy and convert all vertices into a single contiguous buffer, convert colors to DX9 default format.
+			// FIXME-OPT: This is a minor waste of resource, the ideal is to use imconfig.h and
+			//  1) to avoid repacking colors:   #define IMGUI_USE_BGRA_PACKED_COLOR
+			//  2) to avoid repacking vertices: #define IMGUI_OVERRIDE_DRAWVERT_STRUCT_LAYOUT struct ImDrawVert { ImVec2 pos; float z; ImU32 col; ImVec2 uv; }
 			for (int n = 0; n < draw_data->CmdListsCount; n++)
 			{
 				const ImDrawList* cmd_list = draw_data->CmdLists[n];
-				const ImDrawVert* vtx_src = &cmd_list->VtxBuffer[0];
-				for (int i = 0; i < cmd_list->VtxBuffer.size(); i++)
+				const ImDrawVert* vtx_src = cmd_list->VtxBuffer.Data;
+				for (int i = 0; i < cmd_list->VtxBuffer.Size; i++)
 				{
 					vtx_dst->pos[0] = vtx_src->pos.x;
 					vtx_dst->pos[1] = vtx_src->pos.y;
 					vtx_dst->pos[2] = 0.0f;
-					vtx_dst->col = (vtx_src->col & 0xFF00FF00) | ((vtx_src->col & 0xFF0000) >> 16) | ((vtx_src->col & 0xFF) << 16);     // RGBA --> ARGB for DirectX9
+					vtx_dst->col = IMGUI_COL_TO_DX9_ARGB(vtx_src->col);
 					vtx_dst->uv[0] = vtx_src->uv.x;
 					vtx_dst->uv[1] = vtx_src->uv.y;
 					vtx_dst++;
 					vtx_src++;
 				}
-				memcpy(idx_dst, &cmd_list->IdxBuffer[0], cmd_list->IdxBuffer.size() * sizeof(ImDrawIdx));
-				idx_dst += cmd_list->IdxBuffer.size();
+				memcpy(idx_dst, cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
+				idx_dst += cmd_list->IdxBuffer.Size;
 			}
 			Impl->VertexBuffer->Unlock();
 			Impl->IndexBuffer->Unlock();
@@ -87,74 +114,149 @@ namespace cse
 			Impl->D3DDevice->SetIndices(Impl->IndexBuffer);
 			Impl->D3DDevice->SetFVF(D3DFVF_CUSTOMVERTEX);
 
-			// Setup render state: fixed-pipeline, alpha-blending, no face culling, no depth testing
-			Impl->D3DDevice->SetPixelShader(nullptr);
-			Impl->D3DDevice->SetVertexShader(nullptr);
-			Impl->D3DDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID);
-			Impl->D3DDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-			Impl->D3DDevice->SetRenderState(D3DRS_LIGHTING, false);
-			Impl->D3DDevice->SetRenderState(D3DRS_ZENABLE, false);
-			Impl->D3DDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-			Impl->D3DDevice->SetRenderState(D3DRS_ALPHATESTENABLE, false);
-			Impl->D3DDevice->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
-			Impl->D3DDevice->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-			Impl->D3DDevice->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-			Impl->D3DDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, true);
-			Impl->D3DDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-			Impl->D3DDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-			Impl->D3DDevice->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-			Impl->D3DDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
-			Impl->D3DDevice->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-			Impl->D3DDevice->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
-			Impl->D3DDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-			Impl->D3DDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
 
-			// Setup orthographic projection matrix
-			// Being agnostic of whether <d3dx9.h> or <DirectXMath.h> can be used, we aren't relying on D3DXMatrixIdentity()/D3DXMatrixOrthoOffCenterLH() or DirectX::XMMatrixIdentity()/DirectX::XMMatrixOrthographicOffCenterLH()
-			{
-				const float L = 0.5f, R = io.DisplaySize.x + 0.5f, T = 0.5f, B = io.DisplaySize.y + 0.5f;
-				D3DMATRIX mat_identity = { { 1.0f, 0.0f, 0.0f, 0.0f,  0.0f, 1.0f, 0.0f, 0.0f,  0.0f, 0.0f, 1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f } };
-				D3DMATRIX mat_projection =
-				{
-					2.0f / (R - L),   0.0f,         0.0f,  0.0f,
-					0.0f,         2.0f / (T - B),   0.0f,  0.0f,
-					0.0f,         0.0f,         0.5f,  0.0f,
-					(L + R) / (L - R),  (T + B) / (B - T),  0.5f,  1.0f,
-				};
-				Impl->D3DDevice->SetTransform(D3DTS_WORLD, &mat_identity);
-				Impl->D3DDevice->SetTransform(D3DTS_VIEW, &mat_identity);
-				Impl->D3DDevice->SetTransform(D3DTS_PROJECTION, &mat_projection);
-			}
+			// Setup render state: fixed-pipeline
+			ImGuiDX9::SetupRenderState(Impl->D3DDevice, draw_data);
 
 			// Render command lists
-			int vtx_offset = 0;
-			int idx_offset = 0;
+			// (Because we merged all buffers into a single one, we maintain our own offset into them)
+			int global_vtx_offset = 0;
+			int global_idx_offset = 0;
+			ImVec2 clip_off = draw_data->DisplayPos;
 			for (int n = 0; n < draw_data->CmdListsCount; n++)
 			{
 				const ImDrawList* cmd_list = draw_data->CmdLists[n];
-				for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.size(); cmd_i++)
+				for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
 				{
 					const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
-					if (pcmd->UserCallback)
+					if (pcmd->UserCallback != nullptr)
 					{
-						pcmd->UserCallback(cmd_list, pcmd);
+						// User callback, registered via ImDrawList::AddCallback()
+						// (ImDrawCallback_ResetRenderState is a special callback value used by the user to request the renderer to reset render state.)
+						if (pcmd->UserCallback == ImDrawCallback_ResetRenderState)
+							ImGuiDX9::SetupRenderState(Impl->D3DDevice, draw_data);
+						else
+							pcmd->UserCallback(cmd_list, pcmd);
 					}
 					else
 					{
-						const RECT r = { (LONG)pcmd->ClipRect.x, (LONG)pcmd->ClipRect.y, (LONG)pcmd->ClipRect.z, (LONG)pcmd->ClipRect.w };
-						Impl->D3DDevice->SetTexture(0, (LPDIRECT3DTEXTURE9)pcmd->TextureId);
+						// Project scissor/clipping rectangles into framebuffer space
+						ImVec2 clip_min(pcmd->ClipRect.x - clip_off.x, pcmd->ClipRect.y - clip_off.y);
+						ImVec2 clip_max(pcmd->ClipRect.z - clip_off.x, pcmd->ClipRect.w - clip_off.y);
+						if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
+							continue;
+
+						// Apply Scissor/clipping rectangle, Bind texture, Draw
+						const RECT r = { (LONG)clip_min.x, (LONG)clip_min.y, (LONG)clip_max.x, (LONG)clip_max.y };
+						const LPDIRECT3DTEXTURE9 texture = (LPDIRECT3DTEXTURE9)pcmd->GetTexID();
+						Impl->D3DDevice->SetTexture(0, texture);
 						Impl->D3DDevice->SetScissorRect(&r);
-						Impl->D3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, vtx_offset, 0, (UINT)cmd_list->VtxBuffer.size(), idx_offset, pcmd->ElemCount / 3);
+						Impl->D3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, pcmd->VtxOffset + global_vtx_offset, 0, (UINT)cmd_list->VtxBuffer.Size, pcmd->IdxOffset + global_idx_offset, pcmd->ElemCount / 3);
 					}
-					idx_offset += pcmd->ElemCount;
 				}
-				vtx_offset += cmd_list->VtxBuffer.size();
+				global_idx_offset += cmd_list->IdxBuffer.Size;
+				global_vtx_offset += cmd_list->VtxBuffer.Size;
 			}
+
+			// Restore the DX9 transform
+			Impl->D3DDevice->SetTransform(D3DTS_WORLD, &last_world);
+			Impl->D3DDevice->SetTransform(D3DTS_VIEW, &last_view);
+			Impl->D3DDevice->SetTransform(D3DTS_PROJECTION, &last_projection);
 
 			// Restore the DX9 state
 			d3d9_state_block->Apply();
 			d3d9_state_block->Release();
 		}
+
+		void ImGuiDX9::SetupRenderState(IDirect3DDevice9* device, ImDrawData* draw_data)
+		{
+			// Setup viewport
+			D3DVIEWPORT9 vp;
+			vp.X = vp.Y = 0;
+			vp.Width = (DWORD)draw_data->DisplaySize.x;
+			vp.Height = (DWORD)draw_data->DisplaySize.y;
+			vp.MinZ = 0.0f;
+			vp.MaxZ = 1.0f;
+			device->SetViewport(&vp);
+
+			// Setup render state: fixed-pipeline, alpha-blending, no face culling, no depth testing, shade mode (for gradient), bilinear sampling.
+			device->SetPixelShader(nullptr);
+			device->SetVertexShader(nullptr);
+			device->SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID);
+			device->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
+			device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+			device->SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
+			device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+			device->SetRenderState(D3DRS_ZENABLE, FALSE);
+			device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+			device->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
+			device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+			device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+			device->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, TRUE);
+			device->SetRenderState(D3DRS_SRCBLENDALPHA, D3DBLEND_ONE);
+			device->SetRenderState(D3DRS_DESTBLENDALPHA, D3DBLEND_INVSRCALPHA);
+			device->SetRenderState(D3DRS_SCISSORTESTENABLE, TRUE);
+			device->SetRenderState(D3DRS_FOGENABLE, FALSE);
+			device->SetRenderState(D3DRS_RANGEFOGENABLE, FALSE);
+			device->SetRenderState(D3DRS_SPECULARENABLE, FALSE);
+			device->SetRenderState(D3DRS_STENCILENABLE, FALSE);
+			device->SetRenderState(D3DRS_CLIPPING, TRUE);
+			device->SetRenderState(D3DRS_LIGHTING, FALSE);
+			device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+			device->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+			device->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+			device->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+			device->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+			device->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+			device->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+			device->SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+			device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+			device->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+
+			// Setup orthographic projection matrix
+			// Our visible imgui space lies from draw_data->DisplayPos (top left) to draw_data->DisplayPos+data_data->DisplaySize (bottom right). DisplayPos is (0,0) for single viewport apps.
+			// Being agnostic of whether <d3dx9.h> or <DirectXMath.h> can be used, we aren't relying on D3DXMatrixIdentity()/D3DXMatrixOrthoOffCenterLH() or DirectX::XMMatrixIdentity()/DirectX::XMMatrixOrthographicOffCenterLH()
+			{
+				float L = draw_data->DisplayPos.x + 0.5f;
+				float R = draw_data->DisplayPos.x + draw_data->DisplaySize.x + 0.5f;
+				float T = draw_data->DisplayPos.y + 0.5f;
+				float B = draw_data->DisplayPos.y + draw_data->DisplaySize.y + 0.5f;
+				D3DMATRIX mat_identity = { { { 1.0f, 0.0f, 0.0f, 0.0f,  0.0f, 1.0f, 0.0f, 0.0f,  0.0f, 0.0f, 1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f } } };
+				D3DMATRIX mat_projection =
+				{ { {
+						2.0f/(R-L),   0.0f,         0.0f,  0.0f,
+						0.0f,         2.0f/(T-B),   0.0f,  0.0f,
+						0.0f,         0.0f,         0.5f,  0.0f,
+						(L+R)/(L-R),  (T+B)/(B-T),  0.5f,  1.0f
+					} } };
+				device->SetTransform(D3DTS_WORLD, &mat_identity);
+				device->SetTransform(D3DTS_VIEW, &mat_identity);
+				device->SetTransform(D3DTS_PROJECTION, &mat_projection);
+			}
+		}
+
+		void ImGuiDX9::AddKeyEvent(ImGuiKey key, bool down, int native_keycode, int native_scancode)
+		{
+			ImGuiIO& io = ImGui::GetIO();
+			io.AddKeyEvent(key, down);
+			io.SetKeyEventNativeData(key, native_keycode, native_scancode); // To support legacy indexing (<1.87 user code)
+			IM_UNUSED(native_scancode);
+		}
+
+		void ImGuiDX9::UpdateKeyModifiers()
+		{
+			ImGuiIO& io = ImGui::GetIO();
+			io.AddKeyEvent(ImGuiMod_Ctrl, IsVkDown(VK_CONTROL));
+			io.AddKeyEvent(ImGuiMod_Shift, IsVkDown(VK_SHIFT));
+			io.AddKeyEvent(ImGuiMod_Alt, IsVkDown(VK_MENU));
+			io.AddKeyEvent(ImGuiMod_Super, IsVkDown(VK_APPS));
+		}
+
+		bool ImGuiDX9::IsVkDown(int vk)
+		{
+			return (::GetKeyState(vk) & 0x8000) != 0;
+		}
+
 
 		bool ImGuiDX9::CreateFontsTexture()
 		{
@@ -200,7 +302,7 @@ namespace cse
 			FontTexture->UnlockRect(0);
 
 			// Store our identifier
-			io.Fonts->TexID = (void *)FontTexture;
+			io.Fonts->SetTexID((ImTextureID)FontTexture);
 
 			return true;
 		}
@@ -239,9 +341,9 @@ namespace cse
 			FontTexture = nullptr;
 			Time = 0;
 			TicksPerSecond = 0;
+			KeyboardCodePage = 0;
 			RenderWindowHandle = nullptr;
 			D3DDevice = nullptr;
-			MouseDoubleClicked[ImGuiMouseButton_Left] = MouseDoubleClicked[ImGuiMouseButton_Right] = MouseDoubleClicked[ImGuiMouseButton_Middle] = false;
 			ConsumeNextMouseRButtonDown = false;
 			CurrentMouseCoord.x = CurrentMouseCoord.y = 0;
 			MouseDownCursorPos.x = MouseDownCursorPos.y = 0;
@@ -538,25 +640,6 @@ namespace cse
 			ImGui::CreateContext();
 
 			ImGuiIO& io = ImGui::GetIO();
-			io.KeyMap[ImGuiKey_Tab] = VK_TAB;
-			io.KeyMap[ImGuiKey_LeftArrow] = VK_LEFT;
-			io.KeyMap[ImGuiKey_RightArrow] = VK_RIGHT;
-			io.KeyMap[ImGuiKey_UpArrow] = VK_UP;
-			io.KeyMap[ImGuiKey_DownArrow] = VK_DOWN;
-			io.KeyMap[ImGuiKey_PageUp] = VK_PRIOR;
-			io.KeyMap[ImGuiKey_PageDown] = VK_NEXT;
-			io.KeyMap[ImGuiKey_Home] = VK_HOME;
-			io.KeyMap[ImGuiKey_End] = VK_END;
-			io.KeyMap[ImGuiKey_Delete] = VK_DELETE;
-			io.KeyMap[ImGuiKey_Backspace] = VK_BACK;
-			io.KeyMap[ImGuiKey_Enter] = VK_RETURN;
-			io.KeyMap[ImGuiKey_Escape] = VK_ESCAPE;
-			io.KeyMap[ImGuiKey_A] = 'A';
-			io.KeyMap[ImGuiKey_C] = 'C';
-			io.KeyMap[ImGuiKey_V] = 'V';
-			io.KeyMap[ImGuiKey_X] = 'X';
-			io.KeyMap[ImGuiKey_Y] = 'Y';
-			io.KeyMap[ImGuiKey_Z] = 'Z';
 			io.MouseDoubleClickTime = 1.f;
 			io.UserData = this;
 
@@ -591,6 +674,11 @@ namespace cse
 			style.ColorButtonPosition = ImGuiDir_Right;
 			style.ButtonTextAlign = ImVec2(0.5, 0.5);
 
+			// Retrieve keyboard code page, required for handling of non-Unicode Windows.
+			HKL keyboard_layout = GetKeyboardLayout(0);
+			LCID keyboard_lcid = MAKELCID(HIWORD(keyboard_layout), SORT_DEFAULT);
+			if (GetLocaleInfoA(keyboard_lcid, (LOCALE_RETURN_NUMBER | LOCALE_IDEFAULTANSICODEPAGE), (LPSTR)&KeyboardCodePage, sizeof(KeyboardCodePage)) == 0)
+				KeyboardCodePage = CP_ACP; // Fallback to default ANSI code page when fails.
 
 			Initialized = true;
 			return true;
@@ -662,7 +750,6 @@ namespace cse
 			return Active != NULL;
 		}
 
-
 		void ImGuiDX9::NewFrame()
 		{
 			SME_ASSERT(Initialized);
@@ -683,35 +770,14 @@ namespace cse
 			io.DeltaTime = (float)(current_time - Time) / TicksPerSecond;
 			Time = current_time;
 
-			// Read keyboard modifiers inputs
-			io.KeyCtrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
-			io.KeyShift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
-			io.KeyAlt = (GetKeyState(VK_MENU) & 0x8000) != 0;
-			io.KeySuper = false;
-
 			// Start the frame
 			ImGui::NewFrame();
-			ImGuizmo::BeginFrame();
-
-			// manually update the double click state as ImGui's default polling doesn't consistently catch the events given our conditional rendering
-			for (int i = ImGuiMouseButton_Left; i <= ImGuiMouseButton_Middle; ++i)
-			{
-				io.MouseDoubleClicked[i] = MouseDoubleClicked[i];
-				if (io.MouseDoubleClicked[i])
-				{
-					io.MouseClicked[i] = true;
-					io.MouseReleased[i] = true;
-				}
-			}
 		}
 
 		void ImGuiDX9::Render()
 		{
 			ImGui::Render();
 			RenderDrawLists(ImGui::GetDrawData());
-
-			// reset mouse double click state for the next frame
-			MouseDoubleClicked[ImGuiMouseButton_Left] = MouseDoubleClicked[ImGuiMouseButton_Right] = MouseDoubleClicked[ImGuiMouseButton_Middle] = false;
 		}
 
 		void ImGuiDX9::InvalidateDeviceObjects()
@@ -744,15 +810,8 @@ namespace cse
 
 		void ImGuiDX9::ResetInputState(bool ConsumeNextRButtonDown)
 		{
-			ImGuiIO& io = ImGui::GetIO();
-			io.KeyCtrl = false;
-			io.KeyShift = false;
-			io.KeyAlt = false;
-			io.KeySuper = false;
-			io.MouseDown[ImGuiMouseButton_Left] = io.MouseDown[ImGuiMouseButton_Right] = io.MouseDown[ImGuiMouseButton_Middle] = false;
-
-			for (auto& Key : io.KeysDown)
-				Key = false;
+			ImGui::ResetMouseKeys();
+			ImGui::ResetKeyboardKeys();
 
 			if (ConsumeNextRButtonDown)
 				ConsumeNextMouseRButtonDown = true;
@@ -765,59 +824,134 @@ namespace cse
 			switch (msg)
 			{
 			case WM_LBUTTONDOWN:
-				io.MouseDown[ImGuiMouseButton_Left] = true;
+			case WM_LBUTTONDBLCLK:
+				io.AddMouseSourceEvent(ImGuiMouseSource_Mouse);
+				io.AddMouseButtonEvent(ImGuiMouseButton_Left, true);
 
 				return true;
 			case WM_LBUTTONUP:
-				io.MouseDown[ImGuiMouseButton_Left] = false;
+				io.AddMouseSourceEvent(ImGuiMouseSource_Mouse);
+				io.AddMouseButtonEvent(ImGuiMouseButton_Left, false);
 
 				return true;
+			//case wm_lbuttondblclk:
+			//	mousedoubleclicked[imguimousebutton_left] = true;
+
+			//	return true;
 			case WM_RBUTTONDOWN:
-				// ### HACK kludge to workaround the out-of-order dispatching of the button down message when opening the context menu in the render window
+			case WM_RBUTTONDBLCLK:
+				// ### HACK kludge to workaround the out-of-order dispatching of the button 
+				// down message when opening the context menu in the render window
 				if (ConsumeNextMouseRButtonDown == false)
-					io.MouseDown[ImGuiMouseButton_Right] = true;
+				{
+					io.AddMouseSourceEvent(ImGuiMouseSource_Mouse);
+					io.AddMouseButtonEvent(ImGuiMouseButton_Right, true);
+				}
 				else
 					ConsumeNextMouseRButtonDown = false;
 
 				return true;
 			case WM_RBUTTONUP:
-				io.MouseDown[ImGuiMouseButton_Right] = false;
+				io.AddMouseSourceEvent(ImGuiMouseSource_Mouse);
+				io.AddMouseButtonEvent(ImGuiMouseButton_Right, false);
+				
 				return true;
+			//case WM_RBUTTONDBLCLK:
+			//	MouseDoubleClicked[ImGuiMouseButton_Right] = true;
+
+			//	return true;
 			case WM_MBUTTONDOWN:
-				io.MouseDown[ImGuiMouseButton_Middle] = true;
+			case WM_MBUTTONDBLCLK:
+				io.AddMouseSourceEvent(ImGuiMouseSource_Mouse);
+				io.AddMouseButtonEvent(ImGuiMouseButton_Middle, true);
+
 				return true;
 			case WM_MBUTTONUP:
-				io.MouseDown[ImGuiMouseButton_Middle] = false;
+				io.AddMouseSourceEvent(ImGuiMouseSource_Mouse);
+				io.AddMouseButtonEvent(ImGuiMouseButton_Middle, false);
+
 				return true;
+			//case WM_MBUTTONDBLCLK:
+			//	MouseDoubleClicked[ImGuiMouseButton_Middle] = true;
+
+			//	return true;
 			case WM_MOUSEWHEEL:
-				io.MouseWheel += GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? +1.0f : -1.0f;
+				io.AddMouseWheelEvent(0.0f, (float)GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA);
+				
+				return true;
+			case WM_MOUSEHWHEEL:
+				io.AddMouseWheelEvent(-(float)GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA, 0.0f);
+
 				return true;
 			case WM_MOUSEMOVE:
-				io.MousePos.x = (signed short)(lParam);
-				io.MousePos.y = (signed short)(lParam >> 16);
+			{
+				POINT mouse_pos = { (LONG)GET_X_LPARAM(lParam), (LONG)GET_Y_LPARAM(lParam) };
+				io.AddMouseSourceEvent(ImGuiMouseSource_Mouse);
+				io.AddMousePosEvent((float)mouse_pos.x, (float)mouse_pos.y);
+				
 				return true;
-			case WM_SYSKEYDOWN:
+			}
 			case WM_KEYDOWN:
-				if (wParam < 256)
-					io.KeysDown[wParam] = true;
-				return true;
-			case WM_SYSKEYUP:
 			case WM_KEYUP:
+			case WM_SYSKEYDOWN:
+			case WM_SYSKEYUP:
+			{
+				const bool is_key_down = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
 				if (wParam < 256)
-					io.KeysDown[wParam] = false;
+				{
+					// Submit modifiers
+					ImGuiDX9::UpdateKeyModifiers();
+
+					// Obtain virtual key code
+					// (keypad enter doesn't have its own... VK_RETURN with KF_EXTENDED flag means keypad enter, see IM_VK_KEYPAD_ENTER definition for details, it is mapped to ImGuiKey_KeyPadEnter.)
+					int vk = (int)wParam;
+					if ((wParam == VK_RETURN) && (HIWORD(lParam) & KF_EXTENDED))
+						vk = IM_VK_KEYPAD_ENTER;
+					const ImGuiKey key = ImGui::VirtualKeyToImGuiKey(vk);
+					const int scancode = (int)LOBYTE(HIWORD(lParam));
+
+					// Special behavior for VK_SNAPSHOT / ImGuiKey_PrintScreen as Windows doesn't emit the key down event.
+					if (key == ImGuiKey_PrintScreen && !is_key_down)
+						ImGuiDX9::AddKeyEvent(key, true, vk, scancode);
+
+					// Submit key event
+					if (key != ImGuiKey_None)
+						ImGuiDX9::AddKeyEvent(key, is_key_down, vk, scancode);
+
+					// Submit individual left/right modifier events
+					if (vk == VK_SHIFT)
+					{
+						// Important: Shift keys tend to get stuck when pressed together, missing key-up events are corrected in ImGui_ImplWin32_ProcessKeyEventsWorkarounds()
+						if (IsVkDown(VK_LSHIFT) == is_key_down) { ImGuiDX9::AddKeyEvent(ImGuiKey_LeftShift, is_key_down, VK_LSHIFT, scancode); }
+						if (IsVkDown(VK_RSHIFT) == is_key_down) { ImGuiDX9::AddKeyEvent(ImGuiKey_RightShift, is_key_down, VK_RSHIFT, scancode); }
+					}
+					else if (vk == VK_CONTROL)
+					{
+						if (IsVkDown(VK_LCONTROL) == is_key_down) { ImGuiDX9::AddKeyEvent(ImGuiKey_LeftCtrl, is_key_down, VK_LCONTROL, scancode); }
+						if (IsVkDown(VK_RCONTROL) == is_key_down) { ImGuiDX9::AddKeyEvent(ImGuiKey_RightCtrl, is_key_down, VK_RCONTROL, scancode); }
+					}
+					else if (vk == VK_MENU)
+					{
+						if (IsVkDown(VK_LMENU) == is_key_down) { ImGuiDX9::AddKeyEvent(ImGuiKey_LeftAlt, is_key_down, VK_LMENU, scancode); }
+						if (IsVkDown(VK_RMENU) == is_key_down) { ImGuiDX9::AddKeyEvent(ImGuiKey_RightAlt, is_key_down, VK_RMENU, scancode); }
+					}
+				}
 				return true;
+			}
 			case WM_CHAR:
-				if (wParam > 0 && wParam < 0x10000)
-					io.AddInputCharacter((unsigned short)wParam);
-				return true;
-			case WM_LBUTTONDBLCLK:
-				MouseDoubleClicked[ImGuiMouseButton_Left] = true;
-				return true;
-			case WM_RBUTTONDBLCLK:
-				MouseDoubleClicked[ImGuiMouseButton_Right] = true;
-				return true;
-			case WM_MBUTTONDBLCLK:
-				MouseDoubleClicked[ImGuiMouseButton_Middle] = true;
+				if (IsWindowUnicode(hWnd))
+				{
+					// You can also use ToAscii()+GetKeyboardState() to retrieve characters.
+					if (wParam > 0 && wParam < 0x10000)
+						io.AddInputCharacterUTF16((unsigned short)wParam);
+				}
+				else
+				{
+					wchar_t wch = 0;
+					MultiByteToWideChar(KeyboardCodePage, MB_PRECOMPOSED, (char*)&wParam, 1, &wch, 1);
+					io.AddInputCharacter(wch);
+				}
+
 				return true;
 			}
 
@@ -862,12 +996,6 @@ namespace cse
 			return g.HoveredWindow == Itr.Window;
 		}
 
-		bool ImGuiDX9::IsHoveringWindow() const
-		{
-			ImGuiContext& g = *GImGui;
-			return g.HoveredRootWindow || g.HoveredWindow;
-		}
-
 		bool ImGuiDX9::IsChildWindowHovering(void* RootWindow) const
 		{
 			ImGuiContext* RenderContext = ImGui::GetCurrentContext();
@@ -896,11 +1024,6 @@ namespace cse
 			}
 
 			return false;
-		}
-
-		void* ImGuiDX9::GetLastItemID() const
-		{
-			return (void*)ImGui::GetCurrentWindow()->DC.LastItemId;
 		}
 
 		void* ImGuiDX9::GetMouseHoverItemID() const
@@ -1023,7 +1146,7 @@ namespace cse
 			ImGuiStyle& Style = ImGui::GetStyle();
 
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 2));
-			ImGui::BeginChild("##color_list_child_window", ImVec2(0, -25), true, ImGuiWindowFlags_AlwaysUseWindowPadding);
+			ImGui::BeginChild("##color_list_child_window", ImVec2(0, -25), true, ImGuiChildFlags_AlwaysUseWindowPadding);
 			ImGui::PopStyleVar();
 			{
 				for (int i = 0; i < ImGuiCol_COUNT; i++)
@@ -1191,10 +1314,6 @@ namespace cse
 						if (ModalWindowProviderOSDLayer::Instance.HasOpenModals())
 						{
 							State.ConsumeMouseInputEvents = State.ConsumeKeyboardInputEvents = true;
-							Handled = true;
-						}
-						else if (ImGuizmo::IsUsing() || ImGuizmo::IsOver())
-						{
 							Handled = true;
 						}
 						else if (Pipeline->CanAllowInputEventPassthrough(uMsg, wParam, lParam,

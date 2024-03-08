@@ -5,7 +5,6 @@
 #include "RenderWindowCellLists.h"
 #include "RenderWindowInput.h"
 #include "RenderWindowLayers.h"
-#include "RenderWindowGizmos.h"
 
 namespace cse
 {
@@ -244,7 +243,6 @@ namespace cse
 			input::RenderWindowMouseManager*			MouseInputManager;
 			RenderWindowDeferredExecutor*				DeferredExecutor;
 			ReferenceColorMaskManager*					ColorMaskManager;
-			RenderWindowGizmoManager*					GizmoManager;
 			GlobalEventSink*							EventSink;
 			TESObjectREFRArrayT							ActiveRefCache;		// include temporary refs
 			bool										RenderingScene;

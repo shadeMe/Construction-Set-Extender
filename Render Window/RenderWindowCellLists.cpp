@@ -221,7 +221,7 @@ namespace cse
 			{
 				TESObjectCELL* ToSelect = nullptr;
 
-				if (ImGui::CollapsingHeader("Bookmarks", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap))
+				if (ImGui::CollapsingHeader("Bookmarks", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowOverlap))
 				{
 					BookmarksVisible = true;
 					ImGui::SameLine(0, 85);

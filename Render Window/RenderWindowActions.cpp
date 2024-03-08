@@ -416,7 +416,7 @@ namespace cse
 
 					ImGui::Separator();
 					bool Close = false;
-					if (ImGui::IsKeyReleased(VK_ESCAPE))
+					if (ImGui::IsKeyReleased(ImGui::VirtualKeyToImGuiKey(VK_ESCAPE)))
 						Close = true;
 					else
 					{
@@ -710,7 +710,7 @@ namespace cse
 
 					ImGui::Separator();
 					bool Close = false;
-					if (ImGui::IsKeyReleased(VK_ESCAPE))
+					if (ImGui::IsKeyReleased(ImGui::VirtualKeyToImGuiKey(VK_ESCAPE)))
 						Close = true;
 					else
 					{

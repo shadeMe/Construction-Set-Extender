@@ -83,6 +83,8 @@ namespace cse
 		{
 			SME_ASSERT(Context->HasMultipleSelection());
 
+			DrawDragTrail(Context);
+
 			ImGui::TextUnformatted("Transformation:");
 			ImGui::SameLine(0, 15);
 			ImGui::RadioButton("Local", &TransformationMode, kTransformationMode_Local);
@@ -284,7 +286,9 @@ namespace cse
 			auto& io = ImGui::GetIO();
 
 			if (Context->ParentState.DragInput.Active)
+			{
 				ImGui::GetForegroundDrawList()->AddLine(io.MouseClickedPos[ImGuiMouseButton_Left], io.MousePos, ImGui::GetColorU32(ImGuiCol_PlotLines), 4.0f); // Draw a line between the button and the mouse cursor
+			}
 		}
 
 		Reference3DEditComponent::Reference3DEditComponent()
@@ -729,7 +733,7 @@ namespace cse
 				bool RankSelection = SelectionState.Type == SelectionType::Rank;
 
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 2));
-				ImGui::BeginChild("##child_window", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding);
+				ImGui::BeginChild("##child_window", ImVec2(0, 0), false, ImGuiChildFlags_AlwaysUseWindowPadding);
 				ImGui::PopStyleVar();
 				{
 					if (ImGui::BeginTable("##selection_popup_table", 2,
@@ -1505,7 +1509,7 @@ namespace cse
 			TESObjectREFR* ContextMenuRef = nullptr;
 
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 2));
-			ImGui::BeginChild("##reference_list_child_window", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar);
+			ImGui::BeginChild("##reference_list_child_window", ImVec2(0, 0), false, ImGuiChildFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar);
 			ImGui::PopStyleVar();
 			{
 				ImGui::ShowHelpPopup("CTRL + click on a reference below to center the camera on it.\nRight click on a reference to show the context menu.");
@@ -1739,7 +1743,7 @@ namespace cse
 						ImGui::SameLine();
 
 						ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 2));
-						ImGui::BeginChild("##edit_component_child_window", ImVec2(-5, 0), ImGuiWindowFlags_AlwaysUseWindowPadding);
+						ImGui::BeginChild("##edit_component_child_window", ImVec2(-5, 0), ImGuiChildFlags_AlwaysUseWindowPadding);
 						ImGui::PopStyleVar();
 						{
 							if (ImGui::ArrowButton("##ToggleRefList", HideRefList ? ImGuiDir_Right : ImGuiDir_Left))

@@ -22,14 +22,18 @@ namespace cse
 			INT64					Time;
 			INT64					TicksPerSecond;
 			HWND					RenderWindowHandle;
+			UINT32					KeyboardCodePage;
 			IDirect3DDevice9*		D3DDevice;
-			bool					MouseDoubleClicked[3];
 			bool					ConsumeNextMouseRButtonDown;
 			POINT					CurrentMouseCoord;
 			POINT					MouseDownCursorPos;
 			bool					Initialized;
 
 			static void		RenderDrawLists(ImDrawData* draw_data);
+			static void		SetupRenderState(IDirect3DDevice9* device, ImDrawData* draw_data);
+			static void		AddKeyEvent(ImGuiKey key, bool down, int native_keycode, int native_scancode = -1);
+			static void		UpdateKeyModifiers();
+			static bool		IsVkDown(int vk);
 
 			bool			CreateFontsTexture();
 			void			AddFontFromFile(const char* FontPath, const char* IconFontPath = nullptr, ImWchar IconRangeStart = '\0', ImWchar IconRangeEnd = '\0', float IconOffsetX = 0.f, float IconOffsetY = 0.f);
@@ -55,11 +59,9 @@ namespace cse
 			bool	IsInitialized() const;
 			bool	IsDraggingWindow() const;
 			bool	IsPopupHovered() const;												// must be called inside a BeginPopup block
-			bool	IsHoveringWindow() const;
 			bool	IsChildWindowHovering(void* RootWindow) const;						// pass output of GetCurrent/HoveredWindow()
 			bool	HasRootWindow(void* ChildWindow, void* RootWindow) const;			// returns true if the root window is found in the child's parent hierarchy
 
-			void*	GetLastItemID() const;
 			void*	GetMouseHoverItemID() const;
 
 			void*	GetCurrentWindow() const;

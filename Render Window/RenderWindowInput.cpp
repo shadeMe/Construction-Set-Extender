@@ -733,7 +733,7 @@ namespace cse
 
 				bool Closed = false;
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 2));
-				ImGui::BeginChild("##hotkey_list_child_window", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding);
+				ImGui::BeginChild("##hotkey_list_child_window", ImVec2(0, 0), false, ImGuiChildFlags_AlwaysUseWindowPadding);
 				ImGui::PopStyleVar();
 				{
 					if (ImGui::BeginTable("##hotkey_table", 3,
@@ -834,31 +834,28 @@ namespace cse
 					Alt = CurrentHotKey->GetActiveBinding().HasAlt();
 				}
 
-				SHORT FirstKeyDown = NULL;
+				ImGuiKey FirstKeyDown = ImGuiKey_None;
 				bool ClearBuffer = false;
-				for (int i = NULL; i < 256; i++)
+				for (const auto Key : ImGui::NamedKeys())
 				{
 					bool Skip = false;
-					switch (i)
+					switch (Key)
 					{
-					case VK_ESCAPE:
-						if (ImGui::IsKeyPressed(i) || ImGui::IsKeyReleased(i))
+					case ImGuiKey_Escape:
+						if (ImGui::IsKeyPressed(Key) || ImGui::IsKeyReleased(Key))
 						{
 							ClearBuffer = true;
 							Skip = true;
 						}
 
 						break;
-					case VK_SHIFT:
-					case VK_CONTROL:
-					case VK_MENU:
-					case VK_LSHIFT:
-					case VK_RSHIFT:
-					case VK_LCONTROL:
-					case VK_RCONTROL:
-					case VK_LMENU:
-					case VK_RMENU:
-					case VK_SPACE:
+					case ImGuiKey_LeftShift:
+					case ImGuiKey_RightShift:
+					case ImGuiKey_LeftCtrl:
+					case ImGuiKey_RightCtrl:
+					case ImGuiKey_LeftAlt:
+					case ImGuiKey_RightAlt:
+					case ImGuiKey_Space:
 						if (HoldableKey == false)
 							Skip = true;		// use modifiers only when mapping holdable keys
 						break;
@@ -867,13 +864,13 @@ namespace cse
 					if (Skip)
 						continue;
 
-					if (ImGui::IsKeyReleased(i))
+					if (ImGui::IsKeyReleased(Key))
 					{
-						FirstKeyDown = i;
+						FirstKeyDown = Key;
 
-						Shift = ImGui::IsKeyDown(VK_SHIFT);
-						Control = ImGui::IsKeyDown(VK_CONTROL);
-						Alt = ImGui::IsKeyDown(VK_MENU);
+						Shift = ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift);
+						Control = ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl);
+						Alt = ImGui::IsKeyDown(ImGuiKey_LeftAlt) || ImGui::IsKeyDown(ImGuiKey_RightAlt);
 
 						break;
 					}
@@ -882,7 +879,7 @@ namespace cse
 				if (ClearBuffer)
 					HotKeyBuffer = NULL;
 				else if (FirstKeyDown)
-					HotKeyBuffer = FirstKeyDown;
+					HotKeyBuffer = ImGui::ImGuiKeyToVirtualKey(FirstKeyDown);
 
 				BasicKeyBinding NewBinding;
 				bool InvalidNewHoldableKey = false;

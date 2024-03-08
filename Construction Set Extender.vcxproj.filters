@@ -366,9 +366,6 @@
     <ClCompile Include="Render Window\RenderWindowGroups.cpp">
       <Filter>Components\Render Window</Filter>
     </ClCompile>
-    <ClCompile Include="Render Window\RenderWindowGizmos.cpp">
-      <Filter>Components\Render Window</Filter>
-    </ClCompile>
     <ClCompile Include="..\OBSE\obse\NiTypes.cpp">
       <Filter>OBSE</Filter>
     </ClCompile>
@@ -388,9 +385,6 @@
       <Filter>Components\IMGUI</Filter>
     </ClCompile>
     <ClCompile Include="IMGUI\imgui_widgets.cpp">
-      <Filter>Components\IMGUI</Filter>
-    </ClCompile>
-    <ClCompile Include="IMGUI\ImGuizmo.cpp">
       <Filter>Components\IMGUI</Filter>
     </ClCompile>
     <ClCompile Include="Render Window\InfoOverlayOSDLayer.cpp">
@@ -899,9 +893,6 @@
     <ClInclude Include="EditorAPI\TESLevSpell.h">
       <Filter>EditorAPI\Forms\Objects</Filter>
     </ClInclude>
-    <ClInclude Include="Render Window\RenderWindowGizmos.h">
-      <Filter>Components\Render Window</Filter>
-    </ClInclude>
     <ClInclude Include="Render Window\RenderWindowFlyCamera.h">
       <Filter>Components\Render Window</Filter>
     </ClInclude>
@@ -915,9 +906,6 @@
       <Filter>Components\IMGUI</Filter>
     </ClInclude>
     <ClInclude Include="IMGUI\imgui_user.h">
-      <Filter>Components\IMGUI</Filter>
-    </ClInclude>
-    <ClInclude Include="IMGUI\ImGuizmo.h">
       <Filter>Components\IMGUI</Filter>
     </ClInclude>
     <ClInclude Include="IMGUI\imstb_rectpack.h">

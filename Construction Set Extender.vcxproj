@@ -479,7 +479,6 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="HallOfFame.cpp" />
     <ClCompile Include="Hooks\Hooks-Events.cpp" />
     <ClCompile Include="IMGUI\imgui.cpp" />
-    <ClCompile Include="IMGUI\ImGuizmo.cpp" />
     <ClCompile Include="IMGUI\imgui_demo.cpp" />
     <ClCompile Include="IMGUI\imgui_draw.cpp" />
     <ClCompile Include="IMGUI\imgui_tables.cpp" />
@@ -500,7 +499,6 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="Render Window\RenderWindowCellLists.cpp" />
     <ClCompile Include="Render Window\RenderWindowCommon.cpp" />
     <ClCompile Include="Render Window\RenderWindowFlyCamera.cpp" />
-    <ClCompile Include="Render Window\RenderWindowGizmos.cpp" />
     <ClCompile Include="Render Window\RenderWindowGroups.cpp" />
     <ClCompile Include="Render Window\RenderWindowInput.cpp" />
     <ClCompile Include="Render Window\RenderWindowLayers.cpp" />
@@ -614,7 +612,6 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="IconFontCppHeaders\IconsMaterialDesign.h" />
     <ClInclude Include="IMGUI\imconfig.h" />
     <ClInclude Include="IMGUI\imgui.h" />
-    <ClInclude Include="IMGUI\ImGuizmo.h" />
     <ClInclude Include="IMGUI\imgui_internal.h" />
     <ClInclude Include="IMGUI\imgui_user.h" />
     <ClInclude Include="IMGUI\imstb_rectpack.h" />
@@ -636,7 +633,6 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="Render Window\RenderWindowCellLists.h" />
     <ClInclude Include="Render Window\RenderWindowCommon.h" />
     <ClInclude Include="Render Window\RenderWindowFlyCamera.h" />
-    <ClInclude Include="Render Window\RenderWindowGizmos.h" />
     <ClInclude Include="Render Window\RenderWindowGroups.h" />
     <ClInclude Include="Render Window\RenderWindowInput.h" />
     <ClInclude Include="Render Window\RenderWindowLayers.h" />

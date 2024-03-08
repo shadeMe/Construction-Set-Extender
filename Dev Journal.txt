@@ -17,6 +17,8 @@ NOTE	---->
 CSE		---->
 
 	BUGFIX			=
+		> Render window OSD
+			> The first right click inside the OSD after opening the context menu is ignored.
 		> Check if the Launch Game button works correctly with the Steam version of the game
 			> We probably need to use the loader
 		> CSE INI preferences UI bug - exit confirmation message box is not showing up correctly/gets hidden under another window

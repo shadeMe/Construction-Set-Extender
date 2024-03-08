@@ -1167,7 +1167,6 @@ namespace cse
 			MouseInputManager = new input::RenderWindowMouseManager();
 			DeferredExecutor = new RenderWindowDeferredExecutor();
 			ColorMaskManager = new ReferenceColorMaskManager();
-			GizmoManager = new RenderWindowGizmoManager();
 			ActiveRefCache.reserve(500);
 			RenderingScene = false;
 			MouseInClientArea = false;
@@ -1190,7 +1189,6 @@ namespace cse
 			SAFEDELETE(MouseInputManager);
 			SAFEDELETE(DeferredExecutor);
 			SAFEDELETE(ColorMaskManager);
-			SAFEDELETE(GizmoManager);
 
 			Initialized = false;
 		}
@@ -1225,7 +1223,6 @@ namespace cse
 			SceneGraphManager->AddModifier(&ReferenceParentChildIndicator::Instance);
 			SceneGraphManager->AddModifier(&ReferenceVisibilityModifier::Instance);
 
-			GizmoManager->Initialize(OSD);
 			CellLists->Initialize();
 			GroupManager->Initialize();
 			LayerManager->Initialize();
@@ -1287,7 +1284,6 @@ namespace cse
 			LayerManager->Deinitialize();
 			GroupManager->Deinitialize();
 			CellLists->Deinitialize();
-			GizmoManager->Deinitialize(OSD);
 			OSD->Deinitialize();
 			SceneGraphManager->RemoveModifier(&ReferenceParentChildIndicator::Instance);
 			SceneGraphManager->RemoveModifier(&ReferenceVisibilityModifier::Instance);
