@@ -787,6 +787,7 @@ IEnumerable<IntelliSenseItem^>^ IntelliSenseBackend::FetchIntelliSenseItems(Fetc
 		if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::Snippet))
 			Results = DoFetchPrefixMatch(Snippets, Args, nullptr, Results);
 
+		Results = System::Linq::Enumerable::Distinct(Results);
 		return System::Linq::Enumerable::Take(Results, Args->NumItemsToFetch);
 	}
 	case eFilterMode::Fuzzy:
@@ -826,6 +827,7 @@ IEnumerable<IntelliSenseItem^>^ IntelliSenseBackend::FetchIntelliSenseItems(Fetc
 		if (Args->FilterBy.HasFlag(eDatabaseLookupFilter::Snippet))
 			Results = DoFetchFuzzyMatch(Snippets, Args, nullptr, Results);
 
+		Results = System::Linq::Enumerable::Distinct(Results);
 		auto Sorted = IntelliSenseItemCollection::SortAndExtractFuzzyMatches(Results);
 		return System::Linq::Enumerable::Take(Sorted, Args->NumItemsToFetch);
 	}
