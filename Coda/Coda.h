@@ -1,7 +1,7 @@
 #pragma once
 
-#include <bgsee\Script\CodaVM.h>
-#include <bgsee\Script\Commands\CodaScriptCommand.h>
+#include "[BGSEEBase]\Script\CodaVM.h"
+#include "[BGSEEBase]\Script\Commands\CodaScriptCommand.h"
 
 namespace cse
 {

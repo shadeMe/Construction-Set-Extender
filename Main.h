@@ -1,5 +1,4 @@
 #pragma once
-#include <bgsee\Main.h>
 #include "[Common]\ComponentDLLInterface.h"
 
 namespace cse

@@ -1,5 +1,5 @@
 #pragma once
-#include <bgsee\GlobalClipboard.h>
+#include "[BGSEEBase]\GlobalClipboard.h"
 #include "Wrappers.h"
 
 namespace cse

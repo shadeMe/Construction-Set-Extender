@@ -1,5 +1,6 @@
 #pragma once
-#include <bgsee\Achievements.h>
+
+#include "[BGSEEBase]\Achievements.h"
 
 namespace cse
 {

@@ -13,7 +13,6 @@
 #pragma comment(lib, "mscoree.lib")
 #pragma comment(lib, "Psapi.lib")
 #pragma comment(lib, "CrashRpt1403.lib")
-#pragma comment(lib, "BGSEditorExtenderBase.lib")
 
 #pragma comment(linker, "\"/manifestdependency:type='win32' \
 name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \

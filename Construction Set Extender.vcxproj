@@ -568,7 +568,6 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClCompile Include="Exports.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Libraries\BGSEditorExtenderBase\bgsee\BGSEditorExtenderBase_Resource.h" />
     <ClInclude Include="..\..\Libraries\SME Sundries\INIEditGUI_Res.h" />
     <ClInclude Include="..\OBSE\obse\HavokBase.h" />
     <ClInclude Include="..\OBSE\obse\HavokCharacters.h" />
@@ -730,6 +729,7 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <ClInclude Include="ChangeLogManager.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="VersionInfo.h" />
+    <ClInclude Include="[BGSEEBase]\BGSEditorExtenderBase_Resource.h" />
     <ClInclude Include="[Common]\CLIWrapper.h" />
     <ClInclude Include="Construction Set Extender_Resource.h" />
     <ClInclude Include="[Common]\ComponentDLLInterface.h" />
@@ -783,7 +783,6 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
     <None Include="Images\wtf.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\..\Libraries\BGSEditorExtenderBase\bgsee\BGSEditorExtenderBase.rc" />
     <ResourceCompile Include="..\..\Libraries\SME Sundries\INIEditGUI_Res.rc" />
     <ResourceCompile Include="Construction Set Extender.rc" />
     <ResourceCompile Include="VersionInfo.rc">
@@ -797,9 +796,15 @@ copy "$(TargetDir)$(TargetName).pdb" "$(DropboxPath)\CSE Once-In-Awhile'lies\Dat
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release - Skip Dev Channel|Win32'">CSE</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release - No CrashRpt, Attach Debugger|Win32'">CSE</PreprocessorDefinitions>
     </ResourceCompile>
+    <ResourceCompile Include="[BGSEEBase]\BGSEditorExtenderBase.rc" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="IMGUI\imgui.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="[BGSEEBase]\BGSEditorExtenderBase.vcxproj">
+      <Project>{414edf4a-5930-416a-b382-216b445539db}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

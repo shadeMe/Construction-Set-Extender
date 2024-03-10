@@ -37,9 +37,6 @@
     <ClInclude Include="DetectSIMD.h">
       <Filter>Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="BGSEditorExtenderBase_Resource.h">
-      <Filter>Resources</Filter>
-    </ClInclude>
     <ClInclude Include="ToolBox.h">
       <Filter>Modules</Filter>
     </ClInclude>
@@ -202,9 +199,6 @@
     <ClInclude Include="Script\MUP Base\mpPackageUnit.h">
       <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\SME Sundries\INIEditGUI_Res.h">
-      <Filter>Resources</Filter>
-    </ClInclude>
     <ClInclude Include="Script\MUP Implementation\CodaMUPVariable.h">
       <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Implementation</Filter>
     </ClInclude>
@@ -243,6 +237,9 @@
     </ClInclude>
     <ClInclude Include="WindowColorThemer.h">
       <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEditorExtenderBase_Resource.h">
+      <Filter>Resources</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -424,14 +421,6 @@
     <ClCompile Include="WindowColorThemer.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="BGSEditorExtenderBase.rc">
-      <Filter>Resources</Filter>
-    </ResourceCompile>
-    <ResourceCompile Include="..\..\SME Sundries\INIEditGUI_Res.rc">
-      <Filter>Resources</Filter>
-    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="[Resources]\generic.bmp">

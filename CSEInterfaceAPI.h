@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef CSEAPI_NO_CODA
-#include <bgsee\Script\CodaPublicAPI.h>
+#include "[BGSEEBase]\Script\CodaPublicAPI.h"
 #endif
 
 /********** CSE Interface API ******************************************************************

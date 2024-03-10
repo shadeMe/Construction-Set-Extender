@@ -8,7 +8,7 @@
 #include "ObjectPrefabManager.h"
 #include "CustomDialogProcs.h"
 #include "CellViewWindowOverrides.h"
-#include <bgsee/FormUndoStack.h>
+#include "[BGSEEBase]\FormUndoStack.h"
 
 #pragma warning(push)
 #pragma warning(disable: 4005 4748)

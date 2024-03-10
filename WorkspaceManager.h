@@ -1,5 +1,5 @@
 #pragma once
-#include <bgsee\WorkspaceManager.h>
+#include "[BGSEEBase]\WorkspaceManager.h"
 
 namespace cse
 {

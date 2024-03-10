@@ -11,8 +11,8 @@
 #include "mpPackageMatrix.h"
 #include "CodaMUPScriptCommand.h"
 #include "CodaUtilities.h"
-#include "Main.h"
-#include "Console.h"
+#include "..\Main.h"
+#include "..\Console.h"
 
 namespace bgsee
 {

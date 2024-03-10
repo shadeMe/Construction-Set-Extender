@@ -28,8 +28,8 @@
 #include "CellViewWindowOverrides.h"
 #include "ObjectWindowOverrides.h"
 
-#include <bgsee\ToolBox.h>
-#include <bgsee\Script\CodaVM.h>
+#include "[BGSEEBase]\ToolBox.h"
+#include "[BGSEEBase]\Script\CodaVM.h"
 
 namespace cse
 {

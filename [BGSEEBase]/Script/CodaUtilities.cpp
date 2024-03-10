@@ -1,6 +1,6 @@
 #include "CodaUtilities.h"
 #include "CodaAST.h"
-#include "Console.h"
+#include "..\Console.h"
 
 namespace bgsee
 {

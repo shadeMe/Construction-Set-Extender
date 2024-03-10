@@ -5,7 +5,7 @@
 #include "PluginAPIManager.h"
 #include "FormUndoStack.h"
 
-#include <bgsee\BGSEditorExtenderBase_Resource.h>
+#include "[BGSEEBase]\BGSEditorExtenderBase_Resource.h"
 
 namespace cse
 {

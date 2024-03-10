@@ -1,6 +1,6 @@
 #pragma once
 
-#include <bgsee\Wrappers.h>
+#include "[BGSEEBase]\Wrappers.h"
 
 namespace cse
 {

@@ -11,8 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\SME Sundries\INIEditGUI_Res.h" />
     <ClInclude Include="Achievements.h" />
+    <ClInclude Include="BGSEditorExtenderBase_Resource.h" />
     <ClInclude Include="ChangeLogManager.h" />
     <ClInclude Include="Console.h" />
     <ClInclude Include="FormUndoStack.h" />
@@ -80,7 +80,6 @@
     <ClInclude Include="WorkspaceManager.h" />
     <ClInclude Include="Wrappers.h" />
     <ClInclude Include="DetectSIMD.h" />
-    <ClInclude Include="BGSEditorExtenderBase_Resource.h" />
     <ClInclude Include="StdAfx.h" />
   </ItemGroup>
   <ItemGroup>
@@ -151,32 +150,21 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\..\SME Sundries\INIEditGUI_Res.rc" />
-    <ResourceCompile Include="BGSEditorExtenderBase.rc">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="ResourceLocation.h" />
     <None Include="Script\CodaBaseInterfaces.inl" />
     <None Include="Script\CodaForwardDecls.inl" />
     <None Include="[Resources]\generic.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\xSE Common\common_vc9.vcxproj">
+    <ProjectReference Include="..\..\..\Libraries\xSE Common\common_vc9.vcxproj">
       <Project>{20c6411c-596f-4b85-be4e-8bc91f59d8a6}</Project>
-      <Private>true</Private>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
-      <LinkLibraryDependencies>true</LinkLibraryDependencies>
-      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{414EDF4A-5930-416A-B382-216B445539DB}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>BGSEditorExtenderBase</RootNamespace>
-    <ProjectName>BGSEditorExtenderBase</ProjectName>
+    <ProjectName>BGSEEBase</ProjectName>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -251,10 +239,12 @@
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
     </Lib>
     <PostBuildEvent>
-      <Command>copy "$(TargetPath)" "Release\$(TargetFileName)"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Message>Installing Library...</Message>
+      <Message>
+      </Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

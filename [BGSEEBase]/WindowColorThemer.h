@@ -165,6 +165,7 @@ namespace bgsee
 		SME::INI::INISetting*
 					ColorSettings[kColor__MAX];
 		COLORREF	Colors[kColor__MAX];
+		HFONT		DefaultFont;
 		std::unordered_map<UInt32, HBRUSH>
 					Brushes;
 		std::unordered_map<HTHEME, ThemeType>

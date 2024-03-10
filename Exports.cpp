@@ -8,7 +8,7 @@
 #include "Hooks\Hooks-Dialog.h"
 #include "CustomDialogProcs.h"
 
-#include <bgsee\WorkspaceManager.h>
+#include "[BGSEEBase]\WorkspaceManager.h"
 
 using namespace componentDLLInterface;
 using namespace cse;

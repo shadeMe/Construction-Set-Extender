@@ -1,5 +1,5 @@
 #pragma once
-#include <bgsee\HallOfFame.h>
+#include "[BGSEEBase]\HallOfFame.h"
 
 namespace cse
 {

@@ -3,8 +3,8 @@
 #include "Hooks\Hooks-Renderer.h"
 #include "Hooks\Hooks-Dialog.h"
 
-#include <bgsee\Main.h>
-#include <bgsee\BGSEditorExtenderBase_Resource.h>
+#include "[BGSEEBase]\Main.h"
+#include "[BGSEEBase]\BGSEditorExtenderBase_Resource.h"
 
 namespace cse
 {

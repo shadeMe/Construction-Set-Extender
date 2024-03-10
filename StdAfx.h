@@ -115,10 +115,10 @@ using namespace SME::MemoryHandler;
 #include "obse\Utilities.h"
 
 // BGSEEBASE
-#include <bgsee\Main.h>
-#include <bgsee\Console.h>
-#include <bgsee\UIManager.h>
-#include <bgsee\HookUtil.h>
+#include "[BGSEEBase]\Main.h"
+#include "[BGSEEBase]\Console.h"
+#include "[BGSEEBase]\UIManager.h"
+#include "[BGSEEBase]\HookUtil.h"
 
 
 // CSE

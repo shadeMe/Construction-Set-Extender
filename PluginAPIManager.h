@@ -5,7 +5,7 @@
 
 #include "CSEInterfaceAPI.h"
 #include "[Common]\HandShakeStructs.h"
-#include <bgsee\Script\CodaVM.h>
+#include "[BGSEEBase]\Script\CodaVM.h"
 
 namespace cse
 {

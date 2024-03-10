@@ -1,6 +1,6 @@
 #pragma once
 
-#include <bgsee\ChangeLogManager.h>
+#include "[BGSEEBase]\ChangeLogManager.h"
 
 namespace cse
 {
