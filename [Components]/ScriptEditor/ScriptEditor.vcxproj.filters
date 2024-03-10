@@ -488,5 +488,11 @@
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\ThreeDScene\ThreeDScene_16x.png">
       <Filter>Resources\Icons</Filter>
     </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\FuzzyLookup\FuzzyLookup_16x.png">
+      <Filter>Resources\Icons</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2019 Modern Image Library\vswin2019\FSScript\FSScript_16x.png">
+      <Filter>Resources\Icons</Filter>
+    </Image>
   </ItemGroup>
 </Project>
