@@ -114,6 +114,7 @@ ref class CodeSnippetManagerDialog : public DevComponents::DotNetBar::Metro::Met
 	void ResetFields();
 	void SetFields(CodeSnippet^ Snippet);
 	void PopulateSnippetList();
+	void SetDefaultFont(System::Drawing::Font^ DefaultFont);
 
 	void ButtonApply_Click(Object^ Sender, EventArgs^ E);
 	void ToolbarAddSnippet_Click(Object^ Sender, EventArgs^ E);

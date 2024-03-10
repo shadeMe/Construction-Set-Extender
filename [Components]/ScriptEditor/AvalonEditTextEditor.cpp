@@ -892,7 +892,7 @@ void AvalonEditTextEditor::RaiseIntelliSenseInsightHover(intellisense::IntelliSe
 	if (Current)
 		Location.Y += Current->Height;
 	else
-		Location.Y += preferences::SettingsHolder::Get()->Appearance->TextFont->Size;
+		Location.Y += preferences::SettingsHolder::Get()->Appearance->TextEditorFont->Size;
 
 	Location = TextField->PointToScreen(Location);
 	E->DisplayScreenCoords = Point(Location.X, Location.Y);
@@ -931,7 +931,7 @@ void AvalonEditTextEditor::RaiseIntelliSenseContextChange(intellisense::IntelliS
 	if (Current)
 		DisplayScreenCoords.Y += Current->Height + 5;
 	else
-		DisplayScreenCoords.Y += preferences::SettingsHolder::Get()->Appearance->TextFont->Size + 3;
+		DisplayScreenCoords.Y += preferences::SettingsHolder::Get()->Appearance->TextEditorFont->Size + 3;
 
 	E->DisplayScreenCoords = DisplayScreenCoords;
 	IntelliSenseContextChange(this, E);
@@ -1358,7 +1358,7 @@ void AvalonEditTextEditor::ScriptEditorPreferences_Saved( Object^ Sender, EventA
 	if (preferences::SettingsHolder::Get()->Appearance->ShowCodeFolding)
 		CodeFoldingStrategy = gcnew ObScriptCodeFoldingStrategy(this);
 
-	Font^ CustomFont = safe_cast<Font^>(preferences::SettingsHolder::Get()->Appearance->TextFont->Clone());
+	Font^ CustomFont = safe_cast<Font^>(preferences::SettingsHolder::Get()->Appearance->TextEditorFont->Clone());
 	SetFont(CustomFont);
 
 	int TabSize = preferences::SettingsHolder::Get()->Appearance->TabSize;
@@ -1587,7 +1587,7 @@ AvalonEditTextEditor::AvalonEditTextEditor(model::IScriptDocument^ ParentScriptD
 	WinFormsContainer->ResumeLayout(false);
 	WPFHost->ResumeLayout(false);
 
-	SetFont(preferences::SettingsHolder::Get()->Appearance->TextFont);
+	SetFont(preferences::SettingsHolder::Get()->Appearance->TextEditorFont);
 	SetTabCharacterSize(preferences::SettingsHolder::Get()->Appearance->TabSize);
 
 	TextField->TextChanged += TextFieldTextChangedHandler;

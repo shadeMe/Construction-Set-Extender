@@ -474,8 +474,6 @@ void ScriptSelectionDialog::InitializeComponent()
 	//
 	// ScriptEditorSelectScripts
 	//
-	this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
-	this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 	this->ClientSize = System::Drawing::Size(900, 574);
 	this->StartPosition = FormStartPosition::CenterParent;
 	this->Controls->Add(this->BottomToolbarCompleteSelection);
@@ -495,6 +493,9 @@ void ScriptSelectionDialog::InitializeComponent()
 
 void ScriptSelectionDialog::FinalizeComponents()
 {
+	utilities::DisableFormAutoScale(this);
+	SetDefaultFont(preferences::SettingsHolder::Get()->Appearance->UIFont);
+
 	this->ScriptListCFlags->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&ScriptSelectionDialog::ScriptListAspectFlagsGetter);
 	this->ScriptListCFlags->ImageGetter = gcnew BrightIdeasSoftware::ImageGetterDelegate(&ScriptSelectionDialog::ScriptListImageFlagsGetter);
 	this->ScriptListCFlags->AspectToStringConverter = gcnew BrightIdeasSoftware::AspectToStringConverterDelegate(&ScriptSelectionDialog::ScriptListAspectToStringConverterFlags);
@@ -626,6 +627,17 @@ void ScriptSelectionDialog::PopulateLoadedScripts(String^ FilterString, bool Def
 		else
 			ScriptList->SelectedIndex = 0;
 	}
+}
+
+void ScriptSelectionDialog::SetDefaultFont(System::Drawing::Font^ DefaultFont)
+{
+	this->Font = DefaultFont;
+	ScriptList->Font = DefaultFont;
+	ScriptTextPreview->Font = gcnew System::Drawing::Font(ScriptTextPreview->Font->FontFamily, DefaultFont->Size);
+	BottomToolbarContainer->Font = DefaultFont;
+	BottomToolbar->Font = DefaultFont;
+	BottomToolbarSelectionCount->Font = DefaultFont;
+	BottomToolbarCompleteSelection->Font = DefaultFont;
 }
 
 ScriptSelectionDialog::eFlagType ScriptSelectionDialog::GetFlagType(componentDLLInterface::ScriptData* Script)

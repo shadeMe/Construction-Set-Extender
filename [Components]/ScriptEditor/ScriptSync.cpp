@@ -703,9 +703,9 @@ void DiskSyncDialog::InitializeComponent(void)
 	// ButtonOpenWorkingDir
 	//
 	this->ButtonOpenWorkingDir->AccessibleRole = System::Windows::Forms::AccessibleRole::PushButton;
-	this->ButtonOpenWorkingDir->Location = System::Drawing::Point(791, 6);
+	this->ButtonOpenWorkingDir->Location = System::Drawing::Point(791, 8);
 	this->ButtonOpenWorkingDir->Name = L"ButtonOpenWorkingDir";
-	this->ButtonOpenWorkingDir->Size = System::Drawing::Size(45, 21);
+	this->ButtonOpenWorkingDir->Size = System::Drawing::Size(45, 20);
 	this->ButtonOpenWorkingDir->TabIndex = 24;
 	this->ButtonOpenWorkingDir->Text = L"Open";
 	//
@@ -775,7 +775,7 @@ void DiskSyncDialog::InitializeComponent(void)
 	// ButtonSelectWorkingDir
 	//
 	this->ButtonSelectWorkingDir->AccessibleRole = System::Windows::Forms::AccessibleRole::PushButton;
-	this->ButtonSelectWorkingDir->Location = System::Drawing::Point(718, 7);
+	this->ButtonSelectWorkingDir->Location = System::Drawing::Point(718, 8);
 	this->ButtonSelectWorkingDir->Name = L"ButtonSelectWorkingDir";
 	this->ButtonSelectWorkingDir->Size = System::Drawing::Size(67, 20);
 	this->ButtonSelectWorkingDir->TabIndex = 16;
@@ -791,7 +791,7 @@ void DiskSyncDialog::InitializeComponent(void)
 	//
 	this->LabelWorkingDir->BackgroundStyle->CornerType = DevComponents::DotNetBar::eCornerType::Square;
 	this->LabelWorkingDir->ForeColor = System::Drawing::Color::Black;
-	this->LabelWorkingDir->Location = System::Drawing::Point(435, 7);
+	this->LabelWorkingDir->Location = System::Drawing::Point(435, 8);
 	this->LabelWorkingDir->Name = L"LabelWorkingDir";
 	this->LabelWorkingDir->Size = System::Drawing::Size(91, 17);
 	this->LabelWorkingDir->TabIndex = 14;
@@ -1020,7 +1020,7 @@ void DiskSyncDialog::InitializeComponent(void)
 	this->TextBoxWorkingDir->Border->CornerType = DevComponents::DotNetBar::eCornerType::Square;
 	this->TextBoxWorkingDir->DisabledBackColor = System::Drawing::Color::White;
 	this->TextBoxWorkingDir->ForeColor = System::Drawing::Color::Black;
-	this->TextBoxWorkingDir->Location = System::Drawing::Point(532, 6);
+	this->TextBoxWorkingDir->Location = System::Drawing::Point(532, 8);
 	this->TextBoxWorkingDir->Name = L"TextBoxWorkingDir";
 	this->TextBoxWorkingDir->PreventEnterBeep = true;
 	this->TextBoxWorkingDir->Size = System::Drawing::Size(180, 22);
@@ -1127,8 +1127,6 @@ void DiskSyncDialog::InitializeComponent(void)
 	//
 	// ScriptSyncDialog
 	//
-	this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
-	this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 	this->ClientSize = System::Drawing::Size(852, 413);
 	this->Controls->Add(this->LeftPanel);
 	this->Controls->Add(this->TextBoxWorkingDir);
@@ -1155,11 +1153,13 @@ void DiskSyncDialog::InitializeComponent(void)
 	this->LeftPanel->ResumeLayout(false);
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->Toolbar))->EndInit();
 	this->ResumeLayout(false);
-	this->PerformLayout();
 }
 
 void DiskSyncDialog::FinalizeComponents()
 {
+	utilities::DisableFormAutoScale(this);
+	SetDefaultFont(preferences::SettingsHolder::Get()->Appearance->UIFont);
+
 	this->ColScriptName->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&DiskSyncDialog::ListViewAspectScriptNameGetter);
 	this->ColScriptName->ImageGetter = gcnew BrightIdeasSoftware::ImageGetterDelegate(&DiskSyncDialog::ListViewImageScriptNameGetter);
 	this->ColLastSyncTime->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&DiskSyncDialog::ListViewAspectLastSyncTimeGetter);
@@ -1167,6 +1167,7 @@ void DiskSyncDialog::FinalizeComponents()
 
 	SyncedScripts = gcnew Dictionary<String ^, SyncedScriptListViewWrapper ^>;
 
+	ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &DiskSyncDialog::ScriptEditorPreferences_Saved);
 	DiskSyncSyncStartHandler = gcnew SyncStartEventHandler(this, &DiskSyncDialog::DiskSync_SyncStart);
 	DiskSyncSyncStopHandler = gcnew SyncStopEventHandler(this, &DiskSyncDialog::DiskSync_SyncStop);
 	DiskSyncSyncWriteToDiskHandler = gcnew SyncWriteToDiskEventHandler(this, &DiskSyncDialog::DiskSync_SyncWriteToDisk);
@@ -1191,6 +1192,7 @@ void DiskSyncDialog::FinalizeComponents()
 	DeferredSelectionUpdateTimer->Tick += gcnew EventHandler(this, &DiskSyncDialog::DeferredSelectionUpdateTimer_Tick);
 
 	this->Closing += gcnew CancelEventHandler(this, &DiskSyncDialog::Dialog_Cancel);
+	preferences::SettingsHolder::Get()->PreferencesChanged += ScriptEditorPreferencesSavedHandler;
 
 	this->ListViewSyncedScripts->SmallImageList = gcnew ImageList();
 	this->ListViewSyncedScripts->SmallImageList->ImageSize = Drawing::Size(14, 14);
@@ -1371,6 +1373,11 @@ void DiskSyncDialog::Dialog_Cancel(Object^ Sender, CancelEventArgs^ E)
 		DiskSync::Get()->Stop();
 }
 
+void DiskSyncDialog::ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E)
+{
+	SetDefaultFont(preferences::SettingsHolder::Get()->Appearance->UIFont);
+}
+
 
 void DiskSyncDialog::DiskSync_SyncStart(Object^ Sender, SyncStartEventArgs^ E)
 {
@@ -1507,6 +1514,31 @@ void DiskSyncDialog::UpdateToolbarEnabledState()
 	}
 }
 
+void DiskSyncDialog::SetDefaultFont(System::Drawing::Font^ DefaultFont)
+{
+	this->Font = DefaultFont;
+	ButtonOpenWorkingDir->Font = DefaultFont;
+	LabelSelectedScriptLog->Font = DefaultFont;
+	ListViewSyncedScripts->Font = DefaultFont;
+	ButtonStartStopSync->Font = DefaultFont;
+	ButtonSelectWorkingDir->Font = DefaultFont;
+	LabelWorkingDir->Font = DefaultFont;
+	GroupSyncSettings->Font = DefaultFont;
+	GroupStartupFileHandling->Font = DefaultFont;
+	RadioPromptForFileHandling->Font = DefaultFont;
+	RadioUseExistingFiles->Font = DefaultFont;
+	RadioOverwriteExistingFiles->Font = DefaultFont;
+	CheckboxAutoDeleteLogs->Font = DefaultFont;
+	LabelSeconds->Font = DefaultFont;
+	CheckboxAutoSync->Font = DefaultFont;
+	NumericAutoSyncSeconds->Font = DefaultFont;
+	TextBoxSelectedScriptLog->Font = DefaultFont;
+	TextBoxWorkingDir->Font = DefaultFont;
+	LeftPanel->Font = DefaultFont;
+	Toolbar->Font = DefaultFont;
+	ToolbarLabelSyncedScripts->Font = DefaultFont;
+}
+
 System::Object^ DiskSyncDialog::ListViewAspectScriptNameGetter(Object^ RowObject)
 {
 	auto Model = safe_cast<SyncedScriptListViewWrapper^>(RowObject);
@@ -1580,6 +1612,8 @@ DiskSyncDialog::~DiskSyncDialog()
 {
 	Debug::Assert(Singleton != nullptr);
 
+	preferences::SettingsHolder::Get()->PreferencesChanged -= ScriptEditorPreferencesSavedHandler;
+
 	DiskSync::Get()->SyncStart -= DiskSyncSyncStartHandler;
 	DiskSync::Get()->SyncStop -= DiskSyncSyncStopHandler;
 	DiskSync::Get()->ScriptWriteToDisk -= DiskSyncSyncWriteToDiskHandler;
@@ -1597,6 +1631,7 @@ DiskSyncDialog::~DiskSyncDialog()
 	preferences::SettingsHolder::Get()->ScriptSync->AutoDeleteLogs = CheckboxAutoDeleteLogs->Checked;
 	preferences::SettingsHolder::Get()->ScriptSync->AutoSyncInterval = Decimal::ToUInt32(NumericAutoSyncSeconds->Value);
 
+	SAFEDELETE_CLR(ScriptEditorPreferencesSavedHandler);
 	SAFEDELETE_CLR(ListViewThemeWrapper);
 
 	if (components)

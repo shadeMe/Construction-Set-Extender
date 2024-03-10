@@ -67,6 +67,20 @@ CSE		---->
 		> Wildcard find/replace
 		> Add an option to restore a saved backup for some esp/esm, instead of manually recover it from Data/Backup folder and moving it back to Data folder.
 
+		> Resizing dialogs
+			> Global font for all windows
+			> Individual dialogs can be zoomed in and out
+			> Algo:
+				- Enumerate all child windows
+				- Get their rects and save in a tree for hierarchy
+				- Pass 1: Visit each node and calculate the new rect based on the new font size
+				- Pass 2: Visit each node and ensure that:
+					- It doesn't clip with any siblings
+						+ If it does, move the sibling until it doesn't (with some padding)
+					- It's large enough to contain its children
+				- We update the rects bottom-up and then resize and move the windows
+			> Blacklist some windows
+
 
 	CODA			=
 		> Get/SetCellRegions
@@ -83,6 +97,12 @@ SE		---->
 
 
 	BUGFIX			=
+		> DPI issues
+			> Insight tooltip location
+			> Close button on docks/tool windows
+		> Fuzzy search is broken
+			> Consider a better algorithm/suffix tree
+			> Other tricks - https://github.com/RCHowell/rchowell.github.io/issues/4
 		> Copy/paste keyboard shortcuts are always forwarded to the text editor area even when it's not in focus
 			> When in the inline Find textbox
 			> When in the Find/Replace textbox

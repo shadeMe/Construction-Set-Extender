@@ -1,5 +1,6 @@
 #include "SnippetManager.h"
 #include "ScriptEditorViewImplComponents.h"
+#include "Preferences.h"
 #include "Utilities.h"
 
 
@@ -500,8 +501,6 @@ void CodeSnippetManagerDialog::InitializeComponent()
 	this->LeftPanel->Name = L"LeftPanel";
 	this->LeftPanel->Size = System::Drawing::Size(286, 632);
 	this->LeftPanel->TabIndex = 3;
-	this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
-	this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 	this->ClientSize = System::Drawing::Size(776, 656);
 	this->Controls->Add(this->LeftPanel);
 	this->Controls->Add(this->GroupSnippetData);
@@ -526,6 +525,9 @@ void CodeSnippetManagerDialog::InitializeComponent()
 
 void CodeSnippetManagerDialog::FinalizeComponents()
 {
+	utilities::DisableFormAutoScale(this);
+	SetDefaultFont(preferences::SettingsHolder::Get()->Appearance->UIFont);
+
 	SnippetListColumnName->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&CodeSnippetManagerDialog::SnippetsListAspectGetterName);
 	SnippetListColumnShortcut->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&CodeSnippetManagerDialog::SnippetsListAspectGetterShorthand);
 	VariablesListColumnName->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&CodeSnippetManagerDialog::VariablesListAspectGetterName);
@@ -626,6 +628,27 @@ void CodeSnippetManagerDialog::PopulateSnippetList()
 	Debug::Assert(WorkingCopy != nullptr);
 
 	SnippetsList->SetObjects(WorkingCopy->LoadedSnippets);
+}
+
+void CodeSnippetManagerDialog::SetDefaultFont(System::Drawing::Font^ DefaultFont)
+{
+	this->Font = DefaultFont;
+	ContainerToolbar->Font = DefaultFont;
+	SnippetsList->Font = DefaultFont;
+	GroupSnippetData->Font = DefaultFont;
+	GroupVariables->Font = DefaultFont;
+	VariablesToolbar->Font = DefaultFont;
+	TextBoxShortcut->Font = DefaultFont;
+	TextBoxDescription->Font = DefaultFont;
+	LabelDescription->Font = DefaultFont;
+	TextBoxName->Font = DefaultFont;
+	LabelShortcut->Font = DefaultFont;
+	LabelName->Font = DefaultFont;
+	ButtonApply->Font = DefaultFont;
+	GroupCode->Font = DefaultFont;
+	TextBoxCode->Font = gcnew System::Drawing::Font("Consolas", DefaultFont->Size);
+	VariablesList->Font = DefaultFont;
+	LeftPanel->Font = DefaultFont;
 }
 
 void CodeSnippetManagerDialog::ButtonApply_Click( Object^ Sender, EventArgs^ E )

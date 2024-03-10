@@ -1488,9 +1488,11 @@ void ObjectListView::Handler_PreferencesChanged(Object^ Sender, EventArgs^ E)
 	auto BackColor = DarkMode ? StyleManager::MetroColorGeneratorParameters.VisualStudio2012Dark.CanvasColor : StyleManager::MetroColorGeneratorParameters.VisualStudio2012Light.CanvasColor;
 	auto AccentColor = preferences::SettingsHolder::Get()->Appearance->AccentColor;
 	auto ForeColor = DarkMode ? Color::White : Color::Black;
+	auto DefaultFont = preferences::SettingsHolder::Get()->Appearance->UIFont;
 
 	Source->ForeColor = ForeColor;
 	Source->BackColor = BackColor;
+	Source->EmptyListMsgFont = gcnew System::Drawing::Font(Source->EmptyListMsgFont->FontFamily, DefaultFont->Size);
 
 	auto ColorTable = safe_cast<DotNetBar::Rendering::Office2007Renderer^>(DotNetBar::Rendering::GlobalManager::Renderer)->ColorTable;
 	Source->HeaderUsesThemes = false;

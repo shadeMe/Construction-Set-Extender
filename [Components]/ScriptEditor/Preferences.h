@@ -221,9 +221,14 @@ ref struct AppearanceSettings : public SettingsGroup
 	property UInt32 TabSize;
 
 	[Category("General")]
-	[Description("Default text font")]
+	[Description("Default font for the text editor")]
 	[Editor(CustomFontEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
-	property Drawing::Font^ TextFont;
+	property Drawing::Font^ TextEditorFont;
+
+	[Category("General")]
+	[Description("Default font for the script editor UI")]
+	[Editor(CustomFontEditor::typeid, System::Drawing::Design::UITypeEditor::typeid)]
+	property Drawing::Font^ UIFont;
 
 	[Category("General")]
 	[Description("Word wrap text")]
@@ -601,7 +606,8 @@ ref struct AppearanceSettings : public SettingsGroup
 		TabStripLocation = DevComponents::DotNetBar::eTabStripAlignment::Top;
 		TabStripVerticalWidth = 150;
 		TabSize = 4;
-		TextFont = gcnew Drawing::Font("Consolas", 9.75);
+		TextEditorFont = gcnew Drawing::Font("Consolas", 9.75);
+		UIFont = gcnew Drawing::Font("Segoe UI", 9.75);
 		WordWrap = true;
 		ShowTabs = false;
 		ShowSpaces = false;
@@ -856,6 +862,7 @@ ref class PreferencesDialog : public DevComponents::DotNetBar::Metro::MetroForm
 	void InitializeComponent();
 	bool PopulateCategories();
 	bool SwitchCategory(SettingsGroup^ Group);
+	void SetDefaultFont(System::Drawing::Font^ DefaultFont);
 
 	Dictionary<SettingsGroup^, DevComponents::DotNetBar::ButtonItem^>^ RegisteredCategories;
 	SettingsGroup^ CurrentSelection;

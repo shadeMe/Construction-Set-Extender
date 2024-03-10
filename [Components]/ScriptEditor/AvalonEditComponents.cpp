@@ -398,7 +398,7 @@ LineTrackingManagerBgRenderer::~LineTrackingManagerBgRenderer()
 void LineTrackingManagerBgRenderer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 {
 	textView->EnsureVisualLines();
-	if (!textView->VisualLinesValid)
+	if (!textView->VisualLinesValid || textView->VisualLines->Count == 0)
 		return;
 
 	auto FirstVisibleLine = textView->VisualLines[0]->FirstDocumentLine->LineNumber;
@@ -839,8 +839,8 @@ void StructureVisualizerRenderer::OnMouseClick(Object^ Sender, Windows::Input::M
 Windows::UIElement^ StructureVisualizerRenderer::GenerateAdornment(UInt32 JumpLine, String^ ElementText)
 {
 	static const int kMaxTextLength = 50;
-	Font^ CustomFont = gcnew Font(preferences::SettingsHolder::Get()->Appearance->TextFont->FontFamily->Name,
-								  preferences::SettingsHolder::Get()->Appearance->TextFont->Size - 1);
+	Font^ CustomFont = gcnew Font(preferences::SettingsHolder::Get()->Appearance->TextEditorFont->FontFamily->Name,
+								  preferences::SettingsHolder::Get()->Appearance->TextEditorFont->Size - 1);
 
 	ElementText = ElementText->Replace("\t", "");
 	String^ TruncatedElementText = ElementText;
@@ -918,7 +918,7 @@ void IconMarginBase::OnTextViewChanged(AvalonEdit::Rendering::TextView^ oldTextV
 
 void IconMarginBase::OnRedrawRequested(Object^ sender, EventArgs^ E)
 {
-	if (this->TextView && this->TextView->VisualLinesValid)
+	if (this->TextView && this->TextView->VisualLinesValid && this->TextView->VisualLines->Count > 0)
 		InvalidateVisual();
 }
 
@@ -1041,7 +1041,7 @@ void DefaultIconMargin::OnRender(Windows::Media::DrawingContext^ drawingContext)
 
 	drawingContext->DrawRectangle(BackgroundBrush, nullptr, Windows::Rect(0, 0, RenderSize.Width, RenderSize.Height));
 
-	if (TextView == nullptr || !TextView->VisualLinesValid)
+	if (TextView == nullptr || !TextView->VisualLinesValid || TextView->VisualLines->Count == 0)
 		return;
 
 	auto PixelSize = PixelSnapHelpers::GetPixelSize(this);
@@ -1093,6 +1093,7 @@ void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::Mouse
 	DisplayLocation.X += System::Windows::SystemParameters::CursorWidth;
 	//DisplayLocation.Y += GetVisualLineFromMousePosition(E)->Height;
 	DisplayLocation = ParentEditor->PointToScreen(DisplayLocation);
+	auto UIFont = preferences::SettingsHolder::Get()->Appearance->UIFont;
 
 	auto Mb = gcnew utilities::TextMarkupBuilder;
 	Mb->Table(1, 350);
@@ -1111,7 +1112,7 @@ void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::Mouse
 			PopupTitle = Errors->Count + " Error" + (Errors->Count == 1 ? "" : "s");
 
 			for each (auto Itr in Errors)
-				Mb->TableNextRow()->TableNextColumn()->Font(1, true)->Text("» ")->Text(Itr->Text)->PopTag()->TableNextColumn();
+				Mb->TableNextRow()->TableNextColumn()->Font(UIFont->FontFamily->Name, UIFont->Size, false)->Text("» ")->Text(Itr->Text)->PopTag()->TableNextColumn();
 		}
 		else if (ParentScriptDocument->GetMessageCountWarnings(Line))
 		{
@@ -1127,7 +1128,7 @@ void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::Mouse
 			PopupTitle = Warnings->Count + " Warning" + (Warnings->Count == 1 ? "" : "s");
 
 			for each (auto Itr in Warnings)
-				Mb->TableNextRow()->TableNextColumn()->Font(1, true)->Text("» ")->Text(Itr->Text)->PopTag()->TableNextColumn();
+				Mb->TableNextRow()->TableNextColumn()->Font(UIFont->FontFamily->Name, UIFont->Size, false)->Text("» ")->Text(Itr->Text)->PopTag()->TableNextColumn();
 		}
 		else if (ParentScriptDocument->GetBookmarkCount(Line))
 		{
@@ -1141,7 +1142,7 @@ void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::Mouse
 			PopupTitle = Bookmarks->Count + " Bookmark" + (Bookmarks->Count == 1 ? "" : "s");
 
 			for each (auto Itr in Bookmarks)
-				Mb->TableNextRow()->TableNextColumn()->Font(1, true)->Text("» ")->Text(Itr->Text)->PopTag()->TableNextColumn();
+				Mb->TableNextRow()->TableNextColumn()->Font(UIFont->FontFamily->Name, UIFont->Size, false)->Text("» ")->Text(Itr->Text)->PopTag()->TableNextColumn();
 		}
 	}
 	Mb->PopTable();
@@ -1149,7 +1150,10 @@ void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::Mouse
 	if (DisplayPopup)
 	{
 		PopupText = Mb->ToMarkup();
-		PopupTitle =  Mb->Reset()->Font(3, true)->Bold()->Text(PopupTitle)->PopTag(2)->ToMarkup();
+		PopupTitle =  Mb->Reset()->Font(UIFont->FontFamily->Name, UIFont->Size, false)
+			->Header(4)
+			->Text(PopupTitle)
+			->PopTag(2)->ToMarkup();
 
 		auto TooltipData = gcnew DotNetBar::SuperTooltipInfo;
 		TooltipData->HeaderText = PopupTitle;
@@ -1252,7 +1256,7 @@ Windows::Size ScriptBytecodeOffsetMargin::MeasureOverride(Windows::Size availabl
 
 void ScriptBytecodeOffsetMargin::OnRender(Windows::Media::DrawingContext^ drawingContext)
 {
-	if (TextView == nullptr || !TextView->VisualLinesValid)
+	if (TextView == nullptr || !TextView->VisualLinesValid || TextView->VisualLines->Count == 0)
 		return;
 
 	auto ForegroundBrush = safe_cast<System::Windows::Media::Brush^>(GetValue(Windows::Controls::Control::ForegroundProperty));

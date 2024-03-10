@@ -462,6 +462,8 @@ public:
 	TextMarkupBuilder^ Reset();
 };
 
+void DisableFormAutoScale(Windows::Forms::Form^ Form);
+
 
 } // namespace utilities
 

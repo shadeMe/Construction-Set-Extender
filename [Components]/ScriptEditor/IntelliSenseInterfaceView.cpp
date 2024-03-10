@@ -162,7 +162,7 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView(IntPtr ParentViewHandle)
 	ListView->GridLines = false;
 	ListView->HeaderStyle = ColumnHeaderStyle::None;
 	ListView->HideSelection = true;
-	ListView->Font = preferences::SettingsHolder::Get()->Appearance->TextFont;
+	ListView->Font = preferences::SettingsHolder::Get()->Appearance->TextEditorFont;
 	ListView->Margin = Padding(0);
 	ListView->ForeColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
 	ListView->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
@@ -214,8 +214,9 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView(IntPtr ParentViewHandle)
 	WindowWidth = preferences::SettingsHolder::Get()->IntelliSense->WindowWidth;
 	Filters = IIntelliSenseInterfaceView::eItemFilter::None;
 
-	Form->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
-	Form->AutoScaleMode = AutoScaleMode::Font;
+	/*Form->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
+	Form->AutoScaleMode = AutoScaleMode::Font;*/
+	utilities::DisableFormAutoScale(Form);
 	Form->FormBorderStyle = FormBorderStyle::SizableToolWindow;
 	Form->ShowInTaskbar = false;
 	Form->ShowIcon = false;
@@ -280,7 +281,7 @@ void IntelliSenseInterfaceView::ScriptEditorPreferences_Saved(Object^ Sender, Ev
 	Form->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
 	ListView->ForeColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
 	ListView->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
-	ListView->Font = preferences::SettingsHolder::Get()->Appearance->TextFont;
+	ListView->Font = preferences::SettingsHolder::Get()->Appearance->TextEditorFont;
 	BottomToolbar->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
 }
 

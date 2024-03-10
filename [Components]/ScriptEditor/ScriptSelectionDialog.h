@@ -139,6 +139,7 @@ private:
 	void ShowUseReport();
 	void CompleteSelection();
 	void PopulateLoadedScripts(String^ FilterString, bool DefaultSelection, bool SortByFlags);
+	void SetDefaultFont(System::Drawing::Font^ DefaultFont);
 
 	static Object^ ScriptListAspectScriptNameGetter(Object^ RowObject);
 	static Object^ ScriptListAspectFormIDGetter(Object^ RowObject);

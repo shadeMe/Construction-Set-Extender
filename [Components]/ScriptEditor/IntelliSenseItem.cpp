@@ -43,7 +43,8 @@ System::String^ IntelliSenseItem::GenerateHelpTextHeader(String^ Identifier)
 	auto Builder = gcnew utilities::TextMarkupBuilder;
 
 	return Builder
-		->Font(preferences::SettingsHolder::Get()->Appearance->TextFont->FontFamily->Name)
+		->Font(preferences::SettingsHolder::Get()->Appearance->TextEditorFont->FontFamily->Name, 
+			preferences::SettingsHolder::Get()->Appearance->UIFont->Size, false)
 			->Header(4)
 				->Text(Identifier)
 			->PopTag()
@@ -67,7 +68,7 @@ System::String^ IntelliSenseItem::WrapMarkupInDefaultFontSize(String^ Markup)
 {
 	auto Builder = gcnew utilities::TextMarkupBuilder;
 
-	return Builder->Font(1, true)->Markup(Markup)->PopTag()->ToMarkup();
+	return Builder->Font(preferences::SettingsHolder::Get()->Appearance->UIFont->Size, false)->Markup(Markup)->PopTag()->ToMarkup();
 }
 
 IntelliSenseItem::IntelliSenseItem()

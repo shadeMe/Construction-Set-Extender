@@ -1,4 +1,5 @@
 #include "Utilities.h"
+#include "Preferences.h"
 
 namespace cse
 {
@@ -110,6 +111,7 @@ KeyCombo^ KeyCombo::New(Keys Modifier, Keys Key)
 InputBox::InputBox(void)
 {
 	InitializeComponent();
+
 	Result = gcnew InputBoxResult;
 	Result->ReturnCode = Windows::Forms::DialogResult::Ignore;
 	Result->Text = String::Empty;
@@ -136,6 +138,7 @@ void InputBox::InitializeComponent()
 	this->lblPrompt->Location = System::Drawing::Point(12, 12);
 	this->lblPrompt->Name = L"lblPrompt";
 	this->lblPrompt->Size = System::Drawing::Size(313, 52);
+	this->lblPrompt->AutoSize = true;
 	this->lblPrompt->TabIndex = 0;
 	this->lblPrompt->Text = L"Prompt Text";
 	this->lblPrompt->TextLineAlignment = System::Drawing::StringAlignment::Near;
@@ -171,21 +174,20 @@ void InputBox::InitializeComponent()
 	//
 	//
 	//
+	this->txtInput->Anchor = System::Windows::Forms::AnchorStyles::Left | System::Windows::Forms::AnchorStyles::Bottom;
 	this->txtInput->Border->Class = L"TextBoxBorder";
 	this->txtInput->Border->CornerType = DevComponents::DotNetBar::eCornerType::Square;
 	this->txtInput->DisabledBackColor = System::Drawing::Color::Black;
 	this->txtInput->ForeColor = System::Drawing::Color::White;
-	this->txtInput->Location = System::Drawing::Point(12, 74);
+	this->txtInput->Location = System::Drawing::Point(12, 55);
 	this->txtInput->Name = L"txtInput";
 	this->txtInput->PreventEnterBeep = true;
-	this->txtInput->Size = System::Drawing::Size(313, 22);
+	this->txtInput->Size = System::Drawing::Size(313, 30);
 	this->txtInput->TabIndex = 1;
 	this->txtInput->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &InputBox::txtInput_KeyDown);
 	//
 	// InputPromptDialog
 	//
-	this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
-	this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 	this->CancelButton = this->btnCancel;
 	this->ClientSize = System::Drawing::Size(432, 108);
 	this->ControlBox = false;
@@ -202,6 +204,15 @@ void InputBox::InitializeComponent()
 	this->Text = L"Prompt Dialog";
 	this->Load += gcnew System::EventHandler(this, &InputBox::InputBox_Load);
 	this->ResumeLayout(false);
+
+	auto UIFont = preferences::SettingsHolder::Get()->Appearance->UIFont;
+
+	DisableFormAutoScale(this);
+	this->Font = UIFont;
+	lblPrompt->Font = UIFont;
+	btnOK->Font = UIFont;
+	btnCancel->Font = UIFont;
+	txtInput->Font = UIFont;
 }
 
 void InputBox::InputBox_Load(System::Object^ sender, System::EventArgs^ e)
@@ -798,6 +809,13 @@ Color TintColor(Color Input, float NormalizedFactor)
 						   Input.R + (255 - Input.R) * NormalizedFactor,
 						   Input.G + (255 - Input.G) * NormalizedFactor,
 						   Input.B + (255 - Input.B) * NormalizedFactor);
+}
+
+void DisableFormAutoScale(Windows::Forms::Form^ Form)
+{
+	//Form->AutoScaleDimensions = System::Drawing::SizeF(96.0, 96.0);
+	Form->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
+	Form->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 }
 
 

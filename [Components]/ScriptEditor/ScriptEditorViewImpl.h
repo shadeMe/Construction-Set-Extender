@@ -226,6 +226,7 @@ private:
 	void ConvertMouseDownEventToWindowMoveEvent();
 	void CreateAndRegisterWindowChromeButtons(eViewRole ParentContainerRole);
 	void RefreshWindowChromeButtonVisibility(eTabStripAlignment TabStripLocation);
+	void SetDefaultFont(System::Drawing::Font^ DefaultFont);
 
 	void RegisterViewComponent(components::ViewComponent^ ViewComponent, Object^ Source, eViewRole Role);
 	void SetupViewComponentForm(Forms::Form^ Source);

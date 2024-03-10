@@ -313,6 +313,9 @@ void ScriptEditorWorkspace::HandleViewComponentEvent(ViewComponentEvent^ E)
 
 void ScriptEditorWorkspace::HandlePreferencesChanged(Object^ Sender, EventArgs^ E)
 {
+	auto UIFont = preferences::SettingsHolder::Get()->Appearance->UIFont;
+	SetDefaultFont(UIFont);
+
 	auto Style = preferences::SettingsHolder::Get()->Appearance->DarkMode ? eStyle::VisualStudio2012Dark : eStyle::VisualStudio2012Light;
 	auto AccentColor = preferences::SettingsHolder::Get()->Appearance->AccentColor;
 	if (StyleManager->Style != Style || !this->Visible)
@@ -334,6 +337,8 @@ void ScriptEditorWorkspace::HandlePreferencesChanged(Object^ Sender, EventArgs^ 
 	DotNetBar::TextMarkup::MarkupSettings::NormalHyperlink->TextColor = !preferences::SettingsHolder::Get()->Appearance->DarkMode ? TextMarkupHyperlinkLightModeColor : TextMarkupHyperlinkDarkModeColor;
 	DotNetBar::TextMarkup::MarkupSettings::VisitedHyperlink->TextColor = !preferences::SettingsHolder::Get()->Appearance->DarkMode ? TextMarkupHyperlinkLightModeColor : TextMarkupHyperlinkDarkModeColor;
 	DotNetBar::TextMarkup::MarkupSettings::MouseOverHyperlink->TextColor = !preferences::SettingsHolder::Get()->Appearance->DarkMode ? TextMarkupHyperlinkLightModeColor : TextMarkupHyperlinkDarkModeColor;
+
+	DotNetBar::ToastNotification::ToastFont = gcnew Drawing::Font(UIFont->FontFamily, UIFont->Size + 2);
 }
 
 void ScriptEditorWorkspace::HandleControlAdded(Object^ Sender, ControlEventArgs^ E)
@@ -385,7 +390,7 @@ void ScriptEditorWorkspace::HandleDockBarStateChanged(Object^ Sender, BarStateCh
 
 void ScriptEditorWorkspace::SetTabStripLocation(eTabStripAlignment Location, int VerticalTabStripWidth)
 {
-	int HorizontalTabStripMaxHeight = 32;
+	int HorizontalTabStripMaxHeight = int::MaxValue;
 
 	switch (Location)
 	{
@@ -543,6 +548,86 @@ void ScriptEditorWorkspace::RefreshWindowChromeButtonVisibility(eTabStripAlignme
 		GetComponentByRole(eViewRole::MainTabStrip_WindowChromeRestore)->AsButton()->Visible = false;
 		GetComponentByRole(eViewRole::MainTabStrip_WindowChromeClose)->AsButton()->Visible = false;
 	}
+}
+
+void ScriptEditorWorkspace::SetDefaultFont(System::Drawing::Font^ DefaultFont)
+{
+	this->Font = DefaultFont;
+
+	MainTabStrip->SelectedTabFont = gcnew System::Drawing::Font(DefaultFont, System::Drawing::FontStyle::Bold|System::Drawing::FontStyle::Italic);
+	MainTabStrip->TabFont = DefaultFont;
+
+	ContextMenuProvider->Font = DefaultFont;
+
+	ContainerMainToolbar->Font = DefaultFont;
+	BookmarksToolbar->Font = DefaultFont;
+	NavigationBar->Font = DefaultFont;
+	MessagesToolbar->Font = DefaultFont;
+	SuppressibleWarningsList->Font = DefaultFont;
+
+	DockSiteBottom->Font = DefaultFont;
+	DockSiteLeftEx->Font = DefaultFont;
+	DockSiteRightEx->Font = DefaultFont;
+	DockSiteTop->Font = DefaultFont;
+	DockSiteLeft->Font = DefaultFont;
+	DockSiteRight->Font = DefaultFont;
+	DockSiteTopEx->Font = DefaultFont;
+	DockSiteBottomEx->Font = DefaultFont;
+	DockSiteCenter->Font = DefaultFont;
+
+	CenterDockBar->Font = DefaultFont;
+	DockableBarFindInTabsResults->Font = DefaultFont;
+	DockableBarFindReplace->Font = DefaultFont;
+	DockableBarOutlineView->Font = DefaultFont;
+	DockableBarMessages->Font = DefaultFont;
+	DockableBarBookmarks->Font = DefaultFont;
+	DockableBarFindReplaceResults->Font = DefaultFont;
+
+	PanelDockContainerBookmarks->Font = DefaultFont;
+	PanelDockContainerMessageList->Font = DefaultFont;
+	PanelDockContainerFindResults->Font = DefaultFont;
+	PanelDockContainerGlobalFindResults->Font = DefaultFont;
+	PanelDockContainerOutline->Font = DefaultFont;
+	PanelDockContainerFindReplace->Font = DefaultFont;
+
+	MessagesList->Font = DefaultFont;
+	BookmarksList->Font = DefaultFont;
+	FindResultsList->Font = DefaultFont;
+	GlobalFindResultsList->Font = DefaultFont;
+
+	OutlineTreeView->Font = DefaultFont;
+	OutlineTreeView->EmptyListMsgFont = gcnew System::Drawing::Font(OutlineTreeView->EmptyListMsgFont->FontFamily, DefaultFont->Size);
+
+	FindResultsToolbar->Font = DefaultFont;
+	FindResultsToolbarLabel->Font = DefaultFont;
+	FindResultsListToolbarLabelQuery->Font = DefaultFont;
+
+	FindWindowLayoutControl->Font = DefaultFont;
+	FindWindowDropdownFind->Font = DefaultFont;
+	FindWindowDropdownReplace->Font = DefaultFont;
+	FindWindowCheckboxMatchCase->Font = DefaultFont;
+	FindWindowCheckboxUseRegEx->Font = DefaultFont;
+	FindWindowCheckBoxMatchWholeWord->Font = DefaultFont;
+	FindWindowComboLookIn->Font = DefaultFont;
+	FindWindowButtonFind->Font = DefaultFont;
+	FindWindowButtonReplace->Font = DefaultFont;
+	FindWindowButtonCountMatches->Font = DefaultFont;
+	FindWindowCheckBoxIgnoreComments->Font = DefaultFont;
+
+	StatusBar->Font = DefaultFont;
+	StatusBarPreprocessorOutputFlag->Font = DefaultFont;
+	StatusBarDocumentDescription->Font = DefaultFont;
+	StatusBarLineNumber->Font = DefaultFont;
+	StatusBarColumnNumber->Font = DefaultFont;
+
+	PanelDocumentContent->Font = DefaultFont;
+
+	DummySuperTabControlPanel2->Font = DefaultFont;
+	DummySuperTabControlPanel1->Font = DefaultFont;
+
+	EmptyWorkspacePanel->Font = DefaultFont;
+	GetStartedButtonOpenScript->Font = DefaultFont;
+	GetStartedButtonNewScript->Font = DefaultFont;
 }
 
 void ScriptEditorWorkspace::RegisterViewComponent(components::ViewComponent^ ViewComponent, Object^ Source, eViewRole Role)
@@ -998,7 +1083,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->ContainerMainToolbar->CanMove = false;
 	this->ContainerMainToolbar->CanUndock = false;
 	this->ContainerMainToolbar->Dock = System::Windows::Forms::DockStyle::Top;
-	this->ContainerMainToolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
+	//this->ContainerMainToolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 12));
 	this->ContainerMainToolbar->IsMaximized = false;
 	this->ContainerMainToolbar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(13) {
 		this->ToolbarNewScript,
@@ -1424,7 +1509,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	//
 	// DockManager
 	//
-	this->DockManager->AllowUserBarCustomize = false;
+	this->DockManager->AllowUserBarCustomize = true;
 	this->DockManager->AlwaysShowFullMenus = true;
 	this->DockManager->AutoDispatchShortcuts->Add(DevComponents::DotNetBar::eShortcut::F1);
 	this->DockManager->AutoDispatchShortcuts->Add(DevComponents::DotNetBar::eShortcut::CtrlC);
@@ -1485,8 +1570,8 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->DockableBarMessages->CanHide = true;
 	this->DockableBarMessages->CloseSingleTab = true;
 	this->DockableBarMessages->Controls->Add(this->PanelDockContainerMessageList);
-	this->DockableBarMessages->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-		static_cast<System::Byte>(0)));
+	/*this->DockableBarMessages->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+		static_cast<System::Byte>(0)));*/
 	this->DockableBarMessages->GrabHandleStyle = DevComponents::DotNetBar::eGrabHandleStyle::Caption;
 	this->DockableBarMessages->IsMaximized = false;
 	this->DockableBarMessages->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(1) { this->DockContainerItemMessageList });
@@ -1549,7 +1634,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->MessagesToolbar->CanMove = false;
 	this->MessagesToolbar->CanUndock = false;
 	this->MessagesToolbar->Dock = System::Windows::Forms::DockStyle::Top;
-	this->MessagesToolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
+	//this->MessagesToolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
 	this->MessagesToolbar->IsMaximized = false;
 	this->MessagesToolbar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(4) {
 		this->MessagesToolbarErrors,
@@ -1619,8 +1704,8 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->DockableBarBookmarks->CanHide = true;
 	this->DockableBarBookmarks->CloseSingleTab = true;
 	this->DockableBarBookmarks->Controls->Add(this->PanelDockContainerBookmarks);
-	this->DockableBarBookmarks->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-		static_cast<System::Byte>(0)));
+	//this->DockableBarBookmarks->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+	//	static_cast<System::Byte>(0)));
 	this->DockableBarBookmarks->GrabHandleStyle = DevComponents::DotNetBar::eGrabHandleStyle::Caption;
 	this->DockableBarBookmarks->IsMaximized = false;
 	this->DockableBarBookmarks->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(1) { this->DockContainerItemBookmarks });
@@ -1679,7 +1764,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->BookmarksToolbar->CanUndock = false;
 	this->BookmarksToolbar->Dock = System::Windows::Forms::DockStyle::Left;
 	this->BookmarksToolbar->DockOrientation = DevComponents::DotNetBar::eOrientation::Vertical;
-	this->BookmarksToolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
+	//this->BookmarksToolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
 	this->BookmarksToolbar->IsMaximized = false;
 	this->BookmarksToolbar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(2) {
 		this->BookmarksToolbarAdd,
@@ -1731,8 +1816,8 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->DockableBarFindReplaceResults->CanHide = true;
 	this->DockableBarFindReplaceResults->CloseSingleTab = true;
 	this->DockableBarFindReplaceResults->Controls->Add(this->PanelDockContainerFindResults);
-	this->DockableBarFindReplaceResults->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular,
-		System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+	//this->DockableBarFindReplaceResults->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular,
+	//	System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
 	this->DockableBarFindReplaceResults->GrabHandleStyle = DevComponents::DotNetBar::eGrabHandleStyle::Caption;
 	this->DockableBarFindReplaceResults->IsMaximized = false;
 	this->DockableBarFindReplaceResults->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(1) { this->DockContainerItemFindResults });
@@ -1788,7 +1873,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	//
 	this->FindResultsToolbar->AntiAlias = true;
 	this->FindResultsToolbar->Dock = System::Windows::Forms::DockStyle::Top;
-	this->FindResultsToolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
+	//this->FindResultsToolbar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
 	this->FindResultsToolbar->IsMaximized = false;
 	this->FindResultsToolbar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(2) {
 		this->FindResultsToolbarLabel,
@@ -1833,8 +1918,8 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->DockableBarFindInTabsResults->CanHide = true;
 	this->DockableBarFindInTabsResults->CloseSingleTab = true;
 	this->DockableBarFindInTabsResults->Controls->Add(this->PanelDockContainerGlobalFindResults);
-	this->DockableBarFindInTabsResults->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular,
-		System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+	/*this->DockableBarFindInTabsResults->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular,
+		System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));*/
 	this->DockableBarFindInTabsResults->GrabHandleStyle = DevComponents::DotNetBar::eGrabHandleStyle::Caption;
 	this->DockableBarFindInTabsResults->IsMaximized = false;
 	this->DockableBarFindInTabsResults->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(1) { this->DockContainerItemGlobalFindResults });
@@ -1921,8 +2006,8 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->DockableBarOutlineView->CanHide = true;
 	this->DockableBarOutlineView->CloseSingleTab = true;
 	this->DockableBarOutlineView->Controls->Add(this->PanelDockContainerOutline);
-	this->DockableBarOutlineView->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-		static_cast<System::Byte>(0)));
+	//this->DockableBarOutlineView->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+	//	static_cast<System::Byte>(0)));
 	this->DockableBarOutlineView->GrabHandleStyle = DevComponents::DotNetBar::eGrabHandleStyle::Caption;
 	this->DockableBarOutlineView->IsMaximized = false;
 	this->DockableBarOutlineView->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(1) { this->DockContainerItemOutline });
@@ -1998,13 +2083,13 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->DockableBarFindReplace->AutoHide = true;
 	this->DockableBarFindReplace->AutoHideTabTextAlwaysVisible = true;
 	this->DockableBarFindReplace->AutoSyncBarCaption = true;
-	this->DockableBarFindReplace->BarType = DevComponents::DotNetBar::eBarType::DockWindow;
+	this->DockableBarFindReplace->BarType = DevComponents::DotNetBar::eBarType::MenuBar;
 	this->DockableBarFindReplace->CanDockTop = false;
 	this->DockableBarFindReplace->CanHide = true;
 	this->DockableBarFindReplace->CloseSingleTab = true;
 	this->DockableBarFindReplace->Controls->Add(this->PanelDockContainerFindReplace);
-	this->DockableBarFindReplace->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-		static_cast<System::Byte>(0)));
+	//this->DockableBarFindReplace->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+	//	static_cast<System::Byte>(0)));
 	this->DockableBarFindReplace->GrabHandleStyle = DevComponents::DotNetBar::eGrabHandleStyle::Caption;
 	this->DockableBarFindReplace->IsMaximized = false;
 	this->DockableBarFindReplace->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(1) { this->DockContainerItemFindReplace });
@@ -2429,8 +2514,8 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->CenterDockBar->CanUndock = false;
 	this->CenterDockBar->Controls->Add(this->PanelDocumentContent);
 	this->CenterDockBar->Controls->Add(this->NavigationBar);
-	this->CenterDockBar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-		static_cast<System::Byte>(0)));
+	//this->CenterDockBar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+	//	static_cast<System::Byte>(0)));
 	this->CenterDockBar->GrabHandleStyle = DevComponents::DotNetBar::eGrabHandleStyle::Caption;
 	this->CenterDockBar->IsMaximized = false;
 	this->CenterDockBar->LayoutType = DevComponents::DotNetBar::eLayoutType::DockContainer;
@@ -2513,7 +2598,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	//
 	this->ContextMenuProvider->AntiAlias = true;
 	this->ContextMenuProvider->DockSide = DevComponents::DotNetBar::eDockSide::Document;
-	this->ContextMenuProvider->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
+	//this->ContextMenuProvider->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
 	this->ContextMenuProvider->IsMaximized = false;
 	this->ContextMenuProvider->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(2) {
 		this->ContextMenuTextEditor,
@@ -2663,7 +2748,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 	this->StatusBar->CanReorderTabs = false;
 	this->StatusBar->CanUndock = false;
 	this->StatusBar->Dock = System::Windows::Forms::DockStyle::Bottom;
-	this->StatusBar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
+	//this->StatusBar->Font = (gcnew System::Drawing::Font(L"Segoe UI", 9));
 	this->StatusBar->ForeColor = System::Drawing::Color::Black;
 	this->StatusBar->IsMaximized = false;
 	this->StatusBar->Items->AddRange(gcnew cli::array< DevComponents::DotNetBar::BaseItem^  >(8) {
@@ -2804,8 +2889,6 @@ void ScriptEditorWorkspace::InitializeComponents()
 	//
 	// ScriptEditorWorkspace
 	//
-	this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
-	this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 	this->ClientSize = System::Drawing::Size(1030, 890);
 	this->ControlBox = false;
 	this->Controls->Add(this->DockSiteCenter);
@@ -2874,6 +2957,7 @@ void ScriptEditorWorkspace::InitializeComponents()
 
 void ScriptEditorWorkspace::FinalizeComponents()
 {
+	utilities::DisableFormAutoScale(this);
 	this->SuspendLayout();
 
 	MainTabStrip->Tabs->Clear();
@@ -2910,8 +2994,6 @@ void ScriptEditorWorkspace::FinalizeComponents()
 	CreateAndRegisterWindowChromeButtons(eViewRole::MainTabStrip);
 	CreateAndRegisterWindowChromeButtons(eViewRole::MainToolbar);
 
-	SetTabStripLocation(preferences::SettingsHolder::Get()->Appearance->TabStripLocation, preferences::SettingsHolder::Get()->Appearance->TabStripVerticalWidth);
-
 	// init preferences-dependent state
 	HandlePreferencesChanged(nullptr, nullptr);
 
@@ -2928,7 +3010,7 @@ void ScriptEditorWorkspace::FinalizeComponents()
 	//	DebugPrint("Couldn't load script editor UI layout from disk! Exception: " + E->ToString());
 	//}
 
-	this->ResumeLayout();
+	this->ResumeLayout(true);
 }
 
 void ScriptEditorWorkspace::InitializeViewComponents()
@@ -3144,7 +3226,6 @@ void ScriptEditorWorkspace::ShowNotification(String^ Message, Image^ Image, int 
 	{
 		DoOnce = true;
 		DotNetBar::ToastNotification::ToastMargin->All = 32;
-		DotNetBar::ToastNotification::ToastFont = gcnew Drawing::Font(Drawing::SystemFonts::MessageBoxFont->FontFamily, 10.25f);
 		DotNetBar::ToastNotification::DefaultToastPosition = eToastPosition::BottomCenter;
 
 		auto AccentColor = preferences::SettingsHolder::Get()->Appearance->AccentColor;

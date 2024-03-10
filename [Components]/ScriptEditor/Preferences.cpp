@@ -583,12 +583,14 @@ void PreferencesDialog::InitializeComponent(void)
 	this->ShowIcon = false;
 	this->StartPosition = System::Windows::Forms::FormStartPosition::CenterParent;
 	this->Text = L"Preferences";
+
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->PropertyGrid))->EndInit();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->TopBar))->EndInit();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->SidebarSettingsCategories))->EndInit();
 	this->ContainerPropertyGrid->ResumeLayout(false);
 	this->ResumeLayout(false);
 
+	utilities::DisableFormAutoScale(this);
 	this->PropertyGrid->Toolbar->Items->Add(LabelCurrentCategory);
 	this->Closing += gcnew CancelEventHandler(this, &PreferencesDialog::Dialog_Cancel);
 }
@@ -659,6 +661,17 @@ bool PreferencesDialog::SwitchCategory(SettingsGroup^ Group)
 	return true;
 }
 
+void PreferencesDialog::SetDefaultFont(System::Drawing::Font^ DefaultFont)
+{
+	this->Font = DefaultFont;
+	PropertyGrid->Font = DefaultFont;
+	TopBar->Font = DefaultFont;
+	LabelCategories->Font = DefaultFont;
+	LabelCurrentCategory->Font = DefaultFont;
+	SidebarSettingsCategories->Font = DefaultFont;
+	ContainerPropertyGrid->Font = DefaultFont;
+}
+
 PreferencesDialog::PreferencesDialog()
 {
 	RegisteredCategories = gcnew Dictionary<SettingsGroup^, DevComponents::DotNetBar::ButtonItem^>;
@@ -666,6 +679,7 @@ PreferencesDialog::PreferencesDialog()
 	CurrentSelectionSnapshot = nullptr;
 
 	InitializeComponent();
+	SetDefaultFont(preferences::SettingsHolder::Get()->Appearance->UIFont);
 
 	auto IsDarkMode = SettingsHolder::Get()->Appearance->DarkMode;
 	PropertyGrid->GridLinesColor = DevComponents::DotNetBar::StyleManager::MetroColorGeneratorParameters.CanvasColor;

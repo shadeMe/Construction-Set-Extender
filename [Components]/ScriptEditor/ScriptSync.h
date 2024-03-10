@@ -287,6 +287,7 @@ ref class DiskSyncDialog : public DevComponents::DotNetBar::Metro::MetroForm
 	System::ComponentModel::IContainer^ components;
 	view::IObjectListView^ ListViewThemeWrapper;
 
+	EventHandler^ ScriptEditorPreferencesSavedHandler;
 	SyncStartEventHandler^ DiskSyncSyncStartHandler;
 	SyncStopEventHandler^ DiskSyncSyncStopHandler;
 	SyncWriteToDiskEventHandler^ DiskSyncSyncWriteToDiskHandler;
@@ -314,6 +315,7 @@ ref class DiskSyncDialog : public DevComponents::DotNetBar::Metro::MetroForm
 	void DeferredSelectionUpdateTimer_Tick(Object^ Sender, EventArgs^ E);
 
 	void Dialog_Cancel(Object^ Sender, CancelEventArgs^ E);
+	void ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
 
 	void DiskSync_SyncStart(Object^ Sender, SyncStartEventArgs^ E);
 	void DiskSync_SyncStop(Object^ Sender, SyncStopEventArgs^ E);
@@ -324,6 +326,7 @@ ref class DiskSyncDialog : public DevComponents::DotNetBar::Metro::MetroForm
 	bool IsSyncInProgress();
 	String^ GetOutputMessagesForScript(String^ EditorID);
 	void UpdateToolbarEnabledState();
+	void SetDefaultFont(System::Drawing::Font^ DefaultFont);
 
 	static Object^ ListViewAspectScriptNameGetter(Object^ RowObject);
 	static Object^ ListViewImageScriptNameGetter(Object^ RowObject);
