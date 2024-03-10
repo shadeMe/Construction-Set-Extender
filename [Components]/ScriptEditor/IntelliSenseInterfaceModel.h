@@ -41,7 +41,7 @@ ref struct IntelliSenseModelContext
 	property IntelliSenseItemCollection^ CallingObjectScriptVariables;
 	property bool CallingObjectIsObjectReference;
 
-	property String^ FilterString;
+	property String^ CaretToken;
 	property Point DisplayScreenCoords;
 
 	IntelliSenseModelContext();
@@ -55,9 +55,10 @@ ref struct IntelliSenseModelContextUpdateDiff
 	property UInt32 OldCaretPos;
 	property bool LineChanged;
 	property UInt32 OldLine;
+	property IntelliSenseModelContext::eOperationType OldOperation;
 	property bool OperationInvoked;
-	property IntelliSenseItemScript^ OldCallingObjectScript;
 	property bool CallingObjectScriptChanged;
+	property IntelliSenseItemScript^ OldCallingObjectScript;
 
 	IntelliSenseModelContextUpdateDiff();
 
@@ -142,6 +143,7 @@ ref class IntelliSenseInterfaceModel : public IIntelliSenseInterfaceModel
 	void ParentEditor_ContextChangeEventHandler(Object^ Sender, IntelliSenseContextChangeEventArgs^ E);
 	void BoundView_ItemSelected(Object^ Sender, EventArgs^ E);
 	void BoundView_Dismissed(Object^ Sender, EventArgs^ E);
+	void BoundView_FuzzySearchToggled(Object^ Sender, EventArgs^ E);
 
 	EventHandler^ ScriptEditorPreferencesSavedHandler;
 	IntelliSenseInputEventHandler^ ParentEditorInputEventHandler;
@@ -149,6 +151,7 @@ ref class IntelliSenseInterfaceModel : public IIntelliSenseInterfaceModel
 	IntelliSenseContextChangeEventHandler^ ParentEditorContextChangeEventHandler;
 	EventHandler^ BoundViewItemSelectedHandler;
 	EventHandler^ BoundViewDismissedHandler;
+	EventHandler^ BoundViewFuzzySearchToggledHandler;
 
 	void SetContextChangeEventHandlingMode(eContextChangeEventHandlingMode Mode);
 
@@ -160,6 +163,7 @@ ref class IntelliSenseInterfaceModel : public IIntelliSenseInterfaceModel
 	void OnSelectionCompleted();
 	void OnScrollOffsetChanged(IntelliSenseContextChangeEventArgs^ E);
 	void OnTextChanged(IntelliSenseContextChangeEventArgs^ E);
+	void OnFuzzySearchToggled();
 
 
 	void UpdateContext(IntelliSenseContextChangeEventArgs^ Args);

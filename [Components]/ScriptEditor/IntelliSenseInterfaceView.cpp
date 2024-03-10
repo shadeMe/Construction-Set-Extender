@@ -17,6 +17,8 @@ namespace intellisense
 
 IntelliSenseInterfaceView::IntelliSenseInterfaceView(IntPtr ParentViewHandle)
 {
+	auto ImageResources = view::components::CommonIcons::Get()->ResourceManager;
+
 	this->BoundModel = nullptr;
 	this->ParentViewHandle = ParentViewHandle;
 
@@ -24,6 +26,17 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView(IntPtr ParentViewHandle)
 	ColorManager = gcnew DotNetBar::StyleManagerAmbient;
 
 	ListView = gcnew BrightIdeasSoftware::FastObjectListView;
+	BottomToolbar = gcnew DevComponents::DotNetBar::Bar;
+	ToolbarFilterScriptCommand = gcnew DevComponents::DotNetBar::ButtonItem;
+	ToolbarFilterScriptVariable = gcnew DevComponents::DotNetBar::ButtonItem;
+	ToolbarFilterQuest = gcnew DevComponents::DotNetBar::ButtonItem;
+	ToolbarFilterScript = gcnew DevComponents::DotNetBar::ButtonItem;
+	ToolbarFilterUserFunction = gcnew DevComponents::DotNetBar::ButtonItem;
+	ToolbarFilterGameSetting = gcnew DevComponents::DotNetBar::ButtonItem;
+	ToolbarFilterGlobalVariable = gcnew DevComponents::DotNetBar::ButtonItem;
+	ToolbarFilterForm = gcnew DevComponents::DotNetBar::ButtonItem;
+	ToolbarFilterObjectReference = gcnew DevComponents::DotNetBar::ButtonItem;
+	ToolbarFuzzySearch = gcnew DevComponents::DotNetBar::ButtonItem;
 
 	ListViewSelectionChangedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceView::ListView_SelectionChanged);
 	ListViewKeyDownHandler = gcnew KeyEventHandler(this, &IntelliSenseInterfaceView::ListView_KeyDown);
@@ -32,6 +45,9 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView(IntPtr ParentViewHandle)
 	ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceView::ScriptEditorPreferences_Saved);
 	ListViewFormatRowHandler = gcnew EventHandler<BrightIdeasSoftware::FormatRowEventArgs^>(this, &IntelliSenseInterfaceView::ListView_FormatRow);
 	SelectFirstItemOnShowHandler = gcnew utilities::AnimatedForm::TransitionCompleteHandler(this, &IntelliSenseInterfaceView::SelectFirstItemOnShow);
+	ToolbarFilterClickHandler = gcnew EventHandler(this, &IntelliSenseInterfaceView::ToolbarFilter_Click);
+	ToolbarFuzzySearchClickHandler = gcnew EventHandler(this, &IntelliSenseInterfaceView::ToolbarFuzzySearch_Click);
+	FilterPredicate = gcnew BrightIdeasSoftware::ModelFilter(gcnew Predicate<Object^>(this, &IntelliSenseInterfaceView::ListViewFilterPredicate));
 
 	ListView->KeyDown += ListViewKeyDownHandler;
 	ListView->KeyUp += ListViewKeyUpHandler;
@@ -40,15 +56,101 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView(IntPtr ParentViewHandle)
 	ListView->FormatRow += ListViewFormatRowHandler;
 	preferences::SettingsHolder::Get()->PreferencesChanged += ScriptEditorPreferencesSavedHandler;
 
-	Form->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
-	Form->AutoScaleMode = AutoScaleMode::Font;
-	Form->FormBorderStyle = FormBorderStyle::SizableToolWindow;
-	Form->ShowInTaskbar = false;
-	Form->ShowIcon = false;
-	Form->ControlBox = false;
-	Form->Controls->Add(ListView);
-	Form->Margin = Padding(0);
-	Form->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
+	ToolbarFilterScriptCommand->ImagePaddingHorizontal = 10;
+	ToolbarFilterScriptCommand->ImagePaddingVertical = 15;
+	ToolbarFilterScriptCommand->Tooltip = L"Script Commands";
+	ToolbarFilterScriptCommand->Click += ToolbarFilterClickHandler;
+	ToolbarFilterScriptCommand->Tag = IIntelliSenseInterfaceView::eItemFilter::ScriptCommand;
+	ToolbarFilterScriptCommand->Image = IntelliSenseItem::GetItemTypeIcon(IntelliSenseItem::eItemType::ScriptCommand);
+
+	ToolbarFilterScriptVariable->BeginGroup = true;
+	ToolbarFilterScriptVariable->ImagePaddingHorizontal = 10;
+	ToolbarFilterScriptVariable->ImagePaddingVertical = 15;
+	ToolbarFilterScriptVariable->Tooltip = L"Script Variables";
+	ToolbarFilterScriptVariable->Click += ToolbarFilterClickHandler;
+	ToolbarFilterScriptVariable->Tag = IIntelliSenseInterfaceView::eItemFilter::ScriptVariable;
+	ToolbarFilterScriptVariable->Image = IntelliSenseItem::GetItemTypeIcon(IntelliSenseItem::eItemType::ScriptVariable);
+
+	ToolbarFilterQuest->ImagePaddingHorizontal = 10;
+	ToolbarFilterQuest->ImagePaddingVertical = 15;
+	ToolbarFilterQuest->Tooltip = L"Quests";
+	ToolbarFilterQuest->Click += ToolbarFilterClickHandler;
+	ToolbarFilterQuest->Tag = IIntelliSenseInterfaceView::eItemFilter::Quest;  
+	ToolbarFilterQuest->Image = IntelliSenseItem::GetItemTypeIcon(IntelliSenseItem::eItemType::Quest);
+
+	ToolbarFilterScript->ImagePaddingHorizontal = 10;
+	ToolbarFilterScript->ImagePaddingVertical = 15;
+	ToolbarFilterScript->Tooltip = L"Scripts";
+	ToolbarFilterScript->Click += ToolbarFilterClickHandler;
+	ToolbarFilterScript->Tag = IIntelliSenseInterfaceView::eItemFilter::Script;
+	ToolbarFilterScript->Image = IntelliSenseItem::GetItemTypeIcon(IntelliSenseItem::eItemType::Script);
+
+	ToolbarFilterUserFunction->ImagePaddingHorizontal = 10;
+	ToolbarFilterUserFunction->ImagePaddingVertical = 15;
+	ToolbarFilterUserFunction->Tooltip = L"User-Defined Functions";
+	ToolbarFilterUserFunction->Click += ToolbarFilterClickHandler;
+	ToolbarFilterUserFunction->Tag = IIntelliSenseInterfaceView::eItemFilter::UserFunction;
+	ToolbarFilterUserFunction->Image = IntelliSenseItem::GetItemTypeIcon(IntelliSenseItem::eItemType::UserFunction);
+
+	ToolbarFilterGameSetting->ImagePaddingHorizontal = 10;
+	ToolbarFilterGameSetting->ImagePaddingVertical = 15;
+	ToolbarFilterGameSetting->Tooltip = L"Game Settings";
+	ToolbarFilterGameSetting->Click += ToolbarFilterClickHandler;
+	ToolbarFilterGameSetting->Tag = IIntelliSenseInterfaceView::eItemFilter::GameSetting;
+	ToolbarFilterGameSetting->Image = IntelliSenseItem::GetItemTypeIcon(IntelliSenseItem::eItemType::GameSetting);
+
+	ToolbarFilterGlobalVariable->ImagePaddingHorizontal = 10;
+	ToolbarFilterGlobalVariable->ImagePaddingVertical = 15;
+	ToolbarFilterGlobalVariable->Tooltip = L"Global Variables";
+	ToolbarFilterGlobalVariable->Click += ToolbarFilterClickHandler;
+	ToolbarFilterGlobalVariable->Tag = IIntelliSenseInterfaceView::eItemFilter::GlobalVariable;
+	ToolbarFilterGlobalVariable->Image = IntelliSenseItem::GetItemTypeIcon(IntelliSenseItem::eItemType::GlobalVariable);
+
+	ToolbarFilterForm->ImagePaddingHorizontal = 10;
+	ToolbarFilterForm->ImagePaddingVertical = 15;
+	ToolbarFilterForm->Tooltip = L"Forms";
+	ToolbarFilterForm->Click += ToolbarFilterClickHandler;
+	ToolbarFilterForm->Tag = IIntelliSenseInterfaceView::eItemFilter::Form;
+	ToolbarFilterForm->Image = IntelliSenseItem::GetItemTypeIcon(IntelliSenseItem::eItemType::Form);
+
+	ToolbarFilterObjectReference->ImagePaddingHorizontal = 10;
+	ToolbarFilterObjectReference->ImagePaddingVertical = 15;
+	ToolbarFilterObjectReference->Tooltip = L"Object References";
+	ToolbarFilterObjectReference->Click += ToolbarFilterClickHandler;
+	ToolbarFilterObjectReference->Tag = IIntelliSenseInterfaceView::eItemFilter::ObjectReference;
+	ToolbarFilterObjectReference->Image = IntelliSenseItemForm::GetFormTypeIcon(IntelliSenseItemForm::eFormType::REFR);
+
+	ToolbarFuzzySearch->ImagePaddingHorizontal = 15;
+	ToolbarFuzzySearch->ImagePaddingVertical = 15;
+	ToolbarFuzzySearch->Tooltip = L"Fuzzy Matching (Ctrl + U)";
+	ToolbarFuzzySearch->Click += ToolbarFuzzySearchClickHandler;
+	ToolbarFuzzySearch->Image = ImageResources->CreateImage("FuzzySearch");
+
+	ToolbarFilterShortcutKeys = gcnew List<Tuple<DevComponents::DotNetBar::ButtonItem^, Keys>^>;
+	ToolbarFilterShortcutKeys->Add(gcnew Tuple<DevComponents::DotNetBar::ButtonItem^, Keys>(ToolbarFilterScriptVariable, Keys::D1));
+	ToolbarFilterShortcutKeys->Add(gcnew Tuple<DevComponents::DotNetBar::ButtonItem^, Keys>(ToolbarFilterScriptCommand, Keys::D2));
+	ToolbarFilterShortcutKeys->Add(gcnew Tuple<DevComponents::DotNetBar::ButtonItem^, Keys>(ToolbarFilterForm, Keys::D3));
+	ToolbarFilterShortcutKeys->Add(gcnew Tuple<DevComponents::DotNetBar::ButtonItem^, Keys>(ToolbarFilterObjectReference, Keys::D4));
+	ToolbarFilterShortcutKeys->Add(gcnew Tuple<DevComponents::DotNetBar::ButtonItem^, Keys>(ToolbarFilterUserFunction, Keys::D5));
+	ToolbarFilterShortcutKeys->Add(gcnew Tuple<DevComponents::DotNetBar::ButtonItem^, Keys>(ToolbarFilterGlobalVariable, Keys::D6));
+	ToolbarFilterShortcutKeys->Add(gcnew Tuple<DevComponents::DotNetBar::ButtonItem^, Keys>(ToolbarFilterQuest, Keys::D7));
+	ToolbarFilterShortcutKeys->Add(gcnew Tuple<DevComponents::DotNetBar::ButtonItem^, Keys>(ToolbarFilterScript, Keys::D8));
+	ToolbarFilterShortcutKeys->Add(gcnew Tuple<DevComponents::DotNetBar::ButtonItem^, Keys>(ToolbarFilterGameSetting, Keys::D9));
+
+	BottomToolbar->AntiAlias = true;
+	BottomToolbar->Dock = System::Windows::Forms::DockStyle::Bottom;
+	BottomToolbar->DockSide = DevComponents::DotNetBar::eDockSide::Bottom;
+	BottomToolbar->IsMaximized = false;
+	BottomToolbar->Stretch = true;
+	BottomToolbar->Style = DevComponents::DotNetBar::eDotNetBarStyle::StyleManagerControlled;
+	BottomToolbar->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
+
+	BottomToolbar->Items->Add(ToolbarFuzzySearch);
+	for each (auto Button in ToolbarFilterShortcutKeys)
+	{
+		Button->Item1->Tooltip = Button->Item1->Tooltip + String::Format(" (Ctrl + {0})", Button->Item2.ToString());
+		BottomToolbar->Items->Add(Button->Item1);
+	}
 
 	ListView->View = View::Details;
 	ListView->Dock = DockStyle::Fill;
@@ -64,13 +166,23 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView(IntPtr ParentViewHandle)
 	ListView->Margin = Padding(0);
 	ListView->ForeColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
 	ListView->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
+	ListView->ModelFilter = FilterPredicate;
+	ListView->EmptyListMsg = L"No suggestions for the current filters";
+	ListView->EmptyListMsgFont = (gcnew System::Drawing::Font(L"Segoe UI caps", 9.75F, System::Drawing::FontStyle::Regular,
+		System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+	auto EmptyMsgOverlay = safe_cast<BrightIdeasSoftware::TextOverlay^>(ListView->EmptyListMsgOverlay);
+	EmptyMsgOverlay->TextColor = Color::White;
+	EmptyMsgOverlay->BackColor = Color::FromArgb(75, 29, 32, 33);
+	ListView->ShowFilterMenuOnRightClick = false;
+	ListView->UseFiltering = true;
+	ListView->VirtualMode = true;
 	ColorManager->SetEnableAmbientSettings(ListView, DotNetBar::eAmbientSettings::None);
 
 	ListViewDefaultColumn = gcnew BrightIdeasSoftware::OLVColumn;
 	ListViewDefaultColumn->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&IntelliSenseInterfaceView::ListViewAspectGetter);
 	ListViewDefaultColumn->ImageGetter = gcnew BrightIdeasSoftware::ImageGetterDelegate(&IntelliSenseInterfaceView::ListViewImageGetter);
 	ListViewDefaultColumn->FillsFreeSpace = true;
-	ListViewDefaultColumn->Width = 100;
+	ListViewDefaultColumn->Width = preferences::SettingsHolder::Get()->IntelliSense->WindowWidth - 10;
 	ListView->AllColumns->Add(ListViewDefaultColumn);
 	ListView->Columns->Add(ListViewDefaultColumn);
 
@@ -96,9 +208,22 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView(IntPtr ParentViewHandle)
 	InsightPopup->MaximumWidth = Screen::PrimaryScreen->WorkingArea.Width - 150;
 	InsightPopup->MarkupLinkClick += gcnew DotNetBar::MarkupLinkClickEventHandler(&IntelliSenseInterfaceView::SuperTooltip_MarkupLinkClick);
 
+	ListViewItemRectCache = Rectangle();
 	MaximumVisibleItemCount = preferences::SettingsHolder::Get()->IntelliSense->MaxVisiblePopupItems;
 	InsightPopupDisplayDuration = preferences::SettingsHolder::Get()->IntelliSense->InsightToolTipDisplayDuration;
 	WindowWidth = preferences::SettingsHolder::Get()->IntelliSense->WindowWidth;
+	Filters = IIntelliSenseInterfaceView::eItemFilter::None;
+
+	Form->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
+	Form->AutoScaleMode = AutoScaleMode::Font;
+	Form->FormBorderStyle = FormBorderStyle::SizableToolWindow;
+	Form->ShowInTaskbar = false;
+	Form->ShowIcon = false;
+	Form->ControlBox = false;
+	Form->Controls->Add(ListView);
+	Form->Controls->Add(BottomToolbar);
+	Form->Margin = Padding(0);
+	Form->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
 
 	Form->SetSize(Size(0, 0));
 	Form->Show(Point(0, 0), Form->Handle, false);
@@ -108,6 +233,17 @@ IntelliSenseInterfaceView::IntelliSenseInterfaceView(IntPtr ParentViewHandle)
 IntelliSenseInterfaceView::~IntelliSenseInterfaceView()
 {
 	Debug::Assert(Bound == false);
+
+	ToolbarFilterScriptCommand->Click -= ToolbarFilterClickHandler;
+	ToolbarFilterScriptVariable->Click -= ToolbarFilterClickHandler;
+	ToolbarFilterQuest->Click -= ToolbarFilterClickHandler;
+	ToolbarFilterScript->Click -= ToolbarFilterClickHandler;
+	ToolbarFilterUserFunction->Click -= ToolbarFilterClickHandler;
+	ToolbarFilterGameSetting->Click -= ToolbarFilterClickHandler;
+	ToolbarFilterGlobalVariable->Click -= ToolbarFilterClickHandler;
+	ToolbarFilterForm->Click -= ToolbarFilterClickHandler;
+	ToolbarFilterObjectReference->Click -= ToolbarFilterClickHandler;
+	ToolbarFuzzySearch->Click -= ToolbarFilterClickHandler;
 
 	ListView->KeyDown -= ListViewKeyDownHandler;
 	ListView->KeyUp -= ListViewKeyUpHandler;
@@ -122,6 +258,9 @@ IntelliSenseInterfaceView::~IntelliSenseInterfaceView()
 	SAFEDELETE_CLR(ListViewSelectionChangedHandler);
 	SAFEDELETE_CLR(ScriptEditorPreferencesSavedHandler);
 	SAFEDELETE_CLR(SelectFirstItemOnShowHandler);
+	SAFEDELETE_CLR(ToolbarFilterClickHandler);
+	SAFEDELETE_CLR(ToolbarFuzzySearchClickHandler);
+	FilterPredicate = nullptr;
 
 	HideListViewToolTip();
 	HideInsightToolTip();
@@ -142,6 +281,7 @@ void IntelliSenseInterfaceView::ScriptEditorPreferences_Saved(Object^ Sender, Ev
 	ListView->ForeColor = preferences::SettingsHolder::Get()->Appearance->ForeColor;
 	ListView->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
 	ListView->Font = preferences::SettingsHolder::Get()->Appearance->TextFont;
+	BottomToolbar->BackColor = preferences::SettingsHolder::Get()->Appearance->BackColor;
 }
 
 void IntelliSenseInterfaceView::ListView_SelectionChanged(Object^ Sender, EventArgs^ E)
@@ -227,6 +367,18 @@ void IntelliSenseInterfaceView::ListView_FormatRow(Object^ Sender, BrightIdeasSo
 	}
 }
 
+void IntelliSenseInterfaceView::ToolbarFilter_Click(Object^ Sender, EventArgs^ E)
+{
+	auto Button = safe_cast<DevComponents::DotNetBar::ButtonItem^>(Sender);
+	auto SelectedFilter = safe_cast<IIntelliSenseInterfaceView::eItemFilter>(Button->Tag);
+	ToggleFilter(SelectedFilter);
+}
+
+void IntelliSenseInterfaceView::ToolbarFuzzySearch_Click(Object^ Sender, EventArgs^ E)
+{
+	FuzzySearchToggled(this, E);
+}
+
 Object^ IntelliSenseInterfaceView::ListViewAspectGetter(Object^ RowObject)
 {
 	if (RowObject)
@@ -253,8 +405,78 @@ void IntelliSenseInterfaceView::SuperTooltip_MarkupLinkClick(Object^ Sender, Dot
 	Process::Start(E->HRef);
 }
 
+bool IntelliSenseInterfaceView::ListViewFilterPredicate(Object^ Model)
+{
+    if (Filters == IIntelliSenseInterfaceView::eItemFilter::None)
+        return true;
+
+    auto Item = safe_cast<IntelliSenseItem^>(Model);
+    switch (Item->GetItemType())
+    {
+        case IntelliSenseItem::eItemType::ScriptCommand:
+            return Filters.HasFlag(IIntelliSenseInterfaceView::eItemFilter::ScriptCommand);
+        case IntelliSenseItem::eItemType::ScriptVariable:
+            return Filters.HasFlag(IIntelliSenseInterfaceView::eItemFilter::ScriptVariable);
+        case IntelliSenseItem::eItemType::Quest:
+            return Filters.HasFlag(IIntelliSenseInterfaceView::eItemFilter::Quest);
+        case IntelliSenseItem::eItemType::Script:
+            return Filters.HasFlag(IIntelliSenseInterfaceView::eItemFilter::Script);
+        case IntelliSenseItem::eItemType::UserFunction:
+            return Filters.HasFlag(IIntelliSenseInterfaceView::eItemFilter::UserFunction);
+        case IntelliSenseItem::eItemType::GameSetting:
+            return Filters.HasFlag(IIntelliSenseInterfaceView::eItemFilter::GameSetting);
+        case IntelliSenseItem::eItemType::GlobalVariable:
+            return Filters.HasFlag(IIntelliSenseInterfaceView::eItemFilter::GlobalVariable);
+        case IntelliSenseItem::eItemType::Form:
+		{
+			auto FormItem = safe_cast<IntelliSenseItemForm^>(Item);
+			if (FormItem->IsObjectReference())
+				return Filters.HasFlag(IIntelliSenseInterfaceView::eItemFilter::ObjectReference);
+			else
+				return Filters.HasFlag(IIntelliSenseInterfaceView::eItemFilter::Form);
+		}
+        default:
+            return true;
+    }
+}
+
+void IntelliSenseInterfaceView::UpdateToolbarState()
+{
+	ToolbarFilterScriptCommand->Checked = Filters.HasFlag(IIntelliSenseInterfaceView::eItemFilter::ScriptCommand);
+	ToolbarFilterScriptVariable->Checked = Filters.HasFlag(IIntelliSenseInterfaceView::eItemFilter::ScriptVariable);
+	ToolbarFilterQuest->Checked = Filters.HasFlag(IIntelliSenseInterfaceView::eItemFilter::Quest);
+	ToolbarFilterScript->Checked = Filters.HasFlag(IIntelliSenseInterfaceView::eItemFilter::Script);
+	ToolbarFilterUserFunction->Checked = Filters.HasFlag(IIntelliSenseInterfaceView::eItemFilter::UserFunction);
+	ToolbarFilterGameSetting->Checked = Filters.HasFlag(IIntelliSenseInterfaceView::eItemFilter::GameSetting);
+	ToolbarFilterGlobalVariable->Checked = Filters.HasFlag(IIntelliSenseInterfaceView::eItemFilter::GlobalVariable);
+	ToolbarFilterForm->Checked = Filters.HasFlag(IIntelliSenseInterfaceView::eItemFilter::Form);
+	ToolbarFilterObjectReference->Checked = Filters.HasFlag(IIntelliSenseInterfaceView::eItemFilter::ObjectReference);
+
+	ToolbarFuzzySearch->Checked = preferences::SettingsHolder::Get()->IntelliSense->SuggestionsFilter == eFilterMode::Fuzzy;
+}
+
+void IntelliSenseInterfaceView::ToggleFilter(IIntelliSenseInterfaceView::eItemFilter SelectedFilter)
+{
+	if (SelectedFilter == IIntelliSenseInterfaceView::eItemFilter::None)
+		Filters = SelectedFilter;
+	else
+		Filters = Filters ^ SelectedFilter;
+
+	Form->SuspendLayout();
+	{
+		ListView->UseFiltering = false;
+		ListView->UseFiltering = true;
+		UpdateToolbarState();
+	}
+	Form->ResumeLayout(true);
+}
+
 void IntelliSenseInterfaceView::ShowListViewToolTip(IntelliSenseItem^ Item)
 {
+	// Ignore if the all items have been filtered away.
+	if (ListView->VirtualListSize == 0)
+		return;
+
 	auto TooltipData = gcnew DotNetBar::SuperTooltipInfo;
 	TooltipData->HeaderText = Item->TooltipHeaderText;
 	TooltipData->BodyText = Item->TooltipBodyText;
@@ -298,6 +520,7 @@ void IntelliSenseInterfaceView::SelectFirstItemOnShow(utilities::AnimatedForm^ S
 	{
 		auto DefaultSelection = BoundModel->DataStore[0];
 		ListView->SelectObject(DefaultSelection);
+		ListView->EnsureModelVisible(DefaultSelection);
 
 		// The SelectionChanged event doesn't get raised consistently at this point
 		// So, we ensure that the tooltip is shown
@@ -322,6 +545,32 @@ void IntelliSenseInterfaceView::Unbind()
 		Hide();
 		HideInsightToolTip();
 	}
+}
+
+void IntelliSenseInterfaceView::ResetFilters()
+{
+	Filters = IIntelliSenseInterfaceView::eItemFilter::None;
+	UpdateToolbarState();
+}
+
+void IntelliSenseInterfaceView::HandleFilterShortcutKey(Keys ShortcutKey)
+{
+	if (ShortcutKey == Keys::D0)
+	{
+		ToggleFilter(IIntelliSenseInterfaceView::eItemFilter::None);
+		return;
+	}
+	
+	for each (auto Button in ToolbarFilterShortcutKeys)
+	{
+		if (ShortcutKey == Button->Item2)
+		{
+			Button->Item1->RaiseClick();
+			return;
+		}
+	}
+
+	throw gcnew ArgumentException("Unexpected IntelliSense filter shortcut key");
 }
 
 void IntelliSenseInterfaceView::ChangeSelection(IIntelliSenseInterfaceView::eMoveDirection Direction)
@@ -352,6 +601,7 @@ void IntelliSenseInterfaceView::ChangeSelection(IIntelliSenseInterfaceView::eMov
 		auto ModelObject = ListView->GetModelObject(SelectedIndex);
 		if (ModelObject)
 		{
+			ListView->DeselectAll();
 			ListView->SelectObject(ModelObject);
 			ListView->EnsureModelVisible(ModelObject);
 		}
@@ -411,24 +661,32 @@ void IntelliSenseInterfaceView::Update()
 {
 	Debug::Assert(Bound == true);
 
-	ListView->SetObjects(BoundModel->DataStore);
-	ListView->DeselectAll();
-
-	if (BoundModel->DataStore->Count)
+	Form->SuspendLayout();
 	{
-		int ItemCount = BoundModel->DataStore->Count;
-		if (ItemCount > MaximumVisibleItemCount)
-			ItemCount = MaximumVisibleItemCount;
-		int ItemHeight = ListView->GetItemRect(0).Height;
+		ListView->SetObjects(BoundModel->DataStore);
+		ListView->DeselectAll();
+		UpdateToolbarState();
 
-		auto MaxHeight = MaximumVisibleItemCount * ItemHeight + ItemHeight;
-		auto ExtraHeight = (MaximumVisibleItemCount - ItemCount) * ItemHeight;
-		Size DisplaySize = Size(WindowWidth, MaxHeight - ExtraHeight);
+		if (BoundModel->DataStore->Count)
+		{
+			int ItemCount = BoundModel->DataStore->Count;
+			if (ItemCount > MaximumVisibleItemCount)
+				ItemCount = MaximumVisibleItemCount;
 
-		Form->SetSize(DisplaySize);
-		// the column width needs to be (re)set after the form (and its docked listview) have been resized
-		ListViewDefaultColumn->Width = ListView->Width - 4 - (BoundModel->DataStore->Count > MaximumVisibleItemCount ? SystemInformation::HorizontalScrollBarHeight : 0);
+			if (ListView->VirtualListSize > 0)
+				ListViewItemRectCache = ListView->GetItemRect(0);
+
+			int ItemHeight = ListViewItemRectCache.Height;
+			auto MaxHeight = MaximumVisibleItemCount * ItemHeight + ItemHeight;
+			auto ExtraHeight = (MaximumVisibleItemCount - ItemCount) * ItemHeight;
+			Size DisplaySize = Size(WindowWidth, MaxHeight - ExtraHeight + BottomToolbar->Height);
+
+			Form->SetSize(DisplaySize);
+			// the column width needs to be (re)set after the form (and its docked listview) have been resized
+			ListViewDefaultColumn->Width = ListView->Width - 4 - (BoundModel->DataStore->Count > MaximumVisibleItemCount ? SystemInformation::VerticalScrollBarWidth : 0);
+		}
 	}
+	Form->ResumeLayout(true);
 }
 
 void IntelliSenseInterfaceView::Show(Drawing::Point Location)

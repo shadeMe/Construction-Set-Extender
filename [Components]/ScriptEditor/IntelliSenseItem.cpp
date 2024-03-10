@@ -27,7 +27,7 @@ Image^ IntelliSenseItem::GetItemTypeIcon(eItemType Type)
 		ItemTypeIcons->Add(eItemType::ScriptCommand, ImageResources->CreateImage("ScriptCommand"));
 		ItemTypeIcons->Add(eItemType::ScriptVariable, ImageResources->CreateImage("LocalVariable"));
 		ItemTypeIcons->Add(eItemType::Quest, ImageResources->CreateImage("Quest"));
-		ItemTypeIcons->Add(eItemType::Script, ImageResources->CreateImage("UserDefinedFunction"));
+		ItemTypeIcons->Add(eItemType::Script, ImageResources->CreateImage("Script"));
 		ItemTypeIcons->Add(eItemType::UserFunction, ImageResources->CreateImage("UserDefinedFunction"));
 		ItemTypeIcons->Add(eItemType::GameSetting, ImageResources->CreateImage("GameSetting"));
 		ItemTypeIcons->Add(eItemType::GlobalVariable, ImageResources->CreateImage("GlobalVariable"));

@@ -208,7 +208,7 @@ public:
 		ParentWindowHandle = IntPtr::Zero;
 	}
 };
-
+ 
 interface class IIntelliSenseInterfaceView
 {
 public:
@@ -217,15 +217,35 @@ public:
 		Up,
 		Down,
 	};
+	
+	[Flags]
+	static enum class eItemFilter
+	{
+		None = 0,
+
+		ScriptCommand = 1 << 0,
+		ScriptVariable = 1 << 1,
+		Quest = 1 << 2,
+		Script = 1 << 3,
+		UserFunction = 1 << 4,
+		GameSetting = 1 << 5,
+		GlobalVariable = 1 << 6,
+		Form = 1 << 7,
+		ObjectReference = 1 << 8,
+	};
 
 	event EventHandler^ ItemSelected;
 	event EventHandler^ Dismissed;
+	event EventHandler^ FuzzySearchToggled;
 
 	property bool Visible;
 	property IntelliSenseItem^ Selection;
 
 	void Bind(IIntelliSenseInterfaceModel^ To);
 	void Unbind();
+
+	void ResetFilters();
+	void HandleFilterShortcutKey(Keys ShortcutKey);
 
 	void ChangeSelection(eMoveDirection Direction);
 	void DimOpacity();

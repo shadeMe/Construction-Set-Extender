@@ -816,7 +816,8 @@ bool AvalonEditTextEditor::RaiseIntelliSenseInput(intellisense::IntelliSenseInpu
 	case intellisense::IntelliSenseInputEventArgs::eEvent::KeyDown:
 	case intellisense::IntelliSenseInputEventArgs::eEvent::KeyUp:
 		{
-			Int32 KeyState = System::Windows::Input::KeyInterop::VirtualKeyFromKey(K->Key);
+			System::Windows::Input::Key Key = (K->Key == System::Windows::Input::Key::System ? K->SystemKey : K->Key);
+			Int32 KeyState = System::Windows::Input::KeyInterop::VirtualKeyFromKey(Key);
 
 			if ((K->KeyboardDevice->Modifiers & System::Windows::Input::ModifierKeys::Control) == System::Windows::Input::ModifierKeys::Control)
 				KeyState |= (int)Keys::Control;
@@ -1092,14 +1093,7 @@ void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::In
 	if (IsMiddleMouseScrolling)
 		StopMiddleMouseScroll();
 
-	// return early if someone further up the event chain handled the event
-	if (OnKeyDown(E))
-	{
-		HandleKeyEventForKey(E->Key);
-		E->Handled = true;
-		return;
-	}
-
+	// Talk to IntelliSense first.
 	if (RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::eEvent::KeyDown, E, nullptr))
 	{
 		HandleKeyEventForKey(E->Key);
@@ -1107,6 +1101,13 @@ void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::In
 		return;
 	}
 
+	// Then the other listeners.
+	if (OnKeyDown(E))
+	{
+		HandleKeyEventForKey(E->Key);
+		E->Handled = true;
+		return;
+	}
 
 	switch (E->Key)
 	{
@@ -1178,13 +1179,13 @@ void AvalonEditTextEditor::TextField_KeyUp(Object^ Sender, System::Windows::Inpu
 	if (ActivatedInView == false)
 		return;
 
-	if (E->Key == KeyToPreventHandling)
+	if (RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::eEvent::KeyUp, E, nullptr))
+		E->Handled = true;
+	else if (E->Key == KeyToPreventHandling)
 	{
 		E->Handled = true;
 		KeyToPreventHandling = System::Windows::Input::Key::None;
 	}
-	else if (RaiseIntelliSenseInput(intellisense::IntelliSenseInputEventArgs::eEvent::KeyUp, E, nullptr))
-		E->Handled = true;
 }
 
 void AvalonEditTextEditor::TextField_MouseDown(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E)

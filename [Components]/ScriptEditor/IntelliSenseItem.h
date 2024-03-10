@@ -192,6 +192,7 @@ public:
 
 ref class IntelliSenseItemForm : public IntelliSenseItem
 {
+public:
 	static enum class eFormType
 	{
 		None          = 0x00,
@@ -266,6 +267,7 @@ ref class IntelliSenseItemForm : public IntelliSenseItem
 	};
 
 	static Image^ GetFormTypeIcon(eFormType Type);
+private:
 	static Dictionary<eFormType, Image^>^ FormTypeIcons = gcnew Dictionary<eFormType, Image^>;
 protected:
 	static enum class eFormFlags

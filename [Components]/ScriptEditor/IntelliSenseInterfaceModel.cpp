@@ -34,7 +34,7 @@ void IntelliSenseModelContext::Reset()
 	CallingObjectIsObjectReference = false;
 	// CallingObjectScriptVariables is reset elsewhere
 
-	FilterString = String::Empty;
+	CaretToken = String::Empty;
 	DisplayScreenCoords = Point(0, 0);
 }
 
@@ -49,6 +49,7 @@ void IntelliSenseModelContextUpdateDiff::Reset()
 	OldCaretPos = -1;
 	LineChanged = false;
 	OldLine = 0;
+	OldOperation = IntelliSenseModelContext::eOperationType::Default;
 	OperationInvoked = false;
 	OldCallingObjectScript = nullptr;
 	CallingObjectScriptChanged = false;
@@ -83,6 +84,7 @@ IntelliSenseInterfaceModel::IntelliSenseInterfaceModel(textEditor::ITextEditor^ 
 	ParentEditorContextChangeEventHandler = gcnew IntelliSenseContextChangeEventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_ContextChangeEventHandler);
 	BoundViewItemSelectedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceModel::BoundView_ItemSelected);
 	BoundViewDismissedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceModel::BoundView_Dismissed);
+	BoundViewFuzzySearchToggledHandler = gcnew EventHandler(this, &IntelliSenseInterfaceModel::BoundView_FuzzySearchToggled);
 
 	preferences::SettingsHolder::Get()->PreferencesChanged += ScriptEditorPreferencesSavedHandler;
 	ParentEditor->IntelliSenseInput += ParentEditorInputEventHandler;
@@ -106,6 +108,7 @@ IntelliSenseInterfaceModel::~IntelliSenseInterfaceModel()
 	SAFEDELETE_CLR(ParentEditorInsightHoverEventHandler);
 	SAFEDELETE_CLR(BoundViewItemSelectedHandler);
 	SAFEDELETE_CLR(BoundViewDismissedHandler);
+	SAFEDELETE_CLR(BoundViewFuzzySearchToggledHandler);
 
 	ParentEditor = nullptr;
 }
@@ -197,10 +200,14 @@ void IntelliSenseInterfaceModel::BoundView_ItemSelected(Object^ Sender, EventArg
 	OnSelectionCompleted();
 }
 
-
 void IntelliSenseInterfaceModel::BoundView_Dismissed(Object^ Sender, EventArgs^ E)
 {
 	OnUserDismissed();
+}
+
+void IntelliSenseInterfaceModel::BoundView_FuzzySearchToggled(Object^ Sender, EventArgs^ E)
+{
+	OnFuzzySearchToggled();
 }
 
 void IntelliSenseInterfaceModel::SetContextChangeEventHandlingMode(eContextChangeEventHandlingMode Mode)
@@ -226,6 +233,7 @@ void IntelliSenseInterfaceModel::OnParentReset()
 	HideInsightTooltip();
 	ResetContext();
 	EnumeratedItems->Clear();
+	BoundView->ResetFilters();
 }
 
 void IntelliSenseInterfaceModel::OnTriggerKeyPress()
@@ -252,6 +260,7 @@ void IntelliSenseInterfaceModel::OnCaretPosChanged(IntelliSenseContextChangeEven
 	if (LastContextUpdateDiff->LineChanged && Visible)
 	{
 		HidePopup(ePopupHideReason::ContextChanged);
+		BoundView->ResetFilters();
 		return;
 	}
 
@@ -266,7 +275,6 @@ void IntelliSenseInterfaceModel::OnUserInvoked()
 
 	SuppressionMode = ePopupSuppressionMode::NoSuppression;
 	ShowPopup(ePopupShowReason::UserInvoked);
-
 }
 
 void IntelliSenseInterfaceModel::OnUserDismissed()
@@ -330,6 +338,8 @@ void IntelliSenseInterfaceModel::OnTextChanged(IntelliSenseContextChangeEventArg
 	UpdateContext(E);
 
 	HideInsightTooltip();
+	if (LastContextUpdateDiff->OldOperation != Context->Operation)
+		BoundView->ResetFilters();
 
 	if (!Visible)
 	{
@@ -340,12 +350,12 @@ void IntelliSenseInterfaceModel::OnTextChanged(IntelliSenseContextChangeEventArg
 
 		if (LastContextUpdateDiff->OperationInvoked)
 			ShowPopup(ePopupShowReason::OperationInvoked);
-		else if (Context->FilterString->Length >= PopupThresholdLength)
+		else if (Context->CaretToken->Length >= PopupThresholdLength)
 			ShowPopup(ePopupShowReason::PopupThresholdReached);
 	}
 	else
 	{
-		if (!Context->Valid || (!LastContextUpdateDiff->OperationInvoked && Context->FilterString->Length == 0))
+		if (!Context->Valid || (!LastContextUpdateDiff->OperationInvoked && Context->CaretToken->Length == 0))
 		{
 			HidePopup(ePopupHideReason::ContextChanged);
 			return;
@@ -356,6 +366,18 @@ void IntelliSenseInterfaceModel::OnTextChanged(IntelliSenseContextChangeEventArg
 		else if (ShowReason != ePopupShowReason::None)
 			UpdatePopup();
 	}
+}
+
+void IntelliSenseInterfaceModel::OnFuzzySearchToggled()
+{
+	auto SuggestionsFilter = preferences::SettingsHolder::Get()->IntelliSense->SuggestionsFilter;
+	if (SuggestionsFilter == eFilterMode::Fuzzy)
+		SuggestionsFilter = eFilterMode::Prefix;
+	else
+		SuggestionsFilter = eFilterMode::Fuzzy;
+	preferences::SettingsHolder::Get()->IntelliSense->SuggestionsFilter = SuggestionsFilter;
+
+	UpdatePopup();
 }
 
 void IntelliSenseInterfaceModel::UpdateContext(IntelliSenseContextChangeEventArgs^ Args)
@@ -376,6 +398,7 @@ void IntelliSenseInterfaceModel::UpdateContext(IntelliSenseContextChangeEventArg
 	LastContextUpdateDiff->OldCaretPos = Context->CaretPos;
 	LastContextUpdateDiff->OldLine = Context->Line;
 	LastContextUpdateDiff->OldCallingObjectScript = Context->CallingObjectScript;
+	LastContextUpdateDiff->OldOperation = Context->Operation;
 
 	Context->Reset();
 
@@ -418,7 +441,7 @@ void IntelliSenseInterfaceModel::UpdateContext(IntelliSenseContextChangeEventArg
 		PossibleOperationInvocation = true;
 	}
 
-	Context->FilterString = CurrentToken;
+	Context->CaretToken = CurrentToken;
 	Context->Operation = IntelliSenseModelContext::eOperationType::Default;
 
 	bool ResolvedOp = false;
@@ -495,9 +518,9 @@ void IntelliSenseInterfaceModel::UpdateContext(IntelliSenseContextChangeEventArg
 		{
 			Context->Operation = IntelliSenseModelContext::eOperationType::Snippet;
 			if (CurrentToken->Length > 1)
-				Context->FilterString = CurrentToken->Remove(0, 1);
+				Context->CaretToken = CurrentToken->Remove(0, 1);
 			else
-				Context->FilterString = "";
+				Context->CaretToken = "";
 
 			ResolvedOp = true;
 			PossibleOperationInvocation = true;
@@ -540,57 +563,85 @@ bool IntelliSenseInterfaceModel::HandleKeyboardInput(IntelliSenseInputEventArgs:
 	if (!Visible && !PopupInvocation)
 		return false;
 
-	if (KeyUp)
+	if (Type == IntelliSenseInputEventArgs::eEvent::KeyDown)
 	{
 		switch (E->KeyCode)
 		{
-		case Keys::LControlKey:
-		case Keys::RControlKey:
-			BoundView->ResetOpacity();
+		case Keys::D1:
+		case Keys::D2:
+		case Keys::D3:
+		case Keys::D4:
+		case Keys::D5:
+		case Keys::D6:
+		case Keys::D7:
+		case Keys::D8:
+		case Keys::D9:
+		case Keys::D0:
+			if (E->Control)
+			{
+				BoundView->HandleFilterShortcutKey(E->KeyCode);
+				E->Handled = true;
+			}
+
 			break;
-		}
+		case Keys::U:
+			if (E->Control)
+			{
+				OnFuzzySearchToggled();
+				E->Handled = true;
+			}
 
-		return false;
-	}
+			break;
+		case Keys::Enter:
+			if (E->Control)
+			{
+				OnUserInvoked();
+				E->Handled = true;
 
-	switch (E->KeyCode)
-	{
-	case Keys::Enter:
-		if (E->Control)
-		{
-			OnUserInvoked();
+				break;
+			}
+
+			if (!InsertSuggestionOnEnterKey)
+				break;
+		case Keys::Tab:
+			OnSelectionCompleted();
+			E->Handled = true;
+
+			break;
+		case Keys::Escape:
+			OnUserDismissed();
+			E->Handled = true;
+
+			break;
+		case Keys::Up:
+			BoundView->ChangeSelection(IIntelliSenseInterfaceView::eMoveDirection::Up);
+			E->Handled = true;
+
+			break;
+		case Keys::Down:
+			BoundView->ChangeSelection(IIntelliSenseInterfaceView::eMoveDirection::Down);
+			E->Handled = true;
+
+			break;
+		case Keys::LMenu:
+		case Keys::RMenu:
+			BoundView->DimOpacity();
 			E->Handled = true;
 
 			break;
 		}
+	}
+	else if (Type == IntelliSenseInputEventArgs::eEvent::KeyUp)
+	{
+		switch (E->KeyCode)
+		{
+		case Keys::LMenu:
+		case Keys::RMenu:
+			BoundView->ResetOpacity();
+			E->Handled = true;
 
-		if (!InsertSuggestionOnEnterKey)
 			break;
-	case Keys::Tab:
-		OnSelectionCompleted();
-		E->Handled = true;
-
-		break;
-	case Keys::Escape:
-		OnUserDismissed();
-		E->Handled = true;
-
-		break;
-	case Keys::Up:
-		BoundView->ChangeSelection(IIntelliSenseInterfaceView::eMoveDirection::Up);
-		E->Handled = true;
-
-		break;
-	case Keys::Down:
-		BoundView->ChangeSelection(IIntelliSenseInterfaceView::eMoveDirection::Down);
-		E->Handled = true;
-
-		break;
-	case Keys::LControlKey:
-	case Keys::RControlKey:
-		BoundView->DimOpacity();
-
-		break;
+		}
 	}
 
 	return E->Handled;
@@ -764,7 +815,7 @@ void IntelliSenseInterfaceModel::RelocatePopup()
 void IntelliSenseInterfaceModel::PopulateDataStore()
 {
 	FetchIntelliSenseItemsArgs^ FetchArgs = gcnew FetchIntelliSenseItemsArgs;
-	FetchArgs->IdentifierToMatch = Context->FilterString;
+	FetchArgs->IdentifierToMatch = Context->CaretToken;
 	FetchArgs->FilterMode = preferences::SettingsHolder::Get()->IntelliSense->SuggestionsFilter;
 	FetchArgs->FuzzyMatchMaxCost = preferences::SettingsHolder::Get()->IntelliSense->FuzzyFilterMaxCost;
 	FetchArgs->NumItemsToFetch = MaximumNumberOfSuggestions;
@@ -819,7 +870,7 @@ void IntelliSenseInterfaceModel::PopulateDataStore()
 	if (EnumeratedItems->Count == 1)
 	{
 		IntelliSenseItem^ Item = EnumeratedItems[0];
-		if (!String::Compare(Item->GetIdentifier(), Context->FilterString, true))
+		if (!String::Compare(Item->GetIdentifier(), Context->CaretToken, true))
 			EnumeratedItems->Clear();			// do not show when enumerable == current token
 	}
 }
@@ -874,6 +925,7 @@ void IntelliSenseInterfaceModel::Bind(IIntelliSenseInterfaceView^ To)
 
 	BoundView->ItemSelected += BoundViewItemSelectedHandler;
 	BoundView->Dismissed += BoundViewDismissedHandler;
+	BoundView->FuzzySearchToggled += BoundViewFuzzySearchToggledHandler;
 
 	SuppressionMode = ePopupSuppressionMode::NoSuppression;
 	ShowReason = ePopupShowReason::None;
@@ -890,6 +942,7 @@ void IntelliSenseInterfaceModel::Unbind()
 
 		BoundView->ItemSelected -= BoundViewItemSelectedHandler;
 		BoundView->Dismissed -= BoundViewDismissedHandler;
+		BoundView->FuzzySearchToggled -= BoundViewFuzzySearchToggledHandler;
 
 		BoundView->Unbind();
 		BoundView = nullptr;
