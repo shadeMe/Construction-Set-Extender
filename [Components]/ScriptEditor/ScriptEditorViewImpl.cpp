@@ -390,7 +390,8 @@ void ScriptEditorWorkspace::HandleDockBarStateChanged(Object^ Sender, BarStateCh
 
 void ScriptEditorWorkspace::SetTabStripLocation(eTabStripAlignment Location, int VerticalTabStripWidth)
 {
-	int HorizontalTabStripMaxHeight = int::MaxValue;
+	auto UIFont = preferences::SettingsHolder::Get()->Appearance->UIFont;
+	int HorizontalTabStripMaxHeight = UIFont->GetHeight() * 2.5;
 
 	switch (Location)
 	{
@@ -554,7 +555,7 @@ void ScriptEditorWorkspace::SetDefaultFont(System::Drawing::Font^ DefaultFont)
 {
 	this->Font = DefaultFont;
 
-	MainTabStrip->SelectedTabFont = gcnew System::Drawing::Font(DefaultFont, System::Drawing::FontStyle::Bold|System::Drawing::FontStyle::Italic);
+	MainTabStrip->SelectedTabFont = gcnew System::Drawing::Font(DefaultFont, System::Drawing::FontStyle::Bold);
 	MainTabStrip->TabFont = DefaultFont;
 
 	ContextMenuProvider->Font = DefaultFont;
