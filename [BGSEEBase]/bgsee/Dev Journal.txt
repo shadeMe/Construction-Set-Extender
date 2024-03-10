@@ -1,0 +1,17 @@
+To-Do
+=====
+IMMEDIATE  >>
+
+
+NOTE	---->
+> !!IMPORTANT!! Users of the lib need to link the runtime libs as a DLL to prevent inconsistencies across CRT states
+> Add a note to the Coda manual about arithmetic precision issues
+
+MISC	---->
+
+
+BGSEEBase		---->
+
+
+
+--! CodaScript:

@@ -1,0 +1,300 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\SME Sundries\INIEditGUI_Res.h" />
+    <ClInclude Include="Achievements.h" />
+    <ClInclude Include="ChangeLogManager.h" />
+    <ClInclude Include="Console.h" />
+    <ClInclude Include="FormUndoStack.h" />
+    <ClInclude Include="GenericModelessDialog.h" />
+    <ClInclude Include="GlobalClipboard.h" />
+    <ClInclude Include="HallOfFame.h" />
+    <ClInclude Include="HookUtil.h" />
+    <ClInclude Include="Main.h" />
+    <ClInclude Include="Script\CodaAST.h" />
+    <ClInclude Include="Script\CodaCompiler.h" />
+    <ClInclude Include="Script\CodaDataTypes.h" />
+    <ClInclude Include="Script\CodaInterpreter.h" />
+    <ClInclude Include="Script\CodaPublicAPI.h" />
+    <ClInclude Include="Script\CodaUtilities.h" />
+    <ClInclude Include="Script\CodaVM.h" />
+    <ClInclude Include="Script\Commands\CodaScriptCommand.h" />
+    <ClInclude Include="Script\Commands\CodaScriptCommands-Array.h" />
+    <ClInclude Include="Script\Commands\CodaScriptCommands-General.h" />
+    <ClInclude Include="Script\Commands\CodaScriptCommands-String.h" />
+    <ClInclude Include="Script\MUP Base\mpDefines.h" />
+    <ClInclude Include="Script\MUP Base\mpError.h" />
+    <ClInclude Include="Script\MUP Base\mpFuncCommon.h" />
+    <ClInclude Include="Script\MUP Base\mpFuncMatrix.h" />
+    <ClInclude Include="Script\MUP Base\mpFuncNonCmplx.h" />
+    <ClInclude Include="Script\MUP Base\mpFuncStr.h" />
+    <ClInclude Include="Script\MUP Base\mpFwdDecl.h" />
+    <ClInclude Include="Script\MUP Base\mpICallback.h" />
+    <ClInclude Include="Script\MUP Base\mpIfThenElse.h" />
+    <ClInclude Include="Script\MUP Base\mpIOprt.h" />
+    <ClInclude Include="Script\MUP Base\mpIPackage.h" />
+    <ClInclude Include="Script\MUP Base\mpIPrecedence.h" />
+    <ClInclude Include="Script\MUP Base\mpIToken.h" />
+    <ClInclude Include="Script\MUP Base\mpIValReader.h" />
+    <ClInclude Include="Script\MUP Base\mpIValue.h" />
+    <ClInclude Include="Script\MUP Base\mpOprtBinAssign.h" />
+    <ClInclude Include="Script\MUP Base\mpOprtBinCommon.h" />
+    <ClInclude Include="Script\MUP Base\mpOprtIndex.h" />
+    <ClInclude Include="Script\MUP Base\mpOprtMatrix.h" />
+    <ClInclude Include="Script\MUP Base\mpOprtNonCmplx.h" />
+    <ClInclude Include="Script\MUP Base\mpPackageCommon.h" />
+    <ClInclude Include="Script\MUP Base\mpPackageMatrix.h" />
+    <ClInclude Include="Script\MUP Base\mpPackageNonCmplx.h" />
+    <ClInclude Include="Script\MUP Base\mpPackageStr.h" />
+    <ClInclude Include="Script\MUP Base\mpPackageUnit.h" />
+    <ClInclude Include="Script\MUP Base\mpRPN.h" />
+    <ClInclude Include="Script\MUP Base\mpScriptTokens.h" />
+    <ClInclude Include="Script\MUP Base\mpStack.h" />
+    <ClInclude Include="Script\MUP Base\mpTokenReader.h" />
+    <ClInclude Include="Script\MUP Base\mpTypes.h" />
+    <ClInclude Include="Script\MUP Base\mpValReader.h" />
+    <ClInclude Include="Script\MUP Base\mpValueCache.h" />
+    <ClInclude Include="Script\MUP Base\mpVariable.h" />
+    <ClInclude Include="Script\MUP Base\suSortPred.h" />
+    <ClInclude Include="Script\MUP Base\utGeneric.h" />
+    <ClInclude Include="Script\MUP Implementation\CodaMUPArrayDataType.h" />
+    <ClInclude Include="Script\MUP Implementation\CodaMUPExpressionParser.h" />
+    <ClInclude Include="Script\MUP Implementation\CodaMUPScriptCommand.h" />
+    <ClInclude Include="Script\MUP Implementation\CodaMUPValue.h" />
+    <ClInclude Include="Script\MUP Implementation\CodaMUPVariable.h" />
+    <ClInclude Include="ToolBox.h" />
+    <ClInclude Include="UICommon.h" />
+    <ClInclude Include="UIManager.h" />
+    <ClInclude Include="WindowColorThemer.h" />
+    <ClInclude Include="WindowSubclasser.h" />
+    <ClInclude Include="WorkspaceManager.h" />
+    <ClInclude Include="Wrappers.h" />
+    <ClInclude Include="DetectSIMD.h" />
+    <ClInclude Include="BGSEditorExtenderBase_Resource.h" />
+    <ClInclude Include="StdAfx.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Achievements.cpp" />
+    <ClCompile Include="ChangeLogManager.cpp" />
+    <ClCompile Include="Console.cpp" />
+    <ClCompile Include="FormUndoStack.cpp" />
+    <ClCompile Include="GenericModelessDialog.cpp" />
+    <ClCompile Include="GlobalClipboard.cpp" />
+    <ClCompile Include="HallOfFame.cpp" />
+    <ClCompile Include="HookUtil.cpp" />
+    <ClCompile Include="Main.cpp">
+      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</PreprocessToFile>
+    </ClCompile>
+    <ClCompile Include="ResourceLocation.cpp" />
+    <ClCompile Include="Script\CodaAST.cpp" />
+    <ClCompile Include="Script\CodaCompiler.cpp" />
+    <ClCompile Include="Script\CodaDataTypes.cpp" />
+    <ClCompile Include="Script\CodaInterpreter.cpp" />
+    <ClCompile Include="Script\CodaUtilities.cpp" />
+    <ClCompile Include="Script\CodaVM.cpp" />
+    <ClCompile Include="Script\Commands\CodaScriptCommand.cpp" />
+    <ClCompile Include="Script\Commands\CodaScriptCommands-Array.cpp" />
+    <ClCompile Include="Script\Commands\CodaScriptCommands-General.cpp" />
+    <ClCompile Include="Script\Commands\CodaScriptCommands-String.cpp" />
+    <ClCompile Include="Script\MUP Base\mpError.cpp" />
+    <ClCompile Include="Script\MUP Base\mpFuncCommon.cpp" />
+    <ClCompile Include="Script\MUP Base\mpFuncMatrix.cpp" />
+    <ClCompile Include="Script\MUP Base\mpFuncNonCmplx.cpp" />
+    <ClCompile Include="Script\MUP Base\mpFuncStr.cpp" />
+    <ClCompile Include="Script\MUP Base\mpICallback.cpp" />
+    <ClCompile Include="Script\MUP Base\mpIfThenElse.cpp" />
+    <ClCompile Include="Script\MUP Base\mpIOprt.cpp" />
+    <ClCompile Include="Script\MUP Base\mpIPackage.cpp" />
+    <ClCompile Include="Script\MUP Base\mpIToken.cpp" />
+    <ClCompile Include="Script\MUP Base\mpIValReader.cpp" />
+    <ClCompile Include="Script\MUP Base\mpIValue.cpp" />
+    <ClCompile Include="Script\MUP Base\mpOprtBinAssign.cpp" />
+    <ClCompile Include="Script\MUP Base\mpOprtBinCommon.cpp" />
+    <ClCompile Include="Script\MUP Base\mpOprtIndex.cpp" />
+    <ClCompile Include="Script\MUP Base\mpOprtMatrix.cpp" />
+    <ClCompile Include="Script\MUP Base\mpOprtNonCmplx.cpp" />
+    <ClCompile Include="Script\MUP Base\mpPackageCommon.cpp" />
+    <ClCompile Include="Script\MUP Base\mpPackageMatrix.cpp" />
+    <ClCompile Include="Script\MUP Base\mpPackageNonCmplx.cpp" />
+    <ClCompile Include="Script\MUP Base\mpPackageStr.cpp" />
+    <ClCompile Include="Script\MUP Base\mpPackageUnit.cpp" />
+    <ClCompile Include="Script\MUP Base\mpRPN.cpp" />
+    <ClCompile Include="Script\MUP Base\mpScriptTokens.cpp" />
+    <ClCompile Include="Script\MUP Base\mpTokenReader.cpp" />
+    <ClCompile Include="Script\MUP Base\mpValReader.cpp" />
+    <ClCompile Include="Script\MUP Base\mpValueCache.cpp" />
+    <ClCompile Include="Script\MUP Base\mpVariable.cpp" />
+    <ClCompile Include="Script\MUP Implementation\CodaMUPArrayDataType.cpp" />
+    <ClCompile Include="Script\MUP Implementation\CodaMUPExpressionParser.cpp" />
+    <ClCompile Include="Script\MUP Implementation\CodaMUPScriptCommand.cpp" />
+    <ClCompile Include="Script\MUP Implementation\CodaMUPValue.cpp" />
+    <ClCompile Include="Script\MUP Implementation\CodaMUPVariable.cpp" />
+    <ClCompile Include="ToolBox.cpp" />
+    <ClCompile Include="UICommon.cpp" />
+    <ClCompile Include="UIManager.cpp" />
+    <ClCompile Include="WindowColorThemer.cpp" />
+    <ClCompile Include="WindowSubclasser.cpp" />
+    <ClCompile Include="WorkspaceManager.cpp" />
+    <ClCompile Include="StdAfx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\SME Sundries\INIEditGUI_Res.rc" />
+    <ResourceCompile Include="BGSEditorExtenderBase.rc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ResourceLocation.h" />
+    <None Include="Script\CodaBaseInterfaces.inl" />
+    <None Include="Script\CodaForwardDecls.inl" />
+    <None Include="[Resources]\generic.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\xSE Common\common_vc9.vcxproj">
+      <Project>{20c6411c-596f-4b85-be4e-8bc91f59d8a6}</Project>
+      <Private>true</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{414EDF4A-5930-416A-B382-216B445539DB}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>BGSEditorExtenderBase</RootNamespace>
+    <ProjectName>BGSEditorExtenderBase</ProjectName>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <EnableASAN>false</EnableASAN>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <EnableASAN>false</EnableASAN>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="EnvVars.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="EnvVars.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IntDir>$(Configuration)\</IntDir>
+    <IncludePath>Script;Script\MUP Base;Script\MUP Implementation;$(XSECommonIncludePath);$(DirectXIncludePath);$(BoostIncludePath);$(CrashRptIncludePath);$(SMESundriesIncludePath);$(NETFXKitsDir)\include\um;$(IncludePath)</IncludePath>
+    <LibraryPath>$(DirectXLibPath);$(CrashRptLibPath);$(BoostLibPath);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(Configuration)\</OutDir>
+    <IncludePath>Script;Script\MUP Base;Script\MUP Implementation;$(XSECommonIncludePath);$(DirectXIncludePath);$(BoostIncludePath);$(CrashRptIncludePath);$(SMESundriesIncludePath);$(NETFXKitsDir)\include\um;$(IncludePath)</IncludePath>
+    <LibraryPath>$(DirectXLibPath);$(CrashRptLibPath);$(BoostLibPath);$(LibraryPath)</LibraryPath>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <StringPooling>true</StringPooling>
+      <MinimalRebuild>false</MinimalRebuild>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <ForcedIncludeFiles>StdAfx.h</ForcedIncludeFiles>
+      <BasicRuntimeChecks>UninitializedLocalUsageCheck</BasicRuntimeChecks>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <FloatingPointExceptions>
+      </FloatingPointExceptions>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <Lib>
+      <TargetMachine>MachineX86</TargetMachine>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Lib>
+    <PostBuildEvent>
+      <Command>copy "$(TargetPath)" "Release\$(TargetFileName)"</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Installing Library...</Message>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <OmitFramePointers>false</OmitFramePointers>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <ForcedIncludeFiles>StdAfx.h</ForcedIncludeFiles>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <FloatingPointExceptions>
+      </FloatingPointExceptions>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <Lib>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Lib>
+    <ProjectReference>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
