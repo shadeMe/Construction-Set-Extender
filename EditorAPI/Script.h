@@ -21,6 +21,7 @@ public:
 		/*08*/ TESForm*			form;			// referenced object, in case of explict references
 		/*0C*/ UInt32			variableIndex;	// variable index of the reference variable, if any
 	};
+	static_assert(sizeof(Script::RefVariable) == 0x10);
 	typedef tList<RefVariable> RefVariableListT;
 
 	enum VariableTypes
@@ -36,10 +37,12 @@ public:
 		/*04*/ UInt32					unk04;
 		/*08*/ double					data;
 		/*10*/ UInt8					type;
-		/*11*/ UInt8					pad11;
+		/*11*/ UInt8					pad11[3];
 		/*14*/ UInt32					unk14;
 		/*18*/ BSString					name;
 	};
+	static_assert(sizeof(Script::VariableInfo) == 0x20);
+
 	typedef tList<VariableInfo> VariableListT;
 
 	enum ScriptType
@@ -52,12 +55,13 @@ public:
 	// 14
 	struct ScriptInfo
 	{
-		/*00*/ UInt32					unk00;
+		/*00*/ UInt32					unusedVarCount;		// ? from NVSE
 		/*04*/ UInt32					refCount;			// number of reference variables
 		/*08*/ UInt32					dataLength;
 		/*0C*/ UInt32					lastVarIdx;
 		/*10*/ UInt32					type;
 	};
+	static_assert(sizeof(Script::ScriptInfo) == 0x14);
 
 	// members
 	//     /*00*/ TESForm
@@ -85,6 +89,7 @@ public:
 	UInt32								GetScriptableFormUseCount(void);
 	UInt32								GetEffectItemReferences(ScriptMagicItemCrossRefArrayT& OutList);
 };
+static_assert(sizeof(Script) == 0x54);
 
 enum ScriptCompileErrors
 {

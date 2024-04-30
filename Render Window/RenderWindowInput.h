@@ -293,7 +293,7 @@ namespace cse
 				typedef std::vector<BuiltIn::KeyBinding>		BuiltInKeyBindingArrayT;
 
 				HotKeyArrayT				HotKeys;
-				BuiltInKeyBindingArrayT		DeletedBindings;		// default combos that shouldn't be executed, e.g., broken bindings
+				BuiltInKeyBindingArrayT		DeletedBindings;	// default combos that shouldn't be executed, e.g., broken bindings
 				SharedBindings				Shared;
 				void*						MessageLogContext;
 				bool						Initialized;

@@ -267,7 +267,7 @@ namespace cse
 						pushad
 						push	esi
 						push	edi
-						lea		ecx, cse::events::form::kSetFormID
+						lea		ecx, cse::events::form::kSetEditorID
 						call	cse::events::BasicTESFormEventSource::HandleSetEditorID
 						popad
 

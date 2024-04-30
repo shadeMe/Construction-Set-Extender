@@ -225,8 +225,8 @@ public:
 			kUndoOperation_RefDelete,
 			kUndoOperation_RefChange3D,
 			kUndoOperation_Unk04,					// 4-6 used to record landscape changes
-			kUndoOperation_Unk05,
-			kUndoOperation_Unk06
+			kUndoOperation_Unk05,					// color land?
+			kUndoOperation_Unk06					// paint land?
 		};
 
 		// 50

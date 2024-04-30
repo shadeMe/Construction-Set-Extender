@@ -280,6 +280,7 @@ namespace componentDLLInterface
 		GetParentPlugin = nullptr;
 		GetRequiredOBSEVersion = nullptr;
 		DeveloperURLDataListHead = nullptr;
+		DeveloperURLDataListCount = 0;
 	}
 
 	CommandTableData::~CommandTableData()
