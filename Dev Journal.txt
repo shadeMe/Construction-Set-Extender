@@ -44,6 +44,7 @@ CSE		---->
 
 
 	ENHANCEMENT		=
+		> Object Prefab nested Folders? just like the Object Window. 
 		> Speed up the Export Dialogue tool
 			> Also add progress counter
 		> Could you modify the X and Y coordinate boxes in the Cell View so that hitting the tab key will move the cursor to the Y box? Type in an X coordinate, hit tab, then enter a Y coordinate. 

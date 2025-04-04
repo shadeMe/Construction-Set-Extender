@@ -172,34 +172,12 @@ namespace bgsee
 	}
 
 
-	BOOL CALLBACK EnumChildProc(
-		_In_ HWND   hwnd,
-		_In_ LPARAM lParam
-	)
-	{
-		auto GivenFont = (HFONT)lParam;
-		SendMessage(hwnd, WM_SETFONT, reinterpret_cast<WPARAM>(GivenFont), TRUE);
-		return TRUE;
-	}
-
 	LRESULT WindowColorThemer::ThemeOverrideSubclass(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, WindowSubclassProcCollection::SubclassProcExtraParams* SubclassParams)
 	{
 		LRESULT CallbackResult = FALSE;
 
 		switch (uMsg)
 		{
-		case WM_INITDIALOG:
-			EnumChildWindows(hWnd, EnumChildProc, (LPARAM)DefaultFont);
-			break;
-		}
-
-		switch (uMsg)
-		{
-		case WM_SUBCLASSER_PRE_WM_INITDIALOG:
-		case WM_SUBCLASSER_PRE_WM_CREATE:
-			SendMessage(hWnd, WM_SETFONT, reinterpret_cast<WPARAM>(DefaultFont), TRUE);
-
-			break;
 		case WM_SUBCLASSER_POST_WM_INITDIALOG:
 		case WM_SUBCLASSER_POST_WM_CREATE:
 		{
@@ -244,8 +222,6 @@ namespace bgsee
 
 			ActiveThemedWindows.emplace(hWnd, ThemeData);
 			 
-			SendMessage(hWnd, WM_SETFONT, reinterpret_cast<WPARAM>(DefaultFont), TRUE);
-
 			break;
 		}
 		case WM_CTLCOLOREDIT:
@@ -996,21 +972,6 @@ namespace bgsee
 		ColorSettings[kColor_TabControlColorBorder] = &kTabControlColorBorder;
 		ColorSettings[kColor_TabControlColorFill] = &kTabControlColorFill;
 
-		DefaultFont = CreateFont(24,
-			0,
-			0,
-			0,
-			FW_NORMAL,
-			FALSE,
-			FALSE,
-			FALSE,
-			ANSI_CHARSET,
-			OUT_DEFAULT_PRECIS,
-			CLIP_DEFAULT_PRECIS,
-			CLEARTYPE_QUALITY,
-			FF_DONTCARE,
-			"Segoe UI");
-
 		AllHooksValid = InitializeIATPatches();
 		if (!AllHooksValid)
 			BGSEECONSOLE_MESSAGE("Visual styles disabled!");
@@ -1033,8 +994,6 @@ namespace bgsee
 			DeleteObject(Itr.second);
 
 		Brushes.clear();
-
-		DeleteObject(DefaultFont);
 	}
 
 	void WindowColorThemer::Enable()
